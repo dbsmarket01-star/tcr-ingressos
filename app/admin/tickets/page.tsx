@@ -1,0 +1,129 @@
+import Link from "next/link";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { requirePermission } from "@/features/auth/auth.service";
+import { listAdminTickets, listTicketFilterEvents } from "@/features/tickets/ticket.admin.service";
+import { formatDateTime } from "@/lib/format";
+
+export const dynamic = "force-dynamic";
+
+const ticketStatusLabels = {
+  ACTIVE: "Ativo",
+  USED: "Usado",
+  CANCELED: "Cancelado",
+  INVALID: "Invalido"
+};
+
+type TicketsPageProps = {
+  searchParams?: Promise<{
+    eventId?: string;
+    status?: string;
+    search?: string;
+  }>;
+};
+
+export default async function TicketsPage({ searchParams }: TicketsPageProps) {
+  await requirePermission("TICKETS");
+  const params = searchParams ? await searchParams : {};
+  const [{ tickets, totalCount }, events] = await Promise.all([
+    listAdminTickets(params),
+    listTicketFilterEvents()
+  ]);
+  const exportHref = `/admin/tickets/export?${new URLSearchParams({
+    ...(params.eventId ? { eventId: params.eventId } : {}),
+    ...(params.status ? { status: params.status } : {}),
+    ...(params.search ? { search: params.search } : {})
+  }).toString()}`;
+
+  return (
+    <AdminShell
+      title="Ingressos"
+      description="Ingressos emitidos, status, comprador e vinculo com pedido."
+    >
+      <section className="card financeFilters">
+        <form className="financeFiltersForm">
+          <label className="field">
+            <span>Buscar</span>
+            <input name="search" placeholder="Ingresso, pedido, cliente, email, evento ou lote" defaultValue={params.search || ""} />
+          </label>
+          <label className="field">
+            <span>Evento</span>
+            <select name="eventId" defaultValue={params.eventId || ""}>
+              <option value="">Todos os eventos</option>
+              {events.map((event) => (
+                <option value={event.id} key={event.id}>
+                  {event.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            <span>Status</span>
+            <select name="status" defaultValue={params.status || ""}>
+              <option value="">Todos</option>
+              {Object.entries(ticketStatusLabels).map(([value, label]) => (
+                <option value={value} key={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="button" type="submit">
+            Filtrar
+          </button>
+          <Link className="secondaryButton" href="/admin/tickets">
+            Limpar
+          </Link>
+          <Link className="button" href={exportHref}>
+            Exportar CSV
+          </Link>
+        </form>
+        <p className="muted filterSummary">
+          Mostrando {tickets.length} de {totalCount} ingresso(s).
+        </p>
+      </section>
+
+      <section className="card">
+        {tickets.length === 0 ? (
+          <div className="empty">Nenhum ingresso emitido ainda.</div>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Ingresso</th>
+                <th>Status</th>
+                <th>Evento</th>
+                <th>Lote</th>
+                <th>Comprador</th>
+                <th>Pedido</th>
+                <th>Emitido em</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tickets.map((ticket) => (
+                <tr key={ticket.id}>
+                  <td>
+                    <Link href={`/ingresso/${ticket.code}`}>
+                      <strong>{ticket.code}</strong>
+                    </Link>
+                  </td>
+                  <td>
+                    <span className={`status ${ticket.status === "ACTIVE" ? "published" : "draft"}`}>
+                      {ticketStatusLabels[ticket.status]}
+                    </span>
+                  </td>
+                  <td>{ticket.event.title}</td>
+                  <td>{ticket.lot.name}</td>
+                  <td>{ticket.order.customer.name}</td>
+                  <td>
+                    <Link href={`/pedido/${ticket.order.code}`}>{ticket.order.code}</Link>
+                  </td>
+                  <td>{formatDateTime(ticket.issuedAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+    </AdminShell>
+  );
+}

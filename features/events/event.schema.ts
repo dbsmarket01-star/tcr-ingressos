@@ -1,0 +1,61 @@
+import { z } from "zod";
+
+const imageUrlSchema = z.string().url().optional().or(z.literal("")).or(z.string().startsWith("/uploads/"));
+const bannerPositionSchema = z
+  .enum([
+    "left top",
+    "center top",
+    "right top",
+    "left center",
+    "center center",
+    "right center",
+    "left bottom",
+    "center bottom",
+    "right bottom"
+  ])
+  .default("center center");
+const eventMapTemplateSchema = z
+  .enum(["AUTO", "AUDITORIUM", "THEATER", "WAREHOUSE", "CLUB", "FREE"])
+  .default("AUTO");
+const metaPixelIdSchema = z
+  .string()
+  .regex(/^\d{8,25}$/, "Meta Pixel ID deve conter apenas numeros.")
+  .optional();
+const googleTagManagerIdSchema = z
+  .string()
+  .regex(/^GTM-[A-Z0-9]{4,}$/i, "Google Tag Manager ID deve seguir o formato GTM-XXXXXXX.")
+  .transform((value) => value.toUpperCase())
+  .optional();
+
+export const eventDraftSchema = z.object({
+  title: z.string().min(3),
+  slug: z.string().min(3).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  subtitle: z.string().optional(),
+  description: z.string().min(10),
+  startsAt: z.coerce.date(),
+  endsAt: z.coerce.date().optional(),
+  venueName: z.string().min(2),
+  venueAddress: z.string().min(5),
+  city: z.string().min(2),
+  state: z.string().min(2).max(2),
+  salesStartsAt: z.coerce.date().optional(),
+  salesEndsAt: z.coerce.date().optional(),
+  bannerUrl: imageUrlSchema,
+  bannerPosition: bannerPositionSchema,
+  eventMapImageUrl: imageUrlSchema,
+  eventMapTemplate: eventMapTemplateSchema,
+  eventMapNotes: z.string().max(500).optional(),
+  importantInfo: z.string().optional(),
+  metaPixelId: metaPixelIdSchema,
+  googleTagManagerId: googleTagManagerIdSchema,
+  seoTitle: z.string().max(70).optional(),
+  seoDescription: z.string().max(180).optional(),
+  seoKeywords: z.string().max(300).optional(),
+  seoImageUrl: imageUrlSchema,
+  conversionSocialProofText: z.string().max(120).optional(),
+  conversionUrgencyText: z.string().max(140).optional(),
+  conversionCtaText: z.string().max(60).optional(),
+  highlightedLotId: z.string().optional()
+});
+
+export type EventDraftInput = z.infer<typeof eventDraftSchema>;

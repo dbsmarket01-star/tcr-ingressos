@@ -1,0 +1,90 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { createAuditLog } from "@/features/audit/audit.service";
+import { requirePermission } from "@/features/auth/auth.service";
+import { companySettingsSchema } from "./company-settings.schema";
+import { updateCompanySettings } from "./company-settings.service";
+import { splitRuleFormSchema } from "./split-settings.schema";
+import { replacePaymentSplitRules } from "./split-settings.service";
+
+function settingsValidationMessage() {
+  return "Verifique nome da empresa, documento, e-mail e taxa padrao.";
+}
+
+function normalizeDecimal(value: FormDataEntryValue | null) {
+  return String(value ?? "0").trim().replace(",", ".");
+}
+
+export async function updateCompanySettingsAction(formData: FormData) {
+  const admin = await requirePermission("SETTINGS");
+
+  const parsed = companySettingsSchema.safeParse({
+    companyName: String(formData.get("companyName") ?? ""),
+    tradeName: String(formData.get("tradeName") ?? ""),
+    document: String(formData.get("document") ?? ""),
+    supportEmail: String(formData.get("supportEmail") ?? ""),
+    supportPhone: String(formData.get("supportPhone") ?? "") || undefined,
+    defaultCurrency: String(formData.get("defaultCurrency") ?? "BRL"),
+    platformFeePercent: normalizeDecimal(formData.get("platformFeePercent"))
+  });
+
+  if (!parsed.success) {
+    redirect(`/admin/settings?error=${encodeURIComponent(settingsValidationMessage())}`);
+  }
+
+  const settings = await updateCompanySettings(parsed.data);
+
+  await createAuditLog({
+    adminUserId: admin.id,
+    action: "COMPANY_SETTINGS_UPDATED",
+    entityType: "CompanySettings",
+    entityId: settings.id,
+    metadata: {
+      companyName: settings.companyName,
+      supportEmail: settings.supportEmail
+    }
+  });
+
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/audit");
+  redirect("/admin/settings?saved=1");
+}
+
+export async function updatePaymentSplitRulesAction(formData: FormData) {
+  const admin = await requirePermission("SETTINGS");
+  const rules = Array.from({ length: 6 }).map((_, index) => {
+    const parsed = splitRuleFormSchema.safeParse({
+      name: String(formData.get(`splitName_${index}`) ?? ""),
+      walletId: String(formData.get(`splitWalletId_${index}`) ?? ""),
+      type: String(formData.get(`splitType_${index}`) ?? "PERCENTAGE"),
+      value: normalizeDecimal(formData.get(`splitValue_${index}`)),
+      isActive: formData.get(`splitActive_${index}`) === "on",
+      sortOrder: index
+    });
+
+    if (!parsed.success) {
+      return null;
+    }
+
+    return parsed.data;
+  }).filter((rule): rule is NonNullable<typeof rule> => Boolean(rule));
+
+  const savedRules = await replacePaymentSplitRules(rules);
+
+  await createAuditLog({
+    adminUserId: admin.id,
+    action: "PAYMENT_SPLIT_RULES_UPDATED",
+    entityType: "PaymentSplitRule",
+    metadata: {
+      activeRules: savedRules.filter((rule) => rule.isActive).length,
+      totalRules: savedRules.length
+    }
+  });
+
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/production");
+  revalidatePath("/admin/audit");
+  redirect("/admin/settings?splitSaved=1");
+}
