@@ -11,3 +11,4 @@ yarn-error.log*
 /generated/prisma
 public/uploads/*
 !public/uploads/.gitkeep
+vercel-production.env

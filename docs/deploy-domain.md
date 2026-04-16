@@ -96,6 +96,8 @@ Authorization: Bearer SEU_CRON_SECRET
 
 Essa rotina libera estoque de pedidos pendentes vencidos.
 
+No plano Hobby da Vercel, cron nativo mais de uma vez por dia nao e liberado. Para operar no Hobby, use um cron externo, como cron-job.org ou EasyCron, chamando a URL acima a cada 5 minutos. Se a TCR migrar para Vercel Pro, a rotina pode voltar para `vercel.json`.
+
 ## 7. Midia de eventos
 
 Antes de trafego pago, confirmar no dominio final:
