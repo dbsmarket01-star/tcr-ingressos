@@ -1,6 +1,6 @@
 import { EventStatus, Prisma } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { expirePendingOrders } from "@/features/orders/order.service";
 import type { EventDraftInput } from "./event.schema";
 
 export type EventListItem = Awaited<ReturnType<typeof listEvents>>[number];
@@ -30,6 +30,26 @@ export async function listEvents() {
           createdAt: "desc"
         }
       }
+    }
+  });
+}
+
+export async function listPublishedEventShowcase(limit = 6) {
+  return prisma.event.findMany({
+    where: {
+      status: EventStatus.PUBLISHED
+    },
+    orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],
+    take: limit,
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      startsAt: true,
+      venueName: true,
+      city: true,
+      state: true,
+      bannerUrl: true
     }
   });
 }
@@ -95,8 +115,6 @@ export async function getEventForManagement(eventId: string) {
 }
 
 export async function getPublicEventBySlug(slug: string) {
-  await expirePendingOrders({ limit: 25 });
-
   return prisma.event.findFirst({
     where: {
       slug,
@@ -120,6 +138,46 @@ export async function getEventSeoBySlug(slug: string) {
       status: "PUBLISHED"
     }
   });
+}
+
+function toDate(value: unknown) {
+  return value instanceof Date ? value : typeof value === "string" ? new Date(value) : value;
+}
+
+function normalizeCachedEventDates<T>(event: T): T {
+  if (!event || typeof event !== "object") {
+    return event;
+  }
+
+  const normalized = event as Record<string, unknown>;
+
+  for (const field of ["startsAt", "endsAt", "salesStartsAt", "salesEndsAt", "createdAt", "updatedAt"]) {
+    if (field in normalized && normalized[field]) {
+      normalized[field] = toDate(normalized[field]);
+    }
+  }
+
+  if (Array.isArray(normalized.lots)) {
+    normalized.lots = normalized.lots.map((lot) => normalizeCachedEventDates(lot));
+  }
+
+  return normalized as T;
+}
+
+const getCachedPublicEventBySlugRaw = unstable_cache(getPublicEventBySlug, ["public-event"], {
+  revalidate: 10
+});
+
+const getCachedEventSeoBySlugRaw = unstable_cache(getEventSeoBySlug, ["public-event-seo"], {
+  revalidate: 60
+});
+
+export async function getCachedPublicEventBySlug(slug: string) {
+  return normalizeCachedEventDates(await getCachedPublicEventBySlugRaw(slug));
+}
+
+export async function getCachedEventSeoBySlug(slug: string) {
+  return normalizeCachedEventDates(await getCachedEventSeoBySlugRaw(slug));
 }
 
 export async function updateEvent(eventId: string, input: EventDraftInput & { status: EventStatus }) {

@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { listEvents } from "@/features/events/event.service";
+import { listPublishedEventShowcase } from "@/features/events/event.service";
 import { formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const events = (await listEvents()).filter((event) => event.status === "PUBLISHED").slice(0, 6);
+  const events = await listPublishedEventShowcase(6);
 
   return (
     <main className="shell">

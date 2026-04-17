@@ -124,6 +124,7 @@ textarea {
 .secondaryButton:disabled {
   cursor: wait;
   opacity: 0.72;
+  transform: none;
 }
 
 .secondaryButton {
@@ -137,6 +138,27 @@ textarea {
 .secondaryButton:hover {
   background: #e7edf2;
   border-color: #c8d3dd;
+}
+
+.buttonSpinner {
+  animation: spin 0.72s linear infinite;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #ffffff;
+  border-radius: 999px;
+  height: 16px;
+  margin-right: 8px;
+  width: 16px;
+}
+
+.secondaryButton .buttonSpinner {
+  border-color: rgba(11, 122, 99, 0.22);
+  border-top-color: var(--brand);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .googleButton {

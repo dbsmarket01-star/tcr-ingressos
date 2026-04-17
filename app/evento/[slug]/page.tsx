@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getBuyerProfile } from "@/features/customer-auth/google-buyer.service";
-import { getEventSeoBySlug, getPublicEventBySlug } from "@/features/events/event.service";
+import { getCachedEventSeoBySlug, getCachedPublicEventBySlug } from "@/features/events/event.service";
 import { createCheckoutOrderAction } from "@/features/orders/order.actions";
 import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import { buildEventSeo } from "@/features/seo/event-seo";
@@ -37,7 +37,7 @@ type EventPageProps = {
 
 export async function generateMetadata({ params }: Pick<EventPageProps, "params">): Promise<Metadata> {
   const { slug } = await params;
-  const event = await getEventSeoBySlug(slug);
+  const event = await getCachedEventSeoBySlug(slug);
 
   if (!event) {
     return {
@@ -72,15 +72,14 @@ export async function generateMetadata({ params }: Pick<EventPageProps, "params"
 export default async function EventPage({ params, searchParams }: EventPageProps) {
   const { slug } = await params;
   const query = searchParams ? await searchParams : {};
-  const event = await getPublicEventBySlug(slug);
-  const buyerProfile = await getBuyerProfile();
+  const [event, buyerProfile] = await Promise.all([getCachedPublicEventBySlug(slug), getBuyerProfile()]);
 
   if (!event) {
     notFound();
   }
 
+  const now = new Date();
   const activeLots = event.lots.filter((lot) => {
-    const now = new Date();
     const startsOk = !lot.salesStartsAt || lot.salesStartsAt <= now;
     const endsOk = !lot.salesEndsAt || lot.salesEndsAt >= now;
     const hasStock = lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity > 0;
@@ -253,7 +252,12 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             <h2>Mapa de setores</h2>
             {event.eventMapImageUrl ? (
               <div className="eventMapImageFrame">
-                <img src={event.eventMapImageUrl} alt={`Mapa de setores - ${event.title}`} />
+                <img
+                  src={event.eventMapImageUrl}
+                  alt={`Mapa de setores - ${event.title}`}
+                  decoding="async"
+                  loading="lazy"
+                />
               </div>
             ) : (
               <div className={`sectorMap mapTemplate mapTemplate${mapTemplate}`} aria-label="Mapa de setores do evento">

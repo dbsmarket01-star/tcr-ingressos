@@ -7,6 +7,7 @@ export async function getDashboardMetrics() {
     ticketCounts,
     checkInCounts,
     events,
+    eventTicketCounts,
     recentOrders
   ] = await Promise.all([
     prisma.order.aggregate({
@@ -46,13 +47,13 @@ export async function getDashboardMetrics() {
           select: {
             totalInCents: true
           }
-        },
-        tickets: {
-          select: {
-            id: true,
-            status: true
-          }
         }
+      }
+    }),
+    prisma.ticket.groupBy({
+      by: ["eventId", "status"],
+      _count: {
+        _all: true
       }
     }),
     prisma.order.findMany({
@@ -77,14 +78,28 @@ export async function getDashboardMetrics() {
   const countByCheckInStatus = Object.fromEntries(
     checkInCounts.map((item) => [item.status, item._count._all])
   );
+  const ticketCountByEvent = new Map<string, { active: number; used: number }>();
+
+  for (const item of eventTicketCounts) {
+    const current = ticketCountByEvent.get(item.eventId) ?? { active: 0, used: 0 };
+
+    if (item.status === "ACTIVE") {
+      current.active = item._count._all;
+    }
+
+    if (item.status === "USED") {
+      current.used = item._count._all;
+    }
+
+    ticketCountByEvent.set(item.eventId, current);
+  }
 
   const eventRows = events.map((event) => {
     const totalCapacity = event.lots.reduce((sum, lot) => sum + lot.totalQuantity, 0);
     const soldQuantity = event.lots.reduce((sum, lot) => sum + lot.soldQuantity, 0);
     const reservedQuantity = event.lots.reduce((sum, lot) => sum + lot.reservedQuantity, 0);
     const revenueInCents = event.orders.reduce((sum, order) => sum + order.totalInCents, 0);
-    const activeTickets = event.tickets.filter((ticket) => ticket.status === "ACTIVE").length;
-    const usedTickets = event.tickets.filter((ticket) => ticket.status === "USED").length;
+    const eventTickets = ticketCountByEvent.get(event.id) ?? { active: 0, used: 0 };
 
     return {
       id: event.id,
@@ -98,8 +113,8 @@ export async function getDashboardMetrics() {
       soldQuantity,
       reservedQuantity,
       revenueInCents,
-      activeTickets,
-      usedTickets
+      activeTickets: eventTickets.active,
+      usedTickets: eventTickets.used
     };
   });
 
