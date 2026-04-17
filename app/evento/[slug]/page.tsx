@@ -14,6 +14,7 @@ import { TrackingRuntime } from "./TrackingRuntime";
 import { CheckoutEstimator } from "./CheckoutEstimator";
 
 export const dynamic = "force-dynamic";
+export const preferredRegion = "gru1";
 
 const mapTemplateLabels = {
   AUTO: "Mapa automatico",

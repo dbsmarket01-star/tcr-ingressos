@@ -17,6 +17,7 @@ import { calculateCardInterestInCents } from "@/features/pricing/pricing";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
+export const preferredRegion = "gru1";
 
 export const metadata: Metadata = {
   robots: {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { handlePaymentWebhook, syncAsaasPaymentByExternalId } from "@/features/payments/payment.service";
 
 export const dynamic = "force-dynamic";
+export const preferredRegion = "gru1";
 export const maxDuration = 60;
 
 type AsaasWebhookPayload = {
