@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./styles.css";
 
+export const preferredRegion = "gru1";
+
 export const metadata: Metadata = {
   title: "TCR Ingressos",
   description: "MVP de bilheteria online para eventos"
