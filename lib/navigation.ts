@@ -116,31 +116,30 @@ export function getAdminNavItemsForRole(role: AdminRole) {
 export const adminNavGroups: AdminNavGroup[] = [
   {
     label: "Visao geral",
-    description: "Painel principal",
+    description: "Painel",
     defaultOpen: true,
     items: adminNavItems.filter((item) => item.area === "DASHBOARD")
   },
   {
     label: "Operacao",
-    description: "Eventos, entrada e atendimento",
+    description: "Eventos e entrada",
     defaultOpen: true,
     items: adminNavItems.filter((item) => ["EVENTS", "CHECKIN", "SUPPORT"].includes(item.area))
   },
   {
     label: "Vendas",
-    description: "Pedidos e ingressos",
+    description: "Pedidos",
     defaultOpen: true,
     items: adminNavItems.filter((item) => ["ORDERS", "TICKETS"].includes(item.area))
   },
   {
     label: "Analise",
-    description: "Financeiro e relatorios",
-    defaultOpen: true,
+    description: "Financeiro",
     items: adminNavItems.filter((item) => ["FINANCE", "REPORTS", "PRODUCTION"].includes(item.area))
   },
   {
     label: "Sistema",
-    description: "Configuracoes e seguranca",
+    description: "Acessos",
     items: adminNavItems.filter((item) => ["SETTINGS", "USERS", "AUDIT", "ACCOUNT"].includes(item.area))
   }
 ];

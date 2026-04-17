@@ -288,26 +288,16 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
             <div className="paymentBoxHeader">
               <div>
                 <h3>Pagamento</h3>
-                <span>Escolha Pix ou cartao para concluir sua compra.</span>
+                <span>Escolha Pix ou cartao para concluir sua compra com seguranca.</span>
               </div>
               <strong>{formatCurrency(order.totalInCents)}</strong>
             </div>
             {paymentError ? <div className="errorBox">{paymentError}</div> : null}
-            <div className="paymentStatusGrid">
+            <div className="paymentStatusGrid compactPaymentStatus">
               <div>
                 <span>Status</span>
                 <strong>{order.payment ? paymentStatusLabels[order.payment.status] : "Nao iniciado"}</strong>
               </div>
-              <div>
-                <span>Provedor</span>
-                <strong>{order.payment?.provider || "Nao iniciado"}</strong>
-              </div>
-              {order.payment?.externalId ? (
-                <div>
-                  <span>Referencia</span>
-                  <strong className="breakText">{order.payment.externalId}</strong>
-                </div>
-              ) : null}
             </div>
           </div>
 
@@ -389,7 +379,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                   </div>
                   <div className="cardSecurityNote">
                     <span>Checkout transparente</span>
-                    <span>Dados enviados com seguranca ao provedor</span>
+                    <span>Ambiente seguro de pagamento</span>
                     <span>Ingressos liberados apos aprovacao</span>
                   </div>
                   <input type="hidden" name="orderCode" value={order.code} />

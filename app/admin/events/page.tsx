@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { ModuleCard } from "@/components/admin/ModuleCard";
 import { requirePermission } from "@/features/auth/auth.service";
 import { duplicateEventAction } from "@/features/events/event.actions";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -129,17 +128,6 @@ export default async function EventsPage() {
         )}
       </section>
 
-      <section className="grid cardsGrid spacedSection">
-        <ModuleCard title="Listagem de eventos" status="Pronto">
-          A tabela agora le dados reais do Supabase e calcula capacidade, vendidos e faturamento.
-        </ModuleCard>
-        <ModuleCard title="Cadastro de evento" status="Pronto">
-          O fluxo salva dados, banner, mapa, imagem SEO, tracking, textos de conversao e status.
-        </ModuleCard>
-        <ModuleCard title="Operacao de lotes" status="Pronto">
-          Cada evento tem lotes, estoque, taxa, juros de parcelamento, cupom e destaque comercial.
-        </ModuleCard>
-      </section>
     </AdminShell>
   );
 }

@@ -140,30 +140,13 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             <label className="field">
               <span>Meta Pixel ID</span>
               <input name="metaPixelId" inputMode="numeric" placeholder="Ex: 123456789012345" />
-              <small>Somente numeros. Encontre no Gerenciador de Eventos da Meta.</small>
+              <small>Opcional.</small>
             </label>
             <label className="field">
               <span>Google Tag Manager ID</span>
               <input name="googleTagManagerId" placeholder="Ex: GTM-ABC1234" />
-              <small>Formato esperado: GTM-XXXXXXX.</small>
+              <small>Opcional.</small>
             </label>
-          </div>
-          <div className="trackingGuideGrid">
-            <div>
-              <span>Pagina do evento</span>
-              <strong>view_event / ViewContent</strong>
-              <small>Dispara quando o cliente abre a pagina publica do evento.</small>
-            </div>
-            <div>
-              <span>Pedido criado</span>
-              <strong>order_created / InitiateCheckout</strong>
-              <small>Dispara quando o cliente cria o pedido e chega ao pagamento.</small>
-            </div>
-            <div>
-              <span>Compra aprovada</span>
-              <strong>purchase / Purchase</strong>
-              <small>Dispara quando o pedido esta pago e com valor em BRL.</small>
-            </div>
           </div>
           <label className="field">
             <span>Informacoes importantes</span>
@@ -233,11 +216,13 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           </div>
         </div>
 
-        <div className="formSection">
-          <h2>Conversao da pagina publica</h2>
-          <p className="muted">
-            Campos opcionais para controlar textos comerciais da pagina. Se ficar em branco, o sistema usa os calculos automaticos.
-          </p>
+        <details className="formSection advancedSection">
+          <summary className="formSectionSummary">
+            <div>
+              <h2>Conversao da pagina publica</h2>
+              <p className="muted">Textos opcionais para prova social, urgencia e botao principal.</p>
+            </div>
+          </summary>
           <label className="field">
             <span>Prova social</span>
             <input
@@ -267,14 +252,15 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             <input disabled placeholder="Disponivel apos criar os lotes do evento" />
             <small>Depois de criar o evento e os lotes, voce podera escolher o lote destacado na edicao do evento.</small>
           </label>
-        </div>
+        </details>
 
-        <div className="formSection seoPreview">
-          <h2>SEO do evento</h2>
-          <p className="muted">
-            Se deixar em branco, o sistema gera automaticamente. Preencha apenas quando quiser uma
-            chamada personalizada para Google e compartilhamento.
-          </p>
+        <details className="formSection seoPreview advancedSection">
+          <summary className="formSectionSummary">
+            <div>
+              <h2>SEO do evento</h2>
+              <p className="muted">Opcional. Se ficar em branco, o sistema gera automaticamente.</p>
+            </div>
+          </summary>
           <label className="field">
             <span>Titulo SEO</span>
             <input name="seoTitle" maxLength={70} placeholder="Ex: Fernandinho em Salvador | Ingressos oficiais" />
@@ -319,7 +305,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               aparecer bem no Google Search.
             </p>
           </div>
-        </div>
+        </details>
 
         <div className="formActions">
           <Link className="secondaryButton" href="/admin/events">

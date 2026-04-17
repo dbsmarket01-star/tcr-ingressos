@@ -3,6 +3,7 @@
   --ink: #1b2430;
   --muted: #647184;
   --line: #d9e0e7;
+  --line-soft: #e7edf2;
   --brand: #0b7a63;
   --brand-dark: #075642;
   --accent: #bf3f55;
@@ -10,6 +11,7 @@
   --admin-panel: #202c37;
   --admin-soft: #2c3945;
   --surface: #ffffff;
+  --surface-soft: #f8fbfa;
   --warning: #f7b731;
 }
 
@@ -85,8 +87,14 @@ textarea {
   border-radius: 8px;
   display: inline-flex;
   font-weight: 700;
+  justify-content: center;
   min-height: 42px;
   padding: 0 14px;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
 }
 
 .nav a,
@@ -106,6 +114,12 @@ textarea {
   background: var(--brand-dark);
 }
 
+.button:hover,
+.secondaryButton:hover,
+.googleButton:hover {
+  transform: translateY(-1px);
+}
+
 .button:disabled,
 .secondaryButton:disabled {
   cursor: wait;
@@ -118,6 +132,11 @@ textarea {
 
 .secondaryButton {
   cursor: pointer;
+}
+
+.secondaryButton:hover {
+  background: #e7edf2;
+  border-color: #c8d3dd;
 }
 
 .googleButton {
@@ -154,7 +173,7 @@ textarea {
 
 .adminShell {
   display: grid;
-  grid-template-columns: 292px minmax(0, 1fr);
+  grid-template-columns: 260px minmax(0, 1fr);
   min-height: 100vh;
 }
 
@@ -163,36 +182,35 @@ textarea {
     linear-gradient(180deg, rgba(11, 122, 99, 0.16), transparent 210px),
     var(--admin-ink);
   color: white;
-  padding: 20px;
+  padding: 18px 16px;
 }
 
 .sidebarBrand {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.075);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
-  margin-bottom: 22px;
-  padding: 12px;
+  margin-bottom: 16px;
+  padding: 10px;
 }
 
 .sideNav {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .sideNavGroup {
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 8px;
   overflow: hidden;
 }
 
 .sideNavGroup summary {
-  border-left: 4px solid #7db9ad;
+  border-left: 3px solid #7db9ad;
   cursor: pointer;
   display: grid;
-  gap: 4px;
   list-style: none;
-  padding: 12px 36px 12px 14px;
+  padding: 11px 34px 11px 12px;
 }
 
 .sideNavGroup:nth-child(2) summary {
@@ -213,9 +231,13 @@ textarea {
 
 .sideNavGroup summary strong {
   color: #ffffff;
-  font-size: 14px;
-  letter-spacing: 0.02em;
+  font-size: 12px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.sideNavGroup summary span {
+  display: none;
 }
 
 .sideNavGroup summary::-webkit-details-marker {
@@ -225,7 +247,7 @@ textarea {
 .sideNavGroup summary::after {
   color: #b7c2ce;
   content: "+";
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 900;
   position: absolute;
   right: 12px;
@@ -249,15 +271,14 @@ textarea {
   background: rgba(8, 17, 26, 0.26);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: grid;
-  gap: 4px;
-  padding: 8px;
+  gap: 3px;
+  padding: 7px;
 }
 
 .sideNav a {
   border-radius: 6px;
-  display: grid;
-  gap: 2px;
-  padding: 10px 10px 10px 12px;
+  display: flex;
+  padding: 9px 10px 9px 12px;
   position: relative;
 }
 
@@ -275,7 +296,6 @@ textarea {
 
 .sideNav a:hover {
   background: rgba(255, 255, 255, 0.08);
-  padding-left: 16px;
 }
 
 .sideNav a:hover::before,
@@ -286,7 +306,6 @@ textarea {
 .sideNav a.active {
   background: rgba(255, 255, 255, 0.14);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-  padding-left: 16px;
 }
 
 .sideNav a.active strong {
@@ -298,7 +317,11 @@ textarea {
   font-size: 14px;
 }
 
-.sideNav span {
+.sideNav a span {
+  display: none;
+}
+
+.sideNavGroup summary span {
   color: #a9b7c5;
   font-size: 13px;
   line-height: 1.35;
@@ -306,15 +329,19 @@ textarea {
 
 .adminMain {
   min-width: 0;
-  padding: 28px;
+  padding: 24px;
 }
 
 .adminHeader {
   align-items: center;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
   display: flex;
   gap: 20px;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
+  padding: 16px;
 }
 
 .adminHeaderActions {
@@ -330,7 +357,7 @@ textarea {
 }
 
 .adminUserBadge {
-  background: white;
+  background: var(--surface-soft);
   border: 1px solid var(--line);
   border-radius: 8px;
   display: grid;
@@ -346,16 +373,16 @@ textarea {
 }
 
 .adminHeader h1 {
-  font-size: clamp(32px, 5vw, 50px);
-  line-height: 1;
-  margin: 0 0 10px;
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1.04;
+  margin: 0 0 8px;
 }
 
 .adminHeader p {
   color: var(--muted);
   line-height: 1.5;
   margin: 0;
-  max-width: 780px;
+  max-width: 720px;
 }
 
 .hero {
@@ -380,8 +407,8 @@ textarea {
   background-size: cover;
   color: white;
   display: grid;
-  min-height: clamp(360px, 48vw, 520px);
-  padding: 76px 24px 42px;
+  min-height: clamp(330px, 42vw, 480px);
+  padding: 68px 24px 38px;
   place-items: end start;
 }
 
@@ -392,17 +419,17 @@ textarea {
 }
 
 .publicHero h1 {
-  font-size: clamp(34px, 6vw, 62px);
+  font-size: clamp(34px, 5.4vw, 58px);
   letter-spacing: 0;
   line-height: 1;
-  margin: 14px 0 16px;
+  margin: 12px 0 14px;
   max-width: 820px;
 }
 
 .publicHero p {
-  font-size: 19px;
+  font-size: 18px;
   line-height: 1.45;
-  margin: 0 0 22px;
+  margin: 0 0 18px;
   max-width: 760px;
   text-wrap: balance;
 }
@@ -436,8 +463,8 @@ textarea {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 22px;
+  gap: 12px;
+  margin-top: 18px;
 }
 
 .heroActions span {
@@ -496,7 +523,7 @@ textarea {
 
 .publicContent {
   display: grid;
-  gap: 24px;
+  gap: 22px;
 }
 
 .conversionStrip {
@@ -715,18 +742,18 @@ textarea {
 
 .purchasePanel {
   background: white;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: 8px;
-  box-shadow: 0 18px 40px rgba(29, 36, 48, 0.12);
+  box-shadow: 0 18px 40px rgba(29, 36, 48, 0.1);
   display: grid;
-  gap: 16px;
-  padding: 18px;
+  gap: 14px;
+  padding: 16px;
   position: sticky;
   top: 88px;
 }
 
 .purchaseStickyLabel {
-  background: #0d2b24;
+  background: linear-gradient(135deg, #0d2b24, #124b3d);
   border-radius: 8px;
   color: white;
   display: grid;
@@ -802,10 +829,10 @@ textarea {
   border: 1px solid #d7e5df;
   border-radius: 8px;
   color: var(--brand-dark);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 900;
-  min-height: 38px;
-  padding: 8px;
+  min-height: 34px;
+  padding: 7px;
   text-align: center;
   text-transform: uppercase;
 }
@@ -815,12 +842,13 @@ textarea {
 }
 
 .lotOption {
-  border: 1px solid var(--line);
+  background: #ffffff;
+  border: 1px solid var(--line-soft);
   border-radius: 8px;
   display: grid;
-  gap: 12px;
+  gap: 10px;
   grid-template-columns: minmax(0, 1fr) 82px;
-  padding: 14px;
+  padding: 12px;
 }
 
 .lotOptionBody {
@@ -872,11 +900,11 @@ textarea {
 
 .lotPriceBox {
   background: #f8fbfa;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: 8px;
   display: grid;
   gap: 0;
-  margin: 10px 0 8px;
+  margin: 9px 0 8px;
   overflow: hidden;
 }
 
@@ -885,7 +913,7 @@ textarea {
   display: flex;
   gap: 10px;
   justify-content: space-between;
-  padding: 9px 10px;
+  padding: 8px 10px;
 }
 
 .lotPriceBox div + div {
@@ -942,7 +970,7 @@ textarea {
   display: grid;
   gap: 10px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  padding: 14px;
+  padding: 12px;
 }
 
 .checkoutEstimator div {
@@ -1004,14 +1032,34 @@ textarea {
 
 .card {
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-soft);
   border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(22, 32, 42, 0.035);
   padding: 18px;
 }
 
 .metric {
+  border-left: 4px solid var(--brand);
   display: grid;
   gap: 8px;
+}
+
+.secondaryMetrics {
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.secondaryMetrics .metric {
+  background: #fbfcfd;
+  border-left-color: #b7c2ce;
+  box-shadow: none;
+}
+
+.metric .muted {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .metric strong {
@@ -1024,7 +1072,7 @@ textarea {
   display: flex;
   gap: 16px;
   justify-content: space-between;
-  margin: 28px 0 12px;
+  margin: 24px 0 14px;
 }
 
 .inlineHeader {
@@ -1037,6 +1085,12 @@ textarea {
   margin: 0;
 }
 
+.sectionHeader p {
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 4px 0 0;
+}
+
 .linkCard {
   display: grid;
   gap: 8px;
@@ -1044,6 +1098,29 @@ textarea {
 
 .linkCard:hover {
   border-color: var(--brand);
+}
+
+.eventShowcaseCard {
+  overflow: hidden;
+  padding: 0;
+}
+
+.eventShowcaseCard img {
+  aspect-ratio: 16 / 8;
+  display: block;
+  object-fit: cover;
+  width: 100%;
+}
+
+.eventShowcaseCard .eyebrow,
+.eventShowcaseCard h3,
+.eventShowcaseCard p {
+  margin-left: 16px;
+  margin-right: 16px;
+}
+
+.eventShowcaseCard p {
+  margin-bottom: 16px;
 }
 
 .moduleCard {
@@ -1092,14 +1169,15 @@ textarea {
 .table th,
 .table td {
   border-bottom: 1px solid var(--line);
-  padding: 12px 8px;
+  padding: 11px 10px;
   text-align: left;
   vertical-align: top;
 }
 
 .table th {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
@@ -1158,11 +1236,11 @@ textarea {
 .actionRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 7px;
 }
 
 .smallButton {
-  font-size: 13px;
+  font-size: 12px;
   min-height: 34px;
   padding: 0 10px;
 }
@@ -1200,7 +1278,7 @@ textarea {
 .status {
   border-radius: 999px;
   display: inline-flex;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   padding: 5px 10px;
 }
@@ -1224,7 +1302,7 @@ textarea {
 
 .form {
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
 .loginShell {
@@ -1311,18 +1389,66 @@ textarea {
 }
 
 .formSection {
-  border-bottom: 1px solid var(--line);
+  background: #fbfcfd;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
   display: grid;
   gap: 14px;
-  padding-bottom: 18px;
+  padding: 16px;
 }
 
 .formSection:last-of-type {
-  border-bottom: 0;
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .formSection h2 {
   margin: 0;
+}
+
+.advancedSection {
+  gap: 12px;
+}
+
+.formSectionSummary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.formSectionSummary::-webkit-details-marker {
+  display: none;
+}
+
+.formSectionSummary {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.formSectionSummary::after {
+  background: #eef8f4;
+  border: 1px solid #c8eadf;
+  border-radius: 999px;
+  color: var(--brand-dark);
+  content: "Abrir";
+  font-size: 12px;
+  font-weight: 900;
+  padding: 7px 10px;
+}
+
+.advancedSection[open] .formSectionSummary {
+  border-bottom: 1px solid var(--line-soft);
+  margin-bottom: 2px;
+  padding-bottom: 14px;
+}
+
+.advancedSection[open] .formSectionSummary::after {
+  content: "Fechar";
+}
+
+.formSection > p.muted {
+  line-height: 1.45;
+  margin: -4px 0 2px;
 }
 
 .mediaUploadGrid {
@@ -1513,12 +1639,12 @@ textarea {
 }
 
 .trackingGuideGrid div {
-  background: #f7faf9;
+  background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 8px;
   display: grid;
-  gap: 6px;
-  padding: 12px;
+  gap: 5px;
+  padding: 10px;
 }
 
 .trackingGuideGrid span,
@@ -1594,6 +1720,14 @@ textarea {
   min-height: 42px;
   padding: 10px 12px;
   width: 100%;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(11, 122, 99, 0.12);
+  outline: none;
 }
 
 .detailList {
@@ -2534,6 +2668,10 @@ textarea {
   gap: 10px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-top: 12px;
+}
+
+.compactPaymentStatus {
+  grid-template-columns: 1fr;
 }
 
 .paymentStatusGrid div {

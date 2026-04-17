@@ -148,10 +148,6 @@ export default async function TicketPage({ params }: TicketPageProps) {
             <strong>{ticketStatusLabels[ticket.status]}</strong>
             <p>{ticketStatusMessages[ticket.status]}</p>
           </div>
-          <div className="paymentBox">
-            <h3>Token do QR</h3>
-            <p className="muted breakText">{ticket.qrCodeToken}</p>
-          </div>
           {lastCheckIn ? (
             <div className="paymentBox">
               <h3>Ultima validacao</h3>
@@ -169,12 +165,6 @@ export default async function TicketPage({ params }: TicketPageProps) {
             copiedLabel="Codigo copiado"
             label="Copiar codigo do ingresso"
             value={ticket.code}
-          />
-          <CopyButton
-            className="secondaryButton fullButton"
-            copiedLabel="Token copiado"
-            label="Copiar token do QR"
-            value={ticket.qrCodeToken}
           />
         </aside>
       </section>

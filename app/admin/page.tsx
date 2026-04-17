@@ -51,7 +51,7 @@ export default async function AdminPage() {
         </div>
       </section>
 
-      <section className="grid dashboardGrid spacedSection" aria-label="Status de operacao">
+      <section className="grid dashboardGrid secondaryMetrics" aria-label="Status de operacao">
         <div className="card metric">
           <span className="muted">Pedidos pendentes</span>
           <strong>{dashboard.totals.pendingOrders}</strong>
