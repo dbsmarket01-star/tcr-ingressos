@@ -210,11 +210,6 @@ function buildOrderPendingPaymentHtml(input: OrderPendingPaymentEmailInput) {
         <strong>Pedido:</strong> ${input.orderCode}<br />
         <strong>Total:</strong> ${formatCurrency(input.totalInCents)}
       </p>
-      ${
-        input.expiresAt
-          ? `<p><strong>Reserva valida ate:</strong> ${formatDate(input.expiresAt)}</p>`
-          : ""
-      }
       <p>
         <a href="${input.orderUrl}" style="background: #0e7c66; border-radius: 8px; color: white; display: inline-block; font-weight: 700; padding: 12px 18px; text-decoration: none;">
           Finalizar pagamento
@@ -234,7 +229,6 @@ function buildOrderPendingPaymentText(input: OrderPendingPaymentEmailInput) {
     `Local: ${input.venueName}`,
     `Pedido: ${input.orderCode}`,
     `Total: ${formatCurrency(input.totalInCents)}`,
-    input.expiresAt ? `Reserva valida ate: ${formatDate(input.expiresAt)}` : "",
     "",
     `Finalize o pagamento: ${input.orderUrl}`,
     "",

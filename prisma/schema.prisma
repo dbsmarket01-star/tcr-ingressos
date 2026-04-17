@@ -147,6 +147,8 @@ model CompanySettings {
   supportPhone    String?
   defaultCurrency String   @default("BRL")
   platformFeeBps  Int      @default(1000)
+  orderReservationMinutes Int @default(120)
+  cardPendingReservationMinutes Int @default(30)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

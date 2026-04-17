@@ -23,9 +23,16 @@ export async function getCompanySettings() {
       supportEmail: "contato@tcringressos.com.br",
       supportPhone: null,
       defaultCurrency: "BRL",
-      platformFeeBps: 0
+      platformFeeBps: 0,
+      orderReservationMinutes: 120,
+      cardPendingReservationMinutes: 30
     }
   });
+}
+
+export async function getOrderReservationMinutes() {
+  const settings = await getCompanySettings();
+  return settings.orderReservationMinutes;
 }
 
 export async function updateCompanySettings(input: CompanySettingsInput) {
@@ -40,7 +47,9 @@ export async function updateCompanySettings(input: CompanySettingsInput) {
       supportEmail: input.supportEmail,
       supportPhone: input.supportPhone || null,
       defaultCurrency: input.defaultCurrency.toUpperCase(),
-      platformFeeBps: Math.round(input.platformFeePercent * 100)
+      platformFeeBps: Math.round(input.platformFeePercent * 100),
+      orderReservationMinutes: input.orderReservationMinutes,
+      cardPendingReservationMinutes: input.cardPendingReservationMinutes
     },
     create: {
       id: COMPANY_SETTINGS_ID,
@@ -50,7 +59,9 @@ export async function updateCompanySettings(input: CompanySettingsInput) {
       supportEmail: input.supportEmail,
       supportPhone: input.supportPhone || null,
       defaultCurrency: input.defaultCurrency.toUpperCase(),
-      platformFeeBps: Math.round(input.platformFeePercent * 100)
+      platformFeeBps: Math.round(input.platformFeePercent * 100),
+      orderReservationMinutes: input.orderReservationMinutes,
+      cardPendingReservationMinutes: input.cardPendingReservationMinutes
     }
   });
 }

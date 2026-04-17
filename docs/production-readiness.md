@@ -14,6 +14,8 @@ Este roteiro deve ser concluido antes de abrir trafego pago para venda real.
 - Configurar `AUTH_SECRET` forte e exclusivo da instalacao.
 - Configurar `CRON_SECRET` forte.
 - Agendar `/api/maintenance/expire-orders?token=SEU_CRON_SECRET` a cada 5 minutos.
+- A rotina pode rodar a cada 5 minutos, mas o prazo real de reserva e interno e configurado em `/admin/settings`.
+- Por padrao, pedidos seguram estoque por 120 minutos; ajuste conforme a estrategia do evento.
 - Confirmar que `/robots.txt` e `/sitemap.xml` respondem no dominio final.
 - Confirmar que `/api/health` responde `status: ok` no dominio final.
 - Confirmar que `/admin`, `/api`, `/login`, `/pedido` e `/ingresso` nao devem ser indexados.

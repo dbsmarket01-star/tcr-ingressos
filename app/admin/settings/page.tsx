@@ -122,6 +122,32 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           />
           <small>Referencia administrativa. As taxas efetivas continuam configuradas por lote/ingresso.</small>
         </label>
+        <div className="grid twoColumns">
+          <label className="field">
+            <span>Reserva interna do pedido (minutos)</span>
+            <input
+              name="orderReservationMinutes"
+              type="number"
+              min="15"
+              max="1440"
+              defaultValue={companySettings.orderReservationMinutes}
+              required
+            />
+            <small>Uso interno. Define por quanto tempo o pedido segura estoque antes de expirar.</small>
+          </label>
+          <label className="field">
+            <span>Cartao pendente (minutos)</span>
+            <input
+              name="cardPendingReservationMinutes"
+              type="number"
+              min="5"
+              max="240"
+              defaultValue={companySettings.cardPendingReservationMinutes}
+              required
+            />
+            <small>Preparado para tratamentos futuros de cartao pendente ou analise manual.</small>
+          </label>
+        </div>
         <div className="formActions">
           <button className="button" type="submit">
             Salvar configuracoes

@@ -4,7 +4,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CopyButton } from "@/components/forms/CopyButton";
 import { SubmitButton } from "@/components/forms/SubmitButton";
-import { OrderCountdown } from "@/components/orders/OrderCountdown";
 import { getOrderByCode } from "@/features/orders/order.service";
 import {
   approveSimulatedPaymentAction,
@@ -165,14 +164,9 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
             <p className="muted">
               {order.status === "EXPIRED"
                 ? "Este pedido expirou e a reserva voltou para o estoque. Para comprar, volte ao evento e crie um novo pedido."
-                : `Sua reserva foi criada. O estoque dos ingressos selecionados fica reservado ate ${
-                    order.expiresAt ? formatDateTime(order.expiresAt) : "o prazo definido pela operacao"
-                  }.`}
+                : "Seu pedido foi criado. Finalize o pagamento para receber seus ingressos com QR Code."}
             </p>
           </div>
-          {order.status === "PENDING_PAYMENT" && order.expiresAt ? (
-            <OrderCountdown expiresAt={order.expiresAt.toISOString()} />
-          ) : null}
           {order.status === "PAID" ? (
             <div className="successBox">
               Pagamento aprovado. Seus ingressos foram emitidos abaixo e tambem podem ser enviados por e-mail.

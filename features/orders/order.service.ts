@@ -3,9 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { calculateCouponDiscountInCents, getValidCouponForEvent } from "@/features/coupons/coupon.service";
 import { createPublicOrderUrl, sendOrderExpiredEmail } from "@/features/email/email.service";
 import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
+import { getOrderReservationMinutes } from "@/features/settings/company-settings.service";
 import type { CheckoutOrderInput } from "./order.schema";
 
-const ORDER_EXPIRATION_IN_MINUTES = 15;
+const FALLBACK_ORDER_RESERVATION_MINUTES = 120;
 
 function createOrderCode() {
   const random = Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -14,6 +15,7 @@ function createOrderCode() {
 
 export async function createCheckoutOrder(input: CheckoutOrderInput) {
   const selectedItems = input.items.filter((item) => item.quantity > 0);
+  const reservationMinutes = await getOrderReservationMinutes().catch(() => FALLBACK_ORDER_RESERVATION_MINUTES);
 
   return prisma.$transaction(
     async (tx) => {
@@ -125,7 +127,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput) {
         ? calculateCouponDiscountInCents(coupon, amountBeforeDiscountInCents)
         : 0;
       const totalInCents = Math.max(amountBeforeDiscountInCents - discountInCents, 0);
-      const expiresAt = new Date(Date.now() + ORDER_EXPIRATION_IN_MINUTES * 60 * 1000);
+      const expiresAt = new Date(Date.now() + reservationMinutes * 60 * 1000);
 
       const order = await tx.order.create({
         data: {

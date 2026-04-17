@@ -7,7 +7,9 @@ export const companySettingsSchema = z.object({
   supportEmail: z.string().trim().email(),
   supportPhone: z.string().trim().max(32).optional(),
   defaultCurrency: z.string().trim().min(3).max(3).default("BRL"),
-  platformFeePercent: z.coerce.number().min(0).max(30).default(0)
+  platformFeePercent: z.coerce.number().min(0).max(30).default(0),
+  orderReservationMinutes: z.coerce.number().int().min(15).max(1440).default(120),
+  cardPendingReservationMinutes: z.coerce.number().int().min(5).max(240).default(30)
 });
 
 export type CompanySettingsInput = z.infer<typeof companySettingsSchema>;

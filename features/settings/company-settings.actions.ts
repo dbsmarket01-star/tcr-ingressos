@@ -27,7 +27,9 @@ export async function updateCompanySettingsAction(formData: FormData) {
     supportEmail: String(formData.get("supportEmail") ?? ""),
     supportPhone: String(formData.get("supportPhone") ?? "") || undefined,
     defaultCurrency: String(formData.get("defaultCurrency") ?? "BRL"),
-    platformFeePercent: normalizeDecimal(formData.get("platformFeePercent"))
+    platformFeePercent: normalizeDecimal(formData.get("platformFeePercent")),
+    orderReservationMinutes: String(formData.get("orderReservationMinutes") ?? "120"),
+    cardPendingReservationMinutes: String(formData.get("cardPendingReservationMinutes") ?? "30")
   });
 
   if (!parsed.success) {
