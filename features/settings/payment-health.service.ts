@@ -25,6 +25,22 @@ function getAsaasEnvironment(apiUrl?: string) {
   return apiUrl.includes("api.asaas.com") ? "Producao" : "Sandbox";
 }
 
+function getHostingProvider() {
+  return process.env.HOSTING_PROVIDER || (process.env.VERCEL ? "VERCEL" : "LOCAL");
+}
+
+function getHostingPlan() {
+  return process.env.HOSTING_PLAN || "Nao informado";
+}
+
+function getDatabaseProvider() {
+  return process.env.DATABASE_PROVIDER || "SUPABASE";
+}
+
+function getDatabasePlan() {
+  return process.env.DATABASE_PLAN || "Nao informado";
+}
+
 function isLocalUrl(value: string) {
   return value.includes("localhost") || value.includes("127.0.0.1");
 }
@@ -71,6 +87,8 @@ export async function getPaymentHealth() {
       splitRulesConfigured: dbSplitRules.length || envSplitRulesConfigured
     },
     database: {
+      provider: getDatabaseProvider(),
+      plan: getDatabasePlan(),
       databaseUrlConfigured: hasValue(process.env.DATABASE_URL),
       directUrlConfigured: hasValue(process.env.DIRECT_URL),
       usesPooling:
@@ -107,6 +125,10 @@ export async function getPaymentHealth() {
       cronSecretConfigured: hasValue(process.env.CRON_SECRET),
       productionCronProtected: process.env.NODE_ENV === "production" ? hasValue(process.env.CRON_SECRET) : true,
       nodeEnv: process.env.NODE_ENV || "development",
+      vercelEnv: process.env.VERCEL_ENV || null,
+      hostingProvider: getHostingProvider(),
+      hostingPlan: getHostingPlan(),
+      region: process.env.VERCEL_REGION || process.env.AWS_REGION || null,
       appUrlIsLocal: isLocalUrl(appUrl),
       appUrlUsesHttps: appUrl.startsWith("https://")
     },

@@ -128,11 +128,12 @@ export default async function ProductionPage() {
       <section className="grid twoColumns spacedSection">
         <article className="card">
           <span className="eyebrow">Recomendacao atual</span>
-          <h2>Escolha de deploy</h2>
+          <h2>Infraestrutura recomendada</h2>
           <p className="muted">
-            Para comecar rapido, use um provedor com deploy Node.js e variaveis de ambiente. Se escolher Vercel,
-            precisamos migrar uploads para storage externo antes da venda real. Se escolher servidor/VPS com disco
-            persistente, o upload local pode funcionar na primeira etapa.
+            Para a primeira operacao real da TCR, use Vercel Pro para a aplicacao, Supabase Pro para banco/storage,
+            dominio definitivo com HTTPS, Asaas em producao, Resend autenticado e rotina externa de expiracao a cada
+            5 minutos. AWS fica como etapa futura quando houver necessidade de containers, Redis, filas e controle fino
+            de infraestrutura.
           </p>
           <div className="formActions">
             <Link className="secondaryButton" href="/admin/events">
@@ -152,6 +153,30 @@ export default async function ProductionPage() {
           </p>
           <div className="codeBlock">{readiness.links.cron}</div>
         </article>
+      </section>
+
+      <section className="card spacedSection">
+        <span className="eyebrow">Plano de escala</span>
+        <h2>Quando pensar em AWS</h2>
+        <p className="muted">
+          Vercel Pro + Supabase Pro e uma base profissional para a pre-venda e para os primeiros eventos. A migracao para
+          AWS, containers ou Postgres dedicado deve entrar quando o volume exigir cache Redis, filas de processamento,
+          workers separados, observabilidade avancada e controle de custo em alto trafego.
+        </p>
+        <div className="settingsGrid">
+          <div>
+            <span>Agora</span>
+            <strong>Vercel Pro + Supabase Pro</strong>
+          </div>
+          <div>
+            <span>Proxima camada</span>
+            <strong>Redis, filas e monitoramento</strong>
+          </div>
+          <div>
+            <span>Escala pesada</span>
+            <strong>AWS ou containers dedicados</strong>
+          </div>
+        </div>
       </section>
 
       <section className="card spacedSection">

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { expirePendingOrders } from "@/features/orders/order.service";
 
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
 function isAuthorized(request: Request) {
   const secret = process.env.CRON_SECRET;
 

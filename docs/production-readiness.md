@@ -5,9 +5,12 @@ Este roteiro deve ser concluido antes de abrir trafego pago para venda real.
 ## Deploy
 
 - Usar tambem o roteiro detalhado em `docs/deploy-domain.md`.
+- Usar tambem o plano de infraestrutura em `docs/infrastructure-plan.md`.
+- Para primeira operacao real, recomendacao atual: Vercel Pro + Supabase Pro + Supabase Storage.
 - Configurar dominio definitivo com HTTPS.
 - Copiar `.env.example` como base e preencher as variaveis reais no provedor de deploy.
 - Configurar `NEXT_PUBLIC_APP_URL` e `APP_URL` com o dominio final.
+- Configurar `HOSTING_PROVIDER=VERCEL` e `HOSTING_PLAN=VERCEL_PRO` depois do upgrade.
 - Configurar `AUTH_SECRET` forte e exclusivo da instalacao.
 - Configurar `CRON_SECRET` forte.
 - Agendar `/api/maintenance/expire-orders?token=SEU_CRON_SECRET` a cada 5 minutos.
@@ -19,6 +22,8 @@ Este roteiro deve ser concluido antes de abrir trafego pago para venda real.
 ## Banco e ambiente
 
 - Usar banco Supabase/Postgres exclusivo da TCR.
+- Para operacao real, usar Supabase Pro ou Postgres gerenciado equivalente.
+- Configurar `DATABASE_PROVIDER=SUPABASE` e `DATABASE_PLAN=SUPABASE_PRO` depois do upgrade.
 - Nao reutilizar banco da TCR em outra bilheteria/produtora.
 - Para Elo Conference ou outra operacao, criar nova instalacao com novo banco, novas variaveis e novo dominio.
 - Conferir backups e acesso administrativo do Supabase.

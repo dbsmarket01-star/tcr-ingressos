@@ -30,6 +30,22 @@ function storageReady(health: Awaited<ReturnType<typeof getPaymentHealth>>) {
   return health.uploads.provider !== "LOCAL" || health.uploads.localPersistent;
 }
 
+function isRecommendedHostingPlan(health: Awaited<ReturnType<typeof getPaymentHealth>>) {
+  const provider = health.security.hostingProvider.toUpperCase();
+  const plan = health.security.hostingPlan.toUpperCase();
+
+  if (provider === "VERCEL") {
+    return plan.includes("PRO") || plan.includes("TEAM") || plan.includes("ENTERPRISE");
+  }
+
+  return provider !== "LOCAL" && health.security.hostingPlan !== "Nao informado";
+}
+
+function isRecommendedDatabasePlan(health: Awaited<ReturnType<typeof getPaymentHealth>>) {
+  const plan = health.database.plan.toUpperCase();
+  return plan.includes("PRO") || plan.includes("PAID") || plan.includes("TEAM") || plan.includes("DEDICATED");
+}
+
 export async function getProductionReadiness() {
   const health = await getPaymentHealth();
   const [
@@ -128,12 +144,22 @@ export async function getProductionReadiness() {
 
   const infrastructure: ReadinessItem[] = [
     {
-      label: "Hospedagem escolhida",
-      description: "Para a primeira venda real, defina se sera Vercel com storage externo ou servidor com disco persistente.",
-      status: isLocalUrl(health.appUrl) ? "BLOCKED" : "READY",
+      label: "Hospedagem de producao",
+      description: `Hospedagem atual: ${health.security.hostingProvider} (${health.security.hostingPlan}). Para venda real, a recomendacao inicial e Vercel Pro ou plano superior.`,
+      status: isLocalUrl(health.appUrl) ? "BLOCKED" : isRecommendedHostingPlan(health) ? "READY" : "WARNING",
       action: isLocalUrl(health.appUrl)
         ? "Escolher provedor e publicar a aplicacao antes de trocar o webhook definitivo."
-        : undefined
+        : isRecommendedHostingPlan(health)
+          ? undefined
+          : "Configurar HOSTING_PLAN=VERCEL_PRO apos upgrade ou escolher servidor/containers com capacidade equivalente."
+    },
+    {
+      label: "Banco em plano de producao",
+      description: `Banco atual: ${health.database.provider} (${health.database.plan}). Para trafego pago, use Supabase Pro ou Postgres gerenciado equivalente.`,
+      status: isRecommendedDatabasePlan(health) ? "READY" : "WARNING",
+      action: isRecommendedDatabasePlan(health)
+        ? undefined
+        : "Subir o Supabase para Pro antes de campanha maior e definir DATABASE_PLAN=SUPABASE_PRO nas variaveis."
     },
     {
       label: "Storage de imagens em producao",
@@ -298,6 +324,7 @@ export async function getProductionReadiness() {
       cronBearer: `${health.appUrl}/api/maintenance/expire-orders`,
       appUrl: health.appUrl,
       health: `${health.appUrl}/api/health`,
+      infrastructureDocs: "/docs/infrastructure-plan.md",
       docs: "/docs/production-readiness.md"
     }
   };

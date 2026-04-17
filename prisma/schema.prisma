@@ -328,6 +328,8 @@ model Order {
   tickets  Ticket[]
 
   @@index([eventId, status, createdAt])
+  @@index([status, expiresAt])
+  @@index([createdAt])
   @@index([customerId])
   @@index([couponId])
 }
@@ -374,7 +376,9 @@ model Payment {
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([provider, externalId])
+  @@index([externalId])
   @@index([status])
+  @@index([status, updatedAt])
 }
 
 model Ticket {
