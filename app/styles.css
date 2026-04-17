@@ -424,12 +424,12 @@ textarea {
 }
 
 .publicMeta span {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
   font-weight: 700;
   line-height: 1.25;
-  padding: 10px 12px;
+  padding: 9px 12px;
 }
 
 .heroActions {
@@ -506,12 +506,13 @@ textarea {
 }
 
 .conversionStrip div {
-  background: white;
+  background: linear-gradient(180deg, #ffffff, #f8fbfa);
   border: 1px solid var(--line);
   border-radius: 8px;
   display: grid;
   gap: 6px;
-  padding: 14px;
+  min-height: 74px;
+  padding: 13px;
 }
 
 .conversionStrip span {
@@ -523,6 +524,7 @@ textarea {
 
 .conversionStrip strong {
   line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .publicContent h2 {
@@ -553,6 +555,49 @@ textarea {
   display: grid;
   gap: 7px;
   padding: 14px;
+}
+
+.eventVenueCard {
+  align-items: stretch;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+}
+
+.venueMainInfo span {
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.venueMainInfo {
+  display: grid;
+  gap: 7px;
+  padding: 18px;
+}
+
+.venueMainInfo span {
+  color: var(--muted);
+}
+
+.venueMainInfo strong {
+  font-size: 22px;
+  line-height: 1.15;
+}
+
+.venueMainInfo p {
+  color: var(--ink);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.venueMainInfo small {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 800;
 }
 
 .sectorMap {
@@ -1209,6 +1254,28 @@ textarea {
   font-size: clamp(32px, 5vw, 46px);
   line-height: 1;
   margin: 16px 0 12px;
+}
+
+.loginSupportBox,
+.loginAccessNote {
+  background: #f7faf9;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.loginSupportBox p,
+.loginAccessNote p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.loginAccessNote strong {
+  color: var(--ink);
 }
 
 .errorBox {
@@ -3281,11 +3348,16 @@ textarea {
   }
 
   .detailGrid,
+  .eventVenueCard,
   .cardCompactGrid,
   .addressCompactGrid,
   .addressWideGrid,
   .sectorGrid {
     grid-template-columns: 1fr;
+  }
+
+  .venueMainInfo {
+    padding: 16px;
   }
 
   .orderHeroBlock {

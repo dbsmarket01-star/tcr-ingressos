@@ -12,3 +12,5 @@ yarn-error.log*
 public/uploads/*
 !public/uploads/.gitkeep
 vercel-production.env
+OFC - vercel-production.env
+asaas-vercel-fix.env

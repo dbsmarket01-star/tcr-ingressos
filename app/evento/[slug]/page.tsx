@@ -191,9 +191,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           {event.subtitle ? <p>{event.subtitle}</p> : null}
           <div className="publicMeta">
             <span>{formatDateTime(event.startsAt)}</span>
-            <span>
-              {event.venueName} - {event.city}, {event.state}
-            </span>
+            <span>{event.city}, {event.state}</span>
           </div>
           <div className="heroActions">
             <a className="button" href="#ingressos">
@@ -208,12 +206,12 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         <article className="publicContent">
           <section className="conversionStrip" aria-label="Informacoes principais de venda">
             <div>
-              <span>Data</span>
-              <strong>{formatDateTime(event.startsAt)}</strong>
+              <span>Compra</span>
+              <strong>Pix e cartao</strong>
             </div>
             <div>
-              <span>Local</span>
-              <strong>{event.city}, {event.state}</strong>
+              <span>Entrega</span>
+              <strong>QR Code automatico</strong>
             </div>
             <div>
               <span>Vendidos</span>
@@ -231,25 +229,15 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           </section>
 
           <section className="contentBlock">
-            <h2>Detalhes</h2>
-            <div className="detailGrid">
-              <div>
-                <span className="muted">Data e horario</span>
-                <strong>{formatDateTime(event.startsAt)}</strong>
-              </div>
-              <div>
-                <span className="muted">Local</span>
+            <h2>Local do evento</h2>
+            <div className="eventVenueCard">
+              <div className="venueMainInfo">
+                <span>Onde acontece</span>
                 <strong>{event.venueName}</strong>
-              </div>
-              <div>
-                <span className="muted">Endereco</span>
-                <strong>{event.venueAddress}</strong>
-              </div>
-              <div>
-                <span className="muted">Cidade</span>
-                <strong>
+                <p>{event.venueAddress}</p>
+                <small>
                   {event.city}, {event.state}
-                </strong>
+                </small>
               </div>
             </div>
           </section>

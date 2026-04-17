@@ -279,7 +279,8 @@ export class AsaasPaymentProvider implements PaymentProvider {
         email: input.customerEmail,
         cpfCnpj: input.customerDocument.replace(/\D/g, ""),
         mobilePhone: input.customerPhone?.replace(/\D/g, "") || undefined,
-        externalReference: input.orderCode
+        externalReference: input.orderCode,
+        notificationDisabled: true
       })
     });
   }

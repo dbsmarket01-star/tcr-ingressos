@@ -45,6 +45,11 @@ export default async function ForgotPasswordPage({ searchParams }: ForgotPasswor
         <Link className="textLink" href="/login">
           Voltar para o login
         </Link>
+
+        <div className="loginAccessNote">
+          <strong>Nao tem acesso?</strong>
+          <p>Solicite ao proprietario da TCR Ingressos. O cadastro de usuarios internos nao fica aberto ao publico.</p>
+        </div>
       </section>
     </main>
   );

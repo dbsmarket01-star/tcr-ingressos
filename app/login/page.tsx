@@ -70,9 +70,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </button>
         </form>
 
-        <Link className="textLink" href="/login/forgot">
-          Esqueci minha senha
-        </Link>
+        <div className="loginSupportBox">
+          <Link className="secondaryButton fullButton" href="/login/forgot">
+            Recuperar senha
+          </Link>
+          <p>
+            Novo acesso administrativo deve ser liberado pelo proprietario dentro do painel, em Usuarios.
+          </p>
+        </div>
       </section>
     </main>
   );
