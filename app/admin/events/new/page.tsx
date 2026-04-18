@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { BannerPositionField } from "@/components/forms/BannerPositionField";
 import { ImageUploadField } from "@/components/forms/ImageUploadField";
 import { requirePermission } from "@/features/auth/auth.service";
 import { createEventAction } from "@/features/events/event.actions";
@@ -61,31 +62,17 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               <small>Use URL apenas se a imagem ja estiver hospedada fora do sistema.</small>
             </label>
           </div>
-          <label className="field">
-            <span>Enquadramento do banner</span>
-            <select name="bannerPosition" defaultValue="center center">
-              <option value="center center">Centro</option>
-              <option value="left top">Superior esquerdo</option>
-              <option value="center top">Superior centro</option>
-              <option value="right top">Superior direito</option>
-              <option value="left center">Meio esquerdo</option>
-              <option value="right center">Meio direito</option>
-              <option value="left bottom">Inferior esquerdo</option>
-              <option value="center bottom">Inferior centro</option>
-              <option value="right bottom">Inferior direito</option>
-            </select>
-            <small>Use este ajuste quando o rosto, artista ou informacao principal ficar cortado na pagina publica.</small>
-          </label>
+          <BannerPositionField defaultValue="center top" />
           <div className="mediaSizingGuide">
             <div>
               <span>Banner topo</span>
               <strong>1920 x 840 px</strong>
-              <p>O topo usa recorte responsivo. Deixe texto e rosto importantes no centro da arte.</p>
+              <p>Use arte horizontal. Para eventos com palestrante/artista, deixe rosto e texto no centro superior.</p>
             </div>
             <div>
               <span>Area segura</span>
-              <strong>Centro 70%</strong>
-              <p>Evite colocar informacoes vitais nas bordas, pois celular e desktop cortam de formas diferentes.</p>
+              <strong>Centro 80%</strong>
+              <p>Evite informacoes vitais coladas nas bordas. Use o enquadramento para corrigir o recorte final.</p>
             </div>
           </div>
         </div>

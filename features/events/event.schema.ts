@@ -4,6 +4,8 @@ const imageUrlSchema = z.string().url().optional().or(z.literal("")).or(z.string
 const bannerPositionSchema = z
   .enum([
     "left top",
+    "center 18%",
+    "center 28%",
     "center top",
     "right top",
     "left center",
