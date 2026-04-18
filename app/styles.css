@@ -3415,6 +3415,86 @@ textarea {
   gap: 14px;
 }
 
+.paymentChoiceList {
+  display: grid;
+  gap: 12px;
+}
+
+.paymentChoiceDisclosure {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.paymentChoiceDisclosure[open] {
+  border-color: #b7dace;
+  box-shadow: 0 12px 24px rgba(22, 32, 42, 0.05);
+}
+
+.paymentChoiceDisclosure summary {
+  align-items: center;
+  cursor: pointer;
+  display: grid;
+  gap: 4px 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  list-style: none;
+  min-height: 70px;
+  padding: 14px;
+}
+
+.paymentChoiceDisclosure summary::-webkit-details-marker {
+  display: none;
+}
+
+.paymentChoiceDisclosure summary::after {
+  background: #eef8f4;
+  border: 1px solid #c8eadf;
+  border-radius: 999px;
+  color: var(--brand-dark);
+  content: "Abrir";
+  font-size: 12px;
+  font-weight: 900;
+  grid-column: 2;
+  grid-row: 2;
+  padding: 6px 9px;
+}
+
+.paymentChoiceDisclosure[open] summary::after {
+  content: "Fechar";
+}
+
+.paymentChoiceDisclosure summary span {
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.paymentChoiceDisclosure summary strong {
+  background: #eef8f4;
+  border-radius: 999px;
+  color: var(--brand-dark);
+  font-size: 13px;
+  padding: 7px 9px;
+  white-space: nowrap;
+}
+
+.paymentChoiceDisclosure summary small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.paymentChoiceDisclosure .pixBox,
+.paymentChoiceDisclosure .cardForm {
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  border-radius: 0;
+  box-shadow: inset 4px 0 0 var(--brand);
+}
+
 .paymentSteps {
   display: grid;
   gap: 8px;

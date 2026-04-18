@@ -315,177 +315,204 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                   <strong>Receba o QR Code</strong>
                 </div>
               </div>
-              {order.payment?.pixQrCodeImage && order.payment?.pixQrCodePayload ? (
-                <div className="pixBox">
-                <div className="paymentChoiceHeader">
-                  <div>
-                    <h3>Pix</h3>
-                    <span>Confirmacao automatica apos o pagamento</span>
-                  </div>
-                  <strong>{formatCurrency(baseTotalInCents)}</strong>
-                </div>
-                  <ol className="paymentInstructionList">
-                    <li>Abra o app do seu banco.</li>
-                    <li>Escaneie o QR Code ou use o Pix copia e cola.</li>
-                    <li>Apos a confirmacao, seus ingressos sao liberados automaticamente.</li>
-                  </ol>
-                  <img
-                    alt="QR Code Pix para pagamento do pedido"
-                    src={`data:image/png;base64,${order.payment.pixQrCodeImage}`}
-                  />
-                  {order.payment.pixExpiresAt ? (
-                    <p className="muted">Valido ate {formatDateTime(order.payment.pixExpiresAt)}</p>
-                  ) : null}
-                  <label className="field">
-                    <span>Pix copia e cola</span>
-                    <textarea readOnly rows={5} value={order.payment.pixQrCodePayload} />
-                  </label>
-                  <CopyButton
-                    className="secondaryButton fullButton"
-                    copiedLabel="Codigo Pix copiado"
-                    label="Copiar codigo Pix"
-                    value={order.payment.pixQrCodePayload}
-                  />
-                </div>
-              ) : null}
-              {!order.payment?.pixQrCodePayload ? (
-                <form action={startPaymentAction}>
-                  <input type="hidden" name="orderCode" value={order.code} />
-                  <SubmitButton className="button fullButton" pendingText="Preparando pagamento...">
-                    {order.payment?.checkoutUrl ? "Abrir pagamento seguro" : "Gerar Pix agora"}
-                  </SubmitButton>
-                </form>
-              ) : null}
-              {order.payment?.pixQrCodePayload ? (
-                <p className="checkoutFootnote">
-                  A confirmacao e automatica. Depois de pagar, aguarde alguns instantes; os
-                  ingressos serao liberados assim que o pagamento for aprovado.
-                </p>
-              ) : null}
-              {isAsaasCheckout ? (
-                <form action={payWithCreditCardAction} className="cardForm">
-                  <div className="cardFormHeader">
-                    <div>
-                      <h3>Cartao de credito</h3>
-                      <span>Pagamento seguro com confirmacao automatica</span>
-                    </div>
+
+              <div className="paymentChoiceList">
+                <details className="paymentChoiceDisclosure" open={Boolean(order.payment?.pixQrCodePayload)}>
+                  <summary>
+                    <span>Pix</span>
                     <strong>{formatCurrency(baseTotalInCents)}</strong>
-                  </div>
-                  <div className="cardSecurityNote">
-                    <span>Checkout transparente</span>
-                    <span>Ambiente seguro de pagamento</span>
-                    <span>Ingressos liberados apos aprovacao</span>
-                  </div>
-                  <input type="hidden" name="orderCode" value={order.code} />
-
-                  <div className="cardFormSection">
-                    <h4>Dados do cartao</h4>
-                    <label className="field">
-                      <span>Numero do cartao</span>
-                      <input
-                        autoComplete="cc-number"
-                        inputMode="numeric"
-                        name="number"
-                        placeholder="0000 0000 0000 0000"
-                        required
-                      />
-                    </label>
-                    <div className="cardCompactGrid">
-                      <label className="field">
-                        <span>Mes</span>
-                        <input
-                          autoComplete="cc-exp-month"
-                          inputMode="numeric"
-                          maxLength={2}
-                          name="expiryMonth"
-                          placeholder="MM"
-                          required
-                        />
-                      </label>
-                      <label className="field">
-                        <span>Ano</span>
-                        <input
-                          autoComplete="cc-exp-year"
-                          inputMode="numeric"
-                          maxLength={4}
-                          name="expiryYear"
-                          placeholder="AAAA"
-                          required
-                        />
-                      </label>
-                      <label className="field">
-                        <span>CVV</span>
-                        <input
-                          autoComplete="cc-csc"
-                          inputMode="numeric"
-                          maxLength={4}
-                          name="ccv"
-                          placeholder="123"
-                          required
-                        />
-                      </label>
+                    <small>QR Code e copia e cola com confirmacao automatica</small>
+                  </summary>
+                  <div className="pixBox">
+                    <div className="paymentChoiceHeader">
+                      <div>
+                        <h3>Pix</h3>
+                        <span>Confirmacao automatica apos o pagamento</span>
+                      </div>
+                      <strong>{formatCurrency(baseTotalInCents)}</strong>
                     </div>
-                    <label className="field">
-                      <span>Parcelas</span>
-                      <select name="installments" defaultValue="1">
-                        {installmentOptions.map((option) => (
-                          <option key={option.installment} value={option.installment}>
-                            {option.installment}x de {formatCurrency(option.installmentValueInCents)}
-                            {option.interestInCents > 0 ? ` - + ${formatCurrency(option.interestInCents)} juros` : " - sem juros"}
-                          </option>
-                        ))}
-                      </select>
-                      <small>
-                        Juros aparecem apenas quando a parcela configurada para este ingresso exigir acrescimo.
-                      </small>
-                    </label>
-                  </div>
-
-                  <div className="cardFormSection">
-                    <h4>Dados do titular</h4>
-                    <label className="field">
-                      <span>Nome do titular</span>
-                      <input autoComplete="cc-name" name="holderName" required />
-                    </label>
-                    <label className="field">
-                      <span>CPF/CNPJ do titular</span>
-                      <input
-                        inputMode="numeric"
-                        name="holderCpfCnpj"
-                        required
-                        defaultValue={order.customer.document || ""}
-                      />
-                    </label>
-                    <div className="addressWideGrid">
-                      <label className="field">
-                        <span>CEP</span>
-                        <input
-                          autoComplete="postal-code"
-                          inputMode="numeric"
-                          name="holderPostalCode"
-                          placeholder="00000-000"
-                          required
+                    {order.payment?.pixQrCodeImage && order.payment?.pixQrCodePayload ? (
+                      <>
+                        <ol className="paymentInstructionList">
+                          <li>Abra o app do seu banco.</li>
+                          <li>Escaneie o QR Code ou use o Pix copia e cola.</li>
+                          <li>Apos a confirmacao, seus ingressos sao liberados automaticamente.</li>
+                        </ol>
+                        <img
+                          alt="QR Code Pix para pagamento do pedido"
+                          src={`data:image/png;base64,${order.payment.pixQrCodeImage}`}
                         />
-                      </label>
-                      <label className="field">
-                        <span>Numero</span>
-                        <input name="holderAddressNumber" required />
-                      </label>
-                    </div>
-                    <label className="field">
-                      <span>Complemento</span>
-                      <input name="holderAddressComplement" placeholder="Opcional" />
-                    </label>
+                        {order.payment.pixExpiresAt ? (
+                          <p className="muted">Valido ate {formatDateTime(order.payment.pixExpiresAt)}</p>
+                        ) : null}
+                        <label className="field">
+                          <span>Pix copia e cola</span>
+                          <textarea readOnly rows={5} value={order.payment.pixQrCodePayload} />
+                        </label>
+                        <CopyButton
+                          className="secondaryButton fullButton"
+                          copiedLabel="Codigo Pix copiado"
+                          label="Copiar codigo Pix"
+                          value={order.payment.pixQrCodePayload}
+                        />
+                        <p className="checkoutFootnote">
+                          A confirmacao e automatica. Depois de pagar, aguarde alguns instantes; os
+                          ingressos serao liberados assim que o pagamento for aprovado.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <ol className="paymentInstructionList">
+                          <li>Clique em gerar Pix.</li>
+                          <li>Na proxima tela, use o QR Code ou o codigo copia e cola.</li>
+                          <li>Os ingressos sao liberados automaticamente apos a aprovacao.</li>
+                        </ol>
+                        <form action={startPaymentAction}>
+                          <input type="hidden" name="orderCode" value={order.code} />
+                          <SubmitButton className="button fullButton" pendingText="Preparando Pix...">
+                            Gerar Pix agora
+                          </SubmitButton>
+                        </form>
+                      </>
+                    )}
                   </div>
+                </details>
 
-                  <SubmitButton className="button fullButton" pendingText="Processando cartao...">
-                    Pagar com cartao agora
-                  </SubmitButton>
-                  <p className="checkoutFootnote">
-                    A cobranca sera enviada para aprovacao automatica. Se o banco solicitar confirmacao, conclua no app do cartao.
-                  </p>
-                </form>
-              ) : null}
+                {isAsaasCheckout ? (
+                  <details className="paymentChoiceDisclosure">
+                    <summary>
+                      <span>Cartao de credito</span>
+                      <strong>A partir de {formatCurrency(installmentOptions[0].installmentValueInCents)}</strong>
+                      <small>Escolha as parcelas e veja juros antes de confirmar</small>
+                    </summary>
+                    <form action={payWithCreditCardAction} className="cardForm">
+                      <div className="cardFormHeader">
+                        <div>
+                          <h3>Cartao de credito</h3>
+                          <span>Pagamento seguro com confirmacao automatica</span>
+                        </div>
+                        <strong>{formatCurrency(baseTotalInCents)}</strong>
+                      </div>
+                      <div className="cardSecurityNote">
+                        <span>Checkout transparente</span>
+                        <span>Ambiente seguro de pagamento</span>
+                        <span>Ingressos liberados apos aprovacao</span>
+                      </div>
+                      <input type="hidden" name="orderCode" value={order.code} />
+
+                      <div className="cardFormSection">
+                        <h4>Dados do cartao</h4>
+                        <label className="field">
+                          <span>Numero do cartao</span>
+                          <input
+                            autoComplete="cc-number"
+                            inputMode="numeric"
+                            name="number"
+                            placeholder="0000 0000 0000 0000"
+                            required
+                          />
+                        </label>
+                        <div className="cardCompactGrid">
+                          <label className="field">
+                            <span>Mes</span>
+                            <input
+                              autoComplete="cc-exp-month"
+                              inputMode="numeric"
+                              maxLength={2}
+                              name="expiryMonth"
+                              placeholder="MM"
+                              required
+                            />
+                          </label>
+                          <label className="field">
+                            <span>Ano</span>
+                            <input
+                              autoComplete="cc-exp-year"
+                              inputMode="numeric"
+                              maxLength={4}
+                              name="expiryYear"
+                              placeholder="AAAA"
+                              required
+                            />
+                          </label>
+                          <label className="field">
+                            <span>CVV</span>
+                            <input
+                              autoComplete="cc-csc"
+                              inputMode="numeric"
+                              maxLength={4}
+                              name="ccv"
+                              placeholder="123"
+                              required
+                            />
+                          </label>
+                        </div>
+                        <label className="field">
+                          <span>Parcelas</span>
+                          <select name="installments" defaultValue="1">
+                            {installmentOptions.map((option) => (
+                              <option key={option.installment} value={option.installment}>
+                                {option.installment}x de {formatCurrency(option.installmentValueInCents)}
+                                {option.interestInCents > 0
+                                  ? ` - + ${formatCurrency(option.interestInCents)} juros`
+                                  : " - sem juros"}
+                              </option>
+                            ))}
+                          </select>
+                          <small>
+                            Juros aparecem apenas quando a parcela configurada para este ingresso exigir acrescimo.
+                          </small>
+                        </label>
+                      </div>
+
+                      <div className="cardFormSection">
+                        <h4>Dados do titular</h4>
+                        <label className="field">
+                          <span>Nome do titular</span>
+                          <input autoComplete="cc-name" name="holderName" required />
+                        </label>
+                        <label className="field">
+                          <span>CPF/CNPJ do titular</span>
+                          <input
+                            inputMode="numeric"
+                            name="holderCpfCnpj"
+                            required
+                            defaultValue={order.customer.document || ""}
+                          />
+                        </label>
+                        <div className="addressWideGrid">
+                          <label className="field">
+                            <span>CEP</span>
+                            <input
+                              autoComplete="postal-code"
+                              inputMode="numeric"
+                              name="holderPostalCode"
+                              placeholder="00000-000"
+                              required
+                            />
+                          </label>
+                          <label className="field">
+                            <span>Numero</span>
+                            <input name="holderAddressNumber" required />
+                          </label>
+                        </div>
+                        <label className="field">
+                          <span>Complemento</span>
+                          <input name="holderAddressComplement" placeholder="Opcional" />
+                        </label>
+                      </div>
+
+                      <SubmitButton className="button fullButton" pendingText="Processando cartao...">
+                        Pagar com cartao agora
+                      </SubmitButton>
+                      <p className="checkoutFootnote">
+                        A cobranca sera enviada para aprovacao automatica. Se o banco solicitar
+                        confirmacao, conclua no app do cartao.
+                      </p>
+                    </form>
+                  </details>
+                ) : null}
+              </div>
               {showPaymentSimulator && order.payment?.provider === "SIMULATED" ? (
                 <div className="paymentSimulator">
                   <span className="muted">Simulador de retorno do provedor</span>
