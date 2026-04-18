@@ -389,23 +389,51 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                   Continuar com Google
                 </Link>
                 {buyerProfile ? (
-                  <p className="success">Dados preenchidos com sua conta Google: {buyerProfile.email}</p>
+                  <p className="success">
+                    Dados preenchidos com sua conta Google: {buyerProfile.email}
+                    {buyerProfile.phone ? " - telefone recuperado do seu cadastro anterior." : ""}
+                  </p>
                 ) : null}
                 <label className="field">
                   <span>Nome completo</span>
-                  <input name="buyerName" required defaultValue={buyerProfile?.name || ""} />
+                  <input
+                    name="buyerName"
+                    autoComplete="name"
+                    required
+                    defaultValue={buyerProfile?.name || ""}
+                  />
                 </label>
                 <label className="field">
-                  <span>Email</span>
-                  <input name="buyerEmail" type="email" required defaultValue={buyerProfile?.email || ""} />
+                  <span>Email para receber os ingressos</span>
+                  <input
+                    name="buyerEmail"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    defaultValue={buyerProfile?.email || ""}
+                  />
+                  <small>O pedido, o comprovante e os QR Codes serao enviados para este e-mail.</small>
                 </label>
                 <label className="field">
                   <span>CPF</span>
-                  <input name="buyerDocument" required />
+                  <input
+                    name="buyerDocument"
+                    autoComplete="off"
+                    inputMode="numeric"
+                    required
+                    defaultValue={buyerProfile?.document || ""}
+                  />
                 </label>
                 <label className="field">
                   <span>Telefone</span>
-                  <input name="buyerPhone" />
+                  <input
+                    name="buyerPhone"
+                    type="tel"
+                    autoComplete="tel"
+                    inputMode="tel"
+                    defaultValue={buyerProfile?.phone || ""}
+                  />
+                  <small>Usado apenas para suporte do pedido, caso seja necessario.</small>
                 </label>
               </div>
 

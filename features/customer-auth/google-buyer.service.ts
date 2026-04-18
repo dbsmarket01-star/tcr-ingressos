@@ -10,6 +10,8 @@ const STATE_COOKIE_MAX_AGE_SECONDS = 60 * 10;
 export type BuyerProfile = {
   name: string;
   email: string;
+  document?: string | null;
+  phone?: string | null;
   picture?: string;
 };
 
