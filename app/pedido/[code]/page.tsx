@@ -70,6 +70,8 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
   const paymentError = typeof query.paymentError === "string" ? query.paymentError : null;
   const showPaymentSimulator =
     process.env.NODE_ENV !== "production" && process.env.SHOW_PAYMENT_SIMULATOR === "true";
+  const isAsaasCheckout =
+    process.env.PAYMENT_PROVIDER === "ASAAS" || order.payment?.provider === "ASAAS";
   const baseTotalInCents = order.subtotalInCents + order.serviceFeeInCents - order.discountInCents;
   const installmentOptions = Array.from({ length: 10 }, (_, index) => index + 1).map((installment) => {
     const interestInCents = order.items.reduce(
@@ -360,7 +362,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                   ingressos serao liberados assim que o pagamento for aprovado.
                 </p>
               ) : null}
-              {order.payment?.provider === "ASAAS" ? (
+              {isAsaasCheckout ? (
                 <form action={payWithCreditCardAction} className="cardForm">
                   <div className="cardFormHeader">
                     <div>
