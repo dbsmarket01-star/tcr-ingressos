@@ -808,6 +808,182 @@ textarea {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.dashboardFilterPanel {
+  align-items: end;
+  background:
+    linear-gradient(135deg, rgba(15, 124, 98, 0.08), rgba(24, 50, 74, 0.05)),
+    var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(22, 32, 42, 0.035);
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  padding: 20px;
+}
+
+.dashboardFilterPanel h2,
+.dashboardFilterPanel p {
+  margin: 0;
+}
+
+.dashboardFilterPanel h2 {
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1;
+}
+
+.dashboardFilterPanel p {
+  color: var(--muted);
+  line-height: 1.45;
+  margin-top: 8px;
+}
+
+.dashboardDateForm {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.dashboardDateForm label {
+  display: grid;
+  gap: 6px;
+}
+
+.dashboardDateForm span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.dashboardDateForm input {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-height: 42px;
+  min-width: 150px;
+  padding: 0 12px;
+}
+
+.dashboardQuickFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+
+.dashboardPrimaryGrid {
+  margin-top: 18px;
+}
+
+.dashboardHeroMetric {
+  background: linear-gradient(160deg, #0c6b55, #0d3d34);
+  border-color: #0c6b55;
+  color: white;
+}
+
+.dashboardHeroMetric .muted,
+.dashboardHeroMetric small {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.metric small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dashboardInsightsGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  margin-top: 18px;
+}
+
+.dashboardPanel {
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(22, 32, 42, 0.035);
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+}
+
+.donutChart {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 24px white;
+  justify-self: center;
+  max-width: 180px;
+  width: 52%;
+}
+
+.chartLegend {
+  display: grid;
+  gap: 10px;
+}
+
+.chartLegend div {
+  align-items: center;
+  display: grid;
+  gap: 4px 10px;
+  grid-template-columns: 12px minmax(0, 1fr);
+}
+
+.chartLegend strong {
+  color: var(--ink);
+}
+
+.chartLegend small {
+  color: var(--muted);
+  grid-column: 2;
+}
+
+.legendDot {
+  border-radius: 50%;
+  display: block;
+  height: 10px;
+  width: 10px;
+}
+
+.pixDot {
+  background: #0f7c62;
+}
+
+.cardDot {
+  background: #18324a;
+}
+
+.otherDot {
+  background: #a9b7c2;
+}
+
+.stackedBar {
+  background: #18324a;
+  border-radius: 999px;
+  height: 18px;
+  overflow: hidden;
+}
+
+.stackedBar span {
+  background: #0f7c62;
+  display: block;
+  height: 100%;
+}
+
+.dashboardNote {
+  background: #f7faf9;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 12px;
+}
+
 .cardsGrid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -3806,6 +3982,8 @@ textarea {
   }
 
   .dashboardGrid,
+  .dashboardFilterPanel,
+  .dashboardInsightsGrid,
   .financeFiltersForm,
   .financeStatusGrid,
   .cardsGrid,
@@ -3829,6 +4007,16 @@ textarea {
   .ticketPageGrid,
   .twoColumns {
     grid-template-columns: 1fr;
+  }
+
+  .dashboardDateForm {
+    justify-content: flex-start;
+  }
+
+  .dashboardDateForm label,
+  .dashboardDateForm input,
+  .dashboardDateForm button {
+    width: 100%;
   }
 
   .publicHero {

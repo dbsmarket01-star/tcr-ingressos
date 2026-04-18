@@ -23,50 +23,195 @@ const orderStatusLabels = {
   REFUNDED: "Reembolsado"
 };
 
-export default async function AdminPage() {
+type AdminPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function getParamValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function buildPeriodPreset(days: number) {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - (days - 1));
+
+  return {
+    startDate: start.toISOString().slice(0, 10),
+    endDate: end.toISOString().slice(0, 10)
+  };
+}
+
+function buildCurrentMonthPreset() {
+  const end = new Date();
+  const start = new Date(end.getFullYear(), end.getMonth(), 1);
+
+  return {
+    startDate: start.toISOString().slice(0, 10),
+    endDate: end.toISOString().slice(0, 10)
+  };
+}
+
+function periodHref(period: { startDate: string; endDate: string }) {
+  return `/admin?startDate=${period.startDate}&endDate=${period.endDate}`;
+}
+
+export default async function AdminPage({ searchParams }: AdminPageProps) {
   await requirePermission("DASHBOARD");
-  const dashboard = await getDashboardMetrics();
+  const params = searchParams ? await searchParams : {};
+  const startDate = getParamValue(params.startDate);
+  const endDate = getParamValue(params.endDate);
+  const dashboard = await getDashboardMetrics({ startDate, endDate });
+  const oneDay = buildPeriodPreset(1);
+  const sevenDays = buildPeriodPreset(7);
+  const thirtyDays = buildPeriodPreset(30);
+  const currentMonth = buildCurrentMonthPreset();
+  const customerTotal =
+    dashboard.periodMetrics.newCustomerOrders + dashboard.periodMetrics.returningCustomerOrders;
+  const pixRate = dashboard.periodMetrics.paymentMethods.pix.rate;
+  const cardRate = dashboard.periodMetrics.paymentMethods.card.rate;
+  const otherRate = dashboard.periodMetrics.paymentMethods.other.rate;
 
   return (
     <AdminShell
       title="Dashboard"
-      description="Visao real da operacao: vendas, pedidos, ingressos, check-ins e desempenho por evento."
+      description="Analise vendas, faturamento, meios de pagamento e comportamento de clientes por periodo."
     >
-      <section className="grid dashboardGrid" aria-label="Metricas principais">
-        <div className="card metric">
-          <span className="muted">Faturamento pago</span>
-          <strong>{formatCurrency(dashboard.totals.revenueInCents)}</strong>
+      <section className="dashboardFilterPanel" aria-label="Filtro do dashboard">
+        <div>
+          <span className="eyebrow">Periodo de vendas</span>
+          <h2>Resumo de {dashboard.period.startDate} ate {dashboard.period.endDate}</h2>
+          <p>Os valores consideram pagamentos aprovados dentro do periodo selecionado.</p>
         </div>
-        <div className="card metric">
-          <span className="muted">Pedidos pagos</span>
-          <strong>{dashboard.totals.paidOrders}</strong>
-        </div>
-        <div className="card metric">
-          <span className="muted">Ingressos emitidos</span>
-          <strong>{dashboard.totals.ticketsIssued}</strong>
-        </div>
-        <div className="card metric">
-          <span className="muted">Check-ins aprovados</span>
-          <strong>{dashboard.totals.checkInsApproved}</strong>
+
+        <form className="dashboardDateForm" method="get">
+          <label>
+            <span>Inicio</span>
+            <input name="startDate" type="date" defaultValue={dashboard.period.startDate} />
+          </label>
+          <label>
+            <span>Fim</span>
+            <input name="endDate" type="date" defaultValue={dashboard.period.endDate} />
+          </label>
+          <button className="button" type="submit">
+            Filtrar
+          </button>
+        </form>
+
+        <div className="dashboardQuickFilters" aria-label="Atalhos de periodo">
+          <Link className="secondaryButton smallButton" href={periodHref(oneDay)}>
+            Hoje
+          </Link>
+          <Link className="secondaryButton smallButton" href={periodHref(sevenDays)}>
+            7 dias
+          </Link>
+          <Link className="secondaryButton smallButton" href={periodHref(thirtyDays)}>
+            30 dias
+          </Link>
+          <Link className="secondaryButton smallButton" href={periodHref(currentMonth)}>
+            Mes atual
+          </Link>
         </div>
       </section>
 
-      <section className="grid dashboardGrid secondaryMetrics" aria-label="Status de operacao">
-        <div className="card metric">
-          <span className="muted">Pedidos pendentes</span>
-          <strong>{dashboard.totals.pendingOrders}</strong>
+      <section className="grid dashboardGrid dashboardPrimaryGrid" aria-label="Metricas de vendas do periodo">
+        <div className="card metric dashboardHeroMetric">
+          <span className="muted">Faturamento aprovado</span>
+          <strong>{formatCurrency(dashboard.totals.revenueInCents)}</strong>
+          <small>{dashboard.totals.paidOrders} pedido(s) pago(s) no periodo</small>
         </div>
         <div className="card metric">
-          <span className="muted">Pedidos cancelados</span>
-          <strong>{dashboard.totals.canceledOrders}</strong>
+          <span className="muted">Ticket medio</span>
+          <strong>{formatCurrency(dashboard.periodMetrics.averageTicketInCents)}</strong>
+          <small>Media por pedido aprovado</small>
         </div>
         <div className="card metric">
-          <span className="muted">Ingressos ativos</span>
-          <strong>{dashboard.totals.ticketsActive}</strong>
+          <span className="muted">Pedidos criados</span>
+          <strong>{dashboard.periodMetrics.ordersCreated}</strong>
+          <small>{dashboard.periodMetrics.approvedRate}% pagos</small>
         </div>
         <div className="card metric">
-          <span className="muted">Bloqueios no check-in</span>
-          <strong>{dashboard.totals.checkInsBlocked}</strong>
+          <span className="muted">Clientes unicos</span>
+          <strong>{dashboard.periodMetrics.uniqueCustomers}</strong>
+          <small>{dashboard.periodMetrics.newCustomerRate}% novos compradores</small>
+        </div>
+      </section>
+
+      <section className="dashboardInsightsGrid" aria-label="Detalhamento de vendas">
+        <div className="dashboardPanel">
+          <div className="sectionHeader inlineHeader">
+            <div>
+              <h2>Meios de pagamento</h2>
+              <p>Distribuicao dos pedidos aprovados.</p>
+            </div>
+          </div>
+          <div
+            className="donutChart"
+            style={{
+              background: `conic-gradient(#0f7c62 0 ${pixRate}%, #18324a ${pixRate}% ${
+                pixRate + cardRate
+              }%, #a9b7c2 ${pixRate + cardRate}% ${pixRate + cardRate + otherRate}%, #eef2f5 0)`
+            }}
+            aria-hidden="true"
+          />
+          <div className="chartLegend">
+            <div>
+              <span className="legendDot pixDot" />
+              <strong>Pix</strong>
+              <small>
+                {dashboard.periodMetrics.paymentMethods.pix.count} pedido(s) ·{" "}
+                {formatCurrency(dashboard.periodMetrics.paymentMethods.pix.revenueInCents)}
+              </small>
+            </div>
+            <div>
+              <span className="legendDot cardDot" />
+              <strong>Cartao</strong>
+              <small>
+                {dashboard.periodMetrics.paymentMethods.card.count} pedido(s) ·{" "}
+                {formatCurrency(dashboard.periodMetrics.paymentMethods.card.revenueInCents)}
+              </small>
+            </div>
+            {dashboard.periodMetrics.paymentMethods.other.count > 0 ? (
+              <div>
+                <span className="legendDot otherDot" />
+                <strong>Outros</strong>
+                <small>{dashboard.periodMetrics.paymentMethods.other.count} pedido(s)</small>
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="dashboardPanel">
+          <div className="sectionHeader inlineHeader">
+            <div>
+              <h2>Clientes</h2>
+              <p>Novos compradores versus retornos no periodo.</p>
+            </div>
+          </div>
+          <div className="stackedBar" aria-label={`${dashboard.periodMetrics.newCustomerRate}% novos clientes`}>
+            <span style={{ width: `${dashboard.periodMetrics.newCustomerRate}%` }} />
+          </div>
+          <div className="chartLegend">
+            <div>
+              <span className="legendDot pixDot" />
+              <strong>Novos</strong>
+              <small>
+                {dashboard.periodMetrics.newCustomerOrders} pedido(s) ·{" "}
+                {dashboard.periodMetrics.newCustomerRate}%
+              </small>
+            </div>
+            <div>
+              <span className="legendDot cardDot" />
+              <strong>Recorrentes</strong>
+              <small>
+                {dashboard.periodMetrics.returningCustomerOrders} pedido(s) ·{" "}
+                {dashboard.periodMetrics.returningCustomerRate}%
+              </small>
+            </div>
+          </div>
+          <div className="dashboardNote">
+            Base: {customerTotal} pedido(s) aprovado(s) com cliente identificado.
+          </div>
         </div>
       </section>
 
@@ -160,6 +305,25 @@ export default async function AdminPage() {
           </table>
           </div>
         )}
+      </section>
+
+      <section className="grid dashboardGrid secondaryMetrics" aria-label="Indicadores operacionais">
+        <div className="card metric">
+          <span className="muted">Pedidos pendentes</span>
+          <strong>{dashboard.totals.pendingOrders}</strong>
+        </div>
+        <div className="card metric">
+          <span className="muted">Pedidos cancelados</span>
+          <strong>{dashboard.totals.canceledOrders}</strong>
+        </div>
+        <div className="card metric">
+          <span className="muted">Ingressos ativos</span>
+          <strong>{dashboard.totals.ticketsActive}</strong>
+        </div>
+        <div className="card metric">
+          <span className="muted">Check-ins aprovados</span>
+          <strong>{dashboard.totals.checkInsApproved}</strong>
+        </div>
       </section>
 
       <section className="card spacedSection">
