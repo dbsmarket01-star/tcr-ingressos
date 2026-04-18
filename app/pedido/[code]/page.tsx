@@ -382,7 +382,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                   <details className="paymentChoiceDisclosure">
                     <summary>
                       <span>Cartao de credito</span>
-                      <strong>A partir de {formatCurrency(installmentOptions[0].installmentValueInCents)}</strong>
+                      <strong>Ver parcelas</strong>
                       <small>Escolha as parcelas e veja juros antes de confirmar</small>
                     </summary>
                     <form action={payWithCreditCardAction} className="cardForm">
