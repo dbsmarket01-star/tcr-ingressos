@@ -6,6 +6,7 @@ Este roteiro deve ser concluido antes de abrir trafego pago para venda real.
 
 - Usar tambem o roteiro detalhado em `docs/deploy-domain.md`.
 - Usar tambem o plano de infraestrutura em `docs/infrastructure-plan.md`.
+- Usar tambem o ensaio geral em `docs/pre-venda-ensaio-geral.md`.
 - Para primeira operacao real, recomendacao atual: Vercel Pro + Supabase Pro + Supabase Storage.
 - Configurar dominio definitivo com HTTPS.
 - Copiar `.env.example` como base e preencher as variaveis reais no provedor de deploy.
