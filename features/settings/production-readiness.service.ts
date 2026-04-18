@@ -112,6 +112,15 @@ export async function getProductionReadiness() {
       action: health.security.authSecretConfigured ? undefined : "Configurar AUTH_SECRET forte em producao."
     },
     {
+      label: "Dominio interno do painel",
+      description: "ADMIN_HOST deve restringir /admin e /login ao subdominio interno da operacao.",
+      status: isLocalUrl(health.appUrl) ? "WARNING" : statusFrom(health.security.adminHostConfigured, false),
+      action:
+        isLocalUrl(health.appUrl) || health.security.adminHostConfigured
+          ? undefined
+          : "Configurar ADMIN_HOST=produtor.tcringressos.app.br na Vercel para ocultar o painel no dominio publico."
+    },
+    {
       label: "Rotina de expiracao",
       description: "CRON_SECRET protege a rota que libera reservas vencidas.",
       status: statusFrom(health.security.cronSecretConfigured),

@@ -12,6 +12,7 @@ Este roteiro deve ser concluido antes de abrir trafego pago para venda real.
 - Configurar `NEXT_PUBLIC_APP_URL` e `APP_URL` com o dominio final.
 - Configurar `HOSTING_PROVIDER=VERCEL` e `HOSTING_PLAN=VERCEL_PRO` depois do upgrade.
 - Configurar `AUTH_SECRET` forte e exclusivo da instalacao.
+- Configurar `ADMIN_HOST=produtor.tcringressos.app.br` para restringir `/admin` e `/login` ao subdominio interno.
 - Configurar `CRON_SECRET` forte.
 - Agendar `/api/maintenance/expire-orders?token=SEU_CRON_SECRET` a cada 5 minutos.
 - A rotina pode rodar a cada 5 minutos, mas o prazo real de reserva e interno e configurado em `/admin/settings`.
@@ -19,6 +20,7 @@ Este roteiro deve ser concluido antes de abrir trafego pago para venda real.
 - Confirmar que `/robots.txt` e `/sitemap.xml` respondem no dominio final.
 - Confirmar que `/api/health` responde `status: ok` no dominio final.
 - Confirmar que `/admin`, `/api`, `/login`, `/pedido` e `/ingresso` nao devem ser indexados.
+- Confirmar que `/admin` e `/login` no dominio publico retornam 404 quando `ADMIN_HOST` estiver configurado.
 - Rodar `npm run build` antes de publicar.
 
 ## Banco e ambiente

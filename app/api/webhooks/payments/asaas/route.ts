@@ -69,24 +69,34 @@ function isValidAsaasWebhook(request: Request, body: AsaasWebhookPayload | null,
   return candidates.some((receivedToken) => receivedToken === expectedToken);
 }
 
+function webhookResponse(payload: Record<string, unknown>, init?: ResponseInit) {
+  return NextResponse.json(payload, {
+    ...init,
+    headers: {
+      "Cache-Control": "no-store",
+      ...init?.headers
+    }
+  });
+}
+
 export async function POST(request: Request) {
   const url = new URL(request.url);
   const body = (await request.json().catch(() => null)) as AsaasWebhookPayload | null;
 
   if (!isValidAsaasWebhook(request, body, url)) {
-    return NextResponse.json({ error: "Token invalido." }, { status: 401 });
+    return webhookResponse({ error: "Token invalido." }, { status: 401 });
   }
 
   const paymentId = body?.payment?.id;
   const orderCode = body?.payment?.externalReference;
 
   if (!paymentId) {
-    return NextResponse.json({ error: "Payload invalido." }, { status: 400 });
+    return webhookResponse({ error: "Payload invalido." }, { status: 400 });
   }
 
   if (!orderCode) {
     await syncAsaasPaymentByExternalId(paymentId);
-    return NextResponse.json({ received: true });
+    return webhookResponse({ received: true });
   }
 
   await handlePaymentWebhook({
@@ -97,5 +107,5 @@ export async function POST(request: Request) {
     rawPayload: body
   });
 
-  return NextResponse.json({ received: true });
+  return webhookResponse({ received: true });
 }

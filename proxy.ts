@@ -11,25 +11,36 @@ function allowedAdminHosts() {
     .filter(Boolean);
 }
 
+function withInternalHeaders(response: NextResponse) {
+  response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("Referrer-Policy", "same-origin");
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+
+  return response;
+}
+
 export function proxy(request: NextRequest) {
   const hosts = allowedAdminHosts();
 
   if (hosts.length === 0) {
-    return NextResponse.next();
+    return withInternalHeaders(NextResponse.next());
   }
 
   const currentHost = normalizedHost(request.headers.get("host"));
 
   if (hosts.includes(currentHost)) {
-    return NextResponse.next();
+    return withInternalHeaders(NextResponse.next());
   }
 
-  return new NextResponse("Not found", {
-    status: 404,
-    headers: {
-      "Cache-Control": "no-store"
-    }
-  });
+  return withInternalHeaders(
+    new NextResponse("Not found", {
+      status: 404,
+      headers: {
+        "Cache-Control": "no-store"
+      }
+    })
+  );
 }
 
 export const config = {

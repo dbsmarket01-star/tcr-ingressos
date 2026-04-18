@@ -21,15 +21,47 @@ function isAuthorized(request: Request) {
 
 export async function GET(request: Request) {
   if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Nao autorizado." }, { status: 401 });
+    return NextResponse.json(
+      { error: "Nao autorizado." },
+      {
+        status: 401,
+        headers: {
+          "Cache-Control": "no-store"
+        }
+      }
+    );
   }
 
-  const result = await expirePendingOrders({ limit: 500 });
+  try {
+    const result = await expirePendingOrders({ limit: 500 });
 
-  return NextResponse.json({
-    ok: true,
-    ...result
-  });
+    return NextResponse.json(
+      {
+        ok: true,
+        ...result
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store"
+        }
+      }
+    );
+  } catch (error) {
+    console.error("[maintenance:expire-orders]", error);
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Nao foi possivel expirar pedidos pendentes."
+      },
+      {
+        status: 500,
+        headers: {
+          "Cache-Control": "no-store"
+        }
+      }
+    );
+  }
 }
 
 export async function POST(request: Request) {

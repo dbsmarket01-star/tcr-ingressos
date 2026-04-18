@@ -122,6 +122,7 @@ export async function getPaymentHealth() {
     },
     security: {
       authSecretConfigured: hasValue(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET),
+      adminHostConfigured: hasValue(process.env.ADMIN_HOST),
       cronSecretConfigured: hasValue(process.env.CRON_SECRET),
       productionCronProtected: process.env.NODE_ENV === "production" ? hasValue(process.env.CRON_SECRET) : true,
       nodeEnv: process.env.NODE_ENV || "development",
