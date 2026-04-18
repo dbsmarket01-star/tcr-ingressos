@@ -390,8 +390,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                 </Link>
                 {buyerProfile ? (
                   <p className="success">
-                    Dados preenchidos com sua conta Google: {buyerProfile.email}
-                    {buyerProfile.phone ? " - telefone recuperado do seu cadastro anterior." : ""}
+                    Nome e e-mail preenchidos com sua conta Google: {buyerProfile.email}
                   </p>
                 ) : null}
                 <label className="field">
@@ -421,7 +420,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                     autoComplete="off"
                     inputMode="numeric"
                     required
-                    defaultValue={buyerProfile?.document || ""}
                   />
                 </label>
                 <label className="field">
@@ -431,7 +429,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                     type="tel"
                     autoComplete="tel"
                     inputMode="tel"
-                    defaultValue={buyerProfile?.phone || ""}
                   />
                   <small>Usado apenas para suporte do pedido, caso seja necessario.</small>
                 </label>

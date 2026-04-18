@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { consumeGoogleOAuthState, setBuyerProfile } from "@/features/customer-auth/google-buyer.service";
-import { prisma } from "@/lib/prisma";
 
 type GoogleTokenResponse = {
   access_token?: string;
@@ -81,24 +80,9 @@ export async function GET(request: Request) {
     return redirectWithStatus(stateResult.returnTo, request, "invalid");
   }
 
-  const existingCustomer = await prisma.customer.findFirst({
-    where: {
-      email: userInfo.email.toLowerCase()
-    },
-    orderBy: {
-      updatedAt: "desc"
-    },
-    select: {
-      document: true,
-      phone: true
-    }
-  });
-
   await setBuyerProfile({
     name: userInfo.name,
     email: userInfo.email.toLowerCase(),
-    document: existingCustomer?.document ?? null,
-    phone: existingCustomer?.phone ?? null,
     picture: userInfo.picture
   });
 
