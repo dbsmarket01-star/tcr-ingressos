@@ -22,6 +22,7 @@ Este roteiro deve ser concluido antes de abrir trafego pago para venda real.
 - Confirmar que `/api/health` responde `status: ok` no dominio final.
 - Confirmar que `/admin`, `/api`, `/login`, `/pedido` e `/ingresso` nao devem ser indexados.
 - Confirmar que `/admin` e `/login` no dominio publico retornam 404 quando `ADMIN_HOST` estiver configurado.
+- Confirmar que `/evento/...` no dominio interno `produtor...` retorna 404; evento publico deve abrir apenas no dominio publico.
 - Rodar `npm run build` antes de publicar.
 
 ## Banco e ambiente

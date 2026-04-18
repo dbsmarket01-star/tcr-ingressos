@@ -20,19 +20,20 @@ function withInternalHeaders(response: NextResponse) {
   return response;
 }
 
-export function proxy(request: NextRequest) {
-  const hosts = allowedAdminHosts();
+function isInternalPath(pathname: string) {
+  return pathname === "/admin" || pathname.startsWith("/admin/") || pathname === "/login" || pathname.startsWith("/login/");
+}
 
-  if (hosts.length === 0) {
-    return withInternalHeaders(NextResponse.next());
-  }
+function isAllowedAdminHostAsset(pathname: string) {
+  return (
+    pathname.startsWith("/_next/") ||
+    pathname.startsWith("/uploads/") ||
+    pathname === "/favicon.ico" ||
+    /\.(?:avif|css|gif|ico|jpg|jpeg|js|png|svg|webp|woff2?)$/i.test(pathname)
+  );
+}
 
-  const currentHost = normalizedHost(request.headers.get("host"));
-
-  if (hosts.includes(currentHost)) {
-    return withInternalHeaders(NextResponse.next());
-  }
-
+function notFound() {
   return withInternalHeaders(
     new NextResponse("Not found", {
       status: 404,
@@ -43,6 +44,36 @@ export function proxy(request: NextRequest) {
   );
 }
 
+export function proxy(request: NextRequest) {
+  const hosts = allowedAdminHosts();
+
+  if (hosts.length === 0) {
+    return NextResponse.next();
+  }
+
+  const currentHost = normalizedHost(request.headers.get("host"));
+  const isAdminHost = hosts.includes(currentHost);
+  const { pathname } = request.nextUrl;
+
+  if (isAdminHost && pathname === "/") {
+    return withInternalHeaders(NextResponse.redirect(new URL("/login", request.url)));
+  }
+
+  if (isAdminHost && (isInternalPath(pathname) || isAllowedAdminHostAsset(pathname))) {
+    return withInternalHeaders(NextResponse.next());
+  }
+
+  if (isAdminHost) {
+    return notFound();
+  }
+
+  if (isInternalPath(pathname)) {
+    return notFound();
+  }
+
+  return NextResponse.next();
+}
+
 export const config = {
-  matcher: ["/admin/:path*", "/login/:path*"]
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"]
 };
