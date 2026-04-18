@@ -14,15 +14,6 @@ const eventStatusLabels = {
   CANCELED: "Cancelado"
 };
 
-const orderStatusLabels = {
-  DRAFT: "Rascunho",
-  PENDING_PAYMENT: "Pendente",
-  PAID: "Pago",
-  CANCELED: "Cancelado",
-  EXPIRED: "Expirado",
-  REFUNDED: "Reembolsado"
-};
-
 type AdminPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
@@ -56,6 +47,14 @@ function periodHref(period: { startDate: string; endDate: string }) {
   return `/admin?startDate=${period.startDate}&endDate=${period.endDate}`;
 }
 
+function formatPeriodDate(value: string) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  }).format(new Date(`${value}T12:00:00-03:00`));
+}
+
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   await requirePermission("DASHBOARD");
   const params = searchParams ? await searchParams : {};
@@ -79,9 +78,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     >
       <section className="dashboardFilterPanel" aria-label="Filtro do dashboard">
         <div>
-          <span className="eyebrow">Periodo de vendas</span>
-          <h2>Resumo de {dashboard.period.startDate} ate {dashboard.period.endDate}</h2>
-          <p>Os valores consideram pagamentos aprovados dentro do periodo selecionado.</p>
+          <span className="eyebrow">Vendas no periodo</span>
+          <h2>Resumo comercial</h2>
+          <p>
+            De {formatPeriodDate(dashboard.period.startDate)} ate{" "}
+            {formatPeriodDate(dashboard.period.endDate)}. Altere as datas abaixo para analisar
+            outro intervalo.
+          </p>
         </div>
 
         <form className="dashboardDateForm" method="get">
@@ -324,60 +327,6 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <span className="muted">Check-ins aprovados</span>
           <strong>{dashboard.totals.checkInsApproved}</strong>
         </div>
-      </section>
-
-      <section className="card spacedSection">
-        <div className="sectionHeader inlineHeader">
-          <h2>Pedidos recentes</h2>
-          <Link className="secondaryButton" href="/admin/orders">
-            Ver pedidos
-          </Link>
-        </div>
-
-        {dashboard.recentOrders.length === 0 ? (
-          <div className="empty">Nenhum pedido registrado ainda.</div>
-        ) : (
-          <div className="tableScroll">
-          <table className="table operationalTable">
-            <thead>
-              <tr>
-                <th>Pedido</th>
-                <th>Cliente</th>
-                <th>Evento</th>
-                <th>Status</th>
-                <th>Pagamento</th>
-                <th>Total</th>
-                <th>Criado em</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dashboard.recentOrders.map((order) => (
-                <tr key={order.id}>
-                  <td>
-                    <Link href={`/pedido/${order.code}`}>
-                      <strong>{order.code}</strong>
-                    </Link>
-                  </td>
-                  <td>
-                    {order.customer.name}
-                    <br />
-                    <span className="muted">{order.customer.email}</span>
-                  </td>
-                  <td>{order.event.title}</td>
-                  <td>
-                    <span className={`status ${order.status === "PAID" ? "published" : "draft"}`}>
-                      {orderStatusLabels[order.status]}
-                    </span>
-                  </td>
-                  <td>{order.payment?.status ?? "-"}</td>
-                  <td>{formatCurrency(order.totalInCents)}</td>
-                  <td>{formatDateTime(order.createdAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-        )}
       </section>
     </AdminShell>
   );
