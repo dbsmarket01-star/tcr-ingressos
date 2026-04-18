@@ -204,7 +204,11 @@ textarea {
     linear-gradient(180deg, rgba(11, 122, 99, 0.16), transparent 210px),
     var(--admin-ink);
   color: white;
+  height: 100vh;
+  overflow-y: auto;
   padding: 18px 16px;
+  position: sticky;
+  top: 0;
 }
 
 .sidebarBrand {
@@ -221,8 +225,8 @@ textarea {
 }
 
 .sideNavGroup {
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -290,7 +294,7 @@ textarea {
 }
 
 .sideNavGroupItems {
-  background: rgba(8, 17, 26, 0.26);
+  background: rgba(8, 17, 26, 0.22);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: grid;
   gap: 3px;
@@ -1228,6 +1232,10 @@ textarea {
   padding: 16px;
   position: sticky;
   top: 88px;
+}
+
+.orderPaymentPanel {
+  gap: 16px;
 }
 
 .purchaseStickyLabel {
@@ -4094,6 +4102,8 @@ textarea {
   }
 
   .sidebar {
+    height: auto;
+    overflow: visible;
     position: static;
   }
 
@@ -4182,8 +4192,8 @@ textarea {
   }
 
   .publicHero {
-    min-height: 360px;
-    padding: 58px 18px 34px;
+    min-height: 420px;
+    padding: 68px 18px 38px;
   }
 
   .publicHero h1 {
@@ -4196,7 +4206,8 @@ textarea {
   }
 
   .publicMeta {
-    display: grid;
+    display: flex;
+    gap: 8px;
   }
 
   .heroActions {
@@ -4250,6 +4261,10 @@ textarea {
     top: auto;
   }
 
+  .purchaseHeader {
+    display: grid;
+  }
+
   .lotOption {
     grid-template-columns: 1fr;
   }
@@ -4273,7 +4288,18 @@ textarea {
   }
 
   .publicGrid {
-    padding-bottom: 104px;
+    gap: 18px;
+    padding-bottom: 108px;
+    padding-top: 18px;
+  }
+
+  .conversionStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .conversionStrip div {
+    min-height: 66px;
+    padding: 11px;
   }
 
   .eventMapImageFrame {
@@ -4337,9 +4363,9 @@ textarea {
   }
 
   .orderSummaryBox {
-    position: sticky;
-    top: 78px;
-    z-index: 1;
+    position: static;
+    top: auto;
+    z-index: auto;
   }
 
   .paymentBoxHeader,
@@ -4347,6 +4373,12 @@ textarea {
   .cardFormHeader,
   .ticketCard {
     display: grid;
+  }
+
+  .paymentChoiceDisclosure summary {
+    align-items: start;
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 78px;
   }
 
   .paymentBoxHeader > strong,
@@ -4392,6 +4424,14 @@ textarea {
     font-size: 34px;
   }
 
+  .publicHero {
+    min-height: 390px;
+  }
+
+  .publicMeta span {
+    width: 100%;
+  }
+
   .homeHero {
     padding-left: 14px;
     padding-right: 14px;
@@ -4419,6 +4459,15 @@ textarea {
   .pixBox,
   .cardForm {
     padding: 14px;
+  }
+
+  .paymentChoiceDisclosure summary {
+    grid-template-columns: 1fr;
+  }
+
+  .paymentChoiceDisclosure summary::after,
+  .paymentChoiceDisclosure summary strong {
+    justify-self: start;
   }
 
   .checkoutTrustRow span,

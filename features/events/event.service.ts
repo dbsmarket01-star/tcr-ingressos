@@ -54,6 +54,15 @@ export async function listPublishedEventShowcase(limit = 6) {
   });
 }
 
+const listCachedPublishedEventShowcaseRaw = unstable_cache(listPublishedEventShowcase, ["published-event-showcase"], {
+  revalidate: 30
+});
+
+export async function listCachedPublishedEventShowcase(limit = 6) {
+  const events = await listCachedPublishedEventShowcaseRaw(limit);
+  return events.map((event) => normalizeCachedEventDates(event));
+}
+
 export async function createEvent(input: EventDraftInput & { status: EventStatus }) {
   const data: Prisma.EventCreateInput = {
     title: input.title,

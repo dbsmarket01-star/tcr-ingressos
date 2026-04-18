@@ -174,7 +174,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           <span>TCR Ingressos</span>
         </Link>
         <nav className="nav" aria-label="Navegacao">
-          <Link href="/admin">Painel</Link>
+          <Link href="/">Eventos</Link>
         </nav>
       </header>
 
