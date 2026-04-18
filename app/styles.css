@@ -3448,19 +3448,25 @@ textarea {
 }
 
 .paymentChoiceDisclosure summary::after {
-  background: #eef8f4;
-  border: 1px solid #c8eadf;
+  background: var(--brand-dark);
+  border: 1px solid var(--brand-dark);
   border-radius: 999px;
-  color: var(--brand-dark);
+  box-shadow: 0 8px 16px rgba(14, 63, 48, 0.18);
+  color: white;
   content: "Abrir";
   font-size: 12px;
   font-weight: 900;
   grid-column: 2;
   grid-row: 2;
-  padding: 6px 9px;
+  padding: 8px 12px;
+  text-transform: uppercase;
 }
 
 .paymentChoiceDisclosure[open] summary::after {
+  background: #eef8f4;
+  border-color: #b7dace;
+  box-shadow: none;
+  color: var(--brand-dark);
   content: "Fechar";
 }
 
@@ -3471,12 +3477,19 @@ textarea {
 }
 
 .paymentChoiceDisclosure summary strong {
-  background: #eef8f4;
+  background: var(--brand);
   border-radius: 999px;
-  color: var(--brand-dark);
+  box-shadow: 0 8px 16px rgba(42, 126, 94, 0.2);
+  color: white;
   font-size: 13px;
-  padding: 7px 9px;
+  padding: 8px 12px;
   white-space: nowrap;
+}
+
+.paymentChoiceDisclosure[open] summary strong {
+  background: #eef8f4;
+  box-shadow: none;
+  color: var(--brand-dark);
 }
 
 .paymentChoiceDisclosure summary small {
