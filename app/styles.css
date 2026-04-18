@@ -424,6 +424,246 @@ textarea {
   max-width: 820px;
 }
 
+.homePage {
+  background:
+    linear-gradient(180deg, #f1f5f4 0, #eef2f3 420px, #f7f9fa 100%);
+}
+
+.homeHero {
+  background:
+    linear-gradient(90deg, rgba(8, 45, 38, 0.94), rgba(20, 33, 43, 0.78)),
+    url("https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1800&q=82");
+  background-position: center;
+  background-size: cover;
+  color: white;
+  min-height: 520px;
+  padding: 34px 24px 46px;
+}
+
+.homeHeroInner {
+  align-items: end;
+  display: grid;
+  gap: 34px;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 430px);
+  margin: 0 auto;
+  max-width: 1180px;
+  min-height: 440px;
+  width: 100%;
+}
+
+.homeHeroContent {
+  display: grid;
+  gap: 16px;
+  max-width: 760px;
+}
+
+.homeBrand {
+  margin-bottom: 18px;
+}
+
+.homeEyebrow {
+  background: rgba(223, 245, 235, 0.95);
+  border-radius: 999px;
+  color: var(--brand-dark);
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 900;
+  justify-self: start;
+  padding: 8px 12px;
+  text-transform: uppercase;
+}
+
+.homeHero h1 {
+  font-size: clamp(42px, 6vw, 72px);
+  letter-spacing: 0;
+  line-height: 0.98;
+  margin: 0;
+  max-width: 860px;
+}
+
+.homeHero p {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 18px;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 680px;
+}
+
+.homeHeroActions {
+  margin-top: 4px;
+}
+
+.homeTrustStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.homeTrustStrip span {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 12px;
+  font-weight: 900;
+  padding: 9px 11px;
+  text-transform: uppercase;
+}
+
+.homeFeaturePanel {
+  display: grid;
+  gap: 12px;
+}
+
+.homeFeatureCard {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  box-shadow: 0 22px 52px rgba(5, 22, 18, 0.26);
+  color: var(--ink);
+  display: grid;
+  overflow: hidden;
+}
+
+.homeFeatureCard img {
+  aspect-ratio: 16 / 8.5;
+  display: block;
+  object-fit: cover;
+  width: 100%;
+}
+
+.homeFeatureCard div,
+.emptyFeature {
+  padding: 18px;
+}
+
+.homeFeatureCard span,
+.homeMiniStats span {
+  color: var(--brand-dark);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.homeFeatureCard strong {
+  display: block;
+  font-size: 26px;
+  line-height: 1.08;
+  margin-top: 8px;
+}
+
+.homeFeatureCard p {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+  margin-top: 10px;
+}
+
+.homeMiniStats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.homeMiniStats div {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+}
+
+.homeMiniStats span {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.homeMiniStats strong {
+  color: white;
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.homeEventsBand {
+  background:
+    linear-gradient(180deg, #ffffff 0, #f4f7f8 100%);
+  border-top: 1px solid rgba(11, 122, 99, 0.12);
+}
+
+.homeEventsContainer {
+  padding-top: 34px;
+}
+
+.homeSectionHeader {
+  margin-bottom: 20px;
+}
+
+.homeSectionHeader h2 {
+  font-size: clamp(28px, 4vw, 42px);
+  letter-spacing: 0;
+  line-height: 1.04;
+  margin: 4px 0 0;
+}
+
+.homeEventsLayout {
+  align-items: start;
+  display: grid;
+  gap: 22px;
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+
+.homeCardsGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.homeSupportPanel {
+  background: #102f28;
+  border-radius: 8px;
+  color: white;
+  display: grid;
+  gap: 13px;
+  padding: 22px;
+  position: sticky;
+  top: 92px;
+}
+
+.homeSupportPanel .eyebrow {
+  color: #bde7dc;
+}
+
+.homeSupportPanel h3 {
+  font-size: 26px;
+  line-height: 1.08;
+  margin: 0;
+}
+
+.homeSupportPanel p {
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.homeSupportList {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.homeSupportList span {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 10px;
+}
+
+.homeEmptyState {
+  min-height: 220px;
+}
+
 .publicHero {
   background-position: center;
   background-size: cover;
@@ -1125,6 +1365,15 @@ textarea {
 .eventShowcaseCard {
   overflow: hidden;
   padding: 0;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+}
+
+.eventShowcaseCard:hover {
+  box-shadow: 0 16px 34px rgba(22, 32, 42, 0.09);
+  transform: translateY(-2px);
 }
 
 .eventShowcaseCard img {
@@ -3387,6 +3636,9 @@ textarea {
   .financeFiltersForm,
   .financeStatusGrid,
   .cardsGrid,
+  .homeCardsGrid,
+  .homeEventsLayout,
+  .homeHeroInner,
   .mediaUploadGrid,
   .mediaSizingGuide,
   .orderGrid,
@@ -3431,6 +3683,39 @@ textarea {
 
   .heroActions .button {
     justify-content: center;
+  }
+
+  .homeHero {
+    min-height: auto;
+    padding: 28px 18px 34px;
+  }
+
+  .homeHeroInner {
+    align-items: stretch;
+    min-height: 0;
+  }
+
+  .homeHero h1 {
+    font-size: 42px;
+    line-height: 1.02;
+  }
+
+  .homeHero p {
+    font-size: 16px;
+  }
+
+  .homeBrand {
+    margin-bottom: 6px;
+  }
+
+  .homeTrustStrip {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .homeFeaturePanel,
+  .homeSupportPanel {
+    position: static;
   }
 
   .purchasePanel {
@@ -3578,6 +3863,24 @@ textarea {
 
   .publicHero h1 {
     font-size: 34px;
+  }
+
+  .homeHero {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .homeHero h1 {
+    font-size: 36px;
+  }
+
+  .homeFeatureCard strong,
+  .homeSupportPanel h3 {
+    font-size: 22px;
+  }
+
+  .homeMiniStats {
+    grid-template-columns: 1fr;
   }
 
   .purchasePanel,
