@@ -9,8 +9,7 @@ import {
   approveSimulatedPaymentAction,
   failSimulatedPaymentAction,
   payWithCreditCardAction,
-  startPaymentAction,
-  syncAsaasPaymentAction
+  startPaymentAction
 } from "@/features/payments/payment.actions";
 import { calculateCardInterestInCents } from "@/features/pricing/pricing";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -69,6 +68,8 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
   }
 
   const paymentError = typeof query.paymentError === "string" ? query.paymentError : null;
+  const showPaymentSimulator =
+    process.env.NODE_ENV !== "production" && process.env.SHOW_PAYMENT_SIMULATOR === "true";
   const baseTotalInCents = order.subtotalInCents + order.serviceFeeInCents - order.discountInCents;
   const installmentOptions = Array.from({ length: 10 }, (_, index) => index + 1).map((installment) => {
     const interestInCents = order.items.reduce(
@@ -345,23 +346,19 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                   />
                 </div>
               ) : null}
-              <form action={startPaymentAction}>
-                <input type="hidden" name="orderCode" value={order.code} />
-                <SubmitButton className="button fullButton" pendingText="Preparando pagamento...">
-                  {order.payment?.pixQrCodePayload
-                    ? "Atualizar pagamento"
-                    : order.payment?.checkoutUrl
-                      ? "Abrir pagamento"
-                      : "Continuar para pagamento"}
-                </SubmitButton>
-              </form>
-              {order.payment?.provider === "ASAAS" && order.payment.externalId ? (
-                <form action={syncAsaasPaymentAction}>
+              {!order.payment?.pixQrCodePayload ? (
+                <form action={startPaymentAction}>
                   <input type="hidden" name="orderCode" value={order.code} />
-                  <SubmitButton className="secondaryButton fullButton" pendingText="Verificando no Asaas...">
-                    Verificar pagamento
+                  <SubmitButton className="button fullButton" pendingText="Preparando pagamento...">
+                    {order.payment?.checkoutUrl ? "Abrir pagamento seguro" : "Gerar Pix agora"}
                   </SubmitButton>
                 </form>
+              ) : null}
+              {order.payment?.pixQrCodePayload ? (
+                <p className="checkoutFootnote">
+                  A confirmacao e automatica. Depois de pagar, aguarde alguns instantes; os
+                  ingressos serao liberados assim que o pagamento for aprovado.
+                </p>
               ) : null}
               {order.payment?.provider === "ASAAS" ? (
                 <form action={payWithCreditCardAction} className="cardForm">
@@ -487,7 +484,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                   </p>
                 </form>
               ) : null}
-              {order.payment?.provider === "SIMULATED" ? (
+              {showPaymentSimulator && order.payment?.provider === "SIMULATED" ? (
                 <div className="paymentSimulator">
                   <span className="muted">Simulador de retorno do provedor</span>
                   <form action={approveSimulatedPaymentAction}>
