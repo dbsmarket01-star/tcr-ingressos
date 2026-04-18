@@ -26,7 +26,7 @@ export default async function Home() {
             <div className="homeTrustStrip" aria-label="Diferenciais da TCR Ingressos">
               <span>Pix e cartão</span>
               <span>QR Code automático</span>
-              <span>Check-in validado</span>
+              <span>Site oficial</span>
             </div>
             <div className="homeHeroStatement">
               <strong>Escolha o evento, garanta seu ingresso e acompanhe tudo pelo pedido.</strong>
@@ -57,8 +57,8 @@ export default async function Home() {
                 <strong>{events.length}</strong>
               </div>
               <div>
-                <span>Entrada</span>
-                <strong>Digital</strong>
+                <span>Compra</span>
+                <strong>Segura</strong>
               </div>
             </div>
           </aside>
@@ -71,7 +71,6 @@ export default async function Home() {
             <div>
               <span className="eyebrow">Agenda aberta</span>
               <h2>Confira os eventos disponíveis</h2>
-              <p>Escolha seu evento, veja os lotes ativos e finalize a compra em poucos passos.</p>
             </div>
           </div>
 
