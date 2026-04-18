@@ -19,64 +19,81 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const wasReset = params.reset === "1";
 
   return (
-    <main className="loginShell">
-      <section className="loginPanel">
-        <Link className="brand" href="/">
-          <span className="brandMark">T</span>
-          <span>TCR Ingressos</span>
-        </Link>
+    <main className="loginShell loginShellAdmin">
+      <section className="loginPanel adminLoginPanel">
+        <div className="loginIntro">
+          <Link className="brand loginBrand" href="/">
+            <span className="brandMark">T</span>
+            <span>TCR Ingressos</span>
+          </Link>
 
-        <div>
-          <p className="publicBadge">Acesso interno</p>
-          <h1>Entrar no painel</h1>
-          <p className="muted">
-            Use o e-mail e a senha do administrador para acessar a operacao da bilheteria.
-          </p>
+          <div className="loginIntroCopy">
+            <p className="publicBadge">Painel administrativo</p>
+            <h1>Hoje e um bom dia para vender melhor.</h1>
+            <p>
+              Organize eventos, acompanhe pedidos e mantenha a operacao pronta para receber o
+              publico com seguranca.
+            </p>
+          </div>
+
+          <div className="loginMetrics">
+            <span>Eventos</span>
+            <strong>Operacao TCR</strong>
+          </div>
         </div>
 
-        {hasError ? (
-          <div className="errorBox">E-mail ou senha invalidos. Confira os dados e tente novamente.</div>
-        ) : null}
+        <div className="loginFormArea">
+          <div>
+            <p className="publicBadge">Acesso interno</p>
+            <h2>Entrar no painel</h2>
+            <p className="muted">Use seu e-mail e senha para acessar a administracao da bilheteria.</p>
+          </div>
 
-        {wasReset ? (
-          <div className="successBox">Senha redefinida com sucesso. Entre com a nova senha.</div>
-        ) : null}
+          {hasError ? (
+            <div className="errorBox">E-mail ou senha invalidos. Confira os dados e tente novamente.</div>
+          ) : null}
 
-        <form action={loginAction} className="form">
-          <label className="field">
-            <span>E-mail</span>
-            <input
-              autoComplete="email"
-              name="email"
-              placeholder="admin@tcringressos.com.br"
-              required
-              type="email"
-            />
-          </label>
+          {wasReset ? (
+            <div className="successBox">Senha redefinida com sucesso. Entre com a nova senha.</div>
+          ) : null}
 
-          <label className="field">
-            <span>Senha</span>
-            <input
-              autoComplete="current-password"
-              name="password"
-              placeholder="Sua senha"
-              required
-              type="password"
-            />
-          </label>
+          <form action={loginAction} className="form">
+            <label className="field">
+              <span>E-mail</span>
+              <input
+                autoComplete="email"
+                name="email"
+                placeholder="admin@tcringressos.com.br"
+                required
+                type="email"
+              />
+            </label>
 
-          <button className="button fullButton" type="submit">
-            Entrar no painel
-          </button>
-        </form>
+            <label className="field">
+              <span>Senha</span>
+              <input
+                autoComplete="current-password"
+                name="password"
+                placeholder="Sua senha"
+                required
+                type="password"
+              />
+            </label>
 
-        <div className="loginSupportBox">
-          <Link className="secondaryButton fullButton" href="/login/forgot">
-            Recuperar senha
-          </Link>
-          <p>
-            Novo acesso administrativo deve ser liberado pelo proprietario dentro do painel, em Usuarios.
-          </p>
+            <button className="button fullButton" type="submit">
+              Entrar no painel
+            </button>
+          </form>
+
+          <div className="loginSupportBox">
+            <Link className="secondaryButton fullButton" href="/login/forgot">
+              Recuperar senha
+            </Link>
+            <p>
+              Novos acessos internos devem ser liberados pelo proprietario dentro do painel, em
+              Usuarios.
+            </p>
+          </div>
         </div>
       </section>
     </main>

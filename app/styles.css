@@ -1661,6 +1661,103 @@ textarea {
   margin: 16px 0 12px;
 }
 
+.loginShellAdmin {
+  min-height: 100dvh;
+  padding: clamp(20px, 4vw, 48px);
+  place-items: center;
+}
+
+.adminLoginPanel {
+  background: rgba(255, 255, 255, 0.97);
+  gap: 0;
+  grid-template-columns: minmax(0, 0.95fr) minmax(340px, 1fr);
+  max-width: 960px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.loginIntro {
+  background:
+    linear-gradient(160deg, rgba(4, 58, 46, 0.96), rgba(8, 86, 68, 0.9)),
+    url("https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=1200&q=80");
+  background-position: center;
+  background-size: cover;
+  color: white;
+  display: grid;
+  gap: 34px;
+  min-height: 520px;
+  padding: clamp(28px, 4vw, 44px);
+}
+
+.loginBrand {
+  color: white;
+}
+
+.loginIntroCopy {
+  align-self: center;
+  display: grid;
+  gap: 14px;
+}
+
+.loginIntroCopy .publicBadge {
+  background: rgba(219, 255, 237, 0.92);
+  color: #0d644d;
+  width: max-content;
+}
+
+.loginIntro h1 {
+  color: white;
+  font-size: clamp(34px, 4.4vw, 56px);
+  letter-spacing: 0;
+  line-height: 0.98;
+  margin: 0;
+  max-width: 10ch;
+}
+
+.loginIntro p {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 15px;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 34ch;
+}
+
+.loginMetrics {
+  align-self: end;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+}
+
+.loginMetrics span {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.loginMetrics strong {
+  color: white;
+  font-size: 18px;
+}
+
+.loginFormArea {
+  align-content: center;
+  display: grid;
+  gap: 22px;
+  padding: clamp(28px, 4vw, 44px);
+}
+
+.loginFormArea h2 {
+  color: var(--ink);
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1;
+  margin: 14px 0 10px;
+}
+
 .loginSupportBox,
 .loginAccessNote {
   background: #f7faf9;
@@ -1681,6 +1778,26 @@ textarea {
 
 .loginAccessNote strong {
   color: var(--ink);
+}
+
+@media (max-width: 860px) {
+  .adminLoginPanel {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+  }
+
+  .loginIntro {
+    min-height: auto;
+    padding: 28px;
+  }
+
+  .loginIntro h1 {
+    max-width: 12ch;
+  }
+
+  .loginMetrics {
+    display: none;
+  }
 }
 
 .errorBox {
