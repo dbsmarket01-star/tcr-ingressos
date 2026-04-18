@@ -119,9 +119,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
       <section className="grid dashboardGrid dashboardPrimaryGrid" aria-label="Metricas de vendas do periodo">
         <div className="card metric dashboardHeroMetric">
-          <span className="muted">Faturamento aprovado</span>
+          <span className="muted">Valor faturado</span>
           <strong>{formatCurrency(dashboard.totals.revenueInCents)}</strong>
-          <small>{dashboard.totals.paidOrders} pedido(s) pago(s) no periodo</small>
+          <small>Total faturado no periodo selecionado</small>
         </div>
         <div className="card metric">
           <span className="muted">Ticket medio</span>
@@ -129,9 +129,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <small>Media por pedido aprovado</small>
         </div>
         <div className="card metric">
-          <span className="muted">Pedidos criados</span>
-          <strong>{dashboard.periodMetrics.ordersCreated}</strong>
-          <small>{dashboard.periodMetrics.approvedRate}% pagos</small>
+          <span className="muted">Pedidos vendidos</span>
+          <strong>{dashboard.totals.paidOrders}</strong>
+          <small>{dashboard.periodMetrics.approvedRate}% dos pedidos criados</small>
         </div>
         <div className="card metric">
           <span className="muted">Clientes unicos</span>
