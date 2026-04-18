@@ -7,7 +7,6 @@ export const preferredRegion = "gru1";
 
 export default async function Home() {
   const events = await listPublishedEventShowcase(6);
-  const featuredEvent = events[0];
 
   return (
     <main className="shell homePage">
@@ -24,20 +23,14 @@ export default async function Home() {
               Confira as próximas experiências da TCR, escolha seu ingresso e receba o QR Code para
               entrada de forma automática após a confirmação do pagamento.
             </p>
-            <div className="heroActions homeHeroActions">
-              {featuredEvent ? (
-                <Link className="button" href={`/evento/${featuredEvent.slug}`}>
-                  Ver evento em destaque
-                </Link>
-              ) : null}
-              <Link className="secondaryButton" href="/login">
-                Acesso interno
-              </Link>
-            </div>
             <div className="homeTrustStrip" aria-label="Diferenciais da TCR Ingressos">
               <span>Pix e cartão</span>
               <span>QR Code automático</span>
               <span>Check-in validado</span>
+            </div>
+            <div className="homeHeroStatement">
+              <strong>Escolha o evento, garanta seu ingresso e acompanhe tudo pelo pedido.</strong>
+              <span>Uma jornada simples para quem compra e segura para quem opera.</span>
             </div>
           </div>
 
@@ -90,9 +83,12 @@ export default async function Home() {
                 {events.map((event) => (
                   <Link className="card linkCard eventShowcaseCard" href={`/evento/${event.slug}`} key={event.id}>
                     {event.bannerUrl ? <img src={event.bannerUrl} alt="" /> : null}
-                    <span className="eyebrow">{event.city}, {event.state}</span>
-                    <h3>{event.title}</h3>
-                    <p className="muted">{formatDateTime(event.startsAt)} · {event.venueName}</p>
+                    <div className="eventShowcaseBody">
+                      <span className="eyebrow">{event.city}, {event.state}</span>
+                      <h3>{event.title}</h3>
+                      <p className="muted">{formatDateTime(event.startsAt)} · {event.venueName}</p>
+                      <span className="eventCardCta">Comprar agora</span>
+                    </div>
                   </Link>
                 ))}
               </div>

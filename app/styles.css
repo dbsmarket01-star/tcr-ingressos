@@ -426,18 +426,35 @@ textarea {
 
 .homePage {
   background:
-    linear-gradient(180deg, #f1f5f4 0, #eef2f3 420px, #f7f9fa 100%);
+    radial-gradient(circle at 16% 18%, rgba(11, 122, 99, 0.18), transparent 32%),
+    linear-gradient(180deg, #eef4f2 0, #f7f9fa 520px, #ffffff 100%);
 }
 
 .homeHero {
   background:
-    linear-gradient(90deg, rgba(8, 45, 38, 0.94), rgba(20, 33, 43, 0.78)),
+    linear-gradient(110deg, rgba(6, 34, 29, 0.96) 0%, rgba(10, 66, 55, 0.88) 43%, rgba(21, 30, 42, 0.76) 100%),
     url("https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1800&q=82");
   background-position: center;
   background-size: cover;
   color: white;
-  min-height: 520px;
-  padding: 34px 24px 46px;
+  min-height: 560px;
+  padding: 34px 24px 52px;
+  position: relative;
+}
+
+.homeHero::after {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.14) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 74px 74px;
+  bottom: 0;
+  content: "";
+  left: 0;
+  opacity: 0.18;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 .homeHeroInner {
@@ -446,9 +463,11 @@ textarea {
   gap: 34px;
   grid-template-columns: minmax(0, 1fr) minmax(320px, 430px);
   margin: 0 auto;
-  max-width: 1180px;
+  max-width: 1220px;
   min-height: 440px;
+  position: relative;
   width: 100%;
+  z-index: 1;
 }
 
 .homeHeroContent {
@@ -474,7 +493,7 @@ textarea {
 }
 
 .homeHero h1 {
-  font-size: clamp(42px, 6vw, 72px);
+  font-size: clamp(44px, 6.2vw, 76px);
   letter-spacing: 0;
   line-height: 0.98;
   margin: 0;
@@ -489,15 +508,11 @@ textarea {
   max-width: 680px;
 }
 
-.homeHeroActions {
-  margin-top: 4px;
-}
-
 .homeTrustStrip {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .homeTrustStrip span {
@@ -509,6 +524,30 @@ textarea {
   font-weight: 900;
   padding: 9px 11px;
   text-transform: uppercase;
+}
+
+.homeHeroStatement {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  max-width: 600px;
+  padding: 14px;
+}
+
+.homeHeroStatement strong {
+  color: white;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.homeHeroStatement span {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 .homeFeaturePanel {
@@ -588,7 +627,8 @@ textarea {
 
 .homeEventsBand {
   background:
-    linear-gradient(180deg, #ffffff 0, #f4f7f8 100%);
+    radial-gradient(circle at 78% 10%, rgba(191, 63, 85, 0.08), transparent 28%),
+    linear-gradient(180deg, #ffffff 0, #f3f7f7 100%);
   border-top: 1px solid rgba(11, 122, 99, 0.12);
 }
 
@@ -1363,6 +1403,7 @@ textarea {
 }
 
 .eventShowcaseCard {
+  background: #ffffff;
   overflow: hidden;
   padding: 0;
   transition:
@@ -1383,15 +1424,30 @@ textarea {
   width: 100%;
 }
 
-.eventShowcaseCard .eyebrow,
-.eventShowcaseCard h3,
-.eventShowcaseCard p {
-  margin-left: 16px;
-  margin-right: 16px;
+.eventShowcaseBody {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
 }
 
-.eventShowcaseCard p {
-  margin-bottom: 16px;
+.eventShowcaseBody h3,
+.eventShowcaseBody p {
+  margin: 0;
+}
+
+.eventCardCta {
+  align-items: center;
+  background: var(--brand);
+  border-radius: 8px;
+  color: white;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 900;
+  justify-content: center;
+  margin-top: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  width: fit-content;
 }
 
 .moduleCard {
@@ -3713,6 +3769,10 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .homeHeroStatement {
+    max-width: none;
+  }
+
   .homeFeaturePanel,
   .homeSupportPanel {
     position: static;
@@ -3877,6 +3937,10 @@ textarea {
   .homeFeatureCard strong,
   .homeSupportPanel h3 {
     font-size: 22px;
+  }
+
+  .eventCardCta {
+    width: 100%;
   }
 
   .homeMiniStats {
