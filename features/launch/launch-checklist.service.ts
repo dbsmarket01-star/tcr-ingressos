@@ -1,6 +1,7 @@
 import { PaymentProvider, PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getPaymentHealth } from "@/features/settings/payment-health.service";
+import { getPublicEventUrl } from "@/lib/public-url";
 
 type LaunchStatus = "READY" | "WARNING" | "BLOCKED";
 
@@ -277,14 +278,14 @@ export async function getLaunchChecklist(eventId?: string) {
       description: "Confirma QR Code, webhook e emissao de ingresso por Pix.",
       status: pixPayments.length > 0 ? "READY" : "WARNING",
       action: pixPayments.length > 0 ? undefined : "Fazer uma compra teste via Pix neste evento.",
-      href: `/evento/${event.slug}`
+      href: getPublicEventUrl(event.slug)
     },
     {
       label: "Compra cartao testada",
       description: "Confirma checkout transparente, aprovacao e emissao de ingresso no cartao.",
       status: cardPayments.length > 0 ? "READY" : "WARNING",
       action: cardPayments.length > 0 ? undefined : "Fazer uma compra teste via cartao neste evento.",
-      href: `/evento/${event.slug}`
+      href: getPublicEventUrl(event.slug)
     }
   ];
 

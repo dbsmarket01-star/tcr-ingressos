@@ -4,6 +4,7 @@ import { requirePermission } from "@/features/auth/auth.service";
 import { updateManualPresaleCheckAction } from "@/features/launch/final-presale.actions";
 import { getFinalPresaleChecklist } from "@/features/launch/final-presale-checklist.service";
 import { formatDateTime } from "@/lib/format";
+import { getPublicEventUrl } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -88,7 +89,7 @@ export default async function FinalPresalePage({ searchParams }: FinalPresalePag
           </button>
           {checklist.event ? (
             <>
-              <Link className="secondaryButton" href={`/evento/${checklist.event.slug}`}>
+              <Link className="secondaryButton" href={getPublicEventUrl(checklist.event.slug)}>
                 Pagina publica
               </Link>
               <Link className="secondaryButton" href={`/admin/launch?eventId=${checklist.event.id}`}>

@@ -12,6 +12,7 @@ import {
 } from "@/features/lots/lot.actions";
 import { formatPercentageFromBps } from "@/features/pricing/pricing";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { getPublicEventUrl } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -167,7 +168,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
           <div className="sectionHeader inlineHeader">
             <h2>Operacao do evento</h2>
             <div className="actionRow">
-              <Link className="secondaryButton smallButton" href={`/evento/${event.slug}`}>
+              <Link className="secondaryButton smallButton" href={getPublicEventUrl(event.slug)}>
                 Visualizar
               </Link>
               <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}/edit`}>

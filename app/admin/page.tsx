@@ -3,6 +3,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { requirePermission } from "@/features/auth/auth.service";
 import { getDashboardMetrics } from "@/features/dashboard/dashboard.service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { getPublicEventUrl } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -296,7 +297,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                         <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}`}>
                           Gerenciar
                         </Link>
-                        <Link className="secondaryButton smallButton" href={`/evento/${event.slug}`}>
+                        <Link className="secondaryButton smallButton" href={getPublicEventUrl(event.slug)}>
                           Publico
                         </Link>
                       </div>

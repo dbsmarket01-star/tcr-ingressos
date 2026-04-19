@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { requirePermission } from "@/features/auth/auth.service";
 import { getLaunchChecklist } from "@/features/launch/launch-checklist.service";
+import { getPublicEventUrl } from "@/lib/public-url";
 import { formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -86,7 +87,7 @@ export default async function LaunchPage({ searchParams }: LaunchPageProps) {
           </button>
           {checklist.event ? (
             <>
-              <Link className="secondaryButton" href={`/evento/${checklist.event.slug}`}>
+              <Link className="secondaryButton" href={getPublicEventUrl(checklist.event.slug)}>
                 Pagina publica
               </Link>
               <Link className="secondaryButton" href={`/admin/events/${checklist.event.id}`}>

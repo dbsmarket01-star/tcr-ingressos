@@ -4,6 +4,7 @@ import { requirePermission } from "@/features/auth/auth.service";
 import { duplicateEventAction } from "@/features/events/event.actions";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { getEventCapacity, getEventRevenueInCents, listEvents } from "@/features/events/event.service";
+import { getPublicEventUrl } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -105,7 +106,7 @@ export default async function EventsPage() {
                       </td>
                       <td>
                         <div className="actionRow">
-                          <Link className="secondaryButton smallButton" href={`/evento/${event.slug}`}>
+                          <Link className="secondaryButton smallButton" href={getPublicEventUrl(event.slug)}>
                             Visualizar
                           </Link>
                           <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}`}>

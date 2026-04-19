@@ -2,6 +2,7 @@ import { PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getPaymentHealth } from "@/features/settings/payment-health.service";
 import { summarizeAsaasSplit } from "@/features/payments/split-report.service";
+import { getPublicEventUrl } from "@/lib/public-url";
 import { manualPresaleChecklistItems } from "./manual-presale-checklist";
 
 type FinalCheckStatus = "READY" | "WARNING" | "BLOCKED";
@@ -188,7 +189,7 @@ export async function getFinalPresaleChecklist(eventId?: string) {
       status: status(event.status === "PUBLISHED" && activeLots.length > 0 && availableQuantity > 0, true),
       evidence: `${activeLots.length} lote(s) ativo(s), ${availableQuantity} ingresso(s) disponiveis.`,
       action: "Publicar evento e conferir lotes ativos.",
-      href: `/evento/${event.slug}`
+      href: getPublicEventUrl(event.slug)
     },
     {
       label: "Banner e comunicacao visual",
@@ -231,7 +232,7 @@ export async function getFinalPresaleChecklist(eventId?: string) {
       status: status(pixOrders.length > 0),
       evidence: `${pixOrders.length} pagamento(s) Pix aprovado(s).`,
       action: "Fazer compra teste via Pix.",
-      href: `/evento/${event.slug}`
+      href: getPublicEventUrl(event.slug)
     },
     {
       label: "Compra cartao real",
@@ -239,7 +240,7 @@ export async function getFinalPresaleChecklist(eventId?: string) {
       status: status(cardOrders.length > 0),
       evidence: `${cardOrders.length} pagamento(s) cartao aprovado(s).`,
       action: "Fazer compra teste via cartao.",
-      href: `/evento/${event.slug}`
+      href: getPublicEventUrl(event.slug)
     },
     {
       label: "Split Asaas conferido",
