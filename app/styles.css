@@ -1475,35 +1475,38 @@ textarea {
 }
 
 .whatsappFloatingButton {
-  align-items: center;
   background: #128c7e;
   border-radius: 999px;
   bottom: 24px;
   box-shadow: 0 16px 40px rgba(18, 140, 126, 0.28);
   color: #fff;
-  display: inline-flex;
-  font-size: 0.95rem;
-  font-weight: 700;
-  gap: 10px;
-  padding: 12px 16px;
+  display: inline-grid;
+  height: 58px;
+  place-items: center;
   position: fixed;
   right: 20px;
   text-decoration: none;
+  transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+  width: 58px;
   z-index: 60;
 }
 
 .whatsappFloatingButton:hover {
   background: #0f7a6f;
+  box-shadow: 0 20px 44px rgba(18, 140, 126, 0.34);
+  transform: translateY(-1px);
 }
 
 .whatsappFloatingButtonIcon {
-  background: rgba(255, 255, 255, 0.16);
-  border-radius: 999px;
   display: inline-grid;
-  font-size: 0.95rem;
-  font-weight: 800;
   height: 28px;
   place-items: center;
+  width: 28px;
+}
+
+.whatsappFloatingButtonIcon svg {
+  display: block;
+  height: 28px;
   width: 28px;
 }
 
@@ -4649,8 +4652,6 @@ textarea {
 
   .whatsappFloatingButton {
     bottom: 88px;
-    font-size: 0.88rem;
-    padding: 11px 14px;
     right: 14px;
   }
 
@@ -4806,5 +4807,7 @@ textarea {
   .whatsappFloatingButton {
     bottom: 82px;
     right: 12px;
+    height: 54px;
+    width: 54px;
   }
 }
