@@ -431,6 +431,7 @@ model Order {
   currency        String      @default("BRL")
   expiresAt       DateTime?
   expiredEmailSentAt DateTime?
+  ticketsEmailSentAt DateTime?
   paidAt          DateTime?
   canceledAt      DateTime?
   utmSource       String?

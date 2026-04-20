@@ -134,6 +134,10 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
                   <strong>{order.payment?.status ?? "-"}</strong>
                 </div>
                 <div>
+                  <span>E-mail de ingresso</span>
+                  <strong>{order.ticketsEmailSentAt ? formatDateTime(order.ticketsEmailSentAt) : "Pendente"}</strong>
+                </div>
+                <div>
                   <span>Ingressos</span>
                   <strong>{order.tickets.length}</strong>
                 </div>

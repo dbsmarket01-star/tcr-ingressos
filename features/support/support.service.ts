@@ -76,11 +76,11 @@ export async function resendTicketsEmailByOrderCode(orderCode: string) {
   });
 
   if (!order) {
-    throw new Error("Pedido nao encontrado.");
+    throw new Error("Pedido não encontrado.");
   }
 
   if (order.tickets.length === 0) {
-    throw new Error("Este pedido ainda nao possui ingressos emitidos.");
+    throw new Error("Este pedido ainda não possui ingressos emitidos.");
   }
 
   await sendTicketsEmail({
@@ -95,6 +95,13 @@ export async function resendTicketsEmailByOrderCode(orderCode: string) {
       lotName: ticket.lot.name,
       url: createPublicTicketUrl(ticket.code)
     }))
+  });
+
+  await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      ticketsEmailSentAt: new Date()
+    }
   });
 
   return {
@@ -115,7 +122,7 @@ export async function resendPendingPaymentEmailByOrderCode(orderCode: string) {
   });
 
   if (!order) {
-    throw new Error("Pedido nao encontrado.");
+    throw new Error("Pedido não encontrado.");
   }
 
   if (order.status !== "PENDING_PAYMENT") {

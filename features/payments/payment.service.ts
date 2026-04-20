@@ -16,6 +16,47 @@ type WebhookPayload = {
   rawPayload?: unknown;
 };
 
+type TicketEmailPayload = {
+  to: string;
+  buyerName: string;
+  orderCode: string;
+  eventTitle: string;
+  eventDate: Date;
+  venueName: string;
+  tickets: Array<{
+    code: string;
+    lotName: string;
+    url: string;
+  }>;
+};
+
+async function markTicketsEmailSent(orderId: string) {
+  await prisma.order.update({
+    where: { id: orderId },
+    data: {
+      ticketsEmailSentAt: new Date()
+    }
+  });
+}
+
+async function sendTicketsEmailSafely(orderId: string, email: TicketEmailPayload | null) {
+  if (!email) {
+    return;
+  }
+
+  try {
+    await sendTicketsEmail(email);
+    await markTicketsEmailSent(orderId);
+  } catch (error) {
+    console.error("[email] Falha ao enviar ingressos", {
+      orderId,
+      orderCode: email.orderCode,
+      to: email.to,
+      error: error instanceof Error ? error.message : error
+    });
+  }
+}
+
 function mapAsaasPaymentStatus(status?: string) {
   if (status === "CONFIRMED" || status === "RECEIVED") {
     return "APPROVED" as const;
@@ -375,6 +416,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
               items: true,
               customer: true,
               event: true,
+              ticketsEmailSentAt: true,
               tickets: {
                 select: {
                   id: true,
@@ -396,7 +438,24 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
       }
 
       if (payment.status === PaymentStatus.APPROVED || payment.order.status === OrderStatus.PAID) {
-        return { payment, email: null };
+        const approvedTicketsEmail =
+          payment.order.tickets.length > 0 && !payment.order.ticketsEmailSentAt
+            ? {
+                to: payment.order.customer.email,
+                buyerName: payment.order.customer.name,
+                orderCode: payment.order.code,
+                eventTitle: payment.order.event.title,
+                eventDate: payment.order.event.startsAt,
+                venueName: payment.order.event.venueName,
+                tickets: payment.order.tickets.map((ticket) => ({
+                  code: ticket.code,
+                  lotName: ticket.lot.name,
+                  url: createPublicTicketUrl(ticket.code)
+                }))
+              }
+            : null;
+
+        return { payment, orderId: payment.orderId, email: approvedTicketsEmail };
       }
 
       if (payload.status === "PENDING") {
@@ -409,7 +468,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           }
         });
 
-        return { payment: updatedPayment, email: null };
+        return { payment: updatedPayment, orderId: payment.orderId, email: null };
       }
 
       if (payload.status === "APPROVED") {
@@ -506,8 +565,9 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
 
         return {
           payment: updatedPayment,
+          orderId: payment.orderId,
           email:
-            generatedTickets.length > 0
+            generatedTickets.length > 0 && !payment.order.ticketsEmailSentAt
               ? {
                   to: payment.order.customer.email,
                   buyerName: payment.order.customer.name,
@@ -554,10 +614,10 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           }
         });
 
-        return { payment: updatedPayment, email: null };
+        return { payment: updatedPayment, orderId: payment.orderId, email: null };
       }
 
-      return { payment, email: null };
+      return { payment, orderId: payment.orderId, email: null };
     },
     {
       isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
@@ -566,9 +626,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
     }
   );
 
-  if (result.email) {
-    await sendTicketsEmail(result.email);
-  }
+  await sendTicketsEmailSafely(result.orderId, result.email);
 
   return result.payment;
 }
