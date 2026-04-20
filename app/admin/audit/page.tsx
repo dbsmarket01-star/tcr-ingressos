@@ -13,7 +13,8 @@ const actionLabels: Record<string, string> = {
   ADMIN_PASSWORD_CHANGED: "Senha alterada",
   EVENT_DUPLICATED: "Evento duplicado",
   COMPANY_SETTINGS_UPDATED: "Configuracoes da empresa alteradas",
-  ORDER_CANCELED_MANUALLY: "Pedido cancelado manualmente"
+  ORDER_CANCELED_MANUALLY: "Pedido cancelado manualmente",
+  ORDER_REFUNDED_MANUALLY: "Pedido reembolsado manualmente"
 };
 
 function formatMetadata(metadata: unknown) {

@@ -489,6 +489,129 @@ export async function cancelPendingOrderByCode(code: string, reason = "Cancelado
   );
 }
 
+export async function refundPaidOrderByCode(
+  code: string,
+  reason = "Reembolso registrado manualmente pela operacao."
+) {
+  const order = await prisma.order.findUnique({
+    where: { code },
+    include: {
+      items: true,
+      payment: true,
+      tickets: {
+        include: {
+          checkIns: true
+        }
+      },
+      event: {
+        select: {
+          slug: true
+        }
+      }
+    }
+  });
+
+  if (!order) {
+    throw new Error("Pedido nao encontrado.");
+  }
+
+  if (order.status !== OrderStatus.PAID) {
+    throw new Error("Apenas pedidos pagos podem ser reembolsados por aqui.");
+  }
+
+  if (!order.payment || order.payment.status !== PaymentStatus.APPROVED) {
+    throw new Error("Este pedido nao possui pagamento aprovado para registrar reembolso.");
+  }
+
+  const hasUsedTicket = order.tickets.some(
+    (ticket) => ticket.status === "USED" || ticket.checkIns.some((checkIn) => checkIn.status === "APPROVED")
+  );
+
+  if (hasUsedTicket) {
+    throw new Error("Nao e possivel reembolsar um pedido com ingresso ja utilizado no check-in.");
+  }
+
+  return prisma.$transaction(
+    async (tx) => {
+      const updatedOrder = await tx.order.updateMany({
+        where: {
+          id: order.id,
+          status: OrderStatus.PAID
+        },
+        data: {
+          status: OrderStatus.REFUNDED,
+          canceledAt: new Date()
+        }
+      });
+
+      if (updatedOrder.count !== 1) {
+        return {
+          refunded: false,
+          releasedQuantity: 0,
+          canceledTickets: 0,
+          eventSlug: order.event.slug
+        };
+      }
+
+      let releasedQuantity = 0;
+
+      for (const item of order.items) {
+        await tx.$executeRaw`
+          UPDATE "TicketLot"
+          SET "soldQuantity" = GREATEST("soldQuantity" - ${item.quantity}, 0)
+          WHERE "id" = ${item.lotId}
+        `;
+        releasedQuantity += item.quantity;
+      }
+
+      const canceledTickets = order.tickets.length;
+
+      if (canceledTickets > 0) {
+        await tx.ticket.updateMany({
+          where: {
+            orderId: order.id,
+            status: {
+              in: ["ACTIVE", "INVALID"]
+            }
+          },
+          data: {
+            status: "CANCELED",
+            canceledAt: new Date()
+          }
+        });
+      }
+
+      const paymentId = order.payment?.id;
+
+      if (!paymentId) {
+        throw new Error("Pagamento nao encontrado para registrar o reembolso.");
+      }
+
+      await tx.payment.update({
+        where: {
+          id: paymentId
+        },
+        data: {
+          status: PaymentStatus.REFUNDED,
+          failureReason: reason
+        }
+      });
+
+      return {
+        refunded: true,
+        releasedQuantity,
+        canceledTickets,
+        eventSlug: order.event.slug
+      };
+    },
+    {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      maxWait: 5000,
+      timeout: 10000
+    }
+  );
+}
+
 async function notifyOrderExpired(order: {
   id: string;
   code: string;

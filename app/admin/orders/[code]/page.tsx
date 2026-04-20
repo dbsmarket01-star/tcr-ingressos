@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { requirePermission } from "@/features/auth/auth.service";
 import { getAdminOrderDetail } from "@/features/orders/order-detail.service";
+import { refundPaidOrderAction } from "@/features/orders/order.admin.actions";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +11,12 @@ export const dynamic = "force-dynamic";
 type AdminOrderDetailPageProps = {
   params: Promise<{
     code: string;
+  }>;
+  searchParams?: Promise<{
+    refunded?: string;
+    released?: string;
+    ticketsCanceled?: string;
+    orderError?: string;
   }>;
 };
 
@@ -35,23 +42,35 @@ const ticketStatusLabels = {
   ACTIVE: "Ativo",
   USED: "Usado",
   CANCELED: "Cancelado",
-  INVALID: "Invalido"
+  INVALID: "Inválido"
 };
 
-export default async function AdminOrderDetailPage({ params }: AdminOrderDetailPageProps) {
+export default async function AdminOrderDetailPage({ params, searchParams }: AdminOrderDetailPageProps) {
   await requirePermission("ORDERS");
   const { code } = await params;
+  const query = searchParams ? await searchParams : {};
   const order = await getAdminOrderDetail(code);
 
   if (!order) {
     notFound();
   }
 
+  const refundSuccess = query.refunded === "1";
+  const orderError = typeof query.orderError === "string" ? query.orderError : null;
+
   return (
     <AdminShell
       title={`Pedido ${order.code}`}
-      description="Visao operacional completa do pedido, pagamento, split, ingressos emitidos e check-in."
+      description="Visão operacional completa do pedido, pagamento, split, ingressos emitidos e check-in."
     >
+      {refundSuccess ? (
+        <div className="successBox spacedSection">
+          Reembolso registrado com sucesso. {query.released ?? "0"} ingresso(s) voltaram ao estoque e{" "}
+          {query.ticketsCanceled ?? "0"} ingresso(s) foram cancelado(s).
+        </div>
+      ) : null}
+      {orderError ? <div className="errorBox spacedSection">{orderError}</div> : null}
+
       <section className="card orderMaintenance">
         <div>
           <h2>{order.event.title}</h2>
@@ -66,6 +85,15 @@ export default async function AdminOrderDetailPage({ params }: AdminOrderDetailP
         <Link className="button" href={`/pedido/${order.code}`}>
           Ver tela do cliente
         </Link>
+        {order.status === "PAID" ? (
+          <form action={refundPaidOrderAction} className="inlineForm">
+            <input type="hidden" name="orderCode" value={order.code} />
+            <input type="hidden" name="refundReason" value="Reembolso registrado manualmente pelo painel administrativo." />
+            <button className="secondaryButton" type="submit">
+              Reembolsar e cancelar ingressos
+            </button>
+          </form>
+        ) : null}
       </section>
 
       <section className="grid dashboardGrid">
@@ -75,7 +103,7 @@ export default async function AdminOrderDetailPage({ params }: AdminOrderDetailP
         </article>
         <article className="card metric">
           <span className="muted">Pagamento</span>
-          <strong>{order.payment ? paymentStatusLabels[order.payment.status] : "Nao iniciado"}</strong>
+          <strong>{order.payment ? paymentStatusLabels[order.payment.status] : "Não iniciado"}</strong>
         </article>
         <article className="card metric">
           <span className="muted">Total</span>
@@ -122,7 +150,7 @@ export default async function AdminOrderDetailPage({ params }: AdminOrderDetailP
               <strong>{order.payment?.provider || "-"}</strong>
             </div>
             <div>
-              <span>Referencia externa</span>
+              <span>Referência externa</span>
               <strong className="breakText">{order.payment?.externalId || "-"}</strong>
             </div>
             <div>
@@ -151,7 +179,7 @@ export default async function AdminOrderDetailPage({ params }: AdminOrderDetailP
             <strong>{formatCurrency(order.serviceFeeInCents)}</strong>
           </div>
           <div>
-            <span>Juros cartao</span>
+            <span>Juros do cartão</span>
             <strong>{formatCurrency(order.cardInterestInCents)}</strong>
           </div>
           <div>
@@ -174,7 +202,7 @@ export default async function AdminOrderDetailPage({ params }: AdminOrderDetailP
           <h2>Split Asaas</h2>
         </div>
         {order.splitSummary.entries.length === 0 ? (
-          <div className="empty">Este pedido ainda nao tem split retornado pelo Asaas.</div>
+          <div className="empty">Este pedido ainda não tem split retornado pelo Asaas.</div>
         ) : (
           <div className="tableScroll">
             <table className="table financeTable">
@@ -198,7 +226,7 @@ export default async function AdminOrderDetailPage({ params }: AdminOrderDetailP
           </div>
         )}
         <p className="muted">
-          O status do split aqui e o ultimo retorno salvo do Asaas. A liquidacao final deve ser conferida no extrato do Asaas.
+          O status do split aqui é o último retorno salvo do Asaas. A liquidação final deve ser conferida no extrato do Asaas.
         </p>
       </section>
 
@@ -212,7 +240,7 @@ export default async function AdminOrderDetailPage({ params }: AdminOrderDetailP
               <tr>
                 <th>Lote</th>
                 <th>Qtd.</th>
-                <th>Unitario</th>
+                <th>Unitário</th>
                 <th>Taxa</th>
                 <th>Subtotal</th>
               </tr>
@@ -246,7 +274,7 @@ export default async function AdminOrderDetailPage({ params }: AdminOrderDetailP
             <table className="table operationalTable">
               <thead>
                 <tr>
-                  <th>Codigo</th>
+                  <th>Código</th>
                   <th>Lote</th>
                   <th>Status</th>
                   <th>Emitido em</th>
