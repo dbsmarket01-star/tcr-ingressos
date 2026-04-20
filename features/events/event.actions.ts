@@ -131,6 +131,8 @@ export async function createEventAction(formData: FormData) {
   });
 
   revalidatePath("/admin/events");
+  revalidatePath("/");
+  revalidatePath(`/evento/${parsed.data.slug}`);
   redirect("/admin/events");
 }
 
@@ -200,6 +202,8 @@ export async function updateEventAction(formData: FormData) {
 
   revalidatePath("/admin/events");
   revalidatePath(`/admin/events/${eventId}`);
+  revalidatePath("/");
+  revalidatePath(`/evento/${parsed.data.slug}`);
   redirect(`/admin/events/${eventId}`);
 }
 
@@ -223,6 +227,7 @@ export async function updateEventStatusAction(formData: FormData) {
 
   revalidatePath("/admin/events");
   revalidatePath(`/admin/events/${eventId}`);
+  revalidatePath("/");
   redirect(`/admin/events/${eventId}?eventSaved=1`);
 }
 
@@ -256,5 +261,7 @@ export async function duplicateEventAction(formData: FormData) {
 
   revalidatePath("/admin/events");
   revalidatePath("/admin/audit");
+  revalidatePath("/");
+  revalidatePath(`/evento/${duplicatedEvent.slug}`);
   redirect(`/admin/events/${duplicatedEvent.id}`);
 }
