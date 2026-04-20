@@ -90,6 +90,7 @@ export async function createEvent(input: EventDraftInput & { status: EventStatus
     seoDescription: input.seoDescription || null,
     seoKeywords: input.seoKeywords || null,
     seoImageUrl: input.seoImageUrl || null,
+    supportWhatsappUrl: input.supportWhatsappUrl || null,
     conversionSocialProofText: input.conversionSocialProofText || null,
     conversionUrgencyText: input.conversionUrgencyText || null,
     conversionCtaText: input.conversionCtaText || null,
@@ -216,6 +217,7 @@ export async function updateEvent(eventId: string, input: EventDraftInput & { st
     seoDescription: input.seoDescription || null,
     seoKeywords: input.seoKeywords || null,
     seoImageUrl: input.seoImageUrl || null,
+    supportWhatsappUrl: input.supportWhatsappUrl || null,
     conversionSocialProofText: input.conversionSocialProofText || null,
     conversionUrgencyText: input.conversionUrgencyText || null,
     conversionCtaText: input.conversionCtaText || null,
@@ -282,6 +284,7 @@ export async function duplicateEvent(eventId: string) {
         seoDescription: event.seoDescription,
         seoKeywords: event.seoKeywords,
         seoImageUrl: event.seoImageUrl,
+        supportWhatsappUrl: event.supportWhatsappUrl,
         conversionSocialProofText: event.conversionSocialProofText,
         conversionUrgencyText: event.conversionUrgencyText,
         conversionCtaText: event.conversionCtaText

@@ -312,6 +312,7 @@ model Event {
   seoDescription      String?
   seoKeywords         String?
   seoImageUrl         String?
+  supportWhatsappUrl  String?
   conversionSocialProofText String?
   conversionUrgencyText     String?
   conversionCtaText         String?

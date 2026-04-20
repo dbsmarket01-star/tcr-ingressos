@@ -32,43 +32,44 @@ function validationMessage(error: unknown) {
     if (field) {
       const fieldLabels: Record<string, string> = {
         title: "Nome do evento",
-        slug: "Slug publico",
-        description: "Descricao",
-        startsAt: "Inicio do evento",
+        slug: "Slug público",
+        description: "Descrição",
+        startsAt: "Início do evento",
         endsAt: "Fim do evento",
         venueName: "Nome do local",
-        venueAddress: "Endereco",
+        venueAddress: "Endereço",
         city: "Cidade",
         state: "UF",
-        salesStartsAt: "Inicio das vendas",
+        salesStartsAt: "Início das vendas",
         salesEndsAt: "Fim das vendas",
         bannerUrl: "URL do banner",
         bannerPosition: "Enquadramento do banner",
         eventMapImageUrl: "Mapa do evento",
         eventMapTemplate: "Modelo do mapa",
-        eventMapNotes: "Observacoes do mapa",
+        eventMapNotes: "Observações do mapa",
         metaPixelId: "Meta Pixel ID",
         googleTagManagerId: "Google Tag Manager ID",
-        seoTitle: "Titulo SEO",
-        seoDescription: "Descricao SEO",
+        seoTitle: "Título SEO",
+        seoDescription: "Descrição SEO",
         seoImageUrl: "Imagem SEO",
+        supportWhatsappUrl: "Link do WhatsApp",
         conversionSocialProofText: "Prova social",
-        conversionUrgencyText: "Texto de urgencia",
-        conversionCtaText: "Texto do botao",
+        conversionUrgencyText: "Texto de urgência",
+        conversionCtaText: "Texto do botão",
         highlightedLotId: "Lote em destaque"
       };
 
       const label = fieldLabels[field] || field;
 
       if (field === "startsAt") {
-        return "Preencha o campo Inicio do evento com data e horario.";
+        return "Preencha o campo Início do evento com data e horário.";
       }
 
       return `Verifique o campo: ${label}.`;
     }
   }
 
-  return "Verifique os campos obrigatorios do evento.";
+  return "Verifique os campos obrigatórios do evento.";
 }
 
 export async function createEventAction(formData: FormData) {
@@ -85,7 +86,7 @@ export async function createEventAction(formData: FormData) {
     mapUploadUrl = await savePublicImageUpload(formData.get("eventMapFile") as File | null, `events/${slug}/map`);
     seoUploadUrl = await savePublicImageUpload(formData.get("seoImageFile") as File | null, `events/${slug}/seo`);
   } catch (error) {
-    redirect(`/admin/events/new?error=${encodeURIComponent(error instanceof Error ? error.message : "Nao foi possivel salvar a imagem.")}`);
+    redirect(`/admin/events/new?error=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível salvar a imagem.")}`);
   }
 
   const parsed = eventDraftSchema.safeParse({
@@ -113,6 +114,7 @@ export async function createEventAction(formData: FormData) {
     seoDescription: String(formData.get("seoDescription") ?? "").trim() || undefined,
     seoKeywords: String(formData.get("seoKeywords") ?? "").trim() || undefined,
     seoImageUrl: seoUploadUrl || String(formData.get("seoImageUrl") ?? "").trim(),
+    supportWhatsappUrl: String(formData.get("supportWhatsappUrl") ?? "").trim() || undefined,
     conversionSocialProofText: String(formData.get("conversionSocialProofText") ?? "").trim() || undefined,
     conversionUrgencyText: String(formData.get("conversionUrgencyText") ?? "").trim() || undefined,
     conversionCtaText: String(formData.get("conversionCtaText") ?? "").trim() || undefined,
@@ -139,7 +141,7 @@ export async function updateEventAction(formData: FormData) {
   const status = String(formData.get("status") ?? "DRAFT");
 
   if (!eventId) {
-    throw new Error("Evento nao informado.");
+    throw new Error("Evento não informado.");
   }
 
   const slug = slugify(rawSlug || title);
@@ -152,7 +154,7 @@ export async function updateEventAction(formData: FormData) {
     mapUploadUrl = await savePublicImageUpload(formData.get("eventMapFile") as File | null, `events/${slug}/map`);
     seoUploadUrl = await savePublicImageUpload(formData.get("seoImageFile") as File | null, `events/${slug}/seo`);
   } catch (error) {
-    redirect(`/admin/events/${eventId}/edit?error=${encodeURIComponent(error instanceof Error ? error.message : "Nao foi possivel salvar a imagem.")}`);
+    redirect(`/admin/events/${eventId}/edit?error=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível salvar a imagem.")}`);
   }
 
   const parsed = eventDraftSchema.safeParse({
@@ -180,6 +182,7 @@ export async function updateEventAction(formData: FormData) {
     seoDescription: String(formData.get("seoDescription") ?? "").trim() || undefined,
     seoKeywords: String(formData.get("seoKeywords") ?? "").trim() || undefined,
     seoImageUrl: seoUploadUrl || String(formData.get("seoImageUrl") ?? "").trim(),
+    supportWhatsappUrl: String(formData.get("supportWhatsappUrl") ?? "").trim() || undefined,
     conversionSocialProofText: String(formData.get("conversionSocialProofText") ?? "").trim() || undefined,
     conversionUrgencyText: String(formData.get("conversionUrgencyText") ?? "").trim() || undefined,
     conversionCtaText: String(formData.get("conversionCtaText") ?? "").trim() || undefined,
@@ -205,17 +208,17 @@ export async function updateEventStatusAction(formData: FormData) {
   const status = String(formData.get("status") ?? "").trim();
 
   if (!eventId) {
-    redirect(`/admin/events?eventError=${encodeURIComponent("Evento nao informado.")}`);
+    redirect(`/admin/events?eventError=${encodeURIComponent("Evento não informado.")}`);
   }
 
   if (status !== "DRAFT" && status !== "PUBLISHED" && status !== "UNPUBLISHED") {
-    redirect(`/admin/events/${eventId}?eventError=${encodeURIComponent("Status invalido para esta acao.")}`);
+    redirect(`/admin/events/${eventId}?eventError=${encodeURIComponent("Status inválido para esta ação.")}`);
   }
 
   try {
     await updateEventStatus(eventId, status);
   } catch (error) {
-    redirect(`/admin/events/${eventId}?eventError=${encodeURIComponent(error instanceof Error ? error.message : "Nao foi possivel atualizar o evento.")}`);
+    redirect(`/admin/events/${eventId}?eventError=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível atualizar o evento.")}`);
   }
 
   revalidatePath("/admin/events");
@@ -228,7 +231,7 @@ export async function duplicateEventAction(formData: FormData) {
   const eventId = String(formData.get("eventId") ?? "").trim();
 
   if (!eventId) {
-    redirect(`/admin/events?eventError=${encodeURIComponent("Evento nao informado.")}`);
+    redirect(`/admin/events?eventError=${encodeURIComponent("Evento não informado.")}`);
   }
 
   let duplicatedEvent: Awaited<ReturnType<typeof duplicateEvent>>;
@@ -236,7 +239,7 @@ export async function duplicateEventAction(formData: FormData) {
   try {
     duplicatedEvent = await duplicateEvent(eventId);
   } catch (error) {
-    redirect(`/admin/events/${eventId}?eventError=${encodeURIComponent(error instanceof Error ? error.message : "Nao foi possivel duplicar o evento.")}`);
+    redirect(`/admin/events/${eventId}?eventError=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível duplicar o evento.")}`);
   }
 
   await createAuditLog({

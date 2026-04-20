@@ -1474,6 +1474,39 @@ textarea {
   display: none;
 }
 
+.whatsappFloatingButton {
+  align-items: center;
+  background: #128c7e;
+  border-radius: 999px;
+  bottom: 24px;
+  box-shadow: 0 16px 40px rgba(18, 140, 126, 0.28);
+  color: #fff;
+  display: inline-flex;
+  font-size: 0.95rem;
+  font-weight: 700;
+  gap: 10px;
+  padding: 12px 16px;
+  position: fixed;
+  right: 20px;
+  text-decoration: none;
+  z-index: 60;
+}
+
+.whatsappFloatingButton:hover {
+  background: #0f7a6f;
+}
+
+.whatsappFloatingButtonIcon {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  display: inline-grid;
+  font-size: 0.95rem;
+  font-weight: 800;
+  height: 28px;
+  place-items: center;
+  width: 28px;
+}
+
 .lotOption {
   background: #ffffff;
   border: 1px solid var(--line-soft);
@@ -4614,6 +4647,13 @@ textarea {
     text-align: center;
   }
 
+  .whatsappFloatingButton {
+    bottom: 88px;
+    font-size: 0.88rem;
+    padding: 11px 14px;
+    right: 14px;
+  }
+
   .detailGrid,
   .eventVenueCard,
   .cardCompactGrid,
@@ -4761,5 +4801,10 @@ textarea {
 
   .mobileCheckoutBar strong {
     max-width: 48%;
+  }
+
+  .whatsappFloatingButton {
+    bottom: 82px;
+    right: 12px;
   }
 }

@@ -28,6 +28,13 @@ const googleTagManagerIdSchema = z
   .regex(/^GTM-[A-Z0-9]{4,}$/i, "Google Tag Manager ID deve seguir o formato GTM-XXXXXXX.")
   .transform((value) => value.toUpperCase())
   .optional();
+const supportWhatsappUrlSchema = z
+  .string()
+  .url("Link do WhatsApp deve ser uma URL valida.")
+  .refine((value) => value.includes("wa.me") || value.includes("api.whatsapp.com"), {
+    message: "Use um link do WhatsApp como wa.me ou api.whatsapp.com."
+  })
+  .optional();
 
 export const eventDraftSchema = z.object({
   title: z.string().min(3),
@@ -54,6 +61,7 @@ export const eventDraftSchema = z.object({
   seoDescription: z.string().max(180).optional(),
   seoKeywords: z.string().max(300).optional(),
   seoImageUrl: imageUrlSchema,
+  supportWhatsappUrl: supportWhatsappUrlSchema,
   conversionSocialProofText: z.string().max(120).optional(),
   conversionUrgencyText: z.string().max(140).optional(),
   conversionCtaText: z.string().max(60).optional(),

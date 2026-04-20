@@ -140,6 +140,14 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             <textarea name="importantInfo" rows={4} placeholder="Regras, classificação, acesso..." />
           </label>
           <label className="field">
+            <span>WhatsApp de suporte</span>
+            <input
+              name="supportWhatsappUrl"
+              placeholder="https://wa.me/55DDDNUMERO?text=..."
+            />
+            <small>Opcional. Esse link aparece como botão flutuante na página do evento e no pedido pendente.</small>
+          </label>
+          <label className="field">
             <span>Status inicial</span>
             <select name="status" defaultValue="DRAFT">
               <option value="DRAFT">Rascunho</option>

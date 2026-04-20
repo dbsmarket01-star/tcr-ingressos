@@ -2,6 +2,7 @@ import Link from "next/link";
 import Script from "next/script";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getBuyerProfile } from "@/features/customer-auth/google-buyer.service";
 import { getCachedEventSeoBySlug, getCachedPublicEventBySlug } from "@/features/events/event.service";
@@ -454,6 +455,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           <strong>{ctaText}</strong>
         </a>
       ) : null}
+      {event.supportWhatsappUrl ? <WhatsappFloatingButton href={event.supportWhatsappUrl} /> : null}
     </main>
   );
 }

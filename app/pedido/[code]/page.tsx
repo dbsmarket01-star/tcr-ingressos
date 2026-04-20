@@ -3,6 +3,7 @@ import Script from "next/script";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CopyButton } from "@/components/forms/CopyButton";
+import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getOrderByCode } from "@/features/orders/order.service";
 import {
@@ -596,6 +597,9 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
           ) : null}
         </aside>
       </section>
+      {order.status !== "PAID" && order.event.supportWhatsappUrl ? (
+        <WhatsappFloatingButton href={order.event.supportWhatsappUrl} label="Precisa de ajuda?" />
+      ) : null}
     </main>
   );
 }
