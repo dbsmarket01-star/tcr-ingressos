@@ -1008,14 +1008,18 @@ textarea {
   margin-top: 18px;
 }
 
-.dashboardHeroMetric {
+.card.dashboardHeroMetric {
   background: linear-gradient(160deg, #0c6b55, #0d3d34);
   border-color: #0c6b55;
   color: white;
 }
 
-.dashboardHeroMetric .muted,
-.dashboardHeroMetric small {
+.card.dashboardHeroMetric strong {
+  color: white;
+}
+
+.card.dashboardHeroMetric .muted,
+.card.dashboardHeroMetric small {
   color: rgba(255, 255, 255, 0.78);
 }
 
