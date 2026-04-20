@@ -20,68 +20,86 @@ export const adminNavItems: AdminNavItem[] = [
   {
     href: "/admin",
     label: "Dashboard",
-    description: "Vendas, faturamento e alertas",
+    description: "Faturamento, pedidos e visão geral",
     area: "DASHBOARD"
   },
   {
     href: "/admin/events",
     label: "Eventos",
-    description: "Cadastro, edicao e publicacao",
+    description: "Cadastro, publicação e lotes",
     area: "EVENTS"
-  },
-  {
-    href: "/admin/orders",
-    label: "Pedidos",
-    description: "Compras, status e pagamentos",
-    area: "ORDERS"
   },
   {
     href: "/admin/support",
     label: "Atendimento",
-    description: "Busca e reenvio de ingressos",
+    description: "Suporte de pedidos e clientes",
     area: "SUPPORT"
-  },
-  {
-    href: "/admin/finance",
-    label: "Financeiro",
-    description: "Receita, taxas e repasses",
-    area: "FINANCE"
-  },
-  {
-    href: "/admin/reports/lots",
-    label: "Relatorios",
-    description: "Vendas por lote e evento",
-    area: "REPORTS"
-  },
-  {
-    href: "/admin/production",
-    label: "Pre-producao",
-    description: "Checklist para vender de verdade",
-    area: "PRODUCTION"
-  },
-  {
-    href: "/admin/launch",
-    label: "Lancamento",
-    description: "Checklist por evento",
-    area: "PRODUCTION"
-  },
-  {
-    href: "/admin/final-presale",
-    label: "Pre-venda final",
-    description: "Teste operacional final",
-    area: "PRODUCTION"
   },
   {
     href: "/admin/check-in",
     label: "Check-in",
-    description: "Validacao na entrada",
+    description: "Validação e entrada do evento",
     area: "CHECKIN"
+  },
+  {
+    href: "/admin/orders",
+    label: "Pedidos",
+    description: "Compras, pagamentos e reservas",
+    area: "ORDERS"
   },
   {
     href: "/admin/tickets",
     label: "Ingressos",
-    description: "Emissao, QR Code e status",
+    description: "Emissão, status e QR Code",
     area: "TICKETS"
+  },
+  {
+    href: "/admin/finance",
+    label: "Financeiro",
+    description: "Receita, taxas, split e repasses",
+    area: "FINANCE"
+  },
+  {
+    href: "/admin/customers",
+    label: "Clientes",
+    description: "Compradores e histórico",
+    area: "CUSTOMERS"
+  },
+  {
+    href: "/admin/launch",
+    label: "Lançamento",
+    description: "Checklist de publicação",
+    area: "PRODUCTION"
+  },
+  {
+    href: "/admin/final-presale",
+    label: "Pré-venda final",
+    description: "Validação antes do tráfego",
+    area: "PRODUCTION"
+  },
+  {
+    href: "/admin/production",
+    label: "Produção",
+    description: "Deploy, webhook e saúde operacional",
+    area: "PRODUCTION"
+  },
+  {
+    href: "/admin/reports/lots",
+    label: "Relatório de lotes",
+    description: "Capacidade, viradas e desempenho",
+    area: "REPORTS"
+  },
+  {
+    href: "/admin/settings",
+    label: "Configurações",
+    description: "Dados da TCR e integrações",
+    area: "SETTINGS"
+  },
+  {
+    href: "/admin/users",
+    label: "Usuários",
+    description: "Equipe interna e permissões",
+    area: "USERS"
   },
   {
     href: "/admin/account",
@@ -90,22 +108,10 @@ export const adminNavItems: AdminNavItem[] = [
     area: "ACCOUNT"
   },
   {
-    href: "/admin/users",
-    label: "Usuarios",
-    description: "Equipe interna e permissoes",
-    area: "USERS"
-  },
-  {
     href: "/admin/audit",
     label: "Auditoria",
-    description: "Logs de acoes internas",
+    description: "Histórico de ações internas",
     area: "AUDIT"
-  },
-  {
-    href: "/admin/settings",
-    label: "Configuracoes",
-    description: "Dados da TCR Ingressos",
-    area: "SETTINGS"
   }
 ];
 
@@ -115,32 +121,40 @@ export function getAdminNavItemsForRole(role: AdminRole) {
 
 export const adminNavGroups: AdminNavGroup[] = [
   {
-    label: "Visao geral",
-    description: "Painel",
+    label: "Visão geral",
+    description: "Painel central",
     defaultOpen: true,
-    items: adminNavItems.filter((item) => item.area === "DASHBOARD")
+    items: adminNavItems.filter((item) => item.href === "/admin")
   },
   {
-    label: "Operacao",
-    description: "Eventos e entrada",
+    label: "Operação",
+    description: "Evento e atendimento",
     defaultOpen: true,
-    items: adminNavItems.filter((item) => ["EVENTS", "CHECKIN", "SUPPORT"].includes(item.area))
+    items: adminNavItems.filter((item) =>
+      ["/admin/events", "/admin/support", "/admin/check-in"].includes(item.href)
+    )
   },
   {
     label: "Vendas",
-    description: "Pedidos",
+    description: "Pedidos, ingressos e receita",
     defaultOpen: true,
-    items: adminNavItems.filter((item) => ["ORDERS", "TICKETS"].includes(item.area))
+    items: adminNavItems.filter((item) =>
+      ["/admin/orders", "/admin/tickets", "/admin/finance", "/admin/customers"].includes(item.href)
+    )
   },
   {
-    label: "Analise",
-    description: "Financeiro",
-    items: adminNavItems.filter((item) => ["FINANCE", "REPORTS", "PRODUCTION"].includes(item.area))
+    label: "Lançamento",
+    description: "Preparação de abertura",
+    items: adminNavItems.filter((item) =>
+      ["/admin/launch", "/admin/final-presale", "/admin/production", "/admin/reports/lots"].includes(item.href)
+    )
   },
   {
     label: "Sistema",
-    description: "Acessos",
-    items: adminNavItems.filter((item) => ["SETTINGS", "USERS", "AUDIT", "ACCOUNT"].includes(item.area))
+    description: "Configurações e acessos",
+    items: adminNavItems.filter((item) =>
+      ["/admin/settings", "/admin/users", "/admin/account", "/admin/audit"].includes(item.href)
+    )
   }
 ];
 
@@ -154,14 +168,14 @@ export function getAdminNavGroupsForRole(role: AdminRole) {
 }
 
 export const phaseOneModules = [
-  "Admins/usuarios internos",
-  "Eventos",
-  "Lotes de ingressos",
-  "Clientes/participantes",
-  "Pedidos e itens do pedido",
-  "Pagamentos",
+  "Dashboard operacional",
+  "Eventos e lotes",
+  "Pedidos e pagamentos",
   "Ingressos com QR Code",
-  "Check-ins",
-  "Cupons",
-  "Configuracoes da empresa"
+  "Check-in e validação",
+  "Financeiro e split",
+  "Atendimento",
+  "Relatórios de lotes",
+  "Checklist de lançamento",
+  "Configurações da operação"
 ];
