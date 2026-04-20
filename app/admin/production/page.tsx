@@ -56,8 +56,8 @@ export default async function ProductionPage() {
 
   return (
     <AdminShell
-      title="Pre-producao"
-      description="Checklist para sair do localhost com mais seguranca e vender ingressos de verdade."
+      title="Pré-produção"
+      description="Checklist para sair do localhost com mais segurança e vender ingressos de verdade."
     >
       <section className="grid dashboardGrid">
         <article className="card metric">
@@ -65,7 +65,7 @@ export default async function ProductionPage() {
           <strong>{readiness.summary.ready}</strong>
         </article>
         <article className="card metric">
-          <span className="muted">Atencao</span>
+          <span className="muted">Atenção</span>
           <strong>{readiness.summary.warning}</strong>
         </article>
         <article className="card metric">
@@ -82,12 +82,12 @@ export default async function ProductionPage() {
         <div className="sectionHeader inlineHeader">
           <div>
             <span className="eyebrow">Copiar quando publicar</span>
-            <h2>Links de producao esperados</h2>
+            <h2>Links de produção esperados</h2>
           </div>
         </div>
         <div className="settingsGrid">
           <div>
-            <span>URL publica</span>
+            <span>URL pública</span>
             <strong className="breakText">{readiness.links.appUrl}</strong>
           </div>
           <div>
@@ -99,7 +99,7 @@ export default async function ProductionPage() {
             <strong className="breakText">{readiness.links.asaasWebhook}</strong>
           </div>
           <div>
-            <span>Cron de expiracao com query</span>
+            <span>Cron de expiração com query</span>
             <strong className="breakText">{readiness.links.cron}</strong>
           </div>
           <div>
@@ -108,30 +108,29 @@ export default async function ProductionPage() {
           </div>
         </div>
         <p className="formHint">
-          Troque os textos ASAAS_WEBHOOK_TOKEN e CRON_SECRET pelos valores cadastrados nas variaveis de ambiente.
-          Nao envie esses tokens em conversas ou prints publicos.
+          Troque os textos ASAAS_WEBHOOK_TOKEN e CRON_SECRET pelos valores cadastrados nas variáveis de ambiente.
+          Não envie esses tokens em conversas ou prints públicos.
         </p>
       </section>
 
       <section className="grid twoColumns spacedSection">
-        <ChecklistSection title="Deploy e seguranca" eyebrow="Sair do localhost" items={readiness.deploy} />
-        <ChecklistSection title="Infraestrutura critica" eyebrow="Antes do trafego" items={readiness.infrastructure} />
+        <ChecklistSection title="Deploy e segurança" eyebrow="Sair do localhost" items={readiness.deploy} />
+        <ChecklistSection title="Infraestrutura crítica" eyebrow="Antes do tráfego" items={readiness.infrastructure} />
       </section>
 
       <section className="grid twoColumns spacedSection">
         <ChecklistSection title="Pagamentos" eyebrow="Asaas, webhooks e split" items={readiness.payments} />
-        <ChecklistSection title="Operacao minima" eyebrow="Painel e portaria" items={readiness.operation} />
+        <ChecklistSection title="Operação mínima" eyebrow="Painel e portaria" items={readiness.operation} />
       </section>
 
-      <ChecklistSection title="Pre-venda controlada" eyebrow="Teste com pessoas reais" items={readiness.goLive} />
-
+      <ChecklistSection title="Pré-venda controlada" eyebrow="Teste com pessoas reais" items={readiness.goLive} />
       <section className="grid twoColumns spacedSection">
         <article className="card">
-          <span className="eyebrow">Recomendacao atual</span>
+          <span className="eyebrow">Recomendação atual</span>
           <h2>Infraestrutura recomendada</h2>
           <p className="muted">
-            Para a primeira operacao real da TCR, use Vercel Pro para a aplicacao, Supabase Pro para banco/storage,
-            dominio definitivo com HTTPS, Asaas em producao, Resend autenticado e rotina externa de expiracao a cada
+            Para a primeira operação real da TCR, use Vercel Pro para a aplicação, Supabase Pro para banco/storage,
+            domínio definitivo com HTTPS, Asaas em produção, Resend autenticado e rotina externa de expiração a cada
             5 minutos. AWS fica como etapa futura quando houver necessidade de containers, Redis, filas e controle fino
             de infraestrutura.
           </p>
@@ -140,13 +139,13 @@ export default async function ProductionPage() {
               Conferir eventos
             </Link>
             <Link className="button" href="/admin/settings">
-              Configuracoes
+              Configurações
             </Link>
           </div>
         </article>
         <article className="card">
-          <span className="eyebrow">Rotina automatica</span>
-          <h2>Expiracao de reservas</h2>
+          <span className="eyebrow">Rotina automática</span>
+          <h2>Expiração de reservas</h2>
           <p className="muted">
             Agende uma chamada a cada 5 minutos para liberar estoque de pedidos pendentes vencidos. A rota aceita
             token por query, header x-cron-token ou Authorization Bearer.
@@ -159,9 +158,9 @@ export default async function ProductionPage() {
         <span className="eyebrow">Plano de escala</span>
         <h2>Quando pensar em AWS</h2>
         <p className="muted">
-          Vercel Pro + Supabase Pro e uma base profissional para a pre-venda e para os primeiros eventos. A migracao para
+          Vercel Pro + Supabase Pro é uma base profissional para a pré-venda e para os primeiros eventos. A migração para
           AWS, containers ou Postgres dedicado deve entrar quando o volume exigir cache Redis, filas de processamento,
-          workers separados, observabilidade avancada e controle de custo em alto trafego.
+          workers separados, observabilidade avançada e controle de custo em alto tráfego.
         </p>
         <div className="settingsGrid">
           <div>
@@ -169,7 +168,7 @@ export default async function ProductionPage() {
             <strong>Vercel Pro + Supabase Pro</strong>
           </div>
           <div>
-            <span>Proxima camada</span>
+            <span>Próxima camada</span>
             <strong>Redis, filas e monitoramento</strong>
           </div>
           <div>
@@ -180,24 +179,26 @@ export default async function ProductionPage() {
       </section>
 
       <section className="card spacedSection">
-        <h2>Roteiro manual antes de trafego pago</h2>
+        <h2>Roteiro manual antes de tráfego pago</h2>
         <ol className="orderedChecklist">
-          <li>Publicar em dominio real com HTTPS.</li>
+          <li>Publicar em domínio real com HTTPS.</li>
           <li>Atualizar APP_URL e NEXT_PUBLIC_APP_URL no deploy.</li>
-          <li>Atualizar o webhook do Asaas para o dominio definitivo.</li>
-          <li>Agendar a expiracao automatica de pedidos pendentes.</li>
-          <li>Comprar 1 ingresso via Pix real.</li>
-          <li>Comprar 1 ingresso via cartao real.</li>
-          <li>Confirmar webhook automatico do Asaas sem usar botao manual.</li>
+          <li>Atualizar o webhook do Asaas para o domínio definitivo.</li>
+          <li>Agendar a expiração automática de pedidos pendentes.</li>
+          <li>Comprar 1 ingresso via Pix real, incluindo um lote com desconto no Pix, se essa regra estiver ativa.</li>
+          <li>Comprar 1 ingresso via cartão real.</li>
+          <li>Confirmar webhook automático do Asaas sem usar botão manual.</li>
           <li>Confirmar recebimento do e-mail com QR Code.</li>
+          <li>Validar o botão de suporte no WhatsApp na página pública do evento e no pedido pendente.</li>
           <li>Ler QR Code em celular real na tela de check-in.</li>
           <li>Tentar ler o mesmo ingresso novamente e confirmar bloqueio.</li>
           <li>Exportar pedidos e ingressos em CSV.</li>
           <li>Cancelar um pedido pendente teste e conferir estoque liberado.</li>
+          <li>Reembolsar um pedido pago teste e confirmar cancelamento dos ingressos e devolução ao estoque.</li>
         </ol>
         <div className="formActions">
           <Link className="secondaryButton" href="/admin/settings">
-            Ver configuracoes
+            Ver configurações
           </Link>
           <Link className="button" href="/admin/orders">
             Ver pedidos

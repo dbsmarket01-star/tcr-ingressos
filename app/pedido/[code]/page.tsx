@@ -343,7 +343,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                 </div>
                 <div>
                   <span>2</span>
-                  <strong>Pague com seguranca</strong>
+                  <strong>Pague com segurança</strong>
                 </div>
                 <div>
                   <span>3</span>
@@ -356,7 +356,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                   <summary>
                     <span>Pix</span>
                     <strong>{formatCurrency(pixTotalInCents)}</strong>
-                    <small>QR Code e copia e cola com confirmação automática</small>
+                    <small>QR Code e código copia e cola com confirmação automática</small>
                   </summary>
                   <div className="pixBox">
                     <div className="paymentChoiceHeader">

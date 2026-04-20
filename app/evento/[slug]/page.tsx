@@ -290,7 +290,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           </div>
 
           {activeLots.length === 0 ? (
-            <div className="empty">Nenhum ingresso disponivel no momento.</div>
+            <div className="empty">Nenhum ingresso disponível no momento.</div>
           ) : (
             <form action={createCheckoutOrderAction} className="form">
               {checkoutError ? <div className="errorBox">{checkoutError}</div> : null}
@@ -337,7 +337,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                           <strong>+ {formatCurrency(serviceFeeInCents)}</strong>
                         </div>
                         <div>
-                          <span>Total unitario</span>
+                          <span>Total unitário</span>
                           <strong>{formatCurrency(totalWithFeeInCents)}</strong>
                         </div>
                       </div>
@@ -351,7 +351,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                           <span style={{ width: `${Math.min(soldPercent, 100)}%` }} />
                         </div>
                         <span className={isLowStock || lotEndsSoon ? "urgencyText" : "muted"}>
-                          {isLowStock ? `Ultimos ${available} ingressos` : `${available} disponiveis`}
+                          {isLowStock ? `Últimos ${available} ingressos` : `${available} disponíveis`}
                           {lotEndsSoon ? " - lote vira em breve" : ""}
                         </span>
                       </div>
@@ -449,7 +449,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
       {activeLots.length > 0 ? (
         <a className="mobileCheckoutBar" href="#ingressos">
           <span>
-            {activeLots.length} opcoes
+            {activeLots.length} opções
             {lowestTotalInCents > 0 ? ` • desde ${formatCurrency(lowestTotalInCents)}` : ""}
           </span>
           <strong>{ctaText}</strong>
