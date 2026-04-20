@@ -364,7 +364,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                         name={`quantity_${lot.id}`}
                         step="1"
                         type="number"
-                        defaultValue={isHighlighted && available > 0 ? "1" : "0"}
+                        defaultValue="0"
                       />
                     </div>
                   </label>
