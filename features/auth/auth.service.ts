@@ -24,6 +24,12 @@ export type AdminArea =
   | "FINANCE"
   | "CHECKIN"
   | "TICKETS"
+  | "SECURITY"
+  | "SUBSCRIPTIONS"
+  | "DEVICES"
+  | "INCIDENTS"
+  | "CUSTOMERS"
+  | "BILLING"
   | "ACCOUNT"
   | "AUDIT"
   | "REPORTS"
@@ -39,6 +45,12 @@ const areaPermissions: Record<AdminArea, AdminRole[]> = {
   FINANCE: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.FINANCE],
   CHECKIN: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.CHECKIN],
   TICKETS: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.SUPPORT, AdminRole.CHECKIN, AdminRole.STAFF],
+  SECURITY: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.SUPPORT, AdminRole.STAFF],
+  SUBSCRIPTIONS: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.FINANCE, AdminRole.SUPPORT],
+  DEVICES: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.SUPPORT, AdminRole.STAFF],
+  INCIDENTS: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.SUPPORT, AdminRole.STAFF],
+  CUSTOMERS: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.SUPPORT, AdminRole.STAFF],
+  BILLING: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.FINANCE],
   ACCOUNT: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.FINANCE, AdminRole.SUPPORT, AdminRole.STAFF, AdminRole.CHECKIN],
   AUDIT: [AdminRole.OWNER],
   REPORTS: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.FINANCE],
