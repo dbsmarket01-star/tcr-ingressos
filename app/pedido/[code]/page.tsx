@@ -94,6 +94,14 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
       installmentValueInCents: Math.ceil(totalWithInterestInCents / installment)
     };
   });
+  const eventHeroDate = formatDateTime(order.event.startsAt);
+  const paymentStatusLabel = order.payment ? paymentStatusLabels[order.payment.status] : "Não iniciado";
+  const orderLeadText =
+    order.status === "PAID"
+      ? "Pagamento confirmado. Seus ingressos já estão liberados para acesso e também podem ser abertos individualmente abaixo."
+      : order.status === "EXPIRED"
+        ? "Este pedido expirou e a reserva voltou para o estoque. Para comprar, volte ao evento e gere um novo pedido."
+        : "Seu pedido foi reservado. Escolha Pix ou cartão e conclua o pagamento para liberar os ingressos com QR Code.";
 
   return (
     <main className="shell">
@@ -154,7 +162,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
           <span className="brandMark">T</span>
           <span>TCR Ingressos</span>
         </Link>
-        <nav className="nav" aria-label="Navegacao">
+        <nav className="nav" aria-label="Navegação">
           <Link href={`/evento/${order.event.slug}`}>Voltar ao evento</Link>
         </nav>
       </header>
@@ -164,15 +172,25 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
           <div className="orderHeroBlock">
             <span className={`status ${orderStatusClasses[order.status]}`}>{orderStatusLabels[order.status]}</span>
             <h1>Pedido {order.code}</h1>
-            <p className="muted">
-              {order.status === "EXPIRED"
-                ? "Este pedido expirou e a reserva voltou para o estoque. Para comprar, volte ao evento e crie um novo pedido."
-                : "Seu pedido foi criado. Finalize o pagamento para receber seus ingressos com QR Code."}
-            </p>
+            <p className="muted">{orderLeadText}</p>
+            <div className="orderHeroMeta">
+              <div>
+                <span>Evento</span>
+                <strong>{order.event.title}</strong>
+              </div>
+              <div>
+                <span>Data</span>
+                <strong>{eventHeroDate}</strong>
+              </div>
+              <div>
+                <span>Status do pagamento</span>
+                <strong>{paymentStatusLabel}</strong>
+              </div>
+            </div>
           </div>
           {order.status === "PAID" ? (
             <div className="successBox">
-              Pagamento aprovado. Seus ingressos foram emitidos abaixo e tambem podem ser enviados por e-mail.
+              Pagamento aprovado. Seus ingressos foram emitidos abaixo e também podem ser enviados por e-mail.
             </div>
           ) : null}
 
@@ -189,7 +207,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
             <div className="contentBlock">
               <h2>Origem da compra</h2>
               <p>
-                <strong>{order.utmSource || "Origem nao informada"}</strong>
+                <strong>{order.utmSource || "Origem não informada"}</strong>
                 {order.utmMedium ? ` / ${order.utmMedium}` : ""}
                 {order.utmCampaign ? (
                   <>
@@ -209,7 +227,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                   <tr>
                     <th>Ingresso</th>
                     <th>Quantidade</th>
-                    <th>Unitario</th>
+                    <th>Unitário</th>
                     <th>Taxa</th>
                     <th>Total</th>
                   </tr>
@@ -254,6 +272,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
             <div>
               <span>Resumo do pedido</span>
               <strong>{order.event.title}</strong>
+              <small>{eventHeroDate}</small>
             </div>
             <div className="summaryLine">
               <span>Ingressos</span>
@@ -272,7 +291,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
             </div>
             {order.cardInterestInCents > 0 ? (
               <div className="summaryLine">
-                <span>Juros cartao</span>
+                <span>Juros do cartão</span>
                 <strong>{formatCurrency(order.cardInterestInCents)}</strong>
               </div>
             ) : null}
@@ -280,13 +299,16 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
               <span>Total</span>
               <strong>{formatCurrency(order.totalInCents)}</strong>
             </div>
+            <p className="summarySupportText">
+              O ingresso digital será enviado para <strong>{order.customer.email}</strong> assim que o pagamento for aprovado.
+            </p>
           </div>
 
           <div className="paymentBox">
             <div className="paymentBoxHeader">
               <div>
                 <h3>Pagamento</h3>
-                <span>Escolha Pix ou cartao para concluir sua compra com seguranca.</span>
+                <span>Escolha Pix ou cartão para concluir a compra com segurança.</span>
               </div>
               <strong>{formatCurrency(order.totalInCents)}</strong>
             </div>
@@ -294,13 +316,18 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
             <div className="paymentStatusGrid compactPaymentStatus">
               <div>
                 <span>Status</span>
-                <strong>{order.payment ? paymentStatusLabels[order.payment.status] : "Nao iniciado"}</strong>
+                <strong>{paymentStatusLabel}</strong>
               </div>
             </div>
           </div>
 
           {order.status === "PENDING_PAYMENT" ? (
             <div className="paymentMethodStack">
+              <div className="orderActionNote">
+                <span>Próximo passo</span>
+                <strong>Escolha a forma de pagamento para liberar seus ingressos.</strong>
+                <p>O QR Code de entrada é emitido automaticamente após a confirmação.</p>
+              </div>
               <div className="paymentSteps">
                 <div>
                   <span>1</span>
@@ -321,13 +348,13 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                   <summary>
                     <span>Pix</span>
                     <strong>{formatCurrency(baseTotalInCents)}</strong>
-                    <small>QR Code e copia e cola com confirmacao automatica</small>
+                    <small>QR Code e copia e cola com confirmação automática</small>
                   </summary>
                   <div className="pixBox">
                     <div className="paymentChoiceHeader">
                       <div>
                         <h3>Pix</h3>
-                        <span>Confirmacao automatica apos o pagamento</span>
+                        <span>Confirmação automática após o pagamento</span>
                       </div>
                       <strong>{formatCurrency(baseTotalInCents)}</strong>
                     </div>
@@ -336,14 +363,14 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                         <ol className="paymentInstructionList">
                           <li>Abra o app do seu banco.</li>
                           <li>Escaneie o QR Code ou use o Pix copia e cola.</li>
-                          <li>Apos a confirmacao, seus ingressos sao liberados automaticamente.</li>
+                          <li>Após a confirmação, seus ingressos são liberados automaticamente.</li>
                         </ol>
                         <img
                           alt="QR Code Pix para pagamento do pedido"
                           src={`data:image/png;base64,${order.payment.pixQrCodeImage}`}
                         />
                         {order.payment.pixExpiresAt ? (
-                          <p className="muted">Valido ate {formatDateTime(order.payment.pixExpiresAt)}</p>
+                          <p className="muted">Válido até {formatDateTime(order.payment.pixExpiresAt)}</p>
                         ) : null}
                         <label className="field">
                           <span>Pix copia e cola</span>
@@ -351,21 +378,20 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                         </label>
                         <CopyButton
                           className="secondaryButton fullButton"
-                          copiedLabel="Codigo Pix copiado"
-                          label="Copiar codigo Pix"
+                          copiedLabel="Código Pix copiado"
+                          label="Copiar código Pix"
                           value={order.payment.pixQrCodePayload}
                         />
                         <p className="checkoutFootnote">
-                          A confirmacao e automatica. Depois de pagar, aguarde alguns instantes; os
-                          ingressos serao liberados assim que o pagamento for aprovado.
+                          A confirmação é automática. Depois de pagar, aguarde alguns instantes; seus ingressos serão liberados assim que o pagamento for aprovado.
                         </p>
                       </>
                     ) : (
                       <>
                         <ol className="paymentInstructionList">
                           <li>Clique em gerar Pix.</li>
-                          <li>Na proxima tela, use o QR Code ou o codigo copia e cola.</li>
-                          <li>Os ingressos sao liberados automaticamente apos a aprovacao.</li>
+                          <li>Na próxima tela, use o QR Code ou o código copia e cola.</li>
+                          <li>Os ingressos são liberados automaticamente após a aprovação.</li>
                         </ol>
                         <form action={startPaymentAction}>
                           <input type="hidden" name="orderCode" value={order.code} />
@@ -381,29 +407,29 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                 {isAsaasCheckout ? (
                   <details className="paymentChoiceDisclosure">
                     <summary>
-                      <span>Cartao de credito</span>
+                      <span>Cartão de crédito</span>
                       <strong>Ver parcelas</strong>
-                      <small>Escolha as parcelas e veja juros antes de confirmar</small>
+                      <small>Escolha as parcelas e veja os juros antes de confirmar</small>
                     </summary>
                     <form action={payWithCreditCardAction} className="cardForm">
                       <div className="cardFormHeader">
                         <div>
-                          <h3>Cartao de credito</h3>
-                          <span>Pagamento seguro com confirmacao automatica</span>
+                          <h3>Cartão de crédito</h3>
+                          <span>Pagamento seguro com confirmação automática</span>
                         </div>
                         <strong>{formatCurrency(baseTotalInCents)}</strong>
                       </div>
                       <div className="cardSecurityNote">
                         <span>Checkout transparente</span>
                         <span>Ambiente seguro de pagamento</span>
-                        <span>Ingressos liberados apos aprovacao</span>
+                        <span>Ingressos liberados após aprovação</span>
                       </div>
                       <input type="hidden" name="orderCode" value={order.code} />
 
                       <div className="cardFormSection">
-                        <h4>Dados do cartao</h4>
+                        <h4>Dados do cartão</h4>
                         <label className="field">
-                          <span>Numero do cartao</span>
+                          <span>Número do cartão</span>
                           <input
                             autoComplete="cc-number"
                             inputMode="numeric"
@@ -414,7 +440,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                         </label>
                         <div className="cardCompactGrid">
                           <label className="field">
-                            <span>Mes</span>
+                            <span>Mês</span>
                             <input
                               autoComplete="cc-exp-month"
                               inputMode="numeric"
@@ -460,7 +486,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                             ))}
                           </select>
                           <small>
-                            Juros aparecem apenas quando a parcela configurada para este ingresso exigir acrescimo.
+                            Os juros aparecem apenas quando a parcela configurada para este ingresso exigir acréscimo.
                           </small>
                         </label>
                       </div>
@@ -492,7 +518,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                             />
                           </label>
                           <label className="field">
-                            <span>Numero</span>
+                          <span>Número</span>
                             <input name="holderAddressNumber" required />
                           </label>
                         </div>
@@ -502,12 +528,11 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                         </label>
                       </div>
 
-                      <SubmitButton className="button fullButton" pendingText="Processando cartao...">
-                        Pagar com cartao agora
+                      <SubmitButton className="button fullButton" pendingText="Processando cartão...">
+                        Pagar com cartão agora
                       </SubmitButton>
                       <p className="checkoutFootnote">
-                        A cobranca sera enviada para aprovacao automatica. Se o banco solicitar
-                        confirmacao, conclua no app do cartao.
+                        A cobrança será enviada para aprovação automática. Se o banco solicitar confirmação, conclua no aplicativo do cartão.
                       </p>
                     </form>
                   </details>
@@ -536,7 +561,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
           {order.status === "PAID" ? (
             <div className="paymentCompleteBox">
               <h3>Compra aprovada</h3>
-              <p>Seus ingressos estao liberados. Apresente o QR Code na entrada do evento.</p>
+              <p>Seus ingressos estão liberados. Apresente o QR Code na entrada do evento.</p>
               <div className="ticketList">
                 {order.tickets.map((ticket) => (
                   <Link className="secondaryButton fullButton" href={`/ingresso/${ticket.code}`} key={ticket.id}>

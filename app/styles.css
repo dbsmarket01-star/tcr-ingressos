@@ -2698,6 +2698,32 @@ textarea {
   padding: 18px;
 }
 
+.orderHeroMeta {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.orderHeroMeta div {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+}
+
+.orderHeroMeta span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.orderHeroMeta strong {
+  line-height: 1.35;
+}
+
 .orderGrid h1 {
   font-size: clamp(30px, 5vw, 46px);
   line-height: 1;
@@ -2754,7 +2780,8 @@ textarea {
 }
 
 .orderSummaryBox {
-  background: #f7faf9;
+  background:
+    linear-gradient(180deg, #f7faf9, #ffffff);
   border: 1px solid var(--line);
   border-radius: 8px;
   display: grid;
@@ -2775,6 +2802,19 @@ textarea {
   font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.orderSummaryBox > div:first-child small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.summarySupportText {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 8px 0 0;
 }
 
 .ticketList {
@@ -3574,6 +3614,33 @@ textarea {
 .paymentMethodStack {
   display: grid;
   gap: 14px;
+}
+
+.orderActionNote {
+  background: #f7faf9;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+}
+
+.orderActionNote span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.orderActionNote strong,
+.orderActionNote p {
+  margin: 0;
+}
+
+.orderActionNote p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .paymentChoiceList {
@@ -4523,6 +4590,10 @@ textarea {
 
   .orderHeroBlock {
     margin: 0 0 18px;
+  }
+
+  .orderHeroMeta {
+    grid-template-columns: 1fr;
   }
 
   .orderSummaryBox {
