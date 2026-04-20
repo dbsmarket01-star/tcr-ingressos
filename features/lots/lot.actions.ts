@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { parseInstallmentStart, parseMoneyToCents, parsePercentageToBps } from "@/features/pricing/pricing";
 import { createTicketLot, updateTicketLot, updateTicketLotPricing, updateTicketLotStatus } from "./lot.service";
-import { ticketLotSchema } from "./lot.schema";
+import { ticketLotPricingSchema, ticketLotSchema } from "./lot.schema";
 
 function optionalDate(value: FormDataEntryValue | null) {
   const text = String(value ?? "").trim();
@@ -111,16 +111,7 @@ export async function updateTicketLotPricingAction(formData: FormData) {
     redirect(`/admin/events/${eventId || ""}?lotError=${encodeURIComponent("Lote não informado.")}`);
   }
 
-  const parsed = ticketLotSchema
-    .pick({
-      priceInCents: true,
-      serviceFeeBps: true,
-      pixDiscountPercentBps: true,
-      pixDiscountFixedInCents: true,
-      cardInterestBpsPerInstallment: true,
-      cardInterestStartsAtInstallment: true
-    })
-    .safeParse({
+  const parsed = ticketLotPricingSchema.safeParse({
       priceInCents: Math.round(price * 100),
       serviceFeeBps: parsePercentageToBps(formData.get("serviceFeePercent")),
       ...parsePixDiscount(formData),

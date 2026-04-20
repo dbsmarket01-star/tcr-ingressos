@@ -1,6 +1,6 @@
 import { LotStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import type { TicketLotInput } from "./lot.schema";
+import type { TicketLotInput, TicketLotPricingInput } from "./lot.schema";
 
 export async function createTicketLot(input: TicketLotInput & { status: LotStatus }) {
   return prisma.ticketLot.create({
@@ -95,15 +95,7 @@ export async function updateTicketLot(lotId: string, input: TicketLotInput & { s
 
 export async function updateTicketLotPricing(
   lotId: string,
-  input: Pick<
-    TicketLotInput,
-    | "priceInCents"
-    | "serviceFeeBps"
-    | "pixDiscountPercentBps"
-    | "pixDiscountFixedInCents"
-    | "cardInterestBpsPerInstallment"
-    | "cardInterestStartsAtInstallment"
-  >
+  input: TicketLotPricingInput
 ) {
   return prisma.ticketLot.update({
     where: { id: lotId },
