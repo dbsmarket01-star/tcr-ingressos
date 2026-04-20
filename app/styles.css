@@ -194,6 +194,9 @@ textarea {
 }
 
 .adminShell {
+  background:
+    radial-gradient(circle at top left, rgba(14, 124, 102, 0.08), transparent 24%),
+    linear-gradient(180deg, #f4f7f8 0, #f9fbfb 100%);
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
   min-height: 100vh;
@@ -217,6 +220,27 @@ textarea {
   border-radius: 8px;
   margin-bottom: 16px;
   padding: 10px;
+}
+
+.sidebarIntro {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px;
+}
+
+.sidebarIntro .eyebrow {
+  color: #bde7dc;
+}
+
+.sidebarIntro p {
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
 }
 
 .sideNav {
@@ -360,9 +384,12 @@ textarea {
 
 .adminHeader {
   align-items: center;
-  background: rgba(255, 255, 255, 0.62);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(244, 249, 247, 0.92)),
+    rgba(255, 255, 255, 0.62);
   border: 1px solid var(--line-soft);
   border-radius: 8px;
+  box-shadow: 0 12px 30px rgba(18, 36, 48, 0.05);
   display: flex;
   gap: 20px;
   justify-content: space-between;
@@ -462,7 +489,7 @@ textarea {
 }
 
 .homeHeroInner {
-  align-items: end;
+  align-items: center;
   display: grid;
   gap: 34px;
   grid-template-columns: minmax(0, 1fr) minmax(320px, 430px);
@@ -530,6 +557,38 @@ textarea {
   text-transform: uppercase;
 }
 
+.homeHeroStats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 6px;
+  max-width: 720px;
+}
+
+.homeHeroStats div {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  min-height: 92px;
+  padding: 16px;
+}
+
+.homeHeroStats span {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.homeHeroStats strong {
+  color: white;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
 .homeHeroStatement {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -557,6 +616,51 @@ textarea {
 .homeFeaturePanel {
   display: grid;
   gap: 12px;
+}
+
+.homeFeaturedEventCard {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  box-shadow: 0 22px 52px rgba(5, 22, 18, 0.26);
+  color: var(--ink);
+  display: grid;
+  overflow: hidden;
+}
+
+.homeFeaturedEventMedia {
+  aspect-ratio: 16 / 9;
+  background-position: center;
+  background-size: cover;
+}
+
+.homeFeaturedEventBody {
+  display: grid;
+  gap: 10px;
+  padding: 20px;
+}
+
+.homeFeaturedEventBody h2,
+.homeFeaturedEventBody p,
+.homeFeaturedEventBody strong {
+  margin: 0;
+}
+
+.homeFeaturedEventBody h2 {
+  font-size: clamp(28px, 4vw, 34px);
+  line-height: 1.05;
+}
+
+.homeFeaturedEventBody p {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.homeFeaturedEventBody strong {
+  color: var(--ink);
+  font-size: 15px;
 }
 
 .homeFeatureCard {
@@ -705,6 +809,9 @@ textarea {
 }
 
 .homeEmptyState {
+  align-content: center;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(243, 247, 247, 0.98));
   min-height: 220px;
 }
 
@@ -1608,6 +1715,12 @@ textarea {
   width: 100%;
 }
 
+.eventShowcaseImage {
+  aspect-ratio: 16 / 8;
+  background-position: center;
+  background-size: cover;
+}
+
 .eventShowcaseBody {
   display: grid;
   gap: 8px;
@@ -1617,6 +1730,12 @@ textarea {
 .eventShowcaseBody h3,
 .eventShowcaseBody p {
   margin: 0;
+}
+
+.eventShowcaseBody strong {
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .eventCardCta {
@@ -4247,6 +4366,11 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .homeHeroStats,
+  .homeMiniStats {
+    grid-template-columns: 1fr;
+  }
+
   .homeHeroStatement {
     max-width: none;
   }
@@ -4254,6 +4378,11 @@ textarea {
   .homeFeaturePanel,
   .homeSupportPanel {
     position: static;
+  }
+
+  .homeFeaturedEventMedia,
+  .eventShowcaseImage {
+    aspect-ratio: 16 / 10;
   }
 
   .purchasePanel {
@@ -4442,6 +4571,7 @@ textarea {
   }
 
   .homeFeatureCard strong,
+  .homeFeaturedEventBody h2,
   .homeSupportPanel h3 {
     font-size: 22px;
   }

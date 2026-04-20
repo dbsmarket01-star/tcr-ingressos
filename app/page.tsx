@@ -1,12 +1,30 @@
 import Link from "next/link";
 import { listCachedPublishedEventShowcase } from "@/features/events/event.service";
-import { formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
 
+function formatEventCardDate(date: Date) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(date);
+}
+
+const trustHighlights = ["Pix e cartão", "QR Code automático", "Check-in seguro"];
+
+const operationalHighlights = [
+  "Página pública com foco em conversão",
+  "Pedidos, pagamentos e ingressos no mesmo fluxo",
+  "Painel administrativo para operação diária"
+];
+
 export default async function Home() {
   const events = await listCachedPublishedEventShowcase(6);
+  const featuredEvent = events[0] ?? null;
 
   return (
     <main className="shell homePage">
@@ -18,49 +36,65 @@ export default async function Home() {
               <span>TCR Ingressos</span>
             </div>
             <span className="homeEyebrow">Bilheteria oficial</span>
-            <h1>Eventos em cartaz com compra segura e ingresso digital.</h1>
+            <h1>Eventos em cartaz com compra segura, operação rápida e experiência profissional.</h1>
             <p>
-              Confira as próximas experiências da TCR, escolha seu ingresso e receba o QR Code para
-              entrada de forma automática após a confirmação do pagamento.
+              Encontre os próximos eventos da TCR, escolha seu ingresso em poucos passos e receba o
+              QR Code automaticamente após a confirmação do pagamento.
             </p>
-            <div className="homeTrustStrip" aria-label="Diferenciais da TCR Ingressos">
-              <span>Pix e cartão</span>
-              <span>QR Code automático</span>
-              <span>Site oficial</span>
+            <div className="homeTrustStrip" aria-label="Diferenciais da bilheteria">
+              {trustHighlights.map((item) => (
+                <span key={item}>{item}</span>
+              ))}
             </div>
-            <div className="homeHeroStatement">
-              <strong>Escolha o evento, garanta seu ingresso e acompanhe tudo pelo pedido.</strong>
-              <span>Uma jornada simples para quem compra e segura para quem opera.</span>
-            </div>
-          </div>
-
-          <aside className="homeFeaturePanel" aria-label="Evento em destaque">
-            {events[0] ? (
-              <Link className="homeFeatureCard" href={`/evento/${events[0].slug}`}>
-                {events[0].bannerUrl ? <img src={events[0].bannerUrl} alt="" /> : null}
-                <div>
-                  <span>Em destaque</span>
-                  <strong>{events[0].title}</strong>
-                  <p>{formatDateTime(events[0].startsAt)} · {events[0].venueName}</p>
-                </div>
-              </Link>
-            ) : (
-              <div className="homeFeatureCard emptyFeature">
-                <span>Agenda TCR</span>
-                <strong>Novos eventos em breve</strong>
-                <p>Acompanhe a bilheteria oficial para ver as próximas aberturas.</p>
-              </div>
-            )}
-            <div className="homeMiniStats">
+            <div className="homeHeroStats" aria-label="Indicadores da plataforma">
               <div>
                 <span>Eventos</span>
                 <strong>{events.length}</strong>
               </div>
               <div>
-                <span>Compra</span>
-                <strong>Segura</strong>
+                <span>Fluxo</span>
+                <strong>Compra e check-in</strong>
+              </div>
+              <div>
+                <span>Pagamento</span>
+                <strong>Pix e cartão</strong>
               </div>
             </div>
+          </div>
+
+          <aside className="homeFeaturePanel" aria-label="Evento em destaque">
+            {featuredEvent ? (
+              <article className="homeFeaturedEventCard">
+                <div
+                  className="homeFeaturedEventMedia"
+                  style={{
+                    backgroundImage: `linear-gradient(180deg, rgba(13, 23, 31, 0.08), rgba(13, 23, 31, 0.34)), url("${featuredEvent.bannerUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1600&q=80"}")`
+                  }}
+                />
+                <div className="homeFeaturedEventBody">
+                  <span className="eyebrow">Em destaque</span>
+                  <h2>{featuredEvent.title}</h2>
+                  <p>
+                    {formatEventCardDate(featuredEvent.startsAt)} • {featuredEvent.city}, {featuredEvent.state}
+                  </p>
+                  <strong>{featuredEvent.venueName}</strong>
+                  <Link className="button fullButton" href={`/evento/${featuredEvent.slug}`}>
+                    Comprar agora
+                  </Link>
+                </div>
+              </article>
+            ) : (
+              <div className="homeFeatureCard">
+                <div>
+                  <span>Painel pronto</span>
+                  <strong>Publique seu próximo evento</strong>
+                  <p>
+                    Assim que houver um evento publicado, ele aparece aqui com destaque para impulsionar
+                    a próxima venda.
+                  </p>
+                </div>
+              </div>
+            )}
           </aside>
         </div>
       </section>
@@ -70,40 +104,56 @@ export default async function Home() {
           <div className="sectionHeader homeSectionHeader">
             <div>
               <span className="eyebrow">Agenda aberta</span>
-              <h2>Confira os eventos disponíveis</h2>
+              <h2>Confira os próximos eventos disponíveis</h2>
             </div>
           </div>
 
           <div className="homeEventsLayout">
-            {events.length === 0 ? (
-              <div className="empty homeEmptyState">Nenhum evento publicado no momento.</div>
-            ) : (
-              <div className="grid cardsGrid homeCardsGrid">
-                {events.map((event) => (
-                  <Link className="card linkCard eventShowcaseCard" href={`/evento/${event.slug}`} key={event.id}>
-                    {event.bannerUrl ? <img src={event.bannerUrl} alt="" /> : null}
+            <div className="grid cardsGrid homeCardsGrid">
+              {events.length === 0 ? (
+                <article className="card homeEmptyState">
+                  <h3>Nenhum evento publicado ainda</h3>
+                  <p className="muted">
+                    Assim que um evento for publicado no painel, ele aparecerá automaticamente nesta
+                    vitrine pública.
+                  </p>
+                </article>
+              ) : (
+                events.map((event) => (
+                  <article className="card linkCard eventShowcaseCard" key={event.id}>
+                    <div
+                      className="eventShowcaseImage"
+                      style={{
+                        backgroundImage: `linear-gradient(180deg, rgba(8, 20, 29, 0.06), rgba(8, 20, 29, 0.28)), url("${event.bannerUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1400&q=80"}")`
+                      }}
+                    />
                     <div className="eventShowcaseBody">
-                      <span className="eyebrow">{event.city}, {event.state}</span>
+                      <span className="eyebrow">
+                        {event.city}, {event.state}
+                      </span>
                       <h3>{event.title}</h3>
-                      <p className="muted">{formatDateTime(event.startsAt)} · {event.venueName}</p>
-                      <span className="eventCardCta">Comprar agora</span>
+                      <p className="muted">{formatEventCardDate(event.startsAt)}</p>
+                      <strong>{event.venueName}</strong>
+                      <Link className="button smallButton" href={`/evento/${event.slug}`}>
+                        Comprar agora
+                      </Link>
                     </div>
-                  </Link>
-                ))}
-              </div>
-            )}
+                  </article>
+                ))
+              )}
+            </div>
 
             <aside className="homeSupportPanel">
               <span className="eyebrow">Compra assistida</span>
               <h3>Do pedido ao QR Code, tudo em um só lugar.</h3>
               <p>
-                Acompanhe o status do pedido, receba seu ingresso digital e apresente o QR Code na entrada
-                do evento.
+                A vitrine pública mostra os eventos em cartaz, enquanto o painel interno mantém a
+                operação organizada para vendas, ingressos e check-in.
               </p>
               <div className="homeSupportList">
-                <span>Pagamento confirmado automaticamente</span>
-                <span>Ingresso enviado por e-mail</span>
-                <span>Validação segura na portaria</span>
+                {operationalHighlights.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
               </div>
             </aside>
           </div>
