@@ -17,10 +17,10 @@ export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
 
 const mapTemplateLabels = {
-  AUTO: "Mapa automatico",
-  AUDITORIUM: "Auditorio",
+  AUTO: "Mapa automático",
+  AUDITORIUM: "Auditório",
   THEATER: "Teatro",
-  WAREHOUSE: "Galpao / arena",
+  WAREHOUSE: "Galpão / arena",
   CLUB: "Clube / pista",
   FREE: "Setores livres"
 };
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: Pick<EventPageProps, "params"
 
   if (!event) {
     return {
-      title: "Evento nao encontrado | TCR Ingressos"
+      title: "Evento não encontrado | TCR Ingressos"
     };
   }
 
@@ -105,11 +105,15 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const socialProofText = event.conversionSocialProofText || (totalSold > 0 ? `+${totalSold} ingressos vendidos` : "Vendas abertas");
   const urgencyText =
     event.conversionUrgencyText ||
-    (totalAvailable <= 50 ? "Ultimas unidades disponiveis para este evento." : "Compra segura com confirmacao automatica.");
+    (totalAvailable <= 50 ? "Últimas unidades disponíveis para este evento." : "Compra segura com confirmação automática.");
   const ctaText = event.conversionCtaText || "Garantir minha vaga";
   const highlightedLotId = event.highlightedLotId || activeLots[0]?.id;
   const fallbackSectorLabels = sectorLabelsFromLots(activeLots.map((lot) => lot.name));
   const mapTemplate = event.eventMapTemplate || "AUTO";
+  const eventLead =
+    event.subtitle ||
+    event.description.split("\n").find((paragraph) => paragraph.trim().length > 0)?.trim() ||
+    "Confira os detalhes do evento, escolha seu ingresso e finalize a compra com segurança.";
   const lowestTotalInCents = activeLots.reduce((lowest, lot) => {
     const serviceFeeInCents = calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps);
     const total = lot.priceInCents + serviceFeeInCents;
@@ -173,7 +177,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           <span className="brandMark">T</span>
           <span>TCR Ingressos</span>
         </Link>
-        <nav className="nav" aria-label="Navegacao">
+        <nav className="nav" aria-label="Navegação">
           <Link href="/">Eventos</Link>
         </nav>
       </header>
@@ -186,12 +190,14 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         }}
       >
         <div className="publicHeroInner">
-          <div className="publicBadge">Parcele em ate 12x</div>
+          <div className="publicBadge">Parcele em até 12x</div>
           <h1>{event.title}</h1>
-          {event.subtitle ? <p>{event.subtitle}</p> : null}
+          <p>{eventLead}</p>
           <div className="publicMeta">
             <span>{formatDateTime(event.startsAt)}</span>
-            <span>{event.city}, {event.state}</span>
+            <span>
+              {event.venueName} • {event.city}, {event.state}
+            </span>
           </div>
           <div className="heroActions">
             <a className="button" href="#ingressos">
@@ -204,28 +210,53 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
       <section className="container publicGrid">
         <article className="publicContent">
-          <section className="conversionStrip" aria-label="Informacoes principais de venda">
+          <section className="conversionStrip" aria-label="Informações principais de venda">
             <div>
-              <span>Compra</span>
-              <strong>Pix e cartao</strong>
+              <span>Pagamento</span>
+              <strong>Pix e cartão</strong>
             </div>
             <div>
               <span>Entrega</span>
-              <strong>QR Code automatico</strong>
+              <strong>QR Code automático</strong>
             </div>
             <div>
               <span>Vendidos</span>
               <strong>{totalSold > 0 ? `+${totalSold}` : "Aberto"}</strong>
             </div>
             <div>
-              <span>Disponiveis</span>
+              <span>Disponíveis</span>
               <strong>{totalAvailable}</strong>
             </div>
           </section>
 
-          <section>
-            <h2>Descricao do evento</h2>
+          <section className="editorialBlock">
+            <span className="eyebrow">Experiência do evento</span>
+            <h2>Descrição do evento</h2>
             <p>{event.description}</p>
+          </section>
+
+          <section className="contentBlock">
+            <h2>Detalhes do evento</h2>
+            <div className="detailGrid">
+              <div>
+                <span>Data e horário</span>
+                <strong>{formatDateTime(event.startsAt)}</strong>
+              </div>
+              <div>
+                <span>Local</span>
+                <strong>{event.venueName}</strong>
+              </div>
+              <div>
+                <span>Endereço</span>
+                <strong>{event.venueAddress}</strong>
+              </div>
+              <div>
+                <span>Cidade</span>
+                <strong>
+                  {event.city}, {event.state}
+                </strong>
+              </div>
+            </div>
           </section>
 
           <section className="contentBlock">
@@ -244,7 +275,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
           {event.importantInfo ? (
             <section className="contentBlock">
-              <h2>Informacoes importantes</h2>
+              <h2>Informações importantes</h2>
               <p>{event.importantInfo}</p>
             </section>
           ) : null}
@@ -293,11 +324,11 @@ export default async function EventPage({ params, searchParams }: EventPageProps
               <strong>{socialProofText}</strong>
               {lowestTotalInCents > 0 ? <small>A partir de {formatCurrency(lowestTotalInCents)}</small> : null}
             </div>
-            <a className="miniAnchorButton" href="#ingressos">Comprar</a>
+            <a className="miniAnchorButton" href="#ingressos">Escolher</a>
           </div>
           <div className="checkoutTrustRow" aria-label="Garantias da compra">
-            <span>Pix e cartao</span>
-            <span>QR Code automatico</span>
+            <span>Pix e cartão</span>
+            <span>QR Code automático</span>
             <span>Compra segura</span>
           </div>
           <div className="purchaseAlerts">
@@ -411,7 +442,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                     required
                     defaultValue={buyerProfile?.email || ""}
                   />
-                  <small>O pedido, o comprovante e os QR Codes serao enviados para este e-mail.</small>
+                  <small>O pedido, o comprovante e os QR Codes serão enviados para este e-mail.</small>
                 </label>
                 <label className="field">
                   <span>CPF</span>
@@ -429,8 +460,9 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                     type="tel"
                     autoComplete="tel"
                     inputMode="tel"
+                    defaultValue={buyerProfile?.phone || ""}
                   />
-                  <small>Usado apenas para suporte do pedido, caso seja necessario.</small>
+                  <small>Usado apenas para suporte do pedido, caso seja necessário.</small>
                 </label>
               </div>
 
@@ -443,7 +475,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                 Garantir minha vaga agora
               </SubmitButton>
               <p className="checkoutFootnote">
-                Pagamento processado com confirmacao automatica. O ingresso com QR Code e liberado apos aprovacao.
+                Pagamento processado com confirmação automática. O ingresso com QR Code é liberado após a aprovação.
               </p>
             </form>
           )}

@@ -826,6 +826,8 @@ textarea {
 }
 
 .publicHeroInner {
+  display: grid;
+  gap: 14px;
   margin: 0 auto;
   max-width: 1180px;
   width: 100%;
@@ -883,6 +885,21 @@ textarea {
 .heroActions span {
   color: #d8e7ee;
   font-weight: 800;
+}
+
+.editorialBlock {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 251, 250, 0.98));
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  box-shadow: 0 12px 30px rgba(18, 36, 48, 0.04);
+  display: grid;
+  gap: 12px;
+  padding: 22px;
+}
+
+.editorialBlock .eyebrow {
+  color: var(--brand-dark);
 }
 
 .hero h1,
@@ -1173,6 +1190,18 @@ textarea {
   padding: 14px;
 }
 
+.detailGrid span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.detailGrid strong {
+  color: var(--ink);
+  line-height: 1.45;
+}
+
 .eventVenueCard {
   align-items: stretch;
   background: white;
@@ -1377,6 +1406,11 @@ textarea {
 .purchaseHeader div {
   display: grid;
   gap: 4px;
+}
+
+.purchaseHeader strong {
+  font-size: 20px;
+  line-height: 1.2;
 }
 
 .purchaseHeader small {
