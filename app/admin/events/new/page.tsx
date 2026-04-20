@@ -17,7 +17,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
   return (
     <AdminShell
       title="Novo evento"
-      description="Cadastre dados, midias, mapa de setores, tracking e configuracoes comerciais do evento."
+      description="Cadastre dados, mídias, mapa de setores, tracking e configurações comerciais do evento."
     >
       <form action={createEventAction} className="card form wideForm">
         {error ? <div className="errorBox">{error}</div> : null}
@@ -29,16 +29,16 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               <input name="title" placeholder="Ex: TCR Festival 2026" required />
             </label>
             <label className="field">
-              <span>Slug publico</span>
+              <span>Slug público</span>
               <input name="slug" placeholder="tcr-festival-2026" />
             </label>
           </div>
           <label className="field">
-            <span>Subtitulo</span>
+            <span>Subtítulo</span>
             <input name="subtitle" placeholder="Opcional" />
           </label>
           <label className="field">
-            <span>Descricao</span>
+            <span>Descrição</span>
             <textarea
               name="description"
               minLength={10}
@@ -59,7 +59,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             <label className="field mediaUrlFallback">
               <span>Ou URL do banner</span>
               <input name="bannerUrl" placeholder="https://..." />
-              <small>Use URL apenas se a imagem ja estiver hospedada fora do sistema.</small>
+              <small>Use URL apenas se a imagem já estiver hospedada fora do sistema.</small>
             </label>
           </div>
           <BannerPositionField defaultValue="center top" />
@@ -70,9 +70,9 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               <p>Use arte horizontal. Para eventos com palestrante/artista, deixe rosto e texto no centro superior.</p>
             </div>
             <div>
-              <span>Area segura</span>
+              <span>Área segura</span>
               <strong>Centro 80%</strong>
-              <p>Evite informacoes vitais coladas nas bordas. Use o enquadramento para corrigir o recorte final.</p>
+              <p>Evite informações vitais coladas nas bordas. Use o enquadramento para corrigir o recorte final.</p>
             </div>
           </div>
         </div>
@@ -81,14 +81,14 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           <h2>Data e local</h2>
           <div className="grid twoColumns">
             <label className="field">
-              <span>Inicio do evento</span>
+              <span>Início do evento</span>
               <input name="startsAt" type="datetime-local" required />
-              <small>Escolha a data e o horario de inicio do evento.</small>
+              <small>Escolha a data e o horário de início do evento.</small>
             </label>
             <label className="field">
               <span>Fim do evento</span>
               <input name="endsAt" type="datetime-local" />
-              <small>Opcional. Use apenas se ja souber o horario de encerramento.</small>
+              <small>Opcional. Use apenas se já souber o horário de encerramento.</small>
             </label>
           </div>
           <label className="field">
@@ -96,8 +96,8 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             <input name="venueName" placeholder="Ex: Armazem Convention" required />
           </label>
           <label className="field">
-            <span>Endereco</span>
-            <input name="venueAddress" placeholder="Rua, numero, bairro" required />
+            <span>Endereço</span>
+            <input name="venueAddress" placeholder="Rua, número, bairro" required />
           </label>
           <div className="grid twoColumns">
             <label className="field">
@@ -115,7 +115,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           <h2>Venda e tracking</h2>
           <div className="grid twoColumns">
             <label className="field">
-              <span>Inicio das vendas</span>
+              <span>Início das vendas</span>
               <input name="salesStartsAt" type="datetime-local" />
             </label>
             <label className="field">
@@ -136,8 +136,8 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             </label>
           </div>
           <label className="field">
-            <span>Informacoes importantes</span>
-            <textarea name="importantInfo" rows={4} placeholder="Regras, classificacao, acesso..." />
+            <span>Informações importantes</span>
+            <textarea name="importantInfo" rows={4} placeholder="Regras, classificação, acesso..." />
           </label>
           <label className="field">
             <span>Status inicial</span>
@@ -151,27 +151,27 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
         <div className="formSection">
           <h2>Mapa e setores</h2>
           <p className="muted">
-            Escolha um modelo de setores, envie uma imagem propria ou use os lotes como setores. Nao ha cadeira numerada nesta etapa.
+            Escolha um modelo de setores, envie uma imagem própria ou use os lotes como setores. Não há cadeira numerada nesta etapa.
           </p>
           <label className="field">
             <span>Modelo do mapa</span>
             <select name="eventMapTemplate" defaultValue="AUTO">
-              <option value="AUTO">Automatico pelos lotes</option>
-              <option value="AUDITORIUM">Auditorio</option>
+              <option value="AUTO">Automático pelos lotes</option>
+              <option value="AUDITORIUM">Auditório</option>
               <option value="THEATER">Teatro</option>
-              <option value="WAREHOUSE">Galpao / arena</option>
+              <option value="WAREHOUSE">Galpão / arena</option>
               <option value="CLUB">Clube / pista</option>
               <option value="FREE">Livre por setores</option>
             </select>
-            <small>O modelo aparece na pagina publica quando nao houver imagem de mapa enviada.</small>
+            <small>O modelo aparece na página pública quando não houver imagem de mapa enviada.</small>
           </label>
           <label className="field">
-            <span>Observacoes do mapa</span>
+            <span>Observações do mapa</span>
             <textarea
               name="eventMapNotes"
               maxLength={500}
               rows={3}
-              placeholder="Ex: Setor ouro proximo ao palco, prata ao fundo, camarote na lateral."
+              placeholder="Ex: Setor ouro próximo ao palco, prata ao fundo, camarote na lateral."
             />
           </label>
           <div className="mediaUploadGrid">
@@ -179,24 +179,24 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               name="eventMapFile"
               label="Imagem do mapa"
               recommendedSize="Ideal: 1200 x 900 px"
-              usageHint="Mostre palco, setores e acessos principais. A pagina exibira o mapa inteiro, sem cortar."
-              help="Opcional. JPG, PNG, WEBP ou GIF ate 10MB."
+              usageHint="Mostre palco, setores e acessos principais. A página exibirá o mapa inteiro, sem cortar."
+              help="Opcional. JPG, PNG, WEBP ou GIF até 10MB."
               aspect="map"
             />
             <label className="field mediaUrlFallback">
               <span>Ou URL do mapa</span>
               <input name="eventMapImageUrl" placeholder="https://..." />
-              <small>Opcional. Pode ser trocado depois na edicao do evento.</small>
+              <small>Opcional. Pode ser trocado depois na edição do evento.</small>
             </label>
           </div>
           <div className="mediaSizingGuide">
             <div>
               <span>Mapa de setores</span>
               <strong>1200 x 900 px</strong>
-              <p>Use proporcao 4:3 para auditórios, teatros, galpões e clubes.</p>
+              <p>Use proporção 4:3 para auditórios, teatros, galpões e clubes.</p>
             </div>
             <div>
-              <span>Exibicao publica</span>
+              <span>Exibição pública</span>
               <strong>Sem recorte</strong>
               <p>O mapa aparece inteiro dentro de uma moldura. Se a arte for vertical, pode sobrar margem lateral.</p>
             </div>
@@ -206,8 +206,8 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
         <details className="formSection advancedSection">
           <summary className="formSectionSummary">
             <div>
-              <h2>Conversao da pagina publica</h2>
-              <p className="muted">Textos opcionais para prova social, urgencia e botao principal.</p>
+              <h2>Conversão da página pública</h2>
+              <p className="muted">Textos opcionais para prova social, urgência e botão principal.</p>
             </div>
           </summary>
           <label className="field">
@@ -215,19 +215,20 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             <input
               name="conversionSocialProofText"
               maxLength={120}
-              placeholder="Ex: +1.237 pessoas ja garantiram ingresso"
+              placeholder="Ex: +1.237 pessoas já garantiram ingresso"
             />
           </label>
           <label className="field">
-            <span>Texto de urgencia</span>
+            <span>Texto de urgência</span>
             <input
               name="conversionUrgencyText"
               maxLength={140}
               placeholder="Ex: Lote promocional vira hoje as 23:59"
+              
             />
           </label>
           <label className="field">
-            <span>Texto do botao principal</span>
+            <span>Texto do botão principal</span>
             <input
               name="conversionCtaText"
               maxLength={60}
@@ -236,8 +237,8 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           </label>
           <label className="field">
             <span>Lote em destaque</span>
-            <input disabled placeholder="Disponivel apos criar os lotes do evento" />
-            <small>Depois de criar o evento e os lotes, voce podera escolher o lote destacado na edicao do evento.</small>
+            <input disabled placeholder="Disponível após criar os lotes do evento" />
+            <small>Depois de criar o evento e os lotes, você poderá escolher o lote destacado na edição do evento.</small>
           </label>
         </details>
 
@@ -249,12 +250,12 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             </div>
           </summary>
           <label className="field">
-            <span>Titulo SEO</span>
+            <span>Título SEO</span>
             <input name="seoTitle" maxLength={70} placeholder="Ex: Fernandinho em Salvador | Ingressos oficiais" />
-            <small>Recomendado: ate 60 caracteres. Maximo permitido: 70.</small>
+            <small>Recomendado: até 60 caracteres. Máximo permitido: 70.</small>
           </label>
           <label className="field">
-            <span>Descricao SEO</span>
+            <span>Descrição SEO</span>
             <textarea
               name="seoDescription"
               maxLength={180}

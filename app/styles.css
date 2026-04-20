@@ -44,8 +44,10 @@ textarea {
 
 .topbar {
   align-items: center;
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid rgba(217, 224, 231, 0.9);
+  box-shadow: 0 10px 30px rgba(20, 34, 46, 0.04);
+  backdrop-filter: saturate(160%) blur(12px);
   display: flex;
   gap: 20px;
   justify-content: space-between;
@@ -99,7 +101,7 @@ textarea {
 
 .nav a,
 .secondaryButton {
-  background: #eef2f5;
+  background: #f1f5f7;
   color: var(--ink);
 }
 
@@ -2192,12 +2194,14 @@ textarea {
 }
 
 .formSection {
-  background: #fbfcfd;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 250, 0.98));
   border: 1px solid var(--line-soft);
   border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(22, 32, 42, 0.03);
   display: grid;
   gap: 14px;
-  padding: 16px;
+  padding: 18px;
 }
 
 .formSection:last-of-type {
@@ -2205,6 +2209,7 @@ textarea {
 }
 
 .formSection h2 {
+  font-size: 24px;
   margin: 0;
 }
 
@@ -2252,6 +2257,11 @@ textarea {
 .formSection > p.muted {
   line-height: 1.45;
   margin: -4px 0 2px;
+}
+
+.formSection .field small,
+.mediaUrlFallback small {
+  line-height: 1.45;
 }
 
 .mediaUploadGrid {

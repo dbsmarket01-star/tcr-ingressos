@@ -59,18 +59,18 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
   return (
     <AdminShell
       title="Editar evento"
-      description="Atualize os dados principais, publicacao e tracking do evento."
+      description="Atualize os dados principais, publicação e tracking do evento."
     >
       <form action={updateEventAction} className="card form wideForm">
         <input type="hidden" name="eventId" value={event.id} />
 
         <div className="formSection">
-          <h2>Resumo de publicacao</h2>
+          <h2>Resumo de publicação</h2>
           <div className="mediaReadinessGrid">
             {mediaReadiness.map((item) => (
               <div className={item.status ? "isReady" : "isBlocked"} key={item.label}>
                 <span>{item.label}</span>
-                <strong>{item.status ? "Ok" : "Atencao"}</strong>
+                <strong>{item.status ? "Ok" : "Atenção"}</strong>
                 <small>{item.description}</small>
               </div>
             ))}
@@ -85,16 +85,16 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               <input name="title" defaultValue={event.title} required />
             </label>
             <label className="field">
-              <span>Slug publico</span>
+              <span>Slug público</span>
               <input name="slug" defaultValue={event.slug} required />
             </label>
           </div>
           <label className="field">
-            <span>Subtitulo</span>
+            <span>Subtítulo</span>
             <input name="subtitle" defaultValue={event.subtitle ?? ""} />
           </label>
           <label className="field">
-            <span>Descricao</span>
+            <span>Descrição</span>
             <textarea name="description" rows={5} defaultValue={event.description} required />
           </label>
           <div className="mediaUploadGrid">
@@ -103,7 +103,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               label="Trocar banner"
               currentImageUrl={event.bannerUrl}
               recommendedSize="Ideal: 1920 x 840 px"
-              usageHint="Use arte horizontal. Mantenha rosto, nome do evento e data na area central segura."
+              usageHint="Use arte horizontal. Mantenha rosto, nome do evento e data na área central segura."
               help="JPG, PNG, WEBP ou GIF ate 10MB para substituir o banner atual."
               emptyText="Sem banner atual"
               aspect="banner"
@@ -122,9 +122,9 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               <p>Use arte horizontal. Para eventos com palestrante/artista, deixe rosto e texto no centro superior.</p>
             </div>
             <div>
-              <span>Area segura</span>
+              <span>Área segura</span>
               <strong>Centro 80%</strong>
-              <p>Evite informacoes vitais coladas nas bordas. Use o enquadramento para corrigir o recorte final.</p>
+              <p>Evite informações vitais coladas nas bordas. Use o enquadramento para corrigir o recorte final.</p>
             </div>
           </div>
         </div>
@@ -133,7 +133,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           <h2>Data e local</h2>
           <div className="grid twoColumns">
             <label className="field">
-              <span>Inicio do evento</span>
+              <span>Início do evento</span>
               <input
                 name="startsAt"
                 type="datetime-local"
@@ -155,7 +155,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
             <input name="venueName" defaultValue={event.venueName} required />
           </label>
           <label className="field">
-            <span>Endereco</span>
+            <span>Endereço</span>
             <input name="venueAddress" defaultValue={event.venueAddress} required />
           </label>
           <div className="grid twoColumns">
@@ -174,7 +174,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           <h2>Venda e tracking</h2>
           <div className="grid twoColumns">
             <label className="field">
-              <span>Inicio das vendas</span>
+              <span>Início das vendas</span>
               <input
                 name="salesStartsAt"
                 type="datetime-local"
@@ -199,7 +199,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
                 defaultValue={event.metaPixelId ?? ""}
                 placeholder="Ex: 123456789012345"
               />
-              <small>Somente numeros. Encontre no Gerenciador de Eventos da Meta.</small>
+              <small>Somente números. Encontre no Gerenciador de Eventos da Meta.</small>
             </label>
             <label className="field">
               <span>Google Tag Manager ID</span>
@@ -213,9 +213,9 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           </div>
           <div className="trackingGuideGrid">
             <div>
-              <span>Pagina do evento</span>
+              <span>Página do evento</span>
               <strong>view_event / ViewContent</strong>
-              <small>Dispara quando o cliente abre a pagina publica do evento.</small>
+              <small>Dispara quando o cliente abre a página pública do evento.</small>
             </div>
             <div>
               <span>Pedido criado</span>
@@ -225,11 +225,11 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
             <div>
               <span>Compra aprovada</span>
               <strong>purchase / Purchase</strong>
-              <small>Dispara quando o pedido esta pago e com valor em BRL.</small>
+              <small>Dispara quando o pedido está pago e com valor em BRL.</small>
             </div>
           </div>
           <label className="field">
-            <span>Informacoes importantes</span>
+            <span>Informações importantes</span>
             <textarea name="importantInfo" rows={4} defaultValue={event.importantInfo ?? ""} />
           </label>
           <label className="field">
@@ -247,19 +247,19 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
         <div className="formSection">
           <h2>Mapa e setores</h2>
           <p className="muted">
-            Escolha um modelo de setores, envie uma imagem propria ou use os lotes como setores. Nao ha cadeira numerada nesta etapa.
+            Escolha um modelo de setores, envie uma imagem própria ou use os lotes como setores. Não há cadeira numerada nesta etapa.
           </p>
           <label className="field">
             <span>Modelo do mapa</span>
             <select name="eventMapTemplate" defaultValue={event.eventMapTemplate}>
-              <option value="AUTO">Automatico pelos lotes</option>
-              <option value="AUDITORIUM">Auditorio</option>
+              <option value="AUTO">Automático pelos lotes</option>
+              <option value="AUDITORIUM">Auditório</option>
               <option value="THEATER">Teatro</option>
-              <option value="WAREHOUSE">Galpao / arena</option>
+              <option value="WAREHOUSE">Galpão / arena</option>
               <option value="CLUB">Clube / pista</option>
               <option value="FREE">Livre por setores</option>
             </select>
-            <small>O modelo aparece na pagina publica quando nao houver imagem de mapa enviada.</small>
+            <small>O modelo aparece na página pública quando não houver imagem de mapa enviada.</small>
           </label>
           <label className="field">
             <span>Observacoes do mapa</span>
@@ -277,7 +277,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               label="Trocar imagem do mapa"
               currentImageUrl={event.eventMapImageUrl}
               recommendedSize="Ideal: 1200 x 900 px"
-              usageHint="A pagina publica exibira o mapa inteiro, sem cortar. Se nao houver imagem, usa os lotes ativos como setores."
+              usageHint="A página pública exibirá o mapa inteiro, sem cortar. Se não houver imagem, usa os lotes ativos como setores."
               help="Use JPG, PNG, WEBP ou GIF ate 10MB."
               emptyText="Sem mapa atual"
               aspect="map"
@@ -303,9 +303,9 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
         </div>
 
         <div className="formSection">
-          <h2>Conversao da pagina publica</h2>
+          <h2>Conversão da página pública</h2>
           <p className="muted">
-            Controle textos comerciais da pagina publica. Campos vazios usam automaticamente vendas, estoque e dados do evento.
+            Controle textos comerciais da página pública. Campos vazios usam automaticamente vendas, estoque e dados do evento.
           </p>
           <label className="field">
             <span>Prova social</span>
@@ -313,7 +313,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               name="conversionSocialProofText"
               maxLength={120}
               defaultValue={event.conversionSocialProofText ?? ""}
-              placeholder="+1.237 pessoas ja garantiram ingresso"
+              placeholder="+1.237 pessoas já garantiram ingresso"
             />
           </label>
           <label className="field">
