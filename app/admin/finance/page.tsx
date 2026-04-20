@@ -16,7 +16,7 @@ type FinancePageProps = {
 
 const methodLabels = {
   PIX: "Pix",
-  CREDIT_CARD: "Cartao",
+  CREDIT_CARD: "Cartão",
   SIMULATED: "Simulado",
   OTHER: "Outro"
 };
@@ -43,7 +43,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
   return (
     <AdminShell
       title="Financeiro"
-      description="Faturamento, pagamentos, pedidos e liquido aproximado por periodo."
+      description="Faturamento, pagamentos, pedidos e líquido aproximado por período."
     >
       <section className="card financeFilters">
         <form className="financeFiltersForm">
@@ -59,7 +59,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
             </select>
           </label>
           <label className="field">
-            <span>Inicio</span>
+            <span>Início</span>
             <input type="date" name="startDate" defaultValue={report.filters.startDate} />
           </label>
           <label className="field">
@@ -92,7 +92,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
           <strong>{formatCurrency(report.totals.serviceFeeInCents)}</strong>
         </article>
         <article className="card metric">
-          <span className="muted">Juros de cartao</span>
+          <span className="muted">Juros de cartão</span>
           <strong>{formatCurrency(report.totals.cardInterestInCents)}</strong>
         </article>
         <article className="card metric">
@@ -103,7 +103,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
 
       <section className="grid dashboardGrid spacedSection">
         <article className="card metric">
-          <span className="muted">Liquido aproximado</span>
+          <span className="muted">Líquido aproximado</span>
           <strong>{formatCurrency(report.totals.netRevenueInCents)}</strong>
         </article>
         <article className="card metric">
@@ -115,7 +115,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
           <strong>{report.totals.paidOrders}</strong>
         </article>
         <article className="card metric">
-          <span className="muted">Pendente no periodo</span>
+          <span className="muted">Pendente no período</span>
           <strong>{formatCurrency(report.totals.pendingAmountInCents)}</strong>
         </article>
       </section>
@@ -130,7 +130,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
           <strong>{report.totals.ticketsIssued}</strong>
         </article>
         <article className="card metric">
-          <span className="muted">Liquido real Asaas</span>
+          <span className="muted">Líquido real Asaas</span>
           <strong>{report.totals.netValueCoverage}%</strong>
         </article>
         <article className="card metric">
@@ -138,7 +138,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
           <strong>{formatCurrency(report.totals.splitTotalInCents)}</strong>
         </article>
         <article className="card metric">
-          <span className="muted">TCR apos split</span>
+          <span className="muted">TCR após split</span>
           <strong>{formatCurrency(report.totals.tcrAfterSplitInCents)}</strong>
         </article>
       </section>
@@ -165,15 +165,15 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
             <strong>{formatCurrency(report.totals.discountInCents)}</strong>
           </div>
           <div>
-            <span>Liquido aproximado</span>
+            <span>Líquido aproximado</span>
             <strong>{formatCurrency(report.totals.netRevenueInCents)}</strong>
           </div>
           <div>
-            <span>Cobertura do liquido real</span>
+            <span>Cobertura do líquido real</span>
             <strong>{report.totals.netValueCoverage}% dos pagos</strong>
           </div>
           <div>
-            <span>Split automatico</span>
+            <span>Split automático</span>
             <strong>{formatCurrency(report.totals.splitTotalInCents)}</strong>
           </div>
           <div>
@@ -186,8 +186,8 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
           </div>
         </div>
         <p className="muted">
-          O liquido aproximado usa o valor liquido retornado pelo provedor quando disponivel. Quando o provedor nao informa,
-          o sistema usa o total pago como referencia conservadora para nao esconder receita.
+          O líquido aproximado usa o valor líquido retornado pelo provedor quando disponível. Quando o provedor não informa,
+          o sistema usa o total pago como referência conservadora para não esconder receita.
         </p>
       </section>
 
@@ -197,7 +197,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
             <h2>Por forma de pagamento</h2>
           </div>
           {report.byMethod.length === 0 ? (
-            <div className="empty">Nenhum pagamento aprovado no periodo.</div>
+            <div className="empty">Nenhum pagamento aprovado no período.</div>
           ) : (
             <div className="tableScroll">
             <table className="table financeTable">
@@ -209,7 +209,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                   <th>Taxas</th>
                   <th>Juros</th>
                   <th>Descontos</th>
-                  <th>Liquido</th>
+                  <th>Líquido</th>
                 </tr>
               </thead>
               <tbody>
@@ -236,7 +236,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
           </div>
           <div className="financeStatusGrid">
             <div>
-              <span>Pedidos no periodo</span>
+              <span>Pedidos no período</span>
               <strong>{report.totals.ordersInPeriod}</strong>
             </div>
             <div>
@@ -260,7 +260,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
           <h2>Split Asaas por carteira</h2>
         </div>
         {report.bySplitWallet.length === 0 ? (
-          <div className="empty">Nenhum split retornado pelo provedor no periodo.</div>
+            <div className="empty">Nenhum split retornado pelo provedor no período.</div>
         ) : (
           <div className="tableScroll">
             <table className="table financeTable">
@@ -287,7 +287,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
         )}
         <p className="muted">
           Esta leitura vem do retorno do Asaas salvo no pagamento. O status financeiro final ainda depende do processamento
-          e compensacao dentro do proprio Asaas.
+          e da compensação dentro do próprio Asaas.
         </p>
       </section>
 
@@ -296,7 +296,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
           <h2>Faturamento por evento</h2>
         </div>
         {report.byEvent.length === 0 ? (
-          <div className="empty">Nenhum faturamento confirmado no periodo.</div>
+          <div className="empty">Nenhum faturamento confirmado no período.</div>
         ) : (
           <div className="tableScroll">
           <table className="table financeTable">

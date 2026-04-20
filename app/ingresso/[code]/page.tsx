@@ -26,7 +26,7 @@ const ticketStatusLabels = {
   ACTIVE: "Ativo",
   USED: "Utilizado",
   CANCELED: "Cancelado",
-  INVALID: "Invalido"
+  INVALID: "Inválido"
 };
 
 const ticketStatusClasses = {
@@ -37,10 +37,10 @@ const ticketStatusClasses = {
 };
 
 const ticketStatusMessages = {
-  ACTIVE: "Ingresso valido. Apresente o QR Code na entrada do evento.",
-  USED: "Este ingresso ja foi utilizado. A reutilizacao sera bloqueada na portaria.",
-  CANCELED: "Este ingresso esta cancelado e nao deve liberar entrada.",
-  INVALID: "Este ingresso esta invalido e nao deve liberar entrada."
+  ACTIVE: "Ingresso válido. Apresente o QR Code na entrada do evento.",
+  USED: "Este ingresso já foi utilizado. A reutilização será bloqueada na portaria.",
+  CANCELED: "Este ingresso está cancelado e não deve liberar entrada.",
+  INVALID: "Este ingresso está inválido e não deve liberar entrada."
 };
 
 export default async function TicketPage({ params }: TicketPageProps) {
@@ -54,6 +54,7 @@ export default async function TicketPage({ params }: TicketPageProps) {
   const qrCodeSvg = await createTicketQrCodeSvg(ticket.qrCodeToken);
   const lastCheckIn = ticket.checkIns[0];
   const canEnter = ticket.status === "ACTIVE";
+  const eventLocation = `${ticket.event.venueName} - ${ticket.event.city}, ${ticket.event.state}`;
 
   return (
     <main className="shell">
@@ -62,7 +63,7 @@ export default async function TicketPage({ params }: TicketPageProps) {
           <span className="brandMark">T</span>
           <span>TCR Ingressos</span>
         </Link>
-        <nav className="nav" aria-label="Navegacao">
+        <nav className="nav" aria-label="Navegação">
           <Link href={`/pedido/${ticket.order.code}`}>Pedido</Link>
         </nav>
       </header>
@@ -78,7 +79,7 @@ export default async function TicketPage({ params }: TicketPageProps) {
             </div>
             <h1>{ticket.event.title}</h1>
             <p>
-              {formatDateTime(ticket.event.startsAt)} - {ticket.event.venueName}
+              {formatDateTime(ticket.event.startsAt)} - {eventLocation}
             </p>
           </div>
 
@@ -101,11 +102,11 @@ export default async function TicketPage({ params }: TicketPageProps) {
             <div>
               <span>2</span>
               <strong>Apresente o QR Code</strong>
-              <p>A equipe da portaria fara a leitura uma unica vez.</p>
+              <p>A equipe da portaria fará a leitura uma única vez.</p>
             </div>
             <div>
               <span>3</span>
-              <strong>Documento em maos</strong>
+              <strong>Documento em mãos</strong>
               <p>Se solicitado, confirme nome do pedido ou documento.</p>
             </div>
           </div>
@@ -129,19 +130,19 @@ export default async function TicketPage({ params }: TicketPageProps) {
             </div>
             <div>
               <span>Local</span>
-              <strong>{ticket.event.venueName}</strong>
+              <strong>{eventLocation}</strong>
             </div>
             <div className="wideDetail">
-              <span>Endereco</span>
+              <span>Endereço</span>
               <strong>{ticket.event.venueAddress}</strong>
             </div>
           </div>
         </article>
 
         <aside className="card">
-          <h2>Validacao</h2>
+          <h2>Validação</h2>
           <p className="muted">
-            Apresente este QR Code na entrada. Cada ingresso pode ser validado uma unica vez.
+            Apresente este QR Code na entrada. Cada ingresso pode ser validado uma única vez.
           </p>
           <div className={`ticketStatusCallout ${canEnter ? "isReady" : "isBlocked"}`}>
             <span>Status do ingresso</span>
@@ -150,20 +151,26 @@ export default async function TicketPage({ params }: TicketPageProps) {
           </div>
           {lastCheckIn ? (
             <div className="paymentBox">
-              <h3>Ultima validacao</h3>
+              <h3>Última validação</h3>
               <p className="muted">
                 {lastCheckIn.status} em {formatDateTime(lastCheckIn.checkedAt)}
               </p>
             </div>
           ) : null}
+          <div className="paymentBox">
+            <h3>Antes de chegar ao evento</h3>
+            <p className="muted">
+              Deixe este ingresso aberto no celular e, se possível, leve um documento com foto para agilizar a entrada.
+            </p>
+          </div>
           <Link className="button fullButton" href={`/pedido/${ticket.order.code}`}>
             Voltar ao pedido
           </Link>
           <PrintButton className="secondaryButton fullButton" label="Imprimir ingresso" />
           <CopyButton
             className="secondaryButton fullButton"
-            copiedLabel="Codigo copiado"
-            label="Copiar codigo do ingresso"
+            copiedLabel="Código copiado"
+            label="Copiar código do ingresso"
             value={ticket.code}
           />
         </aside>

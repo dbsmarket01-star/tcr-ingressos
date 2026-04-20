@@ -10,7 +10,7 @@ const ticketStatusLabels = {
   ACTIVE: "Ativo",
   USED: "Usado",
   CANCELED: "Cancelado",
-  INVALID: "Invalido"
+  INVALID: "Inválido"
 };
 
 type TicketsPageProps = {
@@ -28,6 +28,9 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
     listAdminTickets(params),
     listTicketFilterEvents()
   ]);
+  const activeCount = tickets.filter((ticket) => ticket.status === "ACTIVE").length;
+  const usedCount = tickets.filter((ticket) => ticket.status === "USED").length;
+  const canceledCount = tickets.filter((ticket) => ticket.status === "CANCELED").length;
   const exportHref = `/admin/tickets/export?${new URLSearchParams({
     ...(params.eventId ? { eventId: params.eventId } : {}),
     ...(params.status ? { status: params.status } : {}),
@@ -37,8 +40,27 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   return (
     <AdminShell
       title="Ingressos"
-      description="Ingressos emitidos, status, comprador e vinculo com pedido."
+      description="Ingressos emitidos, status, comprador e vínculo com pedido."
     >
+      <section className="grid dashboardGrid">
+        <article className="card metric">
+          <span className="muted">Total listado</span>
+          <strong>{tickets.length}</strong>
+        </article>
+        <article className="card metric">
+          <span className="muted">Ativos</span>
+          <strong>{activeCount}</strong>
+        </article>
+        <article className="card metric">
+          <span className="muted">Usados</span>
+          <strong>{usedCount}</strong>
+        </article>
+        <article className="card metric">
+          <span className="muted">Cancelados</span>
+          <strong>{canceledCount}</strong>
+        </article>
+      </section>
+
       <section className="card financeFilters">
         <form className="financeFiltersForm">
           <label className="field">
@@ -86,42 +108,44 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
         {tickets.length === 0 ? (
           <div className="empty">Nenhum ingresso emitido ainda.</div>
         ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Ingresso</th>
-                <th>Status</th>
-                <th>Evento</th>
-                <th>Lote</th>
-                <th>Comprador</th>
-                <th>Pedido</th>
-                <th>Emitido em</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tickets.map((ticket) => (
-                <tr key={ticket.id}>
-                  <td>
-                    <Link href={`/ingresso/${ticket.code}`}>
-                      <strong>{ticket.code}</strong>
-                    </Link>
-                  </td>
-                  <td>
-                    <span className={`status ${ticket.status === "ACTIVE" ? "published" : "draft"}`}>
-                      {ticketStatusLabels[ticket.status]}
-                    </span>
-                  </td>
-                  <td>{ticket.event.title}</td>
-                  <td>{ticket.lot.name}</td>
-                  <td>{ticket.order.customer.name}</td>
-                  <td>
-                    <Link href={`/pedido/${ticket.order.code}`}>{ticket.order.code}</Link>
-                  </td>
-                  <td>{formatDateTime(ticket.issuedAt)}</td>
+          <div className="tableScroll">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Ingresso</th>
+                  <th>Status</th>
+                  <th>Evento</th>
+                  <th>Lote</th>
+                  <th>Comprador</th>
+                  <th>Pedido</th>
+                  <th>Emitido em</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {tickets.map((ticket) => (
+                  <tr key={ticket.id}>
+                    <td>
+                      <Link href={`/ingresso/${ticket.code}`}>
+                        <strong>{ticket.code}</strong>
+                      </Link>
+                    </td>
+                    <td>
+                      <span className={`status ${ticket.status === "ACTIVE" ? "published" : "draft"}`}>
+                        {ticketStatusLabels[ticket.status]}
+                      </span>
+                    </td>
+                    <td>{ticket.event.title}</td>
+                    <td>{ticket.lot.name}</td>
+                    <td>{ticket.order.customer.name}</td>
+                    <td>
+                      <Link href={`/pedido/${ticket.order.code}`}>{ticket.order.code}</Link>
+                    </td>
+                    <td>{formatDateTime(ticket.issuedAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </AdminShell>

@@ -31,7 +31,7 @@ const ticketStatusLabels = {
   ACTIVE: "Ativo",
   USED: "Usado",
   CANCELED: "Cancelado",
-  INVALID: "Invalido"
+  INVALID: "Inválido"
 };
 
 export default async function SupportPage({ searchParams }: SupportPageProps) {
@@ -39,6 +39,12 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
   const params = await searchParams;
   const query = params.q?.trim() ?? "";
   const orders = await searchSupportOrders(query);
+  const toWhatsappHref = (phone?: string | null) => {
+    if (!phone) return null;
+    const digits = phone.replace(/\D/g, "");
+    if (!digits) return null;
+    return `https://wa.me/${digits}`;
+  };
 
   return (
     <AdminShell
@@ -51,7 +57,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
             <span>Buscar por pedido, ingresso, nome, e-mail, telefone ou evento</span>
             <input
               name="q"
-              placeholder="Ex: TCR-..., nome do cliente, e-mail ou codigo do ingresso"
+              placeholder="Ex: TCR-..., nome do cliente, e-mail ou código do ingresso"
               defaultValue={query}
             />
           </label>
@@ -68,7 +74,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
           <span>Pedido TCR-...</span>
           <span>E-mail do cliente</span>
           <span>CPF ou telefone</span>
-          <span>Codigo do ingresso</span>
+          <span>Código do ingresso</span>
         </div>
 
         {params.sent ? (
@@ -89,7 +95,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
         {orders.length === 0 ? (
           <div className="empty">
             {query
-              ? "Nenhum resultado encontrado. Confira se o codigo, e-mail, telefone ou nome foi digitado corretamente."
+              ? "Nenhum resultado encontrado. Confira se o código, e-mail, telefone ou nome foi digitado corretamente."
               : "Digite um pedido, ingresso, nome, e-mail, telefone ou evento para iniciar o atendimento."}
           </div>
         ) : (
@@ -153,12 +159,22 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
                     <br />
                     <span className="breakText">{order.customer.email}</span>
                     <br />
-                    <span>{order.customer.phone ?? "Telefone nao informado"}</span>
+                    <span>{order.customer.phone ?? "Telefone não informado"}</span>
                   </p>
                   <div className="supportInlineCopies">
                     <CopyButton className="secondaryButton smallButton" label="Copiar e-mail" copiedLabel="Copiado" value={order.customer.email} />
                     {order.customer.phone ? (
                       <CopyButton className="secondaryButton smallButton" label="Copiar telefone" copiedLabel="Copiado" value={order.customer.phone} />
+                    ) : null}
+                    {toWhatsappHref(order.customer.phone) ? (
+                      <a
+                        className="secondaryButton smallButton"
+                        href={toWhatsappHref(order.customer.phone) ?? undefined}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        Abrir WhatsApp
+                      </a>
                     ) : null}
                   </div>
                 </div>
@@ -174,23 +190,23 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
 
               <div className="supportResolutionBox">
                 <div>
-                  <span>Situacao sugerida</span>
+                  <span>Situação sugerida</span>
                   <strong>
                     {order.status === "PAID"
                       ? "Cliente pode receber os ingressos."
                       : order.status === "PENDING_PAYMENT"
                         ? "Cliente ainda precisa concluir o pagamento."
-                        : "Conferir historico antes de orientar o cliente."}
+                        : "Conferir histórico antes de orientar o cliente."}
                   </strong>
                 </div>
                 <div>
-                  <span>Acao mais provavel</span>
+                  <span>Ação mais provável</span>
                   <strong>
                     {order.status === "PAID"
                       ? "Reenviar ingressos ou abrir QR Code."
                       : order.status === "PENDING_PAYMENT"
-                        ? "Reenviar link de pagamento."
-                        : "Abrir pedido administrativo."}
+                        ? "Reenviar link de pagamento ou orientar no Pix."
+                        : "Abrir o pedido interno e revisar o histórico."}
                   </strong>
                 </div>
               </div>
@@ -198,7 +214,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
               <div className="ticketList">
                 <h3>Ingressos</h3>
                 {order.tickets.length === 0 ? (
-                  <p className="muted">Ingressos ainda nao emitidos.</p>
+                  <p className="muted">Ingressos ainda não emitidos.</p>
                 ) : (
                   order.tickets.map((ticket) => (
                     <Link className="ticketCard" href={`/ingresso/${ticket.code}`} key={ticket.id}>
