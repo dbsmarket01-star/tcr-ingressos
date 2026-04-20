@@ -1849,6 +1849,10 @@ textarea {
   background: #f8fbfa;
 }
 
+.operationalTable tbody td {
+  line-height: 1.45;
+}
+
 .primaryCell {
   min-width: 220px;
 }
@@ -1901,6 +1905,24 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
+}
+
+.filterPanelHeader {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.filterPanelHeader h2,
+.filterPanelHeader p {
+  margin: 0;
+}
+
+.filterPanelHeader p {
+  margin-top: 6px;
+  max-width: 720px;
 }
 
 .smallButton {
@@ -3346,6 +3368,9 @@ textarea {
 
 .orderMaintenance {
   align-items: center;
+  background:
+    linear-gradient(135deg, rgba(15, 124, 98, 0.05), rgba(24, 50, 74, 0.02)),
+    var(--surface);
   display: flex;
   gap: 16px;
   justify-content: space-between;
@@ -4645,6 +4670,12 @@ textarea {
   .table {
     display: block;
     overflow-x: auto;
+  }
+
+  .filterPanelHeader,
+  .orderMaintenance {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 

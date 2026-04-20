@@ -19,15 +19,47 @@ const statusLabels = {
 export default async function EventsPage() {
   await requirePermission("EVENTS");
   const events = await listEvents();
+  const publishedEvents = events.filter((event) => event.status === "PUBLISHED").length;
+  const draftEvents = events.filter((event) => event.status !== "PUBLISHED").length;
+  const totalRevenueInCents = events.reduce((sum, event) => sum + getEventRevenueInCents(event), 0);
+  const totalCapacity = events.reduce((sum, event) => sum + getEventCapacity(event).total, 0);
+  const totalSold = events.reduce((sum, event) => sum + getEventCapacity(event).sold, 0);
+  const preparedEvents = events.filter((event) => getEventCapacity(event).total > 0).length;
 
   return (
     <AdminShell
       title="Eventos"
-      description="Gerencie publicacao, lotes, vendas, faturamento e paginas publicas dos eventos."
+      description="Gerencie publicação, lotes, vendas, faturamento e páginas públicas dos eventos."
     >
+      <section className="grid dashboardGrid">
+        <article className="card metric">
+          <span className="muted">Eventos publicados</span>
+          <strong>{publishedEvents}</strong>
+          <small>{draftEvents} em preparação ou despublicados</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Faturamento total</span>
+          <strong>{formatCurrency(totalRevenueInCents)}</strong>
+          <small>Receita acumulada dos eventos cadastrados</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Ingressos vendidos</span>
+          <strong>{totalSold}</strong>
+          <small>{totalCapacity} lugares na capacidade total</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Operação preparada</span>
+          <strong>{preparedEvents}</strong>
+          <small>Eventos com lotes prontos para vender</small>
+        </article>
+      </section>
+
       <section className="card">
         <div className="sectionHeader inlineHeader">
-          <h2>Lista operacional</h2>
+          <div>
+            <h2>Lista operacional</h2>
+            <p className="muted">Acompanhe status, capacidade, faturamento e acesso rápido à página pública.</p>
+          </div>
           <Link className="button" href="/admin/events/new">
             Novo evento
           </Link>
@@ -50,7 +82,7 @@ export default async function EventsPage() {
                   <th>Vendas</th>
                   <th>Faturamento</th>
                   <th>Alerta</th>
-                  <th>Acoes</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -101,7 +133,7 @@ export default async function EventsPage() {
                       </td>
                       <td>
                         <span className={`operationHint ${hasLots ? "ok" : "warning"}`}>
-                          {hasLots ? "Operacao preparada" : "Cadastre lotes para vender"}
+                          {hasLots ? "Operação preparada" : "Cadastre lotes para vender"}
                         </span>
                       </td>
                       <td>

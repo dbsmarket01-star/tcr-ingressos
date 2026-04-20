@@ -75,7 +75,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           <h2>Reservas vencidas</h2>
           <p className="muted">
             Pedidos pendentes vencidos liberam automaticamente o estoque quando esta tela, o evento
-            ou a rotina de manutencao rodam.
+            ou a rotina de manutenção rodam.
           </p>
           {params.expired ? (
             <p className="success">
@@ -100,6 +100,17 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
       </section>
 
       <section className="card financeFilters">
+        <div className="filterPanelHeader">
+          <div>
+            <h2>Filtros de atendimento</h2>
+            <p className="muted">
+              Busque por cliente, pedido, cupom ou evento para localizar compras e resolver suporte mais rápido.
+            </p>
+          </div>
+          <Link className="button" href={exportHref}>
+            Exportar CSV
+          </Link>
+        </div>
         <form className="financeFiltersForm">
           <label className="field">
             <span>Buscar</span>
@@ -132,7 +143,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
             </select>
           </label>
           <label className="field">
-            <span>Inicio</span>
+            <span>Início</span>
             <input type="date" name="startDate" defaultValue={params.startDate || ""} />
           </label>
           <label className="field">
@@ -147,11 +158,17 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           </Link>
         </form>
         <p className="muted filterSummary">
-          Mostrando {orders.length} de {totalCount} pedido(s). A exportacao CSV usa estes mesmos filtros.
+          Mostrando {orders.length} de {totalCount} pedido(s). A exportação CSV usa estes mesmos filtros.
         </p>
       </section>
 
       <section className="card">
+        <div className="sectionHeader inlineHeader">
+          <div>
+            <h2>Lista de pedidos</h2>
+            <p className="muted">Confira rapidamente cliente, evento, valor, expiração e situação do pagamento.</p>
+          </div>
+        </div>
         {orders.length === 0 ? (
           <div className="empty">Nenhum pedido registrado ainda.</div>
         ) : (
@@ -172,7 +189,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 <th>Total</th>
                 <th>Expira em</th>
                 <th>Criado em</th>
-                <th>Acoes</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
