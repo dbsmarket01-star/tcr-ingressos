@@ -73,6 +73,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
   const isAsaasCheckout =
     process.env.PAYMENT_PROVIDER === "ASAAS" || order.payment?.provider === "ASAAS";
   const baseTotalInCents = order.subtotalInCents + order.serviceFeeInCents - order.discountInCents;
+  const pixTotalInCents = Math.max(baseTotalInCents - order.pixDiscountInCents, 0);
   const installmentOptions = Array.from({ length: 10 }, (_, index) => index + 1).map((installment) => {
     const interestInCents = order.items.reduce(
       (sum, item) =>
@@ -289,6 +290,12 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                 {formatCurrency(order.discountInCents)}
               </strong>
             </div>
+            {order.pixDiscountInCents > 0 ? (
+              <div className="summaryLine">
+                <span>Desconto no Pix disponível</span>
+                <strong>- {formatCurrency(order.pixDiscountInCents)}</strong>
+              </div>
+            ) : null}
             {order.cardInterestInCents > 0 ? (
               <div className="summaryLine">
                 <span>Juros do cartão</span>
@@ -347,7 +354,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                 <details className="paymentChoiceDisclosure" open={Boolean(order.payment?.pixQrCodePayload)}>
                   <summary>
                     <span>Pix</span>
-                    <strong>{formatCurrency(baseTotalInCents)}</strong>
+                    <strong>{formatCurrency(pixTotalInCents)}</strong>
                     <small>QR Code e copia e cola com confirmação automática</small>
                   </summary>
                   <div className="pixBox">
@@ -356,8 +363,24 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                         <h3>Pix</h3>
                         <span>Confirmação automática após o pagamento</span>
                       </div>
-                      <strong>{formatCurrency(baseTotalInCents)}</strong>
+                      <strong>{formatCurrency(pixTotalInCents)}</strong>
                     </div>
+                    {order.pixDiscountInCents > 0 ? (
+                      <div className="paymentStatusGrid compactPaymentStatus">
+                        <div>
+                          <span>Total sem desconto</span>
+                          <strong>{formatCurrency(baseTotalInCents)}</strong>
+                        </div>
+                        <div>
+                          <span>Desconto no Pix</span>
+                          <strong>- {formatCurrency(order.pixDiscountInCents)}</strong>
+                        </div>
+                        <div>
+                          <span>Total no Pix</span>
+                          <strong>{formatCurrency(pixTotalInCents)}</strong>
+                        </div>
+                      </div>
+                    ) : null}
                     {order.payment?.pixQrCodeImage && order.payment?.pixQrCodePayload ? (
                       <>
                         <ol className="paymentInstructionList">

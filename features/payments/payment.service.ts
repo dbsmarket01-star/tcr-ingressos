@@ -50,16 +50,17 @@ export async function startPaymentForOrder(orderCode: string) {
   }
 
   const baseTotalInCents = order.subtotalInCents + order.serviceFeeInCents - order.discountInCents;
+  const pixTotalInCents = Math.max(baseTotalInCents - order.pixDiscountInCents, 0);
 
-  if (order.cardInterestInCents > 0 || order.totalInCents !== baseTotalInCents) {
+  if (order.cardInterestInCents > 0 || order.totalInCents !== pixTotalInCents) {
     order = await prisma.order.update({
       where: { id: order.id },
       data: {
         cardInterestInCents: 0,
-        totalInCents: baseTotalInCents,
+        totalInCents: pixTotalInCents,
         payment: {
           update: {
-            amountInCents: baseTotalInCents
+            amountInCents: pixTotalInCents
           }
         }
       },
@@ -107,7 +108,7 @@ export async function startPaymentForOrder(orderCode: string) {
   const intent = await provider.createPaymentIntent({
     orderId: order.id,
     orderCode: order.code,
-    amountInCents: order.totalInCents,
+    amountInCents: pixTotalInCents,
     customerName: order.customer.name,
     customerEmail: order.customer.email,
     customerDocument: order.customer.document,
@@ -126,7 +127,7 @@ export async function startPaymentForOrder(orderCode: string) {
       pixQrCodeImage: intent.pixQrCodeImage || null,
       pixQrCodePayload: intent.pixQrCodePayload || null,
       pixExpiresAt: intent.pixExpiresAt || null,
-      amountInCents: order.totalInCents,
+      amountInCents: pixTotalInCents,
       status: PaymentStatus.PENDING,
       rawPayload: (intent.rawPayload || intent) as Prisma.InputJsonValue
     }
@@ -333,6 +334,10 @@ export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & {
       externalId: intent.externalId,
       status: intent.status === "APPROVED" ? PaymentStatus.PENDING : PaymentStatus.PENDING,
       amountInCents: cardTotalInCents,
+      checkoutUrl: null,
+      pixQrCodeImage: null,
+      pixQrCodePayload: null,
+      pixExpiresAt: null,
       rawPayload: intent.rawPayload as Prisma.InputJsonValue,
       order: {
         update: {

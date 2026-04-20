@@ -90,6 +90,123 @@ enum SplitRuleType {
   FIXED_PER_TICKET
 }
 
+enum SubscriptionInterval {
+  MONTHLY
+  QUARTERLY
+  SEMIANNUAL
+  YEARLY
+  FAMILY
+}
+
+enum PlanStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum AppUserStatus {
+  TRIAL
+  ACTIVE
+  GRACE
+  PAST_DUE
+  CANCELED
+  BLOCKED
+}
+
+enum MobilePlatform {
+  ANDROID
+  IOS
+  WINDOWS
+  MACOS
+}
+
+enum DeviceStatus {
+  PENDING
+  ACTIVE
+  BLOCKED
+  REMOVED
+}
+
+enum ProtectionMode {
+  DNS_ONLY
+  LOCAL_VPN
+  DNS_PLUS_VPN
+  APPLE_DNS_PROXY
+}
+
+enum ProtectionStatus {
+  ONLINE
+  DEGRADED
+  OFFLINE
+  LOCKED
+}
+
+enum ProtectionEventType {
+  BLOCKED_DOMAIN
+  BLOCKED_URL
+  BLOCKED_KEYWORD
+  VPN_DISABLED
+  VPN_PERMISSION_REVOKED
+  DNS_TAMPERING
+  EXTERNAL_VPN_DETECTED
+  PROXY_DETECTED
+  APP_STOPPED
+  UNINSTALL_ATTEMPT
+  DEVICE_LIMIT_REACHED
+  SUBSCRIPTION_BLOCK
+  HEARTBEAT
+}
+
+enum BypassSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PENDING_PAYMENT
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum PaymentGateway {
+  ASAAS
+}
+
+enum BlocklistEntryType {
+  DOMAIN
+  SUBDOMAIN
+  URL_KEYWORD
+  HOST_KEYWORD
+}
+
+enum DeviceRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum UnlockRequestStatus {
+  PENDING
+  APPROVED
+  DENIED
+  EXPIRED
+  CANCELED
+}
+
+enum UnlockActionType {
+  DISABLE_PROTECTION
+  REMOVE_DEVICE
+  REQUEST_UNINSTALL
+  RESET_PIN
+  LOGOUT_DEVICE
+}
+
 model AdminUser {
   id           String    @id @default(cuid())
   name         String
@@ -240,6 +357,8 @@ model TicketLot {
   description      String?
   priceInCents     Int
   serviceFeeBps    Int       @default(0)
+  pixDiscountPercentBps Int  @default(0)
+  pixDiscountFixedInCents Int @default(0)
   cardInterestBpsPerInstallment Int @default(0)
   cardInterestStartsAtInstallment Int @default(2)
   totalQuantity    Int
@@ -304,6 +423,7 @@ model Order {
   status          OrderStatus @default(PENDING_PAYMENT)
   subtotalInCents Int
   serviceFeeInCents Int      @default(0)
+  pixDiscountInCents Int     @default(0)
   cardInterestInCents Int    @default(0)
   discountInCents Int         @default(0)
   totalInCents    Int
@@ -447,4 +567,302 @@ model Coupon {
 
   @@unique([eventId, code])
   @@index([eventId, status])
+}
+
+model SubscriptionPlan {
+  id                    String               @id @default(cuid())
+  code                  String               @unique
+  name                  String
+  description           String?
+  status                PlanStatus           @default(DRAFT)
+  interval              SubscriptionInterval
+  durationDays          Int
+  priceInCents          Int
+  trialDays             Int                  @default(7)
+  gracePeriodDays       Int                  @default(2)
+  maxDevices            Int
+  allowsAccountability  Boolean              @default(false)
+  allowsEmergencyMode   Boolean              @default(true)
+  allowsRecoveryTools   Boolean              @default(true)
+  sortOrder             Int                  @default(0)
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  subscriptions Subscription[]
+
+  @@index([status, sortOrder])
+}
+
+model AppUser {
+  id                       String          @id @default(cuid())
+  name                     String
+  email                    String          @unique
+  passwordHash             String?
+  status                   AppUserStatus   @default(TRIAL)
+  trialEndsAt              DateTime?
+  accessEndsAt             DateTime?
+  accountabilityEmail      String?
+  recoveryStartDate        DateTime?
+  currentStreakDays        Int             @default(0)
+  longestStreakDays        Int             @default(0)
+  emergencyModeEnabled     Boolean         @default(false)
+  emergencyModeUntil       DateTime?
+  mustStayProtected        Boolean         @default(true)
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+
+  subscriptions            Subscription[]
+  devices                  ProtectedDevice[]
+  protectionEvents         ProtectionEvent[]
+  bypassIncidents          BypassIncident[]
+  sessions                 AppUserSession[]
+  unlockRequests           UnlockRequest[]
+  accountabilityRelations  AccountabilityLink[] @relation("UserAccountability")
+  guardianRelations        AccountabilityLink[] @relation("GuardianAccountability")
+
+  @@index([status, accessEndsAt])
+}
+
+model AppUserSession {
+  id            String   @id @default(cuid())
+  userId        String
+  tokenHash     String   @unique
+  deviceLabel   String?
+  expiresAt     DateTime
+  lastUsedAt    DateTime?
+  revokedAt     DateTime?
+  createdAt     DateTime @default(now())
+
+  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt, revokedAt])
+}
+
+model Subscription {
+  id                     String             @id @default(cuid())
+  userId                 String
+  planId                 String
+  status                 SubscriptionStatus @default(TRIALING)
+  gateway                PaymentGateway     @default(ASAAS)
+  asaasCustomerId        String?
+  asaasSubscriptionId    String?            @unique
+  asaasPaymentId         String?
+  externalReference      String?            @unique
+  startedAt              DateTime           @default(now())
+  trialEndsAt            DateTime?
+  currentPeriodStartsAt  DateTime?
+  currentPeriodEndsAt    DateTime?
+  graceEndsAt            DateTime?
+  canceledAt             DateTime?
+  lastPaymentAt          DateTime?
+  nextBillingAt          DateTime?
+  metadata               Json?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  paymentEvents SubscriptionPaymentEvent[]
+
+  @@index([userId, status])
+  @@index([planId, status])
+}
+
+model SubscriptionPaymentEvent {
+  id                   String             @id @default(cuid())
+  subscriptionId       String
+  gateway              PaymentGateway     @default(ASAAS)
+  gatewayEventId       String?
+  gatewayPaymentId     String?
+  gatewayStatus        String
+  amountInCents        Int?
+  paidAt               DateTime?
+  dueDate              DateTime?
+  rawPayload           Json?
+  createdAt            DateTime           @default(now())
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId, createdAt])
+  @@index([gatewayPaymentId])
+}
+
+model ProtectedDevice {
+  id                       String            @id @default(cuid())
+  userId                   String
+  nickname                 String?
+  platform                 MobilePlatform
+  status                   DeviceStatus      @default(PENDING)
+  protectionMode           ProtectionMode
+  protectionStatus         ProtectionStatus  @default(OFFLINE)
+  deviceFingerprint        String            @unique
+  installationKey          String            @unique
+  pushToken                String?
+  appVersion               String?
+  osVersion                String?
+  lastHeartbeatAt          DateTime?
+  vpnEnabled               Boolean           @default(false)
+  dnsProfileInstalled      Boolean           @default(false)
+  externalVpnDetected      Boolean           @default(false)
+  developerModeDetected    Boolean           @default(false)
+  uninstallGuardEnabled    Boolean           @default(false)
+  protectedByPin           Boolean           @default(false)
+  riskLevel                DeviceRiskLevel   @default(LOW)
+  riskUpdatedAt            DateTime?
+  protectionLockedAt       DateTime?
+  createdAt                DateTime          @default(now())
+  updatedAt                DateTime          @updatedAt
+
+  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  protectionEvents ProtectionEvent[]
+  bypassIncidents BypassIncident[]
+  unlockRequests UnlockRequest[]
+
+  @@index([userId, status])
+  @@index([platform, protectionStatus])
+  @@index([lastHeartbeatAt])
+}
+
+model ProtectionEvent {
+  id                 String              @id @default(cuid())
+  userId             String
+  deviceId           String?
+  type               ProtectionEventType
+  severity           BypassSeverity      @default(LOW)
+  blockedValue       String?
+  matchedRule        String?
+  metadata           Json?
+  createdAt          DateTime            @default(now())
+
+  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device ProtectedDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([deviceId, createdAt])
+  @@index([type, createdAt])
+}
+
+model BypassIncident {
+  id                 String            @id @default(cuid())
+  userId             String
+  deviceId           String?
+  severity           BypassSeverity
+  title              String
+  description        String
+  resolvedAt         DateTime?
+  metadata           Json?
+  createdAt          DateTime          @default(now())
+
+  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device ProtectedDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([userId, severity, createdAt])
+  @@index([deviceId, createdAt])
+}
+
+model AccountabilityLink {
+  id                 String    @id @default(cuid())
+  userId             String
+  guardianUserId     String?
+  guardianEmail      String
+  guardianName       String?
+  isActive           Boolean   @default(true)
+  receivesAlerts     Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user AppUser @relation("UserAccountability", fields: [userId], references: [id], onDelete: Cascade)
+  guardian AppUser? @relation("GuardianAccountability", fields: [guardianUserId], references: [id], onDelete: SetNull)
+
+  @@index([userId, isActive])
+  @@index([guardianEmail])
+}
+
+model ProtectionPolicy {
+  id                           String   @id @default(cuid())
+  slug                         String   @unique
+  name                         String
+  description                  String?
+  version                      Int      @default(1)
+  isActive                     Boolean  @default(true)
+  targetPornographyOnly        Boolean  @default(true)
+  enforceAndroidVpn            Boolean  @default(true)
+  enforceIosDnsProxy           Boolean  @default(true)
+  blockUnknownDnsChanges       Boolean  @default(true)
+  detectExternalVpn            Boolean  @default(true)
+  detectProxy                  Boolean  @default(true)
+  detectDeveloperMode          Boolean  @default(true)
+  pinRequiredToDisable         Boolean  @default(true)
+  heartbeatIntervalMinutes     Int      @default(15)
+  staleHeartbeatGraceMinutes   Int      @default(45)
+  updatedAt                    DateTime @updatedAt
+  createdAt                    DateTime @default(now())
+
+  sources BlocklistSource[]
+
+  @@index([isActive, updatedAt])
+}
+
+model BlocklistSource {
+  id                String   @id @default(cuid())
+  policyId          String
+  code              String
+  name              String
+  description       String?
+  version           Int      @default(1)
+  isEnabled         Boolean  @default(true)
+  priority          Int      @default(0)
+  updatedAt         DateTime @updatedAt
+  createdAt         DateTime @default(now())
+
+  policy ProtectionPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  entries BlocklistEntry[]
+
+  @@unique([policyId, code])
+  @@index([policyId, isEnabled, priority])
+}
+
+model BlocklistEntry {
+  id          String             @id @default(cuid())
+  sourceId    String
+  value       String
+  type        BlocklistEntryType
+  note        String?
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  source BlocklistSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, value, type])
+  @@index([sourceId, isActive])
+  @@index([type, value])
+}
+
+model UnlockRequest {
+  id                 String              @id @default(cuid())
+  userId             String
+  deviceId           String?
+  actionType         UnlockActionType
+  status             UnlockRequestStatus @default(PENDING)
+  requestedByEmail   String
+  partnerEmail       String
+  approvalCodeHash   String
+  reason             String?
+  expiresAt          DateTime
+  approvedAt         DateTime?
+  cooldownEndsAt     DateTime?
+  deniedAt           DateTime?
+  completedAt        DateTime?
+  metadata           Json?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device ProtectedDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status, createdAt])
+  @@index([deviceId, status])
+  @@index([partnerEmail, status])
 }

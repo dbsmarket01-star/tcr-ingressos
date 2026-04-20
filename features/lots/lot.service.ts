@@ -10,6 +10,8 @@ export async function createTicketLot(input: TicketLotInput & { status: LotStatu
       description: input.description || null,
       priceInCents: input.priceInCents,
       serviceFeeBps: input.serviceFeeBps,
+      pixDiscountPercentBps: input.pixDiscountPercentBps,
+      pixDiscountFixedInCents: input.pixDiscountFixedInCents,
       cardInterestBpsPerInstallment: input.cardInterestBpsPerInstallment,
       cardInterestStartsAtInstallment: input.cardInterestStartsAtInstallment,
       totalQuantity: input.totalQuantity,
@@ -77,6 +79,8 @@ export async function updateTicketLot(lotId: string, input: TicketLotInput & { s
       description: input.description || null,
       priceInCents: input.priceInCents,
       serviceFeeBps: input.serviceFeeBps,
+      pixDiscountPercentBps: input.pixDiscountPercentBps,
+      pixDiscountFixedInCents: input.pixDiscountFixedInCents,
       cardInterestBpsPerInstallment: input.cardInterestBpsPerInstallment,
       cardInterestStartsAtInstallment: input.cardInterestStartsAtInstallment,
       totalQuantity: input.totalQuantity,
@@ -93,7 +97,12 @@ export async function updateTicketLotPricing(
   lotId: string,
   input: Pick<
     TicketLotInput,
-    "priceInCents" | "serviceFeeBps" | "cardInterestBpsPerInstallment" | "cardInterestStartsAtInstallment"
+    | "priceInCents"
+    | "serviceFeeBps"
+    | "pixDiscountPercentBps"
+    | "pixDiscountFixedInCents"
+    | "cardInterestBpsPerInstallment"
+    | "cardInterestStartsAtInstallment"
   >
 ) {
   return prisma.ticketLot.update({
@@ -101,6 +110,8 @@ export async function updateTicketLotPricing(
     data: {
       priceInCents: input.priceInCents,
       serviceFeeBps: input.serviceFeeBps,
+      pixDiscountPercentBps: input.pixDiscountPercentBps,
+      pixDiscountFixedInCents: input.pixDiscountFixedInCents,
       cardInterestBpsPerInstallment: input.cardInterestBpsPerInstallment,
       cardInterestStartsAtInstallment: input.cardInterestStartsAtInstallment
     }

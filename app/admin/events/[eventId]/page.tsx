@@ -50,6 +50,18 @@ const couponTypeLabels = {
   FIXED_AMOUNT: "Valor fixo"
 };
 
+function getPixDiscountType(lot: { pixDiscountPercentBps: number; pixDiscountFixedInCents: number }) {
+  if (lot.pixDiscountPercentBps > 0) {
+    return "PERCENTAGE";
+  }
+
+  if (lot.pixDiscountFixedInCents > 0) {
+    return "FIXED";
+  }
+
+  return "NONE";
+}
+
 export default async function EventManagementPage({ params, searchParams }: EventManagementPageProps) {
   await requirePermission("EVENTS");
   const { eventId } = await params;
@@ -68,16 +80,16 @@ export default async function EventManagementPage({ params, searchParams }: Even
   const hasPublishedSalesReady = event.status === "PUBLISHED" && activeLots > 0 && availableTickets > 0;
   const eventAlerts = [
     ...(event.status !== "PUBLISHED"
-      ? ["Evento ainda nao publicado."]
+      ? ["Evento ainda não publicado."]
       : []),
     ...(activeLots === 0
       ? ["Nenhum lote ativo para venda."]
       : []),
     ...(availableTickets <= 0
-      ? ["Sem ingressos disponiveis para venda."]
+      ? ["Sem ingressos disponíveis para venda."]
       : []),
     ...(capacity.reserved >= 5 && capacity.reserved > availableTickets
-      ? ["Reservas pendentes altas em relacao aos disponiveis."]
+      ? ["Reservas pendentes altas em relação aos disponíveis."]
       : [])
   ];
   const lotError = typeof query.lotError === "string" ? query.lotError : null;
@@ -90,7 +102,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
   return (
     <AdminShell
       title={event.title}
-      description="Gerencie publicacao, leitura operacional e lotes deste evento."
+      description="Gerencie publicação, leitura operacional e lotes deste evento."
     >
       {eventError ? <div className="errorBox spacedSection">{eventError}</div> : null}
       {eventSaved ? <div className="successBox spacedSection">Evento atualizado com sucesso.</div> : null}
@@ -119,7 +131,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
           <strong>{formatDateTime(event.startsAt)}</strong>
         </div>
         <div className="card metric">
-          <span className="muted">Disponiveis</span>
+          <span className="muted">Disponíveis</span>
           <strong>{availableTickets}</strong>
         </div>
         <div className="card metric">
@@ -136,23 +148,23 @@ export default async function EventManagementPage({ params, searchParams }: Even
           </span>
         </div>
         {eventAlerts.length === 0 ? (
-          <div className="successBox">Evento publicado, com lote ativo e ingressos disponiveis.</div>
+          <div className="successBox">Evento publicado, com lote ativo e ingressos disponíveis.</div>
         ) : (
           <div className="operationsAlertGrid">
             {eventAlerts.map((alert) => (
               <article className="operationAlert warning" key={alert}>
                 <div>
-                  <span>Atencao</span>
+                  <span>Atenção</span>
                   <strong>{alert}</strong>
                 </div>
-                <small>Resolva antes de aumentar trafego pago para este evento.</small>
+                <small>Resolva antes de aumentar tráfego pago para este evento.</small>
               </article>
             ))}
           </div>
         )}
         <div className="actionRow spacedSection">
           <Link className="secondaryButton smallButton" href={`/admin/reports/lots?eventId=${event.id}`}>
-            Relatorio do evento
+            Relatório do evento
           </Link>
           <Link className="secondaryButton smallButton" href={`/admin/orders?eventId=${event.id}`}>
             Pedidos do evento
@@ -166,7 +178,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
       <section className="grid twoColumns spacedSection">
         <div className="card">
           <div className="sectionHeader inlineHeader">
-            <h2>Operacao do evento</h2>
+          <h2>Operação do evento</h2>
             <div className="actionRow">
               <Link className="secondaryButton smallButton" href={getPublicEventUrl(event.slug)}>
                 Visualizar
@@ -189,7 +201,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
           <div className="progressCell eventProgress">
             <div className="progressMeta">
               <span>
-                {capacity.sold} vendidos de {capacity.total} disponiveis
+                {capacity.sold} vendidos de {capacity.total} disponíveis
               </span>
               <strong>{progress}%</strong>
             </div>
@@ -231,12 +243,12 @@ export default async function EventManagementPage({ params, searchParams }: Even
             <input name="name" placeholder="Ex: Pista - Primeiro lote" required />
           </label>
           <label className="field">
-            <span>Descricao</span>
+            <span>Descrição</span>
             <input name="description" placeholder="Opcional" />
           </label>
           <div className="grid twoColumns">
             <label className="field">
-              <span>Preco</span>
+              <span>Preço</span>
               <input name="price" type="number" min="0" step="0.01" required />
             </label>
             <label className="field">
@@ -251,7 +263,30 @@ export default async function EventManagementPage({ params, searchParams }: Even
               <small>Ex: 17 para cobrar 17% sobre o valor do ingresso.</small>
             </label>
             <label className="field">
-              <span>Juros cartao por parcela (%)</span>
+              <span>Desconto no Pix</span>
+              <select name="pixDiscountType" defaultValue="NONE">
+                <option value="NONE">Sem desconto</option>
+                <option value="PERCENTAGE">Percentual</option>
+                <option value="FIXED">Valor fixo</option>
+              </select>
+              <small>Escolha se o desconto no Pix será em porcentagem ou em valor fixo.</small>
+            </label>
+          </div>
+          <div className="grid twoColumns">
+            <label className="field">
+              <span>Desconto Pix (%)</span>
+              <input name="pixDiscountPercent" type="number" min="0" max="100" step="0.01" defaultValue="0" />
+              <small>Preencha apenas se o tipo acima for percentual.</small>
+            </label>
+            <label className="field">
+              <span>Desconto Pix (R$)</span>
+              <input name="pixDiscountFixed" type="number" min="0" step="0.01" defaultValue="0" />
+              <small>Preencha apenas se o tipo acima for valor fixo.</small>
+            </label>
+          </div>
+          <div className="grid twoColumns">
+            <label className="field">
+              <span>Juros do cartão por parcela (%)</span>
               <input
                 name="cardInterestPercentPerInstallment"
                 type="number"
@@ -261,7 +296,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
                 defaultValue="0"
                 required
               />
-              <small>Ex: 3 para cobrar 3% por parcela no cartao.</small>
+              <small>Ex: 3 para cobrar 3% por parcela no cartão.</small>
             </label>
           </div>
           <label className="field">
@@ -287,7 +322,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
           </div>
           <div className="grid twoColumns">
             <label className="field">
-              <span>Inicio das vendas</span>
+              <span>Início das vendas</span>
               <input name="salesStartsAt" type="datetime-local" />
             </label>
             <label className="field">
@@ -334,7 +369,9 @@ export default async function EventManagementPage({ params, searchParams }: Even
               {event.lots.map((lot) => {
                 const available = lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity;
                 const serviceFeePercent = (lot.serviceFeeBps / 100).toFixed(2);
+                const pixDiscountPercent = (lot.pixDiscountPercentBps / 100).toFixed(2);
                 const cardInterestPercent = (lot.cardInterestBpsPerInstallment / 100).toFixed(2);
+                const pixDiscountType = getPixDiscountType(lot);
 
                 return (
                   <tr key={lot.id}>
@@ -384,7 +421,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
                         <label>
                           <span>Juros %</span>
                           <input
-                            aria-label={`Juros de cartao de ${lot.name}`}
+                            aria-label={`Juros de cartão de ${lot.name}`}
                             name="cardInterestPercentPerInstallment"
                             type="number"
                             min="0"
@@ -394,9 +431,44 @@ export default async function EventManagementPage({ params, searchParams }: Even
                           />
                         </label>
                         <label>
+                          <span>Pix</span>
+                          <select
+                            aria-label={`Tipo de desconto no Pix de ${lot.name}`}
+                            name="pixDiscountType"
+                            defaultValue={pixDiscountType}
+                          >
+                            <option value="NONE">Sem desconto</option>
+                            <option value="PERCENTAGE">Percentual</option>
+                            <option value="FIXED">Valor fixo</option>
+                          </select>
+                        </label>
+                        <label>
+                          <span>Pix %</span>
+                          <input
+                            aria-label={`Desconto percentual no Pix de ${lot.name}`}
+                            name="pixDiscountPercent"
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            defaultValue={pixDiscountPercent}
+                          />
+                        </label>
+                        <label>
+                          <span>Pix R$</span>
+                          <input
+                            aria-label={`Desconto fixo no Pix de ${lot.name}`}
+                            name="pixDiscountFixed"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            defaultValue={(lot.pixDiscountFixedInCents / 100).toFixed(2)}
+                          />
+                        </label>
+                        <label>
                           <span>A partir</span>
                           <select
-                            aria-label={`Inicio do juros de cartao de ${lot.name}`}
+                            aria-label={`Início do juros de cartão de ${lot.name}`}
                             name="cardInterestStartsAtInstallment"
                             defaultValue={String(lot.cardInterestStartsAtInstallment)}
                           >
@@ -413,6 +485,12 @@ export default async function EventManagementPage({ params, searchParams }: Even
                       </form>
                       <p className="muted">
                         Atual: {formatPercentageFromBps(lot.serviceFeeBps)} taxa /{" "}
+                        {lot.pixDiscountPercentBps > 0
+                          ? `${formatPercentageFromBps(lot.pixDiscountPercentBps)} desconto Pix`
+                          : lot.pixDiscountFixedInCents > 0
+                            ? `${formatCurrency(lot.pixDiscountFixedInCents)} desconto Pix`
+                            : "sem desconto Pix"}{" "}
+                        /{" "}
                         {formatPercentageFromBps(lot.cardInterestBpsPerInstallment)} a partir de{" "}
                         {lot.cardInterestStartsAtInstallment}x
                       </p>
@@ -420,7 +498,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
                     <td>{lot.soldQuantity}</td>
                     <td>{lot.reservedQuantity}</td>
                     <td>{lot.totalQuantity}</td>
-                    <td>{available} disponiveis</td>
+                    <td>{available} disponíveis</td>
                     <td>
                       <div className="actionRow">
                         <Link
@@ -468,7 +546,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
           <h2>Novo cupom</h2>
           <input type="hidden" name="eventId" value={event.id} />
           <label className="field">
-            <span>Codigo</span>
+            <span>Código</span>
             <input name="code" placeholder="Ex: TCR10" required />
           </label>
           <div className="grid twoColumns">
@@ -526,7 +604,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
             <table className="table">
               <thead>
                 <tr>
-                  <th>Codigo</th>
+                  <th>Código</th>
                   <th>Tipo</th>
                   <th>Desconto</th>
                   <th>Uso</th>

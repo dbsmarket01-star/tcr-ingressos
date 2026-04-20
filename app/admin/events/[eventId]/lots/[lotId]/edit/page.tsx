@@ -29,7 +29,7 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
   return (
     <AdminShell
       title="Editar ingresso"
-      description={`Atualize nome, preco, taxas, quantidade e regras de venda de ${lot.event.title}.`}
+      description={`Atualize nome, preço, taxas, quantidade e regras de venda de ${lot.event.title}.`}
     >
       {typeof query.error === "string" ? <div className="errorBox spacedSection">{query.error}</div> : null}
 
@@ -45,12 +45,12 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
             <input name="name" defaultValue={lot.name} required />
           </label>
           <label className="field">
-            <span>Descricao</span>
+            <span>Descrição</span>
             <input name="description" defaultValue={lot.description ?? ""} />
           </label>
           <div className="grid twoColumns">
             <label className="field">
-              <span>Preco</span>
+              <span>Preço</span>
               <input
                 name="price"
                 type="number"
@@ -64,7 +64,7 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
               <span>Quantidade total</span>
               <input name="totalQuantity" type="number" min="1" defaultValue={lot.totalQuantity} required />
               <small>
-                Ja vendidos/reservados: {lot.soldQuantity + lot.reservedQuantity}. O total nao pode ser menor que isso.
+                Já vendidos/reservados: {lot.soldQuantity + lot.reservedQuantity}. O total não pode ser menor que isso.
               </small>
             </label>
           </div>
@@ -86,7 +86,45 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
               />
             </label>
             <label className="field">
-              <span>Juros cartao por parcela (%)</span>
+              <span>Desconto no Pix</span>
+              <select
+                name="pixDiscountType"
+                defaultValue={
+                  lot.pixDiscountPercentBps > 0 ? "PERCENTAGE" : lot.pixDiscountFixedInCents > 0 ? "FIXED" : "NONE"
+                }
+              >
+                <option value="NONE">Sem desconto</option>
+                <option value="PERCENTAGE">Percentual</option>
+                <option value="FIXED">Valor fixo</option>
+              </select>
+            </label>
+          </div>
+          <div className="grid twoColumns">
+            <label className="field">
+              <span>Desconto Pix (%)</span>
+              <input
+                name="pixDiscountPercent"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                defaultValue={(lot.pixDiscountPercentBps / 100).toFixed(2)}
+              />
+            </label>
+            <label className="field">
+              <span>Desconto Pix (R$)</span>
+              <input
+                name="pixDiscountFixed"
+                type="number"
+                min="0"
+                step="0.01"
+                defaultValue={(lot.pixDiscountFixedInCents / 100).toFixed(2)}
+              />
+            </label>
+          </div>
+          <div className="grid twoColumns">
+            <label className="field">
+              <span>Juros do cartão por parcela (%)</span>
               <input
                 name="cardInterestPercentPerInstallment"
                 type="number"
@@ -114,17 +152,17 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
           <h2>Regras de venda</h2>
           <div className="grid twoColumns">
             <label className="field">
-              <span>Minimo por pedido</span>
+              <span>Mínimo por pedido</span>
               <input name="minPerOrder" type="number" min="1" defaultValue={lot.minPerOrder} required />
             </label>
             <label className="field">
-              <span>Maximo por pedido</span>
+              <span>Máximo por pedido</span>
               <input name="maxPerOrder" type="number" min="1" defaultValue={lot.maxPerOrder} required />
             </label>
           </div>
           <div className="grid twoColumns">
             <label className="field">
-              <span>Inicio das vendas</span>
+              <span>Início das vendas</span>
               <input name="salesStartsAt" type="datetime-local" defaultValue={formatDateTimeInput(lot.salesStartsAt)} />
             </label>
             <label className="field">

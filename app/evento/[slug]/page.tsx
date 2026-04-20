@@ -6,7 +6,7 @@ import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getBuyerProfile } from "@/features/customer-auth/google-buyer.service";
 import { getCachedEventSeoBySlug, getCachedPublicEventBySlug } from "@/features/events/event.service";
 import { createCheckoutOrderAction } from "@/features/orders/order.actions";
-import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
+import { calculatePixDiscountInCents, calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import { buildEventSeo } from "@/features/seo/event-seo";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -15,19 +15,6 @@ import { CheckoutEstimator } from "./CheckoutEstimator";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
-
-const mapTemplateLabels = {
-  AUTO: "Mapa automático",
-  AUDITORIUM: "Auditório",
-  THEATER: "Teatro",
-  WAREHOUSE: "Galpão / arena",
-  CLUB: "Clube / pista",
-  FREE: "Setores livres"
-};
-
-function sectorLabelsFromLots(lotNames: string[]) {
-  return lotNames.length > 0 ? lotNames.slice(0, 6) : ["Ouro", "Prata", "Camarote", "Galeria"];
-}
 
 type EventPageProps = {
   params: Promise<{
@@ -108,8 +95,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     (totalAvailable <= 50 ? "Últimas unidades disponíveis para este evento." : "Compra segura com confirmação automática.");
   const ctaText = event.conversionCtaText || "Garantir minha vaga";
   const highlightedLotId = event.highlightedLotId || activeLots[0]?.id;
-  const fallbackSectorLabels = sectorLabelsFromLots(activeLots.map((lot) => lot.name));
-  const mapTemplate = event.eventMapTemplate || "AUTO";
   const eventLead =
     event.subtitle ||
     event.description.split("\n").find((paragraph) => paragraph.trim().length > 0)?.trim() ||
@@ -190,14 +175,10 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         }}
       >
         <div className="publicHeroInner">
-          <div className="publicBadge">Parcele em até 12x</div>
           <h1>{event.title}</h1>
           <p>{eventLead}</p>
           <div className="publicMeta">
             <span>{formatDateTime(event.startsAt)}</span>
-            <span>
-              {event.venueName} • {event.city}, {event.state}
-            </span>
           </div>
           <div className="heroActions">
             <a className="button" href="#ingressos">
@@ -219,14 +200,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
               <span>Entrega</span>
               <strong>QR Code automático</strong>
             </div>
-            <div>
-              <span>Vendidos</span>
-              <strong>{totalSold > 0 ? `+${totalSold}` : "Aberto"}</strong>
-            </div>
-            <div>
-              <span>Disponíveis</span>
-              <strong>{totalAvailable}</strong>
-            </div>
           </section>
 
           <section className="editorialBlock">
@@ -241,10 +214,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
               <div>
                 <span>Data e horário</span>
                 <strong>{formatDateTime(event.startsAt)}</strong>
-              </div>
-              <div>
-                <span>Local</span>
-                <strong>{event.venueName}</strong>
               </div>
               <div>
                 <span>Endereço</span>
@@ -280,37 +249,20 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             </section>
           ) : null}
 
-          <section className="contentBlock">
-            <h2>Mapa de setores</h2>
-            {event.eventMapImageUrl ? (
+          {event.eventMapImageUrl ? (
+            <section className="contentBlock">
+              <h2>Mapa do evento</h2>
               <div className="eventMapImageFrame">
                 <img
                   src={event.eventMapImageUrl}
-                  alt={`Mapa de setores - ${event.title}`}
+                  alt={`Mapa do evento - ${event.title}`}
                   decoding="async"
                   loading="lazy"
                 />
               </div>
-            ) : (
-              <div className={`sectorMap mapTemplate mapTemplate${mapTemplate}`} aria-label="Mapa de setores do evento">
-                <div className="mapTemplateHeader">
-                  <span>{mapTemplateLabels[mapTemplate as keyof typeof mapTemplateLabels] ?? "Mapa de setores"}</span>
-                  <strong>Setores sujeitos a disponibilidade</strong>
-                </div>
-                <div className="stage">PALCO</div>
-                <div className="sectorGrid">
-                  {fallbackSectorLabels.map((sectorLabel, index) => (
-                    <div className={`sector ${index === 0 ? "sectorHighlight" : ""}`} key={`${sectorLabel}-${index}`}>
-                      {sectorLabel}
-                    </div>
-                  ))}
-                </div>
-                {mapTemplate === "THEATER" ? <div className="sector balconySector">Balcao / mezanino</div> : null}
-                {mapTemplate === "CLUB" ? <div className="sector loungeSector">Area social / apoio</div> : null}
-                {event.eventMapNotes ? <p className="mapNotes">{event.eventMapNotes}</p> : null}
-              </div>
-            )}
-          </section>
+              {event.eventMapNotes ? <p className="mapNotes">{event.eventMapNotes}</p> : null}
+            </section>
+          ) : null}
         </article>
 
         <aside className="purchasePanel" id="ingressos">
@@ -356,6 +308,13 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                 const soldPercent = lot.totalQuantity > 0 ? Math.round((lot.soldQuantity / lot.totalQuantity) * 100) : 0;
                 const serviceFeeInCents = calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps);
                 const totalWithFeeInCents = lot.priceInCents + serviceFeeInCents;
+                const pixDiscountInCents = calculatePixDiscountInCents(
+                  totalWithFeeInCents,
+                  1,
+                  lot.pixDiscountPercentBps,
+                  lot.pixDiscountFixedInCents
+                );
+                const pixTotalInCents = Math.max(totalWithFeeInCents - pixDiscountInCents, 0);
                 const lotEndsSoon = lot.salesEndsAt ? lot.salesEndsAt.getTime() - Date.now() <= 24 * 60 * 60 * 1000 : false;
                 const isHighlighted = lot.id === highlightedLotId;
 
@@ -381,6 +340,11 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                           <strong>{formatCurrency(totalWithFeeInCents)}</strong>
                         </div>
                       </div>
+                      {pixDiscountInCents > 0 ? (
+                        <p className="muted">
+                          No Pix: <strong>{formatCurrency(pixTotalInCents)}</strong>
+                        </p>
+                      ) : null}
                       <div className="lotAvailability">
                         <div className="progressTrack" aria-label={`${soldPercent}% vendido`}>
                           <span style={{ width: `${Math.min(soldPercent, 100)}%` }} />

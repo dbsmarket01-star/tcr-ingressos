@@ -3,7 +3,7 @@
 import { LotStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { parseInstallmentStart, parsePercentageToBps } from "@/features/pricing/pricing";
+import { parseInstallmentStart, parseMoneyToCents, parsePercentageToBps } from "@/features/pricing/pricing";
 import { createTicketLot, updateTicketLot, updateTicketLotPricing, updateTicketLotStatus } from "./lot.service";
 import { ticketLotSchema } from "./lot.schema";
 
@@ -14,6 +14,29 @@ function optionalDate(value: FormDataEntryValue | null) {
 
 function lotErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
+}
+
+function parsePixDiscount(formData: FormData) {
+  const type = String(formData.get("pixDiscountType") ?? "NONE").trim();
+
+  if (type === "PERCENTAGE") {
+    return {
+      pixDiscountPercentBps: parsePercentageToBps(formData.get("pixDiscountPercent")),
+      pixDiscountFixedInCents: 0
+    };
+  }
+
+  if (type === "FIXED") {
+    return {
+      pixDiscountPercentBps: 0,
+      pixDiscountFixedInCents: parseMoneyToCents(formData.get("pixDiscountFixed"))
+    };
+  }
+
+  return {
+    pixDiscountPercentBps: 0,
+    pixDiscountFixedInCents: 0
+  };
 }
 
 export async function createTicketLotAction(formData: FormData) {
@@ -27,6 +50,7 @@ export async function createTicketLotAction(formData: FormData) {
     description: String(formData.get("description") ?? "").trim() || undefined,
     priceInCents: Math.round(price * 100),
     serviceFeeBps: parsePercentageToBps(formData.get("serviceFeePercent")),
+    ...parsePixDiscount(formData),
     cardInterestBpsPerInstallment: parsePercentageToBps(formData.get("cardInterestPercentPerInstallment")),
     cardInterestStartsAtInstallment: parseInstallmentStart(formData.get("cardInterestStartsAtInstallment")),
     totalQuantity: Number(formData.get("totalQuantity") ?? 0),
@@ -37,7 +61,7 @@ export async function createTicketLotAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent("Verifique os campos obrigatorios do lote.")}`);
+    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent("Verifique os campos obrigatórios do lote.")}`);
   }
 
   try {
@@ -46,7 +70,7 @@ export async function createTicketLotAction(formData: FormData) {
       status: status === "ACTIVE" ? LotStatus.ACTIVE : LotStatus.DRAFT
     });
   } catch (error) {
-    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent(lotErrorMessage(error, "Nao foi possivel salvar o lote."))}`);
+    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent(lotErrorMessage(error, "Não foi possível salvar o lote."))}`);
   }
 
   revalidatePath("/admin/events");
@@ -60,17 +84,17 @@ export async function updateTicketLotStatusAction(formData: FormData) {
   const status = String(formData.get("status") ?? "").trim();
 
   if (!eventId || !lotId) {
-    redirect(`/admin/events/${eventId || ""}?lotError=${encodeURIComponent("Lote nao informado.")}`);
+    redirect(`/admin/events/${eventId || ""}?lotError=${encodeURIComponent("Lote não informado.")}`);
   }
 
   if (status !== "ACTIVE" && status !== "PAUSED" && status !== "CLOSED" && status !== "DRAFT") {
-    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent("Status invalido para este lote.")}`);
+    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent("Status inválido para este lote.")}`);
   }
 
   try {
     await updateTicketLotStatus(lotId, status);
   } catch (error) {
-    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent(lotErrorMessage(error, "Nao foi possivel atualizar o status do lote."))}`);
+    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent(lotErrorMessage(error, "Não foi possível atualizar o status do lote."))}`);
   }
 
   revalidatePath("/admin/events");
@@ -84,31 +108,34 @@ export async function updateTicketLotPricingAction(formData: FormData) {
   const price = Number(formData.get("price") ?? 0);
 
   if (!eventId || !lotId) {
-    redirect(`/admin/events/${eventId || ""}?lotError=${encodeURIComponent("Lote nao informado.")}`);
+    redirect(`/admin/events/${eventId || ""}?lotError=${encodeURIComponent("Lote não informado.")}`);
   }
 
   const parsed = ticketLotSchema
     .pick({
       priceInCents: true,
       serviceFeeBps: true,
+      pixDiscountPercentBps: true,
+      pixDiscountFixedInCents: true,
       cardInterestBpsPerInstallment: true,
       cardInterestStartsAtInstallment: true
     })
     .safeParse({
       priceInCents: Math.round(price * 100),
       serviceFeeBps: parsePercentageToBps(formData.get("serviceFeePercent")),
+      ...parsePixDiscount(formData),
       cardInterestBpsPerInstallment: parsePercentageToBps(formData.get("cardInterestPercentPerInstallment")),
       cardInterestStartsAtInstallment: parseInstallmentStart(formData.get("cardInterestStartsAtInstallment"))
     });
 
   if (!parsed.success) {
-    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent("Verifique preco, taxa e juros do lote.")}`);
+    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent("Verifique preço, taxa e juros do lote.")}`);
   }
 
   try {
     await updateTicketLotPricing(lotId, parsed.data);
   } catch (error) {
-    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent(lotErrorMessage(error, "Nao foi possivel atualizar preco e taxas do lote."))}`);
+    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent(lotErrorMessage(error, "Não foi possível atualizar preço e taxas do lote."))}`);
   }
 
   revalidatePath("/admin/events");
@@ -125,7 +152,7 @@ export async function updateTicketLotAction(formData: FormData) {
   const status = String(formData.get("status") ?? "DRAFT");
 
   if (!eventId || !lotId) {
-    redirect(`/admin/events/${eventId || ""}/lots/${lotId || ""}/edit?error=${encodeURIComponent("Lote nao informado.")}`);
+    redirect(`/admin/events/${eventId || ""}/lots/${lotId || ""}/edit?error=${encodeURIComponent("Lote não informado.")}`);
   }
 
   const parsed = ticketLotSchema.safeParse({
@@ -134,6 +161,7 @@ export async function updateTicketLotAction(formData: FormData) {
     description: String(formData.get("description") ?? "").trim() || undefined,
     priceInCents: Math.round(price * 100),
     serviceFeeBps: parsePercentageToBps(formData.get("serviceFeePercent")),
+    ...parsePixDiscount(formData),
     cardInterestBpsPerInstallment: parsePercentageToBps(formData.get("cardInterestPercentPerInstallment")),
     cardInterestStartsAtInstallment: parseInstallmentStart(formData.get("cardInterestStartsAtInstallment")),
     totalQuantity: Number(formData.get("totalQuantity") ?? 0),
@@ -144,7 +172,7 @@ export async function updateTicketLotAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect(`/admin/events/${eventId}/lots/${lotId}/edit?error=${encodeURIComponent("Verifique os campos obrigatorios do lote.")}`);
+    redirect(`/admin/events/${eventId}/lots/${lotId}/edit?error=${encodeURIComponent("Verifique os campos obrigatórios do lote.")}`);
   }
 
   if (
@@ -153,7 +181,7 @@ export async function updateTicketLotAction(formData: FormData) {
     status !== LotStatus.CLOSED &&
     status !== LotStatus.DRAFT
   ) {
-    redirect(`/admin/events/${eventId}/lots/${lotId}/edit?error=${encodeURIComponent("Status invalido para este lote.")}`);
+    redirect(`/admin/events/${eventId}/lots/${lotId}/edit?error=${encodeURIComponent("Status inválido para este lote.")}`);
   }
 
   try {
@@ -162,7 +190,7 @@ export async function updateTicketLotAction(formData: FormData) {
       status: status as LotStatus
     });
   } catch (error) {
-    redirect(`/admin/events/${eventId}/lots/${lotId}/edit?error=${encodeURIComponent(lotErrorMessage(error, "Nao foi possivel atualizar o ingresso."))}`);
+    redirect(`/admin/events/${eventId}/lots/${lotId}/edit?error=${encodeURIComponent(lotErrorMessage(error, "Não foi possível atualizar o ingresso."))}`);
   }
 
   revalidatePath("/admin/events");

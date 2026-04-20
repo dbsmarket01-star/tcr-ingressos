@@ -2,6 +2,19 @@ export function calculateServiceFeeInCents(priceInCents: number, quantity: numbe
   return Math.round(priceInCents * quantity * (serviceFeeBps / 10000));
 }
 
+export function calculatePixDiscountInCents(
+  amountInCents: number,
+  quantity: number,
+  pixDiscountPercentBps: number,
+  pixDiscountFixedInCents: number
+) {
+  const percentageDiscount =
+    pixDiscountPercentBps > 0 ? Math.round(amountInCents * (pixDiscountPercentBps / 10000)) : 0;
+  const fixedDiscount = pixDiscountFixedInCents > 0 ? pixDiscountFixedInCents * quantity : 0;
+
+  return Math.min(Math.max(percentageDiscount + fixedDiscount, 0), amountInCents);
+}
+
 export function calculateCardInterestInCents(
   amountInCents: number,
   installments: number,
@@ -41,4 +54,15 @@ export function parsePercentageToBps(value: FormDataEntryValue | null) {
   }
 
   return Math.round(parsed * 100);
+}
+
+export function parseMoneyToCents(value: FormDataEntryValue | null) {
+  const normalized = String(value ?? "").replace(",", ".").trim();
+  const parsed = Number(normalized || 0);
+
+  if (!Number.isFinite(parsed)) {
+    return 0;
+  }
+
+  return Math.max(Math.round(parsed * 100), 0);
 }

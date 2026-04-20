@@ -2,7 +2,7 @@ import { OrderStatus, PaymentProvider, PaymentStatus, Prisma } from "@prisma/cli
 import { prisma } from "@/lib/prisma";
 import { calculateCouponDiscountInCents, getValidCouponForEvent } from "@/features/coupons/coupon.service";
 import { createPublicOrderUrl, sendOrderExpiredEmail } from "@/features/email/email.service";
-import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
+import { calculatePixDiscountInCents, calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import { getOrderReservationMinutes } from "@/features/settings/company-settings.service";
 import type { CheckoutOrderInput } from "./order.schema";
 
@@ -56,6 +56,8 @@ export async function createCheckoutOrder(input: CheckoutOrderInput) {
         unitPriceInCents: number;
         serviceFeeBps: number;
         serviceFeeInCents: number;
+        pixDiscountPercentBps: number;
+        pixDiscountFixedInCents: number;
         cardInterestBpsPerInstallment: number;
         cardInterestStartsAtInstallment: number;
         totalInCents: number;
@@ -113,6 +115,8 @@ export async function createCheckoutOrder(input: CheckoutOrderInput) {
           unitPriceInCents: lot.priceInCents,
           serviceFeeBps: lot.serviceFeeBps,
           serviceFeeInCents,
+          pixDiscountPercentBps: lot.pixDiscountPercentBps,
+          pixDiscountFixedInCents: lot.pixDiscountFixedInCents,
           cardInterestBpsPerInstallment: lot.cardInterestBpsPerInstallment,
           cardInterestStartsAtInstallment: lot.cardInterestStartsAtInstallment,
           totalInCents: lot.priceInCents * item.quantity
@@ -126,6 +130,17 @@ export async function createCheckoutOrder(input: CheckoutOrderInput) {
       const discountInCents = coupon
         ? calculateCouponDiscountInCents(coupon, amountBeforeDiscountInCents)
         : 0;
+      const pixDiscountInCents = orderItems.reduce(
+        (sum, item) =>
+          sum +
+          calculatePixDiscountInCents(
+            item.totalInCents + item.serviceFeeInCents,
+            item.quantity,
+            item.pixDiscountPercentBps,
+            item.pixDiscountFixedInCents
+          ),
+        0
+      );
       const totalInCents = Math.max(amountBeforeDiscountInCents - discountInCents, 0);
       const expiresAt = new Date(Date.now() + reservationMinutes * 60 * 1000);
 
@@ -139,6 +154,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput) {
           status: OrderStatus.PENDING_PAYMENT,
           subtotalInCents,
           serviceFeeInCents,
+          pixDiscountInCents,
           cardInterestInCents: 0,
           discountInCents,
           totalInCents,
