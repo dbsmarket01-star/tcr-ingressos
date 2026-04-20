@@ -169,6 +169,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
       <section
         className="publicHero"
         style={{
+          ["--public-hero-image" as string]: `url("${heroImage}")`,
+          ["--public-hero-position" as string]: event.bannerPosition,
           backgroundImage: `linear-gradient(90deg, rgba(9, 20, 28, 0.9), rgba(9, 20, 28, 0.5)), url("${heroImage}")`,
           backgroundPosition: event.bannerPosition
         }}
