@@ -75,8 +75,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     return startsOk && endsOk && hasStock;
   });
 
-  const totalSold = event.lots.reduce((sum, lot) => sum + lot.soldQuantity, 0);
-  const totalCapacity = event.lots.reduce((sum, lot) => sum + lot.totalQuantity, 0);
   const totalAvailable = event.lots.reduce(
     (sum, lot) => sum + Math.max(lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity, 0),
     0
@@ -90,7 +88,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const heroImage =
     event.bannerUrl ||
     "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1600&q=80";
-  const socialProofText = event.conversionSocialProofText || (totalSold > 0 ? `+${totalSold} ingressos vendidos` : "Vendas abertas");
+  const socialProofText = event.conversionSocialProofText?.trim() || "Vendas abertas";
   const urgencyText =
     event.conversionUrgencyText ||
     (totalAvailable <= 50 ? "Últimas unidades disponíveis para este evento." : "Compra segura com confirmação automática.");
@@ -185,7 +183,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             <a className="button" href="#ingressos">
               {ctaText}
             </a>
-            <span>{socialProofText}</span>
+            {socialProofText ? <span>{socialProofText}</span> : null}
           </div>
         </div>
       </section>

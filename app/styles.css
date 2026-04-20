@@ -1475,10 +1475,10 @@ textarea {
 }
 
 .whatsappFloatingButton {
-  background: #128c7e;
+  background: #25d366;
   border-radius: 999px;
   bottom: 24px;
-  box-shadow: 0 16px 40px rgba(18, 140, 126, 0.28);
+  box-shadow: 0 16px 40px rgba(37, 211, 102, 0.28);
   color: #fff;
   display: inline-grid;
   height: 58px;
@@ -1492,8 +1492,8 @@ textarea {
 }
 
 .whatsappFloatingButton:hover {
-  background: #0f7a6f;
-  box-shadow: 0 20px 44px rgba(18, 140, 126, 0.34);
+  background: #1ebe5d;
+  box-shadow: 0 20px 44px rgba(37, 211, 102, 0.34);
   transform: translateY(-1px);
 }
 
@@ -4487,17 +4487,31 @@ textarea {
   }
 
   .publicHero {
-    min-height: 420px;
-    padding: 68px 18px 38px;
+    min-height: 430px;
+    padding: 68px 18px 34px;
+  }
+
+  .publicHeroInner {
+    background: linear-gradient(180deg, rgba(9, 20, 28, 0.76), rgba(9, 20, 28, 0.4));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
+    max-width: 640px;
+    padding: 18px 16px;
+    backdrop-filter: blur(6px);
   }
 
   .publicHero h1 {
     font-size: 40px;
-    line-height: 1.02;
+    line-height: 0.98;
+    margin: 4px 0 8px;
   }
 
   .publicHero p {
     font-size: 16px;
+    line-height: 1.5;
+    margin: 0 0 10px;
+    max-width: 32ch;
+    text-wrap: pretty;
   }
 
   .publicMeta {
@@ -4505,13 +4519,24 @@ textarea {
     gap: 8px;
   }
 
+  .publicMeta span {
+    background: rgba(255, 255, 255, 0.18);
+  }
+
   .heroActions {
     align-items: stretch;
     display: grid;
+    gap: 10px;
+    margin-top: 8px;
   }
 
   .heroActions .button {
     justify-content: center;
+  }
+
+  .heroActions span {
+    font-size: 14px;
+    text-align: left;
   }
 
   .homeHero {
@@ -4607,6 +4632,10 @@ textarea {
     padding: 11px;
   }
 
+  .conversionStrip strong {
+    font-size: 15px;
+  }
+
   .eventMapImageFrame {
     aspect-ratio: 1 / 1;
     max-height: none;
@@ -4651,8 +4680,10 @@ textarea {
   }
 
   .whatsappFloatingButton {
-    bottom: 88px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 110px);
+    height: 52px;
     right: 14px;
+    width: 52px;
   }
 
   .detailGrid,
@@ -4745,7 +4776,12 @@ textarea {
   }
 
   .publicHero {
-    min-height: 390px;
+    min-height: 404px;
+  }
+
+  .publicHeroInner {
+    border-radius: 16px;
+    padding: 16px 14px;
   }
 
   .publicMeta span {
@@ -4805,9 +4841,9 @@ textarea {
   }
 
   .whatsappFloatingButton {
-    bottom: 82px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 104px);
     right: 12px;
-    height: 54px;
-    width: 54px;
+    height: 50px;
+    width: 50px;
   }
 }
