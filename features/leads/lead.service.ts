@@ -62,6 +62,7 @@ export async function getLeadCaptureEventBySlug(slug: string) {
       leadCaptureOfferText: true,
       leadCaptureCtaText: true,
       leadCaptureHeroImageUrl: true,
+      leadCaptureVideoUrl: true,
       leadCaptureWhatsappGroupUrl: true,
       leadCaptureThankYouTitle: true,
       leadCaptureThankYouDescription: true,

@@ -40,6 +40,37 @@ export async function generateMetadata({ params }: Pick<LeadCapturePageProps, "p
   };
 }
 
+function getYoutubeEmbedUrl(url?: string | null) {
+  if (!url) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "");
+
+    if (host === "youtu.be") {
+      const videoId = parsed.pathname.replace("/", "").trim();
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    }
+
+    if (host === "youtube.com" || host === "m.youtube.com") {
+      const videoId = parsed.searchParams.get("v");
+      if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+
+      if (parsed.pathname.startsWith("/embed/")) {
+        return `https://www.youtube.com${parsed.pathname}`;
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 export default async function LeadCapturePage({ params, searchParams }: LeadCapturePageProps) {
   const { slug } = await params;
   const query = searchParams ? await searchParams : {};
@@ -62,6 +93,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
   const offerText =
     event.leadCaptureOfferText || "Entre na lista e receba condições especiais na abertura das vendas.";
   const ctaText = event.leadCaptureCtaText || "Garantir meu super desconto";
+  const youtubeEmbedUrl = getYoutubeEmbedUrl(event.leadCaptureVideoUrl);
 
   return (
     <main className="shell leadCaptureShell">
@@ -98,7 +130,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             <span>Prioridade na abertura</span>
             <span>Grupo no WhatsApp</span>
           </div>
-          <form action={createEventLeadAction} className="leadCaptureForm card">
+          <form action={createEventLeadAction} className="leadCaptureForm card" id="lead-capture-form">
             <input type="hidden" name="eventId" value={event.id} />
             <input type="hidden" name="eventSlug" value={event.slug} />
             <h2>Garanta sua prioridade</h2>
@@ -126,6 +158,79 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             </small>
           </form>
         </div>
+      </section>
+
+      <section className="leadCaptureBody">
+        <article className="leadCaptureSection card">
+          <div className="sectionHeader">
+            <div>
+              <span className="leadEyebrow">Como funciona</span>
+              <h2>Entre na lista antes da abertura oficial</h2>
+            </div>
+          </div>
+          <div className="leadStepsGrid">
+            <article className="leadStepCard">
+              <strong>1. Cadastre seus dados</strong>
+              <p>Leva poucos segundos. Você entra na lista oficial deste lançamento.</p>
+            </article>
+            <article className="leadStepCard">
+              <strong>2. Acesse o grupo no WhatsApp</strong>
+              <p>É por lá que vamos concentrar avisos, abertura e condições especiais.</p>
+            </article>
+            <article className="leadStepCard">
+              <strong>3. Receba prioridade na abertura</strong>
+              <p>Quem estiver no grupo acompanha primeiro a liberação dos ingressos.</p>
+            </article>
+          </div>
+        </article>
+
+        {youtubeEmbedUrl ? (
+          <section className="leadCaptureSection card leadVideoSection">
+            <div className="sectionHeader">
+              <div>
+                <span className="leadEyebrow">Convite em vídeo</span>
+                <h2>Assista antes de entrar na lista</h2>
+              </div>
+            </div>
+            <p className="muted">
+              Separamos um vídeo opcional para apresentar melhor a proposta deste evento e aumentar a intenção de compra.
+            </p>
+            <div className="leadVideoFrame">
+              <iframe
+                src={youtubeEmbedUrl}
+                title={`Vídeo de apresentação de ${headline}`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            </div>
+          </section>
+        ) : null}
+
+        <section className="leadCaptureSection leadCaptureSectionSplit">
+          <article className="card leadCaptureHighlight">
+            <span className="leadEyebrow">O que você vai receber</span>
+            <h2>Uma comunicação mais organizada e direta</h2>
+            <p>
+              A landing de captação existe para separar o interesse da compra. Primeiro você registra a intenção, entra no grupo e
+              acompanha o lançamento. Depois, quando a venda abrir, seguimos para a página oficial de ingressos.
+            </p>
+            <ul className="leadChecklist">
+              <li>aviso de abertura com antecedência</li>
+              <li>acesso ao grupo oficial deste evento</li>
+              <li>melhor contexto antes de tomar a decisão de compra</li>
+            </ul>
+          </article>
+
+          <article className="card leadCaptureSupportCard">
+            <span className="leadEyebrow">Convite rápido</span>
+            <h2>Quer garantir prioridade neste lançamento?</h2>
+            <p>Preencha o formulário no topo e siga para a próxima etapa. O processo foi pensado para ser rápido, leve e direto.</p>
+            <a className="secondaryButton" href="#lead-capture-form">
+              Ir para o formulário
+            </a>
+          </article>
+        </section>
       </section>
     </main>
   );

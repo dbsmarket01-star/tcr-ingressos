@@ -210,6 +210,14 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             </label>
           </div>
           <label className="field">
+            <span>Vídeo do YouTube</span>
+            <input
+              name="leadCaptureVideoUrl"
+              placeholder="https://www.youtube.com/watch?v=... ou https://youtu.be/..."
+            />
+            <small>Opcional. Se você informar um vídeo, ele aparece abaixo do topo da landing.</small>
+          </label>
+          <label className="field">
             <span>Link do grupo de WhatsApp</span>
             <input
               name="leadCaptureWhatsappGroupUrl"

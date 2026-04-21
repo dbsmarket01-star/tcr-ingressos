@@ -319,6 +319,7 @@ model Event {
   leadCaptureOfferText String?
   leadCaptureCtaText  String?
   leadCaptureHeroImageUrl String?
+  leadCaptureVideoUrl String?
   leadCaptureWhatsappGroupUrl String?
   leadCaptureThankYouTitle String?
   leadCaptureThankYouDescription String?

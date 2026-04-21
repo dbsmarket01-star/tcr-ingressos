@@ -243,6 +243,11 @@ export default async function EventManagementPage({ params, searchParams }: Even
               </Link>
             ) : null}
             {event.leadCaptureEnabled ? (
+              <Link className="secondaryButton smallButton" href={`${getPublicLeadCaptureUrl(event.slug)}/obrigado`} target="_blank">
+                Abrir obrigado
+              </Link>
+            ) : null}
+            {event.leadCaptureEnabled ? (
               <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}/leads`}>
                 Ver leads ({event._count.leads})
               </Link>

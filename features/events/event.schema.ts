@@ -42,6 +42,13 @@ const whatsappGroupUrlSchema = z
     message: "Use um link de grupo ou convite do WhatsApp."
   })
   .optional();
+const youtubeUrlSchema = z
+  .string()
+  .url("Link do vídeo deve ser uma URL válida.")
+  .refine((value) => value.includes("youtube.com") || value.includes("youtu.be"), {
+    message: "Use um link do YouTube."
+  })
+  .optional();
 
 export const eventDraftSchema = z.object({
   title: z.string().min(3),
@@ -75,6 +82,7 @@ export const eventDraftSchema = z.object({
   leadCaptureOfferText: z.string().max(160).optional(),
   leadCaptureCtaText: z.string().max(80).optional(),
   leadCaptureHeroImageUrl: imageUrlSchema,
+  leadCaptureVideoUrl: youtubeUrlSchema,
   leadCaptureWhatsappGroupUrl: whatsappGroupUrlSchema,
   leadCaptureThankYouTitle: z.string().max(120).optional(),
   leadCaptureThankYouDescription: z.string().max(400).optional(),

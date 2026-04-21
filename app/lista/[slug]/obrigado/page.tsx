@@ -29,6 +29,7 @@ export default async function LeadCaptureThankYouPage({ params }: LeadCaptureTha
     event.leadCaptureThankYouDescription ||
     "Entre agora no grupo oficial para receber as informações do evento e a oferta especial de abertura.";
   const buttonText = event.leadCaptureThankYouButtonText || "Quero entrar no grupo oficial no WhatsApp";
+  const location = [event.city, event.state].filter(Boolean).join(", ");
 
   return (
     <main className="shell leadCaptureThanksShell">
@@ -43,6 +44,10 @@ export default async function LeadCaptureThankYouPage({ params }: LeadCaptureTha
         <span className="leadEyebrow">Cadastro confirmado</span>
         <h1>{title}</h1>
         <p>{description}</p>
+        <div className="leadCaptureMeta leadThankYouMeta">
+          <span>{event.title}</span>
+          <span>{location}</span>
+        </div>
         <div className="leadThankYouProgress" aria-hidden="true">
           <span className="isDone" />
           <span className="isDone" />

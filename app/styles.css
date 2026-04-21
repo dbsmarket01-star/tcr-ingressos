@@ -4410,6 +4410,108 @@ textarea {
   padding: 20px;
 }
 
+.leadCaptureBody {
+  display: grid;
+  gap: 24px;
+  margin: 0 auto;
+  max-width: 1240px;
+  padding: 0 24px 56px;
+}
+
+.leadCaptureSection {
+  display: grid;
+  gap: 18px;
+  padding: 26px;
+}
+
+.leadCaptureSectionSplit {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+}
+
+.leadStepsGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.leadStepCard {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(244, 248, 246, 0.86));
+  border: 1px solid rgba(13, 43, 36, 0.08);
+  border-radius: 18px;
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+}
+
+.leadStepCard strong,
+.leadCaptureHighlight h2,
+.leadCaptureSupportCard h2,
+.leadVideoSection h2 {
+  margin: 0;
+}
+
+.leadStepCard p,
+.leadCaptureHighlight p,
+.leadCaptureSupportCard p {
+  color: #365249;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.leadVideoSection {
+  background:
+    radial-gradient(circle at top right, rgba(68, 153, 123, 0.08), transparent 26%),
+    white;
+}
+
+.leadVideoFrame {
+  aspect-ratio: 16 / 9;
+  background: #0d1f1b;
+  border-radius: 22px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.leadVideoFrame iframe {
+  border: 0;
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.leadCaptureHighlight,
+.leadCaptureSupportCard {
+  display: grid;
+  gap: 14px;
+  padding: 26px;
+}
+
+.leadCaptureHighlight {
+  background:
+    radial-gradient(circle at top left, rgba(68, 153, 123, 0.1), transparent 28%),
+    white;
+}
+
+.leadCaptureSupportCard {
+  align-content: start;
+  background: linear-gradient(180deg, rgba(13, 43, 36, 0.05), rgba(13, 43, 36, 0.02));
+}
+
+.leadChecklist {
+  color: #244239;
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.leadChecklist li {
+  line-height: 1.5;
+  text-transform: none;
+}
+
 .leadCaptureForm h2,
 .leadThankYouCard h1,
 .leadCaptureForm p {
@@ -4435,6 +4537,10 @@ textarea {
   font-size: 20px;
   line-height: 1.5;
   margin: 0;
+}
+
+.leadThankYouMeta {
+  justify-content: center;
 }
 
 .leadThankYouProgress {
@@ -4894,6 +5000,15 @@ textarea {
     padding: 18px 18px 34px;
   }
 
+  .leadCaptureBody {
+    padding: 0 18px 34px;
+  }
+
+  .leadStepsGrid,
+  .leadCaptureSectionSplit {
+    grid-template-columns: 1fr;
+  }
+
   .leadCaptureHeroMedia {
     border-radius: 18px;
     min-height: 300px;
@@ -5262,6 +5377,11 @@ textarea {
   }
 
   .leadCaptureHero {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .leadCaptureBody {
     padding-left: 14px;
     padding-right: 14px;
   }
