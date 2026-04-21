@@ -4367,6 +4367,23 @@ textarea {
   padding: 8px 12px;
 }
 
+.leadBenefitRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.leadBenefitRow span {
+  background: white;
+  border: 1px solid rgba(13, 43, 36, 0.1);
+  border-radius: 999px;
+  color: var(--brand-dark);
+  font-size: 12px;
+  font-weight: 900;
+  padding: 8px 12px;
+  text-transform: uppercase;
+}
+
 .leadOfferBox {
   background: linear-gradient(135deg, rgba(42, 126, 94, 0.12), rgba(42, 126, 94, 0.05));
   border: 1px solid rgba(42, 126, 94, 0.18);
@@ -4399,6 +4416,12 @@ textarea {
   margin: 0;
 }
 
+.leadCaptureFootnote {
+  color: var(--muted);
+  line-height: 1.45;
+  text-align: center;
+}
+
 .leadThankYouCard {
   display: grid;
   gap: 14px;
@@ -4412,6 +4435,53 @@ textarea {
   font-size: 20px;
   line-height: 1.5;
   margin: 0;
+}
+
+.leadThankYouProgress {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 4px auto;
+  max-width: 420px;
+  width: 100%;
+}
+
+.leadThankYouProgress span {
+  border-radius: 999px;
+  height: 14px;
+}
+
+.leadThankYouProgress .isDone {
+  background: rgba(42, 126, 94, 0.36);
+}
+
+.leadThankYouProgress .isActive {
+  background: rgba(42, 126, 94, 0.95);
+}
+
+.leadThankYouChecklist {
+  display: grid;
+  gap: 12px;
+  text-align: left;
+}
+
+.leadThankYouChecklist div {
+  background: #f7faf9;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+}
+
+.leadThankYouChecklist strong,
+.leadThankYouChecklist small {
+  margin: 0;
+}
+
+.leadThankYouChecklist small {
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 .whatsappGroupButton {
@@ -4832,6 +4902,10 @@ textarea {
   .leadCaptureHeroContent p,
   .leadThankYouCard p {
     font-size: 16px;
+  }
+
+  .leadBenefitRow {
+    gap: 8px;
   }
 
   .conversionStrip {

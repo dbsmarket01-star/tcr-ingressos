@@ -43,6 +43,21 @@ export default async function LeadCaptureThankYouPage({ params }: LeadCaptureTha
         <span className="leadEyebrow">Cadastro confirmado</span>
         <h1>{title}</h1>
         <p>{description}</p>
+        <div className="leadThankYouProgress" aria-hidden="true">
+          <span className="isDone" />
+          <span className="isDone" />
+          <span className="isActive" />
+        </div>
+        <div className="leadThankYouChecklist">
+          <div>
+            <strong>Cadastro feito</strong>
+            <small>Seu interesse já foi registrado.</small>
+          </div>
+          <div>
+            <strong>Agora entre no grupo</strong>
+            <small>É lá que você vai receber a abertura e as orientações deste evento.</small>
+          </div>
+        </div>
         {event.leadCaptureWhatsappGroupUrl ? (
           <a
             className="button fullButton whatsappGroupButton"

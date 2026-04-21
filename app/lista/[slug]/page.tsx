@@ -93,6 +93,11 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             <strong>{offerText}</strong>
             <small>Cadastre-se e siga para a página final com o grupo oficial do WhatsApp.</small>
           </div>
+          <div className="leadBenefitRow" aria-label="Benefícios da lista de interesse">
+            <span>Lista oficial</span>
+            <span>Prioridade na abertura</span>
+            <span>Grupo no WhatsApp</span>
+          </div>
           <form action={createEventLeadAction} className="leadCaptureForm card">
             <input type="hidden" name="eventId" value={event.id} />
             <input type="hidden" name="eventSlug" value={event.slug} />
@@ -116,6 +121,9 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             <SubmitButton className="button fullButton" pendingText="Enviando cadastro...">
               {ctaText}
             </SubmitButton>
+            <small className="leadCaptureFootnote">
+              Seus dados serão usados apenas para avisos deste lançamento e acesso ao grupo oficial.
+            </small>
           </form>
         </div>
       </section>
