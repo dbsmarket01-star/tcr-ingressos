@@ -12,7 +12,7 @@ import {
 } from "@/features/lots/lot.actions";
 import { formatPercentageFromBps } from "@/features/pricing/pricing";
 import { formatCurrency, formatDateTime } from "@/lib/format";
-import { getPublicEventUrl } from "@/lib/public-url";
+import { getPublicEventUrl, getPublicLeadCaptureUrl } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -162,17 +162,22 @@ export default async function EventManagementPage({ params, searchParams }: Even
             ))}
           </div>
         )}
-        <div className="actionRow spacedSection">
-          <Link className="secondaryButton smallButton" href={`/admin/reports/lots?eventId=${event.id}`}>
-            Relatório do evento
-          </Link>
-          <Link className="secondaryButton smallButton" href={`/admin/orders?eventId=${event.id}`}>
+          <div className="actionRow spacedSection">
+            <Link className="secondaryButton smallButton" href={`/admin/reports/lots?eventId=${event.id}`}>
+              Relatório do evento
+            </Link>
+            <Link className="secondaryButton smallButton" href={`/admin/orders?eventId=${event.id}`}>
             Pedidos do evento
           </Link>
-          <Link className="secondaryButton smallButton" href={`/admin/finance?eventId=${event.id}`}>
-            Financeiro do evento
-          </Link>
-        </div>
+            <Link className="secondaryButton smallButton" href={`/admin/finance?eventId=${event.id}`}>
+              Financeiro do evento
+            </Link>
+            {event.leadCaptureEnabled ? (
+              <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}/leads`}>
+                Leads captados
+              </Link>
+            ) : null}
+          </div>
       </section>
 
       <section className="grid twoColumns spacedSection">
@@ -232,6 +237,16 @@ export default async function EventManagementPage({ params, searchParams }: Even
                 Voltar para rascunho
               </button>
             </form>
+            {event.leadCaptureEnabled ? (
+              <Link className="secondaryButton smallButton" href={getPublicLeadCaptureUrl(event.slug)} target="_blank">
+                Abrir captação
+              </Link>
+            ) : null}
+            {event.leadCaptureEnabled ? (
+              <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}/leads`}>
+                Ver leads ({event._count.leads})
+              </Link>
+            ) : null}
           </div>
         </div>
 

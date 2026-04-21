@@ -91,6 +91,16 @@ export async function createEvent(input: EventDraftInput & { status: EventStatus
     seoKeywords: input.seoKeywords || null,
     seoImageUrl: input.seoImageUrl || null,
     supportWhatsappUrl: input.supportWhatsappUrl || null,
+    leadCaptureEnabled: input.leadCaptureEnabled,
+    leadCaptureHeadline: input.leadCaptureHeadline || null,
+    leadCaptureDescription: input.leadCaptureDescription || null,
+    leadCaptureOfferText: input.leadCaptureOfferText || null,
+    leadCaptureCtaText: input.leadCaptureCtaText || null,
+    leadCaptureHeroImageUrl: input.leadCaptureHeroImageUrl || null,
+    leadCaptureWhatsappGroupUrl: input.leadCaptureWhatsappGroupUrl || null,
+    leadCaptureThankYouTitle: input.leadCaptureThankYouTitle || null,
+    leadCaptureThankYouDescription: input.leadCaptureThankYouDescription || null,
+    leadCaptureThankYouButtonText: input.leadCaptureThankYouButtonText || null,
     conversionSocialProofText: input.conversionSocialProofText || null,
     conversionUrgencyText: input.conversionUrgencyText || null,
     conversionCtaText: input.conversionCtaText || null,
@@ -106,6 +116,17 @@ export async function getEventForManagement(eventId: string) {
     include: {
       lots: {
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
+      },
+      leads: {
+        orderBy: {
+          createdAt: "desc"
+        },
+        take: 5
+      },
+      _count: {
+        select: {
+          leads: true
+        }
       },
       orders: {
         where: {
@@ -218,6 +239,16 @@ export async function updateEvent(eventId: string, input: EventDraftInput & { st
     seoKeywords: input.seoKeywords || null,
     seoImageUrl: input.seoImageUrl || null,
     supportWhatsappUrl: input.supportWhatsappUrl || null,
+    leadCaptureEnabled: input.leadCaptureEnabled,
+    leadCaptureHeadline: input.leadCaptureHeadline || null,
+    leadCaptureDescription: input.leadCaptureDescription || null,
+    leadCaptureOfferText: input.leadCaptureOfferText || null,
+    leadCaptureCtaText: input.leadCaptureCtaText || null,
+    leadCaptureHeroImageUrl: input.leadCaptureHeroImageUrl || null,
+    leadCaptureWhatsappGroupUrl: input.leadCaptureWhatsappGroupUrl || null,
+    leadCaptureThankYouTitle: input.leadCaptureThankYouTitle || null,
+    leadCaptureThankYouDescription: input.leadCaptureThankYouDescription || null,
+    leadCaptureThankYouButtonText: input.leadCaptureThankYouButtonText || null,
     conversionSocialProofText: input.conversionSocialProofText || null,
     conversionUrgencyText: input.conversionUrgencyText || null,
     conversionCtaText: input.conversionCtaText || null,
@@ -285,6 +316,16 @@ export async function duplicateEvent(eventId: string) {
         seoKeywords: event.seoKeywords,
         seoImageUrl: event.seoImageUrl,
         supportWhatsappUrl: event.supportWhatsappUrl,
+        leadCaptureEnabled: event.leadCaptureEnabled,
+        leadCaptureHeadline: event.leadCaptureHeadline,
+        leadCaptureDescription: event.leadCaptureDescription,
+        leadCaptureOfferText: event.leadCaptureOfferText,
+        leadCaptureCtaText: event.leadCaptureCtaText,
+        leadCaptureHeroImageUrl: event.leadCaptureHeroImageUrl,
+        leadCaptureWhatsappGroupUrl: event.leadCaptureWhatsappGroupUrl,
+        leadCaptureThankYouTitle: event.leadCaptureThankYouTitle,
+        leadCaptureThankYouDescription: event.leadCaptureThankYouDescription,
+        leadCaptureThankYouButtonText: event.leadCaptureThankYouButtonText,
         conversionSocialProofText: event.conversionSocialProofText,
         conversionUrgencyText: event.conversionUrgencyText,
         conversionCtaText: event.conversionCtaText

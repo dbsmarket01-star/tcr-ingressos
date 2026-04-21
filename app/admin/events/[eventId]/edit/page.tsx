@@ -253,6 +253,89 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           </label>
         </div>
 
+        <details className="formSection advancedSection" open>
+          <summary className="formSectionSummary">
+            <div>
+              <h2>Captação de leads</h2>
+              <p className="muted">Landing separada da venda para captar interesse, salvar o lead e levar para o grupo de WhatsApp.</p>
+            </div>
+          </summary>
+          <label className="field checkboxField">
+            <input name="leadCaptureEnabled" type="checkbox" defaultChecked={event.leadCaptureEnabled} />
+            <span>Ativar página de captação para este evento</span>
+          </label>
+          <div className="infoBox">
+            Link público da captação:{" "}
+            <Link href={`/lista/${event.slug}`} target="_blank">
+              /lista/{event.slug}
+            </Link>
+          </div>
+          <label className="field">
+            <span>Título da captação</span>
+            <input name="leadCaptureHeadline" defaultValue={event.leadCaptureHeadline ?? ""} />
+          </label>
+          <label className="field">
+            <span>Descrição da captação</span>
+            <textarea name="leadCaptureDescription" rows={4} defaultValue={event.leadCaptureDescription ?? ""} />
+          </label>
+          <div className="grid twoColumns">
+            <label className="field">
+              <span>Oferta / incentivo</span>
+              <input
+                name="leadCaptureOfferText"
+                defaultValue={event.leadCaptureOfferText ?? ""}
+                placeholder="Ex: Cadastre-se e receba até 20% de desconto na abertura."
+              />
+            </label>
+            <label className="field">
+              <span>Texto do botão</span>
+              <input name="leadCaptureCtaText" defaultValue={event.leadCaptureCtaText ?? ""} />
+            </label>
+          </div>
+          <div className="mediaUploadGrid">
+            <ImageUploadField
+              name="leadCaptureHeroFile"
+              label="Imagem da captação"
+              currentImageUrl={event.leadCaptureHeroImageUrl ?? undefined}
+              recommendedSize="Ideal: 1600 x 900 px"
+              usageHint="Essa imagem aparece só na landing de captação, sem misturar com a página de venda."
+              help="Use JPG, PNG, WEBP ou GIF até 10MB."
+              emptyText="Sem imagem da captação"
+              aspect="banner"
+            />
+            <label className="field mediaUrlFallback">
+              <span>URL da imagem da captação</span>
+              <input name="leadCaptureHeroImageUrl" defaultValue={event.leadCaptureHeroImageUrl ?? ""} placeholder="https://..." />
+            </label>
+          </div>
+          <label className="field">
+            <span>Link do grupo de WhatsApp</span>
+            <input
+              name="leadCaptureWhatsappGroupUrl"
+              defaultValue={event.leadCaptureWhatsappGroupUrl ?? ""}
+              placeholder="https://chat.whatsapp.com/..."
+            />
+          </label>
+          <div className="grid twoColumns">
+            <label className="field">
+              <span>Título do agradecimento</span>
+              <input name="leadCaptureThankYouTitle" defaultValue={event.leadCaptureThankYouTitle ?? ""} />
+            </label>
+            <label className="field">
+              <span>Texto do botão final</span>
+              <input name="leadCaptureThankYouButtonText" defaultValue={event.leadCaptureThankYouButtonText ?? ""} />
+            </label>
+          </div>
+          <label className="field">
+            <span>Descrição do agradecimento</span>
+            <textarea
+              name="leadCaptureThankYouDescription"
+              rows={3}
+              defaultValue={event.leadCaptureThankYouDescription ?? ""}
+            />
+          </label>
+        </details>
+
         <div className="formSection">
           <h2>Mapa e setores</h2>
           <p className="muted">

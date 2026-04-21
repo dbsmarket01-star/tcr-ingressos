@@ -5,3 +5,7 @@ export function getPublicBaseUrl() {
 export function getPublicEventUrl(slug: string) {
   return `${getPublicBaseUrl()}/evento/${slug}`;
 }
+
+export function getPublicLeadCaptureUrl(slug: string) {
+  return `${getPublicBaseUrl()}/lista/${slug}`;
+}

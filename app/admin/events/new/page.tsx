@@ -156,6 +156,87 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           </label>
         </div>
 
+        <details className="formSection advancedSection" open>
+          <summary className="formSectionSummary">
+            <div>
+              <h2>Captação de leads</h2>
+              <p className="muted">Página separada da venda para captar intenção de compra e levar para o grupo de WhatsApp.</p>
+            </div>
+          </summary>
+          <label className="field checkboxField">
+            <input name="leadCaptureEnabled" type="checkbox" />
+            <span>Ativar página de captação para este evento</span>
+          </label>
+          <div className="infoBox">
+            Link público da captação após salvar: <strong>/lista/{`{slug-do-evento}`}</strong>
+          </div>
+          <label className="field">
+            <span>Título da captação</span>
+            <input name="leadCaptureHeadline" placeholder="Ex: Cláudio Duarte em Santo André" />
+          </label>
+          <label className="field">
+            <span>Descrição da captação</span>
+            <textarea
+              name="leadCaptureDescription"
+              rows={4}
+              placeholder="Explique rapidamente o evento e convide a pessoa a entrar na lista de interesse."
+            />
+          </label>
+          <div className="grid twoColumns">
+            <label className="field">
+              <span>Oferta / incentivo</span>
+              <input
+                name="leadCaptureOfferText"
+                placeholder="Ex: Cadastre-se e receba até 20% de desconto na abertura."
+              />
+            </label>
+            <label className="field">
+              <span>Texto do botão</span>
+              <input name="leadCaptureCtaText" placeholder="Ex: Garantir meu super desconto" />
+            </label>
+          </div>
+          <div className="mediaUploadGrid">
+            <ImageUploadField
+              name="leadCaptureHeroFile"
+              label="Imagem da captação"
+              recommendedSize="Ideal: 1600 x 900 px"
+              usageHint="Use uma arte bonita e informativa. Essa imagem aparece só na landing de captura, separada da página de venda."
+              help="JPG, PNG, WEBP ou GIF até 10MB."
+              aspect="banner"
+            />
+            <label className="field mediaUrlFallback">
+              <span>Ou URL da imagem da captação</span>
+              <input name="leadCaptureHeroImageUrl" placeholder="https://..." />
+            </label>
+          </div>
+          <label className="field">
+            <span>Link do grupo de WhatsApp</span>
+            <input
+              name="leadCaptureWhatsappGroupUrl"
+              placeholder="https://chat.whatsapp.com/..."
+            />
+            <small>Esse botão aparece na página de obrigado.</small>
+          </label>
+          <div className="grid twoColumns">
+            <label className="field">
+              <span>Título do agradecimento</span>
+              <input name="leadCaptureThankYouTitle" placeholder="Ex: Último passo" />
+            </label>
+            <label className="field">
+              <span>Texto do botão final</span>
+              <input name="leadCaptureThankYouButtonText" placeholder="Ex: Quero entrar no grupo oficial" />
+            </label>
+          </div>
+          <label className="field">
+            <span>Descrição do agradecimento</span>
+            <textarea
+              name="leadCaptureThankYouDescription"
+              rows={3}
+              placeholder="Ex: Entre agora no grupo oficial para receber as informações e a abertura com desconto."
+            />
+          </label>
+        </details>
+
         <div className="formSection">
           <h2>Mapa e setores</h2>
           <p className="muted">

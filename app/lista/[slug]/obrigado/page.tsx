@@ -1,0 +1,62 @@
+import Link from "next/link";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { getLeadCaptureEventBySlug } from "@/features/leads/lead.service";
+
+type LeadCaptureThankYouPageProps = {
+  params: Promise<{
+    slug: string;
+  }>;
+};
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false
+  }
+};
+
+export default async function LeadCaptureThankYouPage({ params }: LeadCaptureThankYouPageProps) {
+  const { slug } = await params;
+  const event = await getLeadCaptureEventBySlug(slug);
+
+  if (!event) {
+    notFound();
+  }
+
+  const title = event.leadCaptureThankYouTitle || "Último passo";
+  const description =
+    event.leadCaptureThankYouDescription ||
+    "Entre agora no grupo oficial para receber as informações do evento e a oferta especial de abertura.";
+  const buttonText = event.leadCaptureThankYouButtonText || "Quero entrar no grupo oficial no WhatsApp";
+
+  return (
+    <main className="shell leadCaptureThanksShell">
+      <header className="topbar">
+        <Link className="brand" href="/">
+          <span className="brandMark">T</span>
+          <span>TCR Ingressos</span>
+        </Link>
+      </header>
+
+      <section className="leadThankYouCard card">
+        <span className="leadEyebrow">Cadastro confirmado</span>
+        <h1>{title}</h1>
+        <p>{description}</p>
+        {event.leadCaptureWhatsappGroupUrl ? (
+          <a
+            className="button fullButton whatsappGroupButton"
+            href={event.leadCaptureWhatsappGroupUrl}
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            {buttonText}
+          </a>
+        ) : null}
+        <small>
+          O acesso à lista foi registrado. Agora entre no grupo para acompanhar as informações e os descontos deste lançamento.
+        </small>
+      </section>
+    </main>
+  );
+}

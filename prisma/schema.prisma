@@ -313,6 +313,16 @@ model Event {
   seoKeywords         String?
   seoImageUrl         String?
   supportWhatsappUrl  String?
+  leadCaptureEnabled  Boolean     @default(false)
+  leadCaptureHeadline String?
+  leadCaptureDescription String?
+  leadCaptureOfferText String?
+  leadCaptureCtaText  String?
+  leadCaptureHeroImageUrl String?
+  leadCaptureWhatsappGroupUrl String?
+  leadCaptureThankYouTitle String?
+  leadCaptureThankYouDescription String?
+  leadCaptureThankYouButtonText String?
   conversionSocialProofText String?
   conversionUrgencyText     String?
   conversionCtaText         String?
@@ -328,9 +338,26 @@ model Event {
   checkIns  CheckIn[]
   coupons   Coupon[]
   presaleChecks EventPresaleCheck[]
+  leads     EventLead[]
 
   @@index([status, startsAt])
   @@index([city, state])
+}
+
+model EventLead {
+  id         String   @id @default(cuid())
+  eventId     String
+  name       String
+  email      String
+  phone      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, createdAt])
+  @@index([email])
+  @@unique([eventId, email])
 }
 
 model EventPresaleCheck {

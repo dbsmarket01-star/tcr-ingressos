@@ -35,6 +35,13 @@ const supportWhatsappUrlSchema = z
     message: "Use um link do WhatsApp como wa.me ou api.whatsapp.com."
   })
   .optional();
+const whatsappGroupUrlSchema = z
+  .string()
+  .url("Link do grupo de WhatsApp deve ser uma URL valida.")
+  .refine((value) => value.includes("chat.whatsapp.com") || value.includes("wa.me") || value.includes("api.whatsapp.com"), {
+    message: "Use um link de grupo ou convite do WhatsApp."
+  })
+  .optional();
 
 export const eventDraftSchema = z.object({
   title: z.string().min(3),
@@ -62,6 +69,16 @@ export const eventDraftSchema = z.object({
   seoKeywords: z.string().max(300).optional(),
   seoImageUrl: imageUrlSchema,
   supportWhatsappUrl: supportWhatsappUrlSchema,
+  leadCaptureEnabled: z.boolean().default(false),
+  leadCaptureHeadline: z.string().max(120).optional(),
+  leadCaptureDescription: z.string().max(600).optional(),
+  leadCaptureOfferText: z.string().max(160).optional(),
+  leadCaptureCtaText: z.string().max(80).optional(),
+  leadCaptureHeroImageUrl: imageUrlSchema,
+  leadCaptureWhatsappGroupUrl: whatsappGroupUrlSchema,
+  leadCaptureThankYouTitle: z.string().max(120).optional(),
+  leadCaptureThankYouDescription: z.string().max(400).optional(),
+  leadCaptureThankYouButtonText: z.string().max(80).optional(),
   conversionSocialProofText: z.string().max(120).optional(),
   conversionUrgencyText: z.string().max(140).optional(),
   conversionCtaText: z.string().max(60).optional(),

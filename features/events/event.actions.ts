@@ -53,6 +53,15 @@ function validationMessage(error: unknown) {
         seoDescription: "Descrição SEO",
         seoImageUrl: "Imagem SEO",
         supportWhatsappUrl: "Link do WhatsApp",
+        leadCaptureHeadline: "Título da captação",
+        leadCaptureDescription: "Descrição da captação",
+        leadCaptureOfferText: "Oferta da captação",
+        leadCaptureCtaText: "Texto do botão da captação",
+        leadCaptureHeroImageUrl: "Imagem da captação",
+        leadCaptureWhatsappGroupUrl: "Link do grupo de WhatsApp",
+        leadCaptureThankYouTitle: "Título do agradecimento",
+        leadCaptureThankYouDescription: "Descrição do agradecimento",
+        leadCaptureThankYouButtonText: "Texto do botão do agradecimento",
         conversionSocialProofText: "Prova social",
         conversionUrgencyText: "Texto de urgência",
         conversionCtaText: "Texto do botão",
@@ -80,11 +89,13 @@ export async function createEventAction(formData: FormData) {
   let bannerUploadUrl: string | null = null;
   let mapUploadUrl: string | null = null;
   let seoUploadUrl: string | null = null;
+  let leadHeroUploadUrl: string | null = null;
 
   try {
     bannerUploadUrl = await savePublicImageUpload(formData.get("bannerFile") as File | null, `events/${slug}/banner`);
     mapUploadUrl = await savePublicImageUpload(formData.get("eventMapFile") as File | null, `events/${slug}/map`);
     seoUploadUrl = await savePublicImageUpload(formData.get("seoImageFile") as File | null, `events/${slug}/seo`);
+    leadHeroUploadUrl = await savePublicImageUpload(formData.get("leadCaptureHeroFile") as File | null, `events/${slug}/lead-hero`);
   } catch (error) {
     redirect(`/admin/events/new?error=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível salvar a imagem.")}`);
   }
@@ -115,6 +126,16 @@ export async function createEventAction(formData: FormData) {
     seoKeywords: String(formData.get("seoKeywords") ?? "").trim() || undefined,
     seoImageUrl: seoUploadUrl || String(formData.get("seoImageUrl") ?? "").trim(),
     supportWhatsappUrl: String(formData.get("supportWhatsappUrl") ?? "").trim() || undefined,
+    leadCaptureEnabled: String(formData.get("leadCaptureEnabled") ?? "") === "on",
+    leadCaptureHeadline: String(formData.get("leadCaptureHeadline") ?? "").trim() || undefined,
+    leadCaptureDescription: String(formData.get("leadCaptureDescription") ?? "").trim() || undefined,
+    leadCaptureOfferText: String(formData.get("leadCaptureOfferText") ?? "").trim() || undefined,
+    leadCaptureCtaText: String(formData.get("leadCaptureCtaText") ?? "").trim() || undefined,
+    leadCaptureHeroImageUrl: leadHeroUploadUrl || String(formData.get("leadCaptureHeroImageUrl") ?? "").trim(),
+    leadCaptureWhatsappGroupUrl: String(formData.get("leadCaptureWhatsappGroupUrl") ?? "").trim() || undefined,
+    leadCaptureThankYouTitle: String(formData.get("leadCaptureThankYouTitle") ?? "").trim() || undefined,
+    leadCaptureThankYouDescription: String(formData.get("leadCaptureThankYouDescription") ?? "").trim() || undefined,
+    leadCaptureThankYouButtonText: String(formData.get("leadCaptureThankYouButtonText") ?? "").trim() || undefined,
     conversionSocialProofText: String(formData.get("conversionSocialProofText") ?? "").trim() || undefined,
     conversionUrgencyText: String(formData.get("conversionUrgencyText") ?? "").trim() || undefined,
     conversionCtaText: String(formData.get("conversionCtaText") ?? "").trim() || undefined,
@@ -133,6 +154,8 @@ export async function createEventAction(formData: FormData) {
   revalidatePath("/admin/events");
   revalidatePath("/");
   revalidatePath(`/evento/${parsed.data.slug}`);
+  revalidatePath(`/lista/${parsed.data.slug}`);
+  revalidatePath(`/lista/${parsed.data.slug}/obrigado`);
   redirect("/admin/events");
 }
 
@@ -150,11 +173,13 @@ export async function updateEventAction(formData: FormData) {
   let bannerUploadUrl: string | null = null;
   let mapUploadUrl: string | null = null;
   let seoUploadUrl: string | null = null;
+  let leadHeroUploadUrl: string | null = null;
 
   try {
     bannerUploadUrl = await savePublicImageUpload(formData.get("bannerFile") as File | null, `events/${slug}/banner`);
     mapUploadUrl = await savePublicImageUpload(formData.get("eventMapFile") as File | null, `events/${slug}/map`);
     seoUploadUrl = await savePublicImageUpload(formData.get("seoImageFile") as File | null, `events/${slug}/seo`);
+    leadHeroUploadUrl = await savePublicImageUpload(formData.get("leadCaptureHeroFile") as File | null, `events/${slug}/lead-hero`);
   } catch (error) {
     redirect(`/admin/events/${eventId}/edit?error=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível salvar a imagem.")}`);
   }
@@ -185,6 +210,16 @@ export async function updateEventAction(formData: FormData) {
     seoKeywords: String(formData.get("seoKeywords") ?? "").trim() || undefined,
     seoImageUrl: seoUploadUrl || String(formData.get("seoImageUrl") ?? "").trim(),
     supportWhatsappUrl: String(formData.get("supportWhatsappUrl") ?? "").trim() || undefined,
+    leadCaptureEnabled: String(formData.get("leadCaptureEnabled") ?? "") === "on",
+    leadCaptureHeadline: String(formData.get("leadCaptureHeadline") ?? "").trim() || undefined,
+    leadCaptureDescription: String(formData.get("leadCaptureDescription") ?? "").trim() || undefined,
+    leadCaptureOfferText: String(formData.get("leadCaptureOfferText") ?? "").trim() || undefined,
+    leadCaptureCtaText: String(formData.get("leadCaptureCtaText") ?? "").trim() || undefined,
+    leadCaptureHeroImageUrl: leadHeroUploadUrl || String(formData.get("leadCaptureHeroImageUrl") ?? "").trim(),
+    leadCaptureWhatsappGroupUrl: String(formData.get("leadCaptureWhatsappGroupUrl") ?? "").trim() || undefined,
+    leadCaptureThankYouTitle: String(formData.get("leadCaptureThankYouTitle") ?? "").trim() || undefined,
+    leadCaptureThankYouDescription: String(formData.get("leadCaptureThankYouDescription") ?? "").trim() || undefined,
+    leadCaptureThankYouButtonText: String(formData.get("leadCaptureThankYouButtonText") ?? "").trim() || undefined,
     conversionSocialProofText: String(formData.get("conversionSocialProofText") ?? "").trim() || undefined,
     conversionUrgencyText: String(formData.get("conversionUrgencyText") ?? "").trim() || undefined,
     conversionCtaText: String(formData.get("conversionCtaText") ?? "").trim() || undefined,
@@ -202,8 +237,11 @@ export async function updateEventAction(formData: FormData) {
 
   revalidatePath("/admin/events");
   revalidatePath(`/admin/events/${eventId}`);
+  revalidatePath(`/admin/events/${eventId}/leads`);
   revalidatePath("/");
   revalidatePath(`/evento/${parsed.data.slug}`);
+  revalidatePath(`/lista/${parsed.data.slug}`);
+  revalidatePath(`/lista/${parsed.data.slug}/obrigado`);
   redirect(`/admin/events/${eventId}`);
 }
 
@@ -263,5 +301,7 @@ export async function duplicateEventAction(formData: FormData) {
   revalidatePath("/admin/audit");
   revalidatePath("/");
   revalidatePath(`/evento/${duplicatedEvent.slug}`);
+  revalidatePath(`/lista/${duplicatedEvent.slug}`);
+  revalidatePath(`/lista/${duplicatedEvent.slug}/obrigado`);
   redirect(`/admin/events/${duplicatedEvent.id}`);
 }
