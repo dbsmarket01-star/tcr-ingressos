@@ -199,7 +199,7 @@ export function ImageUploadField({
               <span>Zoom</span>
               <input
                 type="range"
-                min="1"
+                min="0.45"
                 max="2.5"
                 step="0.05"
                 value={crop.zoom}

@@ -882,6 +882,7 @@ textarea {
 
 .publicHeroMedia {
   align-items: center;
+  aspect-ratio: 16 / 7;
   background: linear-gradient(180deg, rgba(9, 20, 28, 0.98), rgba(20, 33, 43, 0.94));
   border: 1px solid rgba(197, 211, 220, 0.24);
   border-bottom: 0;
@@ -890,7 +891,6 @@ textarea {
   justify-content: center;
   margin: 84px auto 0;
   max-width: 1180px;
-  min-height: clamp(260px, 34vw, 420px);
   overflow: hidden;
   padding: 16px;
   width: 100%;
@@ -899,7 +899,6 @@ textarea {
 .publicHeroImage {
   display: block;
   height: 100%;
-  max-height: 388px;
   object-fit: contain;
   width: 100%;
 }

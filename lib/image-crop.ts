@@ -10,6 +10,9 @@ const DEFAULT_IMAGE_CROP: ImageCrop = {
   zoom: 1
 };
 
+const MIN_IMAGE_CROP_ZOOM = 0.45;
+const MAX_IMAGE_CROP_ZOOM = 2.5;
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
@@ -18,7 +21,7 @@ export function sanitizeImageCrop(input?: Partial<ImageCrop> | null): ImageCrop 
   return {
     x: clamp(Number(input?.x ?? DEFAULT_IMAGE_CROP.x), 0, 100),
     y: clamp(Number(input?.y ?? DEFAULT_IMAGE_CROP.y), 0, 100),
-    zoom: clamp(Number(input?.zoom ?? DEFAULT_IMAGE_CROP.zoom), 1, 2.5)
+    zoom: clamp(Number(input?.zoom ?? DEFAULT_IMAGE_CROP.zoom), MIN_IMAGE_CROP_ZOOM, MAX_IMAGE_CROP_ZOOM)
   };
 }
 
