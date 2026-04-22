@@ -2635,6 +2635,46 @@ textarea {
   white-space: nowrap;
 }
 
+.imageCropActions {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.imageCropPresetRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.imageCropPresetButton,
+.imageCropResetButton {
+  appearance: none;
+  background: white;
+  border: 1px solid rgba(16, 43, 37, 0.12);
+  border-radius: 999px;
+  color: var(--brand-dark);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+  min-height: 36px;
+  padding: 0 14px;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.imageCropPresetButton:hover,
+.imageCropResetButton:hover {
+  background: #eff7f3;
+  border-color: rgba(16, 43, 37, 0.2);
+  transform: translateY(-1px);
+}
+
+.imageCropResetButton {
+  background: rgba(16, 43, 37, 0.04);
+}
+
 .imageCropStage {
   background: #13212d;
   border-radius: 16px;
@@ -2659,6 +2699,41 @@ textarea {
   height: 100%;
   object-fit: cover;
   width: 100%;
+}
+
+.imageCropSafeArea {
+  border: 1px dashed rgba(255, 255, 255, 0.7);
+  border-radius: 14px;
+  inset: 10%;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+.imageCropSafeAreabanner {
+  inset: 14% 10%;
+}
+
+.imageCropSafeAreamap {
+  inset: 10%;
+}
+
+.imageCropSafeAreashare {
+  inset: 16% 12%;
+}
+
+.imageCropSafeArea span {
+  background: rgba(6, 27, 23, 0.72);
+  border-radius: 999px;
+  color: white;
+  font-size: 11px;
+  font-weight: 900;
+  left: 12px;
+  letter-spacing: 0.02em;
+  padding: 6px 10px;
+  position: absolute;
+  top: 12px;
+  text-transform: uppercase;
 }
 
 .imageCropControls {
@@ -2690,6 +2765,11 @@ textarea {
 
 @media (max-width: 780px) {
   .imageCropToolHeader {
+    flex-direction: column;
+  }
+
+  .imageCropActions {
+    align-items: stretch;
     flex-direction: column;
   }
 

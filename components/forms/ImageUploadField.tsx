@@ -35,6 +35,27 @@ const recommendedRatios = {
   share: 1.91
 } satisfies Record<NonNullable<ImageUploadFieldProps["aspect"]>, number>;
 
+const cropPresets = {
+  banner: [
+    { label: "Auto", crop: { x: 50, y: 50 } },
+    { label: "Topo", crop: { x: 50, y: 28 } },
+    { label: "Centro", crop: { x: 50, y: 50 } },
+    { label: "Base", crop: { x: 50, y: 72 } }
+  ],
+  map: [
+    { label: "Auto", crop: { x: 50, y: 50 } },
+    { label: "Centro", crop: { x: 50, y: 50 } },
+    { label: "Esquerda", crop: { x: 32, y: 50 } },
+    { label: "Direita", crop: { x: 68, y: 50 } }
+  ],
+  share: [
+    { label: "Auto", crop: { x: 50, y: 50 } },
+    { label: "Centro", crop: { x: 50, y: 50 } },
+    { label: "Esquerda", crop: { x: 32, y: 50 } },
+    { label: "Direita", crop: { x: 68, y: 50 } }
+  ]
+} satisfies Record<NonNullable<ImageUploadFieldProps["aspect"]>, Array<{ label: string; crop: Partial<ImageCrop> }>>;
+
 function buildDefaultCrop(meta: ImageMeta | null, aspect: NonNullable<ImageUploadFieldProps["aspect"]>): ImageCrop {
   if (!meta) {
     return sanitizeImageCrop(null);
@@ -156,6 +177,8 @@ export function ImageUploadField({
 
   const aspectAnalysis = analyzeAspect(imageMeta, aspect);
   const cropValue = stringifyImageCrop(crop);
+  const defaultCrop = buildDefaultCrop(imageMeta, aspect);
+  const presets = cropPresets[aspect];
 
   return (
     <label className={`field fileDropField imageUploadField imageUpload${aspect}`}>
@@ -188,7 +211,38 @@ export function ImageUploadField({
             </div>
             {imageMeta ? <span className="imageCropMeta">{imageMeta.width} x {imageMeta.height} px</span> : null}
           </div>
+          <div className="imageCropActions">
+            <div className="imageCropPresetRow" role="group" aria-label="Presets rápidos de enquadramento">
+              {presets.map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  className="imageCropPresetButton"
+                  onClick={() =>
+                    setCrop((current) =>
+                      sanitizeImageCrop({
+                        ...current,
+                        ...preset.crop
+                      })
+                    )
+                  }
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="imageCropResetButton"
+              onClick={() => setCrop(defaultCrop)}
+            >
+              Restaurar ajuste automático
+            </button>
+          </div>
           <div className={`imageCropStage imageCropStage${aspect}`}>
+            <div className={`imageCropSafeArea imageCropSafeArea${aspect}`}>
+              <span>Área segura</span>
+            </div>
             <img
               src={previewUrl}
               alt=""
