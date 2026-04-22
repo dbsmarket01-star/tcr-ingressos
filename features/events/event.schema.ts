@@ -55,7 +55,7 @@ export const eventDraftSchema = z.object({
   title: z.string().min(3),
   slug: z.string().min(3).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   subtitle: z.string().optional(),
-  description: z.string().min(10),
+  description: z.string().max(5000).optional(),
   startsAt: z.coerce.date(),
   endsAt: z.coerce.date().optional(),
   venueName: z.string().min(2),

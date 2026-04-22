@@ -61,10 +61,8 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             <span>Descrição</span>
             <textarea
               name="description"
-              minLength={10}
               rows={5}
-              placeholder="Explique o evento, artistas, contexto e principais motivos para comprar."
-              required
+              placeholder="Opcional. Explique o evento, artistas, contexto e principais motivos para comprar."
             />
           </label>
           <div className="mediaUploadGrid">

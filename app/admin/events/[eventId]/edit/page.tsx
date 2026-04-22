@@ -126,7 +126,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           </label>
           <label className="field">
             <span>Descrição</span>
-            <textarea name="description" rows={5} defaultValue={event.description} required />
+            <textarea name="description" rows={5} defaultValue={event.description} placeholder="Opcional. Descreva o evento se quiser exibir esse bloco na página pública." />
           </label>
           <div className="mediaUploadGrid">
             <ImageUploadField

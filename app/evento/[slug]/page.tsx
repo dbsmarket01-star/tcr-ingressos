@@ -99,7 +99,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const highlightedLotId = event.highlightedLotId || activeLots[0]?.id;
   const eventLead =
     event.subtitle ||
-    event.description.split("\n").find((paragraph) => paragraph.trim().length > 0)?.trim() ||
+    event.description?.split("\n").find((paragraph) => paragraph.trim().length > 0)?.trim() ||
     "Confira os detalhes do evento, escolha seu ingresso e finalize a compra com segurança.";
   const lowestTotalInCents = activeLots.reduce((lowest, lot) => {
     const serviceFeeInCents = calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps);
@@ -197,11 +197,13 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
       <section className="container publicGrid">
         <article className="publicContent">
+          {event.description?.trim() ? (
           <section className="editorialBlock">
             <span className="eyebrow">Experiência do evento</span>
             <h2>Descrição do evento</h2>
             <p>{event.description}</p>
           </section>
+        ) : null}
 
           <section className="contentBlock">
             <h2>Data e local</h2>
