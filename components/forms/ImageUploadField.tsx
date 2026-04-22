@@ -15,6 +15,58 @@ type ImageUploadFieldProps = {
   aspect?: "banner" | "map" | "share";
 };
 
+type ImageMeta = {
+  width: number;
+  height: number;
+  ratio: number;
+};
+
+const recommendedRatios = {
+  banner: 1920 / 840,
+  map: 4 / 3,
+  share: 1.91
+} satisfies Record<NonNullable<ImageUploadFieldProps["aspect"]>, number>;
+
+function analyzeAspect(meta: ImageMeta | null, aspect: NonNullable<ImageUploadFieldProps["aspect"]>) {
+  if (!meta) {
+    return null;
+  }
+
+  const recommendedRatio = recommendedRatios[aspect];
+  const ratioDifference = meta.ratio / recommendedRatio;
+
+  if (ratioDifference < 0.88) {
+    return {
+      tone: "warning",
+      title: "A arte está mais alta que o ideal",
+      text:
+        aspect === "banner"
+          ? "No topo público podem sobrar faixas laterais e o banner parecer menor do que você imaginou."
+          : "A imagem está mais vertical do que o recomendado para este espaço."
+    };
+  }
+
+  if (ratioDifference > 1.12) {
+    return {
+      tone: "info",
+      title: "A arte está mais panorâmica que o ideal",
+      text:
+        aspect === "banner"
+          ? "Ela tende a ocupar bem a largura, mas pode sobrar menos altura útil para textos e rostos."
+          : "A imagem está mais horizontal do que o recomendado para este espaço."
+    };
+  }
+
+  return {
+    tone: "success",
+    title: "A proporção está bem próxima do ideal",
+    text:
+      aspect === "banner"
+        ? "A prévia indica um encaixe bom no topo público, com menos chance de faixas ou sensação de aperto."
+        : "A prévia indica um encaixe equilibrado para este espaço."
+  };
+}
+
 export function ImageUploadField({
   name,
   label,
@@ -28,6 +80,30 @@ export function ImageUploadField({
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl ?? null);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [imageMeta, setImageMeta] = useState<ImageMeta | null>(null);
+
+  useEffect(() => {
+    if (!previewUrl) {
+      setImageMeta(null);
+      return;
+    }
+
+    const image = new window.Image();
+    image.onload = () => {
+      if (!image.naturalWidth || !image.naturalHeight) {
+        setImageMeta(null);
+        return;
+      }
+
+      setImageMeta({
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+        ratio: image.naturalWidth / image.naturalHeight
+      });
+    };
+    image.onerror = () => setImageMeta(null);
+    image.src = previewUrl;
+  }, [previewUrl]);
 
   useEffect(() => {
     return () => {
@@ -36,6 +112,8 @@ export function ImageUploadField({
       }
     };
   }, [objectUrl]);
+
+  const aspectAnalysis = analyzeAspect(imageMeta, aspect);
 
   return (
     <label className={`field fileDropField imageUploadField imageUpload${aspect}`}>
@@ -53,6 +131,25 @@ export function ImageUploadField({
       ) : (
         <div className="imageUploadPlaceholder">{emptyText}</div>
       )}
+      {previewUrl ? (
+        <div className="imageUploadPublicPreview">
+          <span>Prévia aproximada do espaço público</span>
+          <div className={`imageUploadPublicFrame imageUploadPublicFrame${aspect}`}>
+            <img src={previewUrl} alt="" />
+          </div>
+          {imageMeta ? (
+            <small>
+              Arquivo atual: {imageMeta.width} x {imageMeta.height} px
+            </small>
+          ) : null}
+        </div>
+      ) : null}
+      {aspectAnalysis ? (
+        <div className={`imageAspectNotice is${aspectAnalysis.tone}`}>
+          <strong>{aspectAnalysis.title}</strong>
+          <small>{aspectAnalysis.text}</small>
+        </div>
+      ) : null}
       <input
         name={name}
         type="file"

@@ -2547,6 +2547,92 @@ textarea {
   width: 100%;
 }
 
+.imageUploadPublicPreview {
+  display: grid;
+  gap: 8px;
+}
+
+.imageUploadPublicPreview > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.imageUploadPublicPreview > small {
+  color: var(--muted);
+}
+
+.imageUploadPublicFrame {
+  align-items: center;
+  background: #13212d;
+  border: 1px solid rgba(19, 33, 45, 0.08);
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  padding: 18px;
+}
+
+.imageUploadPublicFrame img {
+  display: block;
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.imageUploadPublicFramebanner {
+  aspect-ratio: 16 / 7;
+  min-height: 220px;
+}
+
+.imageUploadPublicFramebanner img {
+  max-height: 260px;
+}
+
+.imageUploadPublicFramemap {
+  aspect-ratio: 4 / 3;
+}
+
+.imageUploadPublicFrameshare {
+  aspect-ratio: 1.91 / 1;
+}
+
+.imageAspectNotice {
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--brand);
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+}
+
+.imageAspectNotice strong,
+.imageAspectNotice small {
+  margin: 0;
+}
+
+.imageAspectNotice.issuccess {
+  background: #e7f7ef;
+  border-color: #b9e8d0;
+  border-left-color: #19a76f;
+  color: #075c40;
+}
+
+.imageAspectNotice.iswarning {
+  background: #fff9e8;
+  border-color: #f0dfab;
+  border-left-color: #d6a321;
+  color: #7a5600;
+}
+
+.imageAspectNotice.isinfo {
+  background: #eef5fb;
+  border-color: #c9dff0;
+  border-left-color: #4d7fa9;
+  color: #234c74;
+}
+
 .imageUploadmap .imageUploadPreview {
   background: #f7faf9;
 }
