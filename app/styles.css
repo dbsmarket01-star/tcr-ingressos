@@ -867,7 +867,7 @@ textarea {
   align-content: center;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(243, 247, 247, 0.98));
-  min-height: 220px;
+  min-height: auto;
 }
 
 .publicHero {
@@ -5550,7 +5550,7 @@ textarea {
   .publicHeroMedia {
     border-radius: 16px 16px 0 0;
     margin-top: 62px;
-    min-height: 220px;
+    min-height: auto;
     padding: 10px;
   }
 
