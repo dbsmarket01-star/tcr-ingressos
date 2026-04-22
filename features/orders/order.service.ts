@@ -196,6 +196,12 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           },
           event: {
             select: {
+              organization: {
+                select: {
+                  name: true,
+                  publicDomain: true
+                }
+              },
               title: true,
               startsAt: true,
               venueName: true
@@ -242,7 +248,13 @@ export async function expirePendingOrders(options?: { limit?: number; now?: Date
       },
       event: {
         select: {
-          title: true
+          title: true,
+          organization: {
+            select: {
+              name: true,
+              publicDomain: true
+            }
+          }
         }
       }
     }
@@ -331,7 +343,13 @@ export async function expirePendingOrderByCode(code: string) {
       },
       event: {
         select: {
-          title: true
+          title: true,
+          organization: {
+            select: {
+              name: true,
+              publicDomain: true
+            }
+          }
         }
       }
     }
@@ -636,6 +654,10 @@ async function notifyOrderExpired(order: {
   };
   event: {
     title: string;
+    organization: {
+      name: string;
+      publicDomain: string | null;
+    } | null;
   };
 }) {
   if (order.expiredEmailSentAt) {
@@ -647,8 +669,9 @@ async function notifyOrderExpired(order: {
       to: order.customer.email,
       buyerName: order.customer.name,
       orderCode: order.code,
+      brandName: order.event.organization?.name || "TCR Ingressos",
       eventTitle: order.event.title,
-      orderUrl: createPublicOrderUrl(order.code)
+      orderUrl: createPublicOrderUrl(order.code, order.event.organization)
     });
 
     await prisma.order.update({
@@ -671,7 +694,16 @@ export async function getOrderByCode(code: string) {
     where: { code },
     include: {
       customer: true,
-      event: true,
+      event: {
+        include: {
+          organization: {
+            select: {
+              name: true,
+              publicDomain: true
+            }
+          }
+        }
+      },
       payment: true,
       tickets: {
         include: {

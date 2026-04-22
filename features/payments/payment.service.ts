@@ -437,7 +437,16 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
             include: {
               items: true,
               customer: true,
-              event: true,
+              event: {
+                include: {
+                  organization: {
+                    select: {
+                      name: true,
+                      publicDomain: true
+                    }
+                  }
+                }
+              },
               ticketsEmailSentAt: true,
               tickets: {
                 select: {
@@ -466,13 +475,14 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
                 to: payment.order.customer.email,
                 buyerName: payment.order.customer.name,
                 orderCode: payment.order.code,
+                brandName: payment.order.event.organization?.name || "TCR Ingressos",
                 eventTitle: payment.order.event.title,
                 eventDate: payment.order.event.startsAt,
                 venueName: payment.order.event.venueName,
                 tickets: payment.order.tickets.map((ticket) => ({
                   code: ticket.code,
                   lotName: ticket.lot.name,
-                  url: createPublicTicketUrl(ticket.code)
+                  url: createPublicTicketUrl(ticket.code, payment.order.event.organization)
                 }))
               }
             : null;
@@ -594,12 +604,13 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
                   to: payment.order.customer.email,
                   buyerName: payment.order.customer.name,
                   orderCode: payment.order.code,
+                  brandName: payment.order.event.organization?.name || "TCR Ingressos",
                   eventTitle: payment.order.event.title,
                   eventDate: payment.order.event.startsAt,
                   venueName: payment.order.event.venueName,
                   tickets: generatedTickets.map((ticket) => ({
                     ...ticket,
-                    url: createPublicTicketUrl(ticket.code)
+                    url: createPublicTicketUrl(ticket.code, payment.order.event.organization)
                   }))
                 }
               : null

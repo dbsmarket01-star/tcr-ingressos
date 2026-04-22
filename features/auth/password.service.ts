@@ -41,6 +41,12 @@ export async function requestAdminPasswordReset(email: string) {
     },
     select: {
       id: true,
+      organization: {
+        select: {
+          name: true,
+          adminDomain: true
+        }
+      },
       name: true,
       email: true
     }
@@ -65,7 +71,10 @@ export async function requestAdminPasswordReset(email: string) {
   await sendAdminPasswordResetEmail({
     to: admin.email,
     name: admin.name,
-    resetUrl: createAdminPasswordResetUrl(token),
+    brandName: admin.organization?.name || "TCR Ingressos",
+    resetUrl: createAdminPasswordResetUrl(token, {
+      adminDomain: admin.organization?.adminDomain
+    }),
     expiresInMinutes: RESET_TOKEN_EXPIRES_MINUTES
   });
 }

@@ -73,7 +73,16 @@ export async function resendTicketsEmailByOrderCode(orderCode: string, allowedEv
     },
     include: {
       customer: true,
-      event: true,
+      event: {
+        include: {
+          organization: {
+            select: {
+              name: true,
+              publicDomain: true
+            }
+          }
+        }
+      },
       tickets: {
         orderBy: {
           issuedAt: "asc"
@@ -97,13 +106,14 @@ export async function resendTicketsEmailByOrderCode(orderCode: string, allowedEv
     to: order.customer.email,
     buyerName: order.customer.name,
     orderCode: order.code,
+    brandName: order.event.organization?.name || "TCR Ingressos",
     eventTitle: order.event.title,
     eventDate: order.event.startsAt,
     venueName: order.event.venueName,
     tickets: order.tickets.map((ticket) => ({
       code: ticket.code,
       lotName: ticket.lot.name,
-      url: createPublicTicketUrl(ticket.code)
+      url: createPublicTicketUrl(ticket.code, order.event.organization)
     }))
   });
 
@@ -128,7 +138,16 @@ export async function resendPendingPaymentEmailByOrderCode(orderCode: string, al
     },
     include: {
       customer: true,
-      event: true
+      event: {
+        include: {
+          organization: {
+            select: {
+              name: true,
+              publicDomain: true
+            }
+          }
+        }
+      }
     }
   });
 
@@ -144,12 +163,13 @@ export async function resendPendingPaymentEmailByOrderCode(orderCode: string, al
     to: order.customer.email,
     buyerName: order.customer.name,
     orderCode: order.code,
+    brandName: order.event.organization?.name || "TCR Ingressos",
     eventTitle: order.event.title,
     eventDate: order.event.startsAt,
     venueName: order.event.venueName,
     totalInCents: order.totalInCents,
     expiresAt: order.expiresAt,
-    orderUrl: createPublicOrderUrl(order.code)
+    orderUrl: createPublicOrderUrl(order.code, order.event.organization)
   });
 
   return {
