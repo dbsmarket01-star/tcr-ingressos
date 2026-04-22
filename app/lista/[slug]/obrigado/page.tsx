@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getLeadCaptureEventBySlug } from "@/features/leads/lead.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 
 type LeadCaptureThankYouPageProps = {
   params: Promise<{
@@ -20,7 +21,8 @@ export const metadata: Metadata = {
 export default async function LeadCaptureThankYouPage({ params, searchParams }: LeadCaptureThankYouPageProps) {
   const { slug } = await params;
   const query = searchParams ? await searchParams : {};
-  const event = await getLeadCaptureEventBySlug(slug);
+  const organizationContext = await getCurrentOrganizationContext();
+  const event = await getLeadCaptureEventBySlug(slug, organizationContext.organization.id);
 
   if (!event) {
     notFound();
@@ -38,8 +40,8 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
     <main className="shell leadCaptureThanksShell">
       <header className="topbar">
         <Link className="brand" href="/">
-          <span className="brandMark">T</span>
-          <span>TCR Ingressos</span>
+          <span className="brandMark">{organizationContext.brandMark}</span>
+          <span>{organizationContext.brandName}</span>
         </Link>
       </header>
 

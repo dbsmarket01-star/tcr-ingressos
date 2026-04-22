@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { loginAction } from "@/features/auth/auth.actions";
 import { getCurrentAdmin } from "@/features/auth/auth.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 
 type LoginPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -17,21 +18,22 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = searchParams ? await searchParams : {};
   const hasError = params.error === "invalid";
   const wasReset = params.reset === "1";
+  const organizationContext = await getCurrentOrganizationContext();
 
   return (
     <main className="loginShell loginShellAdmin">
       <section className="loginPanel adminLoginPanel">
         <div className="loginFormArea">
           <Link className="brand loginBrand loginBrandDark" href="/">
-            <span className="brandMark">T</span>
-            <span>TCR Ingressos</span>
+            <span className="brandMark">{organizationContext.brandMark}</span>
+            <span>{organizationContext.brandName}</span>
           </Link>
 
           <div>
             <p className="publicBadge">Acesso interno</p>
             <h2>Bem-vindo de volta</h2>
             <p className="muted">
-              Entre para acompanhar vendas, check-in, pedidos, leads e a operação da TCR Ingressos
+              Entre para acompanhar vendas, check-in, pedidos, leads e a operação da {organizationContext.brandName}
               em um só lugar.
             </p>
           </div>
@@ -50,7 +52,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <input
                 autoComplete="email"
                 name="email"
-                placeholder="admin@tcringressos.app.br"
+                placeholder={`admin@${organizationContext.organization.adminDomain || organizationContext.organization.publicDomain || "sua-operacao.com.br"}`}
                 required
                 type="email"
               />

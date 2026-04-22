@@ -5,7 +5,8 @@ import { notFound } from "next/navigation";
 import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getBuyerProfile } from "@/features/customer-auth/google-buyer.service";
-import { getCachedEventSeoBySlug, getCachedPublicEventBySlug } from "@/features/events/event.service";
+import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrganization } from "@/features/events/event.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { createCheckoutOrderAction } from "@/features/orders/order.actions";
 import { calculatePixDiscountInCents, calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import { buildEventSeo } from "@/features/seo/event-seo";
@@ -27,11 +28,12 @@ type EventPageProps = {
 
 export async function generateMetadata({ params }: Pick<EventPageProps, "params">): Promise<Metadata> {
   const { slug } = await params;
-  const event = await getCachedEventSeoBySlug(slug);
+  const organizationContext = await getCurrentOrganizationContext();
+  const event = await getCachedEventSeoBySlugInOrganization(slug, organizationContext.organization.id);
 
   if (!event) {
     return {
-      title: "Evento não encontrado | TCR Ingressos"
+      title: `Evento não encontrado | ${organizationContext.brandName}`
     };
   }
 
@@ -62,7 +64,11 @@ export async function generateMetadata({ params }: Pick<EventPageProps, "params"
 export default async function EventPage({ params, searchParams }: EventPageProps) {
   const { slug } = await params;
   const query = searchParams ? await searchParams : {};
-  const [event, buyerProfile] = await Promise.all([getCachedPublicEventBySlug(slug), getBuyerProfile()]);
+  const organizationContext = await getCurrentOrganizationContext();
+  const [event, buyerProfile] = await Promise.all([
+    getCachedPublicEventBySlugInOrganization(slug, organizationContext.organization.id),
+    getBuyerProfile()
+  ]);
 
   if (!event) {
     notFound();
@@ -158,8 +164,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
       />
       <header className="topbar">
         <Link className="brand" href="/">
-          <span className="brandMark">T</span>
-          <span>TCR Ingressos</span>
+          <span className="brandMark">{organizationContext.brandMark}</span>
+          <span>{organizationContext.brandName}</span>
         </Link>
         <nav className="nav" aria-label="Navegação">
           <Link href="/">Eventos</Link>

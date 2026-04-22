@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listCachedPublishedEventShowcase } from "@/features/events/event.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
@@ -23,7 +24,8 @@ const operationalHighlights = [
 ];
 
 export default async function Home() {
-  const events = await listCachedPublishedEventShowcase(6);
+  const organizationContext = await getCurrentOrganizationContext();
+  const events = await listCachedPublishedEventShowcase(6, organizationContext.organization.id);
   const featuredEvent = events[0] ?? null;
 
   return (
@@ -31,14 +33,14 @@ export default async function Home() {
       <section className="homeHero">
         <div className="homeHeroInner">
           <div className="homeHeroContent">
-            <div className="brand homeBrand" aria-label="TCR Ingressos">
-              <span className="brandMark">T</span>
-              <span>TCR Ingressos</span>
+            <div className="brand homeBrand" aria-label={organizationContext.brandName}>
+              <span className="brandMark">{organizationContext.brandMark}</span>
+              <span>{organizationContext.brandName}</span>
             </div>
             <span className="homeEyebrow">Bilheteria oficial</span>
             <h1>Eventos em cartaz com compra segura, operação rápida e experiência profissional.</h1>
             <p>
-              Encontre os próximos eventos da TCR, escolha seu ingresso em poucos passos e receba o
+              Encontre os próximos eventos da {organizationContext.brandName}, escolha seu ingresso em poucos passos e receba o
               QR Code automaticamente após a confirmação do pagamento.
             </p>
             <div className="homeTrustStrip" aria-label="Diferenciais da bilheteria">

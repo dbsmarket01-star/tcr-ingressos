@@ -1,21 +1,39 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import "./styles.css";
 
 export const preferredRegion = "gru1";
 
-export const metadata: Metadata = {
-  title: "TCR Ingressos",
-  description: "Bilheteria oficial da TCR para venda de ingressos, pedidos, check-in e operação de eventos."
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const organizationContext = await getCurrentOrganizationContext();
 
-export default function RootLayout({
+  return {
+    title: organizationContext.brandName,
+    description: `Bilheteria oficial da ${organizationContext.brandName} para venda de ingressos, pedidos, check-in e operação de eventos.`
+  };
+}
+
+export default async function RootLayout({
   children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const organizationContext = await getCurrentOrganizationContext();
+
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body
+        style={
+          organizationContext.organization.primaryColor
+            ? ({
+                ["--brand-accent" as string]: organizationContext.organization.primaryColor
+              } as CSSProperties)
+            : undefined
+        }
+      >
+        {children}
+      </body>
     </html>
   );
 }

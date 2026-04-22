@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requestPasswordResetAction } from "@/features/auth/auth.actions";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 
 type ForgotPasswordPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -8,14 +9,15 @@ type ForgotPasswordPageProps = {
 export default async function ForgotPasswordPage({ searchParams }: ForgotPasswordPageProps) {
   const params = searchParams ? await searchParams : {};
   const sent = params.sent === "1";
+  const organizationContext = await getCurrentOrganizationContext();
 
   return (
     <main className="loginShell loginShellAdmin">
       <section className="loginPanel adminLoginPanel">
         <div className="loginFormArea">
           <Link className="brand loginBrand loginBrandDark" href="/">
-            <span className="brandMark">T</span>
-            <span>TCR Ingressos</span>
+            <span className="brandMark">{organizationContext.brandMark}</span>
+            <span>{organizationContext.brandName}</span>
           </Link>
 
           <div>
@@ -36,7 +38,13 @@ export default async function ForgotPasswordPage({ searchParams }: ForgotPasswor
           <form action={requestPasswordResetAction} className="form">
             <label className="field">
               <span>E-mail</span>
-              <input autoComplete="email" name="email" placeholder="admin@tcringressos.app.br" required type="email" />
+              <input
+                autoComplete="email"
+                name="email"
+                placeholder={`admin@${organizationContext.organization.adminDomain || organizationContext.organization.publicDomain || "sua-operacao.com.br"}`}
+                required
+                type="email"
+              />
             </label>
 
             <button className="button fullButton" type="submit">

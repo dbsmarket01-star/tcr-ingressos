@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { createEventLeadAction } from "@/features/leads/lead.actions";
 import { getLeadCaptureEventBySlug } from "@/features/leads/lead.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { formatDateTime } from "@/lib/format";
 import { imageCropStyle, parseImageCrop } from "@/lib/image-crop";
@@ -17,11 +18,12 @@ type LeadCapturePageProps = {
 
 export async function generateMetadata({ params }: Pick<LeadCapturePageProps, "params">): Promise<Metadata> {
   const { slug } = await params;
-  const event = await getLeadCaptureEventBySlug(slug);
+  const organizationContext = await getCurrentOrganizationContext();
+  const event = await getLeadCaptureEventBySlug(slug, organizationContext.organization.id);
 
   if (!event) {
     return {
-      title: "Lista de interesse indisponível | TCR Ingressos",
+      title: `Lista de interesse indisponível | ${organizationContext.brandName}`,
       robots: {
         index: false,
         follow: false
@@ -76,7 +78,8 @@ function getYoutubeEmbedUrl(url?: string | null) {
 export default async function LeadCapturePage({ params, searchParams }: LeadCapturePageProps) {
   const { slug } = await params;
   const query = searchParams ? await searchParams : {};
-  const event = await getLeadCaptureEventBySlug(slug);
+  const organizationContext = await getCurrentOrganizationContext();
+  const event = await getLeadCaptureEventBySlug(slug, organizationContext.organization.id);
 
   if (!event) {
     notFound();
@@ -103,8 +106,8 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
     <main className="shell leadCaptureShell">
       <header className="topbar">
         <Link className="brand" href="/">
-          <span className="brandMark">T</span>
-          <span>TCR Ingressos</span>
+          <span className="brandMark">{organizationContext.brandMark}</span>
+          <span>{organizationContext.brandName}</span>
         </Link>
         <nav className="nav" aria-label="Navegação">
           <Link href="/">Eventos</Link>

@@ -13,7 +13,7 @@ function createOrderCode() {
   return `TCR-${Date.now().toString(36).toUpperCase()}-${random}`;
 }
 
-export async function createCheckoutOrder(input: CheckoutOrderInput) {
+export async function createCheckoutOrder(input: CheckoutOrderInput, organizationId?: string | null) {
   const selectedItems = input.items.filter((item) => item.quantity > 0);
   const reservationMinutes = await getOrderReservationMinutes().catch(() => FALLBACK_ORDER_RESERVATION_MINUTES);
 
@@ -23,6 +23,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput) {
         where: {
           id: input.eventId,
           slug: input.eventSlug,
+          ...(organizationId ? { organizationId } : {}),
           status: "PUBLISHED"
         },
         select: {

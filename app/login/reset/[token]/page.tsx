@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { resetPasswordAction } from "@/features/auth/auth.actions";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 
 type ResetPasswordPageProps = {
   params: Promise<{
@@ -12,20 +13,21 @@ export default async function ResetPasswordPage({ params, searchParams }: ResetP
   const { token } = await params;
   const query = searchParams ? await searchParams : {};
   const hasError = query.error === "invalid";
+  const organizationContext = await getCurrentOrganizationContext();
 
   return (
     <main className="loginShell loginShellAdmin">
       <section className="loginPanel adminLoginPanel">
         <div className="loginFormArea">
           <Link className="brand loginBrand loginBrandDark" href="/">
-            <span className="brandMark">T</span>
-            <span>TCR Ingressos</span>
+            <span className="brandMark">{organizationContext.brandMark}</span>
+            <span>{organizationContext.brandName}</span>
           </Link>
 
           <div>
             <p className="publicBadge">Acesso interno</p>
             <h2>Nova senha</h2>
-            <p className="muted">Crie uma nova senha para voltar ao painel administrativo da TCR Ingressos com segurança.</p>
+            <p className="muted">Crie uma nova senha para voltar ao painel administrativo da {organizationContext.brandName} com segurança.</p>
           </div>
 
           {hasError ? (

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { eventLeadSchema } from "./lead.schema";
 import { createOrUpdateEventLead } from "./lead.service";
 
@@ -46,7 +47,8 @@ export async function createEventLeadAction(formData: FormData) {
   }
 
   try {
-    const result = await createOrUpdateEventLead(parsed.data);
+    const organizationContext = await getCurrentOrganizationContext();
+    const result = await createOrUpdateEventLead(parsed.data, organizationContext.organization.id);
     revalidatePath(`/admin/events/${parsed.data.eventId}/leads`);
     revalidatePath(`/admin/events/${parsed.data.eventId}`);
 

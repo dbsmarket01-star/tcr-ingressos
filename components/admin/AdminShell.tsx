@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AdminSideNav } from "@/components/admin/AdminSideNav";
 import { logoutAction } from "@/features/auth/auth.actions";
 import { getCurrentAdmin } from "@/features/auth/auth.service";
+import { getCurrentOrganizationContext, getOrganizationBrandingById } from "@/features/organizations/organization.service";
 import { getAdminNavGroupsForRole } from "@/lib/navigation";
 
 type AdminShellProps = {
@@ -13,13 +14,19 @@ type AdminShellProps = {
 export async function AdminShell({ title, description, children }: AdminShellProps) {
   const admin = await getCurrentAdmin();
   const navGroups = admin ? getAdminNavGroupsForRole(admin.role) : [];
+  const currentOrganizationContext = await getCurrentOrganizationContext();
+  const adminOrganization =
+    admin?.organizationId ? await getOrganizationBrandingById(admin.organizationId) : currentOrganizationContext.organization;
+  const brandName = adminOrganization?.name || currentOrganizationContext.brandName;
+  const brandMark = brandName.trim().charAt(0).toUpperCase() || "I";
+  const publicSiteHref = currentOrganizationContext.publicBaseUrl || "/";
 
   return (
     <main className="adminShell">
       <aside className="sidebar">
         <Link className="brand sidebarBrand" href="/admin">
-          <span className="brandMark">T</span>
-          <span>TCR Ingressos</span>
+          <span className="brandMark">{brandMark}</span>
+          <span>{brandName}</span>
         </Link>
         <div className="sidebarIntro">
           <span className="eyebrow">Central de operação</span>
@@ -45,7 +52,7 @@ export async function AdminShell({ title, description, children }: AdminShellPro
               <strong>Operação em andamento</strong>
               <span>Vendas, atendimento e check-in centralizados para a rotina do produtor.</span>
             </div>
-            <Link className="secondaryButton" href="/">
+            <Link className="secondaryButton" href={publicSiteHref}>
               Ver site
             </Link>
             <form action={logoutAction}>

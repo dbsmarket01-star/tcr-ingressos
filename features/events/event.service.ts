@@ -44,8 +44,7 @@ export async function listEvents(organizationId: string, allowedEventIds?: strin
   });
 }
 
-export async function listPublishedEventShowcase(limit = 6) {
-  const organizationId = await ensureDefaultOrganizationBackfill();
+export async function listPublishedEventShowcase(organizationId: string, limit = 6) {
   return prisma.event.findMany({
     where: {
       organizationId,
@@ -70,8 +69,9 @@ const listCachedPublishedEventShowcaseRaw = unstable_cache(listPublishedEventSho
   revalidate: 30
 });
 
-export async function listCachedPublishedEventShowcase(limit = 6) {
-  const events = await listCachedPublishedEventShowcaseRaw(limit);
+export async function listCachedPublishedEventShowcase(limit = 6, organizationId?: string | null) {
+  const resolvedOrganizationId = organizationId || (await ensureDefaultOrganizationBackfill());
+  const events = await listCachedPublishedEventShowcaseRaw(resolvedOrganizationId, limit);
   return events.map((event) => normalizeCachedEventDates(event));
 }
 
@@ -176,8 +176,7 @@ export async function getEventForManagement(
   });
 }
 
-export async function getPublicEventBySlug(slug: string) {
-  const organizationId = await ensureDefaultOrganizationBackfill();
+export async function getPublicEventBySlug(slug: string, organizationId: string) {
   return prisma.event.findFirst({
     where: {
       organizationId,
@@ -195,8 +194,7 @@ export async function getPublicEventBySlug(slug: string) {
   });
 }
 
-export async function getEventSeoBySlug(slug: string) {
-  const organizationId = await ensureDefaultOrganizationBackfill();
+export async function getEventSeoBySlug(slug: string, organizationId: string) {
   return prisma.event.findFirst({
     where: {
       organizationId,
@@ -239,11 +237,21 @@ const getCachedEventSeoBySlugRaw = unstable_cache(getEventSeoBySlug, ["public-ev
 });
 
 export async function getCachedPublicEventBySlug(slug: string) {
-  return normalizeCachedEventDates(await getCachedPublicEventBySlugRaw(slug));
+  const organizationId = await ensureDefaultOrganizationBackfill();
+  return normalizeCachedEventDates(await getCachedPublicEventBySlugRaw(slug, organizationId));
+}
+
+export async function getCachedPublicEventBySlugInOrganization(slug: string, organizationId: string) {
+  return normalizeCachedEventDates(await getCachedPublicEventBySlugRaw(slug, organizationId));
 }
 
 export async function getCachedEventSeoBySlug(slug: string) {
-  return normalizeCachedEventDates(await getCachedEventSeoBySlugRaw(slug));
+  const organizationId = await ensureDefaultOrganizationBackfill();
+  return normalizeCachedEventDates(await getCachedEventSeoBySlugRaw(slug, organizationId));
+}
+
+export async function getCachedEventSeoBySlugInOrganization(slug: string, organizationId: string) {
+  return normalizeCachedEventDates(await getCachedEventSeoBySlugRaw(slug, organizationId));
 }
 
 export async function updateEvent(eventId: string, input: EventDraftInput & { status: EventStatus }) {

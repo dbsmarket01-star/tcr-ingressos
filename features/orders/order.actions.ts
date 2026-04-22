@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createPublicOrderUrl, sendOrderPendingPaymentEmail } from "@/features/email/email.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { assertRateLimit } from "@/features/security/rate-limit";
 import { checkoutOrderSchema } from "./order.schema";
 import { createCheckoutOrder } from "./order.service";
@@ -18,7 +19,7 @@ function checkoutValidationMessage(error: unknown) {
     }
 
     if (field === "buyerEmail") {
-      return "Preencha um e-mail valido.";
+      return "Preencha um e-mail válido.";
     }
 
     if (field === "buyerDocument") {
@@ -74,9 +75,10 @@ export async function createCheckoutOrderAction(formData: FormData) {
   let order: Awaited<ReturnType<typeof createCheckoutOrder>>;
 
   try {
-    order = await createCheckoutOrder(parsed.data);
+    const organizationContext = await getCurrentOrganizationContext();
+    order = await createCheckoutOrder(parsed.data, organizationContext.organization.id);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Nao foi possivel criar o pedido. Tente novamente.";
+    const message = error instanceof Error ? error.message : "Não foi possível criar o pedido. Tente novamente.";
     redirect(`/evento/${eventSlug || parsed.data.eventSlug}?checkoutError=${encodeURIComponent(message)}#ingressos`);
   }
 

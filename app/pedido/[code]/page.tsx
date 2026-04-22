@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { CopyButton } from "@/components/forms/CopyButton";
 import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
 import { SubmitButton } from "@/components/forms/SubmitButton";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { getOrderByCode } from "@/features/orders/order.service";
 import {
   approveSimulatedPaymentAction,
@@ -62,6 +63,7 @@ const orderStatusClasses = {
 export default async function OrderPage({ params, searchParams }: OrderPageProps) {
   const { code } = await params;
   const query = searchParams ? await searchParams : {};
+  const organizationContext = await getCurrentOrganizationContext();
   const order = await getOrderByCode(code);
 
   if (!order) {
@@ -164,8 +166,8 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
       ) : null}
       <header className="topbar">
         <Link className="brand" href="/">
-          <span className="brandMark">T</span>
-          <span>TCR Ingressos</span>
+          <span className="brandMark">{organizationContext.brandMark}</span>
+          <span>{organizationContext.brandName}</span>
         </Link>
         <nav className="nav" aria-label="Navegação">
           <Link href={`/evento/${order.event.slug}`}>Voltar ao evento</Link>
