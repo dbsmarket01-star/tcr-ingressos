@@ -213,13 +213,15 @@ export async function createCheckoutOrder(input: CheckoutOrderInput) {
   );
 }
 
-export async function expirePendingOrders(options?: { limit?: number; now?: Date }) {
+export async function expirePendingOrders(options?: { limit?: number; now?: Date; allowedEventIds?: string[] | null }) {
   const now = options?.now ?? new Date();
   const limit = options?.limit ?? 100;
+  const allowedEventIds = options?.allowedEventIds;
 
   const orders = await prisma.order.findMany({
     where: {
       status: OrderStatus.PENDING_PAYMENT,
+      ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
       expiresAt: {
         lt: now
       }
@@ -408,9 +410,16 @@ export async function expirePendingOrderByCode(code: string) {
   return result;
 }
 
-export async function cancelPendingOrderByCode(code: string, reason = "Cancelado manualmente pela operacao.") {
-  const order = await prisma.order.findUnique({
-    where: { code },
+export async function cancelPendingOrderByCode(
+  code: string,
+  reason = "Cancelado manualmente pela operacao.",
+  allowedEventIds?: string[] | null
+) {
+  const order = await prisma.order.findFirst({
+    where: {
+      code,
+      ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {})
+    },
     include: {
       items: true,
       payment: true
@@ -491,10 +500,14 @@ export async function cancelPendingOrderByCode(code: string, reason = "Cancelado
 
 export async function refundPaidOrderByCode(
   code: string,
-  reason = "Reembolso registrado manualmente pela operacao."
+  reason = "Reembolso registrado manualmente pela operacao.",
+  allowedEventIds?: string[] | null
 ) {
-  const order = await prisma.order.findUnique({
-    where: { code },
+  const order = await prisma.order.findFirst({
+    where: {
+      code,
+      ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {})
+    },
     include: {
       items: true,
       payment: true,

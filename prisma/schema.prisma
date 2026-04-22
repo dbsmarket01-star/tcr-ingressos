@@ -214,6 +214,8 @@ model AdminUser {
   passwordHash String
   role         AdminRole @default(STAFF)
   isActive     Boolean   @default(true)
+  accessAllEvents Boolean @default(true)
+  allowedEventIds String[] @default([])
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 

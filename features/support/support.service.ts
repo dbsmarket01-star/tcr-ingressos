@@ -6,31 +6,40 @@ import {
   sendTicketsEmail
 } from "@/features/email/email.service";
 
-export async function searchSupportOrders(query?: string) {
+type EventScope = string[] | null | undefined;
+
+function buildSupportWhere(query?: string, allowedEventIds?: EventScope) {
   const term = query?.trim();
   const digits = term?.replace(/\D/g, "");
 
-  return prisma.order.findMany({
-    where: term
+  return {
+    ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+    ...(term
       ? {
           OR: [
-            { code: { contains: term, mode: "insensitive" } },
-            { event: { title: { contains: term, mode: "insensitive" } } },
-            { customer: { name: { contains: term, mode: "insensitive" } } },
-            { customer: { email: { contains: term, mode: "insensitive" } } },
-            { customer: { phone: { contains: term, mode: "insensitive" } } },
-            { customer: { document: { contains: term, mode: "insensitive" } } },
+            { code: { contains: term, mode: "insensitive" as const } },
+            { event: { title: { contains: term, mode: "insensitive" as const } } },
+            { customer: { name: { contains: term, mode: "insensitive" as const } } },
+            { customer: { email: { contains: term, mode: "insensitive" as const } } },
+            { customer: { phone: { contains: term, mode: "insensitive" as const } } },
+            { customer: { document: { contains: term, mode: "insensitive" as const } } },
             ...(digits
               ? [
                   { customer: { phone: { contains: digits, mode: "insensitive" as const } } },
                   { customer: { document: { contains: digits, mode: "insensitive" as const } } }
                 ]
               : []),
-            { tickets: { some: { code: { contains: term, mode: "insensitive" } } } },
-            { tickets: { some: { qrCodeToken: { contains: term, mode: "insensitive" } } } }
+            { tickets: { some: { code: { contains: term, mode: "insensitive" as const } } } },
+            { tickets: { some: { qrCodeToken: { contains: term, mode: "insensitive" as const } } } }
           ]
         }
-      : undefined,
+      : {})
+  };
+}
+
+export async function searchSupportOrders(query?: string, allowedEventIds?: EventScope) {
+  return prisma.order.findMany({
+    where: buildSupportWhere(query, allowedEventIds),
     orderBy: {
       createdAt: "desc"
     },
@@ -56,10 +65,11 @@ export async function searchSupportOrders(query?: string) {
   });
 }
 
-export async function resendTicketsEmailByOrderCode(orderCode: string) {
-  const order = await prisma.order.findUnique({
+export async function resendTicketsEmailByOrderCode(orderCode: string, allowedEventIds?: EventScope) {
+  const order = await prisma.order.findFirst({
     where: {
-      code: orderCode
+      code: orderCode,
+      ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {})
     },
     include: {
       customer: true,
@@ -110,10 +120,11 @@ export async function resendTicketsEmailByOrderCode(orderCode: string) {
   };
 }
 
-export async function resendPendingPaymentEmailByOrderCode(orderCode: string) {
-  const order = await prisma.order.findUnique({
+export async function resendPendingPaymentEmailByOrderCode(orderCode: string, allowedEventIds?: EventScope) {
+  const order = await prisma.order.findFirst({
     where: {
-      code: orderCode
+      code: orderCode,
+      ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {})
     },
     include: {
       customer: true,

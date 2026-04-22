@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { getLaunchChecklist } from "@/features/launch/launch-checklist.service";
 import { getPublicEventUrl } from "@/lib/public-url";
 import { formatDateTime } from "@/lib/format";
@@ -15,7 +15,7 @@ type LaunchPageProps = {
 
 const statusLabels = {
   READY: "Pronto",
-  WARNING: "Atencao",
+  WARNING: "Atenção",
   BLOCKED: "Pendente"
 };
 
@@ -59,15 +59,15 @@ function ChecklistCard({
 }
 
 export default async function LaunchPage({ searchParams }: LaunchPageProps) {
-  await requirePermission("PRODUCTION");
+  const admin = await requirePermission("PRODUCTION");
   const params = searchParams ? await searchParams : {};
-  const checklist = await getLaunchChecklist(params.eventId);
+  const checklist = await getLaunchChecklist(params.eventId, getAdminAllowedEventIds(admin));
   const launchReady = checklist.summary.blocked === 0 && checklist.summary.warning <= 2;
 
   return (
     <AdminShell
-      title="Lancamento"
-      description="Checklist por evento antes de liberar trafego pago e venda real."
+      title="Lançamento"
+      description="Checklist por evento antes de liberar tráfego pago e venda real."
     >
       <section className="card financeFilters">
         <form className="financeFiltersForm">
@@ -88,7 +88,7 @@ export default async function LaunchPage({ searchParams }: LaunchPageProps) {
           {checklist.event ? (
             <>
               <Link className="secondaryButton" href={getPublicEventUrl(checklist.event.slug)}>
-                Pagina publica
+                Página pública
               </Link>
               <Link className="secondaryButton" href={`/admin/events/${checklist.event.id}`}>
                 Gerenciar evento
@@ -104,7 +104,7 @@ export default async function LaunchPage({ searchParams }: LaunchPageProps) {
           <strong>{checklist.summary.ready}</strong>
         </article>
         <article className="card metric">
-          <span className="muted">Atencao</span>
+          <span className="muted">Atenção</span>
           <strong>{checklist.summary.warning}</strong>
         </article>
         <article className="card metric">
@@ -113,7 +113,7 @@ export default async function LaunchPage({ searchParams }: LaunchPageProps) {
         </article>
         <article className="card metric">
           <span className="muted">Status</span>
-          <strong>{launchReady ? "Pode testar trafego" : "Revisar antes"}</strong>
+          <strong>{launchReady ? "Pode testar tráfego" : "Revisar antes"}</strong>
         </article>
       </section>
 
@@ -122,7 +122,7 @@ export default async function LaunchPage({ searchParams }: LaunchPageProps) {
           <div className="sectionHeader inlineHeader">
             <h2>{checklist.event.title}</h2>
             <span className={`status ${launchReady ? "published" : "pending"}`}>
-              {launchReady ? "Lancamento viavel" : "Ajustes recomendados"}
+              {launchReady ? "Lançamento viável" : "Ajustes recomendados"}
             </span>
           </div>
           <div className="settingsGrid">
@@ -131,7 +131,7 @@ export default async function LaunchPage({ searchParams }: LaunchPageProps) {
               <strong>{formatDateTime(checklist.event.startsAt)}</strong>
             </div>
             <div>
-              <span>Disponiveis</span>
+              <span>Disponíveis</span>
               <strong>{checklist.event.availableQuantity}</strong>
             </div>
             <div>
@@ -147,7 +147,7 @@ export default async function LaunchPage({ searchParams }: LaunchPageProps) {
               <strong>{checklist.event.approvedPayments}</strong>
             </div>
             <div>
-              <span>Pix / Cartao</span>
+              <span>Pix / Cartão</span>
               <strong>
                 {checklist.event.pixPayments} / {checklist.event.cardPayments}
               </strong>
@@ -167,7 +167,7 @@ export default async function LaunchPage({ searchParams }: LaunchPageProps) {
       {checklist.nextActions.length > 0 ? (
         <section className="card spacedSection">
           <div className="sectionHeader inlineHeader">
-            <h2>Proximas acoes</h2>
+            <h2>Próximas ações</h2>
           </div>
           <div className="operationsAlertGrid">
             {checklist.nextActions.map((item) => (
@@ -191,18 +191,18 @@ export default async function LaunchPage({ searchParams }: LaunchPageProps) {
         </section>
       ) : (
         <section className="card spacedSection">
-          <div className="successBox">Checklist de lancamento sem pendencias ou alertas para este evento.</div>
+          <div className="successBox">Checklist de lançamento sem pendências ou alertas para este evento.</div>
         </section>
       )}
 
       <section className="grid twoColumns spacedSection">
-        <ChecklistCard title="Pagina, SEO e tracking" items={checklist.content} />
+        <ChecklistCard title="Página, SEO e tracking" items={checklist.content} />
         <ChecklistCard title="Venda e estoque" items={checklist.sales} />
       </section>
 
       <section className="grid twoColumns spacedSection">
         <ChecklistCard title="Pagamento, webhook e split" items={checklist.payments} />
-        <ChecklistCard title="Operacao e entrada" items={checklist.operation} />
+        <ChecklistCard title="Operação e entrada" items={checklist.operation} />
       </section>
 
       {checklist.recentPaidOrders.length > 0 ? (

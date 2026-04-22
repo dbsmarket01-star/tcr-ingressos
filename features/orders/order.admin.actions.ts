@@ -3,12 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAuditLog } from "@/features/audit/audit.service";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { cancelPendingOrderByCode, expirePendingOrders, refundPaidOrderByCode } from "./order.service";
 
 export async function expirePendingOrdersAction() {
-  await requirePermission("ORDERS");
-  const result = await expirePendingOrders({ limit: 200 });
+  const admin = await requirePermission("ORDERS");
+  const result = await expirePendingOrders({ limit: 200, allowedEventIds: getAdminAllowedEventIds(admin) });
   const params = new URLSearchParams({
     expired: String(result.expiredCount),
     released: String(result.releasedQuantity)
@@ -23,6 +23,7 @@ export async function expirePendingOrdersAction() {
 
 export async function cancelPendingOrderAction(formData: FormData) {
   const admin = await requirePermission("ORDERS");
+  const allowedEventIds = getAdminAllowedEventIds(admin);
   const orderCode = String(formData.get("orderCode") ?? "").trim();
 
   if (!orderCode) {
@@ -30,7 +31,7 @@ export async function cancelPendingOrderAction(formData: FormData) {
   }
 
   try {
-    const result = await cancelPendingOrderByCode(orderCode);
+    const result = await cancelPendingOrderByCode(orderCode, undefined, allowedEventIds);
 
     await createAuditLog({
       adminUserId: admin.id,
@@ -56,6 +57,7 @@ export async function cancelPendingOrderAction(formData: FormData) {
 
 export async function refundPaidOrderAction(formData: FormData) {
   const admin = await requirePermission("ORDERS");
+  const allowedEventIds = getAdminAllowedEventIds(admin);
   const orderCode = String(formData.get("orderCode") ?? "").trim();
   const refundReason =
     String(formData.get("refundReason") ?? "").trim() || "Reembolso registrado manualmente pela operacao.";
@@ -65,7 +67,7 @@ export async function refundPaidOrderAction(formData: FormData) {
   }
 
   try {
-    const result = await refundPaidOrderByCode(orderCode, refundReason);
+    const result = await refundPaidOrderByCode(orderCode, refundReason, allowedEventIds);
 
     await createAuditLog({
       adminUserId: admin.id,

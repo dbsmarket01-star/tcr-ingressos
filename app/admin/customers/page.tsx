@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
@@ -13,31 +13,52 @@ type CustomersPageProps = {
 };
 
 export default async function CustomersPage({ searchParams }: CustomersPageProps) {
-  await requirePermission("CUSTOMERS");
+  const admin = await requirePermission("CUSTOMERS");
   const params = searchParams ? await searchParams : {};
   const query = params.q?.trim() ?? "";
+  const allowedEventIds = getAdminAllowedEventIds(admin);
 
   const customers = await prisma.customer.findMany({
     where: query
       ? {
-          OR: [
-            { name: { contains: query, mode: "insensitive" } },
-            { email: { contains: query, mode: "insensitive" } },
-            { document: { contains: query } },
-            { phone: { contains: query } }
+          AND: [
+            ...(allowedEventIds ? [{ orders: { some: { eventId: { in: allowedEventIds } } } }] : []),
+            {
+              OR: [
+                { name: { contains: query, mode: "insensitive" } },
+                { email: { contains: query, mode: "insensitive" } },
+                { document: { contains: query } },
+                { phone: { contains: query } }
+              ]
+            }
           ]
         }
-      : undefined,
+      : allowedEventIds
+        ? {
+            orders: {
+              some: {
+                eventId: { in: allowedEventIds }
+              }
+            }
+          }
+        : undefined,
     orderBy: [{ createdAt: "desc" }],
     take: 100,
     include: {
       _count: {
         select: {
-          orders: true,
+          orders: allowedEventIds
+            ? {
+                where: {
+                  eventId: { in: allowedEventIds }
+                }
+              }
+            : true,
           participants: true
         }
       },
       orders: {
+        where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
         orderBy: [{ createdAt: "desc" }],
         take: 5,
         select: {

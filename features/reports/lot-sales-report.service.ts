@@ -1,6 +1,8 @@
 import { OrderStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
+type EventScope = string[] | null | undefined;
+
 function getLotAlert(soldPercent: number, availableQuantity: number, reservedQuantity: number) {
   if (availableQuantity <= 0) {
     return {
@@ -33,9 +35,13 @@ function getLotAlert(soldPercent: number, availableQuantity: number, reservedQua
   };
 }
 
-export async function getLotSalesReport(eventId?: string) {
+export async function getLotSalesReport(eventId?: string, allowedEventIds?: EventScope) {
+  const eventFilter = eventId ? { id: eventId } : allowedEventIds ? { id: { in: allowedEventIds } } : undefined;
+  const lotFilter = eventId ? { eventId } : allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined;
+
   const [events, lots] = await Promise.all([
     prisma.event.findMany({
+      where: eventFilter,
       orderBy: [{ startsAt: "desc" }, { title: "asc" }],
       select: {
         id: true,
@@ -43,9 +49,7 @@ export async function getLotSalesReport(eventId?: string) {
       }
     }),
     prisma.ticketLot.findMany({
-      where: {
-        ...(eventId ? { eventId } : {})
-      },
+      where: lotFilter,
       orderBy: [{ event: { startsAt: "desc" } }, { sortOrder: "asc" }, { createdAt: "asc" }],
       include: {
         event: {

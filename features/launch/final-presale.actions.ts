@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAuditLog } from "@/features/audit/audit.service";
-import { requirePermission } from "@/features/auth/auth.service";
+import { requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { prisma } from "@/lib/prisma";
 
 function cleanText(value: FormDataEntryValue | null) {
@@ -20,6 +20,8 @@ export async function updateManualPresaleCheckAction(formData: FormData) {
   if (!eventId || !key) {
     redirect("/admin/final-presale");
   }
+
+  await requireEventAccess(eventId);
 
   const item = await prisma.eventPresaleCheck.findUnique({
     where: {

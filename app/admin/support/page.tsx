@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { CopyButton } from "@/components/forms/CopyButton";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { resendPendingPaymentEmailAction, resendTicketsEmailAction } from "@/features/support/support.actions";
 import { searchSupportOrders } from "@/features/support/support.service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -35,10 +35,10 @@ const ticketStatusLabels = {
 };
 
 export default async function SupportPage({ searchParams }: SupportPageProps) {
-  await requirePermission("SUPPORT");
+  const admin = await requirePermission("SUPPORT");
   const params = await searchParams;
   const query = params.q?.trim() ?? "";
-  const orders = await searchSupportOrders(query);
+  const orders = await searchSupportOrders(query, getAdminAllowedEventIds(admin));
   const toWhatsappHref = (phone?: string | null) => {
     if (!phone) return null;
     const digits = phone.replace(/\D/g, "");

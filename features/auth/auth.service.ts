@@ -1,4 +1,4 @@
-import { AdminRole, AdminUser } from "@prisma/client";
+import { AdminRole } from "@prisma/client";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createHmac, timingSafeEqual } from "node:crypto";
@@ -14,7 +14,18 @@ type SessionPayload = {
   exp: number;
 };
 
-export type CurrentAdmin = Pick<AdminUser, "id" | "name" | "email" | "role">;
+export type CurrentAdmin = {
+  id: string;
+  name: string;
+  email: string;
+  role: AdminRole;
+  accessAllEvents: boolean;
+  allowedEventIds: string[];
+};
+
+export type AuthenticatedAdmin = CurrentAdmin & {
+  passwordHash: string;
+};
 
 export type AdminArea =
   | "DASHBOARD"
@@ -175,7 +186,9 @@ export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
       id: true,
       name: true,
       email: true,
-      role: true
+      role: true,
+      accessAllEvents: true,
+      allowedEventIds: true
     }
   });
 }
@@ -185,6 +198,29 @@ export async function requireAdmin() {
 
   if (!admin) {
     redirect("/login");
+  }
+
+  return admin;
+}
+
+export function getAdminAllowedEventIds(admin: CurrentAdmin): string[] | null {
+  if (admin.role === AdminRole.OWNER || admin.accessAllEvents) {
+    return null;
+  }
+
+  return admin.allowedEventIds;
+}
+
+export function canAccessEvent(admin: CurrentAdmin, eventId: string) {
+  const allowedEventIds = getAdminAllowedEventIds(admin);
+  return !allowedEventIds || allowedEventIds.includes(eventId);
+}
+
+export async function requireEventAccess(eventId: string) {
+  const admin = await requireAdmin();
+
+  if (!canAccessEvent(admin, eventId)) {
+    redirect("/admin/events");
   }
 
   return admin;
@@ -209,6 +245,15 @@ export async function findActiveAdminByEmail(email: string) {
     where: {
       email,
       isActive: true
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      passwordHash: true,
+      role: true,
+      accessAllEvents: true,
+      allowedEventIds: true
     }
   });
 }

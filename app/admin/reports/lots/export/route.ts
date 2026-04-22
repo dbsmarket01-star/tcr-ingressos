@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { getLotSalesReport } from "@/features/reports/lot-sales-report.service";
 
 function csvValue(value: unknown) {
@@ -16,9 +16,9 @@ function formatDate(value: Date) {
 }
 
 export async function GET(request: Request) {
-  await requirePermission("REPORTS");
+  const admin = await requirePermission("REPORTS");
   const url = new URL(request.url);
-  const report = await getLotSalesReport(url.searchParams.get("eventId") || undefined);
+  const report = await getLotSalesReport(url.searchParams.get("eventId") || undefined, getAdminAllowedEventIds(admin));
 
   const headers = [
     "Evento",

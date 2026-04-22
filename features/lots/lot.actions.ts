@@ -3,6 +3,7 @@
 import { LotStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { parseInstallmentStart, parseMoneyToCents, parsePercentageToBps } from "@/features/pricing/pricing";
 import { createTicketLot, updateTicketLot, updateTicketLotPricing, updateTicketLotStatus } from "./lot.service";
 import { ticketLotPricingSchema, ticketLotSchema } from "./lot.schema";
@@ -40,6 +41,7 @@ function parsePixDiscount(formData: FormData) {
 }
 
 export async function createTicketLotAction(formData: FormData) {
+  await requirePermission("EVENTS");
   const eventId = String(formData.get("eventId") ?? "").trim();
   const price = Number(formData.get("price") ?? 0);
   const status = String(formData.get("status") ?? "DRAFT");
@@ -64,6 +66,8 @@ export async function createTicketLotAction(formData: FormData) {
     redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent("Verifique os campos obrigatórios do lote.")}`);
   }
 
+  await requireEventAccess(eventId);
+
   try {
     await createTicketLot({
       ...parsed.data,
@@ -79,6 +83,7 @@ export async function createTicketLotAction(formData: FormData) {
 }
 
 export async function updateTicketLotStatusAction(formData: FormData) {
+  await requirePermission("EVENTS");
   const eventId = String(formData.get("eventId") ?? "").trim();
   const lotId = String(formData.get("lotId") ?? "").trim();
   const status = String(formData.get("status") ?? "").trim();
@@ -86,6 +91,8 @@ export async function updateTicketLotStatusAction(formData: FormData) {
   if (!eventId || !lotId) {
     redirect(`/admin/events/${eventId || ""}?lotError=${encodeURIComponent("Lote não informado.")}`);
   }
+
+  await requireEventAccess(eventId);
 
   if (status !== "ACTIVE" && status !== "PAUSED" && status !== "CLOSED" && status !== "DRAFT") {
     redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent("Status inválido para este lote.")}`);
@@ -103,6 +110,7 @@ export async function updateTicketLotStatusAction(formData: FormData) {
 }
 
 export async function updateTicketLotPricingAction(formData: FormData) {
+  await requirePermission("EVENTS");
   const eventId = String(formData.get("eventId") ?? "").trim();
   const lotId = String(formData.get("lotId") ?? "").trim();
   const price = Number(formData.get("price") ?? 0);
@@ -110,6 +118,8 @@ export async function updateTicketLotPricingAction(formData: FormData) {
   if (!eventId || !lotId) {
     redirect(`/admin/events/${eventId || ""}?lotError=${encodeURIComponent("Lote não informado.")}`);
   }
+
+  await requireEventAccess(eventId);
 
   const parsed = ticketLotPricingSchema.safeParse({
       priceInCents: Math.round(price * 100),
@@ -136,6 +146,7 @@ export async function updateTicketLotPricingAction(formData: FormData) {
 }
 
 export async function updateTicketLotAction(formData: FormData) {
+  await requirePermission("EVENTS");
   const eventId = String(formData.get("eventId") ?? "").trim();
   const lotId = String(formData.get("lotId") ?? "").trim();
   const eventSlug = String(formData.get("eventSlug") ?? "").trim();
@@ -145,6 +156,8 @@ export async function updateTicketLotAction(formData: FormData) {
   if (!eventId || !lotId) {
     redirect(`/admin/events/${eventId || ""}/lots/${lotId || ""}/edit?error=${encodeURIComponent("Lote não informado.")}`);
   }
+
+  await requireEventAccess(eventId);
 
   const parsed = ticketLotSchema.safeParse({
     eventId,

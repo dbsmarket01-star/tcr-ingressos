@@ -6,6 +6,7 @@ import { getPublicEventUrl } from "@/lib/public-url";
 import { manualPresaleChecklistItems } from "./manual-presale-checklist";
 
 type FinalCheckStatus = "READY" | "WARNING" | "BLOCKED";
+type EventScope = string[] | null | undefined;
 
 type FinalCheckItem = {
   label: string;
@@ -52,8 +53,9 @@ function summarize(items: FinalCheckItem[]) {
   };
 }
 
-export async function getFinalPresaleChecklist(eventId?: string) {
+export async function getFinalPresaleChecklist(eventId?: string, allowedEventIds?: EventScope) {
   const events = await prisma.event.findMany({
+    where: allowedEventIds ? { id: { in: allowedEventIds } } : undefined,
     orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],
     select: {
       id: true,
@@ -66,8 +68,10 @@ export async function getFinalPresaleChecklist(eventId?: string) {
   const [health, event] = await Promise.all([
     getPaymentHealth(),
     selectedEventId
-      ? prisma.event.findUnique({
-          where: { id: selectedEventId },
+      ? prisma.event.findFirst({
+          where: {
+            AND: [{ id: selectedEventId }, ...(allowedEventIds ? [{ id: { in: allowedEventIds } }] : [])]
+          },
           include: {
             lots: true,
             orders: {
@@ -93,10 +97,10 @@ export async function getFinalPresaleChecklist(eventId?: string) {
   if (!event) {
     const item: FinalCheckItem = {
       label: "Evento selecionado",
-      description: "Escolha um evento para revisar a pre-venda final.",
+      description: "Escolha um evento dentro do seu escopo de acesso para revisar a pre-venda final.",
       status: "BLOCKED",
-      action: "Cadastre ou selecione um evento.",
-      href: "/admin/events/new"
+      action: "Cadastre ou selecione um evento permitido.",
+      href: allowedEventIds ? "/admin/events" : "/admin/events/new"
     };
 
     return {

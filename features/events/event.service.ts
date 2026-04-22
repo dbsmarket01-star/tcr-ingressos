@@ -6,8 +6,9 @@ import type { EventDraftInput } from "./event.schema";
 export type EventListItem = Awaited<ReturnType<typeof listEvents>>[number];
 export type EventManagement = NonNullable<Awaited<ReturnType<typeof getEventForManagement>>>;
 
-export async function listEvents() {
+export async function listEvents(allowedEventIds?: string[] | null) {
   return prisma.event.findMany({
+    where: allowedEventIds ? { id: { in: allowedEventIds } } : undefined,
     orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],
     include: {
       lots: {
@@ -119,9 +120,11 @@ export async function createEvent(input: EventDraftInput & { status: EventStatus
   return prisma.event.create({ data });
 }
 
-export async function getEventForManagement(eventId: string) {
-  return prisma.event.findUnique({
-    where: { id: eventId },
+export async function getEventForManagement(eventId: string, allowedEventIds?: string[] | null) {
+  return prisma.event.findFirst({
+    where: {
+      AND: [{ id: eventId }, ...(allowedEventIds ? [{ id: { in: allowedEventIds } }] : [])]
+    },
     include: {
       lots: {
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]

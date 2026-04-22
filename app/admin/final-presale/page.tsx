@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { updateManualPresaleCheckAction } from "@/features/launch/final-presale.actions";
 import { getFinalPresaleChecklist } from "@/features/launch/final-presale-checklist.service";
 import { formatDateTime } from "@/lib/format";
@@ -16,7 +16,7 @@ type FinalPresalePageProps = {
 
 const statusLabels = {
   READY: "Pronto",
-  WARNING: "Atencao",
+  WARNING: "Atenção",
   BLOCKED: "Pendente"
 };
 
@@ -61,15 +61,15 @@ function PresaleSection({
 }
 
 export default async function FinalPresalePage({ searchParams }: FinalPresalePageProps) {
-  await requirePermission("PRODUCTION");
+  const admin = await requirePermission("PRODUCTION");
   const params = searchParams ? await searchParams : {};
-  const checklist = await getFinalPresaleChecklist(params.eventId);
+  const checklist = await getFinalPresaleChecklist(params.eventId, getAdminAllowedEventIds(admin));
   const canStartControlledPresale = checklist.summary.blocked === 0 && checklist.summary.warning <= 2;
 
   return (
     <AdminShell
       title="Pre-venda final"
-      description="Checklist operacional final antes de rodar anuncio e vender em dominio real."
+      description="Checklist operacional final antes de rodar anúncio e vender em domínio real."
     >
       <section className="card financeFilters">
         <form className="financeFiltersForm">
@@ -90,10 +90,10 @@ export default async function FinalPresalePage({ searchParams }: FinalPresalePag
           {checklist.event ? (
             <>
               <Link className="secondaryButton" href={getPublicEventUrl(checklist.event.slug)}>
-                Pagina publica
+                Página pública
               </Link>
               <Link className="secondaryButton" href={`/admin/launch?eventId=${checklist.event.id}`}>
-                Checklist lancamento
+                Checklist lançamento
               </Link>
             </>
           ) : null}
@@ -106,7 +106,7 @@ export default async function FinalPresalePage({ searchParams }: FinalPresalePag
           <strong>{checklist.summary.ready}</strong>
         </article>
         <article className="card metric">
-          <span className="muted">Atencao</span>
+          <span className="muted">Atenção</span>
           <strong>{checklist.summary.warning}</strong>
         </article>
         <article className="card metric">
@@ -124,7 +124,7 @@ export default async function FinalPresalePage({ searchParams }: FinalPresalePag
           <div className="sectionHeader inlineHeader">
             <h2>{checklist.event.title}</h2>
             <span className={`status ${canStartControlledPresale ? "published" : "pending"}`}>
-              {canStartControlledPresale ? "Pronto para teste publico pequeno" : "Ainda revisar"}
+              {canStartControlledPresale ? "Pronto para teste público pequeno" : "Ainda revisar"}
             </span>
           </div>
           <div className="settingsGrid">
@@ -133,7 +133,7 @@ export default async function FinalPresalePage({ searchParams }: FinalPresalePag
               <strong>{formatDateTime(checklist.event.startsAt)}</strong>
             </div>
             <div>
-              <span>Disponiveis</span>
+              <span>Disponíveis</span>
               <strong>{checklist.event.availableQuantity}</strong>
             </div>
             <div>
@@ -141,7 +141,7 @@ export default async function FinalPresalePage({ searchParams }: FinalPresalePag
               <strong>{checklist.event.paidOrders}</strong>
             </div>
             <div>
-              <span>Pix / Cartao</span>
+              <span>Pix / Cartão</span>
               <strong>
                 {checklist.event.pixPayments} / {checklist.event.cardPayments}
               </strong>
@@ -194,14 +194,14 @@ export default async function FinalPresalePage({ searchParams }: FinalPresalePag
         </section>
       ) : (
         <section className="card spacedSection">
-          <div className="successBox">Checklist final sem pendencias para este evento.</div>
+          <div className="successBox">Checklist final sem pendências para este evento.</div>
         </section>
       )}
 
       {checklist.evidence.length > 0 ? (
         <section className="card spacedSection">
           <div className="sectionHeader inlineHeader">
-            <h2>Evidencias rapidas</h2>
+            <h2>Evidências rápidas</h2>
           </div>
           <div className="presaleEvidenceGrid">
             {checklist.evidence.map((item) => (
@@ -215,7 +215,7 @@ export default async function FinalPresalePage({ searchParams }: FinalPresalePag
       ) : null}
 
       <section className="grid twoColumns spacedSection">
-        <PresaleSection title="Venda e pagina publica" items={checklist.sale} />
+        <PresaleSection title="Venda e página pública" items={checklist.sale} />
         <PresaleSection title="Pagamento e repasse" items={checklist.payment} />
       </section>
 
@@ -244,7 +244,7 @@ export default async function FinalPresalePage({ searchParams }: FinalPresalePag
                   <p className="muted">{item.description}</p>
                   {item.checkedAt ? <small>Marcado em {formatDateTime(item.checkedAt)}</small> : null}
                   <label className="field">
-                    <span>Observacao</span>
+                    <span>Observação</span>
                     <input
                       name="note"
                       placeholder="Ex.: testado por Lucas no iPhone, pedido TCR..."

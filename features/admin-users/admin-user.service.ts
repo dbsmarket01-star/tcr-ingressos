@@ -11,7 +11,9 @@ export async function listAdminUsers() {
       email: true,
       role: true,
       isActive: true,
-      createdAt: true
+      createdAt: true,
+      accessAllEvents: true,
+      allowedEventIds: true
     }
   });
 }
@@ -21,6 +23,8 @@ export async function createAdminUser(input: {
   email: string;
   password: string;
   role: AdminRole;
+  accessAllEvents: boolean;
+  allowedEventIds: string[];
 }) {
   const passwordHash = await bcrypt.hash(input.password, 12);
 
@@ -30,7 +34,16 @@ export async function createAdminUser(input: {
       email: input.email.toLowerCase(),
       passwordHash,
       role: input.role,
-      isActive: true
+      isActive: true,
+      accessAllEvents: input.role === AdminRole.OWNER ? true : input.accessAllEvents,
+      allowedEventIds: input.role === AdminRole.OWNER || input.accessAllEvents ? [] : input.allowedEventIds
+    },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      accessAllEvents: true,
+      allowedEventIds: true
     }
   });
 }
@@ -42,6 +55,10 @@ export async function updateAdminUserStatus(userId: string, isActive: boolean) {
     },
     data: {
       isActive
+    },
+    select: {
+      id: true,
+      email: true
     }
   });
 }
@@ -52,7 +69,40 @@ export async function updateAdminUserRole(userId: string, role: AdminRole) {
       id: userId
     },
     data: {
-      role
+      role,
+      ...(role === AdminRole.OWNER
+        ? {
+            accessAllEvents: true,
+            allowedEventIds: []
+          }
+        : {})
+    },
+    select: {
+      id: true,
+      email: true,
+      role: true
+    }
+  });
+}
+
+export async function updateAdminUserEventAccess(
+  userId: string,
+  accessAllEvents: boolean,
+  allowedEventIds: string[]
+) {
+  return prisma.adminUser.update({
+    where: {
+      id: userId
+    },
+    data: {
+      accessAllEvents,
+      allowedEventIds: accessAllEvents ? [] : allowedEventIds
+    },
+    select: {
+      id: true,
+      email: true,
+      accessAllEvents: true,
+      allowedEventIds: true
     }
   });
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { getAdminOrderDetail } from "@/features/orders/order-detail.service";
 import { refundPaidOrderAction } from "@/features/orders/order.admin.actions";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -46,10 +46,10 @@ const ticketStatusLabels = {
 };
 
 export default async function AdminOrderDetailPage({ params, searchParams }: AdminOrderDetailPageProps) {
-  await requirePermission("ORDERS");
+  const admin = await requirePermission("ORDERS");
   const { code } = await params;
   const query = searchParams ? await searchParams : {};
-  const order = await getAdminOrderDetail(code);
+  const order = await getAdminOrderDetail(code, getAdminAllowedEventIds(admin));
 
   if (!order) {
     notFound();

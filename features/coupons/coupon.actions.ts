@@ -3,6 +3,7 @@
 import { CouponStatus, CouponType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { parsePercentageToBps } from "@/features/pricing/pricing";
 import { couponSchema } from "./coupon.schema";
 import { createCoupon, updateCouponStatus } from "./coupon.service";
@@ -14,13 +15,14 @@ function optionalDate(value: FormDataEntryValue | null) {
 
 function couponErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message.includes("Unique constraint")) {
-    return "Ja existe um cupom com este codigo neste evento.";
+    return "Já existe um cupom com este código neste evento.";
   }
 
   return error instanceof Error ? error.message : fallback;
 }
 
 export async function createCouponAction(formData: FormData) {
+  await requirePermission("EVENTS");
   const eventId = String(formData.get("eventId") ?? "").trim();
   const type = String(formData.get("type") ?? CouponType.PERCENTAGE) as CouponType;
   const fixedAmount = Number(formData.get("amount") ?? 0);
@@ -41,10 +43,12 @@ export async function createCouponAction(formData: FormData) {
     redirect(`/admin/events/${eventId}?couponError=${encodeURIComponent("Verifique os dados do cupom.")}`);
   }
 
+  await requireEventAccess(eventId);
+
   try {
     await createCoupon(parsed.data);
   } catch (error) {
-    redirect(`/admin/events/${eventId}?couponError=${encodeURIComponent(couponErrorMessage(error, "Nao foi possivel salvar o cupom."))}`);
+    redirect(`/admin/events/${eventId}?couponError=${encodeURIComponent(couponErrorMessage(error, "Não foi possível salvar o cupom."))}`);
   }
 
   revalidatePath(`/admin/events/${eventId}`);
@@ -52,22 +56,25 @@ export async function createCouponAction(formData: FormData) {
 }
 
 export async function updateCouponStatusAction(formData: FormData) {
+  await requirePermission("EVENTS");
   const eventId = String(formData.get("eventId") ?? "").trim();
   const couponId = String(formData.get("couponId") ?? "").trim();
   const status = String(formData.get("status") ?? "").trim();
 
   if (!eventId || !couponId) {
-    redirect(`/admin/events/${eventId || ""}?couponError=${encodeURIComponent("Cupom nao informado.")}`);
+    redirect(`/admin/events/${eventId || ""}?couponError=${encodeURIComponent("Cupom não informado.")}`);
   }
 
+  await requireEventAccess(eventId);
+
   if (status !== CouponStatus.ACTIVE && status !== CouponStatus.PAUSED && status !== CouponStatus.EXPIRED) {
-    redirect(`/admin/events/${eventId}?couponError=${encodeURIComponent("Status invalido para o cupom.")}`);
+    redirect(`/admin/events/${eventId}?couponError=${encodeURIComponent("Status inválido para o cupom.")}`);
   }
 
   try {
     await updateCouponStatus(couponId, status as CouponStatus);
   } catch (error) {
-    redirect(`/admin/events/${eventId}?couponError=${encodeURIComponent(couponErrorMessage(error, "Nao foi possivel atualizar o cupom."))}`);
+    redirect(`/admin/events/${eventId}?couponError=${encodeURIComponent(couponErrorMessage(error, "Não foi possível atualizar o cupom."))}`);
   }
 
   revalidatePath(`/admin/events/${eventId}`);

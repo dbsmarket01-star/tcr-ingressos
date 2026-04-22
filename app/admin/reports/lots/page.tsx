@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { getLotSalesReport } from "@/features/reports/lot-sales-report.service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
@@ -13,9 +13,10 @@ type LotSalesReportPageProps = {
 export const dynamic = "force-dynamic";
 
 export default async function LotSalesReportPage({ searchParams }: LotSalesReportPageProps) {
-  await requirePermission("REPORTS");
+  const admin = await requirePermission("REPORTS");
   const params = searchParams ? await searchParams : {};
-  const report = await getLotSalesReport(params.eventId);
+  const allowedEventIds = getAdminAllowedEventIds(admin);
+  const report = await getLotSalesReport(params.eventId, allowedEventIds);
   const exportHref = `/admin/reports/lots/export?${new URLSearchParams({
     ...(params.eventId ? { eventId: params.eventId } : {})
   }).toString()}`;

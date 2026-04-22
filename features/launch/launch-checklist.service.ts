@@ -4,6 +4,7 @@ import { getPaymentHealth } from "@/features/settings/payment-health.service";
 import { getPublicEventUrl } from "@/lib/public-url";
 
 type LaunchStatus = "READY" | "WARNING" | "BLOCKED";
+type EventScope = string[] | null | undefined;
 
 type LaunchItem = {
   label: string;
@@ -62,8 +63,9 @@ function sortNextActions(items: LaunchItem[]) {
     .slice(0, 6);
 }
 
-export async function listLaunchEvents() {
+export async function listLaunchEvents(allowedEventIds?: EventScope) {
   return prisma.event.findMany({
+    where: allowedEventIds ? { id: { in: allowedEventIds } } : undefined,
     orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],
     select: {
       id: true,
@@ -74,15 +76,15 @@ export async function listLaunchEvents() {
   });
 }
 
-export async function getLaunchChecklist(eventId?: string) {
-  const events = await listLaunchEvents();
+export async function getLaunchChecklist(eventId?: string, allowedEventIds?: EventScope) {
+  const events = await listLaunchEvents(allowedEventIds);
   const selectedEventId = eventId || events[0]?.id || "";
   const [health, event] = await Promise.all([
     getPaymentHealth(),
     selectedEventId
-      ? prisma.event.findUnique({
+      ? prisma.event.findFirst({
           where: {
-            id: selectedEventId
+            AND: [{ id: selectedEventId }, ...(allowedEventIds ? [{ id: { in: allowedEventIds } }] : [])]
           },
           include: {
             lots: {

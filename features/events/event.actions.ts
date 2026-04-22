@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { createEvent, duplicateEvent, updateEvent, updateEventStatus } from "./event.service";
 import { eventDraftSchema } from "./event.schema";
 import { createAuditLog } from "@/features/audit/audit.service";
-import { requirePermission } from "@/features/auth/auth.service";
+import { requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { savePublicImageUpload } from "@/features/uploads/local-upload.service";
 
 function optionalDate(value: FormDataEntryValue | null) {
@@ -86,6 +86,7 @@ function validationMessage(error: unknown) {
 }
 
 export async function createEventAction(formData: FormData) {
+  await requirePermission("EVENTS");
   const title = String(formData.get("title") ?? "").trim();
   const rawSlug = String(formData.get("slug") ?? "").trim();
   const status = String(formData.get("status") ?? "DRAFT");
@@ -168,6 +169,7 @@ export async function createEventAction(formData: FormData) {
 }
 
 export async function updateEventAction(formData: FormData) {
+  await requirePermission("EVENTS");
   const eventId = String(formData.get("eventId") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
   const rawSlug = String(formData.get("slug") ?? "").trim();
@@ -176,6 +178,8 @@ export async function updateEventAction(formData: FormData) {
   if (!eventId) {
     throw new Error("Evento não informado.");
   }
+
+  await requireEventAccess(eventId);
 
   const slug = slugify(rawSlug || title);
   let bannerUploadUrl: string | null = null;
@@ -267,12 +271,15 @@ export async function updateEventAction(formData: FormData) {
 }
 
 export async function updateEventStatusAction(formData: FormData) {
+  await requirePermission("EVENTS");
   const eventId = String(formData.get("eventId") ?? "").trim();
   const status = String(formData.get("status") ?? "").trim();
 
   if (!eventId) {
     redirect(`/admin/events?eventError=${encodeURIComponent("Evento não informado.")}`);
   }
+
+  await requireEventAccess(eventId);
 
   if (status !== "DRAFT" && status !== "PUBLISHED" && status !== "UNPUBLISHED") {
     redirect(`/admin/events/${eventId}?eventError=${encodeURIComponent("Status inválido para esta ação.")}`);
@@ -297,6 +304,8 @@ export async function duplicateEventAction(formData: FormData) {
   if (!eventId) {
     redirect(`/admin/events?eventError=${encodeURIComponent("Evento não informado.")}`);
   }
+
+  await requireEventAccess(eventId);
 
   let duplicatedEvent: Awaited<ReturnType<typeof duplicateEvent>>;
 
