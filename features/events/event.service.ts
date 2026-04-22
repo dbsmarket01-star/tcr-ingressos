@@ -29,6 +29,11 @@ export async function listEvents() {
         orderBy: {
           createdAt: "desc"
         }
+      },
+      _count: {
+        select: {
+          leads: true
+        }
       }
     }
   });

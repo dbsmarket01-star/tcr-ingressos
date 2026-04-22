@@ -26,7 +26,22 @@ export async function GET(
 
   const leads = await listEventLeads(event.id);
 
-  const headers = ["Nome", "E-mail", "Telefone", "Evento", "Cidade", "UF", "Cadastrado em"];
+  const headers = [
+    "Nome",
+    "E-mail",
+    "Telefone",
+    "Evento",
+    "Cidade",
+    "UF",
+    "UTM source",
+    "UTM medium",
+    "UTM campaign",
+    "UTM content",
+    "UTM term",
+    "Referrer",
+    "Landing",
+    "Cadastrado em"
+  ];
   const rows = leads.map((lead) => [
     lead.name,
     lead.email,
@@ -34,6 +49,13 @@ export async function GET(
     event.title,
     event.city,
     event.state,
+    lead.utmSource || "",
+    lead.utmMedium || "",
+    lead.utmCampaign || "",
+    lead.utmContent || "",
+    lead.utmTerm || "",
+    lead.referrer || "",
+    lead.landingPage || "",
     formatDate(lead.createdAt)
   ]);
 

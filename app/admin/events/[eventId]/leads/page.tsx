@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { CopyButton } from "@/components/forms/CopyButton";
 import { requirePermission } from "@/features/auth/auth.service";
 import { getEventForManagement } from "@/features/events/event.service";
 import { listEventLeads } from "@/features/leads/lead.service";
 import { formatDateTime } from "@/lib/format";
 import { getPublicLeadCaptureUrl } from "@/lib/public-url";
+import { getSourceLabel } from "@/features/tracking/tracking";
 
 type EventLeadsPageProps = {
   params: Promise<{
@@ -26,6 +28,7 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
   const leadsWithPhone = leads.filter((lead) => Boolean(lead.phone)).length;
   const leadsWithEmail = leads.filter((lead) => Boolean(lead.email)).length;
   const exportHref = `/admin/events/${event.id}/leads/export`;
+  const publicLandingUrl = getPublicLeadCaptureUrl(event.slug);
 
   function getWhatsappUrl(phone?: string | null) {
     const digits = (phone ?? "").replace(/\D/g, "");
@@ -47,6 +50,12 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
             <Link className="secondaryButton smallButton" href={getPublicLeadCaptureUrl(event.slug)} target="_blank">
               Abrir landing
             </Link>
+            <CopyButton
+              className="secondaryButton smallButton"
+              value={publicLandingUrl}
+              label="Copiar link"
+              copiedLabel="Link copiado"
+            />
             <Link className="secondaryButton smallButton" href={`${getPublicLeadCaptureUrl(event.slug)}/obrigado`} target="_blank">
               Abrir obrigado
             </Link>
@@ -106,6 +115,7 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
                   <th>Nome</th>
                   <th>E-mail</th>
                   <th>Telefone</th>
+                  <th>Origem</th>
                   <th>Cadastrado em</th>
                   <th>Ações</th>
                 </tr>
@@ -116,6 +126,7 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
                     <td>{lead.name}</td>
                     <td>{lead.email}</td>
                     <td>{lead.phone || "-"}</td>
+                    <td>{getSourceLabel(lead.utmSource, lead.utmMedium)}</td>
                     <td>{formatDateTime(lead.createdAt)}</td>
                     <td>
                       <div className="tableActions">

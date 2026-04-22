@@ -22,7 +22,19 @@ export async function createOrUpdateEventLead(input: EventLeadInput) {
     throw new Error("Esta página de captação não está disponível no momento.");
   }
 
-  return prisma.eventLead.upsert({
+  const existingLead = await prisma.eventLead.findUnique({
+    where: {
+      eventId_email: {
+        eventId: event.id,
+        email: input.email
+      }
+    },
+    select: {
+      id: true
+    }
+  });
+
+  const lead = await prisma.eventLead.upsert({
     where: {
       eventId_email: {
         eventId: event.id,
@@ -31,15 +43,34 @@ export async function createOrUpdateEventLead(input: EventLeadInput) {
     },
     update: {
       name: input.name,
-      phone: sanitizePhone(input.phone)
+      phone: sanitizePhone(input.phone),
+      utmSource: input.utmSource || null,
+      utmMedium: input.utmMedium || null,
+      utmCampaign: input.utmCampaign || null,
+      utmContent: input.utmContent || null,
+      utmTerm: input.utmTerm || null,
+      referrer: input.referrer || null,
+      landingPage: input.landingPage || null
     },
     create: {
       eventId: event.id,
       name: input.name,
       email: input.email,
-      phone: sanitizePhone(input.phone)
+      phone: sanitizePhone(input.phone),
+      utmSource: input.utmSource || null,
+      utmMedium: input.utmMedium || null,
+      utmCampaign: input.utmCampaign || null,
+      utmContent: input.utmContent || null,
+      utmTerm: input.utmTerm || null,
+      referrer: input.referrer || null,
+      landingPage: input.landingPage || null
     }
   });
+
+  return {
+    lead,
+    isExisting: Boolean(existingLead)
+  };
 }
 
 export async function getLeadCaptureEventBySlug(slug: string) {

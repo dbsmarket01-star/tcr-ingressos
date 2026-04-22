@@ -31,7 +31,14 @@ export async function createEventLeadAction(formData: FormData) {
     eventSlug,
     name: String(formData.get("name") ?? "").trim(),
     email: String(formData.get("email") ?? "").trim(),
-    phone: String(formData.get("phone") ?? "").trim() || undefined
+    phone: String(formData.get("phone") ?? "").trim() || undefined,
+    utmSource: String(formData.get("utmSource") ?? "").trim() || undefined,
+    utmMedium: String(formData.get("utmMedium") ?? "").trim() || undefined,
+    utmCampaign: String(formData.get("utmCampaign") ?? "").trim() || undefined,
+    utmContent: String(formData.get("utmContent") ?? "").trim() || undefined,
+    utmTerm: String(formData.get("utmTerm") ?? "").trim() || undefined,
+    referrer: String(formData.get("referrer") ?? "").trim() || undefined,
+    landingPage: String(formData.get("landingPage") ?? "").trim() || undefined
   });
 
   if (!parsed.success) {
@@ -39,12 +46,15 @@ export async function createEventLeadAction(formData: FormData) {
   }
 
   try {
-    await createOrUpdateEventLead(parsed.data);
+    const result = await createOrUpdateEventLead(parsed.data);
+    revalidatePath(`/admin/events/${parsed.data.eventId}/leads`);
+    revalidatePath(`/admin/events/${parsed.data.eventId}`);
+
+    if (result.isExisting) {
+      redirect(`/lista/${eventSlug}/obrigado?existing=1`);
+    }
   } catch (error) {
     redirect(`/lista/${eventSlug}?error=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível concluir seu cadastro.")}`);
   }
-
-  revalidatePath(`/admin/events/${parsed.data.eventId}/leads`);
-  revalidatePath(`/admin/events/${parsed.data.eventId}`);
   redirect(`/lista/${eventSlug}/obrigado`);
 }

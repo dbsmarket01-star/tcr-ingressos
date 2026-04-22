@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { createEventLeadAction } from "@/features/leads/lead.actions";
 import { getLeadCaptureEventBySlug } from "@/features/leads/lead.service";
+import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { formatDateTime } from "@/lib/format";
 
 type LeadCapturePageProps = {
@@ -94,6 +95,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
     event.leadCaptureOfferText || "Entre na lista e receba condições especiais na abertura das vendas.";
   const ctaText = event.leadCaptureCtaText || "Garantir meu super desconto";
   const youtubeEmbedUrl = getYoutubeEmbedUrl(event.leadCaptureVideoUrl);
+  const tracking = getTrackingParamsFromSearch(query, `/lista/${event.slug}`);
 
   return (
     <main className="shell leadCaptureShell">
@@ -133,6 +135,13 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
           <form action={createEventLeadAction} className="leadCaptureForm card" id="lead-capture-form">
             <input type="hidden" name="eventId" value={event.id} />
             <input type="hidden" name="eventSlug" value={event.slug} />
+            <input type="hidden" name="utmSource" value={tracking.utmSource || ""} />
+            <input type="hidden" name="utmMedium" value={tracking.utmMedium || ""} />
+            <input type="hidden" name="utmCampaign" value={tracking.utmCampaign || ""} />
+            <input type="hidden" name="utmContent" value={tracking.utmContent || ""} />
+            <input type="hidden" name="utmTerm" value={tracking.utmTerm || ""} />
+            <input type="hidden" name="referrer" value={tracking.referrer || ""} />
+            <input type="hidden" name="landingPage" value={tracking.landingPage || ""} />
             <h2>Garanta sua prioridade</h2>
             <p className="muted">
               Preencha seus dados para entrar na lista de interesse e receber a abertura deste evento.

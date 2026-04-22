@@ -7,6 +7,7 @@ type LeadCaptureThankYouPageProps = {
   params: Promise<{
     slug: string;
   }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export const metadata: Metadata = {
@@ -16,8 +17,9 @@ export const metadata: Metadata = {
   }
 };
 
-export default async function LeadCaptureThankYouPage({ params }: LeadCaptureThankYouPageProps) {
+export default async function LeadCaptureThankYouPage({ params, searchParams }: LeadCaptureThankYouPageProps) {
   const { slug } = await params;
+  const query = searchParams ? await searchParams : {};
   const event = await getLeadCaptureEventBySlug(slug);
 
   if (!event) {
@@ -30,6 +32,7 @@ export default async function LeadCaptureThankYouPage({ params }: LeadCaptureTha
     "Entre agora no grupo oficial para receber as informações do evento e a oferta especial de abertura.";
   const buttonText = event.leadCaptureThankYouButtonText || "Quero entrar no grupo oficial no WhatsApp";
   const location = [event.city, event.state].filter(Boolean).join(", ");
+  const isExistingLead = query.existing === "1";
 
   return (
     <main className="shell leadCaptureThanksShell">
@@ -43,6 +46,11 @@ export default async function LeadCaptureThankYouPage({ params }: LeadCaptureTha
       <section className="leadThankYouCard card">
         <span className="leadEyebrow">Cadastro confirmado</span>
         <h1>{title}</h1>
+        {isExistingLead ? (
+          <div className="infoBox">
+            Você já estava nesta lista. Atualizamos seus dados e mantivemos seu acesso à próxima etapa.
+          </div>
+        ) : null}
         <p>{description}</p>
         <div className="leadCaptureMeta leadThankYouMeta">
           <span>{event.title}</span>

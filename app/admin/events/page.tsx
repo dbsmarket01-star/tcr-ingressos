@@ -52,6 +52,11 @@ export default async function EventsPage() {
           <strong>{preparedEvents}</strong>
           <small>Eventos com lotes prontos para vender</small>
         </article>
+        <article className="card metric">
+          <span className="muted">Captações ativas</span>
+          <strong>{events.filter((event) => event.leadCaptureEnabled).length}</strong>
+          <small>{events.reduce((sum, event) => sum + (event._count?.leads ?? 0), 0)} leads captados no total</small>
+        </article>
       </section>
 
       <section className="card">
@@ -135,6 +140,14 @@ export default async function EventsPage() {
                         <span className={`operationHint ${hasLots ? "ok" : "warning"}`}>
                           {hasLots ? "Operação preparada" : "Cadastre lotes para vender"}
                         </span>
+                        {event.leadCaptureEnabled ? (
+                          <>
+                            <br />
+                            <span className="muted">
+                              Captação ativa • {event._count?.leads ?? 0} lead(s)
+                            </span>
+                          </>
+                        ) : null}
                       </td>
                       <td>
                         <div className="actionRow">

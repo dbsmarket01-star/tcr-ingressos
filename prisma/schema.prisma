@@ -351,6 +351,13 @@ model EventLead {
   name       String
   email      String
   phone      String?
+  utmSource  String?
+  utmMedium  String?
+  utmCampaign String?
+  utmContent String?
+  utmTerm    String?
+  referrer   String?
+  landingPage String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
