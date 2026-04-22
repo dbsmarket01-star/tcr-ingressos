@@ -19,6 +19,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const hasError = params.error === "invalid";
   const wasReset = params.reset === "1";
   const organizationContext = await getCurrentOrganizationContext();
+  const isPlatformHost = organizationContext.isPlatformHost;
 
   return (
     <main className="loginShell loginShellAdmin">
@@ -31,10 +32,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
           <div>
             <p className="publicBadge">Acesso interno</p>
-            <h2>Bem-vindo de volta</h2>
+            <h2>{isPlatformHost ? `Acesso à ${organizationContext.platformName}` : "Bem-vindo de volta"}</h2>
             <p className="muted">
-              Entre para acompanhar vendas, check-in, pedidos, leads e a operação da {organizationContext.brandName}
-              em um só lugar.
+              {isPlatformHost
+                ? `Entre para administrar a plataforma, organizar operações filhas e acompanhar a evolução da ${organizationContext.platformName}.`
+                : `Entre para acompanhar vendas, check-in, pedidos, leads e a operação da ${organizationContext.brandName} em um só lugar.`}
             </p>
           </div>
 
@@ -90,25 +92,42 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </div>
 
           <div className="loginIntroCopy">
-            <h1>Seu painel de operação com leitura mais clara e ritmo de evento real.</h1>
+            <h1>
+              {isPlatformHost
+                ? "O painel que sustenta várias bilheterias embaixo da mesma base."
+                : "Seu painel de operação com leitura mais clara e ritmo de evento real."}
+            </h1>
             <p>
-              Centralize bilheteria, equipe, atendimento e acompanhamento comercial com uma
-              experiência mais segura para quem opera e mais profissional para quem vende.
+              {isPlatformHost
+                ? `A ${organizationContext.platformName} centraliza o motor da plataforma, enquanto cada operação filha mantém domínio, eventos e equipe próprios.`
+                : "Centralize bilheteria, equipe, atendimento e acompanhamento comercial com uma experiência mais segura para quem opera e mais profissional para quem vende."}
             </p>
           </div>
 
           <div className="loginFeatureStack" aria-label="Recursos do painel">
             <article className="loginFeatureCard">
-              <strong>Análises em tempo real</strong>
-              <span>Acompanhe faturamento, pedidos e desempenho por evento.</span>
+              <strong>{isPlatformHost ? "Operações separadas" : "Análises em tempo real"}</strong>
+              <span>
+                {isPlatformHost
+                  ? "Cada bilheteria roda com seu próprio domínio, sua própria identidade e seus próprios eventos."
+                  : "Acompanhe faturamento, pedidos e desempenho por evento."}
+              </span>
             </article>
             <article className="loginFeatureCard">
-              <strong>Check-in com QR Code</strong>
-              <span>Validação rápida para portaria e operação no dia do evento.</span>
+              <strong>{isPlatformHost ? "Motor único" : "Check-in com QR Code"}</strong>
+              <span>
+                {isPlatformHost
+                  ? "Pagamentos, ingressos, leads, QR Code e check-in continuam rodando na mesma base."
+                  : "Validação rápida para portaria e operação no dia do evento."}
+              </span>
             </article>
             <article className="loginFeatureCard">
-              <strong>Gestão de equipe</strong>
-              <span>Libere acessos internos e, quando precisar, restrinja por evento.</span>
+              <strong>{isPlatformHost ? "Escala sem duplicar código" : "Gestão de equipe"}</strong>
+              <span>
+                {isPlatformHost
+                  ? "A evolução da plataforma acontece uma vez e beneficia todas as operações embaixo dela."
+                  : "Libere acessos internos e, quando precisar, restrinja por evento."}
+              </span>
             </article>
           </div>
         </div>

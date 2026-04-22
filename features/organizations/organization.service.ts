@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getPlatformAppUrl, getPlatformHost, getPlatformName, isPlatformHost } from "@/features/platform/platform.service";
 import { getRequestHost, normalizeHost } from "@/lib/request-host";
 
 export const DEFAULT_ORGANIZATION_SLUG = "tcr-ingressos";
@@ -32,6 +33,10 @@ export type OrganizationContext = {
   requestHost: string | null;
   isMatchedByHost: boolean;
   isAdminHost: boolean;
+  isPlatformHost: boolean;
+  platformName: string;
+  platformHost: string | null;
+  platformAppUrl: string;
   publicBaseUrl: string;
   adminBaseUrl: string | null;
   brandName: string;
@@ -82,12 +87,18 @@ function buildOrganizationContext(
   const normalizedRequestHost = normalizeHost(requestHost);
   const normalizedAdminHost = normalizeHost(organization.adminDomain);
   const publicBaseUrl = buildHttpsUrl(organization.publicDomain) || getFallbackPublicBaseUrl();
+  const platformHost = getPlatformHost();
+  const platformName = getPlatformName();
 
   return {
     organization,
     requestHost: normalizedRequestHost,
     isMatchedByHost,
     isAdminHost: Boolean(normalizedRequestHost && normalizedAdminHost && normalizedRequestHost === normalizedAdminHost),
+    isPlatformHost: isPlatformHost(normalizedRequestHost),
+    platformName,
+    platformHost,
+    platformAppUrl: getPlatformAppUrl(),
     publicBaseUrl,
     adminBaseUrl: buildHttpsUrl(organization.adminDomain),
     brandName: organization.name,
