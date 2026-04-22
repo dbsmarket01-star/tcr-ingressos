@@ -44,7 +44,9 @@ function validationMessage(error: unknown) {
         salesEndsAt: "Fim das vendas",
         bannerUrl: "Banner do evento",
         bannerPosition: "Exibição do banner",
+        bannerCrop: "Enquadramento do banner",
         eventMapImageUrl: "Mapa do evento",
+        eventMapCrop: "Enquadramento do mapa",
         eventMapTemplate: "Modelo do mapa",
         eventMapNotes: "Observações do mapa",
         metaPixelId: "Meta Pixel ID",
@@ -58,6 +60,7 @@ function validationMessage(error: unknown) {
         leadCaptureOfferText: "Oferta da captação",
         leadCaptureCtaText: "Texto do botão da captação",
         leadCaptureHeroImageUrl: "Imagem da captação",
+        leadCaptureHeroCrop: "Enquadramento da imagem da captação",
         leadCaptureVideoUrl: "Vídeo da captação",
         leadCaptureWhatsappGroupUrl: "Link do grupo de WhatsApp",
         leadCaptureThankYouTitle: "Título do agradecimento",
@@ -116,7 +119,9 @@ export async function createEventAction(formData: FormData) {
     salesEndsAt: optionalDate(formData.get("salesEndsAt")),
     bannerUrl: bannerUploadUrl || String(formData.get("bannerUrl") ?? "").trim(),
     bannerPosition: String(formData.get("bannerPosition") ?? "center center"),
+    bannerCrop: String(formData.get("bannerCrop") ?? "").trim() || undefined,
     eventMapImageUrl: mapUploadUrl || String(formData.get("eventMapImageUrl") ?? "").trim(),
+    eventMapCrop: String(formData.get("eventMapCrop") ?? "").trim() || undefined,
     eventMapTemplate: String(formData.get("eventMapTemplate") ?? "AUTO"),
     eventMapNotes: String(formData.get("eventMapNotes") ?? "").trim() || undefined,
     importantInfo: String(formData.get("importantInfo") ?? "").trim() || undefined,
@@ -133,6 +138,7 @@ export async function createEventAction(formData: FormData) {
     leadCaptureOfferText: String(formData.get("leadCaptureOfferText") ?? "").trim() || undefined,
     leadCaptureCtaText: String(formData.get("leadCaptureCtaText") ?? "").trim() || undefined,
     leadCaptureHeroImageUrl: leadHeroUploadUrl || String(formData.get("leadCaptureHeroImageUrl") ?? "").trim(),
+    leadCaptureHeroCrop: String(formData.get("leadCaptureHeroCrop") ?? "").trim() || undefined,
     leadCaptureVideoUrl: String(formData.get("leadCaptureVideoUrl") ?? "").trim() || undefined,
     leadCaptureWhatsappGroupUrl: String(formData.get("leadCaptureWhatsappGroupUrl") ?? "").trim() || undefined,
     leadCaptureThankYouTitle: String(formData.get("leadCaptureThankYouTitle") ?? "").trim() || undefined,
@@ -204,7 +210,12 @@ export async function updateEventAction(formData: FormData) {
       String(formData.get("bannerUrl") ?? "").trim() ||
       String(formData.get("currentBannerUrl") ?? "").trim(),
     bannerPosition: String(formData.get("bannerPosition") ?? "center center"),
-    eventMapImageUrl: mapUploadUrl || String(formData.get("eventMapImageUrl") ?? "").trim(),
+    bannerCrop: String(formData.get("bannerCrop") ?? "").trim() || undefined,
+    eventMapImageUrl:
+      mapUploadUrl ||
+      String(formData.get("eventMapImageUrl") ?? "").trim() ||
+      String(formData.get("currentEventMapImageUrl") ?? "").trim(),
+    eventMapCrop: String(formData.get("eventMapCrop") ?? "").trim() || undefined,
     eventMapTemplate: String(formData.get("eventMapTemplate") ?? "AUTO"),
     eventMapNotes: String(formData.get("eventMapNotes") ?? "").trim() || undefined,
     importantInfo: String(formData.get("importantInfo") ?? "").trim() || undefined,
@@ -224,6 +235,7 @@ export async function updateEventAction(formData: FormData) {
       leadHeroUploadUrl ||
       String(formData.get("leadCaptureHeroImageUrl") ?? "").trim() ||
       String(formData.get("currentLeadCaptureHeroImageUrl") ?? "").trim(),
+    leadCaptureHeroCrop: String(formData.get("leadCaptureHeroCrop") ?? "").trim() || undefined,
     leadCaptureVideoUrl: String(formData.get("leadCaptureVideoUrl") ?? "").trim() || undefined,
     leadCaptureWhatsappGroupUrl: String(formData.get("leadCaptureWhatsappGroupUrl") ?? "").trim() || undefined,
     leadCaptureThankYouTitle: String(formData.get("leadCaptureThankYouTitle") ?? "").trim() || undefined,

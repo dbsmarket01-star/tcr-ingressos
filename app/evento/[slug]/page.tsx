@@ -11,6 +11,7 @@ import { calculatePixDiscountInCents, calculateServiceFeeInCents } from "@/featu
 import { buildEventSeo } from "@/features/seo/event-seo";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { imageCropFromBannerPosition, imageCropStyle, parseImageCrop } from "@/lib/image-crop";
 import { TrackingRuntime } from "./TrackingRuntime";
 import { CheckoutEstimator } from "./CheckoutEstimator";
 
@@ -88,6 +89,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const heroImage =
     event.bannerUrl ||
     "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1600&q=80";
+  const bannerCrop = parseImageCrop(event.bannerCrop) || imageCropFromBannerPosition(event.bannerPosition);
+  const mapCrop = parseImageCrop(event.eventMapCrop);
   const socialProofText = event.conversionSocialProofText?.trim() || "Vendas abertas";
   const urgencyText =
     event.conversionUrgencyText ||
@@ -167,13 +170,14 @@ export default async function EventPage({ params, searchParams }: EventPageProps
       </header>
 
       <section className="publicHero">
-        <div className="publicHeroMedia">
+        <div className={`publicHeroMedia ${bannerCrop ? "hasCrop" : ""}`}>
           <img
-            className="publicHeroImage"
+            className={`publicHeroImage ${bannerCrop ? "croppedImage" : ""}`}
             src={heroImage}
             alt={`Banner do evento ${event.title}`}
             decoding="async"
             loading="eager"
+            style={imageCropStyle(bannerCrop)}
           />
         </div>
         <div className="publicHeroInner">
@@ -233,12 +237,14 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           {event.eventMapImageUrl ? (
             <section className="contentBlock">
               <h2>Mapa do evento</h2>
-              <div className="eventMapImageFrame">
+              <div className={`eventMapImageFrame ${mapCrop ? "hasCrop" : ""}`}>
                 <img
+                  className={mapCrop ? "croppedImage" : ""}
                   src={event.eventMapImageUrl}
                   alt={`Mapa do evento - ${event.title}`}
                   decoding="async"
                   loading="lazy"
+                  style={imageCropStyle(mapCrop)}
                 />
               </div>
               {event.eventMapNotes ? <p className="mapNotes">{event.eventMapNotes}</p> : null}

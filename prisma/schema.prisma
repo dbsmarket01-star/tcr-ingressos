@@ -293,7 +293,9 @@ model Event {
   description         String
   bannerUrl           String?
   bannerPosition      String      @default("center center")
+  bannerCrop          String?
   eventMapImageUrl    String?
+  eventMapCrop        String?
   eventMapTemplate    String      @default("AUTO")
   eventMapNotes       String?
   startsAt            DateTime
@@ -319,6 +321,7 @@ model Event {
   leadCaptureOfferText String?
   leadCaptureCtaText  String?
   leadCaptureHeroImageUrl String?
+  leadCaptureHeroCrop String?
   leadCaptureVideoUrl String?
   leadCaptureWhatsappGroupUrl String?
   leadCaptureThankYouTitle String?

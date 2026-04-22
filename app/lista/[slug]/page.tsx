@@ -6,6 +6,7 @@ import { createEventLeadAction } from "@/features/leads/lead.actions";
 import { getLeadCaptureEventBySlug } from "@/features/leads/lead.service";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { formatDateTime } from "@/lib/format";
+import { imageCropStyle, parseImageCrop } from "@/lib/image-crop";
 
 type LeadCapturePageProps = {
   params: Promise<{
@@ -85,6 +86,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
     event.leadCaptureHeroImageUrl ||
     event.bannerUrl ||
     "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1800&q=80";
+  const leadHeroCrop = parseImageCrop(event.leadCaptureHeroCrop) || parseImageCrop(event.bannerCrop);
   const error = typeof query.error === "string" ? query.error : null;
   const headline = event.leadCaptureHeadline || event.title;
   const description =
@@ -110,8 +112,13 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
       </header>
 
       <section className="leadCaptureHero">
-        <div className="leadCaptureHeroMedia">
-          <img alt={headline} src={heroImage} />
+        <div className={`leadCaptureHeroMedia ${leadHeroCrop ? "hasCrop" : ""}`}>
+          <img
+            className={leadHeroCrop ? "croppedImage" : ""}
+            alt={headline}
+            src={heroImage}
+            style={imageCropStyle(leadHeroCrop)}
+          />
         </div>
         <div className="leadCaptureHeroContent">
           <span className="leadEyebrow">Lista de interesse oficial</span>

@@ -1,6 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  type ImageCrop,
+  parseImageCrop,
+  sanitizeImageCrop,
+  stringifyImageCrop
+} from "@/lib/image-crop";
 
 const MAX_PREVIEW_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 
@@ -13,6 +19,8 @@ type ImageUploadFieldProps = {
   recommendedSize?: string;
   usageHint?: string;
   aspect?: "banner" | "map" | "share";
+  cropFieldName?: string;
+  currentCropValue?: string | null;
 };
 
 type ImageMeta = {
@@ -75,12 +83,15 @@ export function ImageUploadField({
   emptyText = "Nenhuma imagem selecionada",
   recommendedSize,
   usageHint,
-  aspect = "banner"
+  aspect = "banner",
+  cropFieldName,
+  currentCropValue
 }: ImageUploadFieldProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl ?? null);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [imageMeta, setImageMeta] = useState<ImageMeta | null>(null);
+  const [crop, setCrop] = useState<ImageCrop>(() => sanitizeImageCrop(parseImageCrop(currentCropValue)));
 
   useEffect(() => {
     if (!previewUrl) {
@@ -113,7 +124,12 @@ export function ImageUploadField({
     };
   }, [objectUrl]);
 
+  useEffect(() => {
+    setCrop(sanitizeImageCrop(parseImageCrop(currentCropValue)));
+  }, [currentCropValue]);
+
   const aspectAnalysis = analyzeAspect(imageMeta, aspect);
+  const cropValue = stringifyImageCrop(crop);
 
   return (
     <label className={`field fileDropField imageUploadField imageUpload${aspect}`}>
@@ -134,8 +150,17 @@ export function ImageUploadField({
       {previewUrl ? (
         <div className="imageUploadPublicPreview">
           <span>Prévia aproximada do espaço público</span>
-          <div className={`imageUploadPublicFrame imageUploadPublicFrame${aspect}`}>
-            <img src={previewUrl} alt="" />
+          <div className={`imageUploadPublicFrame imageUploadPublicFrame${aspect} ${cropFieldName ? "hasCrop" : ""}`}>
+            <img
+              className={cropFieldName ? "croppedImage" : ""}
+              src={previewUrl}
+              alt=""
+              style={cropFieldName ? {
+                objectPosition: `${crop.x}% ${crop.y}%`,
+                transform: `scale(${crop.zoom})`,
+                transformOrigin: `${crop.x}% ${crop.y}%`
+              } : undefined}
+            />
           </div>
           {imageMeta ? (
             <small>
@@ -148,6 +173,87 @@ export function ImageUploadField({
         <div className={`imageAspectNotice is${aspectAnalysis.tone}`}>
           <strong>{aspectAnalysis.title}</strong>
           <small>{aspectAnalysis.text}</small>
+        </div>
+      ) : null}
+      {previewUrl && cropFieldName ? (
+        <div className="imageCropTool">
+          <div className="imageCropToolHeader">
+            <div>
+              <strong>Recorte guiado</strong>
+              <small>Essa prévia se aproxima de como a imagem aparece para o cliente final.</small>
+            </div>
+          </div>
+          <div className={`imageCropStage imageCropStage${aspect}`}>
+            <img
+              src={previewUrl}
+              alt=""
+              style={{
+                objectPosition: `${crop.x}% ${crop.y}%`,
+                transform: `scale(${crop.zoom})`,
+                transformOrigin: `${crop.x}% ${crop.y}%`
+              }}
+            />
+          </div>
+          <div className="imageCropControls">
+            <label className="field">
+              <span>Zoom</span>
+              <input
+                type="range"
+                min="1"
+                max="2.5"
+                step="0.05"
+                value={crop.zoom}
+                onChange={(event) =>
+                  setCrop((current) =>
+                    sanitizeImageCrop({
+                      ...current,
+                      zoom: Number(event.target.value)
+                    })
+                  )
+                }
+              />
+              <small>{crop.zoom.toFixed(2)}x</small>
+            </label>
+            <label className="field">
+              <span>Horizontal</span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value={crop.x}
+                onChange={(event) =>
+                  setCrop((current) =>
+                    sanitizeImageCrop({
+                      ...current,
+                      x: Number(event.target.value)
+                    })
+                  )
+                }
+              />
+              <small>{Math.round(crop.x)}%</small>
+            </label>
+            <label className="field">
+              <span>Vertical</span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value={crop.y}
+                onChange={(event) =>
+                  setCrop((current) =>
+                    sanitizeImageCrop({
+                      ...current,
+                      y: Number(event.target.value)
+                    })
+                  )
+                }
+              />
+              <small>{Math.round(crop.y)}%</small>
+            </label>
+          </div>
+          <input type="hidden" name={cropFieldName} value={cropValue} />
         </div>
       ) : null}
       <input
@@ -178,6 +284,7 @@ export function ImageUploadField({
 
           setObjectUrl(nextObjectUrl);
           setPreviewUrl(nextObjectUrl);
+          setCrop(sanitizeImageCrop(null));
           setLocalError(null);
         }}
       />

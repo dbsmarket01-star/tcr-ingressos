@@ -72,21 +72,22 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               name="bannerFile"
               label="Banner do evento"
               recommendedSize="Ideal: 1920 x 840 px"
-              usageHint="Envie a arte final do evento. O sistema agora preserva a imagem inteira na página pública, sem depender de ajuste manual."
+              usageHint="Envie a arte final do evento e use o recorte guiado para simular como ela ficará no topo público."
               help="JPG, PNG, WEBP ou GIF ate 10MB."
               aspect="banner"
+              cropFieldName="bannerCrop"
             />
           </div>
           <div className="mediaSizingGuide">
             <div>
               <span>Banner topo</span>
               <strong>1920 x 840 px</strong>
-              <p>Use arte horizontal. A página pública exibe a imagem inteira, então você não precisa mais ficar ajustando o corte na mão.</p>
+              <p>Use arte horizontal e ajuste o enquadramento na própria prévia guiada antes de salvar.</p>
             </div>
             <div>
               <span>Dica prática</span>
-              <strong>Arte pronta</strong>
-              <p>Se o banner já vier com título e personagens bem distribuídos, ele tende a ficar correto no desktop e no mobile sem retrabalho.</p>
+              <strong>Área segura</strong>
+              <p>Se título e personagens estiverem no centro útil da arte, o recorte guiado tende a funcionar muito bem no desktop e no mobile.</p>
             </div>
           </div>
         </div>
@@ -234,9 +235,10 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               name="leadCaptureHeroFile"
               label="Imagem da captação"
               recommendedSize="Ideal: 1600 x 900 px"
-              usageHint="Use uma arte bonita e informativa. Essa imagem aparece só na landing de captura, separada da página de venda."
+              usageHint="Use uma arte bonita e informativa. O recorte guiado mostra como ela ficará no topo da landing."
               help="JPG, PNG, WEBP ou GIF até 10MB."
               aspect="banner"
+              cropFieldName="leadCaptureHeroCrop"
             />
           </div>
           <label className="field">
@@ -319,6 +321,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               usageHint="Mostre palco, setores e acessos principais. A página exibirá o mapa inteiro, sem cortar."
               help="Opcional. JPG, PNG, WEBP ou GIF até 10MB."
               aspect="map"
+              cropFieldName="eventMapCrop"
             />
           </div>
           <div className="mediaSizingGuide">

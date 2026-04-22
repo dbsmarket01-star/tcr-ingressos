@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const imageUrlSchema = z.string().url().optional().or(z.literal("")).or(z.string().startsWith("/uploads/"));
+const imageCropSchema = z.string().max(120).optional();
 const bannerPositionSchema = z
   .enum([
     "left top",
@@ -65,7 +66,9 @@ export const eventDraftSchema = z.object({
   salesEndsAt: z.coerce.date().optional(),
   bannerUrl: imageUrlSchema,
   bannerPosition: bannerPositionSchema,
+  bannerCrop: imageCropSchema,
   eventMapImageUrl: imageUrlSchema,
+  eventMapCrop: imageCropSchema,
   eventMapTemplate: eventMapTemplateSchema,
   eventMapNotes: z.string().max(500).optional(),
   importantInfo: z.string().optional(),
@@ -82,6 +85,7 @@ export const eventDraftSchema = z.object({
   leadCaptureOfferText: z.string().max(160).optional(),
   leadCaptureCtaText: z.string().max(80).optional(),
   leadCaptureHeroImageUrl: imageUrlSchema,
+  leadCaptureHeroCrop: imageCropSchema,
   leadCaptureVideoUrl: youtubeUrlSchema,
   leadCaptureWhatsappGroupUrl: whatsappGroupUrlSchema,
   leadCaptureThankYouTitle: z.string().max(120).optional(),

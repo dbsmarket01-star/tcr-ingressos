@@ -64,6 +64,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
       <form action={updateEventAction} className="card form wideForm">
         <input type="hidden" name="eventId" value={event.id} />
         <input type="hidden" name="currentBannerUrl" value={event.bannerUrl ?? ""} />
+        <input type="hidden" name="currentEventMapImageUrl" value={event.eventMapImageUrl ?? ""} />
         <input type="hidden" name="currentLeadCaptureHeroImageUrl" value={event.leadCaptureHeroImageUrl ?? ""} />
 
         <section className="adminPanelHero compact">
@@ -132,23 +133,25 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               name="bannerFile"
               label="Trocar banner"
               currentImageUrl={event.bannerUrl}
+              currentCropValue={event.bannerCrop}
               recommendedSize="Ideal: 1920 x 840 px"
-              usageHint="Envie a arte final. A página pública agora preserva a imagem inteira, sem depender de ajuste manual de enquadramento."
+              usageHint="Envie a arte final e use o recorte guiado para pré-visualizar o enquadramento no topo público."
               help="JPG, PNG, WEBP ou GIF ate 10MB para substituir o banner atual."
               emptyText="Sem banner atual"
               aspect="banner"
+              cropFieldName="bannerCrop"
             />
           </div>
           <div className="mediaSizingGuide">
             <div>
               <span>Banner topo</span>
               <strong>1920 x 840 px</strong>
-              <p>Use arte horizontal. O topo público foi simplificado para mostrar a imagem inteira com mais fidelidade no desktop e no mobile.</p>
+              <p>Use arte horizontal. O recorte guiado te mostra antes de salvar o que vai aparecer no desktop e no mobile.</p>
             </div>
             <div>
-              <span>Sem ajuste manual</span>
-              <strong>Mais prático</strong>
-              <p>Você só precisa enviar a arte. Retiramos o campo de URL e o seletor de enquadramento para deixar esse bloco mais rápido e confiável.</p>
+              <span>Recorte guiado</span>
+              <strong>Mais seguro</strong>
+              <p>Você envia a arte, ajusta o enquadramento com a prévia e salva sem depender daquele seletor antigo confuso.</p>
             </div>
           </div>
         </div>
@@ -343,11 +346,13 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               name="leadCaptureHeroFile"
               label="Imagem da captação"
               currentImageUrl={event.leadCaptureHeroImageUrl ?? undefined}
+              currentCropValue={event.leadCaptureHeroCrop}
               recommendedSize="Ideal: 1600 x 900 px"
-              usageHint="Essa imagem aparece só na landing de captação, sem misturar com a página de venda."
+              usageHint="Essa imagem aparece só na landing de captação. Use o recorte guiado para deixar a arte bem encaixada."
               help="Use JPG, PNG, WEBP ou GIF até 10MB."
               emptyText="Sem imagem da captação"
               aspect="banner"
+              cropFieldName="leadCaptureHeroCrop"
             />
           </div>
           <label className="field">
@@ -429,11 +434,13 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               name="eventMapFile"
               label="Trocar imagem do mapa"
               currentImageUrl={event.eventMapImageUrl}
+              currentCropValue={event.eventMapCrop}
               recommendedSize="Ideal: 1200 x 900 px"
-              usageHint="A página pública exibirá o mapa inteiro, sem cortar. Se não houver imagem, usa os lotes ativos como setores."
+              usageHint="Use o recorte guiado para enquadrar o mapa do jeito que ele deve aparecer para o cliente final."
               help="Use JPG, PNG, WEBP ou GIF até 10MB."
               emptyText="Sem mapa atual"
               aspect="map"
+              cropFieldName="eventMapCrop"
             />
           </div>
           <div className="mediaSizingGuide">
@@ -444,8 +451,8 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
             </div>
             <div>
               <span>Exibição pública</span>
-              <strong>Sem recorte</strong>
-              <p>O mapa aparece inteiro dentro de uma moldura. Se a arte for vertical, pode sobrar margem lateral.</p>
+              <strong>Com prévia guiada</strong>
+              <p>Agora você consegue simular o enquadramento final antes de salvar, em vez de descobrir o problema só na página pública.</p>
             </div>
           </div>
         </details>
