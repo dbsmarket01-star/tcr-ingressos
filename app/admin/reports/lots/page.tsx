@@ -22,10 +22,18 @@ export default async function LotSalesReportPage({ searchParams }: LotSalesRepor
 
   return (
     <AdminShell
-      title="Relatorios"
+      title="Relatórios"
       description="Acompanhe vendas, capacidade e receita por evento e por lote de ingresso."
     >
-      <section className="card financeFilters">
+      <section className="adminPanelHero compact">
+        <div>
+          <span className="sectionEyebrow">Leitura analítica</span>
+          <h2>Relatórios mais claros para decisão</h2>
+          <p className="muted">Os filtros, métricas e alertas agora ficam em blocos separados para você bater o olho e agir mais rápido.</p>
+        </div>
+      </section>
+
+      <section className="card financeFilters adminPanelBlock">
         <form className="financeFiltersForm">
           <label className="field">
             <span>Evento</span>
@@ -50,7 +58,7 @@ export default async function LotSalesReportPage({ searchParams }: LotSalesRepor
         </form>
       </section>
 
-      <section className="grid dashboardGrid">
+      <section className="grid dashboardGrid adminMetricsDense">
         <article className="card metric">
           <span className="muted">Lotes</span>
           <strong>{report.totals.totalLots}</strong>
@@ -68,7 +76,7 @@ export default async function LotSalesReportPage({ searchParams }: LotSalesRepor
           <strong>{report.totals.totalReserved}</strong>
         </article>
         <article className="card metric">
-          <span className="muted">Disponiveis</span>
+          <span className="muted">Disponíveis</span>
           <strong>{report.totals.totalAvailable}</strong>
         </article>
         <article className="card metric">
@@ -76,7 +84,7 @@ export default async function LotSalesReportPage({ searchParams }: LotSalesRepor
           <strong>{formatCurrency(report.totals.totalGrossInCents)}</strong>
         </article>
         <article className="card metric">
-          <span className="muted">Ocupacao</span>
+          <span className="muted">Ocupação</span>
           <strong>{report.totals.totalOccupancyPercent}%</strong>
         </article>
         <article className="card metric">
@@ -84,7 +92,7 @@ export default async function LotSalesReportPage({ searchParams }: LotSalesRepor
           <strong>{report.totals.totalCheckInPercent}%</strong>
         </article>
         <article className="card metric">
-          <span className="muted">Ticket medio</span>
+          <span className="muted">Ticket médio</span>
           <strong>{formatCurrency(report.totals.averageGrossPerSoldTicketInCents)}</strong>
         </article>
         <article className="card metric">
@@ -93,7 +101,7 @@ export default async function LotSalesReportPage({ searchParams }: LotSalesRepor
         </article>
       </section>
 
-      <section className="card spacedSection">
+      <section className="card spacedSection adminPanelBlock">
         <div className="sectionHeader inlineHeader">
           <h2>Alertas operacionais</h2>
         </div>
@@ -115,11 +123,11 @@ export default async function LotSalesReportPage({ searchParams }: LotSalesRepor
         )}
       </section>
 
-      <section className="card spacedSection">
+      <section className="card spacedSection adminPanelBlock">
         {report.rows.length === 0 ? (
           <div className="empty">Nenhum lote encontrado para os filtros selecionados.</div>
         ) : (
-          <div className="tableScroll wideTableScroll">
+          <div className="tableScroll wideTableScroll adminTableWrap">
           <table className="table operationalTable">
             <thead>
               <tr>
@@ -127,12 +135,12 @@ export default async function LotSalesReportPage({ searchParams }: LotSalesRepor
                 <th>Lote</th>
                 <th>Status</th>
                 <th>Alerta</th>
-                <th>Preco</th>
+                <th>Preço</th>
                 <th>Vendido / Total</th>
                 <th>Reservado</th>
-                <th>Disponivel</th>
+                <th>Disponível</th>
                 <th>Check-ins</th>
-                <th>Ticket medio</th>
+                <th>Ticket médio</th>
                 <th>Taxas</th>
                 <th>Bruto</th>
               </tr>

@@ -440,6 +440,59 @@ textarea {
   max-width: 720px;
 }
 
+.adminPanelHero {
+  background:
+    linear-gradient(135deg, rgba(11, 122, 99, 0.1), rgba(7, 86, 66, 0.04)),
+    white;
+  border: 1px solid #d6e9e2;
+  border-radius: 8px;
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 18px;
+}
+
+.adminPanelHero.compact h2 {
+  font-size: clamp(24px, 3vw, 34px);
+  margin: 4px 0 0;
+}
+
+.adminPanelHero p {
+  line-height: 1.55;
+  margin: 6px 0 0;
+  max-width: 820px;
+}
+
+.sectionEyebrow {
+  color: var(--brand-dark);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.formFlowBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.formFlowBar span {
+  background: #f3f7f6;
+  border: 1px solid #d8e7e1;
+  border-radius: 999px;
+  color: #3a5a52;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 8px 12px;
+}
+
+.formFlowBar .isCurrent {
+  background: #e4f4ee;
+  border-color: #9bd4c2;
+  color: var(--brand-dark);
+}
+
 .hero {
   background:
     linear-gradient(90deg, rgba(14, 124, 102, 0.92), rgba(29, 36, 48, 0.82)),
@@ -1917,6 +1970,22 @@ textarea {
   line-height: 1.45;
 }
 
+.adminPanelBlock {
+  border-color: #dce6ea;
+  box-shadow: 0 14px 28px rgba(18, 36, 48, 0.04);
+}
+
+.adminTableWrap {
+  background: linear-gradient(180deg, rgba(248, 251, 250, 0.65), rgba(255, 255, 255, 0.92));
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.adminMetricsDense {
+  margin-bottom: 18px;
+}
+
 .primaryCell {
   min-width: 220px;
 }
@@ -2266,6 +2335,63 @@ textarea {
   padding: 18px;
 }
 
+.formSectionTone {
+  position: relative;
+}
+
+.formSectionTone::before {
+  border-radius: 999px;
+  content: "";
+  height: 4px;
+  left: 18px;
+  position: absolute;
+  top: 18px;
+  width: 52px;
+}
+
+.tonePrimary::before {
+  background: linear-gradient(90deg, #0b7a63, #28a27b);
+}
+
+.toneSchedule::before {
+  background: linear-gradient(90deg, #235c93, #5f96d6);
+}
+
+.toneSales::before {
+  background: linear-gradient(90deg, #7d5a16, #d0a133);
+}
+
+.toneLead::before {
+  background: linear-gradient(90deg, #8f3e8f, #c274c2);
+}
+
+.toneMap::before {
+  background: linear-gradient(90deg, #6b4d2d, #a77b46);
+}
+
+.toneConversion::before,
+.toneSummary::before {
+  background: linear-gradient(90deg, #24384f, #5d7997);
+}
+
+.formSectionHeader {
+  align-items: start;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  padding-top: 12px;
+}
+
+.formSectionHeader > div {
+  display: grid;
+  gap: 4px;
+}
+
+.formSectionHeader p {
+  margin: 0;
+  max-width: 420px;
+}
+
 .formSection:last-of-type {
   border-bottom: 1px solid var(--line-soft);
 }
@@ -2293,6 +2419,11 @@ textarea {
   display: flex;
   gap: 14px;
   justify-content: space-between;
+}
+
+.formSectionSummary > div {
+  display: grid;
+  gap: 4px;
 }
 
 .formSectionSummary::after {
@@ -4774,6 +4905,11 @@ textarea {
   .adminHeader {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .formSectionHeader {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .bannerPositionTool {

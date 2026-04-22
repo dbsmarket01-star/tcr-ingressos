@@ -21,8 +21,29 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
     >
       <form action={createEventAction} className="card form wideForm">
         {error ? <div className="errorBox">{error}</div> : null}
-        <div className="formSection">
-          <h2>Dados principais</h2>
+        <section className="adminPanelHero compact">
+          <div>
+            <span className="sectionEyebrow">Cadastro guiado</span>
+            <h2>Monte o evento em etapas mais claras</h2>
+            <p className="muted">Organizamos o cadastro para você preencher identidade, agenda, comercial, captação e mapa sem a sensação de formulário embaralhado.</p>
+          </div>
+          <div className="formFlowBar" aria-label="Etapas do cadastro">
+            <span className="isCurrent">Identidade</span>
+            <span>Agenda</span>
+            <span>Comercial</span>
+            <span>Captação</span>
+            <span>Mapa</span>
+          </div>
+        </section>
+
+        <div className="formSection formSectionTone tonePrimary">
+          <div className="formSectionHeader">
+            <div>
+              <span className="sectionEyebrow">Identidade do evento</span>
+              <h2>Dados principais</h2>
+            </div>
+            <p className="muted">Nome, subtítulo, descrição e artes que formam a primeira impressão da página pública.</p>
+          </div>
           <div className="grid twoColumns">
             <label className="field">
               <span>Nome do evento</span>
@@ -77,8 +98,14 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           </div>
         </div>
 
-        <div className="formSection">
-          <h2>Data e local</h2>
+        <div className="formSection formSectionTone toneSchedule">
+          <div className="formSectionHeader">
+            <div>
+              <span className="sectionEyebrow">Agenda e localização</span>
+              <h2>Data e local</h2>
+            </div>
+            <p className="muted">Defina quando e onde o evento acontece para não deixar dúvida operacional nem para o cliente.</p>
+          </div>
           <div className="grid twoColumns">
             <label className="field">
               <span>Início do evento</span>
@@ -111,8 +138,14 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           </div>
         </div>
 
-        <div className="formSection">
-          <h2>Venda e tracking</h2>
+        <div className="formSection formSectionTone toneSales">
+          <div className="formSectionHeader">
+            <div>
+              <span className="sectionEyebrow">Comercial e rastreamento</span>
+              <h2>Venda e tracking</h2>
+            </div>
+            <p className="muted">Janela de vendas, Pixel, GTM, avisos e suporte tudo agrupado no mesmo bloco comercial.</p>
+          </div>
           <div className="grid twoColumns">
             <label className="field">
               <span>Início das vendas</span>
@@ -156,9 +189,10 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           </label>
         </div>
 
-        <details className="formSection advancedSection" open>
+        <details className="formSection advancedSection formSectionTone toneLead" open>
           <summary className="formSectionSummary">
             <div>
+              <span className="sectionEyebrow">Pré-lançamento</span>
               <h2>Captação de leads</h2>
               <p className="muted">Página separada da venda para captar intenção de compra e levar para o grupo de WhatsApp.</p>
             </div>
@@ -245,8 +279,14 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           </label>
         </details>
 
-        <div className="formSection">
-          <h2>Mapa e setores</h2>
+        <div className="formSection formSectionTone toneMap">
+          <div className="formSectionHeader">
+            <div>
+              <span className="sectionEyebrow">Layout do espaço</span>
+              <h2>Mapa e setores</h2>
+            </div>
+            <p className="muted">Organize visualmente palco, setores e referências para o cliente entender melhor o ingresso.</p>
+          </div>
           <p className="muted">
             Escolha um modelo de setores, envie uma imagem própria ou use os lotes como setores. Não há cadeira numerada nesta etapa.
           </p>
@@ -300,9 +340,10 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           </div>
         </div>
 
-        <details className="formSection advancedSection">
+        <details className="formSection advancedSection formSectionTone toneConversion">
           <summary className="formSectionSummary">
             <div>
+              <span className="sectionEyebrow">Argumentos de venda</span>
               <h2>Conversão da página pública</h2>
               <p className="muted">Textos opcionais para prova social, urgência e botão principal.</p>
             </div>

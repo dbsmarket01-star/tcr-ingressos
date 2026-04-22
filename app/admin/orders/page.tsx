@@ -51,6 +51,14 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
       title="Pedidos"
       description="Acompanhe compras, clientes, itens, pagamentos e status operacional."
     >
+      <section className="adminPanelHero compact">
+        <div>
+          <span className="sectionEyebrow">Atendimento comercial</span>
+          <h2>Pedidos mais fáceis de ler e agir</h2>
+          <p className="muted">Separamos resumo, manutenção e filtros para a operação ficar menos embaralhada e mais prática no suporte diário.</p>
+        </div>
+      </section>
+
       <section className="grid dashboardGrid">
         <article className="card metric">
           <span className="muted">Pedidos pagos</span>
@@ -70,7 +78,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         </article>
       </section>
 
-      <section className="card orderMaintenance">
+      <section className="card orderMaintenance adminPanelBlock">
         <div>
           <h2>Reservas vencidas</h2>
           <p className="muted">
@@ -99,7 +107,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         </Link>
       </section>
 
-      <section className="card financeFilters">
+      <section className="card financeFilters adminPanelBlock">
         <div className="filterPanelHeader">
           <div>
             <h2>Filtros de atendimento</h2>
@@ -162,7 +170,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         </p>
       </section>
 
-      <section className="card">
+      <section className="card adminPanelBlock">
         <div className="sectionHeader inlineHeader">
           <div>
             <h2>Lista de pedidos</h2>
@@ -172,7 +180,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         {orders.length === 0 ? (
           <div className="empty">Nenhum pedido registrado ainda.</div>
         ) : (
-          <div className="tableScroll wideTableScroll">
+          <div className="tableScroll wideTableScroll adminTableWrap">
           <table className="table operationalTable ordersTable">
             <thead>
               <tr>

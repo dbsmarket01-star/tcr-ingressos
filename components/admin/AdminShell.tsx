@@ -3,7 +3,6 @@ import { AdminSideNav } from "@/components/admin/AdminSideNav";
 import { logoutAction } from "@/features/auth/auth.actions";
 import { getCurrentAdmin } from "@/features/auth/auth.service";
 import { getAdminNavGroupsForRole } from "@/lib/navigation";
-import { getPublicBaseUrl } from "@/lib/public-url";
 
 type AdminShellProps = {
   title: string;
@@ -14,18 +13,17 @@ type AdminShellProps = {
 export async function AdminShell({ title, description, children }: AdminShellProps) {
   const admin = await getCurrentAdmin();
   const navGroups = admin ? getAdminNavGroupsForRole(admin.role) : [];
-  const publicUrl = getPublicBaseUrl();
 
   return (
     <main className="adminShell">
       <aside className="sidebar">
-        <Link className="brand sidebarBrand" href={publicUrl}>
+        <Link className="brand sidebarBrand" href="/admin">
           <span className="brandMark">T</span>
           <span>TCR Ingressos</span>
         </Link>
         <div className="sidebarIntro">
           <span className="eyebrow">Central de operação</span>
-          <p>Eventos, pedidos, check-in e financeiro em um fluxo único de trabalho.</p>
+          <p>Eventos, pedidos, leads, check-in e financeiro em uma operação mais organizada para a equipe.</p>
         </div>
         <AdminSideNav groups={navGroups} />
       </aside>
@@ -43,7 +41,7 @@ export async function AdminShell({ title, description, children }: AdminShellPro
                 <span>{admin.role}</span>
               </div>
             ) : null}
-            <Link className="secondaryButton" href={publicUrl}>
+            <Link className="secondaryButton" href="/">
               Ver site
             </Link>
             <form action={logoutAction}>

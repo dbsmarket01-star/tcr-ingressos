@@ -64,8 +64,30 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
       <form action={updateEventAction} className="card form wideForm">
         <input type="hidden" name="eventId" value={event.id} />
 
-        <div className="formSection">
-          <h2>Resumo de publicação</h2>
+        <section className="adminPanelHero compact">
+          <div>
+            <span className="sectionEyebrow">Operação do evento</span>
+            <h2>Edite com uma visão mais limpa do todo</h2>
+            <p className="muted">Reorganizamos os blocos para você revisar publicação, comercial, captação e mapa com menos poluição visual.</p>
+          </div>
+          <div className="formFlowBar" aria-label="Etapas do evento">
+            <span className="isCurrent">Resumo</span>
+            <span>Identidade</span>
+            <span>Agenda</span>
+            <span>Comercial</span>
+            <span>Captação</span>
+            <span>Mapa</span>
+          </div>
+        </section>
+
+        <div className="formSection formSectionTone toneSummary">
+          <div className="formSectionHeader">
+            <div>
+              <span className="sectionEyebrow">Estado atual</span>
+              <h2>Resumo de publicação</h2>
+            </div>
+            <p className="muted">Antes de mexer nos detalhes, veja rapidamente o que já está pronto e o que ainda pede atenção.</p>
+          </div>
           <div className="mediaReadinessGrid">
             {mediaReadiness.map((item) => (
               <div className={item.status ? "isReady" : "isBlocked"} key={item.label}>
@@ -77,8 +99,14 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           </div>
         </div>
 
-        <div className="formSection">
-          <h2>Dados principais</h2>
+        <div className="formSection formSectionTone tonePrimary">
+          <div className="formSectionHeader">
+            <div>
+              <span className="sectionEyebrow">Identidade do evento</span>
+              <h2>Dados principais</h2>
+            </div>
+            <p className="muted">Nome, descrição e imagens que sustentam a página pública e os compartilhamentos.</p>
+          </div>
           <div className="grid twoColumns">
             <label className="field">
               <span>Nome do evento</span>
@@ -129,8 +157,14 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           </div>
         </div>
 
-        <div className="formSection">
-          <h2>Data e local</h2>
+        <div className="formSection formSectionTone toneSchedule">
+          <div className="formSectionHeader">
+            <div>
+              <span className="sectionEyebrow">Agenda e localização</span>
+              <h2>Data e local</h2>
+            </div>
+            <p className="muted">Centralize aqui a agenda e o ponto físico do evento para reduzir retrabalho e dúvida operacional.</p>
+          </div>
           <div className="grid twoColumns">
             <label className="field">
               <span>Início do evento</span>
@@ -170,8 +204,14 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           </div>
         </div>
 
-        <div className="formSection">
-          <h2>Venda e tracking</h2>
+        <div className="formSection formSectionTone toneSales">
+          <div className="formSectionHeader">
+            <div>
+              <span className="sectionEyebrow">Comercial e rastreamento</span>
+              <h2>Venda e tracking</h2>
+            </div>
+            <p className="muted">Janela de venda, rastreamento, suporte e informações úteis reunidos no mesmo bloco comercial.</p>
+          </div>
           <div className="grid twoColumns">
             <label className="field">
               <span>Início das vendas</span>
@@ -253,9 +293,10 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           </label>
         </div>
 
-        <details className="formSection advancedSection" open>
+        <details className="formSection advancedSection formSectionTone toneLead" open>
           <summary className="formSectionSummary">
             <div>
+              <span className="sectionEyebrow">Pré-lançamento</span>
               <h2>Captação de leads</h2>
               <p className="muted">Landing separada da venda para captar interesse, salvar o lead e levar para o grupo de WhatsApp.</p>
             </div>
@@ -345,8 +386,14 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           </label>
         </details>
 
-        <div className="formSection">
-          <h2>Mapa e setores</h2>
+        <div className="formSection formSectionTone toneMap">
+          <div className="formSectionHeader">
+            <div>
+              <span className="sectionEyebrow">Layout do espaço</span>
+              <h2>Mapa e setores</h2>
+            </div>
+            <p className="muted">Deixe o mapa e os setores mais fáceis de entender antes de abrir a venda para o público.</p>
+          </div>
           <p className="muted">
             Escolha um modelo de setores, envie uma imagem própria ou use os lotes como setores. Não há cadeira numerada nesta etapa.
           </p>
@@ -403,8 +450,14 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           </div>
         </div>
 
-        <div className="formSection">
-          <h2>Conversão da página pública</h2>
+        <div className="formSection formSectionTone toneConversion">
+          <div className="formSectionHeader">
+            <div>
+              <span className="sectionEyebrow">Argumentos de venda</span>
+              <h2>Conversão da página pública</h2>
+            </div>
+            <p className="muted">Textos comerciais opcionais para prova social, urgência e CTA sem bagunçar o restante do cadastro.</p>
+          </div>
           <p className="muted">
             Controle textos comerciais da página pública. Campos vazios usam automaticamente vendas, estoque e dados do evento.
           </p>
