@@ -35,6 +35,21 @@ const recommendedRatios = {
   share: 1.91
 } satisfies Record<NonNullable<ImageUploadFieldProps["aspect"]>, number>;
 
+function buildDefaultCrop(meta: ImageMeta | null, aspect: NonNullable<ImageUploadFieldProps["aspect"]>): ImageCrop {
+  if (!meta) {
+    return sanitizeImageCrop(null);
+  }
+
+  const recommendedRatio = recommendedRatios[aspect];
+  const fitZoom = Math.min(1, Math.min(meta.ratio / recommendedRatio, recommendedRatio / meta.ratio));
+
+  return sanitizeImageCrop({
+    x: 50,
+    y: 50,
+    zoom: Number(fitZoom.toFixed(2))
+  });
+}
+
 function analyzeAspect(meta: ImageMeta | null, aspect: NonNullable<ImageUploadFieldProps["aspect"]>) {
   if (!meta) {
     return null;
@@ -92,6 +107,7 @@ export function ImageUploadField({
   const [localError, setLocalError] = useState<string | null>(null);
   const [imageMeta, setImageMeta] = useState<ImageMeta | null>(null);
   const [crop, setCrop] = useState<ImageCrop>(() => sanitizeImageCrop(parseImageCrop(currentCropValue)));
+  const [shouldAutoFitCrop, setShouldAutoFitCrop] = useState<boolean>(() => !currentCropValue);
 
   useEffect(() => {
     if (!previewUrl) {
@@ -126,7 +142,17 @@ export function ImageUploadField({
 
   useEffect(() => {
     setCrop(sanitizeImageCrop(parseImageCrop(currentCropValue)));
+    setShouldAutoFitCrop(!currentCropValue);
   }, [currentCropValue]);
+
+  useEffect(() => {
+    if (!shouldAutoFitCrop || !cropFieldName || !imageMeta) {
+      return;
+    }
+
+    setCrop(buildDefaultCrop(imageMeta, aspect));
+    setShouldAutoFitCrop(false);
+  }, [aspect, cropFieldName, imageMeta, shouldAutoFitCrop]);
 
   const aspectAnalysis = analyzeAspect(imageMeta, aspect);
   const cropValue = stringifyImageCrop(crop);
@@ -147,28 +173,6 @@ export function ImageUploadField({
       ) : (
         <div className="imageUploadPlaceholder">{emptyText}</div>
       )}
-      {previewUrl ? (
-        <div className="imageUploadPublicPreview">
-          <span>Prévia aproximada do espaço público</span>
-          <div className={`imageUploadPublicFrame imageUploadPublicFrame${aspect} ${cropFieldName ? "hasCrop" : ""}`}>
-            <img
-              className={cropFieldName ? "croppedImage" : ""}
-              src={previewUrl}
-              alt=""
-              style={cropFieldName ? {
-                objectPosition: `${crop.x}% ${crop.y}%`,
-                transform: `scale(${crop.zoom})`,
-                transformOrigin: `${crop.x}% ${crop.y}%`
-              } : undefined}
-            />
-          </div>
-          {imageMeta ? (
-            <small>
-              Arquivo atual: {imageMeta.width} x {imageMeta.height} px
-            </small>
-          ) : null}
-        </div>
-      ) : null}
       {aspectAnalysis ? (
         <div className={`imageAspectNotice is${aspectAnalysis.tone}`}>
           <strong>{aspectAnalysis.title}</strong>
@@ -179,9 +183,10 @@ export function ImageUploadField({
         <div className="imageCropTool">
           <div className="imageCropToolHeader">
             <div>
-              <strong>Recorte guiado</strong>
-              <small>Essa prévia se aproxima de como a imagem aparece para o cliente final.</small>
+              <strong>Prévia editável do espaço público</strong>
+              <small>É esse enquadramento que usamos para o cliente final. A imagem entra inteira por padrão e você ajusta só se quiser.</small>
             </div>
+            {imageMeta ? <span className="imageCropMeta">{imageMeta.width} x {imageMeta.height} px</span> : null}
           </div>
           <div className={`imageCropStage imageCropStage${aspect}`}>
             <img
@@ -212,7 +217,7 @@ export function ImageUploadField({
                   )
                 }
               />
-              <small>{crop.zoom.toFixed(2)}x</small>
+              <small>{crop.zoom < 1 ? `${crop.zoom.toFixed(2)}x · afastado` : `${crop.zoom.toFixed(2)}x`}</small>
             </label>
             <label className="field">
               <span>Horizontal</span>
@@ -284,6 +289,7 @@ export function ImageUploadField({
 
           setObjectUrl(nextObjectUrl);
           setPreviewUrl(nextObjectUrl);
+          setShouldAutoFitCrop(true);
           setCrop(sanitizeImageCrop(null));
           setLocalError(null);
         }}
