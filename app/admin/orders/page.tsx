@@ -49,17 +49,22 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   return (
     <AdminShell
       title="Pedidos"
-      description="Acompanhe compras, clientes, itens, pagamentos e status operacional."
+      description="Localize compras, entenda o status rapidamente e resolva atendimento sem ruído."
     >
       <section className="adminPanelHero compact">
         <div>
           <span className="sectionEyebrow">Atendimento comercial</span>
-          <h2>Pedidos mais fáceis de ler e agir</h2>
-          <p className="muted">Separamos resumo, manutenção e filtros para a operação ficar menos embaralhada e mais prática no suporte diário.</p>
+          <h2>Pedidos com leitura mais direta para o dia a dia</h2>
+          <p className="muted">A ideia aqui é simples: achar rápido, entender o status sem interpretar demais e agir em poucos cliques.</p>
         </div>
       </section>
 
       <section className="grid dashboardGrid">
+        <article className="card dashboardHeroMetric metric">
+          <span className="muted">Faturamento confirmado</span>
+          <strong>{formatCurrency(summary.totalInCents)}</strong>
+          <small>Com base no recorte atual</small>
+        </article>
         <article className="card metric">
           <span className="muted">Pedidos pagos</span>
           <strong>{summary.paidOrders}</strong>
@@ -72,18 +77,13 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           <span className="muted">Cancelados/expirados</span>
           <strong>{summary.canceledOrders}</strong>
         </article>
-        <article className="card metric">
-          <span className="muted">Total filtrado</span>
-          <strong>{formatCurrency(summary.totalInCents)}</strong>
-        </article>
       </section>
 
       <section className="card orderMaintenance adminPanelBlock">
         <div>
           <h2>Reservas vencidas</h2>
           <p className="muted">
-            Pedidos pendentes vencidos liberam automaticamente o estoque quando esta tela, o evento
-            ou a rotina de manutenção rodam.
+            Use este botão quando quiser forçar a limpeza do estoque reservado por pedidos que já passaram do prazo.
           </p>
           {params.expired ? (
             <p className="success">
@@ -174,7 +174,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         <div className="sectionHeader inlineHeader">
           <div>
             <h2>Lista de pedidos</h2>
-            <p className="muted">Confira rapidamente cliente, evento, valor, expiração e situação do pagamento.</p>
+            <p className="muted">Mantivemos só o que ajuda de verdade no atendimento: quem comprou, o quê, por quanto e o que fazer agora.</p>
           </div>
         </div>
         {orders.length === 0 ? (
@@ -187,13 +187,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 <th>Pedido</th>
                 <th>Cliente</th>
                 <th>Evento</th>
-                <th>Itens</th>
                 <th>Status</th>
-                <th>Pagamento</th>
-                <th>Origem</th>
-                <th>Taxas</th>
-                <th>Juros</th>
-                <th>Desconto</th>
                 <th>Total</th>
                 <th>Expira em</th>
                 <th>Criado em</th>
@@ -215,36 +209,12 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                   </td>
                   <td>{order.event.title}</td>
                   <td>
-                    {order.items.map((item) => (
-                      <div key={item.id}>
-                        {item.quantity}x {item.lot.name}
-                      </div>
-                    ))}
-                  </td>
-                  <td>
                     <span className={`status ${order.status === "PAID" ? "published" : "draft"}`}>
                       {orderStatusLabels[order.status]}
                     </span>
+                    <br />
+                    <span className="muted">Pagamento: {order.payment?.status ?? "-"}</span>
                   </td>
-                  <td>{order.payment?.status ?? "-"}</td>
-                  <td>
-                    {order.utmSource || order.utmMedium ? (
-                      <>
-                        {order.utmSource ?? "-"} / {order.utmMedium ?? "-"}
-                        {order.utmCampaign ? (
-                          <>
-                            <br />
-                            <span className="muted">{order.utmCampaign}</span>
-                          </>
-                        ) : null}
-                      </>
-                    ) : (
-                      "Direto"
-                    )}
-                  </td>
-                  <td>{formatCurrency(order.serviceFeeInCents)}</td>
-                  <td>{formatCurrency(order.cardInterestInCents)}</td>
-                  <td>{formatCurrency(order.discountInCents)}</td>
                   <td>{formatCurrency(order.totalInCents)}</td>
                   <td>{order.expiresAt ? formatDateTime(order.expiresAt) : "-"}</td>
                   <td>{formatDateTime(order.createdAt)}</td>

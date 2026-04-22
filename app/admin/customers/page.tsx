@@ -73,12 +73,12 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
   return (
     <AdminShell
       title="Clientes"
-      description="Base de compradores, recorrência, contato e histórico de pedidos."
+      description="Base de compradores para localizar histórico, recorrência e contato com mais velocidade."
     >
       <section className="adminPanelHero compact">
         <div>
           <span className="sectionEyebrow">Relacionamento</span>
-          <h2>Compradores organizados para atendimento real</h2>
+          <h2>Compradores organizados para operação real</h2>
           <p className="muted">
             Aqui você localiza rapidamente quem já comprou, quantos pedidos fez e qual foi o último
             evento, sem misturar isso com módulos de outro produto.
@@ -102,6 +102,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
         <article className="card metric">
           <span className="muted">Receita dos últimos pedidos</span>
           <strong>{formatCurrency(summary.revenue)}</strong>
+          <small>Somente pedidos pagos do recorte</small>
         </article>
       </section>
 
@@ -137,7 +138,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
         <div className="sectionHeader inlineHeader">
           <div>
             <h2>Base de clientes</h2>
-            <p className="muted">Veja contato, recorrência e últimos pedidos sem sair desta tela.</p>
+            <p className="muted">O foco aqui é descobrir rápido quem é a pessoa, quanto já comprou e qual foi o último contato útil.</p>
           </div>
         </div>
 

@@ -135,7 +135,7 @@ export function CheckInScanner({ action }: CheckInScannerProps) {
       <div className="checkInFormHeader">
         <div>
           <h2>Validar ingresso</h2>
-          <p>Use a câmera para QR Code ou cole o código manualmente.</p>
+          <p>Use a câmera para o QR Code ou valide manualmente quando precisar.</p>
         </div>
         <span>{cameraStatus === "scanning" ? "Lendo" : "Pronto"}</span>
       </div>
@@ -197,7 +197,7 @@ export function CheckInScanner({ action }: CheckInScannerProps) {
         />
       </label>
       <p className="muted">
-        Dica: se o QR Code falhar, procure o pedido ou o ingresso no atendimento e cole o código aqui.
+        Dica: se o QR Code falhar, procure o pedido ou o ingresso no atendimento e cole o código aqui. Isso costuma resolver mais rápido do que insistir na câmera.
       </p>
       <button className="button fullButton" type="submit">
         Validar entrada

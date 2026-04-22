@@ -43,7 +43,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
   return (
     <AdminShell
       title="Check-in"
-      description="Valide código ou token de QR Code, marque entrada e bloqueie reutilização."
+      description="Valide QR Code com rapidez, bloqueie reutilização e mantenha a porta fluindo."
     >
       <section className="grid dashboardGrid">
         <article className="card metric">
@@ -79,11 +79,29 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
         </div>
       </section>
 
+      <section className="operationsAlertGrid spacedSection">
+        <article className="operationAlert">
+          <span>Quando aparecer válido</span>
+          <strong>Liberar entrada</strong>
+          <p>Confirme rapidamente nome ou lote se quiser uma checagem extra.</p>
+        </article>
+        <article className="operationAlert warning">
+          <span>Quando aparecer já usado</span>
+          <strong>Segurar a entrada</strong>
+          <p>Conferir documento e acionar o atendimento antes de qualquer liberação.</p>
+        </article>
+        <article className="operationAlert danger">
+          <span>Quando aparecer inválido ou cancelado</span>
+          <strong>Não liberar</strong>
+          <p>Oriente o cliente a procurar suporte com o pedido ou o e-mail do ingresso.</p>
+        </article>
+      </section>
+
       <section className="grid twoColumns spacedSection">
         <CheckInScanner action={validateTicketAction} />
 
         <aside className={`card checkInResult ${status ? `checkIn${status}` : ""}`} aria-live="polite">
-          <h2>Resultado</h2>
+          <h2>Leitura atual</h2>
           {status ? (
             <>
               <div className="checkInDecision">
@@ -131,7 +149,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
           ) : (
             <div className="checkInIdle">
               <strong>Nenhuma leitura realizada ainda.</strong>
-              <p>Abra a câmera ou cole o código do ingresso para iniciar a validação.</p>
+              <p>Abra a câmera ou cole o código do ingresso para começar. O resultado aparece aqui com a orientação do que fazer na hora.</p>
             </div>
           )}
         </aside>

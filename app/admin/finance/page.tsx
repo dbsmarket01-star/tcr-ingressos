@@ -43,14 +43,14 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
   return (
     <AdminShell
       title="Financeiro"
-      description="Faturamento, pagamentos, pedidos e líquido aproximado por período."
+      description="Faturamento, pagamentos e repasses do período com leitura mais objetiva."
     >
       <section className="adminPanelHero compact">
         <div>
           <span className="sectionEyebrow">Saúde financeira</span>
           <h2>Números mais claros para decidir rápido</h2>
           <p className="muted">
-            Organizamos bruto, líquido, split e pendências para você bater o olho e entender o que já entrou, o que ainda depende de pagamento e o que foi repassado.
+            O objetivo desta tela é bater o olho e entender o que entrou, o que ainda está pendente e quanto já saiu em split, sem ficar caçando informação em blocos demais.
           </p>
         </div>
       </section>
@@ -89,6 +89,11 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
       </section>
 
       <section className="grid dashboardGrid">
+        <article className="card dashboardHeroMetric metric">
+          <span className="muted">Líquido aproximado</span>
+          <strong>{formatCurrency(report.totals.netRevenueInCents)}</strong>
+          <small>Referência principal do período filtrado</small>
+        </article>
         <article className="card metric">
           <span className="muted">Bruto confirmado</span>
           <strong>{formatCurrency(report.totals.grossRevenueInCents)}</strong>
@@ -112,10 +117,6 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
       </section>
 
       <section className="grid dashboardGrid spacedSection">
-        <article className="card metric">
-          <span className="muted">Líquido aproximado</span>
-          <strong>{formatCurrency(report.totals.netRevenueInCents)}</strong>
-        </article>
         <article className="card metric">
           <span className="muted">Taxas identificadas</span>
           <strong>{formatCurrency(report.totals.estimatedFeesInCents)}</strong>
