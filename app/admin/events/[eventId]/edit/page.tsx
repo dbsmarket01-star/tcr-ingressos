@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { ImageUploadField } from "@/components/forms/ImageUploadField";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { updateEventAction } from "@/features/events/event.actions";
 import { getEventForManagement } from "@/features/events/event.service";
 import { buildEventSeo } from "@/features/seo/event-seo";
@@ -18,9 +18,10 @@ type EditEventPageProps = {
 };
 
 export default async function EditEventPage({ params }: EditEventPageProps) {
-  await requirePermission("EVENTS");
+  const admin = await requirePermission("EVENTS");
   const { eventId } = await params;
-  const event = await getEventForManagement(eventId);
+  await requireEventAccess(eventId);
+  const event = await getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin));
 
   if (!event) {
     notFound();

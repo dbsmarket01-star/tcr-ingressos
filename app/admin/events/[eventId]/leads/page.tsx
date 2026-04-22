@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { CopyButton } from "@/components/forms/CopyButton";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { getEventForManagement } from "@/features/events/event.service";
 import { listEventLeads } from "@/features/leads/lead.service";
 import { formatDateTime } from "@/lib/format";
@@ -16,9 +16,10 @@ type EventLeadsPageProps = {
 };
 
 export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
-  await requirePermission("EVENTS");
+  const admin = await requirePermission("EVENTS");
   const { eventId } = await params;
-  const event = await getEventForManagement(eventId);
+  await requireEventAccess(eventId);
+  const event = await getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin));
 
   if (!event) {
     notFound();

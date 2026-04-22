@@ -2,6 +2,7 @@ import { AdminRole } from "@prisma/client";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { ensureDefaultOrganizationBackfill } from "@/features/organizations/organization.service";
 import { prisma } from "@/lib/prisma";
 
 const COOKIE_NAME = "tcr_admin_session";
@@ -16,6 +17,7 @@ type SessionPayload = {
 
 export type CurrentAdmin = {
   id: string;
+  organizationId: string | null;
   name: string;
   email: string;
   role: AdminRole;
@@ -163,6 +165,7 @@ export async function clearAdminSession() {
 }
 
 export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
+  const defaultOrganizationId = await ensureDefaultOrganizationBackfill();
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
 
@@ -176,7 +179,7 @@ export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
     return null;
   }
 
-  return prisma.adminUser.findFirst({
+  const admin = await prisma.adminUser.findFirst({
     where: {
       id: payload.sub,
       email: payload.email,
@@ -184,6 +187,7 @@ export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
     },
     select: {
       id: true,
+      organizationId: true,
       name: true,
       email: true,
       role: true,
@@ -191,6 +195,28 @@ export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
       allowedEventIds: true
     }
   });
+
+  if (!admin) {
+    return null;
+  }
+
+  if (admin.organizationId) {
+    return admin;
+  }
+
+  await prisma.adminUser.update({
+    where: {
+      id: admin.id
+    },
+    data: {
+      organizationId: defaultOrganizationId
+    }
+  });
+
+  return {
+    ...admin,
+    organizationId: defaultOrganizationId
+  };
 }
 
 export async function requireAdmin() {
@@ -219,7 +245,17 @@ export function canAccessEvent(admin: CurrentAdmin, eventId: string) {
 export async function requireEventAccess(eventId: string) {
   const admin = await requireAdmin();
 
-  if (!canAccessEvent(admin, eventId)) {
+  const event = await prisma.event.findFirst({
+    where: {
+      id: eventId,
+      organizationId: admin.organizationId
+    },
+    select: {
+      id: true
+    }
+  });
+
+  if (!event || !canAccessEvent(admin, eventId)) {
     redirect("/admin/events");
   }
 
@@ -241,13 +277,15 @@ export async function requirePermission(area: AdminArea) {
 }
 
 export async function findActiveAdminByEmail(email: string) {
-  return prisma.adminUser.findFirst({
+  const defaultOrganizationId = await ensureDefaultOrganizationBackfill();
+  const admin = await prisma.adminUser.findFirst({
     where: {
       email,
       isActive: true
     },
     select: {
       id: true,
+      organizationId: true,
       name: true,
       email: true,
       passwordHash: true,
@@ -256,4 +294,26 @@ export async function findActiveAdminByEmail(email: string) {
       allowedEventIds: true
     }
   });
+
+  if (!admin) {
+    return null;
+  }
+
+  if (admin.organizationId) {
+    return admin;
+  }
+
+  await prisma.adminUser.update({
+    where: {
+      id: admin.id
+    },
+    data: {
+      organizationId: defaultOrganizationId
+    }
+  });
+
+  return {
+    ...admin,
+    organizationId: defaultOrganizationId
+  };
 }

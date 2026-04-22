@@ -1,3 +1,4 @@
+import { ensureDefaultOrganizationBackfill } from "@/features/organizations/organization.service";
 import { prisma } from "@/lib/prisma";
 import type { EventLeadInput } from "./lead.schema";
 
@@ -7,10 +8,12 @@ function sanitizePhone(value?: string) {
 }
 
 export async function createOrUpdateEventLead(input: EventLeadInput) {
+  const organizationId = await ensureDefaultOrganizationBackfill();
   const event = await prisma.event.findFirst({
     where: {
       id: input.eventId,
       slug: input.eventSlug,
+      organizationId,
       leadCaptureEnabled: true
     },
     select: {
@@ -74,8 +77,10 @@ export async function createOrUpdateEventLead(input: EventLeadInput) {
 }
 
 export async function getLeadCaptureEventBySlug(slug: string) {
+  const organizationId = await ensureDefaultOrganizationBackfill();
   return prisma.event.findFirst({
     where: {
+      organizationId,
       slug,
       leadCaptureEnabled: true
     },

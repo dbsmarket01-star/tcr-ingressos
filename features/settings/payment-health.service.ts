@@ -1,3 +1,4 @@
+import { ensureDefaultOrganizationBackfill } from "@/features/organizations/organization.service";
 import { prisma } from "@/lib/prisma";
 
 function hasValue(value?: string) {
@@ -46,6 +47,7 @@ function isLocalUrl(value: string) {
 }
 
 export async function getPaymentHealth() {
+  const organizationId = await ensureDefaultOrganizationBackfill();
   const appUrl = getAppUrl();
   const provider = process.env.PAYMENT_PROVIDER || "SIMULATED";
   const asaasApiUrl = process.env.ASAAS_API_URL || "https://api-sandbox.asaas.com/v3";
@@ -58,6 +60,7 @@ export async function getPaymentHealth() {
     }),
     prisma.paymentSplitRule.findMany({
       where: {
+        organizationId,
         isActive: true
       }
     })

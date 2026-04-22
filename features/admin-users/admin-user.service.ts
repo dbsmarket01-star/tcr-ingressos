@@ -2,11 +2,15 @@ import { AdminRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
-export async function listAdminUsers() {
+export async function listAdminUsers(organizationId: string) {
   return prisma.adminUser.findMany({
+    where: {
+      organizationId
+    },
     orderBy: [{ isActive: "desc" }, { name: "asc" }],
     select: {
       id: true,
+      organizationId: true,
       name: true,
       email: true,
       role: true,
@@ -19,6 +23,7 @@ export async function listAdminUsers() {
 }
 
 export async function createAdminUser(input: {
+  organizationId: string;
   name: string;
   email: string;
   password: string;
@@ -30,6 +35,7 @@ export async function createAdminUser(input: {
 
   return prisma.adminUser.create({
     data: {
+      organizationId: input.organizationId,
       name: input.name,
       email: input.email.toLowerCase(),
       passwordHash,
@@ -101,6 +107,23 @@ export async function updateAdminUserEventAccess(
     select: {
       id: true,
       email: true,
+      accessAllEvents: true,
+      allowedEventIds: true
+    }
+  });
+}
+
+export async function getAdminUserByIdInOrganization(userId: string, organizationId: string) {
+  return prisma.adminUser.findFirst({
+    where: {
+      id: userId,
+      organizationId
+    },
+    select: {
+      id: true,
+      organizationId: true,
+      email: true,
+      role: true,
       accessAllEvents: true,
       allowedEventIds: true
     }

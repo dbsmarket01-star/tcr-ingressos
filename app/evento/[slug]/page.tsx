@@ -97,9 +97,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     (totalAvailable <= 50 ? "Últimas unidades disponíveis para este evento." : "Compra segura com confirmação automática.");
   const ctaText = event.conversionCtaText || "Garantir minha vaga";
   const highlightedLotId = event.highlightedLotId || activeLots[0]?.id;
-  const eventLead =
-    event.subtitle?.trim() ||
-    "Confira os detalhes do evento, escolha seu ingresso e finalize a compra com segurança.";
+  const eventLead = event.subtitle?.trim() || "";
   const lowestTotalInCents = activeLots.reduce((lowest, lot) => {
     const serviceFeeInCents = calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps);
     const total = lot.priceInCents + serviceFeeInCents;
@@ -181,7 +179,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         </div>
         <div className="publicHeroInner">
           <h1>{event.title}</h1>
-          <p>{eventLead}</p>
+          {eventLead ? <p>{eventLead}</p> : null}
           <div className="publicMeta">
             <span>{formatDateTime(event.startsAt)}</span>
           </div>

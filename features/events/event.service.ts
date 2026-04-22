@@ -1,14 +1,18 @@
 import { EventStatus, Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
+import { ensureDefaultOrganizationBackfill } from "@/features/organizations/organization.service";
 import { prisma } from "@/lib/prisma";
 import type { EventDraftInput } from "./event.schema";
 
 export type EventListItem = Awaited<ReturnType<typeof listEvents>>[number];
 export type EventManagement = NonNullable<Awaited<ReturnType<typeof getEventForManagement>>>;
 
-export async function listEvents(allowedEventIds?: string[] | null) {
+export async function listEvents(organizationId: string, allowedEventIds?: string[] | null) {
   return prisma.event.findMany({
-    where: allowedEventIds ? { id: { in: allowedEventIds } } : undefined,
+    where: {
+      organizationId,
+      ...(allowedEventIds ? { id: { in: allowedEventIds } } : {})
+    },
     orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],
     include: {
       lots: {
@@ -41,8 +45,10 @@ export async function listEvents(allowedEventIds?: string[] | null) {
 }
 
 export async function listPublishedEventShowcase(limit = 6) {
+  const organizationId = await ensureDefaultOrganizationBackfill();
   return prisma.event.findMany({
     where: {
+      organizationId,
       status: EventStatus.PUBLISHED
     },
     orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],
@@ -69,8 +75,13 @@ export async function listCachedPublishedEventShowcase(limit = 6) {
   return events.map((event) => normalizeCachedEventDates(event));
 }
 
-export async function createEvent(input: EventDraftInput & { status: EventStatus }) {
+export async function createEvent(input: EventDraftInput & { status: EventStatus }, organizationId: string) {
   const data: Prisma.EventCreateInput = {
+    organization: {
+      connect: {
+        id: organizationId
+      }
+    },
     title: input.title,
     slug: input.slug,
     subtitle: input.subtitle || null,
@@ -120,10 +131,18 @@ export async function createEvent(input: EventDraftInput & { status: EventStatus
   return prisma.event.create({ data });
 }
 
-export async function getEventForManagement(eventId: string, allowedEventIds?: string[] | null) {
+export async function getEventForManagement(
+  eventId: string,
+  organizationId: string,
+  allowedEventIds?: string[] | null
+) {
   return prisma.event.findFirst({
     where: {
-      AND: [{ id: eventId }, ...(allowedEventIds ? [{ id: { in: allowedEventIds } }] : [])]
+      AND: [
+        { id: eventId },
+        { organizationId },
+        ...(allowedEventIds ? [{ id: { in: allowedEventIds } }] : [])
+      ]
     },
     include: {
       lots: {
@@ -158,8 +177,10 @@ export async function getEventForManagement(eventId: string, allowedEventIds?: s
 }
 
 export async function getPublicEventBySlug(slug: string) {
+  const organizationId = await ensureDefaultOrganizationBackfill();
   return prisma.event.findFirst({
     where: {
+      organizationId,
       slug,
       status: "PUBLISHED"
     },
@@ -175,8 +196,10 @@ export async function getPublicEventBySlug(slug: string) {
 }
 
 export async function getEventSeoBySlug(slug: string) {
+  const organizationId = await ensureDefaultOrganizationBackfill();
   return prisma.event.findFirst({
     where: {
+      organizationId,
       slug,
       status: "PUBLISHED"
     }
@@ -306,6 +329,7 @@ export async function duplicateEvent(eventId: string) {
   return prisma.$transaction(async (tx) => {
     const duplicatedEvent = await tx.event.create({
       data: {
+        organizationId: event.organizationId,
         title: `Copia de ${event.title}`,
         slug: createDuplicateSlug(event.slug),
         subtitle: event.subtitle,

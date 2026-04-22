@@ -4,7 +4,13 @@ import { AdminRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { createAuditLog } from "@/features/audit/audit.service";
 import { requirePermission } from "@/features/auth/auth.service";
-import { createAdminUser, updateAdminUserEventAccess, updateAdminUserRole, updateAdminUserStatus } from "./admin-user.service";
+import {
+  createAdminUser,
+  getAdminUserByIdInOrganization,
+  updateAdminUserEventAccess,
+  updateAdminUserRole,
+  updateAdminUserStatus
+} from "./admin-user.service";
 
 function parseRole(value: FormDataEntryValue | null) {
   const role = String(value ?? "");
@@ -47,6 +53,7 @@ export async function createAdminUserAction(formData: FormData) {
   }
 
   const createdUser = await createAdminUser({
+    organizationId: currentAdmin.organizationId!,
     name,
     email,
     password,
@@ -80,6 +87,12 @@ export async function updateAdminUserStatusAction(formData: FormData) {
     throw new Error("Usuário não informado.");
   }
 
+  const targetUser = await getAdminUserByIdInOrganization(userId, currentAdmin.organizationId!);
+
+  if (!targetUser) {
+    throw new Error("Usuário não encontrado nesta operação.");
+  }
+
   if (currentAdmin.id === userId && !isActive) {
     throw new Error("Você não pode desativar seu próprio usuário.");
   }
@@ -107,6 +120,12 @@ export async function updateAdminUserRoleAction(formData: FormData) {
 
   if (!userId) {
     throw new Error("Usuário não informado.");
+  }
+
+  const targetUser = await getAdminUserByIdInOrganization(userId, currentAdmin.organizationId!);
+
+  if (!targetUser) {
+    throw new Error("Usuário não encontrado nesta operação.");
   }
 
   if (currentAdmin.id === userId && role !== AdminRole.OWNER) {
@@ -138,6 +157,12 @@ export async function updateAdminUserEventAccessAction(formData: FormData) {
 
   if (!userId) {
     throw new Error("Usuário não informado.");
+  }
+
+  const targetUser = await getAdminUserByIdInOrganization(userId, currentAdmin.organizationId!);
+
+  if (!targetUser) {
+    throw new Error("Usuário não encontrado nesta operação.");
   }
 
   if (currentAdmin.id === userId && !accessAllEvents && allowedEventIds.length === 0) {

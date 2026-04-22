@@ -16,9 +16,9 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ eventId: string }> }
 ) {
-  await requirePermission("EVENTS");
+  const admin = await requirePermission("EVENTS");
   const { eventId } = await params;
-  const event = await getEventForManagement(eventId);
+  const event = await getEventForManagement(eventId, admin.organizationId!);
 
   if (!event) {
     return new NextResponse("Evento não encontrado.", { status: 404 });

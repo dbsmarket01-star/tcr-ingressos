@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { duplicateEventAction } from "@/features/events/event.actions";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { getEventCapacity, getEventRevenueInCents, listEvents } from "@/features/events/event.service";
@@ -17,8 +17,8 @@ const statusLabels = {
 };
 
 export default async function EventsPage() {
-  await requirePermission("EVENTS");
-  const events = await listEvents();
+  const admin = await requirePermission("EVENTS");
+  const events = await listEvents(admin.organizationId!, getAdminAllowedEventIds(admin));
   const publishedEvents = events.filter((event) => event.status === "PUBLISHED").length;
   const draftEvents = events.filter((event) => event.status !== "PUBLISHED").length;
   const totalRevenueInCents = events.reduce((sum, event) => sum + getEventRevenueInCents(event), 0);

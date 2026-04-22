@@ -207,8 +207,32 @@ enum UnlockActionType {
   LOGOUT_DEVICE
 }
 
+model Organization {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  name           String
+  publicDomain   String?
+  adminDomain    String?
+  logoUrl        String?
+  primaryColor   String?
+  secondaryColor String?
+  supportEmail   String?
+  supportPhone   String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  adminUsers        AdminUser[]
+  companySettings   CompanySettings[]
+  events            Event[]
+  paymentSplitRules PaymentSplitRule[]
+
+  @@index([isActive])
+}
+
 model AdminUser {
   id           String    @id @default(cuid())
+  organizationId String?
   name         String
   email        String    @unique
   passwordHash String
@@ -219,11 +243,13 @@ model AdminUser {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   createdEvents Event[]
   checkIns      CheckIn[]
   passwordResetTokens AdminPasswordResetToken[]
   auditLogs AdminAuditLog[]
 
+  @@index([organizationId])
   @@index([role])
   @@index([isActive])
 }
@@ -259,6 +285,7 @@ model AdminPasswordResetToken {
 
 model CompanySettings {
   id              String   @id @default(cuid())
+  organizationId  String?
   companyName     String
   tradeName       String
   document        String
@@ -270,10 +297,16 @@ model CompanySettings {
   cardPendingReservationMinutes Int @default(30)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@unique([organizationId])
 }
 
 model PaymentSplitRule {
   id           String        @id @default(cuid())
+  organizationId String?
   name         String
   walletId     String
   type         SplitRuleType
@@ -284,11 +317,15 @@ model PaymentSplitRule {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
   @@index([isActive, sortOrder])
 }
 
 model Event {
   id                  String      @id @default(cuid())
+  organizationId      String?
   slug                String      @unique
   title               String
   subtitle            String?
@@ -337,6 +374,7 @@ model Event {
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
 
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   createdBy AdminUser? @relation(fields: [createdById], references: [id], onDelete: SetNull)
   lots      TicketLot[]
   orders    Order[]
@@ -346,6 +384,7 @@ model Event {
   presaleChecks EventPresaleCheck[]
   leads     EventLead[]
 
+  @@index([organizationId])
   @@index([status, startsAt])
   @@index([city, state])
 }

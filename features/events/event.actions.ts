@@ -86,7 +86,7 @@ function validationMessage(error: unknown) {
 }
 
 export async function createEventAction(formData: FormData) {
-  await requirePermission("EVENTS");
+  const admin = await requirePermission("EVENTS");
   const title = String(formData.get("title") ?? "").trim();
   const rawSlug = String(formData.get("slug") ?? "").trim();
   const status = String(formData.get("status") ?? "DRAFT");
@@ -158,7 +158,7 @@ export async function createEventAction(formData: FormData) {
   await createEvent({
     ...parsed.data,
     status: status === "PUBLISHED" ? EventStatus.PUBLISHED : EventStatus.DRAFT
-  });
+  }, admin.organizationId!);
 
   revalidatePath("/admin/events");
   revalidatePath("/");

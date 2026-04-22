@@ -23,10 +23,13 @@ const roleLabels = {
 };
 
 export default async function AdminUsersPage() {
-  await requirePermission("USERS");
+  const admin = await requirePermission("USERS");
   const [users, events] = await Promise.all([
-    listAdminUsers(),
+    listAdminUsers(admin.organizationId!),
     prisma.event.findMany({
+      where: {
+        organizationId: admin.organizationId!
+      },
       orderBy: [{ startsAt: "desc" }, { title: "asc" }],
       select: {
         id: true,

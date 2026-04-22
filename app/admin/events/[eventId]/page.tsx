@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { createCouponAction, updateCouponStatusAction } from "@/features/coupons/coupon.actions";
 import { duplicateEventAction, updateEventStatusAction } from "@/features/events/event.actions";
 import { getEventCapacity, getEventForManagement, getEventRevenueInCents } from "@/features/events/event.service";
@@ -63,10 +63,11 @@ function getPixDiscountType(lot: { pixDiscountPercentBps: number; pixDiscountFix
 }
 
 export default async function EventManagementPage({ params, searchParams }: EventManagementPageProps) {
-  await requirePermission("EVENTS");
+  const admin = await requirePermission("EVENTS");
   const { eventId } = await params;
+  await requireEventAccess(eventId);
   const query = searchParams ? await searchParams : {};
-  const event = await getEventForManagement(eventId);
+  const event = await getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin));
 
   if (!event) {
     notFound();

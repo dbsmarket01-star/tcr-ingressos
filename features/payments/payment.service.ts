@@ -145,7 +145,7 @@ export async function startPaymentForOrder(orderCode: string) {
   }
 
   const provider = getPaymentProvider();
-  const split = await buildAsaasSplitsForOrder(order.items);
+  const split = await buildAsaasSplitsForOrder(order.items, order.event.organizationId);
   const intent = await provider.createPaymentIntent({
     orderId: order.id,
     orderCode: order.code,
@@ -343,7 +343,7 @@ export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & {
   const cardTotalInCents = baseTotalInCents + cardInterestInCents;
 
   const asaas = getAsaasProvider();
-  const split = await buildAsaasSplitsForOrder(order.items);
+  const split = await buildAsaasSplitsForOrder(order.items, order.event.organizationId);
   const intent = await asaas.createCreditCardPayment({
     orderId: order.id,
     orderCode: order.code,
