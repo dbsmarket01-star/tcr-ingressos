@@ -24,6 +24,12 @@ export const adminNavItems: AdminNavItem[] = [
     area: "DASHBOARD"
   },
   {
+    href: "/admin/operations",
+    label: "Operações",
+    description: "Bilheterias filhas, domínios e status",
+    area: "OPERATIONS"
+  },
+  {
     href: "/admin/events",
     label: "Eventos",
     description: "Cadastro, publicação e lotes",
@@ -153,16 +159,22 @@ export const adminNavGroups: AdminNavGroup[] = [
     label: "Sistema",
     description: "Configurações e acessos",
     items: adminNavItems.filter((item) =>
-      ["/admin/settings", "/admin/users", "/admin/account", "/admin/audit"].includes(item.href)
+      ["/admin/operations", "/admin/settings", "/admin/users", "/admin/account", "/admin/audit"].includes(item.href)
     )
   }
 ];
 
-export function getAdminNavGroupsForRole(role: AdminRole) {
+export function getAdminNavGroupsForRole(role: AdminRole, options?: { isPlatformHost?: boolean }) {
   return adminNavGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => canAccessArea(role, item.area))
+      items: group.items.filter((item) => {
+        if (item.href === "/admin/operations" && !options?.isPlatformHost) {
+          return false;
+        }
+
+        return canAccessArea(role, item.area);
+      })
     }))
     .filter((group) => group.items.length > 0);
 }

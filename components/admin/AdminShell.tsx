@@ -13,8 +13,8 @@ type AdminShellProps = {
 
 export async function AdminShell({ title, description, children }: AdminShellProps) {
   const admin = await getCurrentAdmin();
-  const navGroups = admin ? getAdminNavGroupsForRole(admin.role) : [];
   const currentOrganizationContext = await getCurrentOrganizationContext();
+  const navGroups = admin ? getAdminNavGroupsForRole(admin.role, { isPlatformHost: currentOrganizationContext.isPlatformHost }) : [];
   const adminOrganization =
     admin?.organizationId ? await getOrganizationBrandingById(admin.organizationId) : currentOrganizationContext.organization;
   const isPlatformHost = currentOrganizationContext.isPlatformHost;

@@ -31,6 +31,7 @@ export type AuthenticatedAdmin = CurrentAdmin & {
 
 export type AdminArea =
   | "DASHBOARD"
+  | "OPERATIONS"
   | "EVENTS"
   | "ORDERS"
   | "SUPPORT"
@@ -52,6 +53,7 @@ export type AdminArea =
 
 const areaPermissions: Record<AdminArea, AdminRole[]> = {
   DASHBOARD: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.FINANCE, AdminRole.SUPPORT, AdminRole.STAFF],
+  OPERATIONS: [AdminRole.OWNER],
   EVENTS: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.STAFF],
   ORDERS: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.FINANCE, AdminRole.SUPPORT, AdminRole.STAFF],
   SUPPORT: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.SUPPORT, AdminRole.STAFF],
