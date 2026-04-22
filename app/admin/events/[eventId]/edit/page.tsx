@@ -31,17 +31,17 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
     {
       label: "Banner",
       status: Boolean(event.bannerUrl),
-      description: event.bannerUrl ? "Configurado" : "Pendente para conversao"
+      description: event.bannerUrl ? "Configurado" : "Pendente para conversão"
     },
     {
       label: "Mapa",
       status: Boolean(event.eventMapImageUrl) || event.eventMapTemplate !== "AUTO" || event.lots.length > 0,
       description: event.eventMapImageUrl
-        ? "Imagem propria"
+        ? "Imagem própria"
         : event.eventMapTemplate !== "AUTO"
           ? "Modelo visual escolhido"
           : event.lots.length > 0
-            ? "Automatico pelos lotes"
+            ? "Automático pelos lotes"
             : "Pendente"
     },
     {
@@ -59,7 +59,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
   return (
     <AdminShell
       title="Editar evento"
-      description="Atualize os dados principais, publicação e tracking do evento."
+      description="Atualize primeiro o essencial do evento e deixe os blocos avançados recolhidos."
     >
       <form action={updateEventAction} className="card form wideForm">
         <input type="hidden" name="eventId" value={event.id} />
@@ -206,7 +206,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               <span className="sectionEyebrow">Comercial e rastreamento</span>
               <h2>Venda e tracking</h2>
             </div>
-            <p className="muted">Janela de venda, rastreamento, suporte e informações úteis reunidos no mesmo bloco comercial.</p>
+            <p className="muted">Janela de venda, suporte e publicação. Tracking fica recolhido para não embaralhar a operação principal.</p>
           </div>
           <div className="grid twoColumns">
             <label className="field">
@@ -225,44 +225,6 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
                 defaultValue={formatDateTimeInput(event.salesEndsAt)}
               />
             </label>
-          </div>
-          <div className="grid twoColumns">
-            <label className="field">
-              <span>Meta Pixel ID</span>
-              <input
-                name="metaPixelId"
-                inputMode="numeric"
-                defaultValue={event.metaPixelId ?? ""}
-                placeholder="Ex: 123456789012345"
-              />
-              <small>Somente números. Encontre no Gerenciador de Eventos da Meta.</small>
-            </label>
-            <label className="field">
-              <span>Google Tag Manager ID</span>
-              <input
-                name="googleTagManagerId"
-                defaultValue={event.googleTagManagerId ?? ""}
-                placeholder="Ex: GTM-ABC1234"
-              />
-              <small>Formato esperado: GTM-XXXXXXX.</small>
-            </label>
-          </div>
-          <div className="trackingGuideGrid">
-            <div>
-              <span>Página do evento</span>
-              <strong>view_event / ViewContent</strong>
-              <small>Dispara quando o cliente abre a página pública do evento.</small>
-            </div>
-            <div>
-              <span>Pedido criado</span>
-              <strong>order_created / InitiateCheckout</strong>
-              <small>Dispara quando o cliente cria o pedido e chega ao pagamento.</small>
-            </div>
-            <div>
-              <span>Compra aprovada</span>
-              <strong>purchase / Purchase</strong>
-              <small>Dispara quando o pedido está pago e com valor em BRL.</small>
-            </div>
           </div>
           <label className="field">
             <span>Informações importantes</span>
@@ -287,9 +249,56 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               <option value="PUBLISHED">Publicado</option>
             </select>
           </label>
+          <details className="advancedSection adminInlineDetails">
+            <summary className="formSectionSummary">
+              <div>
+                <span className="sectionEyebrow">Opcional</span>
+                <h2>Tracking e campanhas</h2>
+                <p className="muted">Abra este bloco quando o evento já estiver pronto para tráfego.</p>
+              </div>
+            </summary>
+            <div className="grid twoColumns">
+              <label className="field">
+                <span>Meta Pixel ID</span>
+                <input
+                  name="metaPixelId"
+                  inputMode="numeric"
+                  defaultValue={event.metaPixelId ?? ""}
+                  placeholder="Ex: 123456789012345"
+                />
+                <small>Somente números.</small>
+              </label>
+              <label className="field">
+                <span>Google Tag Manager ID</span>
+                <input
+                  name="googleTagManagerId"
+                  defaultValue={event.googleTagManagerId ?? ""}
+                  placeholder="Ex: GTM-ABC1234"
+                />
+                <small>Formato esperado: GTM-XXXXXXX.</small>
+              </label>
+            </div>
+            <div className="trackingGuideGrid">
+              <div>
+                <span>Página do evento</span>
+                <strong>view_event / ViewContent</strong>
+                <small>Dispara quando o cliente abre a página pública do evento.</small>
+              </div>
+              <div>
+                <span>Pedido criado</span>
+                <strong>order_created / InitiateCheckout</strong>
+                <small>Dispara quando o cliente cria o pedido e chega ao pagamento.</small>
+              </div>
+              <div>
+                <span>Compra aprovada</span>
+                <strong>purchase / Purchase</strong>
+                <small>Dispara quando o pedido está pago e com valor em BRL.</small>
+              </div>
+            </div>
+          </details>
         </div>
 
-        <details className="formSection advancedSection formSectionTone toneLead" open>
+        <details className="formSection advancedSection formSectionTone toneLead">
           <summary className="formSectionSummary">
             <div>
               <span className="sectionEyebrow">Pré-lançamento</span>
@@ -378,20 +387,24 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           </label>
         </details>
 
-        <div className="formSection formSectionTone toneMap">
-          <div className="formSectionHeader">
+        <details className="formSection advancedSection formSectionTone toneMap">
+          <summary className="formSectionSummary">
             <div>
-              <span className="sectionEyebrow">Layout do espaço</span>
+              <span className="sectionEyebrow">Opcional</span>
               <h2>Mapa e setores</h2>
+              <p className="muted">Abra apenas se este evento realmente precisar de mapa visual.</p>
             </div>
+          </summary>
+          <div className="formSectionHeader">
+            <div />
             <p className="muted">Deixe o mapa e os setores mais fáceis de entender antes de abrir a venda para o público.</p>
           </div>
           <p className="muted">
             Escolha um modelo de setores, envie uma imagem própria ou use os lotes como setores. Não há cadeira numerada nesta etapa.
           </p>
           <label className="field">
-            <span>Modelo do mapa</span>
-            <select name="eventMapTemplate" defaultValue={event.eventMapTemplate}>
+              <span>Modelo do mapa</span>
+              <select name="eventMapTemplate" defaultValue={event.eventMapTemplate}>
               <option value="AUTO">Automático pelos lotes</option>
               <option value="AUDITORIUM">Auditório</option>
               <option value="THEATER">Teatro</option>
@@ -402,13 +415,13 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
             <small>O modelo aparece na página pública quando não houver imagem de mapa enviada.</small>
           </label>
           <label className="field">
-            <span>Observacoes do mapa</span>
+            <span>Observações do mapa</span>
             <textarea
               name="eventMapNotes"
               maxLength={500}
               rows={3}
               defaultValue={event.eventMapNotes ?? ""}
-              placeholder="Ex: Setor ouro proximo ao palco, prata ao fundo, camarote na lateral."
+              placeholder="Ex: Setor ouro próximo ao palco, prata ao fundo, camarote na lateral."
             />
           </label>
           <div className="mediaUploadGrid">
@@ -418,38 +431,33 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               currentImageUrl={event.eventMapImageUrl}
               recommendedSize="Ideal: 1200 x 900 px"
               usageHint="A página pública exibirá o mapa inteiro, sem cortar. Se não houver imagem, usa os lotes ativos como setores."
-              help="Use JPG, PNG, WEBP ou GIF ate 10MB."
+              help="Use JPG, PNG, WEBP ou GIF até 10MB."
               emptyText="Sem mapa atual"
               aspect="map"
             />
-            <label className="field mediaUrlFallback">
-              <span>URL do mapa</span>
-              <input name="eventMapImageUrl" defaultValue={event.eventMapImageUrl ?? ""} placeholder="https://..." />
-              <small>Opcional. Limpe este campo para voltar ao mapa visual padrao.</small>
-            </label>
           </div>
           <div className="mediaSizingGuide">
             <div>
               <span>Mapa de setores</span>
               <strong>1200 x 900 px</strong>
-              <p>Use proporcao 4:3 para auditórios, teatros, galpões e clubes.</p>
+              <p>Use proporção 4:3 para auditórios, teatros, galpões e clubes.</p>
             </div>
             <div>
-              <span>Exibicao publica</span>
+              <span>Exibição pública</span>
               <strong>Sem recorte</strong>
               <p>O mapa aparece inteiro dentro de uma moldura. Se a arte for vertical, pode sobrar margem lateral.</p>
             </div>
           </div>
-        </div>
+        </details>
 
-        <div className="formSection formSectionTone toneConversion">
-          <div className="formSectionHeader">
+        <details className="formSection advancedSection formSectionTone toneConversion">
+          <summary className="formSectionSummary">
             <div>
-              <span className="sectionEyebrow">Argumentos de venda</span>
-              <h2>Conversão da página pública</h2>
+              <span className="sectionEyebrow">Opcional</span>
+              <h2>Textos de conversão</h2>
+              <p className="muted">Use este bloco só se quiser dar um tom mais comercial à página pública.</p>
             </div>
-            <p className="muted">Textos comerciais opcionais para prova social, urgência e CTA sem bagunçar o restante do cadastro.</p>
-          </div>
+          </summary>
           <p className="muted">
             Controle textos comerciais da página pública. Campos vazios usam automaticamente vendas, estoque e dados do evento.
           </p>
@@ -463,16 +471,16 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
             />
           </label>
           <label className="field">
-            <span>Texto de urgencia</span>
+            <span>Texto de urgência</span>
             <input
               name="conversionUrgencyText"
               maxLength={140}
               defaultValue={event.conversionUrgencyText ?? ""}
-              placeholder="Lote promocional vira hoje as 23:59"
+              placeholder="Lote promocional vira hoje às 23:59"
             />
           </label>
           <label className="field">
-            <span>Texto do botao principal</span>
+            <span>Texto do botão principal</span>
             <input
               name="conversionCtaText"
               maxLength={60}
@@ -483,35 +491,37 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           <label className="field">
             <span>Lote em destaque</span>
             <select name="highlightedLotId" defaultValue={event.highlightedLotId ?? ""}>
-              <option value="">Automatico: primeiro lote disponivel</option>
+              <option value="">Automático: primeiro lote disponível</option>
               {event.lots.map((lot) => (
                 <option value={lot.id} key={lot.id}>
                   {lot.name}
                 </option>
               ))}
             </select>
-            <small>O lote destacado aparece com selo "Mais escolhido" e ja vem com quantidade 1 selecionada.</small>
+            <small>O lote destacado aparece com selo "Mais escolhido" e já vem com quantidade 1 selecionada.</small>
           </label>
-        </div>
+        </details>
 
-        <div className="formSection seoPreview">
-          <h2>SEO do evento</h2>
-          <p className="muted">
-            Se os campos ficarem em branco, a pagina usa a embalagem automatica. Se preencher, sua
-            versao personalizada aparece no Google e no compartilhamento social.
-          </p>
+        <details className="formSection seoPreview advancedSection">
+          <summary className="formSectionSummary">
+            <div>
+              <span className="sectionEyebrow">Opcional</span>
+              <h2>SEO do evento</h2>
+              <p className="muted">Se você não preencher nada aqui, o sistema já monta o básico sozinho.</p>
+            </div>
+          </summary>
           <label className="field">
-            <span>Titulo SEO</span>
+            <span>Título SEO</span>
             <input
               name="seoTitle"
               maxLength={70}
               defaultValue={event.seoTitle ?? ""}
               placeholder={seo.title}
             />
-            <small>Recomendado: ate 60 caracteres. Maximo permitido: 70.</small>
+            <small>Recomendado: até 60 caracteres. Máximo permitido: 70.</small>
           </label>
           <label className="field">
-            <span>Descricao SEO</span>
+            <span>Descrição SEO</span>
             <textarea
               name="seoDescription"
               maxLength={180}
@@ -519,7 +529,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               defaultValue={event.seoDescription ?? ""}
               placeholder={seo.description}
             />
-            <small>Recomendado: ate 155 caracteres. Maximo permitido: 180.</small>
+            <small>Recomendado: até 155 caracteres. Máximo permitido: 180.</small>
           </label>
           <label className="field">
             <span>Palavras-chave</span>
@@ -529,7 +539,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               defaultValue={event.seoKeywords ?? ""}
               placeholder="fernandinho, ingressos, salvador"
             />
-            <small>Separe por virgula.</small>
+            <small>Separe por vírgula.</small>
           </label>
           <div className="mediaUploadGrid">
             <ImageUploadField
@@ -553,14 +563,14 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
             <strong>{seo.title}</strong>
             <p>{seo.description}</p>
           </div>
-        </div>
+        </details>
 
         <div className="formActions">
           <Link className="secondaryButton" href={`/admin/events/${event.id}`}>
             Cancelar
           </Link>
           <button className="button" type="submit">
-            Salvar alteracoes
+            Salvar alterações
           </button>
         </div>
       </form>

@@ -193,17 +193,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
       <section className="container publicGrid">
         <article className="publicContent">
-          <section className="conversionStrip" aria-label="Informações principais de venda">
-            <div>
-              <span>Pagamento</span>
-              <strong>Pix e cartão</strong>
-            </div>
-            <div>
-              <span>Entrega</span>
-              <strong>QR Code automático</strong>
-            </div>
-          </section>
-
           <section className="editorialBlock">
             <span className="eyebrow">Experiência do evento</span>
             <h2>Descrição do evento</h2>
@@ -211,11 +200,15 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           </section>
 
           <section className="contentBlock">
-            <h2>Detalhes do evento</h2>
+            <h2>Data e local</h2>
             <div className="detailGrid">
               <div>
                 <span>Data e horário</span>
                 <strong>{formatDateTime(event.startsAt)}</strong>
+              </div>
+              <div>
+                <span>Local</span>
+                <strong>{event.venueName}</strong>
               </div>
               <div>
                 <span>Endereço</span>
@@ -226,20 +219,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                 <strong>
                   {event.city}, {event.state}
                 </strong>
-              </div>
-            </div>
-          </section>
-
-          <section className="contentBlock">
-            <h2>Local do evento</h2>
-            <div className="eventVenueCard">
-              <div className="venueMainInfo">
-                <span>Onde acontece</span>
-                <strong>{event.venueName}</strong>
-                <p>{event.venueAddress}</p>
-                <small>
-                  {event.city}, {event.state}
-                </small>
               </div>
             </div>
           </section>

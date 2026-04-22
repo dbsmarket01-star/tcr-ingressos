@@ -16,7 +16,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
   return (
     <AdminShell
       title="Novo evento"
-      description="Cadastre dados, mídias, mapa de setores, tracking e configurações comerciais do evento."
+      description="Preencha primeiro o essencial do evento e deixe os blocos avançados para depois."
     >
       <form action={createEventAction} className="card form wideForm">
         {error ? <div className="errorBox">{error}</div> : null}
@@ -137,7 +137,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               <span className="sectionEyebrow">Comercial e rastreamento</span>
               <h2>Venda e tracking</h2>
             </div>
-            <p className="muted">Janela de vendas, Pixel, GTM, avisos e suporte tudo agrupado no mesmo bloco comercial.</p>
+            <p className="muted">Janela de vendas, suporte e publicação. Tracking fica escondido para não poluir o cadastro principal.</p>
           </div>
           <div className="grid twoColumns">
             <label className="field">
@@ -147,18 +147,6 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             <label className="field">
               <span>Fim das vendas</span>
               <input name="salesEndsAt" type="datetime-local" />
-            </label>
-          </div>
-          <div className="grid twoColumns">
-            <label className="field">
-              <span>Meta Pixel ID</span>
-              <input name="metaPixelId" inputMode="numeric" placeholder="Ex: 123456789012345" />
-              <small>Opcional.</small>
-            </label>
-            <label className="field">
-              <span>Google Tag Manager ID</span>
-              <input name="googleTagManagerId" placeholder="Ex: GTM-ABC1234" />
-              <small>Opcional.</small>
             </label>
           </div>
           <label className="field">
@@ -180,9 +168,28 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               <option value="PUBLISHED">Publicado</option>
             </select>
           </label>
+          <details className="advancedSection adminInlineDetails">
+            <summary className="formSectionSummary">
+              <div>
+                <span className="sectionEyebrow">Opcional</span>
+                <h2>Tracking e campanhas</h2>
+                <p className="muted">Preencha apenas quando o evento já estiver pronto para tráfego.</p>
+              </div>
+            </summary>
+            <div className="grid twoColumns">
+              <label className="field">
+                <span>Meta Pixel ID</span>
+                <input name="metaPixelId" inputMode="numeric" placeholder="Ex: 123456789012345" />
+              </label>
+              <label className="field">
+                <span>Google Tag Manager ID</span>
+                <input name="googleTagManagerId" placeholder="Ex: GTM-ABC1234" />
+              </label>
+            </div>
+          </details>
         </div>
 
-        <details className="formSection advancedSection formSectionTone toneLead" open>
+        <details className="formSection advancedSection formSectionTone toneLead">
           <summary className="formSectionSummary">
             <div>
               <span className="sectionEyebrow">Pré-lançamento</span>
@@ -268,12 +275,16 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           </label>
         </details>
 
-        <div className="formSection formSectionTone toneMap">
-          <div className="formSectionHeader">
+        <details className="formSection advancedSection formSectionTone toneMap">
+          <summary className="formSectionSummary">
             <div>
-              <span className="sectionEyebrow">Layout do espaço</span>
+              <span className="sectionEyebrow">Opcional</span>
               <h2>Mapa e setores</h2>
+              <p className="muted">Abra este bloco só se realmente quiser exibir mapa na página pública.</p>
             </div>
+          </summary>
+          <div className="formSectionHeader">
+            <div />
             <p className="muted">Organize visualmente palco, setores e referências para o cliente entender melhor o ingresso.</p>
           </div>
           <p className="muted">
@@ -309,11 +320,6 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               help="Opcional. JPG, PNG, WEBP ou GIF até 10MB."
               aspect="map"
             />
-            <label className="field mediaUrlFallback">
-              <span>Ou URL do mapa</span>
-              <input name="eventMapImageUrl" placeholder="https://..." />
-              <small>Opcional. Pode ser trocado depois na edição do evento.</small>
-            </label>
           </div>
           <div className="mediaSizingGuide">
             <div>
@@ -327,14 +333,14 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               <p>O mapa aparece inteiro dentro de uma moldura. Se a arte for vertical, pode sobrar margem lateral.</p>
             </div>
           </div>
-        </div>
+        </details>
 
         <details className="formSection advancedSection formSectionTone toneConversion">
           <summary className="formSectionSummary">
             <div>
-              <span className="sectionEyebrow">Argumentos de venda</span>
-              <h2>Conversão da página pública</h2>
-              <p className="muted">Textos opcionais para prova social, urgência e botão principal.</p>
+              <span className="sectionEyebrow">Opcional</span>
+              <h2>Textos de conversão</h2>
+              <p className="muted">Use só se quiser dar um tom mais comercial à página pública.</p>
             </div>
           </summary>
           <label className="field">
@@ -372,8 +378,9 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
         <details className="formSection seoPreview advancedSection">
           <summary className="formSectionSummary">
             <div>
+              <span className="sectionEyebrow">Opcional</span>
               <h2>SEO do evento</h2>
-              <p className="muted">Opcional. Se ficar em branco, o sistema gera automaticamente.</p>
+              <p className="muted">Se você não preencher nada aqui, o sistema já monta o básico sozinho.</p>
             </div>
           </summary>
           <label className="field">
