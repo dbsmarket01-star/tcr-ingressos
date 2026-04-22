@@ -23,6 +23,14 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
   }
 
   const leads = await listEventLeads(event.id);
+  const leadsWithPhone = leads.filter((lead) => Boolean(lead.phone)).length;
+  const leadsWithEmail = leads.filter((lead) => Boolean(lead.email)).length;
+  const exportHref = `/admin/events/${event.id}/leads/export`;
+
+  function getWhatsappUrl(phone?: string | null) {
+    const digits = (phone ?? "").replace(/\D/g, "");
+    return digits ? `https://wa.me/55${digits}` : null;
+  }
 
   return (
     <AdminShell
@@ -38,6 +46,12 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
           <div className="actionRow">
             <Link className="secondaryButton smallButton" href={getPublicLeadCaptureUrl(event.slug)} target="_blank">
               Abrir landing
+            </Link>
+            <Link className="secondaryButton smallButton" href={`${getPublicLeadCaptureUrl(event.slug)}/obrigado`} target="_blank">
+              Abrir obrigado
+            </Link>
+            <Link className="button smallButton" href={exportHref}>
+              Exportar CSV
             </Link>
             <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}/edit`}>
               Editar captação
@@ -57,6 +71,14 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
             <span className="muted">Último cadastro</span>
             <strong>{leads[0] ? formatDateTime(leads[0].createdAt) : "-"}</strong>
           </div>
+          <div className="card metric">
+            <span className="muted">Com WhatsApp</span>
+            <strong>{leadsWithPhone}</strong>
+          </div>
+          <div className="card metric">
+            <span className="muted">Com e-mail</span>
+            <strong>{leadsWithEmail}</strong>
+          </div>
         </div>
       </section>
 
@@ -66,6 +88,13 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
             <h2>Cadastros recebidos</h2>
             <p className="muted">Esses contatos vieram da landing separada da venda de ingressos.</p>
           </div>
+          {leads.length > 0 ? (
+            <div className="actionRow">
+              <Link className="secondaryButton smallButton" href={exportHref}>
+                Baixar planilha
+              </Link>
+            </div>
+          ) : null}
         </div>
         {leads.length === 0 ? (
           <div className="empty">Nenhum lead captado ainda para este evento.</div>
@@ -78,6 +107,7 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
                   <th>E-mail</th>
                   <th>Telefone</th>
                   <th>Cadastrado em</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -87,6 +117,23 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
                     <td>{lead.email}</td>
                     <td>{lead.phone || "-"}</td>
                     <td>{formatDateTime(lead.createdAt)}</td>
+                    <td>
+                      <div className="tableActions">
+                        <a className="secondaryButton smallButton" href={`mailto:${lead.email}`}>
+                          E-mail
+                        </a>
+                        {getWhatsappUrl(lead.phone) ? (
+                          <a
+                            className="secondaryButton smallButton"
+                            href={getWhatsappUrl(lead.phone) || "#"}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                          >
+                            WhatsApp
+                          </a>
+                        ) : null}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
