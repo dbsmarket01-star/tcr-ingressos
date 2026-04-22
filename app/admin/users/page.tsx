@@ -1,5 +1,6 @@
 import { AdminRole } from "@prisma/client";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { AdminUserEventScopeField } from "@/components/admin/AdminUserEventScopeField";
 import {
   createAdminUserAction,
   updateAdminUserEventAccessAction,
@@ -69,20 +70,14 @@ export default async function AdminUsersPage() {
               ))}
             </select>
           </label>
-          <label className="checkboxField">
-            <input name="accessAllEvents" type="checkbox" defaultChecked />
-            <span>Liberar acesso a todos os eventos</span>
-          </label>
           <label className="field">
-            <span>Eventos permitidos</span>
-            <select name="allowedEventIds" multiple size={Math.min(Math.max(events.length, 4), 8)}>
-              {events.map((event) => (
-                <option key={event.id} value={event.id}>
-                  {event.title}
-                </option>
-              ))}
-            </select>
-            <small>Use esta lista quando o usuário puder acessar somente um ou alguns eventos.</small>
+            <span>Escopo dos eventos</span>
+            <AdminUserEventScopeField
+              events={events}
+              defaultAccessAllEvents
+              defaultAllowedEventIds={[]}
+            />
+            <small>Escolha se este usuário vê todos os eventos ou apenas os que você marcar abaixo.</small>
           </label>
           <button className="button" type="submit">
             Criar usuário
@@ -144,28 +139,12 @@ export default async function AdminUsersPage() {
                     <form action={updateAdminUserEventAccessAction} className="stackedInlineForm">
                       <input type="hidden" name="userId" value={user.id} />
                       <input type="hidden" name="role" value={user.role} />
-                      <label className="checkboxField compact">
-                        <input
-                          name="accessAllEvents"
-                          type="checkbox"
-                          defaultChecked={user.role === AdminRole.OWNER || user.accessAllEvents}
-                          disabled={user.role === AdminRole.OWNER}
-                        />
-                        <span>{user.role === AdminRole.OWNER ? "Proprietário sempre vê tudo" : "Todos os eventos"}</span>
-                      </label>
-                      <select
-                        name="allowedEventIds"
-                        multiple
-                        size={Math.min(Math.max(events.length, 4), 6)}
-                        defaultValue={user.allowedEventIds}
-                        disabled={user.role === AdminRole.OWNER || user.accessAllEvents}
-                      >
-                        {events.map((event) => (
-                          <option value={event.id} key={event.id}>
-                            {event.title}
-                          </option>
-                        ))}
-                      </select>
+                      <AdminUserEventScopeField
+                        events={events}
+                        defaultAccessAllEvents={user.role === AdminRole.OWNER || user.accessAllEvents}
+                        defaultAllowedEventIds={user.allowedEventIds}
+                        lockedToAllEvents={user.role === AdminRole.OWNER}
+                      />
                       <small className="muted">
                         {user.role === AdminRole.OWNER || user.accessAllEvents
                           ? "Acesso sem restrição de evento."

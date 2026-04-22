@@ -5910,3 +5910,51 @@ textarea {
   font-size: 12px;
   line-height: 1.35;
 }
+
+.eventScopeField {
+  display: grid;
+  gap: 12px;
+}
+
+.eventScopeModes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.eventScopeMode {
+  align-items: center;
+  background: #f4f8f6;
+  border: 1px solid rgba(16, 85, 69, 0.12);
+  border-radius: 999px;
+  color: #36524b;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 8px;
+  padding: 10px 14px;
+}
+
+.eventScopeMode.isActive {
+  background: rgba(11, 122, 99, 0.1);
+  border-color: rgba(11, 122, 99, 0.28);
+  color: var(--brand-dark);
+}
+
+.eventScopeMode input {
+  accent-color: var(--brand);
+}
+
+.eventScopeChecklist {
+  border: 1px solid rgba(16, 85, 69, 0.12);
+  border-radius: 14px;
+  display: grid;
+  gap: 8px;
+  max-height: 240px;
+  overflow: auto;
+  padding: 12px;
+}
+
+.eventScopeChecklist.isDisabled {
+  background: #f8faf9;
+  opacity: 0.68;
+}

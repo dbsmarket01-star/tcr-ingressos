@@ -35,9 +35,23 @@ function getLotAlert(soldPercent: number, availableQuantity: number, reservedQua
   };
 }
 
-export async function getLotSalesReport(eventId?: string, allowedEventIds?: EventScope) {
-  const eventFilter = eventId ? { id: eventId } : allowedEventIds ? { id: { in: allowedEventIds } } : undefined;
-  const lotFilter = eventId ? { eventId } : allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined;
+export async function getLotSalesReport(
+  organizationId: string,
+  eventId?: string,
+  allowedEventIds?: EventScope
+) {
+  const eventFilter = {
+    organizationId,
+    ...(eventId ? { id: eventId } : {}),
+    ...(eventId ? {} : allowedEventIds ? { id: { in: allowedEventIds } } : {})
+  };
+  const lotFilter = {
+    event: {
+      organizationId,
+      ...(eventId ? { id: eventId } : {}),
+      ...(eventId ? {} : allowedEventIds ? { id: { in: allowedEventIds } } : {})
+    }
+  };
 
   const [events, lots] = await Promise.all([
     prisma.event.findMany({
@@ -95,8 +109,8 @@ export async function getLotSalesReport(eventId?: string, allowedEventIds?: Even
     const serviceFeeInCents = lot.orderItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
     const usedTickets = lot.tickets.filter((ticket) => ticket.status === "USED").length;
     const activeTickets = lot.tickets.filter((ticket) => ticket.status === "ACTIVE").length;
-    const availableQuantity = Math.max(lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity, 0);
-    const soldPercent = lot.totalQuantity > 0 ? Math.round((lot.soldQuantity / lot.totalQuantity) * 100) : 0;
+    const availableQuantity = Math.max(lot.totalQuantity - paidQuantity - lot.reservedQuantity, 0);
+    const soldPercent = lot.totalQuantity > 0 ? Math.round((paidQuantity / lot.totalQuantity) * 100) : 0;
     const issuedTickets = activeTickets + usedTickets;
     const checkInPercent = issuedTickets > 0 ? Math.round((usedTickets / issuedTickets) * 100) : 0;
     const averageGrossPerSoldTicketInCents =
@@ -113,7 +127,7 @@ export async function getLotSalesReport(eventId?: string, allowedEventIds?: Even
       status: lot.status,
       priceInCents: lot.priceInCents,
       totalQuantity: lot.totalQuantity,
-      soldQuantity: lot.soldQuantity,
+      soldQuantity: paidQuantity,
       paidQuantity,
       reservedQuantity: lot.reservedQuantity,
       availableQuantity,
@@ -133,7 +147,7 @@ export async function getLotSalesReport(eventId?: string, allowedEventIds?: Even
   const criticalAlerts = rows.filter((row) => row.alert.level !== "ok");
   const totalIssuedTickets = rows.reduce((sum, row) => sum + row.issuedTickets, 0);
   const totalUsedTickets = rows.reduce((sum, row) => sum + row.usedTickets, 0);
-  const totalSold = rows.reduce((sum, row) => sum + row.soldQuantity, 0);
+  const totalSold = rows.reduce((sum, row) => sum + row.paidQuantity, 0);
   const totalCapacity = rows.reduce((sum, row) => sum + row.totalQuantity, 0);
   const totalGrossInCents = rows.reduce((sum, row) => sum + row.grossInCents, 0);
 

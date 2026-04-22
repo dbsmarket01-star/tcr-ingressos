@@ -18,7 +18,11 @@ function formatDate(value: Date) {
 export async function GET(request: Request) {
   const admin = await requirePermission("REPORTS");
   const url = new URL(request.url);
-  const report = await getLotSalesReport(url.searchParams.get("eventId") || undefined, getAdminAllowedEventIds(admin));
+  const report = await getLotSalesReport(
+    admin.organizationId!,
+    url.searchParams.get("eventId") || undefined,
+    getAdminAllowedEventIds(admin)
+  );
 
   const headers = [
     "Evento",

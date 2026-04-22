@@ -23,7 +23,9 @@ function parseRole(value: FormDataEntryValue | null) {
 }
 
 function parseEventAccess(formData: FormData, role: AdminRole) {
-  const accessAllEvents = role === AdminRole.OWNER ? true : formData.get("accessAllEvents") === "on";
+  const scopeMode = String(formData.get("scopeMode") ?? "");
+  const accessAllEvents =
+    role === AdminRole.OWNER ? true : scopeMode ? scopeMode === "ALL" : formData.get("accessAllEvents") === "on";
   const allowedEventIds = formData
     .getAll("allowedEventIds")
     .map((value) => String(value).trim())

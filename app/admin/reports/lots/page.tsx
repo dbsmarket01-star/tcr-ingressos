@@ -16,7 +16,7 @@ export default async function LotSalesReportPage({ searchParams }: LotSalesRepor
   const admin = await requirePermission("REPORTS");
   const params = searchParams ? await searchParams : {};
   const allowedEventIds = getAdminAllowedEventIds(admin);
-  const report = await getLotSalesReport(params.eventId, allowedEventIds);
+  const report = await getLotSalesReport(admin.organizationId!, params.eventId, allowedEventIds);
   const exportHref = `/admin/reports/lots/export?${new URLSearchParams({
     ...(params.eventId ? { eventId: params.eventId } : {})
   }).toString()}`;
