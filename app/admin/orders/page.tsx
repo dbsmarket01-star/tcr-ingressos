@@ -249,16 +249,22 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                   <td>{order.expiresAt ? formatDateTime(order.expiresAt) : "-"}</td>
                   <td>{formatDateTime(order.createdAt)}</td>
                   <td>
-                    {order.status === "PENDING_PAYMENT" || order.status === "EXPIRED" ? (
-                      <form action={cancelPendingOrderAction}>
-                        <input type="hidden" name="orderCode" value={order.code} />
-                        <button className="secondaryButton smallButton" type="submit">
-                          Cancelar
-                        </button>
-                      </form>
-                    ) : (
-                      <span className="muted">-</span>
-                    )}
+                    <div className="actionRow">
+                      <Link className="secondaryButton smallButton" href={`/admin/orders/${order.code}`}>
+                        Detalhe
+                      </Link>
+                      <Link className="secondaryButton smallButton" href={`/admin/support?q=${encodeURIComponent(order.code)}`}>
+                        Atender
+                      </Link>
+                      {order.status === "PENDING_PAYMENT" || order.status === "EXPIRED" ? (
+                        <form action={cancelPendingOrderAction}>
+                          <input type="hidden" name="orderCode" value={order.code} />
+                          <button className="secondaryButton smallButton" type="submit">
+                            Cancelar
+                          </button>
+                        </form>
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               ))}

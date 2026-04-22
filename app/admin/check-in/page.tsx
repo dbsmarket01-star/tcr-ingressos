@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { requirePermission } from "@/features/auth/auth.service";
 import { validateTicketAction } from "@/features/check-in/check-in.actions";
@@ -20,17 +21,17 @@ type CheckInPageProps = {
 };
 
 const statusLabels = {
-  APPROVED: "Valido",
-  ALREADY_USED: "Ja usado",
-  INVALID: "Invalido",
+  APPROVED: "Válido",
+  ALREADY_USED: "Já usado",
+  INVALID: "Inválido",
   CANCELED: "Cancelado"
 };
 
 const statusInstructions = {
   APPROVED: "Entrada liberada. Pode seguir.",
   ALREADY_USED: "Bloqueie a entrada e confira o documento/pedido.",
-  INVALID: "Nao liberar entrada. Codigo nao encontrado ou invalido.",
-  CANCELED: "Nao liberar entrada. Ingresso cancelado."
+  INVALID: "Não liberar entrada. Código não encontrado ou inválido.",
+  CANCELED: "Não liberar entrada. Ingresso cancelado."
 };
 
 export default async function CheckInPage({ searchParams }: CheckInPageProps) {
@@ -42,7 +43,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
   return (
     <AdminShell
       title="Check-in"
-      description="Valide codigo ou token de QR Code, marque entrada e bloqueie reutilizacao."
+      description="Valide código ou token de QR Code, marque entrada e bloqueie reutilização."
     >
       <section className="grid dashboardGrid">
         <article className="card metric">
@@ -58,7 +59,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
           <strong>{stats.totalToday}</strong>
         </article>
         <article className="card metric">
-          <span className="muted">Historico carregado</span>
+          <span className="muted">Histórico carregado</span>
           <strong>{recentCheckIns.length}</strong>
         </article>
       </section>
@@ -66,15 +67,15 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
       <section className="card spacedSection checkInOpsBar">
         <div>
           <span>Fluxo da portaria</span>
-          <strong>Ler QR Code, conferir resultado e liberar apenas se aparecer Valido.</strong>
+          <strong>Ler QR Code, conferir resultado e liberar apenas se aparecer Válido.</strong>
         </div>
         <div>
-          <span>Reutilizacao</span>
-          <strong>Se aparecer Ja usado, bloqueie a entrada e acione o responsavel.</strong>
+          <span>Reutilização</span>
+          <strong>Se aparecer Já usado, bloqueie a entrada e acione o responsável.</strong>
         </div>
         <div>
           <span>Plano B</span>
-          <strong>Sem camera, digite ou cole o codigo do ingresso manualmente.</strong>
+          <strong>Sem câmera, digite ou cole o código do ingresso manualmente.</strong>
         </div>
       </section>
 
@@ -110,7 +111,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
                   </div>
                   {result.checkedAt ? (
                     <div className="summaryLine">
-                      <span>Horario</span>
+                      <span>Horário</span>
                       <strong>{formatDateTime(new Date(result.checkedAt))}</strong>
                     </div>
                   ) : null}
@@ -130,7 +131,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
           ) : (
             <div className="checkInIdle">
               <strong>Nenhuma leitura realizada ainda.</strong>
-              <p>Abra a camera ou cole o codigo do ingresso para iniciar a validacao.</p>
+              <p>Abra a câmera ou cole o código do ingresso para iniciar a validação.</p>
             </div>
           )}
         </aside>
@@ -138,49 +139,55 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
 
       <section className="card spacedSection">
         <div className="sectionHeader inlineHeader">
-          <h2>Historico recente</h2>
+          <div>
+            <h2>Histórico recente</h2>
+            <p className="muted">Use este histórico para confirmar rapidamente o que acabou de acontecer na porta.</p>
+          </div>
+          <Link className="secondaryButton smallButton" href="/admin/support">
+            Abrir atendimento
+          </Link>
         </div>
 
         {recentCheckIns.length === 0 ? (
           <div className="empty">Nenhum check-in registrado ainda.</div>
         ) : (
           <div className="tableScroll">
-          <table className="table operationalTable">
-            <thead>
-              <tr>
-                <th>Horario</th>
-                <th>Status</th>
-                <th>Evento</th>
-                <th>Ingresso</th>
-                <th>Comprador</th>
-                <th>Dispositivo</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentCheckIns.map((checkIn) => (
-                <tr key={checkIn.id}>
-                  <td>{formatDateTime(checkIn.checkedAt)}</td>
-                  <td>
-                    <span
-                      className={`status ${
-                        checkIn.status === "APPROVED" ? "published" : "draft"
-                      }`}
-                    >
-                      {statusLabels[checkIn.status]}
-                    </span>
-                  </td>
-                  <td>{checkIn.event.title}</td>
-                  <td>
-                    <strong>{checkIn.ticket.code}</strong>
-                    <br />
-                    <span className="muted">{checkIn.ticket.lot.name}</span>
-                  </td>
-                  <td>{checkIn.ticket.order.customer.name}</td>
-                  <td>{checkIn.deviceName ?? "-"}</td>
+            <table className="table operationalTable">
+              <thead>
+                <tr>
+                  <th>Horário</th>
+                  <th>Status</th>
+                  <th>Evento</th>
+                  <th>Ingresso</th>
+                  <th>Comprador</th>
+                  <th>Dispositivo</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {recentCheckIns.map((checkIn) => (
+                  <tr key={checkIn.id}>
+                    <td>{formatDateTime(checkIn.checkedAt)}</td>
+                    <td>
+                      <span
+                        className={`status ${
+                          checkIn.status === "APPROVED" ? "published" : "draft"
+                        }`}
+                      >
+                        {statusLabels[checkIn.status]}
+                      </span>
+                    </td>
+                    <td>{checkIn.event.title}</td>
+                    <td>
+                      <strong>{checkIn.ticket.code}</strong>
+                      <br />
+                      <span className="muted">{checkIn.ticket.lot.name}</span>
+                    </td>
+                    <td>{checkIn.ticket.order.customer.name}</td>
+                    <td>{checkIn.deviceName ?? "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>

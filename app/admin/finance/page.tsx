@@ -45,6 +45,16 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
       title="Financeiro"
       description="Faturamento, pagamentos, pedidos e líquido aproximado por período."
     >
+      <section className="adminPanelHero compact">
+        <div>
+          <span className="sectionEyebrow">Saúde financeira</span>
+          <h2>Números mais claros para decidir rápido</h2>
+          <p className="muted">
+            Organizamos bruto, líquido, split e pendências para você bater o olho e entender o que já entrou, o que ainda depende de pagamento e o que foi repassado.
+          </p>
+        </div>
+      </section>
+
       <section className="card financeFilters">
         <form className="financeFiltersForm">
           <label className="field">
@@ -145,7 +155,10 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
 
       <section className="card spacedSection">
         <div className="sectionHeader inlineHeader">
-          <h2>Resumo de repasse</h2>
+          <div>
+            <h2>Resumo de repasse</h2>
+            <p className="muted">Use este quadro para conferir rapidamente o que ficou com a operação e o que saiu no split.</p>
+          </div>
         </div>
         <div className="financeStatusGrid">
           <div>

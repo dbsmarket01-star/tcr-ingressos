@@ -105,6 +105,15 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
       </section>
 
       <section className="card">
+        <div className="sectionHeader inlineHeader">
+          <div>
+            <h2>Ingressos emitidos</h2>
+            <p className="muted">Localize o ingresso, confira o comprador e abra o pedido ou o QR Code em poucos cliques.</p>
+          </div>
+          <Link className="button" href={exportHref}>
+            Exportar CSV
+          </Link>
+        </div>
         {tickets.length === 0 ? (
           <div className="empty">Nenhum ingresso emitido ainda.</div>
         ) : (
@@ -119,6 +128,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                   <th>Comprador</th>
                   <th>Pedido</th>
                   <th>Emitido em</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -136,11 +146,25 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                     </td>
                     <td>{ticket.event.title}</td>
                     <td>{ticket.lot.name}</td>
-                    <td>{ticket.order.customer.name}</td>
                     <td>
-                      <Link href={`/pedido/${ticket.order.code}`}>{ticket.order.code}</Link>
+                      {ticket.order.customer.name}
+                      <br />
+                      <span className="muted">{ticket.order.customer.email}</span>
+                    </td>
+                    <td>
+                      <Link href={`/admin/orders/${ticket.order.code}`}>{ticket.order.code}</Link>
                     </td>
                     <td>{formatDateTime(ticket.issuedAt)}</td>
+                    <td>
+                      <div className="actionRow">
+                        <Link className="secondaryButton smallButton" href={`/ingresso/${ticket.code}`}>
+                          Abrir QR
+                        </Link>
+                        <Link className="secondaryButton smallButton" href={`/admin/support?q=${encodeURIComponent(ticket.code)}`}>
+                          Atender
+                        </Link>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

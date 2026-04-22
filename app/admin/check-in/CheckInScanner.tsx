@@ -135,7 +135,7 @@ export function CheckInScanner({ action }: CheckInScannerProps) {
       <div className="checkInFormHeader">
         <div>
           <h2>Validar ingresso</h2>
-          <p>Use a camera para QR Code ou cole o codigo manualmente.</p>
+          <p>Use a câmera para QR Code ou cole o código manualmente.</p>
         </div>
         <span>{cameraStatus === "scanning" ? "Lendo" : "Pronto"}</span>
       </div>
@@ -147,7 +147,7 @@ export function CheckInScanner({ action }: CheckInScannerProps) {
           type="button"
           disabled={cameraStatus === "starting" || cameraStatus === "scanning"}
         >
-          Abrir camera
+          Abrir câmera
         </button>
         {showCameraPreview ? (
           <button className="secondaryButton" onClick={stopCamera} type="button">
@@ -165,22 +165,22 @@ export function CheckInScanner({ action }: CheckInScannerProps) {
 
       {cameraStatus === "unsupported" ? (
         <p className="formHint">
-          Este navegador nao liberou leitura automatica. Cole ou digite o codigo abaixo.
+          Este navegador não liberou leitura automática. Cole ou digite o código abaixo.
         </p>
       ) : null}
 
       {cameraStatus === "error" ? (
         <p className="formHint">
-          Nao consegui acessar a camera. Confira a permissao do navegador ou valide pelo codigo.
+          Não consegui acessar a câmera. Confira a permissão do navegador ou valide pelo código.
         </p>
       ) : null}
 
       <label className="field">
-        <span>Codigo ou token do QR Code</span>
+        <span>Código ou token do QR Code</span>
         <input
           autoFocus
           name="code"
-          placeholder="Cole ou leia o codigo do ingresso"
+          placeholder="Cole ou leia o código do ingresso"
           ref={inputRef}
           required
         />
@@ -196,6 +196,9 @@ export function CheckInScanner({ action }: CheckInScannerProps) {
           }}
         />
       </label>
+      <p className="muted">
+        Dica: se o QR Code falhar, procure o pedido ou o ingresso no atendimento e cole o código aqui.
+      </p>
       <button className="button fullButton" type="submit">
         Validar entrada
       </button>

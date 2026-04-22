@@ -180,6 +180,25 @@ export default async function EventManagementPage({ params, searchParams }: Even
           </div>
       </section>
 
+      <section className="grid dashboardGrid spacedSection">
+        <article className="card metric">
+          <span className="muted">Pedidos</span>
+          <strong>{event.orders.length}</strong>
+        </article>
+        <article className="card metric">
+          <span className="muted">Ingressos vendidos</span>
+          <strong>{capacity.sold}</strong>
+        </article>
+        <article className="card metric">
+          <span className="muted">Cupons</span>
+          <strong>{event.coupons.length}</strong>
+        </article>
+        <article className="card metric">
+          <span className="muted">Leads captados</span>
+          <strong>{event._count.leads}</strong>
+        </article>
+      </section>
+
       <section className="grid twoColumns spacedSection">
         <div className="card">
           <div className="sectionHeader inlineHeader">
