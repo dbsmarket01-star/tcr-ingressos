@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { BannerPositionField } from "@/components/forms/BannerPositionField";
 import { ImageUploadField } from "@/components/forms/ImageUploadField";
 import { requirePermission } from "@/features/auth/auth.service";
 import { updateEventAction } from "@/features/events/event.actions";
 import { getEventForManagement } from "@/features/events/event.service";
 import { buildEventSeo } from "@/features/seo/event-seo";
 import { formatDateTimeInput } from "@/lib/format";
+import { getPublicLeadCaptureUrl } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +63,8 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
     >
       <form action={updateEventAction} className="card form wideForm">
         <input type="hidden" name="eventId" value={event.id} />
+        <input type="hidden" name="currentBannerUrl" value={event.bannerUrl ?? ""} />
+        <input type="hidden" name="currentLeadCaptureHeroImageUrl" value={event.leadCaptureHeroImageUrl ?? ""} />
 
         <section className="adminPanelHero compact">
           <div>
@@ -131,28 +133,22 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               label="Trocar banner"
               currentImageUrl={event.bannerUrl}
               recommendedSize="Ideal: 1920 x 840 px"
-              usageHint="Use arte horizontal. Mantenha rosto, nome do evento e data na área central segura."
+              usageHint="Envie a arte final. A página pública agora preserva a imagem inteira, sem depender de ajuste manual de enquadramento."
               help="JPG, PNG, WEBP ou GIF ate 10MB para substituir o banner atual."
               emptyText="Sem banner atual"
               aspect="banner"
             />
-            <label className="field mediaUrlFallback">
-              <span>URL do banner</span>
-              <input name="bannerUrl" defaultValue={event.bannerUrl ?? ""} />
-              <small>Atual: {event.bannerUrl ? "banner configurado" : "sem banner"}</small>
-            </label>
           </div>
-          <BannerPositionField defaultValue={event.bannerPosition} previewImageUrl={event.bannerUrl} />
           <div className="mediaSizingGuide">
             <div>
               <span>Banner topo</span>
               <strong>1920 x 840 px</strong>
-              <p>Use arte horizontal. Para eventos com palestrante/artista, deixe rosto e texto no centro superior.</p>
+              <p>Use arte horizontal. O topo público foi simplificado para mostrar a imagem inteira com mais fidelidade no desktop e no mobile.</p>
             </div>
             <div>
-              <span>Área segura</span>
-              <strong>Centro 80%</strong>
-              <p>Evite informações vitais coladas nas bordas. Use o enquadramento para corrigir o recorte final.</p>
+              <span>Sem ajuste manual</span>
+              <strong>Mais prático</strong>
+              <p>Você só precisa enviar a arte. Retiramos o campo de URL e o seletor de enquadramento para deixar esse bloco mais rápido e confiável.</p>
             </div>
           </div>
         </div>
@@ -307,7 +303,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           </label>
           <div className="infoBox">
             Link público da captação:{" "}
-            <Link href={`/lista/${event.slug}`} target="_blank">
+            <Link href={getPublicLeadCaptureUrl(event.slug)} target="_blank">
               /lista/{event.slug}
             </Link>
           </div>
@@ -344,10 +340,6 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               emptyText="Sem imagem da captação"
               aspect="banner"
             />
-            <label className="field mediaUrlFallback">
-              <span>URL da imagem da captação</span>
-              <input name="leadCaptureHeroImageUrl" defaultValue={event.leadCaptureHeroImageUrl ?? ""} placeholder="https://..." />
-            </label>
           </div>
           <label className="field">
             <span>Vídeo do YouTube</span>

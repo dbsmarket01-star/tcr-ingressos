@@ -86,7 +86,7 @@ export function ImageUploadField({
       />
       {localError ? <small className="fieldError">{localError}</small> : null}
       {help ? <small>{help}</small> : null}
-      <span className="uploadActionText">Clique para escolher ou trocar a imagem</span>
+      <span className="uploadActionText">Escolher ou trocar imagem</span>
     </label>
   );
 }

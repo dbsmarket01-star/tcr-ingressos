@@ -166,15 +166,16 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         </nav>
       </header>
 
-      <section
-        className="publicHero"
-        style={{
-          ["--public-hero-image" as string]: `url("${heroImage}")`,
-          ["--public-hero-position" as string]: event.bannerPosition,
-          backgroundImage: `linear-gradient(90deg, rgba(9, 20, 28, 0.9), rgba(9, 20, 28, 0.5)), url("${heroImage}")`,
-          backgroundPosition: event.bannerPosition
-        }}
-      >
+      <section className="publicHero">
+        <div className="publicHeroMedia">
+          <img
+            className="publicHeroImage"
+            src={heroImage}
+            alt={`Banner do evento ${event.title}`}
+            decoding="async"
+            loading="eager"
+          />
+        </div>
         <div className="publicHeroInner">
           <h1>{event.title}</h1>
           <p>{eventLead}</p>
@@ -273,8 +274,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           </div>
           <div className="purchaseHeader">
             <div>
-              <span className="muted">Ingressos</span>
-              <strong>{socialProofText}</strong>
+              <span className="muted">Lotes disponíveis</span>
+              <strong>{activeLots.length} opção{activeLots.length > 1 ? "ões" : ""} para compra</strong>
               {lowestTotalInCents > 0 ? <small>A partir de {formatCurrency(lowestTotalInCents)}</small> : null}
             </div>
             <a className="miniAnchorButton" href="#ingressos">Escolher</a>
@@ -435,6 +436,12 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                 <span>Cupom de desconto</span>
                 <input name="coupon" placeholder="Digite seu cupom" />
               </label>
+
+              {event.supportWhatsappUrl ? (
+                <p className="checkoutSupportHint">
+                  Precisa de ajuda antes de pagar? Use o ícone do WhatsApp para falar com o suporte deste evento.
+                </p>
+              ) : null}
 
               <SubmitButton className="button fullButton" pendingText="Criando pedido...">
                 Garantir minha vaga agora

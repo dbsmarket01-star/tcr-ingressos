@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { BannerPositionField } from "@/components/forms/BannerPositionField";
 import { ImageUploadField } from "@/components/forms/ImageUploadField";
 import { requirePermission } from "@/features/auth/auth.service";
 import { createEventAction } from "@/features/events/event.actions";
@@ -73,27 +72,21 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               name="bannerFile"
               label="Banner do evento"
               recommendedSize="Ideal: 1920 x 840 px"
-              usageHint="Use arte horizontal. Mantenha rosto, nome do evento e data na area central segura."
+              usageHint="Envie a arte final do evento. O sistema agora preserva a imagem inteira na página pública, sem depender de ajuste manual."
               help="JPG, PNG, WEBP ou GIF ate 10MB."
               aspect="banner"
             />
-            <label className="field mediaUrlFallback">
-              <span>Ou URL do banner</span>
-              <input name="bannerUrl" placeholder="https://..." />
-              <small>Use URL apenas se a imagem já estiver hospedada fora do sistema.</small>
-            </label>
           </div>
-          <BannerPositionField defaultValue="center top" />
           <div className="mediaSizingGuide">
             <div>
               <span>Banner topo</span>
               <strong>1920 x 840 px</strong>
-              <p>Use arte horizontal. Para eventos com palestrante/artista, deixe rosto e texto no centro superior.</p>
+              <p>Use arte horizontal. A página pública exibe a imagem inteira, então você não precisa mais ficar ajustando o corte na mão.</p>
             </div>
             <div>
-              <span>Área segura</span>
-              <strong>Centro 80%</strong>
-              <p>Evite informações vitais coladas nas bordas. Use o enquadramento para corrigir o recorte final.</p>
+              <span>Dica prática</span>
+              <strong>Arte pronta</strong>
+              <p>Se o banner já vier com título e personagens bem distribuídos, ele tende a ficar correto no desktop e no mobile sem retrabalho.</p>
             </div>
           </div>
         </div>
@@ -238,10 +231,6 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               help="JPG, PNG, WEBP ou GIF até 10MB."
               aspect="banner"
             />
-            <label className="field mediaUrlFallback">
-              <span>Ou URL da imagem da captação</span>
-              <input name="leadCaptureHeroImageUrl" placeholder="https://..." />
-            </label>
           </div>
           <label className="field">
             <span>Vídeo do YouTube</span>

@@ -42,8 +42,8 @@ function validationMessage(error: unknown) {
         state: "UF",
         salesStartsAt: "Início das vendas",
         salesEndsAt: "Fim das vendas",
-        bannerUrl: "URL do banner",
-        bannerPosition: "Enquadramento do banner",
+        bannerUrl: "Banner do evento",
+        bannerPosition: "Exibição do banner",
         eventMapImageUrl: "Mapa do evento",
         eventMapTemplate: "Modelo do mapa",
         eventMapNotes: "Observações do mapa",
@@ -199,7 +199,10 @@ export async function updateEventAction(formData: FormData) {
     state: String(formData.get("state") ?? "").trim(),
     salesStartsAt: optionalDate(formData.get("salesStartsAt")),
     salesEndsAt: optionalDate(formData.get("salesEndsAt")),
-    bannerUrl: bannerUploadUrl || String(formData.get("bannerUrl") ?? "").trim(),
+    bannerUrl:
+      bannerUploadUrl ||
+      String(formData.get("bannerUrl") ?? "").trim() ||
+      String(formData.get("currentBannerUrl") ?? "").trim(),
     bannerPosition: String(formData.get("bannerPosition") ?? "center center"),
     eventMapImageUrl: mapUploadUrl || String(formData.get("eventMapImageUrl") ?? "").trim(),
     eventMapTemplate: String(formData.get("eventMapTemplate") ?? "AUTO"),
@@ -217,7 +220,10 @@ export async function updateEventAction(formData: FormData) {
     leadCaptureDescription: String(formData.get("leadCaptureDescription") ?? "").trim() || undefined,
     leadCaptureOfferText: String(formData.get("leadCaptureOfferText") ?? "").trim() || undefined,
     leadCaptureCtaText: String(formData.get("leadCaptureCtaText") ?? "").trim() || undefined,
-    leadCaptureHeroImageUrl: leadHeroUploadUrl || String(formData.get("leadCaptureHeroImageUrl") ?? "").trim(),
+    leadCaptureHeroImageUrl:
+      leadHeroUploadUrl ||
+      String(formData.get("leadCaptureHeroImageUrl") ?? "").trim() ||
+      String(formData.get("currentLeadCaptureHeroImageUrl") ?? "").trim(),
     leadCaptureVideoUrl: String(formData.get("leadCaptureVideoUrl") ?? "").trim() || undefined,
     leadCaptureWhatsappGroupUrl: String(formData.get("leadCaptureWhatsappGroupUrl") ?? "").trim() || undefined,
     leadCaptureThankYouTitle: String(formData.get("leadCaptureThankYouTitle") ?? "").trim() || undefined,
