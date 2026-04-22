@@ -17,9 +17,20 @@ export async function AdminShell({ title, description, children }: AdminShellPro
   const currentOrganizationContext = await getCurrentOrganizationContext();
   const adminOrganization =
     admin?.organizationId ? await getOrganizationBrandingById(admin.organizationId) : currentOrganizationContext.organization;
-  const brandName = adminOrganization?.name || currentOrganizationContext.brandName;
+  const isPlatformHost = currentOrganizationContext.isPlatformHost;
+  const brandName = isPlatformHost
+    ? currentOrganizationContext.platformName
+    : adminOrganization?.name || currentOrganizationContext.brandName;
   const brandMark = brandName.trim().charAt(0).toUpperCase() || "I";
-  const publicSiteHref = currentOrganizationContext.publicBaseUrl || "/";
+  const publicSiteHref = isPlatformHost ? currentOrganizationContext.platformAppUrl || "/" : currentOrganizationContext.publicBaseUrl || "/";
+  const sidebarEyebrow = isPlatformHost ? "Central da plataforma" : "Central de operação";
+  const sidebarText = isPlatformHost
+    ? "Operações, domínios, equipes e evolução do motor de bilheteria em um painel-mãe."
+    : "Eventos, pedidos, leads, check-in e financeiro em uma operação mais organizada para a equipe.";
+  const pulseTitle = isPlatformHost ? "Plataforma em evolução" : "Operação em andamento";
+  const pulseText = isPlatformHost
+    ? "A base da Ingressas sustenta o motor, enquanto cada bilheteria filha mantém sua própria marca e domínio."
+    : "Vendas, atendimento e check-in centralizados para a rotina do produtor.";
 
   return (
     <main className="adminShell">
@@ -29,8 +40,8 @@ export async function AdminShell({ title, description, children }: AdminShellPro
           <span>{brandName}</span>
         </Link>
         <div className="sidebarIntro">
-          <span className="eyebrow">Central de operação</span>
-          <p>Eventos, pedidos, leads, check-in e financeiro em uma operação mais organizada para a equipe.</p>
+          <span className="eyebrow">{sidebarEyebrow}</span>
+          <p>{sidebarText}</p>
         </div>
         <AdminSideNav groups={navGroups} />
       </aside>
@@ -49,11 +60,11 @@ export async function AdminShell({ title, description, children }: AdminShellPro
               </div>
             ) : null}
             <div className="adminHeaderPulse">
-              <strong>Operação em andamento</strong>
-              <span>Vendas, atendimento e check-in centralizados para a rotina do produtor.</span>
+              <strong>{pulseTitle}</strong>
+              <span>{pulseText}</span>
             </div>
             <Link className="secondaryButton" href={publicSiteHref}>
-              Ver site
+              {isPlatformHost ? "Ver plataforma" : "Ver site"}
             </Link>
             <form action={logoutAction}>
               <button className="secondaryButton" type="submit">

@@ -89,20 +89,22 @@ function buildOrganizationContext(
   const publicBaseUrl = buildHttpsUrl(organization.publicDomain) || getFallbackPublicBaseUrl();
   const platformHost = getPlatformHost();
   const platformName = getPlatformName();
+  const platformMode = isPlatformHost(normalizedRequestHost);
+  const displayName = platformMode ? platformName : organization.name;
 
   return {
     organization,
     requestHost: normalizedRequestHost,
     isMatchedByHost,
     isAdminHost: Boolean(normalizedRequestHost && normalizedAdminHost && normalizedRequestHost === normalizedAdminHost),
-    isPlatformHost: isPlatformHost(normalizedRequestHost),
+    isPlatformHost: platformMode,
     platformName,
     platformHost,
     platformAppUrl: getPlatformAppUrl(),
     publicBaseUrl,
     adminBaseUrl: buildHttpsUrl(organization.adminDomain),
-    brandName: organization.name,
-    brandMark: organization.name.trim().charAt(0).toUpperCase() || "I"
+    brandName: displayName,
+    brandMark: displayName.trim().charAt(0).toUpperCase() || "I"
   };
 }
 

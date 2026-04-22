@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { getDashboardMetrics } from "@/features/dashboard/dashboard.service";
+import { getPlatformOverview } from "@/features/platform/platform.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { getPublicEventUrl } from "@/lib/public-url";
 
@@ -38,9 +40,14 @@ function formatPeriodLabel(startDate: string, endDate: string) {
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
-  await requirePermission("DASHBOARD");
+  const admin = await requirePermission("DASHBOARD");
   const params = searchParams ? await searchParams : {};
-  const dashboard = await getDashboardMetrics(params);
+  const organizationContext = await getCurrentOrganizationContext();
+  const isPlatformHost = organizationContext.isPlatformHost;
+  const [dashboard, platformOverview] = await Promise.all([
+    getDashboardMetrics(params, getAdminAllowedEventIds(admin)),
+    isPlatformHost ? getPlatformOverview() : Promise.resolve(null)
+  ]);
   const periodLabel = formatPeriodLabel(dashboard.period.startDate, dashboard.period.endDate);
   const approvedRateLabel =
     dashboard.periodMetrics.ordersCreated > 0
@@ -49,14 +56,93 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
   return (
     <AdminShell
-      title="Dashboard"
-      description="Acompanhe faturamento, pedidos, meios de pagamento e desempenho dos eventos por período."
+      title={isPlatformHost ? "Ingressas" : "Dashboard"}
+      description={
+        isPlatformHost
+          ? "Acompanhe a plataforma-mãe, a saúde das operações embaixo dela e a operação-base sem perder contexto."
+          : "Acompanhe faturamento, pedidos, meios de pagamento e desempenho dos eventos por período."
+      }
     >
+      {isPlatformHost && platformOverview ? (
+        <section className="platformOverviewPanel spacedSection" aria-label="Resumo da plataforma">
+          <div className="platformOverviewHero">
+            <div>
+              <span className="eyebrow">Modo plataforma</span>
+              <h2>{organizationContext.platformName} já está pronta para sustentar mais de uma bilheteria.</h2>
+              <p>
+                O motor principal já separa operações, branding por host e escopo interno. O próximo passo é plugar os
+                domínios reais de cada operação filha sem duplicar código.
+              </p>
+            </div>
+            <div className="platformOverviewBadges">
+              <span>Base única</span>
+              <span>Domínio por operação</span>
+              <span>Equipe e eventos isolados</span>
+            </div>
+          </div>
+
+          <div className="grid dashboardGrid platformOverviewMetrics">
+            {metric("Operações", platformOverview.totalOrganizations, `${platformOverview.activeOrganizations} ativas`)}
+            {metric("Domínios configurados", platformOverview.domainsConfigured, "Público ou admin já apontados")}
+            {metric("Eventos na base", platformOverview.totalEvents, `${platformOverview.publishedEvents} publicados`)}
+            {metric("Usuários internos", platformOverview.totalAdmins, "Acessos somados na plataforma")}
+          </div>
+
+          <div className="dashboardPanel platformOperationsPanel">
+            <div className="sectionHeader inlineHeader">
+              <div>
+                <h2>Operações já estruturadas</h2>
+                <p>Esta leitura mostra o que já existe na base antes de conectar os próximos domínios.</p>
+              </div>
+            </div>
+
+            <div className="tableScroll">
+              <table className="table operationalTable">
+                <thead>
+                  <tr>
+                    <th>Operação</th>
+                    <th>Status</th>
+                    <th>Eventos</th>
+                    <th>Equipe</th>
+                    <th>Domínio público</th>
+                    <th>Domínio admin</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {platformOverview.operations.map((operation) => (
+                    <tr key={operation.id}>
+                      <td>
+                        <strong>{operation.name}</strong>
+                        <br />
+                        <span className="muted">{operation.slug}</span>
+                      </td>
+                      <td>
+                        <span className={`status ${operation.isActive ? "published" : "draft"}`}>
+                          {operation.isActive ? "Ativa" : "Inativa"}
+                        </span>
+                      </td>
+                      <td>{operation.eventCount}</td>
+                      <td>{operation.adminCount}</td>
+                      <td>{operation.publicDomain || "A conectar"}</td>
+                      <td>{operation.adminDomain || "A conectar"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <section className="dashboardFilterPanel" aria-label="Filtro do dashboard">
         <div>
-          <span className="eyebrow">Visão comercial</span>
-          <h2>Resumo da operação</h2>
-          <p>{periodLabel}. Ajuste as datas para comparar vendas, clientes e desempenho por evento.</p>
+          <span className="eyebrow">{isPlatformHost ? "Operação-base" : "Visão comercial"}</span>
+          <h2>{isPlatformHost ? "Resumo da TCR dentro da plataforma" : "Resumo da operação"}</h2>
+          <p>
+            {isPlatformHost
+              ? `${periodLabel}. Enquanto os próximos domínios entram, esta leitura segue mostrando a primeira operação filha da base.`
+              : `${periodLabel}. Ajuste as datas para comparar vendas, clientes e desempenho por evento.`}
+          </p>
           <div className="dashboardQuickFilters">
             <Link className="secondaryButton smallButton" href="/admin">
               Hoje

@@ -886,6 +886,41 @@ textarea {
   padding: 10px;
 }
 
+.platformFlowSection {
+  margin-top: 28px;
+}
+
+.platformFlowGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.platformFlowCard {
+  align-content: start;
+  gap: 10px;
+}
+
+.platformFlowCard span {
+  color: var(--brand);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.platformFlowCard strong {
+  font-size: 24px;
+  line-height: 1.12;
+}
+
+.platformFlowCard p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+
 .homeEmptyState {
   align-content: center;
   background:
@@ -1164,6 +1199,79 @@ textarea {
   display: grid;
   gap: 18px;
   padding: 18px;
+}
+
+.platformOverviewPanel {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.platformOverviewHero {
+  background:
+    radial-gradient(circle at top right, rgba(111, 183, 221, 0.14), transparent 34%),
+    linear-gradient(135deg, rgba(13, 50, 43, 0.98), rgba(15, 32, 44, 0.95));
+  border: 1px solid rgba(167, 215, 201, 0.16);
+  border-radius: 24px;
+  box-shadow: 0 26px 60px rgba(16, 24, 35, 0.16);
+  color: white;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  overflow: hidden;
+  padding: 24px;
+}
+
+.platformOverviewHero h2,
+.platformOverviewHero p {
+  margin: 0;
+}
+
+.platformOverviewHero h2 {
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.02;
+  margin-top: 4px;
+  max-width: 14ch;
+}
+
+.platformOverviewHero p {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  margin-top: 12px;
+  max-width: 64ch;
+}
+
+.platformOverviewHero .eyebrow {
+  color: #bfe8dd;
+}
+
+.platformOverviewBadges {
+  align-content: center;
+  display: grid;
+  gap: 10px;
+}
+
+.platformOverviewBadges span {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.92);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 14px;
+  text-transform: uppercase;
+}
+
+.platformOverviewMetrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.platformOperationsPanel {
+  padding-top: 20px;
 }
 
 .donutChart {
@@ -5343,6 +5451,16 @@ textarea {
     width: 100%;
   }
 
+  .platformOverviewHero,
+  .platformFlowGrid,
+  .platformOverviewMetrics {
+    grid-template-columns: 1fr;
+  }
+
+  .platformOverviewHero {
+    padding: 20px;
+  }
+
   .publicHero {
     padding: 0 18px 0;
   }
@@ -5752,6 +5870,11 @@ textarea {
 
   .homeHero h1 {
     font-size: 36px;
+  }
+
+  .platformOverviewHero h2,
+  .platformFlowCard strong {
+    font-size: 24px;
   }
 
   .homeHeroStats div {

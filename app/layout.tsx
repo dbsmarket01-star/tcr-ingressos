@@ -9,8 +9,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const organizationContext = await getCurrentOrganizationContext();
 
   return {
-    title: organizationContext.brandName,
-    description: `Bilheteria oficial da ${organizationContext.brandName} para venda de ingressos, pedidos, check-in e operação de eventos.`
+    title: organizationContext.isPlatformHost ? organizationContext.platformName : organizationContext.brandName,
+    description: organizationContext.isPlatformHost
+      ? `${organizationContext.platformName} é a plataforma SaaS que sustenta várias bilheterias com domínio, equipe, eventos, pedidos e check-in próprios.`
+      : `Bilheteria oficial da ${organizationContext.brandName} para venda de ingressos, pedidos, check-in e operação de eventos.`
   };
 }
 

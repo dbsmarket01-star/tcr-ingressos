@@ -20,6 +20,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const wasReset = params.reset === "1";
   const organizationContext = await getCurrentOrganizationContext();
   const isPlatformHost = organizationContext.isPlatformHost;
+  const loginBrandLabel = isPlatformHost ? organizationContext.platformName : organizationContext.brandName;
 
   return (
     <main className="loginShell loginShellAdmin">
@@ -27,7 +28,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <div className="loginFormArea">
           <Link className="brand loginBrand loginBrandDark" href="/">
             <span className="brandMark">{organizationContext.brandMark}</span>
-            <span>{organizationContext.brandName}</span>
+            <span>{loginBrandLabel}</span>
           </Link>
 
           <div>
@@ -81,7 +82,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               Recuperar senha
             </Link>
             <p>
-              Novos acessos internos devem ser liberados pelo proprietário dentro do painel, em Usuários.
+              {isPlatformHost
+                ? "Enquanto a plataforma nasce, os acessos ainda são liberados dentro da operação-base."
+                : "Novos acessos internos devem ser liberados pelo proprietário dentro do painel, em Usuários."}
             </p>
           </div>
         </div>

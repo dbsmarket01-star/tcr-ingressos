@@ -23,9 +23,25 @@ const operationalHighlights = [
   "Painel administrativo para operação diária"
 ];
 
+const platformFlow = [
+  {
+    title: "Plataforma-mãe",
+    body: "Ingressas administra o motor, a evolução da base e o padrão que sustenta todas as bilheterias."
+  },
+  {
+    title: "Operações filhas",
+    body: "Cada cliente roda com domínio próprio, identidade própria, usuários próprios e eventos separados."
+  },
+  {
+    title: "Fluxo público + operação",
+    body: "Vendas, leads, pedidos, QR Code, check-in e atendimento continuam no mesmo núcleo técnico."
+  }
+];
+
 export default async function Home() {
   const organizationContext = await getCurrentOrganizationContext();
   const isPlatformHost = organizationContext.isPlatformHost;
+  const baseOperationName = organizationContext.organization.name;
   const events = await listCachedPublishedEventShowcase(6, organizationContext.organization.id);
   const featuredEvent = events[0] ?? null;
 
@@ -49,7 +65,7 @@ export default async function Home() {
             </h1>
             <p>
               {isPlatformHost
-                ? `${organizationContext.platformName} é a plataforma-mãe que sustenta bilheterias como a ${organizationContext.brandName} e futuras operações com eventos, leads, pedidos, ingressos e check-in no mesmo motor.`
+                ? `${organizationContext.platformName} é a plataforma-mãe que sustenta bilheterias como a ${baseOperationName} e futuras operações com eventos, leads, pedidos, ingressos e check-in no mesmo motor.`
                 : `Encontre os próximos eventos da ${organizationContext.brandName}, escolha seu ingresso em poucos passos e receba o QR Code automaticamente após a confirmação do pagamento.`}
             </p>
             <div className="homeTrustStrip" aria-label="Diferenciais da bilheteria">
@@ -203,6 +219,27 @@ export default async function Home() {
               </div>
             </aside>
           </div>
+
+          {isPlatformHost ? (
+            <section className="platformFlowSection" aria-label="Fluxo da plataforma">
+              <div className="sectionHeader homeSectionHeader">
+                <div>
+                  <span className="eyebrow">Como a Ingressas se organiza</span>
+                  <h2>Uma base só, várias bilheterias embaixo.</h2>
+                </div>
+              </div>
+
+              <div className="platformFlowGrid">
+                {platformFlow.map((item, index) => (
+                  <article className="card platformFlowCard" key={item.title}>
+                    <span>{`0${index + 1}`}</span>
+                    <strong>{item.title}</strong>
+                    <p>{item.body}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </div>
       </section>
     </main>
