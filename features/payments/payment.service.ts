@@ -30,6 +30,16 @@ type TicketEmailPayload = {
   }>;
 };
 
+export type AsaasExternalPaymentSyncResult =
+  | {
+      handled: true;
+      result: Awaited<ReturnType<typeof handlePaymentWebhook>>;
+    }
+  | {
+      handled: false;
+      reason: "not_found";
+    };
+
 async function markTicketsEmailSent(orderId: string) {
   await prisma.order.update({
     where: { id: orderId },
@@ -288,19 +298,31 @@ export async function syncAsaasPaymentByExternalId(externalId: string) {
   });
 
   if (!localPayment) {
-    throw new Error("Pagamento Asaas nao encontrado.");
+    console.warn("[asaas-webhook] Pagamento externo ignorado por nao existir localmente.", {
+      externalId
+    });
+
+    return {
+      handled: false,
+      reason: "not_found"
+    } satisfies AsaasExternalPaymentSyncResult;
   }
 
   const asaas = getAsaasProvider();
   const payment = await asaas.getPayment(externalId);
 
-  return handlePaymentWebhook({
+  const result = await handlePaymentWebhook({
     externalId: String(payment.id || externalId),
     orderCode: localPayment.order.code,
     status: mapAsaasPaymentStatus(payment.status),
     reason: payment.status,
     rawPayload: payment
   });
+
+  return {
+    handled: true,
+    result
+  } satisfies AsaasExternalPaymentSyncResult;
 }
 
 export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & { remoteIp: string }) {

@@ -94,18 +94,34 @@ export async function POST(request: Request) {
     return webhookResponse({ error: "Payload invalido." }, { status: 400 });
   }
 
-  if (!orderCode) {
-    await syncAsaasPaymentByExternalId(paymentId);
+  try {
+    if (!orderCode) {
+      const syncResult = await syncAsaasPaymentByExternalId(paymentId);
+
+      return webhookResponse({
+        received: true,
+        ignored: !syncResult.handled
+      });
+    }
+
+    await handlePaymentWebhook({
+      externalId: paymentId,
+      orderCode,
+      status: mapAsaasStatus(body?.event, body?.payment?.status),
+      reason: body?.event,
+      rawPayload: body
+    });
+
     return webhookResponse({ received: true });
+  } catch (error) {
+    console.error("[asaas-webhook] Falha ao processar webhook.", {
+      paymentId,
+      orderCode,
+      event: body?.event,
+      status: body?.payment?.status,
+      error: error instanceof Error ? error.message : error
+    });
+
+    return webhookResponse({ error: "Falha ao processar webhook." }, { status: 500 });
   }
-
-  await handlePaymentWebhook({
-    externalId: paymentId,
-    orderCode,
-    status: mapAsaasStatus(body?.event, body?.payment?.status),
-    reason: body?.event,
-    rawPayload: body
-  });
-
-  return webhookResponse({ received: true });
 }
