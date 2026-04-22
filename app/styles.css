@@ -10,16 +10,16 @@
   --admin-ink: #16202a;
   --admin-panel: #202c37;
   --admin-soft: #2c3945;
-  --admin-primary: #43206f;
-  --admin-primary-dark: #2d124f;
-  --admin-lilac: #8f6fe3;
+  --admin-primary: #0b7a63;
+  --admin-primary-dark: #075642;
+  --admin-lilac: #79c7b2;
   --admin-cyan: #6fb7dd;
   --admin-card: #ffffff;
-  --admin-card-soft: #faf7ff;
-  --admin-plum: #6b3fd6;
-  --admin-plum-dark: #4c25aa;
-  --admin-indigo-soft: #e9deff;
-  --admin-surface-tint: #f5f1ff;
+  --admin-card-soft: #f6fbf9;
+  --admin-plum: #0f8c72;
+  --admin-plum-dark: #08614d;
+  --admin-indigo-soft: #d8efe8;
+  --admin-surface-tint: #eef7f4;
   --surface: #ffffff;
   --surface-soft: #f8fbfa;
   --warning: #f7b731;
@@ -207,9 +207,9 @@ textarea {
 
 .adminShell {
   background:
-    radial-gradient(circle at top left, rgba(143, 111, 227, 0.18), transparent 24%),
-    radial-gradient(circle at top right, rgba(11, 122, 99, 0.08), transparent 20%),
-    linear-gradient(180deg, #f6f1ff 0, #fafbfe 26%, #f4f7fb 100%);
+    radial-gradient(circle at top left, rgba(11, 122, 99, 0.12), transparent 24%),
+    radial-gradient(circle at top right, rgba(111, 183, 221, 0.08), transparent 20%),
+    linear-gradient(180deg, #eef5f3 0, #fafcfc 26%, #f4f7fb 100%);
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
   min-height: 100vh;
@@ -217,9 +217,9 @@ textarea {
 
 .sidebar {
   background:
-    radial-gradient(circle at top left, rgba(143, 111, 227, 0.35), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(11, 122, 99, 0.18), transparent 22%),
-    linear-gradient(180deg, #3f226e 0%, #2e174f 58%, #25113f 100%);
+    radial-gradient(circle at top left, rgba(111, 183, 221, 0.18), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(11, 122, 99, 0.16), transparent 22%),
+    linear-gradient(180deg, #173941 0%, #102c33 58%, #0c2026 100%);
   color: white;
   height: 100vh;
   overflow-y: auto;
@@ -252,7 +252,7 @@ textarea {
 }
 
 .sidebarIntro .eyebrow {
-  color: #dccffb;
+  color: #c2ece0;
 }
 
 .sidebarIntro p {
@@ -276,7 +276,7 @@ textarea {
 }
 
 .sideNavGroup summary {
-  border-left: 3px solid #b597ff;
+  border-left: 3px solid #8ad4bd;
   cursor: pointer;
   display: grid;
   list-style: none;
@@ -296,7 +296,7 @@ textarea {
 }
 
 .sideNavGroup:nth-child(5) summary {
-  border-left-color: #e48fe6;
+  border-left-color: #9fd7c6;
 }
 
 .sideNavGroup summary strong {
@@ -353,7 +353,7 @@ textarea {
 }
 
 .sideNav a::before {
-  background: #d8c3ff;
+  background: #bde7dc;
   border-radius: 999px;
   content: "";
   height: 6px;
@@ -407,10 +407,10 @@ textarea {
 .adminHeader {
   align-items: center;
   background:
-    radial-gradient(circle at top right, rgba(159, 131, 228, 0.16), transparent 36%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 244, 255, 0.96)),
+    radial-gradient(circle at top right, rgba(111, 183, 221, 0.12), transparent 36%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(243, 249, 247, 0.96)),
     rgba(255, 255, 255, 0.62);
-  border: 1px solid rgba(212, 205, 236, 0.76);
+  border: 1px solid rgba(214, 232, 226, 0.88);
   border-radius: 24px;
   box-shadow: 0 24px 52px rgba(33, 24, 54, 0.08);
   display: flex;
@@ -433,8 +433,8 @@ textarea {
 }
 
 .adminUserBadge {
-  background: linear-gradient(180deg, #fffefe, #f7f3ff);
-  border: 1px solid rgba(212, 205, 236, 0.9);
+  background: linear-gradient(180deg, #fffefe, #f2faf7);
+  border: 1px solid rgba(214, 232, 226, 0.92);
   border-radius: 18px;
   display: grid;
   gap: 3px;
@@ -443,14 +443,14 @@ textarea {
 }
 
 .adminUserBadge span {
-  color: #716391;
+  color: #56736a;
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .adminHeader h1 {
-  color: #2d1b57;
+  color: #14343a;
   font-size: clamp(28px, 4vw, 42px);
   line-height: 1.04;
   margin: 0 0 8px;
@@ -2172,9 +2172,9 @@ textarea {
 
 .loginShell {
   background:
-    radial-gradient(circle at top left, rgba(157, 124, 255, 0.22), transparent 24%),
-    radial-gradient(circle at bottom right, rgba(11, 122, 99, 0.08), transparent 16%),
-    linear-gradient(115deg, #f4efff 0%, #ffffff 48%, #f4f6fb 100%);
+    radial-gradient(circle at top left, rgba(11, 122, 99, 0.14), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(111, 183, 221, 0.08), transparent 16%),
+    linear-gradient(115deg, #eef6f3 0%, #ffffff 48%, #f4f6fb 100%);
   background-position: center;
   background-size: cover;
   display: grid;
@@ -2207,7 +2207,7 @@ textarea {
 
 .adminLoginPanel {
   background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(210, 202, 235, 0.72);
+  border: 1px solid rgba(213, 229, 222, 0.82);
   border-radius: 28px;
   box-shadow: 0 34px 90px rgba(46, 28, 87, 0.18);
   gap: 0;
@@ -2219,8 +2219,8 @@ textarea {
 
 .loginIntro {
   background:
-    radial-gradient(circle at top left, rgba(186, 160, 255, 0.16), transparent 18%),
-    linear-gradient(160deg, rgba(66, 33, 116, 0.96), rgba(110, 60, 179, 0.93)),
+    radial-gradient(circle at top left, rgba(111, 183, 221, 0.14), transparent 18%),
+    linear-gradient(160deg, rgba(12, 65, 55, 0.97), rgba(17, 43, 49, 0.93)),
     url("https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=1200&q=80");
   background-position: center;
   background-size: cover;
@@ -2249,8 +2249,8 @@ textarea {
 }
 
 .loginBrandDark {
-  background: linear-gradient(180deg, #fffefe, #f6f1ff);
-  border: 1px solid rgba(214, 204, 241, 0.92);
+  background: linear-gradient(180deg, #fffefe, #f4faf8);
+  border: 1px solid rgba(214, 232, 226, 0.92);
   border-radius: 18px;
   box-shadow: 0 14px 34px rgba(43, 31, 76, 0.08);
   color: var(--ink);
@@ -2260,8 +2260,8 @@ textarea {
 }
 
 .loginBrandDark .brandMark {
-  background: linear-gradient(135deg, var(--admin-plum), #46a287);
-  box-shadow: 0 10px 20px rgba(76, 37, 170, 0.18);
+  background: linear-gradient(135deg, var(--brand), #46a287);
+  box-shadow: 0 10px 20px rgba(11, 122, 99, 0.18);
 }
 
 .loginIntroCopy {
@@ -2321,8 +2321,8 @@ textarea {
 .loginFormArea {
   align-content: center;
   background:
-    radial-gradient(circle at top left, rgba(159, 131, 228, 0.12), transparent 24%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(249, 247, 253, 0.98));
+    radial-gradient(circle at top left, rgba(11, 122, 99, 0.08), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(246, 250, 248, 0.98));
   display: grid;
   gap: 22px;
   padding: clamp(30px, 4vw, 48px);
@@ -2344,7 +2344,7 @@ textarea {
 }
 
 .loginFormArea .field span {
-  color: #5b4e7c;
+  color: #35574f;
   font-weight: 800;
 }
 
@@ -2357,25 +2357,25 @@ textarea {
 }
 
 .loginFormArea input:focus {
-  border-color: #9f83e4;
-  box-shadow: 0 0 0 4px rgba(159, 131, 228, 0.12);
+  border-color: #6fb7dd;
+  box-shadow: 0 0 0 4px rgba(111, 183, 221, 0.12);
   outline: none;
 }
 
 .loginFormArea .button.fullButton {
-  background: linear-gradient(135deg, #9049de, #b14ed7);
+  background: linear-gradient(135deg, #0b7a63, #13a17f);
   border-radius: 14px;
   min-height: 56px;
 }
 
 .loginFormArea .button.fullButton:hover {
-  background: linear-gradient(135deg, #7f3fd0, #a63dd0);
+  background: linear-gradient(135deg, #086753, #0d906f);
 }
 
 .loginSupportBox,
 .loginAccessNote {
-  background: linear-gradient(180deg, #fcfbff, #f8f5ff);
-  border: 1px solid #e2d9f5;
+  background: linear-gradient(180deg, #fcfefd, #f4faf7);
+  border: 1px solid #dcece6;
   border-radius: 22px;
   display: grid;
   gap: 10px;
@@ -2440,7 +2440,7 @@ textarea {
 }
 
 .loginFeatureCard:nth-child(1)::before {
-  background: linear-gradient(135deg, rgba(154, 126, 255, 0.95), rgba(209, 115, 226, 0.95));
+  background: linear-gradient(135deg, rgba(11, 122, 99, 0.95), rgba(70, 162, 135, 0.95));
 }
 
 .loginFeatureCard:nth-child(2)::before {
@@ -2448,7 +2448,7 @@ textarea {
 }
 
 .loginFeatureCard:nth-child(3)::before {
-  background: linear-gradient(135deg, rgba(88, 191, 146, 0.95), rgba(11, 122, 99, 0.95));
+  background: linear-gradient(135deg, rgba(143, 171, 95, 0.95), rgba(11, 122, 99, 0.95));
 }
 
 .loginFeatureCard strong {
@@ -2465,8 +2465,8 @@ textarea {
 
 .loginAdminShowcaseSecondary {
   background:
-    radial-gradient(circle at top left, rgba(148, 121, 232, 0.22), transparent 18%),
-    linear-gradient(160deg, rgba(59, 33, 105, 0.96), rgba(83, 47, 145, 0.94)),
+    radial-gradient(circle at top left, rgba(111, 183, 221, 0.18), transparent 18%),
+    linear-gradient(160deg, rgba(13, 62, 53, 0.97), rgba(16, 38, 45, 0.94)),
     url("https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80");
   background-position: center;
   background-size: cover;
@@ -5886,8 +5886,8 @@ textarea {
   }
 }
 .adminHeaderPulse {
-  background: linear-gradient(135deg, rgba(105, 69, 184, 0.13), rgba(111, 183, 221, 0.08));
-  border: 1px solid rgba(160, 142, 214, 0.32);
+  background: linear-gradient(135deg, rgba(11, 122, 99, 0.12), rgba(111, 183, 221, 0.08));
+  border: 1px solid rgba(150, 207, 190, 0.34);
   border-radius: 999px;
   display: grid;
   gap: 2px;
@@ -5896,12 +5896,12 @@ textarea {
 }
 
 .adminHeaderPulse strong {
-  color: var(--admin-plum-dark);
+  color: var(--brand-dark);
   font-size: 13px;
 }
 
 .adminHeaderPulse span {
-  color: #5f5675;
+  color: #4f6a62;
   font-size: 12px;
   line-height: 1.35;
 }
