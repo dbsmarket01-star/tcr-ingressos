@@ -41,6 +41,10 @@ export async function AdminShell({ title, description, children }: AdminShellPro
                 <span>{admin.role}</span>
               </div>
             ) : null}
+            <div className="adminHeaderPulse">
+              <strong>Operação em andamento</strong>
+              <span>Vendas, atendimento e check-in centralizados para a rotina do produtor.</span>
+            </div>
             <Link className="secondaryButton" href="/">
               Ver site
             </Link>

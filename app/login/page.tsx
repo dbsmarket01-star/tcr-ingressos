@@ -21,36 +21,23 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <main className="loginShell loginShellAdmin">
       <section className="loginPanel adminLoginPanel">
-        <div className="loginIntro">
-          <Link className="brand loginBrand" href="/">
+        <div className="loginFormArea">
+          <Link className="brand loginBrand loginBrandDark" href="/">
             <span className="brandMark">T</span>
             <span>TCR Ingressos</span>
           </Link>
 
-          <div className="loginIntroCopy">
-            <p className="publicBadge">Painel administrativo</p>
-            <h1>Hoje e um bom dia para vender melhor.</h1>
-            <p>
-              Organize eventos, acompanhe pedidos e mantenha a operacao pronta para receber o
-              publico com seguranca.
+          <div>
+            <p className="publicBadge">Acesso interno</p>
+            <h2>Bem-vindo de volta</h2>
+            <p className="muted">
+              Entre para acompanhar vendas, check-in, pedidos, leads e a operação da TCR Ingressos
+              em um só lugar.
             </p>
           </div>
 
-          <div className="loginMetrics">
-            <span>Eventos</span>
-            <strong>Operacao TCR</strong>
-          </div>
-        </div>
-
-        <div className="loginFormArea">
-          <div>
-            <p className="publicBadge">Acesso interno</p>
-            <h2>Entrar no painel</h2>
-            <p className="muted">Use seu e-mail e senha para acessar a administracao da bilheteria.</p>
-          </div>
-
           {hasError ? (
-            <div className="errorBox">E-mail ou senha invalidos. Confira os dados e tente novamente.</div>
+            <div className="errorBox">E-mail ou senha inválidos. Confira os dados e tente novamente.</div>
           ) : null}
 
           {wasReset ? (
@@ -63,7 +50,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <input
                 autoComplete="email"
                 name="email"
-                placeholder="admin@tcringressos.com.br"
+                placeholder="admin@tcringressos.app.br"
                 required
                 type="email"
               />
@@ -90,9 +77,37 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               Recuperar senha
             </Link>
             <p>
-              Novos acessos internos devem ser liberados pelo proprietario dentro do painel, em
-              Usuarios.
+              Novos acessos internos devem ser liberados pelo proprietário dentro do painel, em Usuários.
             </p>
+          </div>
+        </div>
+
+        <div className="loginIntro loginAdminShowcase">
+          <div className="loginShowcaseHeader">
+            <span className="loginShowcasePill">Plataforma de gerenciamento de eventos</span>
+          </div>
+
+          <div className="loginIntroCopy">
+            <h1>Seu painel de operação com leitura mais clara e ritmo de evento real.</h1>
+            <p>
+              Centralize bilheteria, equipe, atendimento e acompanhamento comercial com uma
+              experiência mais segura para quem opera e mais profissional para quem vende.
+            </p>
+          </div>
+
+          <div className="loginFeatureStack" aria-label="Recursos do painel">
+            <article className="loginFeatureCard">
+              <strong>Análises em tempo real</strong>
+              <span>Acompanhe faturamento, pedidos e desempenho por evento.</span>
+            </article>
+            <article className="loginFeatureCard">
+              <strong>Check-in com QR Code</strong>
+              <span>Validação rápida para portaria e operação no dia do evento.</span>
+            </article>
+            <article className="loginFeatureCard">
+              <strong>Gestão de equipe</strong>
+              <span>Libere acessos internos e, quando precisar, restrinja por evento.</span>
+            </article>
           </div>
         </div>
       </section>
