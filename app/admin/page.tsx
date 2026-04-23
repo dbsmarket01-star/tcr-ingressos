@@ -43,11 +43,148 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const admin = await requirePermission("DASHBOARD");
   const params = searchParams ? await searchParams : {};
   const organizationContext = await getCurrentOrganizationContext();
-  const isPlatformHost = organizationContext.isPlatformHost;
-  const [dashboard, platformOverview] = await Promise.all([
-    getDashboardMetrics(params, getAdminAllowedEventIds(admin)),
-    isPlatformHost ? getPlatformOverview() : Promise.resolve(null)
-  ]);
+
+  if (organizationContext.isPlatformHost) {
+    const platformOverview = await getPlatformOverview();
+
+    return (
+      <AdminShell
+        title="Ingresaas"
+        description="Painel master da plataforma, com leitura consolidada das bilheterias filhas, domínios e equipe."
+      >
+        <section className="platformOverviewPanel spacedSection" aria-label="Resumo da plataforma">
+          <div className="platformOverviewHero">
+            <div>
+              <span className="eyebrow">Painel master</span>
+              <h2>A Ingresaas administra o motor SaaS. As operações filhas atendem o mercado.</h2>
+              <p>
+                Esta tela acompanha a saúde da plataforma, a prontidão das bilheterias filhas e os passos necessários
+                para colocar cada nova operação no ar com domínio, equipe e identidade próprios.
+              </p>
+            </div>
+            <div className="platformOverviewBadges">
+              <span>Plataforma-mãe</span>
+              <span>Bilheterias filhas</span>
+              <span>Domínio por operação</span>
+            </div>
+          </div>
+
+          <div className="grid dashboardGrid platformOverviewMetrics">
+            {metric("Operações", platformOverview.totalOrganizations, `${platformOverview.childOrganizations} filhas embaixo da base`)}
+            {metric("Ativas", platformOverview.activeOrganizations, `${platformOverview.fullyConfiguredOrganizations} com público + admin completos`, true)}
+            {metric("Domínios configurados", platformOverview.domainsConfigured, "Público ou admin já definidos")}
+            {metric("Equipe somada", platformOverview.totalAdmins, "Usuários internos cadastrados nas operações")}
+          </div>
+        </section>
+
+        <section className="grid twoColumns spacedSection">
+          <article className="dashboardPanel platformMasterGuide">
+            <div className="sectionHeader inlineHeader">
+              <div>
+                <h2>Checklist de implantação</h2>
+                <p>O fluxo mínimo para uma nova bilheteria filha nascer dentro da Ingresaas sem bagunça.</p>
+              </div>
+            </div>
+            <ol className="platformChecklist">
+              <li>Criar a operação com nome, domínios e canais de suporte</li>
+              <li>Definir branding mínimo para site público e admin</li>
+              <li>Apontar domínio público e domínio do produtor</li>
+              <li>Liberar equipe inicial e configurar permissões</li>
+              <li>Publicar os primeiros eventos sem misturar dados com outra operação</li>
+            </ol>
+            <div className="actionRow">
+              <Link className="button smallButton" href="/admin/operations">
+                Abrir operações
+              </Link>
+              <Link className="secondaryButton smallButton" href="/login">
+                Ver acesso master
+              </Link>
+            </div>
+          </article>
+
+          <article className="dashboardPanel platformMasterGuide">
+            <div className="sectionHeader inlineHeader">
+              <div>
+                <h2>Leitura da arquitetura</h2>
+                <p>Critérios para a Ingresaas parar de parecer uma bilheteria e se comportar como plataforma.</p>
+              </div>
+            </div>
+            <div className="permissionList">
+              <p>
+                <strong>Ingresaas:</strong> domínio institucional, login master e gestão de operações.
+              </p>
+              <p>
+                <strong>Bilheteria filha:</strong> domínio público para cliente final e domínio admin para produtores.
+              </p>
+              <p>
+                <strong>Branding:</strong> cada operação precisa refletir suas próprias cores, suporte e linguagem.
+              </p>
+              <p>
+                <strong>Base única:</strong> o motor técnico continua compartilhado, sem clonar código ou banco.
+              </p>
+            </div>
+          </article>
+        </section>
+
+        <section className="dashboardPanel platformOperationsPanel spacedSection">
+          <div className="sectionHeader inlineHeader">
+            <div>
+              <h2>Bilheterias na base</h2>
+              <p>Leitura rápida do que já está ativo, do que ainda depende de domínio e do que já tem equipe própria.</p>
+            </div>
+            <Link className="button" href="/admin/operations">
+              Gerir operações
+            </Link>
+          </div>
+
+          <div className="platformOperationsGrid">
+            {platformOverview.operations.map((operation) => {
+              const ready = Boolean(operation.publicDomain && operation.adminDomain);
+              const supportSummary = operation.supportEmail || operation.supportPhone || "Suporte ainda não definido";
+
+              return (
+                <article className="card platformOperationCard" key={operation.id}>
+                  <div
+                    className="platformOperationAccent"
+                    style={{ background: operation.primaryColor || "linear-gradient(135deg, #0f172a, #334155)" }}
+                  />
+                  <div className="platformOperationHeader">
+                    <div>
+                      <strong>{operation.name}</strong>
+                      <span>{operation.slug}</span>
+                    </div>
+                    <span className={`status ${ready ? "published" : "pending"}`}>{ready ? "Pronta" : "Em preparo"}</span>
+                  </div>
+
+                  <div className="platformOperationMeta">
+                    <div>
+                      <span>Eventos</span>
+                      <strong>{operation.eventCount}</strong>
+                    </div>
+                    <div>
+                      <span>Equipe</span>
+                      <strong>{operation.adminCount}</strong>
+                    </div>
+                    <div>
+                      <span>Suporte</span>
+                      <strong>{supportSummary}</strong>
+                    </div>
+                  </div>
+
+                  <div className="platformOperationLinks">
+                    <span>{operation.publicDomain || "Domínio público pendente"}</span>
+                    <span>{operation.adminDomain || "Domínio admin pendente"}</span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      </AdminShell>
+    );
+  }
+
+  const dashboard = await getDashboardMetrics(params, getAdminAllowedEventIds(admin));
   const periodLabel = formatPeriodLabel(dashboard.period.startDate, dashboard.period.endDate);
   const approvedRateLabel =
     dashboard.periodMetrics.ordersCreated > 0
@@ -56,93 +193,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
   return (
     <AdminShell
-      title={isPlatformHost ? "Ingressas" : "Dashboard"}
-      description={
-        isPlatformHost
-          ? "Acompanhe a plataforma-mãe, a saúde das operações embaixo dela e a operação-base sem perder contexto."
-          : "Acompanhe faturamento, pedidos, meios de pagamento e desempenho dos eventos por período."
-      }
+      title="Dashboard"
+      description="Acompanhe faturamento, pedidos, meios de pagamento e desempenho dos eventos por período."
     >
-      {isPlatformHost && platformOverview ? (
-        <section className="platformOverviewPanel spacedSection" aria-label="Resumo da plataforma">
-          <div className="platformOverviewHero">
-            <div>
-              <span className="eyebrow">Modo plataforma</span>
-              <h2>{organizationContext.platformName} já está pronta para sustentar mais de uma bilheteria.</h2>
-              <p>
-                O motor principal já separa operações, branding por host e escopo interno. O próximo passo é plugar os
-                domínios reais de cada operação filha sem duplicar código.
-              </p>
-            </div>
-            <div className="platformOverviewBadges">
-              <span>Base única</span>
-              <span>Domínio por operação</span>
-              <span>Equipe e eventos isolados</span>
-            </div>
-          </div>
-
-          <div className="grid dashboardGrid platformOverviewMetrics">
-            {metric("Operações", platformOverview.totalOrganizations, `${platformOverview.activeOrganizations} ativas`)}
-            {metric("Domínios configurados", platformOverview.domainsConfigured, "Público ou admin já apontados")}
-            {metric("Eventos na base", platformOverview.totalEvents, `${platformOverview.publishedEvents} publicados`)}
-            {metric("Usuários internos", platformOverview.totalAdmins, "Acessos somados na plataforma")}
-          </div>
-
-          <div className="dashboardPanel platformOperationsPanel">
-            <div className="sectionHeader inlineHeader">
-              <div>
-                <h2>Operações já estruturadas</h2>
-                <p>Esta leitura mostra o que já existe na base antes de conectar os próximos domínios.</p>
-              </div>
-            </div>
-
-            <div className="tableScroll">
-              <table className="table operationalTable">
-                <thead>
-                  <tr>
-                    <th>Operação</th>
-                    <th>Status</th>
-                    <th>Eventos</th>
-                    <th>Equipe</th>
-                    <th>Domínio público</th>
-                    <th>Domínio admin</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {platformOverview.operations.map((operation) => (
-                    <tr key={operation.id}>
-                      <td>
-                        <strong>{operation.name}</strong>
-                        <br />
-                        <span className="muted">{operation.slug}</span>
-                      </td>
-                      <td>
-                        <span className={`status ${operation.isActive ? "published" : "draft"}`}>
-                          {operation.isActive ? "Ativa" : "Inativa"}
-                        </span>
-                      </td>
-                      <td>{operation.eventCount}</td>
-                      <td>{operation.adminCount}</td>
-                      <td>{operation.publicDomain || "A conectar"}</td>
-                      <td>{operation.adminDomain || "A conectar"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-      ) : null}
-
       <section className="dashboardFilterPanel" aria-label="Filtro do dashboard">
         <div>
-          <span className="eyebrow">{isPlatformHost ? "Operação-base" : "Visão comercial"}</span>
-          <h2>{isPlatformHost ? "Resumo da TCR dentro da plataforma" : "Resumo da operação"}</h2>
-          <p>
-            {isPlatformHost
-              ? `${periodLabel}. Enquanto os próximos domínios entram, esta leitura segue mostrando a primeira operação filha da base.`
-              : `${periodLabel}. Ajuste as datas para comparar vendas, clientes e desempenho por evento.`}
-          </p>
+          <span className="eyebrow">Visão comercial</span>
+          <h2>Resumo da operação</h2>
+          <p>{periodLabel}. Ajuste as datas para comparar vendas, clientes e desempenho por evento.</p>
           <div className="dashboardQuickFilters">
             <Link className="secondaryButton smallButton" href="/admin">
               Hoje
@@ -245,8 +303,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               <span className="legendDot pixDot" />
               <strong>Novos</strong>
               <small>
-                {dashboard.periodMetrics.newCustomerOrders} pedido(s) •{" "}
-                {dashboard.periodMetrics.newCustomerRate}%
+                {dashboard.periodMetrics.newCustomerOrders} pedido(s) • {dashboard.periodMetrics.newCustomerRate}%
               </small>
             </div>
             <div>

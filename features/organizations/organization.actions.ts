@@ -27,6 +27,9 @@ export async function createOrganizationAction(formData: FormData) {
     slug,
     publicDomain: readText(formData, "publicDomain"),
     adminDomain: readText(formData, "adminDomain"),
+    logoUrl: readText(formData, "logoUrl"),
+    primaryColor: readText(formData, "primaryColor"),
+    secondaryColor: readText(formData, "secondaryColor"),
     supportEmail: readText(formData, "supportEmail"),
     supportPhone: readText(formData, "supportPhone")
   });
@@ -40,13 +43,16 @@ export async function createOrganizationAction(formData: FormData) {
       name: organization.name,
       slug: organization.slug,
       publicDomain: organization.publicDomain,
-      adminDomain: organization.adminDomain
+      adminDomain: organization.adminDomain,
+      primaryColor: organization.primaryColor,
+      secondaryColor: organization.secondaryColor
     }
   });
 
   revalidatePath("/admin");
   revalidatePath("/admin/operations");
   revalidatePath("/");
+  revalidatePath("/login");
 }
 
 export async function updateOrganizationAction(formData: FormData) {
@@ -63,6 +69,9 @@ export async function updateOrganizationAction(formData: FormData) {
     name,
     publicDomain: readText(formData, "publicDomain"),
     adminDomain: readText(formData, "adminDomain"),
+    logoUrl: readText(formData, "logoUrl"),
+    primaryColor: readText(formData, "primaryColor"),
+    secondaryColor: readText(formData, "secondaryColor"),
     supportEmail: readText(formData, "supportEmail"),
     supportPhone: readText(formData, "supportPhone")
   });
@@ -75,13 +84,16 @@ export async function updateOrganizationAction(formData: FormData) {
     metadata: {
       name: organization.name,
       publicDomain: organization.publicDomain,
-      adminDomain: organization.adminDomain
+      adminDomain: organization.adminDomain,
+      primaryColor: organization.primaryColor,
+      secondaryColor: organization.secondaryColor
     }
   });
 
   revalidatePath("/admin");
   revalidatePath("/admin/operations");
   revalidatePath("/");
+  revalidatePath("/login");
 }
 
 export async function updateOrganizationStatusAction(formData: FormData) {
@@ -108,5 +120,5 @@ export async function updateOrganizationStatusAction(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/admin/operations");
   revalidatePath("/");
+  revalidatePath("/login");
 }
-

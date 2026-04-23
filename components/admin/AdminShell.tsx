@@ -29,8 +29,10 @@ export async function AdminShell({ title, description, children }: AdminShellPro
     : "Eventos, pedidos, leads, check-in e financeiro em uma operação mais organizada para a equipe.";
   const pulseTitle = isPlatformHost ? "Plataforma em evolução" : "Operação em andamento";
   const pulseText = isPlatformHost
-    ? "A base da Ingressas sustenta o motor, enquanto cada bilheteria filha mantém sua própria marca e domínio."
+    ? "A base da Ingresaas sustenta o motor, enquanto cada bilheteria filha mantém sua própria marca e domínio."
     : "Vendas, atendimento e check-in centralizados para a rotina do produtor.";
+  const headerActionHref = isPlatformHost ? "/admin/operations" : publicSiteHref;
+  const headerActionLabel = isPlatformHost ? "Gerir operações" : "Ver site";
 
   return (
     <main className="adminShell">
@@ -63,8 +65,8 @@ export async function AdminShell({ title, description, children }: AdminShellPro
               <strong>{pulseTitle}</strong>
               <span>{pulseText}</span>
             </div>
-            <Link className="secondaryButton" href={publicSiteHref}>
-              {isPlatformHost ? "Ver plataforma" : "Ver site"}
+            <Link className="secondaryButton" href={headerActionHref}>
+              {headerActionLabel}
             </Link>
             <form action={logoutAction}>
               <button className="secondaryButton" type="submit">

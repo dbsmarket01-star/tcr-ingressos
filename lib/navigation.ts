@@ -165,6 +165,31 @@ export const adminNavGroups: AdminNavGroup[] = [
 ];
 
 export function getAdminNavGroupsForRole(role: AdminRole, options?: { isPlatformHost?: boolean }) {
+  if (options?.isPlatformHost) {
+    const platformGroups: AdminNavGroup[] = [
+      {
+        label: "Plataforma",
+        description: "Visão da Ingresaas",
+        defaultOpen: true,
+        items: adminNavItems.filter((item) => ["/admin", "/admin/operations"].includes(item.href))
+      },
+      {
+        label: "Governança",
+        description: "Equipe e histórico",
+        items: adminNavItems.filter((item) =>
+          ["/admin/users", "/admin/audit", "/admin/account"].includes(item.href)
+        )
+      }
+    ];
+
+    return platformGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => canAccessArea(role, item.area))
+      }))
+      .filter((group) => group.items.length > 0);
+  }
+
   return adminNavGroups
     .map((group) => ({
       ...group,

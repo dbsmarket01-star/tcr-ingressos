@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { normalizeHost } from "@/lib/request-host";
 
-export const DEFAULT_PLATFORM_NAME = "Ingressas";
+export const DEFAULT_PLATFORM_NAME = "Ingresaas";
 export const DEFAULT_PLATFORM_DOMAIN = "ingresaas.app.br";
 
 export function getPlatformName() {
@@ -37,9 +37,11 @@ export type PlatformOverview = {
   totalOrganizations: number;
   activeOrganizations: number;
   domainsConfigured: number;
+  fullyConfiguredOrganizations: number;
   totalEvents: number;
   publishedEvents: number;
   totalAdmins: number;
+  childOrganizations: number;
   operations: Array<{
     id: string;
     slug: string;
@@ -47,6 +49,10 @@ export type PlatformOverview = {
     isActive: boolean;
     publicDomain: string | null;
     adminDomain: string | null;
+    supportEmail: string | null;
+    supportPhone: string | null;
+    primaryColor: string | null;
+    secondaryColor: string | null;
     eventCount: number;
     adminCount: number;
   }>;
@@ -63,6 +69,10 @@ export async function getPlatformOverview(): Promise<PlatformOverview> {
         isActive: true,
         publicDomain: true,
         adminDomain: true,
+        supportEmail: true,
+        supportPhone: true,
+        primaryColor: true,
+        secondaryColor: true,
         _count: {
           select: {
             events: true,
@@ -81,14 +91,18 @@ export async function getPlatformOverview(): Promise<PlatformOverview> {
   ]);
 
   const domainsConfigured = organizations.filter((item) => item.publicDomain || item.adminDomain).length;
+  const fullyConfiguredOrganizations = organizations.filter((item) => item.publicDomain && item.adminDomain).length;
+  const childOrganizations = Math.max(organizations.length - 1, 0);
 
   return {
     totalOrganizations: organizations.length,
     activeOrganizations: organizations.filter((item) => item.isActive).length,
     domainsConfigured,
+    fullyConfiguredOrganizations,
     totalEvents,
     publishedEvents,
     totalAdmins,
+    childOrganizations,
     operations: organizations.map((item) => ({
       id: item.id,
       slug: item.slug,
@@ -96,6 +110,10 @@ export async function getPlatformOverview(): Promise<PlatformOverview> {
       isActive: item.isActive,
       publicDomain: item.publicDomain,
       adminDomain: item.adminDomain,
+      supportEmail: item.supportEmail,
+      supportPhone: item.supportPhone,
+      primaryColor: item.primaryColor,
+      secondaryColor: item.secondaryColor,
       eventCount: item._count.events,
       adminCount: item._count.adminUsers
     }))

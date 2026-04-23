@@ -21,6 +21,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const organizationContext = await getCurrentOrganizationContext();
   const isPlatformHost = organizationContext.isPlatformHost;
   const loginBrandLabel = isPlatformHost ? organizationContext.platformName : organizationContext.brandName;
+  const loginPlaceholderDomain = isPlatformHost
+    ? organizationContext.platformHost || "ingresaas.app.br"
+    : organizationContext.organization.adminDomain || organizationContext.organization.publicDomain || "sua-operacao.com.br";
 
   return (
     <main className="loginShell loginShellAdmin">
@@ -55,7 +58,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <input
                 autoComplete="email"
                 name="email"
-                placeholder={`admin@${organizationContext.organization.adminDomain || organizationContext.organization.publicDomain || "sua-operacao.com.br"}`}
+                placeholder={`admin@${loginPlaceholderDomain}`}
                 required
                 type="email"
               />
@@ -83,7 +86,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </Link>
             <p>
               {isPlatformHost
-                ? "Enquanto a plataforma nasce, os acessos ainda são liberados dentro da operação-base."
+                ? "Use este acesso para administrar a Ingresaas, cadastrar operações filhas e acompanhar a expansão da plataforma."
                 : "Novos acessos internos devem ser liberados pelo proprietário dentro do painel, em Usuários."}
             </p>
           </div>
@@ -120,15 +123,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <strong>{isPlatformHost ? "Motor único" : "Check-in com QR Code"}</strong>
               <span>
                 {isPlatformHost
-                  ? "Pagamentos, ingressos, leads, QR Code e check-in continuam rodando na mesma base."
+                  ? "Pagamentos, ingressos, leads, QR Code e check-in continuam rodando na mesma base técnica."
                   : "Validação rápida para portaria e operação no dia do evento."}
               </span>
             </article>
             <article className="loginFeatureCard">
-              <strong>{isPlatformHost ? "Escala sem duplicar código" : "Gestão de equipe"}</strong>
+              <strong>{isPlatformHost ? "Governança da plataforma" : "Gestão de equipe"}</strong>
               <span>
                 {isPlatformHost
-                  ? "A evolução da plataforma acontece uma vez e beneficia todas as operações embaixo dela."
+                  ? "Acompanhe bilheterias filhas, domínios, branding e prontidão operacional a partir de um só painel master."
                   : "Libere acessos internos e, quando precisar, restrinja por evento."}
               </span>
             </article>

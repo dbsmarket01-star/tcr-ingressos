@@ -5,6 +5,9 @@ type CreateOrganizationInput = {
   slug: string;
   publicDomain?: string | null;
   adminDomain?: string | null;
+  logoUrl?: string | null;
+  primaryColor?: string | null;
+  secondaryColor?: string | null;
   supportEmail?: string | null;
   supportPhone?: string | null;
 };
@@ -14,6 +17,9 @@ type UpdateOrganizationInput = {
   name: string;
   publicDomain?: string | null;
   adminDomain?: string | null;
+  logoUrl?: string | null;
+  primaryColor?: string | null;
+  secondaryColor?: string | null;
   supportEmail?: string | null;
   supportPhone?: string | null;
 };
@@ -21,6 +27,22 @@ type UpdateOrganizationInput = {
 function normalizeValue(value?: string | null) {
   const trimmed = value?.trim() || "";
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function normalizeHexColor(value?: string | null) {
+  const normalized = normalizeValue(value);
+
+  if (!normalized) {
+    return null;
+  }
+
+  const hex = normalized.replace(/^#/, "");
+
+  if (!/^[\da-fA-F]{6}$/.test(hex)) {
+    return null;
+  }
+
+  return `#${hex.toLowerCase()}`;
 }
 
 function slugify(value: string) {
@@ -54,6 +76,9 @@ export async function createOrganization(input: CreateOrganizationInput) {
       slug: slugify(input.slug || input.name),
       publicDomain: normalizeValue(input.publicDomain),
       adminDomain: normalizeValue(input.adminDomain),
+      logoUrl: normalizeValue(input.logoUrl),
+      primaryColor: normalizeHexColor(input.primaryColor),
+      secondaryColor: normalizeHexColor(input.secondaryColor),
       supportEmail: normalizeValue(input.supportEmail),
       supportPhone: normalizeValue(input.supportPhone)
     }
@@ -69,6 +94,9 @@ export async function updateOrganization(input: UpdateOrganizationInput) {
       name: input.name.trim(),
       publicDomain: normalizeValue(input.publicDomain),
       adminDomain: normalizeValue(input.adminDomain),
+      logoUrl: normalizeValue(input.logoUrl),
+      primaryColor: normalizeHexColor(input.primaryColor),
+      secondaryColor: normalizeHexColor(input.secondaryColor),
       supportEmail: normalizeValue(input.supportEmail),
       supportPhone: normalizeValue(input.supportPhone)
     }
@@ -85,4 +113,3 @@ export async function updateOrganizationStatus(id: string, isActive: boolean) {
     }
   });
 }
-

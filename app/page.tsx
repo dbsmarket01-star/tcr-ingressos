@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listCachedPublishedEventShowcase } from "@/features/events/event.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
+import { getPlatformOverview } from "@/features/platform/platform.service";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
@@ -23,25 +24,194 @@ const operationalHighlights = [
   "Painel administrativo para operação diária"
 ];
 
-const platformFlow = [
+const platformPillars = [
   {
-    title: "Plataforma-mãe",
-    body: "Ingressas administra o motor, a evolução da base e o padrão que sustenta todas as bilheterias."
+    title: "Motor único",
+    body: "Pagamentos, pedidos, leads, ingressos e check-in continuam centralizados em uma base só."
   },
   {
-    title: "Operações filhas",
-    body: "Cada cliente roda com domínio próprio, identidade própria, usuários próprios e eventos separados."
+    title: "Operações independentes",
+    body: "Cada cliente roda com domínio, equipe, identidade visual e eventos próprios."
   },
   {
-    title: "Fluxo público + operação",
-    body: "Vendas, leads, pedidos, QR Code, check-in e atendimento continuam no mesmo núcleo técnico."
+    title: "Escala sem retrabalho",
+    body: "A evolução da plataforma acontece uma vez e beneficia todas as bilheterias filhas."
   }
+];
+
+const platformAudience = [
+  "Produtores que precisam de uma bilheteria própria sem construir tecnologia do zero",
+  "Operações com domínio próprio, equipe própria e identidade visual separada",
+  "Negócios que precisam vender, validar QR Code, acompanhar leads e operar eventos em uma só base"
 ];
 
 export default async function Home() {
   const organizationContext = await getCurrentOrganizationContext();
   const isPlatformHost = organizationContext.isPlatformHost;
-  const baseOperationName = organizationContext.organization.name;
+
+  if (isPlatformHost) {
+    const platformOverview = await getPlatformOverview();
+    const liveOperations = platformOverview.operations.filter((item) => item.isActive);
+
+    return (
+      <main className="shell homePage platformHomePage">
+        <section className="platformHero">
+          <div className="platformHeroGrid">
+            <div className="platformHeroContent">
+              <div className="brand homeBrand" aria-label={organizationContext.platformName}>
+                <span className="brandMark">{organizationContext.brandMark}</span>
+                <span>{organizationContext.platformName}</span>
+              </div>
+              <span className="homeEyebrow">Plataforma SaaS de bilheteria</span>
+              <h1>O painel-mãe que cria, sustenta e escala bilheterias com domínio próprio.</h1>
+              <p>
+                {organizationContext.platformName} não vende ingressos direto ao público. Ela fornece o motor,
+                o painel e a estrutura para operações como TCR e futuras bilheterias filhas venderem no próprio domínio.
+              </p>
+
+              <div className="platformHeroActions">
+                <Link className="button" href="/login">
+                  Entrar na plataforma
+                </Link>
+                <Link className="secondaryButton" href="/admin/operations">
+                  Ver operações
+                </Link>
+              </div>
+
+              <div className="homeTrustStrip" aria-label="Diferenciais da plataforma">
+                {["Domínio por operação", "Branding por cliente", "Vendas + leads + QR Code"].map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+            </div>
+
+            <aside className="platformHeroPanel">
+              <div className="platformHeroPanelHeader">
+                <span className="eyebrow">Resumo da base</span>
+                <strong>{organizationContext.platformName}</strong>
+              </div>
+
+              <div className="platformHeroMetrics">
+                <article>
+                  <span>Operações ativas</span>
+                  <strong>{platformOverview.activeOrganizations}</strong>
+                </article>
+                <article>
+                  <span>Domínios completos</span>
+                  <strong>{platformOverview.fullyConfiguredOrganizations}</strong>
+                </article>
+                <article>
+                  <span>Eventos publicados</span>
+                  <strong>{platformOverview.publishedEvents}</strong>
+                </article>
+                <article>
+                  <span>Usuários internos</span>
+                  <strong>{platformOverview.totalAdmins}</strong>
+                </article>
+              </div>
+
+              <div className="platformHeroNote">
+                <strong>Modelo operacional</strong>
+                <p>
+                  Uma plataforma controla o motor. Cada bilheteria filha atende seus próprios produtores e eventos sem
+                  misturar domínio, equipe ou identidade.
+                </p>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section className="container platformSection">
+          <div className="sectionHeader homeSectionHeader">
+            <div>
+              <span className="eyebrow">Como a Ingresaas funciona</span>
+              <h2>Arquitetura preparada para crescer sem duplicar sistema.</h2>
+            </div>
+          </div>
+
+          <div className="platformFlowGrid">
+            {platformPillars.map((item, index) => (
+              <article className="card platformFlowCard" key={item.title}>
+                <span>{`0${index + 1}`}</span>
+                <strong>{item.title}</strong>
+                <p>{item.body}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="container platformSection">
+          <div className="platformSplitGrid">
+            <article className="card platformAudienceCard">
+              <span className="eyebrow">Para quem a plataforma foi pensada</span>
+              <h2>Bilheterias filhas com operação própria, sem reinventar o motor.</h2>
+              <div className="homeSupportList">
+                {platformAudience.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+            </article>
+
+            <article className="card platformOnboardingCard">
+              <span className="eyebrow">Fluxo de implantação</span>
+              <h2>Como nasce uma nova bilheteria dentro da Ingresaas.</h2>
+              <ol className="platformChecklist">
+                <li>Cadastra a operação no painel master</li>
+                <li>Define domínio público e domínio admin</li>
+                <li>Configura branding, suporte e equipe inicial</li>
+                <li>Publica eventos e libera o fluxo comercial</li>
+              </ol>
+            </article>
+          </div>
+        </section>
+
+        <section className="container platformSection">
+          <div className="sectionHeader homeSectionHeader">
+            <div>
+              <span className="eyebrow">Operações embaixo da base</span>
+              <h2>Bilheterias já preparadas dentro da plataforma.</h2>
+            </div>
+          </div>
+
+          <div className="platformOperationsGrid">
+            {liveOperations.map((operation) => (
+              <article className="card platformOperationCard" key={operation.id}>
+                <div
+                  className="platformOperationAccent"
+                  style={{ background: operation.primaryColor || "linear-gradient(135deg, #0b7a63, #46a287)" }}
+                />
+                <div className="platformOperationHeader">
+                  <div>
+                    <strong>{operation.name}</strong>
+                    <span>{operation.publicDomain || "Domínio ainda não configurado"}</span>
+                  </div>
+                  <span className={`status ${operation.isActive ? "published" : "draft"}`}>
+                    {operation.isActive ? "Ativa" : "Inativa"}
+                  </span>
+                </div>
+                <div className="platformOperationMeta">
+                  <div>
+                    <span>Eventos</span>
+                    <strong>{operation.eventCount}</strong>
+                  </div>
+                  <div>
+                    <span>Equipe</span>
+                    <strong>{operation.adminCount}</strong>
+                  </div>
+                </div>
+                <p className="muted">
+                  {operation.adminDomain
+                    ? `Admin em ${operation.adminDomain}`
+                    : "Ainda falta apontar o domínio administrativo desta operação."}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   const events = await listCachedPublishedEventShowcase(6, organizationContext.organization.id);
   const featuredEvent = events[0] ?? null;
 
@@ -50,55 +220,44 @@ export default async function Home() {
       <section className="homeHero">
         <div className="homeHeroInner">
           <div className="homeHeroContent">
-            <div
-              className="brand homeBrand"
-              aria-label={isPlatformHost ? organizationContext.platformName : organizationContext.brandName}
-            >
+            <div className="brand homeBrand" aria-label={organizationContext.brandName}>
               <span className="brandMark">{organizationContext.brandMark}</span>
-              <span>{isPlatformHost ? organizationContext.platformName : organizationContext.brandName}</span>
+              <span>{organizationContext.brandName}</span>
             </div>
-            <span className="homeEyebrow">{isPlatformHost ? "Plataforma SaaS de bilheteria" : "Bilheteria oficial"}</span>
-            <h1>
-              {isPlatformHost
-                ? "A base para operar várias bilheterias com domínio e identidade próprios."
-                : "Eventos em cartaz com compra segura, operação rápida e experiência profissional."}
-            </h1>
+            <span className="homeEyebrow">Bilheteria oficial</span>
+            <h1>Eventos em cartaz com compra segura, operação rápida e experiência profissional.</h1>
             <p>
-              {isPlatformHost
-                ? `${organizationContext.platformName} é a plataforma-mãe que sustenta bilheterias como a ${baseOperationName} e futuras operações com eventos, leads, pedidos, ingressos e check-in no mesmo motor.`
-                : `Encontre os próximos eventos da ${organizationContext.brandName}, escolha seu ingresso em poucos passos e receba o QR Code automaticamente após a confirmação do pagamento.`}
+              Encontre os próximos eventos da {organizationContext.brandName}, escolha seu ingresso em poucos passos e
+              receba o QR Code automaticamente após a confirmação do pagamento.
             </p>
             <div className="homeTrustStrip" aria-label="Diferenciais da bilheteria">
-              {(isPlatformHost
-                ? ["Domínio por operação", "Pagamento e QR Code", "Painel para produtores"]
-                : trustHighlights
-              ).map((item) => (
+              {trustHighlights.map((item) => (
                 <span key={item}>{item}</span>
               ))}
             </div>
-            <div className="homeHeroStats" aria-label="Indicadores da plataforma">
+            <div className="homeHeroStats" aria-label="Indicadores da bilheteria">
               <div>
-                <span>{isPlatformHost ? "Operações prontas" : "Eventos"}</span>
-                <strong>{isPlatformHost ? "1 base ativa" : events.length}</strong>
+                <span>Eventos</span>
+                <strong>{events.length}</strong>
               </div>
               <div>
                 <span>Fluxo</span>
-                <strong>{isPlatformHost ? "SaaS + operação" : "Compra e check-in"}</strong>
+                <strong>Compra e check-in</strong>
               </div>
               <div>
-                <span>{isPlatformHost ? "Modelo" : "Pagamento"}</span>
-                <strong>{isPlatformHost ? "Bilheteria white-label" : "Pix e cartão"}</strong>
+                <span>Pagamento</span>
+                <strong>Pix e cartão</strong>
               </div>
             </div>
           </div>
 
           <aside className="homeFeaturePanel" aria-label="Evento em destaque">
-            {!isPlatformHost && featuredEvent ? (
+            {featuredEvent ? (
               <article className="homeFeaturedEventCard">
                 <div
                   className="homeFeaturedEventMedia"
                   style={{
-                    backgroundImage: `linear-gradient(180deg, rgba(13, 23, 31, 0.08), rgba(13, 23, 31, 0.34)), url("${featuredEvent.bannerUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1600&q=80"}")`
+                    backgroundImage: `linear-gradient(180deg, rgba(8, 20, 29, 0.08), rgba(8, 20, 29, 0.28)), url("${featuredEvent.bannerUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1200&q=80"}")`
                   }}
                 />
                 <div className="homeFeaturedEventBody">
@@ -114,133 +273,67 @@ export default async function Home() {
                 </div>
               </article>
             ) : (
-              <div className="homeFeatureCard">
-                <div>
-                  <span>{isPlatformHost ? "Ingressas" : "Painel pronto"}</span>
-                  <strong>{isPlatformHost ? "Estruture uma nova operação na plataforma" : "Publique seu próximo evento"}</strong>
-                  <p>
-                    {isPlatformHost
-                      ? "O próximo passo é cadastrar as operações filhas, apontar seus domínios e isolar marca, usuários, eventos e vendas."
-                      : "Assim que houver um evento publicado, ele aparece aqui com destaque para impulsionar a próxima venda."}
-                  </p>
-                </div>
-              </div>
+              <article className="card homeEmptyState">
+                <h3>Nenhum evento em destaque</h3>
+                <p className="muted">Assim que a agenda for publicada, os próximos eventos aparecem aqui.</p>
+              </article>
             )}
           </aside>
         </div>
       </section>
 
-      <section className="homeEventsBand">
-        <div className="container homeEventsContainer">
-          <div className="sectionHeader homeSectionHeader">
-            <div>
-              <span className="eyebrow">{isPlatformHost ? "Próximas operações" : "Agenda aberta"}</span>
-              <h2>
-                {isPlatformHost
-                  ? "A estrutura já está pronta para crescer além da TCR"
-                  : "Confira os próximos eventos disponíveis"}
-              </h2>
-            </div>
+      <section className="container homeSection">
+        <div className="sectionHeader homeSectionHeader">
+          <div>
+            <span className="eyebrow">Agenda aberta</span>
+            <h2>Confira os próximos eventos disponíveis</h2>
           </div>
-
-          <div className="homeEventsLayout">
-            <div className="grid cardsGrid homeCardsGrid">
-              {isPlatformHost ? (
-                <>
-                  <article className="card homeEmptyState">
-                    <h3>TCR Ingressos</h3>
-                    <p className="muted">
-                      Primeira operação da base, já com eventos, pedidos, ingressos, check-in e captação.
-                    </p>
-                  </article>
-                  <article className="card homeEmptyState">
-                    <h3>Próxima bilheteria</h3>
-                    <p className="muted">
-                      O próximo passo técnico é cadastrar a segunda operação e apontar o domínio próprio dela.
-                    </p>
-                  </article>
-                </>
-              ) : events.length === 0 ? (
-                <article className="card homeEmptyState">
-                  <h3>Nenhum evento publicado ainda</h3>
-                  <p className="muted">
-                    Assim que um evento for publicado no painel, ele aparecerá automaticamente nesta
-                    vitrine pública.
-                  </p>
-                </article>
-              ) : (
-                events.map((event) => (
-                  <article className="card linkCard eventShowcaseCard" key={event.id}>
-                    <div
-                      className="eventShowcaseImage"
-                      style={{
-                        backgroundImage: `linear-gradient(180deg, rgba(8, 20, 29, 0.06), rgba(8, 20, 29, 0.28)), url("${event.bannerUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1400&q=80"}")`
-                      }}
-                    />
-                    <div className="eventShowcaseBody">
-                      <span className="eyebrow">
-                        {event.city}, {event.state}
-                      </span>
-                      <h3>{event.title}</h3>
-                      <p className="muted">{formatEventCardDate(event.startsAt)}</p>
-                      <strong>{event.venueName}</strong>
-                      <Link className="button smallButton" href={`/evento/${event.slug}`}>
-                        Comprar agora
-                      </Link>
-                    </div>
-                  </article>
-                ))
-              )}
-            </div>
-
-            <aside className="homeSupportPanel">
-              <span className="eyebrow">{isPlatformHost ? "Visão da plataforma" : "Compra assistida"}</span>
-              <h3>
-                {isPlatformHost
-                  ? "Uma base única para várias bilheterias com identidades diferentes."
-                  : "Do pedido ao QR Code, tudo em um só lugar."}
-              </h3>
-              <p>
-                {isPlatformHost
-                  ? `${organizationContext.platformName} administra o motor. Cada operação filha publica no seu próprio domínio e mantém branding, equipe e eventos separados.`
-                  : "A vitrine pública mostra os eventos em cartaz, enquanto o painel interno mantém a operação organizada para vendas, ingressos e check-in."}
-              </p>
-              <div className="homeSupportList">
-                {(isPlatformHost
-                  ? [
-                      "motor único para vendas, pagamentos e ingressos",
-                      "domínio e identidade separados por operação",
-                      "escala sem duplicar código nem banco"
-                    ]
-                  : operationalHighlights
-                ).map((item) => (
-                  <span key={item}>{item}</span>
-                ))}
-              </div>
-            </aside>
-          </div>
-
-          {isPlatformHost ? (
-            <section className="platformFlowSection" aria-label="Fluxo da plataforma">
-              <div className="sectionHeader homeSectionHeader">
-                <div>
-                  <span className="eyebrow">Como a Ingressas se organiza</span>
-                  <h2>Uma base só, várias bilheterias embaixo.</h2>
-                </div>
-              </div>
-
-              <div className="platformFlowGrid">
-                {platformFlow.map((item, index) => (
-                  <article className="card platformFlowCard" key={item.title}>
-                    <span>{`0${index + 1}`}</span>
-                    <strong>{item.title}</strong>
-                    <p>{item.body}</p>
-                  </article>
-                ))}
-              </div>
-            </section>
-          ) : null}
         </div>
+
+        <div className="homeShowcaseGrid">
+          {events.length === 0 ? (
+            <article className="card homeEmptyState">
+              <h3>Nenhum evento publicado ainda</h3>
+              <p className="muted">Assim que um evento for publicado no painel, ele aparecerá automaticamente aqui.</p>
+            </article>
+          ) : (
+            events.map((event) => (
+              <article className="card linkCard eventShowcaseCard" key={event.id}>
+                <div
+                  className="eventShowcaseImage"
+                  style={{
+                    backgroundImage: `linear-gradient(180deg, rgba(8, 20, 29, 0.06), rgba(8, 20, 29, 0.28)), url("${event.bannerUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1400&q=80"}")`
+                  }}
+                />
+                <div className="eventShowcaseBody">
+                  <span className="eyebrow">
+                    {event.city}, {event.state}
+                  </span>
+                  <h3>{event.title}</h3>
+                  <p className="muted">{formatEventCardDate(event.startsAt)}</p>
+                  <strong>{event.venueName}</strong>
+                  <Link className="button smallButton" href={`/evento/${event.slug}`}>
+                    Comprar agora
+                  </Link>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+
+        <aside className="homeSupportPanel">
+          <span className="eyebrow">Compra assistida</span>
+          <h3>Do pedido ao QR Code, tudo em um só lugar.</h3>
+          <p>
+            A vitrine pública mostra os eventos em cartaz, enquanto o painel interno mantém a operação organizada para
+            vendas, ingressos e check-in.
+          </p>
+          <div className="homeSupportList">
+            {operationalHighlights.map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+        </aside>
       </section>
     </main>
   );

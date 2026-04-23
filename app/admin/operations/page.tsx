@@ -25,7 +25,7 @@ export default async function AdminOperationsPage() {
   return (
     <AdminShell
       title="Operações"
-      description="Cadastre e organize as bilheterias filhas da Ingressas, com domínio, equipe e operação separados."
+      description="Cadastre e organize as bilheterias filhas da Ingresaas, com domínio, equipe e operação separados."
     >
       <section className="grid twoColumns">
         <form action={createOrganizationAction} className="card form">
@@ -58,6 +58,23 @@ export default async function AdminOperationsPage() {
           </label>
 
           <label className="field">
+            <span>Logo (URL)</span>
+            <input name="logoUrl" placeholder="Ex.: https://cdn.seudominio.com/logo.png" />
+          </label>
+
+          <div className="grid twoColumns">
+            <label className="field">
+              <span>Cor principal</span>
+              <input name="primaryColor" placeholder="Ex.: #1f5fbf" />
+            </label>
+
+            <label className="field">
+              <span>Cor secundária</span>
+              <input name="secondaryColor" placeholder="Ex.: #dce9ff" />
+            </label>
+          </div>
+
+          <label className="field">
             <span>E-mail de suporte</span>
             <input name="supportEmail" type="email" placeholder="Ex.: suporte@a2ingressos.app.br" />
           </label>
@@ -74,10 +91,10 @@ export default async function AdminOperationsPage() {
 
         <section className="card">
           <span className="eyebrow">Leitura da arquitetura</span>
-          <h2>Como a Ingressas vai crescer</h2>
+          <h2>Como a Ingresaas vai crescer</h2>
           <div className="permissionList">
             <p>
-              <strong>Ingressas:</strong> a plataforma-mãe que administra o motor SaaS.
+              <strong>Ingresaas:</strong> a plataforma-mãe que administra o motor SaaS.
             </p>
             <p>
               <strong>Operação filha:</strong> uma bilheteria com marca, domínio, equipe e eventos próprios.
@@ -90,6 +107,47 @@ export default async function AdminOperationsPage() {
             </p>
           </div>
         </section>
+      </section>
+
+      <section className="grid twoColumns spacedSection">
+        <article className="dashboardPanel platformMasterGuide">
+          <div className="sectionHeader inlineHeader">
+            <div>
+              <h2>Checklist de onboarding</h2>
+              <p>Use esta ordem para cada operação nova nascer com menos dependência manual.</p>
+            </div>
+          </div>
+          <ol className="platformChecklist">
+            <li>Cadastrar nome, domínio público e domínio admin</li>
+            <li>Definir cores, logo e suporte</li>
+            <li>Criar usuário proprietário da operação</li>
+            <li>Publicar primeiro evento e revisar a home da bilheteria</li>
+            <li>Testar pedido, e-mail, ingresso e check-in no domínio certo</li>
+          </ol>
+        </article>
+
+        <article className="dashboardPanel platformMasterGuide">
+          <div className="sectionHeader inlineHeader">
+            <div>
+              <h2>Padrão de domínio</h2>
+              <p>Estrutura recomendada para manter o SaaS limpo e previsível.</p>
+            </div>
+          </div>
+          <div className="permissionList">
+            <p>
+              <strong>Master:</strong> ingresaas.app.br
+            </p>
+            <p>
+              <strong>Público da operação:</strong> bilheteria no domínio do cliente final
+            </p>
+            <p>
+              <strong>Admin da operação:</strong> produtor.seudominio.com.br
+            </p>
+            <p>
+              <strong>Suporte:</strong> cada operação mantém seu e-mail e WhatsApp próprios
+            </p>
+          </div>
+        </article>
       </section>
 
       <section className="card spacedSection">
@@ -128,6 +186,22 @@ export default async function AdminOperationsPage() {
                 </div>
               </div>
 
+              <div className="operationsAdminLinks">
+                <span>{organization.publicDomain || "Domínio público pendente"}</span>
+                <span>{organization.adminDomain || "Domínio admin pendente"}</span>
+              </div>
+
+              <div className="operationsAdminSwatches">
+                <span>
+                  <i style={{ background: organization.primaryColor || "#0b7a63" }} />
+                  Principal
+                </span>
+                <span>
+                  <i style={{ background: organization.secondaryColor || "#dff3ec" }} />
+                  Secundária
+                </span>
+              </div>
+
               <form action={updateOrganizationAction} className="operationsAdminForm">
                 <input type="hidden" name="organizationId" value={organization.id} />
 
@@ -144,6 +218,21 @@ export default async function AdminOperationsPage() {
                 <label className="field">
                   <span>Domínio admin</span>
                   <input name="adminDomain" defaultValue={organization.adminDomain || ""} />
+                </label>
+
+                <label className="field">
+                  <span>Logo (URL)</span>
+                  <input name="logoUrl" defaultValue={organization.logoUrl || ""} />
+                </label>
+
+                <label className="field">
+                  <span>Cor principal</span>
+                  <input name="primaryColor" defaultValue={organization.primaryColor || ""} />
+                </label>
+
+                <label className="field">
+                  <span>Cor secundária</span>
+                  <input name="secondaryColor" defaultValue={organization.secondaryColor || ""} />
                 </label>
 
                 <label className="field">

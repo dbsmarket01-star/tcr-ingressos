@@ -58,8 +58,19 @@ export default async function RootLayout({
   const organizationContext = await getCurrentOrganizationContext();
   const primaryColor = normalizeHex(organizationContext.organization.primaryColor);
   const secondaryColor = normalizeHex(organizationContext.organization.secondaryColor);
-  const brandStyle =
-    primaryColor && !organizationContext.isPlatformHost
+  const brandStyle = organizationContext.isPlatformHost
+    ? ({
+        ["--brand" as string]: "#24427a",
+        ["--brand-dark" as string]: "#182b55",
+        ["--admin-primary" as string]: "#24427a",
+        ["--admin-primary-dark" as string]: "#182b55",
+        ["--admin-plum" as string]: "#24427a",
+        ["--admin-plum-dark" as string]: "#182b55",
+        ["--admin-surface-tint" as string]: "#eef3ff",
+        ["--admin-indigo-soft" as string]: "#dbe6ff",
+        ["--surface-soft" as string]: "#f5f8ff"
+      } as CSSProperties)
+    : primaryColor
       ? ({
           ["--brand" as string]: primaryColor,
           ["--brand-dark" as string]: shiftHex(primaryColor, -28),

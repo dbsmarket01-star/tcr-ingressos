@@ -14,6 +14,7 @@ export default async function ResetPasswordPage({ params, searchParams }: ResetP
   const query = searchParams ? await searchParams : {};
   const hasError = query.error === "invalid";
   const organizationContext = await getCurrentOrganizationContext();
+  const isPlatformHost = organizationContext.isPlatformHost;
 
   return (
     <main className="loginShell loginShellAdmin">
@@ -27,7 +28,11 @@ export default async function ResetPasswordPage({ params, searchParams }: ResetP
           <div>
             <p className="publicBadge">Acesso interno</p>
             <h2>Nova senha</h2>
-            <p className="muted">Crie uma nova senha para voltar ao painel administrativo da {organizationContext.brandName} com segurança.</p>
+            <p className="muted">
+              {isPlatformHost
+                ? `Crie uma nova senha para voltar ao painel master da ${organizationContext.platformName} com segurança.`
+                : `Crie uma nova senha para voltar ao painel administrativo da ${organizationContext.brandName} com segurança.`}
+            </p>
           </div>
 
           {hasError ? (
@@ -56,7 +61,11 @@ export default async function ResetPasswordPage({ params, searchParams }: ResetP
             <Link className="secondaryButton fullButton" href="/login">
               Voltar para o login
             </Link>
-            <p>Depois da redefinição, o acesso volta com o mesmo perfil e com as mesmas permissões já liberadas.</p>
+            <p>
+              {isPlatformHost
+                ? "Depois da redefinição, o acesso volta com o mesmo papel de plataforma e a mesma visão sobre as operações filhas."
+                : "Depois da redefinição, o acesso volta com o mesmo perfil e com as mesmas permissões já liberadas."}
+            </p>
           </div>
         </div>
 
@@ -66,10 +75,15 @@ export default async function ResetPasswordPage({ params, searchParams }: ResetP
           </div>
 
           <div className="loginIntroCopy">
-            <h1>Volte para a operação sem perder o contexto do seu trabalho.</h1>
+            <h1>
+              {isPlatformHost
+                ? "Volte para o painel master sem perder o contexto da plataforma."
+                : "Volte para a operação sem perder o contexto do seu trabalho."}
+            </h1>
             <p>
-              Senha nova, acesso preservado e a mesma rotina de eventos, pedidos, check-in e
-              atendimento pronta para continuar.
+              {isPlatformHost
+                ? "Senha nova, acesso preservado e a mesma visão sobre operações, domínios, usuários e evolução da base pronta para continuar."
+                : "Senha nova, acesso preservado e a mesma rotina de eventos, pedidos, check-in e atendimento pronta para continuar."}
             </p>
           </div>
 
@@ -80,11 +94,19 @@ export default async function ResetPasswordPage({ params, searchParams }: ResetP
             </article>
             <article className="loginFeatureCard">
               <strong>Permissões mantidas</strong>
-              <span>O usuário continua com o mesmo perfil e com o mesmo escopo de eventos já liberado.</span>
+              <span>
+                {isPlatformHost
+                  ? "O acesso master continua com o mesmo papel na plataforma, sem misturar permissões das bilheterias filhas."
+                  : "O usuário continua com o mesmo perfil e com o mesmo escopo de eventos já liberado."}
+              </span>
             </article>
             <article className="loginFeatureCard">
-              <strong>Controle centralizado</strong>
-              <span>O proprietário mantém a gestão dos acessos internos dentro da própria plataforma.</span>
+              <strong>{isPlatformHost ? "Governança centralizada" : "Controle centralizado"}</strong>
+              <span>
+                {isPlatformHost
+                  ? "A Ingresaas mantém o controle do acesso master, enquanto cada operação filha cuida da própria equipe."
+                  : "O proprietário mantém a gestão dos acessos internos dentro da própria plataforma."}
+              </span>
             </article>
           </div>
         </div>

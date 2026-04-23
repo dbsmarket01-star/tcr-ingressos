@@ -579,6 +579,198 @@ textarea {
   z-index: 1;
 }
 
+.platformHomePage {
+  background:
+    radial-gradient(circle at top left, rgba(36, 66, 122, 0.12), transparent 24%),
+    linear-gradient(180deg, #eef3ff 0, #f7f9ff 520px, #ffffff 100%);
+}
+
+.platformHero {
+  background:
+    radial-gradient(circle at top right, rgba(94, 144, 255, 0.18), transparent 18%),
+    radial-gradient(circle at bottom left, rgba(69, 108, 194, 0.14), transparent 24%),
+    linear-gradient(155deg, rgba(11, 18, 35, 0.98), rgba(24, 35, 67, 0.95));
+  color: white;
+  overflow: hidden;
+  position: relative;
+}
+
+.platformHero::after {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 74px 74px;
+  content: "";
+  inset: 0;
+  opacity: 0.18;
+  pointer-events: none;
+  position: absolute;
+}
+
+.platformHeroGrid {
+  align-items: center;
+  display: grid;
+  gap: 34px;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  margin: 0 auto;
+  max-width: 1220px;
+  min-height: 560px;
+  padding: 34px 24px 52px;
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+.platformHeroContent {
+  display: grid;
+  gap: 18px;
+  max-width: 760px;
+}
+
+.platformHeroContent h1 {
+  color: white;
+  font-size: clamp(44px, 6vw, 76px);
+  letter-spacing: 0;
+  line-height: 0.98;
+  margin: 0;
+  max-width: 11ch;
+}
+
+.platformHeroContent p {
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 18px;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 680px;
+}
+
+.platformHeroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.platformHeroActions .secondaryButton {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: white;
+}
+
+.platformHeroActions .secondaryButton:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.platformHeroPanel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.08));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  box-shadow: 0 28px 60px rgba(10, 18, 37, 0.24);
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+}
+
+.platformHeroPanelHeader {
+  display: grid;
+  gap: 6px;
+}
+
+.platformHeroPanelHeader .eyebrow {
+  color: #dbe6ff;
+}
+
+.platformHeroPanelHeader strong {
+  color: white;
+  font-size: 24px;
+}
+
+.platformHeroMetrics {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.platformHeroMetrics article {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
+.platformHeroMetrics span {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.platformHeroMetrics strong {
+  color: white;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.platformHeroNote {
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+}
+
+.platformHeroNote strong {
+  color: white;
+}
+
+.platformHeroNote p {
+  color: rgba(255, 255, 255, 0.78);
+  margin: 0;
+}
+
+.platformSection {
+  display: grid;
+  gap: 22px;
+  padding-top: 34px;
+}
+
+.platformSplitGrid,
+.platformOperationsGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.platformAudienceCard,
+.platformOnboardingCard {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(245, 249, 255, 0.98));
+  border: 1px solid #dbe4f4;
+  border-radius: 24px;
+  box-shadow: 0 20px 44px rgba(19, 34, 69, 0.06);
+  padding: 26px;
+}
+
+.platformAudienceCard h2,
+.platformOnboardingCard h2 {
+  margin: 10px 0 14px;
+}
+
+.platformChecklist {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.platformChecklist li {
+  color: var(--ink);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
 .homeHeroContent {
   display: grid;
   gap: 16px;
@@ -1274,6 +1466,10 @@ textarea {
   padding-top: 20px;
 }
 
+.platformMasterGuide {
+  gap: 18px;
+}
+
 .operationsAdminList {
   display: grid;
   gap: 16px;
@@ -1337,10 +1533,126 @@ textarea {
   line-height: 1.3;
 }
 
+.operationsAdminLinks {
+  display: grid;
+  gap: 8px;
+}
+
+.operationsAdminLinks span {
+  background: #f4f8ff;
+  border: 1px solid #dbe4f4;
+  border-radius: 14px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 10px 12px;
+}
+
+.operationsAdminSwatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.operationsAdminSwatches span {
+  align-items: center;
+  background: #f4f8ff;
+  border: 1px solid #dbe4f4;
+  border-radius: 999px;
+  color: var(--muted);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 800;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.operationsAdminSwatches i {
+  border-radius: 999px;
+  display: inline-block;
+  height: 12px;
+  width: 12px;
+}
+
 .operationsAdminForm {
   display: grid;
   gap: 14px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.platformOperationCard {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(245, 249, 255, 0.98));
+  border: 1px solid #dbe4f4;
+  border-radius: 22px;
+  box-shadow: 0 18px 38px rgba(20, 31, 60, 0.06);
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.platformOperationAccent {
+  border-radius: 999px;
+  height: 6px;
+  width: 100%;
+}
+
+.platformOperationHeader {
+  align-items: start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.platformOperationHeader div {
+  display: grid;
+  gap: 4px;
+}
+
+.platformOperationHeader strong {
+  font-size: 20px;
+}
+
+.platformOperationHeader span:not(.status) {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.platformOperationMeta {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.platformOperationMeta div {
+  background: #f5f8ff;
+  border: 1px solid #dde6f7;
+  border-radius: 16px;
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+}
+
+.platformOperationMeta span,
+.platformOperationLinks span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.platformOperationMeta strong {
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.platformOperationLinks {
+  background: #f5f8ff;
+  border: 1px solid #dde6f7;
+  border-radius: 16px;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
 }
 
 .donutChart {
@@ -5491,6 +5803,9 @@ textarea {
   .homeCardsGrid,
   .homeEventsLayout,
   .homeHeroInner,
+  .platformHeroGrid,
+  .platformSplitGrid,
+  .platformOperationsGrid,
   .mediaUploadGrid,
   .mediaSizingGuide,
   .orderGrid,
@@ -5523,6 +5838,8 @@ textarea {
   .platformOverviewHero,
   .platformFlowGrid,
   .platformOverviewMetrics,
+  .platformHeroMetrics,
+  .platformOperationMeta,
   .operationsAdminStats,
   .operationsAdminForm {
     grid-template-columns: 1fr;
@@ -5530,6 +5847,14 @@ textarea {
 
   .platformOverviewHero {
     padding: 20px;
+  }
+
+  .platformHeroContent h1 {
+    max-width: 12ch;
+  }
+
+  .platformHeroPanel {
+    padding: 18px;
   }
 
   .publicHero {
@@ -5588,6 +5913,15 @@ textarea {
     padding: 20px 18px 34px;
   }
 
+  .platformHero {
+    min-height: auto;
+  }
+
+  .platformHeroGrid {
+    min-height: 0;
+    padding: 20px 18px 34px;
+  }
+
   .homeHeroInner {
     align-items: stretch;
     background: linear-gradient(180deg, rgba(7, 26, 21, 0.24), rgba(7, 26, 21, 0.08));
@@ -5603,6 +5937,16 @@ textarea {
   }
 
   .homeHero p {
+    font-size: 16px;
+    max-width: 34ch;
+  }
+
+  .platformHeroContent h1 {
+    font-size: 42px;
+    line-height: 1;
+  }
+
+  .platformHeroContent p {
     font-size: 16px;
     max-width: 34ch;
   }
