@@ -30,7 +30,11 @@ export function isPlatformHost(host?: string | null) {
   const normalizedHost = normalizeHost(host);
   const platformHost = getPlatformHost();
 
-  return Boolean(normalizedHost && platformHost && normalizedHost === platformHost);
+  if (!normalizedHost || !platformHost) {
+    return false;
+  }
+
+  return normalizedHost === platformHost || normalizedHost === `www.${platformHost}`;
 }
 
 export type PlatformOverview = {
