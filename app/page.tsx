@@ -45,6 +45,21 @@ const platformAudience = [
   "Negócios que precisam vender, validar QR Code, acompanhar leads e operar eventos em uma só base"
 ];
 
+const platformCapabilityRows = [
+  {
+    title: "Vendas, tickets e QR Code",
+    body: "Checkout, pagamento, emissão de ingresso e validação continuam centralizados na mesma base."
+  },
+  {
+    title: "Leads, landing pages e operação",
+    body: "A plataforma sustenta captura, eventos, pedidos, suporte e check-in sem quebrar o fluxo."
+  },
+  {
+    title: "Marca e domínio por cliente",
+    body: "Cada bilheteria filha opera com domínio, admin, suporte e identidade visual próprios."
+  }
+];
+
 export default async function Home() {
   const organizationContext = await getCurrentOrganizationContext();
   const isPlatformHost = organizationContext.isPlatformHost;
@@ -83,6 +98,12 @@ export default async function Home() {
                   <span key={item}>{item}</span>
                 ))}
               </div>
+
+              <div className="platformHeroChecklist">
+                <span>Cria a bilheteria filha</span>
+                <span>Define domínio e branding</span>
+                <span>Entrega uma operação pronta para vender</span>
+              </div>
             </div>
 
             <aside className="platformHeroPanel">
@@ -117,6 +138,17 @@ export default async function Home() {
                   misturar domínio, equipe ou identidade.
                 </p>
               </div>
+
+              <div className="platformHeroMiniGrid">
+                <article>
+                  <span>Operações prontas</span>
+                  <strong>{liveOperations.filter((item) => item.readinessScore >= 67).length}</strong>
+                </article>
+                <article>
+                  <span>Implantação mínima</span>
+                  <strong>Domínio + equipe + branding</strong>
+                </article>
+              </div>
             </aside>
           </div>
         </section>
@@ -133,6 +165,24 @@ export default async function Home() {
             {platformPillars.map((item, index) => (
               <article className="card platformFlowCard" key={item.title}>
                 <span>{`0${index + 1}`}</span>
+                <strong>{item.title}</strong>
+                <p>{item.body}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="container platformSection">
+          <div className="sectionHeader homeSectionHeader">
+            <div>
+              <span className="eyebrow">O que a plataforma entrega</span>
+              <h2>Uma base técnica única para várias bilheterias operarem com autonomia.</h2>
+            </div>
+          </div>
+
+          <div className="platformCapabilityGrid">
+            {platformCapabilityRows.map((item) => (
+              <article className="card platformCapabilityCard" key={item.title}>
                 <strong>{item.title}</strong>
                 <p>{item.body}</p>
               </article>
@@ -161,6 +211,9 @@ export default async function Home() {
                 <li>Configura branding, suporte e equipe inicial</li>
                 <li>Publica eventos e libera o fluxo comercial</li>
               </ol>
+              <div className="platformOnboardingFootnote">
+                Isso mantém TCR, A2 e as próximas operações embaixo do mesmo motor, sem duplicar projeto.
+              </div>
             </article>
           </div>
         </section>

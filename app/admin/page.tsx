@@ -75,6 +75,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             {metric("Domínios configurados", platformOverview.domainsConfigured, "Público ou admin já definidos")}
             {metric("Equipe somada", platformOverview.totalAdmins, "Usuários internos cadastrados nas operações")}
           </div>
+
+          <div className="platformMasterActionBar">
+            <Link className="button smallButton" href="/admin/operations">
+              Abrir gestão das operações
+            </Link>
+            <Link className="secondaryButton smallButton" href="/login">
+              Validar acesso master
+            </Link>
+          </div>
         </section>
 
         <section className="grid twoColumns spacedSection">
@@ -124,6 +133,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               </p>
             </div>
           </article>
+        </section>
+
+        <section className="grid dashboardGrid platformMasterSnapshot spacedSection" aria-label="Próximos movimentos da plataforma">
+          {metric("Prontas para operar", platformOverview.operations.filter((item) => item.readinessScore >= 67).length, "Operações com estrutura suficiente para revisão final")}
+          {metric("Ainda montando base", platformOverview.operations.filter((item) => item.readinessScore < 67).length, "Dependem de domínio, branding ou equipe")}
+          {metric("Eventos publicados", platformOverview.publishedEvents, "Já ativos em alguma bilheteria filha")}
+          {metric("Domínios completos", platformOverview.fullyConfiguredOrganizations, "Público + admin cadastrados")}
         </section>
 
         <section className="dashboardPanel platformOperationsPanel spacedSection">

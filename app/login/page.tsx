@@ -48,6 +48,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </p>
           </div>
 
+          {isPlatformHost ? (
+            <div className="platformLoginSignals" aria-label="Escopos da plataforma">
+              <span>Painel master</span>
+              <span>Operações filhas</span>
+              <span>Governança central</span>
+            </div>
+          ) : null}
+
           {hasError ? (
             <div className="errorBox">E-mail ou senha inválidos. Confira os dados e tente novamente.</div>
           ) : null}
@@ -98,7 +106,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
         <div className="loginIntro loginAdminShowcase">
           <div className="loginShowcaseHeader">
-            <span className="loginShowcasePill">Plataforma de gerenciamento de eventos</span>
+            <span className="loginShowcasePill">
+              {isPlatformHost ? "Painel master da plataforma" : "Plataforma de gerenciamento de eventos"}
+            </span>
           </div>
 
           <div className="loginIntroCopy">
@@ -140,6 +150,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               </span>
             </article>
           </div>
+
+          {isPlatformHost ? (
+            <div className="platformLoginFootnote">
+              <strong>Fluxo recomendado</strong>
+              <span>Entre no painel master, abra Operações e gerencie a TCR como primeira bilheteria filha.</span>
+            </div>
+          ) : null}
         </div>
       </section>
     </main>

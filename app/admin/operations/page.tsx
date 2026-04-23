@@ -27,6 +27,23 @@ export default async function AdminOperationsPage() {
       title="Operações"
       description="Cadastre e organize as bilheterias filhas da Ingresaas, com domínio, equipe e operação separados."
     >
+      <section className="platformOperationsHero spacedSection" aria-label="Visão geral das operações">
+        <div>
+          <span className="eyebrow">Gestão das bilheterias filhas</span>
+          <h2>Cadastre, prepare e acompanhe cada operação a partir do painel master.</h2>
+          <p>
+            Esta é a mesa de controle da Ingresaas. Aqui você liga domínio, branding, equipe e suporte antes de a
+            bilheteria filha entrar em operação pública.
+          </p>
+        </div>
+        <div className="platformOperationsHeroBadges">
+          <span>Domínio público</span>
+          <span>Domínio admin</span>
+          <span>Branding por operação</span>
+          <span>Onboarding guiado</span>
+        </div>
+      </section>
+
       <section className="grid twoColumns">
         <form action={createOrganizationAction} className="card form">
           <div>
@@ -183,6 +200,10 @@ export default async function AdminOperationsPage() {
                 <div>
                   <span>Criada em</span>
                   <strong>{formatDateTime(organization.createdAt)}</strong>
+                </div>
+                <div>
+                  <span>Prontidão</span>
+                  <strong>{organization.readinessScore}%</strong>
                 </div>
               </div>
 
