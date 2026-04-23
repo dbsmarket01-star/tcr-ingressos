@@ -6,6 +6,8 @@ type DashboardFilters = {
   endDate?: string;
 };
 
+type EventScope = string[] | null | undefined;
+
 type PaymentMethod = "PIX" | "CREDIT_CARD" | "SIMULATED" | "OTHER";
 
 function parseStartDate(value?: string) {
@@ -79,7 +81,7 @@ function percentage(value: number, total: number) {
   return Math.round((value / total) * 100);
 }
 
-export async function getDashboardMetrics(filters: DashboardFilters = {}) {
+export async function getDashboardMetrics(filters: DashboardFilters = {}, allowedEventIds?: EventScope) {
   const periodStart = parseStartDate(filters.startDate);
   const periodEnd = parseEndDate(filters.endDate);
   const paidAtPeriod = {
@@ -106,6 +108,7 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}) {
     prisma.order.aggregate({
       where: {
         status: "PAID",
+        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
         paidAt: paidAtPeriod
       },
       _sum: {
@@ -114,6 +117,7 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}) {
     }),
     prisma.order.groupBy({
       by: ["status"],
+      where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
       _count: {
         _all: true
       }
@@ -121,6 +125,7 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}) {
     prisma.order.groupBy({
       by: ["status"],
       where: {
+        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
         createdAt: createdAtPeriod
       },
       _count: {
@@ -130,6 +135,7 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}) {
     prisma.order.findMany({
       where: {
         status: "PAID",
+        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
         paidAt: paidAtPeriod
       },
       select: {
@@ -148,6 +154,7 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}) {
     prisma.order.findMany({
       where: {
         status: "PAID",
+        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
         paidAt: {
           lt: periodStart
         }
@@ -158,18 +165,21 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}) {
       }
     }),
     prisma.ticket.groupBy({
+      where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
       by: ["status"],
       _count: {
         _all: true
       }
     }),
     prisma.checkIn.groupBy({
+      where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
       by: ["status"],
       _count: {
         _all: true
       }
     }),
     prisma.event.findMany({
+      where: allowedEventIds ? { id: { in: allowedEventIds } } : undefined,
       orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],
       include: {
         lots: true,
@@ -184,12 +194,14 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}) {
       }
     }),
     prisma.ticket.groupBy({
+      where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
       by: ["eventId", "status"],
       _count: {
         _all: true
       }
     }),
     prisma.order.findMany({
+      where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
       orderBy: {
         createdAt: "desc"
       },
