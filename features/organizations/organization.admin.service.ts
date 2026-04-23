@@ -83,6 +83,58 @@ export async function listOrganizationsForPlatformAdmin() {
   });
 }
 
+export async function getOrganizationDetailForPlatformAdmin(id: string) {
+  const organization = await prisma.organization.findUnique({
+    where: { id },
+    include: {
+      adminUsers: {
+        where: { isActive: true },
+        orderBy: [{ role: "asc" }, { name: "asc" }],
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          accessAllEvents: true,
+          allowedEventIds: true
+        }
+      },
+      events: {
+        orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          status: true,
+          city: true,
+          state: true,
+          startsAt: true
+        }
+      },
+      _count: {
+        select: {
+          adminUsers: true,
+          events: true
+        }
+      }
+    }
+  });
+
+  if (!organization) {
+    return null;
+  }
+
+  const platformOverview = await getPlatformOverview();
+  const readiness = platformOverview.operations.find((operation) => operation.id === organization.id);
+
+  return {
+    ...organization,
+    readinessScore: readiness?.readinessScore ?? 0,
+    readinessLabel: readiness?.readinessLabel ?? "Inicial",
+    readinessItems: readiness?.readinessItems ?? []
+  };
+}
+
 export async function createOrganization(input: CreateOrganizationInput) {
   return prisma.organization.create({
     data: {

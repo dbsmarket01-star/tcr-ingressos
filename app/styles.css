@@ -1739,6 +1739,46 @@ textarea {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.platformMemberList {
+  display: grid;
+  gap: 12px;
+}
+
+.platformMemberCard {
+  align-items: start;
+  background: #f7fbff;
+  border: 1px solid #dbe4f4;
+  border-radius: 18px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 14px 16px;
+}
+
+.platformMemberCard strong {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.platformMemberCard span:not(.status) {
+  color: var(--muted);
+}
+
+.platformMemberMeta {
+  align-items: end;
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.platformMemberMeta small {
+  color: var(--muted);
+  font-weight: 700;
+  max-width: 28ch;
+  text-align: right;
+}
+
 .platformOperationCard {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(245, 249, 255, 0.98));
   border: 1px solid #dbe4f4;

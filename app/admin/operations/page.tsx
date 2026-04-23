@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { requirePermission } from "@/features/auth/auth.service";
@@ -294,6 +295,9 @@ export default async function AdminOperationsPage() {
               </form>
 
               <div className="actionRow">
+                <Link className="button smallButton" href={`/admin/operations/${organization.id}`}>
+                  Ver detalhe
+                </Link>
                 {organization.publicDomain ? (
                   <a
                     className="secondaryButton smallButton"

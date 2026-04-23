@@ -203,6 +203,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     <span>{operation.publicDomain || "Domínio público pendente"}</span>
                     <span>{operation.adminDomain || "Domínio admin pendente"}</span>
                   </div>
+
+                  <div className="actionRow">
+                    <Link className="secondaryButton smallButton" href={`/admin/operations/${operation.id}`}>
+                      Ver detalhe
+                    </Link>
+                  </div>
                 </article>
               );
             })}
