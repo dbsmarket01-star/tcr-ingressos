@@ -60,6 +60,21 @@ const platformCapabilityRows = [
   }
 ];
 
+const platformControlPoints = [
+  {
+    title: "Operações filhas",
+    body: "Cadastre, configure e acompanhe cada bilheteria a partir do painel master."
+  },
+  {
+    title: "Domínio e branding",
+    body: "Cada operação recebe domínio próprio, admin próprio e uma identidade visual separada."
+  },
+  {
+    title: "Base comercial única",
+    body: "Pedidos, leads, tickets, QR Code e check-in continuam evoluindo dentro do mesmo motor."
+  }
+];
+
 export default async function Home() {
   const organizationContext = await getCurrentOrganizationContext();
   const isPlatformHost = organizationContext.isPlatformHost;
@@ -103,6 +118,15 @@ export default async function Home() {
                 <span>Cria a bilheteria filha</span>
                 <span>Define domínio e branding</span>
                 <span>Entrega uma operação pronta para vender</span>
+              </div>
+
+              <div className="platformControlGrid" aria-label="Pontos centrais da plataforma">
+                {platformControlPoints.map((item) => (
+                  <article className="platformControlCard" key={item.title}>
+                    <strong>{item.title}</strong>
+                    <p>{item.body}</p>
+                  </article>
+                ))}
               </div>
             </div>
 
@@ -223,6 +247,14 @@ export default async function Home() {
             <div>
               <span className="eyebrow">Operações embaixo da base</span>
               <h2>Bilheterias já preparadas dentro da plataforma.</h2>
+            </div>
+            <div className="platformSectionActions">
+              <Link className="secondaryButton smallButton" href="/admin">
+                Abrir painel master
+              </Link>
+              <Link className="button smallButton" href="/admin/operations">
+                Gerir operações
+              </Link>
             </div>
           </div>
 

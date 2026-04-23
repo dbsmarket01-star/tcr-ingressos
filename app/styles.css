@@ -602,9 +602,9 @@ textarea {
 
 .platformHero {
   background:
-    radial-gradient(circle at top right, rgba(125, 170, 255, 0.22), transparent 18%),
-    radial-gradient(circle at bottom left, rgba(90, 142, 242, 0.14), transparent 24%),
-    linear-gradient(155deg, #14233e, #243b66 56%, #314d80);
+    radial-gradient(circle at top right, rgba(160, 196, 255, 0.28), transparent 20%),
+    radial-gradient(circle at bottom left, rgba(106, 151, 245, 0.16), transparent 26%),
+    linear-gradient(155deg, #1b2f53, #2f4e84 58%, #46639a);
   color: white;
   overflow: hidden;
   position: relative;
@@ -705,6 +705,35 @@ textarea {
   display: grid;
   gap: 18px;
   padding: 22px;
+}
+
+.platformControlGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.platformControlCard {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  display: grid;
+  gap: 8px;
+  min-height: 126px;
+  padding: 16px;
+}
+
+.platformControlCard strong {
+  color: white;
+  font-size: 17px;
+  line-height: 1.2;
+}
+
+.platformControlCard p {
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 0;
 }
 
 .platformHeroPanelHeader {
@@ -836,6 +865,12 @@ textarea {
   display: grid;
   gap: 18px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.platformSectionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .platformAudienceCard,
@@ -1501,8 +1536,8 @@ textarea {
 
 .platformOverviewHero {
   background:
-    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.18), transparent 34%),
-    linear-gradient(135deg, #1c2f56, #2e4678 58%, #3c5b95);
+    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.2), transparent 34%),
+    linear-gradient(135deg, #243c69, #36568a 58%, #5377af);
   border: 1px solid rgba(var(--brand-rgb), 0.16);
   border-radius: 24px;
   box-shadow: 0 26px 60px rgba(31, 53, 97, 0.14);
@@ -1566,6 +1601,38 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+.platformExecutiveGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1.15fr 0.85fr;
+}
+
+.platformExecutiveCard {
+  gap: 14px;
+}
+
+.platformExecutiveCard h2,
+.platformExecutiveCard p {
+  margin: 0;
+}
+
+.platformExecutiveCard h2 {
+  font-size: 28px;
+  line-height: 1.08;
+  max-width: 16ch;
+}
+
+.platformExecutiveCard p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.platformExecutiveLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .platformMasterSnapshot {
@@ -1827,6 +1894,44 @@ textarea {
   justify-content: flex-end;
 }
 
+.platformOperationLaunchpad {
+  display: grid;
+}
+
+.platformOperationLaunchpadCard {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 251, 255, 0.98));
+  border: 1px solid #e2eaff;
+  border-radius: 24px;
+  box-shadow: 0 18px 40px rgba(31, 53, 97, 0.05);
+  display: grid;
+  gap: 12px;
+  padding: 22px 24px;
+}
+
+.platformOperationLaunchpadCard h3,
+.platformOperationLaunchpadCard p {
+  margin: 0;
+}
+
+.platformOperationLaunchpadCard h3 {
+  color: #14213f;
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.08;
+  max-width: 18ch;
+}
+
+.platformOperationLaunchpadCard p {
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 68ch;
+}
+
+.platformOperationLaunchpadGrid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .platformEventActionStack {
   display: flex;
   flex-wrap: wrap;
@@ -1944,6 +2049,31 @@ textarea {
   min-height: 34px;
   padding: 0 12px;
   text-transform: uppercase;
+}
+
+.platformLoginTimeline {
+  display: grid;
+  gap: 10px;
+}
+
+.platformLoginTimeline article {
+  background: #f7faff;
+  border: 1px solid #dbe4f4;
+  border-radius: 18px;
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+}
+
+.platformLoginTimeline strong {
+  color: #20345f;
+  font-size: 14px;
+}
+
+.platformLoginTimeline span {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .platformLoginFootnote {
@@ -6176,7 +6306,9 @@ textarea {
   .platformFlowGrid,
   .platformOverviewMetrics,
   .platformHeroMetrics,
+  .platformControlGrid,
   .platformOperationMeta,
+  .platformOperationLaunchpadGrid,
   .operationsAdminStats,
   .operationsAdminForm {
     grid-template-columns: 1fr;
@@ -6188,6 +6320,10 @@ textarea {
 
   .platformHeroContent h1 {
     max-width: 12ch;
+  }
+
+  .platformExecutiveGrid {
+    grid-template-columns: 1fr;
   }
 
   .platformHeroPanel {
@@ -6484,6 +6620,11 @@ textarea {
   }
 
   .platformOperationsHeroBadges {
+    justify-content: flex-start;
+  }
+
+  .platformOperationCommandActions,
+  .platformSectionActions {
     justify-content: flex-start;
   }
 

@@ -86,6 +86,37 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </div>
         </section>
 
+        <section className="platformExecutiveGrid spacedSection" aria-label="Ações rápidas da plataforma">
+          <article className="dashboardPanel platformExecutiveCard">
+            <span className="eyebrow">Próximo passo</span>
+            <h2>Continue a lapidar a primeira bilheteria filha antes de abrir a próxima.</h2>
+            <p>
+              Use a TCR como operação piloto: refine a experiência, valide o fluxo master -&gt; operação e só depois
+              replique o modelo para o A2.
+            </p>
+            <div className="actionRow">
+              <Link className="button smallButton" href="/admin/operations">
+                Escolher operação
+              </Link>
+            </div>
+          </article>
+
+          <article className="dashboardPanel platformExecutiveCard">
+            <span className="eyebrow">Atalhos úteis</span>
+            <div className="platformExecutiveLinks">
+              <Link className="secondaryButton smallButton" href="/admin/operations">
+                Operações
+              </Link>
+              <Link className="secondaryButton smallButton" href="/admin">
+                Dashboard master
+              </Link>
+              <Link className="secondaryButton smallButton" href="/login">
+                Login master
+              </Link>
+            </div>
+          </article>
+        </section>
+
         <section className="grid twoColumns spacedSection">
           <article className="dashboardPanel platformMasterGuide">
             <div className="sectionHeader inlineHeader">
@@ -209,7 +240,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                       Ver detalhe
                     </Link>
                     {operation.adminDomain ? (
-                      <a className="button smallButton" href={`https://${operation.adminDomain}/login`} target="_blank" rel="noreferrer">
+                      <a className="button smallButton" href={`https://${operation.adminDomain}/admin`} target="_blank" rel="noreferrer">
                         Entrar na operação
                       </a>
                     ) : null}

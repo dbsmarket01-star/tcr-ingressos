@@ -69,12 +69,42 @@ export default async function OperationDetailPage({ params }: OperationDetailPag
             </a>
           ) : null}
           {operation.adminDomain ? (
-            <a className="button smallButton" href={`https://${operation.adminDomain}/login`} target="_blank" rel="noreferrer">
+            <a className="button smallButton" href={`https://${operation.adminDomain}/admin`} target="_blank" rel="noreferrer">
               Entrar no admin da operação
             </a>
           ) : null}
         </div>
       </section>
+
+      {operation.adminDomain ? (
+        <section className="platformOperationLaunchpad spacedSection" aria-label="Atalhos internos da operação">
+          <article className="platformOperationLaunchpadCard">
+            <span className="eyebrow">Entrar na rotina da filha</span>
+            <h3>Abra a TCR já no ponto certo do trabalho.</h3>
+            <p>Esses atalhos levam você direto para as áreas que mais costumam precisar de revisão diária.</p>
+            <div className="platformOperationLaunchpadGrid">
+              <a className="secondaryButton smallButton" href={`https://${operation.adminDomain}/admin`} target="_blank" rel="noreferrer">
+                Dashboard
+              </a>
+              <a className="secondaryButton smallButton" href={`https://${operation.adminDomain}/admin/events`} target="_blank" rel="noreferrer">
+                Eventos
+              </a>
+              <a className="secondaryButton smallButton" href={`https://${operation.adminDomain}/admin/orders`} target="_blank" rel="noreferrer">
+                Pedidos
+              </a>
+              <a className="secondaryButton smallButton" href={`https://${operation.adminDomain}/admin/check-in`} target="_blank" rel="noreferrer">
+                Check-in
+              </a>
+              <a className="secondaryButton smallButton" href={`https://${operation.adminDomain}/admin/finance`} target="_blank" rel="noreferrer">
+                Financeiro
+              </a>
+              <a className="secondaryButton smallButton" href={`https://${operation.adminDomain}/admin/users`} target="_blank" rel="noreferrer">
+                Usuários
+              </a>
+            </div>
+          </article>
+        </section>
+      ) : null}
 
       <section className="grid dashboardGrid platformMasterSnapshot spacedSection">
         <article className="card metric dashboardHeroMetric">
@@ -192,8 +222,8 @@ export default async function OperationDetailPage({ params }: OperationDetailPag
               </a>
             ) : null}
             {operation.adminDomain ? (
-              <a className="secondaryButton smallButton" href={`https://${operation.adminDomain}/login`} target="_blank" rel="noreferrer">
-                Ir para o login da filha
+              <a className="secondaryButton smallButton" href={`https://${operation.adminDomain}/admin`} target="_blank" rel="noreferrer">
+                Ir para o admin da filha
               </a>
             ) : null}
           </div>

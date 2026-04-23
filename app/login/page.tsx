@@ -124,6 +124,23 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </p>
           </div>
 
+          {isPlatformHost ? (
+            <div className="platformLoginTimeline" aria-label="Fluxo de uso da plataforma">
+              <article>
+                <strong>1. Entra no master</strong>
+                <span>Administra a plataforma e acompanha a prontidão das filhas.</span>
+              </article>
+              <article>
+                <strong>2. Abre a operação</strong>
+                <span>Escolhe a bilheteria filha e confere branding, domínio, equipe e eventos.</span>
+              </article>
+              <article>
+                <strong>3. Entra na rotina</strong>
+                <span>Salta para eventos, pedidos, financeiro e operação diária quando precisar.</span>
+              </article>
+            </div>
+          ) : null}
+
           <div className="loginFeatureStack" aria-label="Recursos do painel">
             <article className="loginFeatureCard">
               <strong>{isPlatformHost ? "Operações separadas" : "Análises em tempo real"}</strong>
