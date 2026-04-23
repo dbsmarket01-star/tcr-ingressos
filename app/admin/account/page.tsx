@@ -1,6 +1,7 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { changePasswordAction } from "@/features/auth/auth.actions";
 import { requirePermission } from "@/features/auth/auth.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 
 type AdminAccountPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -10,6 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminAccountPage({ searchParams }: AdminAccountPageProps) {
   const admin = await requirePermission("ACCOUNT");
+  const organizationContext = await getCurrentOrganizationContext();
   const params = searchParams ? await searchParams : {};
   const hasError = params.error === "invalid";
   const changed = params.changed === "1";
@@ -17,7 +19,7 @@ export default async function AdminAccountPage({ searchParams }: AdminAccountPag
   return (
     <AdminShell
       title="Minha conta"
-      description="Gerencie seus dados de acesso interno ao painel da TCR Ingressos."
+      description={`Gerencie seus dados de acesso interno ao painel da ${organizationContext.brandName}.`}
     >
       <section className="grid twoColumns">
         <form action={changePasswordAction} className="card form">
@@ -46,7 +48,7 @@ export default async function AdminAccountPage({ searchParams }: AdminAccountPag
         </form>
 
         <section className="card">
-          <h2>Dados do usuario</h2>
+          <h2>Dados do usuário</h2>
           <dl className="detailList">
             <div>
               <dt>Nome</dt>
@@ -62,7 +64,7 @@ export default async function AdminAccountPage({ searchParams }: AdminAccountPag
             </div>
           </dl>
           <p className="muted">
-            Para alterar nome, email ou papel de acesso, use a tela de usuarios com um perfil proprietario.
+            Para alterar nome, e-mail ou papel de acesso, use a tela de usuários com um perfil proprietário.
           </p>
         </section>
       </section>

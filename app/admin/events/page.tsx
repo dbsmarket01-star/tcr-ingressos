@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { duplicateEventAction } from "@/features/events/event.actions";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { getEventCapacity, getEventRevenueInCents, listEvents } from "@/features/events/event.service";
 import { getPublicEventUrl } from "@/lib/public-url";
@@ -18,6 +19,7 @@ const statusLabels = {
 
 export default async function EventsPage() {
   const admin = await requirePermission("EVENTS");
+  const organizationContext = await getCurrentOrganizationContext();
   const events = await listEvents(admin.organizationId!, getAdminAllowedEventIds(admin));
   const publishedEvents = events.filter((event) => event.status === "PUBLISHED").length;
   const draftEvents = events.filter((event) => event.status !== "PUBLISHED").length;
@@ -72,8 +74,8 @@ export default async function EventsPage() {
 
         {events.length === 0 ? (
           <div className="empty">
-            Nenhum evento cadastrado ainda. Clique em Novo evento para criar o primeiro evento da
-            TCR Ingressos.
+            Nenhum evento cadastrado ainda. Clique em Novo evento para criar o primeiro evento da{" "}
+            {organizationContext.brandName}.
           </div>
         ) : (
           <div className="tableScroll">

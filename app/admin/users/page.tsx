@@ -9,6 +9,7 @@ import {
 } from "@/features/admin-users/admin-user.actions";
 import { listAdminUsers } from "@/features/admin-users/admin-user.service";
 import { requirePermission } from "@/features/auth/auth.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
@@ -25,6 +26,7 @@ const roleLabels = {
 
 export default async function AdminUsersPage() {
   const admin = await requirePermission("USERS");
+  const organizationContext = await getCurrentOrganizationContext();
   const [users, events] = await Promise.all([
     listAdminUsers(admin.organizationId!),
     prisma.event.findMany({
@@ -43,7 +45,7 @@ export default async function AdminUsersPage() {
   return (
     <AdminShell
       title="Usuários"
-      description="Gerencie equipe interna, papéis e acesso ao painel da TCR Ingressos."
+      description={`Gerencie equipe interna, papéis e acesso ao painel da ${organizationContext.brandName}.`}
     >
       <section className="grid twoColumns">
         <form action={createAdminUserAction} className="card form">

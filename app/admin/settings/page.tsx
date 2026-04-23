@@ -2,10 +2,13 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { ModuleCard } from "@/components/admin/ModuleCard";
 import { CopyButton } from "@/components/forms/CopyButton";
 import { requirePermission } from "@/features/auth/auth.service";
+import { updateProtectionPolicyAction } from "@/features/security-center/protection-policy.actions";
+import { getOrCreateDefaultProtectionPolicy, listProtectionSources } from "@/features/security-center/protection-policy.service";
 import { updateCompanySettingsAction, updatePaymentSplitRulesAction } from "@/features/settings/company-settings.actions";
 import { getCompanySettings } from "@/features/settings/company-settings.service";
 import { getPaymentHealth } from "@/features/settings/payment-health.service";
 import { buildSplitRulesPreview, listPaymentSplitRules } from "@/features/settings/split-settings.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { formatCurrency } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -36,36 +39,39 @@ function splitValueForRule(rule?: Awaited<ReturnType<typeof listPaymentSplitRule
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   await requirePermission("SETTINGS");
+  const organizationContext = await getCurrentOrganizationContext();
   const params = searchParams ? await searchParams : {};
   const error = typeof params.error === "string" ? params.error : null;
   const saved = params.saved === "1";
-  const [health, companySettings, splitRules] = await Promise.all([
+  const [health, companySettings, splitRules, protectionPolicy, protectionSources] = await Promise.all([
     getPaymentHealth(),
     getCompanySettings(),
-    listPaymentSplitRules()
+    listPaymentSplitRules(),
+    getOrCreateDefaultProtectionPolicy(),
+    listProtectionSources()
   ]);
   const splitRows = Array.from({ length: 6 }).map((_, index) => splitRules[index] ?? null);
   const splitPreview = buildSplitRulesPreview(splitRules);
 
   return (
     <AdminShell
-      title="Configuracoes"
-      description="Dados centrais da empresa e parametros padrao da operacao TCR Ingressos."
+      title="Configurações"
+      description={`Dados centrais da empresa e parâmetros padrão da operação ${organizationContext.brandName}.`}
     >
       <section className="grid cardsGrid">
-        <ModuleCard title="Empresa unica" status="Preparado">
-          A tabela de configuracoes guarda os dados da TCR Ingressos, moeda padrao e taxa padrao da
-          plataforma.
+        <ModuleCard title="Empresa única" status="Preparado">
+          A tabela de configurações guarda os dados da {organizationContext.brandName}, moeda padrão e taxa padrão da
+          operação.
         </ModuleCard>
-        <ModuleCard title="Usuarios internos" status="Preparado">
-          Admins internos possuem papel, email unico, senha criptografada e status ativo/inativo.
+        <ModuleCard title="Usuários internos" status="Preparado">
+          Admins internos possuem papel, e-mail único, senha criptografada e status ativo/inativo.
         </ModuleCard>
         <ModuleCard title="E-mail transacional" status="Pronto">
-          Resend: {health.email.resendConfigured ? "configurado" : "nao configurado"}. Remetente:
+          Resend: {health.email.resendConfigured ? "configurado" : "não configurado"}. Remetente:
           {" "}{health.email.from}.
         </ModuleCard>
-        <ModuleCard title="Seguranca de producao" status={health.security.productionCronProtected ? "Pronto" : "Preparado"}>
-          Sessao: {health.security.authSecretConfigured ? "AUTH_SECRET configurado" : "AUTH_SECRET pendente"}.
+        <ModuleCard title="Segurança de produção" status={health.security.productionCronProtected ? "Pronto" : "Preparado"}>
+          Sessão: {health.security.authSecretConfigured ? "AUTH_SECRET configurado" : "AUTH_SECRET pendente"}.
           {" "}Rotina: {health.security.cronSecretConfigured ? "CRON_SECRET configurado" : "CRON_SECRET pendente"}.
         </ModuleCard>
       </section>
@@ -73,17 +79,18 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
       <section className="sectionHeader">
         <div>
           <h2>Dados da empresa</h2>
-          <p className="muted">Informacoes centrais da operacao propria da TCR Ingressos.</p>
+          <p className="muted">Informações centrais da operação {organizationContext.brandName}.</p>
         </div>
       </section>
 
       <form action={updateCompanySettingsAction} className="card form wideForm">
         {error ? <div className="errorBox">{error}</div> : null}
-        {saved ? <div className="successBox">Configuracoes salvas com sucesso.</div> : null}
+        {saved ? <div className="successBox">Configurações salvas com sucesso.</div> : null}
         {params.splitSaved === "1" ? <div className="successBox">Regras de split salvas com sucesso.</div> : null}
+        {params.policySaved === "1" ? <div className="successBox">Politica de protecao salva com sucesso.</div> : null}
         <div className="grid twoColumns">
           <label className="field">
-            <span>Razao social</span>
+            <span>Razão social</span>
             <input name="companyName" defaultValue={companySettings.companyName} required />
           </label>
           <label className="field">
@@ -97,7 +104,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <input name="document" defaultValue={companySettings.document} required />
           </label>
           <label className="field">
-            <span>Moeda padrao</span>
+            <span>Moeda padrão</span>
             <input name="defaultCurrency" maxLength={3} defaultValue={companySettings.defaultCurrency} required />
           </label>
         </div>
@@ -112,7 +119,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           </label>
         </div>
         <label className="field">
-          <span>Taxa padrao da plataforma (%)</span>
+          <span>Taxa padrão da plataforma (%)</span>
           <input
             name="platformFeePercent"
             type="text"
@@ -120,7 +127,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             defaultValue={percentFromBps(companySettings.platformFeeBps)}
             required
           />
-          <small>Referencia administrativa. As taxas efetivas continuam configuradas por lote/ingresso.</small>
+          <small>Referência administrativa. As taxas efetivas continuam configuradas por lote/ingresso.</small>
         </label>
         <div className="grid twoColumns">
           <label className="field">
@@ -136,7 +143,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <small>Uso interno. Define por quanto tempo o pedido segura estoque antes de expirar.</small>
           </label>
           <label className="field">
-            <span>Cartao pendente (minutos)</span>
+            <span>Cartão pendente (minutos)</span>
             <input
               name="cardPendingReservationMinutes"
               type="number"
@@ -145,12 +152,113 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               defaultValue={companySettings.cardPendingReservationMinutes}
               required
             />
-            <small>Preparado para tratamentos futuros de cartao pendente ou analise manual.</small>
+            <small>Preparado para tratamentos futuros de cartão pendente ou análise manual.</small>
           </label>
         </div>
         <div className="formActions">
           <button className="button" type="submit">
-            Salvar configuracoes
+            Salvar configurações
+          </button>
+        </div>
+      </form>
+
+      <section className="sectionHeader">
+        <div>
+          <h2>Politica de protecao</h2>
+          <p className="muted">Define as regras remotas que Android e iOS devem sincronizar para bloquear conteudo adulto e reagir a bypass.</p>
+        </div>
+      </section>
+
+      <form action={updateProtectionPolicyAction} className="card form wideForm">
+        <div className="grid twoColumns">
+          <label className="field">
+            <span>Nome da politica</span>
+            <input name="policyName" defaultValue={protectionPolicy.name} required />
+          </label>
+          <label className="field">
+            <span>Foco</span>
+            <input value={`Versao ${protectionPolicy.version} · pornografia em prioridade`} disabled />
+          </label>
+        </div>
+        <label className="field">
+          <span>Descricao</span>
+          <textarea name="policyDescription" defaultValue={protectionPolicy.description ?? ""} rows={3} />
+        </label>
+        <div className="grid twoColumns">
+          <label className="field checkboxField">
+            <input name="targetPornographyOnly" type="checkbox" defaultChecked={protectionPolicy.targetPornographyOnly} />
+            <span>Priorizar pornografia como categoria principal</span>
+          </label>
+          <label className="field checkboxField">
+            <input name="pinRequiredToDisable" type="checkbox" defaultChecked={protectionPolicy.pinRequiredToDisable} />
+            <span>Exigir PIN para desativar protecao</span>
+          </label>
+          <label className="field checkboxField">
+            <input name="enforceAndroidVpn" type="checkbox" defaultChecked={protectionPolicy.enforceAndroidVpn} />
+            <span>Obrigar VPN local no Android</span>
+          </label>
+          <label className="field checkboxField">
+            <input name="enforceIosDnsProxy" type="checkbox" defaultChecked={protectionPolicy.enforceIosDnsProxy} />
+            <span>Exigir DNS proxy no iOS</span>
+          </label>
+          <label className="field checkboxField">
+            <input name="blockUnknownDnsChanges" type="checkbox" defaultChecked={protectionPolicy.blockUnknownDnsChanges} />
+            <span>Tratar troca de DNS como risco</span>
+          </label>
+          <label className="field checkboxField">
+            <input name="detectExternalVpn" type="checkbox" defaultChecked={protectionPolicy.detectExternalVpn} />
+            <span>Detectar VPN externa</span>
+          </label>
+          <label className="field checkboxField">
+            <input name="detectProxy" type="checkbox" defaultChecked={protectionPolicy.detectProxy} />
+            <span>Detectar proxy</span>
+          </label>
+          <label className="field checkboxField">
+            <input name="detectDeveloperMode" type="checkbox" defaultChecked={protectionPolicy.detectDeveloperMode} />
+            <span>Detectar modo desenvolvedor</span>
+          </label>
+        </div>
+        <div className="grid twoColumns">
+          <label className="field">
+            <span>Heartbeat esperado (minutos)</span>
+            <input
+              name="heartbeatIntervalMinutes"
+              type="number"
+              min="1"
+              max="120"
+              defaultValue={protectionPolicy.heartbeatIntervalMinutes}
+              required
+            />
+          </label>
+          <label className="field">
+            <span>Janela de tolerancia sem heartbeat (minutos)</span>
+            <input
+              name="staleHeartbeatGraceMinutes"
+              type="number"
+              min="5"
+              max="360"
+              defaultValue={protectionPolicy.staleHeartbeatGraceMinutes}
+              required
+            />
+          </label>
+        </div>
+        <div className="settingsWebhookBox">
+          <h3>Blocklists sincronizadas</h3>
+          {protectionSources.length === 0 ? (
+            <p>Nenhuma fonte cadastrada ainda.</p>
+          ) : (
+            <ul className="launchChecklistList">
+              {protectionSources.map((source: any) => (
+                <li key={source.id}>
+                  <strong>{source.name}</strong> · {source.isEnabled ? "ativa" : "inativa"} · versao {source.version} · {source.entries.length} entrada(s)
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="formActions">
+          <button className="button" type="submit">
+            Salvar politica
           </button>
         </div>
       </form>
@@ -166,7 +274,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         <div className="splitRulesHeader">
           <div>
             <strong>Regras de repasse</strong>
-            <span className="muted">O valor restante fica na conta principal da TCR que criou a cobranca.</span>
+            <span className="muted">O valor restante fica na conta principal da TCR que criou a cobrança.</span>
           </div>
           <span className={`status ${health.asaas.splitEnabled ? "published" : "draft"}`}>
             {health.asaas.splitEnabled ? "Split ligado" : "Split desligado no ambiente"}
@@ -218,9 +326,9 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         </div>
         <div className="splitPreviewBox">
           <div>
-            <h3>Previa do split</h3>
+            <h3>Prévia do split</h3>
             <p className="muted">
-              Simulacao com pedido de {formatCurrency(splitPreview.orderAmountInCents)} e {splitPreview.ticketQuantity} ingressos.
+              Simulação com pedido de {formatCurrency(splitPreview.orderAmountInCents)} e {splitPreview.ticketQuantity} ingressos.
             </p>
           </div>
           {splitPreview.rows.length === 0 ? (
@@ -274,7 +382,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
       <section className="sectionHeader">
         <div>
           <h2>Pagamentos</h2>
-          <p className="muted">Conferencia rapida da integracao ativa, webhooks e ambiente.</p>
+          <p className="muted">Conferência rápida da integração ativa, webhooks e ambiente.</p>
         </div>
       </section>
 
@@ -285,7 +393,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <strong>{health.provider}</strong>
           </div>
           <div>
-            <span>URL publica configurada</span>
+            <span>URL pública configurada</span>
             <strong className="breakText">{health.appUrl}</strong>
           </div>
           <div>
@@ -338,7 +446,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               <br />
               Limite por imagem: {health.uploads.maxImageMb}MB
               <br />
-              Persistencia: {health.uploads.provider !== "LOCAL" || health.uploads.localPersistent ? "confirmada" : "confirmar no deploy"}
+              Persistência: {health.uploads.provider !== "LOCAL" || health.uploads.localPersistent ? "confirmada" : "confirmar no deploy"}
             </p>
           </div>
         </div>
@@ -347,11 +455,11 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           <div className="settingsStatusItem">
             <span className={`status ${health.asaas.enabled ? "published" : "draft"}`}>Asaas</span>
             <p>
-              Chave API: {health.asaas.apiKeyConfigured ? health.asaas.apiKeyMasked : "nao configurada"}
+              Chave API: {health.asaas.apiKeyConfigured ? health.asaas.apiKeyMasked : "não configurada"}
               <br />
-              Tipo padrao: {health.asaas.billingType}
+              Tipo padrão: {health.asaas.billingType}
               <br />
-              Webhook token: {health.asaas.webhookTokenConfigured ? "configurado" : "nao configurado"}
+              Webhook token: {health.asaas.webhookTokenConfigured ? "configurado" : "não configurado"}
               <br />
               Split:{" "}
               {health.asaas.splitEnabled
@@ -365,10 +473,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               Mercado Pago
             </span>
             <p>
-              Access token: {health.mercadoPago.accessTokenConfigured ? "configurado" : "nao configurado"}
+              Access token: {health.mercadoPago.accessTokenConfigured ? "configurado" : "não configurado"}
               <br />
               Webhook secret:{" "}
-              {health.mercadoPago.webhookSecretConfigured ? "configurado" : "nao configurado"}
+              {health.mercadoPago.webhookSecretConfigured ? "configurado" : "não configurado"}
             </p>
           </div>
         </div>
@@ -377,17 +485,17 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           <h3>Webhook Asaas esperado</h3>
           <p className="breakText">{health.asaas.webhookUrl}</p>
           <p className="muted">
-            Token por query/header: {health.asaas.webhookTokenConfigured ? "configurado" : "nao configurado"}
+            Token por query/header: {health.asaas.webhookTokenConfigured ? "configurado" : "não configurado"}
           </p>
           <CopyButton className="secondaryButton smallButton" label="Copiar webhook" copiedLabel="Copiado" value={health.asaas.webhookUrl} />
         </div>
 
         <div className="settingsWebhookBox">
-          <h3>Rotina de expiracao de pedidos</h3>
+          <h3>Rotina de expiração de pedidos</h3>
           <p className="breakText">{health.appUrl}/api/maintenance/expire-orders</p>
           <p className="muted">
             Ambiente: {health.security.nodeEnv}. Token CRON:{" "}
-            {health.security.cronSecretConfigured ? "configurado" : "nao configurado"}.
+            {health.security.cronSecretConfigured ? "configurado" : "não configurado"}.
           </p>
           <CopyButton
             className="secondaryButton smallButton"
@@ -398,10 +506,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         </div>
 
         <div className="settingsWebhookBox">
-          <h3>Checklist rapido de deploy</h3>
+          <h3>Checklist rápido de deploy</h3>
           <ul className="settingsChecklist">
             <li className={health.security.appUrlIsLocal ? "isBlocked" : "isReady"}>
-              Dominio publico: {health.security.appUrlIsLocal ? "ainda esta local" : "configurado"}
+              Domínio público: {health.security.appUrlIsLocal ? "ainda está local" : "configurado"}
             </li>
             <li className={health.security.authSecretConfigured ? "isReady" : "isBlocked"}>
               AUTH_SECRET: {health.security.authSecretConfigured ? "configurado" : "pendente"}
@@ -448,7 +556,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               </tr>
             </thead>
             <tbody>
-              {health.recentPayments.map((item) => (
+              {health.recentPayments.map((item: any) => (
                 <tr key={`${item.provider}-${item.status}`}>
                   <td>{item.provider}</td>
                   <td>{item.status}</td>
