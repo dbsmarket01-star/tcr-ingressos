@@ -6,12 +6,14 @@
   --line-soft: #e7edf2;
   --brand: #0b7a63;
   --brand-dark: #075642;
+  --brand-rgb: 11, 122, 99;
   --accent: #bf3f55;
   --admin-ink: #16202a;
   --admin-panel: #202c37;
   --admin-soft: #2c3945;
   --admin-primary: #0b7a63;
   --admin-primary-dark: #075642;
+  --admin-primary-rgb: 11, 122, 99;
   --admin-lilac: #79c7b2;
   --admin-cyan: #6fb7dd;
   --admin-card: #ffffff;
@@ -216,9 +218,9 @@ textarea {
 
 .adminShell {
   background:
-    radial-gradient(circle at top left, rgba(11, 122, 99, 0.12), transparent 24%),
-    radial-gradient(circle at top right, rgba(111, 183, 221, 0.08), transparent 20%),
-    linear-gradient(180deg, #eef5f3 0, #fafcfc 26%, #f4f7fb 100%);
+    radial-gradient(circle at top left, rgba(var(--admin-primary-rgb), 0.12), transparent 24%),
+    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.08), transparent 20%),
+    linear-gradient(180deg, var(--admin-surface-tint) 0, #fafcfc 26%, #f4f7fb 100%);
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
   min-height: 100vh;
@@ -226,9 +228,9 @@ textarea {
 
 .sidebar {
   background:
-    radial-gradient(circle at top left, rgba(111, 183, 221, 0.18), transparent 24%),
-    radial-gradient(circle at bottom right, rgba(11, 122, 99, 0.16), transparent 22%),
-    linear-gradient(180deg, #173941 0%, #102c33 58%, #0c2026 100%);
+    radial-gradient(circle at top left, rgba(var(--brand-rgb), 0.18), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(var(--admin-primary-rgb), 0.16), transparent 22%),
+    linear-gradient(180deg, var(--admin-primary-dark) 0%, color-mix(in srgb, var(--admin-primary-dark) 82%, #0d1526) 58%, #0b1220 100%);
   color: white;
   height: 100vh;
   overflow-y: auto;
@@ -261,7 +263,7 @@ textarea {
 }
 
 .sidebarIntro .eyebrow {
-  color: #c2ece0;
+  color: color-mix(in srgb, var(--surface) 68%, var(--brand) 32%);
 }
 
 .sidebarIntro p {
@@ -285,7 +287,7 @@ textarea {
 }
 
 .sideNavGroup summary {
-  border-left: 3px solid #8ad4bd;
+  border-left: 3px solid color-mix(in srgb, var(--surface) 46%, var(--brand) 54%);
   cursor: pointer;
   display: grid;
   list-style: none;
@@ -293,7 +295,7 @@ textarea {
 }
 
 .sideNavGroup:nth-child(2) summary {
-  border-left-color: #8ad4bd;
+  border-left-color: color-mix(in srgb, var(--surface) 46%, var(--brand) 54%);
 }
 
 .sideNavGroup:nth-child(3) summary {
@@ -305,7 +307,7 @@ textarea {
 }
 
 .sideNavGroup:nth-child(5) summary {
-  border-left-color: #9fd7c6;
+  border-left-color: color-mix(in srgb, var(--surface) 52%, var(--brand) 48%);
 }
 
 .sideNavGroup summary strong {
@@ -1448,9 +1450,9 @@ textarea {
 }
 
 .card.dashboardHeroMetric {
-  background: linear-gradient(160deg, #0c6b55, #0d3d34);
-  border-color: #0c6b55;
-  box-shadow: 0 18px 34px rgba(8, 74, 59, 0.18);
+  background: linear-gradient(160deg, var(--admin-primary), var(--admin-primary-dark));
+  border-color: var(--admin-primary);
+  box-shadow: 0 18px 34px rgba(var(--admin-primary-rgb), 0.18);
   color: white;
 }
 
@@ -1495,9 +1497,9 @@ textarea {
 
 .platformOverviewHero {
   background:
-    radial-gradient(circle at top right, rgba(111, 183, 221, 0.14), transparent 34%),
-    linear-gradient(135deg, rgba(13, 50, 43, 0.98), rgba(15, 32, 44, 0.95));
-  border: 1px solid rgba(167, 215, 201, 0.16);
+    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.16), transparent 34%),
+    linear-gradient(135deg, color-mix(in srgb, var(--admin-primary-dark) 88%, #0b1220), color-mix(in srgb, var(--admin-primary) 24%, #172545));
+  border: 1px solid rgba(var(--brand-rgb), 0.16);
   border-radius: 24px;
   box-shadow: 0 26px 60px rgba(16, 24, 35, 0.16);
   color: white;
@@ -1528,7 +1530,7 @@ textarea {
 }
 
 .platformOverviewHero .eyebrow {
-  color: #bfe8dd;
+  color: color-mix(in srgb, var(--surface) 62%, var(--brand) 38%);
 }
 
 .platformOverviewBadges {

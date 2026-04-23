@@ -62,8 +62,10 @@ export default async function RootLayout({
     ? ({
         ["--brand" as string]: "#24427a",
         ["--brand-dark" as string]: "#182b55",
+        ["--brand-rgb" as string]: "36, 66, 122",
         ["--admin-primary" as string]: "#24427a",
         ["--admin-primary-dark" as string]: "#182b55",
+        ["--admin-primary-rgb" as string]: "36, 66, 122",
         ["--admin-plum" as string]: "#24427a",
         ["--admin-plum-dark" as string]: "#182b55",
         ["--admin-surface-tint" as string]: "#eef3ff",
@@ -74,8 +76,10 @@ export default async function RootLayout({
       ? ({
           ["--brand" as string]: primaryColor,
           ["--brand-dark" as string]: shiftHex(primaryColor, -28),
+          ["--brand-rgb" as string]: `${parseInt(primaryColor.slice(1, 3), 16)}, ${parseInt(primaryColor.slice(3, 5), 16)}, ${parseInt(primaryColor.slice(5, 7), 16)}`,
           ["--admin-primary" as string]: primaryColor,
           ["--admin-primary-dark" as string]: shiftHex(primaryColor, -28),
+          ["--admin-primary-rgb" as string]: `${parseInt(primaryColor.slice(1, 3), 16)}, ${parseInt(primaryColor.slice(3, 5), 16)}, ${parseInt(primaryColor.slice(5, 7), 16)}`,
           ["--admin-plum" as string]: primaryColor,
           ["--admin-plum-dark" as string]: shiftHex(primaryColor, -36),
           ...(secondaryColor
