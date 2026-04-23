@@ -26,6 +26,9 @@ export async function getRequestHost() {
   const headerStore = await headers();
 
   return normalizeHost(
-    headerStore.get("x-original-host") || headerStore.get("host") || headerStore.get("x-forwarded-host")
+    headerStore.get("x-resolved-host") ||
+      headerStore.get("x-original-host") ||
+      headerStore.get("host") ||
+      headerStore.get("x-forwarded-host")
   );
 }

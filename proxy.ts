@@ -46,12 +46,18 @@ function notFound() {
 
 export function proxy(request: NextRequest) {
   const hosts = allowedAdminHosts();
+  const currentHost = normalizedHost(request.nextUrl.hostname || request.headers.get("host"));
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-resolved-host", currentHost);
 
   if (hosts.length === 0) {
-    return NextResponse.next();
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders
+      }
+    });
   }
 
-  const currentHost = normalizedHost(request.headers.get("host"));
   const isAdminHost = hosts.includes(currentHost);
   const { pathname } = request.nextUrl;
 
@@ -60,7 +66,13 @@ export function proxy(request: NextRequest) {
   }
 
   if (isAdminHost && (isInternalPath(pathname) || isAllowedAdminHostAsset(pathname))) {
-    return withInternalHeaders(NextResponse.next());
+    return withInternalHeaders(
+      NextResponse.next({
+        request: {
+          headers: requestHeaders
+        }
+      })
+    );
   }
 
   if (isAdminHost) {
@@ -71,7 +83,11 @@ export function proxy(request: NextRequest) {
     return notFound();
   }
 
-  return NextResponse.next();
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders
+    }
+  });
 }
 
 export const config = {
