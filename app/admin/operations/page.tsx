@@ -39,12 +39,12 @@ export default async function AdminOperationsPage() {
 
           <label className="field">
             <span>Nome da operação</span>
-            <input name="name" placeholder="Ex.: A2 Emergidos" required />
+            <input name="name" placeholder="Ex.: A2 imergidos" required />
           </label>
 
           <label className="field">
             <span>Slug interno</span>
-            <input name="slug" placeholder="Ex.: a2-emergidos" />
+            <input name="slug" placeholder="Ex.: a2-imergidos" />
           </label>
 
           <label className="field">
@@ -177,4 +177,3 @@ export default async function AdminOperationsPage() {
     </AdminShell>
   );
 }
-

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { normalizeHost } from "@/lib/request-host";
 
 export const DEFAULT_PLATFORM_NAME = "Ingressas";
-export const DEFAULT_PLATFORM_DOMAIN = "ingressas.app.br";
+export const DEFAULT_PLATFORM_DOMAIN = "ingresaas.app.br";
 
 export function getPlatformName() {
   return process.env.PLATFORM_NAME?.trim() || DEFAULT_PLATFORM_NAME;
