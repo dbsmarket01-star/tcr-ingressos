@@ -1,7 +1,25 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+const DEFAULT_PLATFORM_DOMAIN = "ingresaas.app.br";
+const LEGACY_PLATFORM_DOMAINS = ["ingressas.app.br"];
+
 function normalizedHost(host: string | null) {
   return (host || "").split(":")[0].toLowerCase();
+}
+
+function platformHosts() {
+  const configured = normalizedHost(process.env.PLATFORM_DOMAIN || "");
+  const hosts = new Set<string>([DEFAULT_PLATFORM_DOMAIN, ...LEGACY_PLATFORM_DOMAINS]);
+
+  if (configured) {
+    hosts.add(configured);
+  }
+
+  for (const host of Array.from(hosts)) {
+    hosts.add(`www.${host}`);
+  }
+
+  return hosts;
 }
 
 function allowedAdminHosts() {
@@ -47,6 +65,7 @@ function notFound() {
 export function proxy(request: NextRequest) {
   const hosts = allowedAdminHosts();
   const currentHost = normalizedHost(request.nextUrl.hostname || request.headers.get("host"));
+  const isPlatformMasterHost = platformHosts().has(currentHost);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-resolved-host", currentHost);
 
@@ -77,6 +96,14 @@ export function proxy(request: NextRequest) {
 
   if (isAdminHost) {
     return notFound();
+  }
+
+  if (isPlatformMasterHost && isInternalPath(pathname)) {
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders
+      }
+    });
   }
 
   if (isInternalPath(pathname)) {
