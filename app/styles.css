@@ -38,6 +38,10 @@ body {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+.platformTheme {
+  --accent: #456cc2;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -418,7 +422,7 @@ textarea {
 .adminHeader {
   align-items: center;
   background:
-    radial-gradient(circle at top right, rgba(111, 183, 221, 0.12), transparent 36%),
+    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.12), transparent 36%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(243, 249, 247, 0.96)),
     rgba(255, 255, 255, 0.62);
   border: 1px solid rgba(214, 232, 226, 0.88);
@@ -476,7 +480,7 @@ textarea {
 
 .adminPanelHero {
   background:
-    linear-gradient(135deg, rgba(11, 122, 99, 0.1), rgba(7, 86, 66, 0.04)),
+    linear-gradient(135deg, rgba(var(--brand-rgb), 0.1), rgba(var(--brand-rgb), 0.04)),
     white;
   border: 1px solid #d6e9e2;
   border-radius: 8px;
@@ -2941,8 +2945,8 @@ textarea {
 
 .loginShell {
   background:
-    radial-gradient(circle at top left, rgba(11, 122, 99, 0.14), transparent 24%),
-    radial-gradient(circle at bottom right, rgba(111, 183, 221, 0.08), transparent 16%),
+    radial-gradient(circle at top left, rgba(var(--brand-rgb), 0.14), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(var(--brand-rgb), 0.08), transparent 16%),
     linear-gradient(115deg, #eef6f3 0%, #ffffff 48%, #f4f6fb 100%);
   background-position: center;
   background-size: cover;
@@ -2988,8 +2992,12 @@ textarea {
 
 .loginIntro {
   background:
-    radial-gradient(circle at top left, rgba(111, 183, 221, 0.14), transparent 18%),
-    linear-gradient(160deg, rgba(12, 65, 55, 0.97), rgba(17, 43, 49, 0.93)),
+    radial-gradient(circle at top left, rgba(var(--brand-rgb), 0.14), transparent 18%),
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--admin-primary-dark) 82%, #09111f),
+      color-mix(in srgb, var(--admin-primary) 26%, #111f35)
+    ),
     url("https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=1200&q=80");
   background-position: center;
   background-size: cover;
@@ -3029,8 +3037,8 @@ textarea {
 }
 
 .loginBrandDark .brandMark {
-  background: linear-gradient(135deg, var(--brand), #46a287);
-  box-shadow: 0 10px 20px rgba(11, 122, 99, 0.18);
+  background: linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--brand) 72%, white 28%));
+  box-shadow: 0 10px 20px rgba(var(--brand-rgb), 0.18);
 }
 
 .loginIntroCopy {
@@ -3090,7 +3098,7 @@ textarea {
 .loginFormArea {
   align-content: center;
   background:
-    radial-gradient(circle at top left, rgba(11, 122, 99, 0.08), transparent 24%),
+    radial-gradient(circle at top left, rgba(var(--brand-rgb), 0.08), transparent 24%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(246, 250, 248, 0.98));
   display: grid;
   gap: 22px;
@@ -3132,13 +3140,13 @@ textarea {
 }
 
 .loginFormArea .button.fullButton {
-  background: linear-gradient(135deg, #0b7a63, #13a17f);
+  background: linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--brand) 74%, white 26%));
   border-radius: 14px;
   min-height: 56px;
 }
 
 .loginFormArea .button.fullButton:hover {
-  background: linear-gradient(135deg, #086753, #0d906f);
+  background: linear-gradient(135deg, var(--brand-dark), color-mix(in srgb, var(--brand) 82%, black 18%));
 }
 
 .loginSupportBox,

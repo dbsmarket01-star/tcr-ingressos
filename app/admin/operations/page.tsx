@@ -118,10 +118,10 @@ export default async function AdminOperationsPage() {
               <strong>Operação filha:</strong> uma bilheteria com marca, domínio, equipe e eventos próprios.
             </p>
             <p>
-              <strong>TCR:</strong> segue como a primeira operação já ativa na base.
+              <strong>Primeira filha:</strong> a base atual pode ser refinada aqui antes de nascer a próxima operação.
             </p>
             <p>
-              <strong>Próximo passo:</strong> cadastrar A2 e os próximos clientes, depois apontar domínio e branding.
+              <strong>Escala:</strong> novas bilheterias entram pela mesma tela, depois recebem domínio, branding e equipe.
             </p>
           </div>
         </section>

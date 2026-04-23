@@ -80,8 +80,8 @@ export default async function Home() {
               <span className="homeEyebrow">Plataforma SaaS de bilheteria</span>
               <h1>O painel-mãe que cria, sustenta e escala bilheterias com domínio próprio.</h1>
               <p>
-                {organizationContext.platformName} não vende ingressos direto ao público. Ela fornece o motor,
-                o painel e a estrutura para operações como TCR e futuras bilheterias filhas venderem no próprio domínio.
+                {organizationContext.platformName} nao vende ingressos direto ao publico. Ela fornece o motor, o painel
+                e a estrutura para cada bilheteria filha operar com dominio, equipe, branding e rotina comercial proprios.
               </p>
 
               <div className="platformHeroActions">
@@ -212,7 +212,7 @@ export default async function Home() {
                 <li>Publica eventos e libera o fluxo comercial</li>
               </ol>
               <div className="platformOnboardingFootnote">
-                Isso mantém TCR, A2 e as próximas operações embaixo do mesmo motor, sem duplicar projeto.
+                Isso mantem cada nova operacao embaixo do mesmo motor, sem duplicar projeto, banco ou fluxo comercial.
               </div>
             </article>
           </div>

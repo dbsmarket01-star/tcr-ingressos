@@ -94,7 +94,7 @@ export default async function RootLayout({
 
   return (
     <html lang="pt-BR">
-      <body style={brandStyle}>
+      <body className={organizationContext.isPlatformHost ? "platformTheme" : "operationTheme"} style={brandStyle}>
         {children}
       </body>
     </html>

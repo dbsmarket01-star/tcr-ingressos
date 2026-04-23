@@ -58,8 +58,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               <span className="eyebrow">Painel master</span>
               <h2>A Ingresaas administra o motor SaaS. As operações filhas atendem o mercado.</h2>
               <p>
-                Esta tela acompanha a saúde da plataforma, a prontidão das bilheterias filhas e os passos necessários
-                para colocar cada nova operação no ar com domínio, equipe e identidade próprios.
+                Esta tela acompanha a saude da plataforma, a prontidao das bilheterias filhas e os passos necessarios
+                para colocar cada nova operacao no ar com dominio, equipe e identidade proprios.
               </p>
             </div>
             <div className="platformOverviewBadges">
@@ -120,16 +120,16 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             </div>
             <div className="permissionList">
               <p>
-                <strong>Ingresaas:</strong> domínio institucional, login master e gestão de operações.
+                <strong>Ingresaas:</strong> dominio institucional, login master e gestao das bilheterias filhas.
               </p>
               <p>
-                <strong>Bilheteria filha:</strong> domínio público para cliente final e domínio admin para produtores.
+                <strong>Bilheteria filha:</strong> dominio publico para cliente final e dominio admin para produtores.
               </p>
               <p>
-                <strong>Branding:</strong> cada operação precisa refletir suas próprias cores, suporte e linguagem.
+                <strong>Branding:</strong> cada operacao precisa refletir suas proprias cores, suporte e linguagem.
               </p>
               <p>
-                <strong>Base única:</strong> o motor técnico continua compartilhado, sem clonar código ou banco.
+                <strong>Base unica:</strong> o motor tecnico continua compartilhado, sem clonar codigo ou banco.
               </p>
             </div>
           </article>
