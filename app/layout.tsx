@@ -60,17 +60,17 @@ export default async function RootLayout({
   const secondaryColor = normalizeHex(organizationContext.organization.secondaryColor);
   const brandStyle = organizationContext.isPlatformHost
     ? ({
-        ["--brand" as string]: "#24427a",
-        ["--brand-dark" as string]: "#182b55",
-        ["--brand-rgb" as string]: "36, 66, 122",
-        ["--admin-primary" as string]: "#24427a",
-        ["--admin-primary-dark" as string]: "#182b55",
-        ["--admin-primary-rgb" as string]: "36, 66, 122",
-        ["--admin-plum" as string]: "#24427a",
-        ["--admin-plum-dark" as string]: "#182b55",
-        ["--admin-surface-tint" as string]: "#eef3ff",
-        ["--admin-indigo-soft" as string]: "#dbe6ff",
-        ["--surface-soft" as string]: "#f5f8ff"
+        ["--brand" as string]: "#5a8ef2",
+        ["--brand-dark" as string]: "#28477f",
+        ["--brand-rgb" as string]: "90, 142, 242",
+        ["--admin-primary" as string]: "#4f83eb",
+        ["--admin-primary-dark" as string]: "#1f3561",
+        ["--admin-primary-rgb" as string]: "79, 131, 235",
+        ["--admin-plum" as string]: "#5a8ef2",
+        ["--admin-plum-dark" as string]: "#28477f",
+        ["--admin-surface-tint" as string]: "#f3f7ff",
+        ["--admin-indigo-soft" as string]: "#e5eeff",
+        ["--surface-soft" as string]: "#f8fbff"
       } as CSSProperties)
     : primaryColor
       ? ({

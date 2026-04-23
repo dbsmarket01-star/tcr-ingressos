@@ -596,15 +596,15 @@ textarea {
 
 .platformHomePage {
   background:
-    radial-gradient(circle at top left, rgba(36, 66, 122, 0.12), transparent 24%),
-    linear-gradient(180deg, #eef3ff 0, #f7f9ff 520px, #ffffff 100%);
+    radial-gradient(circle at top left, rgba(var(--brand-rgb), 0.1), transparent 24%),
+    linear-gradient(180deg, #f4f8ff 0, #fbfcff 520px, #ffffff 100%);
 }
 
 .platformHero {
   background:
-    radial-gradient(circle at top right, rgba(94, 144, 255, 0.18), transparent 18%),
-    radial-gradient(circle at bottom left, rgba(69, 108, 194, 0.14), transparent 24%),
-    linear-gradient(155deg, rgba(11, 18, 35, 0.98), rgba(24, 35, 67, 0.95));
+    radial-gradient(circle at top right, rgba(125, 170, 255, 0.22), transparent 18%),
+    radial-gradient(circle at bottom left, rgba(90, 142, 242, 0.14), transparent 24%),
+    linear-gradient(155deg, #14233e, #243b66 56%, #314d80);
   color: white;
   overflow: hidden;
   position: relative;
@@ -698,10 +698,10 @@ textarea {
 }
 
 .platformHeroPanel {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.08));
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.12));
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 24px;
-  box-shadow: 0 28px 60px rgba(10, 18, 37, 0.24);
+  box-shadow: 0 28px 60px rgba(20, 34, 66, 0.18);
   display: grid;
   gap: 18px;
   padding: 22px;
@@ -713,7 +713,7 @@ textarea {
 }
 
 .platformHeroPanelHeader .eyebrow {
-  color: #dbe6ff;
+  color: #e6eeff;
 }
 
 .platformHeroPanelHeader strong {
@@ -728,8 +728,8 @@ textarea {
 }
 
 .platformHeroMetrics article {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 18px;
   display: grid;
   gap: 8px;
@@ -750,7 +750,7 @@ textarea {
 }
 
 .platformHeroNote {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.11);
   border-radius: 18px;
   display: grid;
   gap: 8px;
@@ -773,8 +773,8 @@ textarea {
 }
 
 .platformHeroMiniGrid article {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 18px;
   display: grid;
   gap: 6px;
@@ -1501,11 +1501,11 @@ textarea {
 
 .platformOverviewHero {
   background:
-    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.16), transparent 34%),
-    linear-gradient(135deg, color-mix(in srgb, var(--admin-primary-dark) 88%, #0b1220), color-mix(in srgb, var(--admin-primary) 24%, #172545));
+    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.18), transparent 34%),
+    linear-gradient(135deg, #1c2f56, #2e4678 58%, #3c5b95);
   border: 1px solid rgba(var(--brand-rgb), 0.16);
   border-radius: 24px;
-  box-shadow: 0 26px 60px rgba(16, 24, 35, 0.16);
+  box-shadow: 0 26px 60px rgba(31, 53, 97, 0.14);
   color: white;
   display: grid;
   gap: 18px;
@@ -1582,8 +1582,8 @@ textarea {
 
 .platformOperationsHero {
   align-items: start;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 249, 255, 0.98));
-  border: 1px solid #dbe4f4;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 251, 255, 0.98));
+  border: 1px solid #e2eaff;
   border-radius: 24px;
   box-shadow: 0 20px 44px rgba(19, 34, 69, 0.05);
   display: grid;
@@ -1622,10 +1622,10 @@ textarea {
 
 .platformOperationsHeroBadges span {
   align-items: center;
-  background: #f1f5ff;
-  border: 1px solid #d9e3fb;
+  background: #f5f8ff;
+  border: 1px solid #e0e8ff;
   border-radius: 999px;
-  color: #24427a;
+  color: #3c5b95;
   display: inline-flex;
   font-size: 12px;
   font-weight: 900;
@@ -1640,8 +1640,8 @@ textarea {
 }
 
 .operationsAdminCard {
-  background: linear-gradient(180deg, #ffffff, #f7fbfa);
-  border: 1px solid #dce9e4;
+  background: linear-gradient(180deg, #ffffff, #f8fbff);
+  border: 1px solid #e3eaff;
   border-radius: 20px;
   display: grid;
   gap: 16px;
@@ -1678,8 +1678,8 @@ textarea {
 }
 
 .operationsAdminStats div {
-  background: #f4faf8;
-  border: 1px solid #dce9e4;
+  background: #f7faff;
+  border: 1px solid #e3eaff;
   border-radius: 16px;
   display: grid;
   gap: 5px;
@@ -2947,7 +2947,7 @@ textarea {
   background:
     radial-gradient(circle at top left, rgba(var(--brand-rgb), 0.14), transparent 24%),
     radial-gradient(circle at bottom right, rgba(var(--brand-rgb), 0.08), transparent 16%),
-    linear-gradient(115deg, #eef6f3 0%, #ffffff 48%, #f4f6fb 100%);
+    linear-gradient(115deg, #f4f8ff 0%, #ffffff 48%, #f7f9ff 100%);
   background-position: center;
   background-size: cover;
   display: grid;
@@ -2995,8 +2995,8 @@ textarea {
     radial-gradient(circle at top left, rgba(var(--brand-rgb), 0.14), transparent 18%),
     linear-gradient(
       160deg,
-      color-mix(in srgb, var(--admin-primary-dark) 82%, #09111f),
-      color-mix(in srgb, var(--admin-primary) 26%, #111f35)
+      color-mix(in srgb, var(--admin-primary-dark) 80%, #0d1525),
+      color-mix(in srgb, var(--admin-primary) 32%, #1f3561)
     ),
     url("https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=1200&q=80");
   background-position: center;
@@ -3026,8 +3026,8 @@ textarea {
 }
 
 .loginBrandDark {
-  background: linear-gradient(180deg, #fffefe, #f4faf8);
-  border: 1px solid rgba(214, 232, 226, 0.92);
+  background: linear-gradient(180deg, #ffffff, #f7faff);
+  border: 1px solid #e4eaff;
   border-radius: 18px;
   box-shadow: 0 14px 34px rgba(43, 31, 76, 0.08);
   color: var(--ink);
@@ -3099,7 +3099,7 @@ textarea {
   align-content: center;
   background:
     radial-gradient(circle at top left, rgba(var(--brand-rgb), 0.08), transparent 24%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(246, 250, 248, 0.98));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 251, 255, 0.98));
   display: grid;
   gap: 22px;
   padding: clamp(30px, 4vw, 48px);
@@ -3121,7 +3121,7 @@ textarea {
 }
 
 .loginFormArea .field span {
-  color: #35574f;
+  color: #3f537d;
   font-weight: 800;
 }
 
@@ -3134,8 +3134,8 @@ textarea {
 }
 
 .loginFormArea input:focus {
-  border-color: #6fb7dd;
-  box-shadow: 0 0 0 4px rgba(111, 183, 221, 0.12);
+  border-color: color-mix(in srgb, var(--brand) 62%, white 38%);
+  box-shadow: 0 0 0 4px rgba(var(--brand-rgb), 0.12);
   outline: none;
 }
 
