@@ -208,6 +208,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     <Link className="secondaryButton smallButton" href={`/admin/operations/${operation.id}`}>
                       Ver detalhe
                     </Link>
+                    {operation.adminDomain ? (
+                      <a className="button smallButton" href={`https://${operation.adminDomain}/login`} target="_blank" rel="noreferrer">
+                        Entrar na operação
+                      </a>
+                    ) : null}
                   </div>
                 </article>
               );

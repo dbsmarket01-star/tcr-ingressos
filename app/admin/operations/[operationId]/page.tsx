@@ -4,7 +4,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { requirePermission } from "@/features/auth/auth.service";
 import { getOrganizationDetailForPlatformAdmin } from "@/features/organizations/organization.admin.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
-import { formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +50,32 @@ export default async function OperationDetailPage({ params }: OperationDetailPag
         </div>
       </section>
 
+      <section className="platformOperationCommandBar spacedSection" aria-label="Ações rápidas da operação">
+        <div className="platformOperationCommandCopy">
+          <span className="eyebrow">Acesso rápido</span>
+          <h3>Administre a filha a partir da Ingresaas e entre na operação quando precisar aprofundar.</h3>
+          <p>
+            Esta tela já funciona como a ponte master -&gt; operação. Você revisa a saúde da bilheteria aqui e salta
+            para o painel da filha só quando quiser entrar na camada operacional.
+          </p>
+        </div>
+        <div className="platformOperationCommandActions">
+          <Link className="secondaryButton smallButton" href="/admin/operations">
+            Voltar para operações
+          </Link>
+          {operation.publicDomain ? (
+            <a className="secondaryButton smallButton" href={`https://${operation.publicDomain}`} target="_blank" rel="noreferrer">
+              Abrir site público
+            </a>
+          ) : null}
+          {operation.adminDomain ? (
+            <a className="button smallButton" href={`https://${operation.adminDomain}/login`} target="_blank" rel="noreferrer">
+              Entrar no admin da operação
+            </a>
+          ) : null}
+        </div>
+      </section>
+
       <section className="grid dashboardGrid platformMasterSnapshot spacedSection">
         <article className="card metric dashboardHeroMetric">
           <span className="muted">Prontidão</span>
@@ -70,6 +96,54 @@ export default async function OperationDetailPage({ params }: OperationDetailPag
           <span className="muted">Criada em</span>
           <strong>{formatDateTime(operation.createdAt)}</strong>
           <small>Primeiro registro da operação</small>
+        </article>
+      </section>
+
+      <section className="grid dashboardGrid platformMasterSnapshot spacedSection" aria-label="Indicadores operacionais da filha">
+        <article className="card metric dashboardHeroMetric">
+          <span className="muted">Faturamento pago</span>
+          <strong>{formatCurrency(operation.paidRevenueInCents)}</strong>
+          <small>Soma apenas dos pedidos pagos</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Pedidos pagos</span>
+          <strong>{operation.paidOrdersCount}</strong>
+          <small>Compras confirmadas</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Pedidos totais</span>
+          <strong>{operation.totalOrdersCount}</strong>
+          <small>Inclui pendentes, expirados e pagos</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Leads captados</span>
+          <strong>{operation.totalLeadsCount}</strong>
+          <small>Base de interesse da operação</small>
+        </article>
+      </section>
+
+      <section className="grid dashboardGrid platformMasterSnapshot spacedSection" aria-label="Situação dos ingressos">
+        <article className="card metric">
+          <span className="muted">Ingressos ativos</span>
+          <strong>{operation.activeTicketsCount}</strong>
+          <small>Prontos para uso</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Usados</span>
+          <strong>{operation.usedTicketsCount}</strong>
+          <small>Já validados no check-in</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Cancelados</span>
+          <strong>{operation.canceledTicketsCount}</strong>
+          <small>Sem validade operacional</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Equipe / eventos</span>
+          <strong>
+            {operation._count.adminUsers} / {operation._count.events}
+          </strong>
+          <small>Base humana e agenda da filha</small>
         </article>
       </section>
 
@@ -112,22 +186,14 @@ export default async function OperationDetailPage({ params }: OperationDetailPag
           </div>
 
           <div className="actionRow">
-            <Link className="secondaryButton smallButton" href="/admin/operations">
-              Voltar para operações
-            </Link>
             {operation.publicDomain ? (
-              <a className="button smallButton" href={`https://${operation.publicDomain}`} target="_blank" rel="noreferrer">
-                Abrir público
+              <a className="secondaryButton smallButton" href={`https://${operation.publicDomain}`} target="_blank" rel="noreferrer">
+                Conferir vitrine
               </a>
             ) : null}
             {operation.adminDomain ? (
-              <a
-                className="secondaryButton smallButton"
-                href={`https://${operation.adminDomain}/login`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Abrir admin
+              <a className="secondaryButton smallButton" href={`https://${operation.adminDomain}/login`} target="_blank" rel="noreferrer">
+                Ir para o login da filha
               </a>
             ) : null}
           </div>
@@ -198,9 +264,21 @@ export default async function OperationDetailPage({ params }: OperationDetailPag
                       {[event.city, event.state].filter(Boolean).join(", ") || "Local pendente"}
                     </td>
                     <td>
-                      <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}`}>
-                        Abrir evento
-                      </Link>
+                      <div className="platformEventActionStack">
+                        <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}`}>
+                          Abrir no master
+                        </Link>
+                        {operation.publicDomain && event.status === "PUBLISHED" ? (
+                          <a
+                            className="secondaryButton smallButton"
+                            href={`https://${operation.publicDomain}/evento/${event.slug}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Ver público
+                          </a>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))

@@ -124,11 +124,86 @@ export async function getOrganizationDetailForPlatformAdmin(id: string) {
     return null;
   }
 
+  const [
+    paidOrdersCount,
+    totalOrdersCount,
+    totalLeadsCount,
+    activeTicketsCount,
+    usedTicketsCount,
+    canceledTicketsCount,
+    paidRevenue
+  ] = await prisma.$transaction([
+    prisma.order.count({
+      where: {
+        event: {
+          organizationId: id
+        },
+        status: "PAID"
+      }
+    }),
+    prisma.order.count({
+      where: {
+        event: {
+          organizationId: id
+        }
+      }
+    }),
+    prisma.eventLead.count({
+      where: {
+        event: {
+          organizationId: id
+        }
+      }
+    }),
+    prisma.ticket.count({
+      where: {
+        event: {
+          organizationId: id
+        },
+        status: "ACTIVE"
+      }
+    }),
+    prisma.ticket.count({
+      where: {
+        event: {
+          organizationId: id
+        },
+        status: "USED"
+      }
+    }),
+    prisma.ticket.count({
+      where: {
+        event: {
+          organizationId: id
+        },
+        status: "CANCELED"
+      }
+    }),
+    prisma.order.aggregate({
+      where: {
+        event: {
+          organizationId: id
+        },
+        status: "PAID"
+      },
+      _sum: {
+        totalInCents: true
+      }
+    })
+  ]);
+
   const platformOverview = await getPlatformOverview();
   const readiness = platformOverview.operations.find((operation) => operation.id === organization.id);
 
   return {
     ...organization,
+    paidOrdersCount,
+    totalOrdersCount,
+    totalLeadsCount,
+    activeTicketsCount,
+    usedTicketsCount,
+    canceledTicketsCount,
+    paidRevenueInCents: paidRevenue._sum.totalInCents ?? 0,
     readinessScore: readiness?.readinessScore ?? 0,
     readinessLabel: readiness?.readinessLabel ?? "Inicial",
     readinessItems: readiness?.readinessItems ?? []
