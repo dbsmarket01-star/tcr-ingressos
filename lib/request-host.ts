@@ -5,7 +5,11 @@ export function normalizeHost(value?: string | null) {
     return null;
   }
 
-  const trimmed = value.trim().toLowerCase();
+  const trimmed = value
+    .split(",")
+    .map((part) => part.trim())
+    .find(Boolean)
+    ?.toLowerCase();
 
   if (!trimmed) {
     return null;
@@ -22,6 +26,6 @@ export async function getRequestHost() {
   const headerStore = await headers();
 
   return normalizeHost(
-    headerStore.get("x-forwarded-host") || headerStore.get("x-original-host") || headerStore.get("host")
+    headerStore.get("x-original-host") || headerStore.get("host") || headerStore.get("x-forwarded-host")
   );
 }
