@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getPlatformOverview } from "@/features/platform/platform.service";
 
 type CreateOrganizationInput = {
   name: string;
@@ -56,7 +57,7 @@ function slugify(value: string) {
 }
 
 export async function listOrganizationsForPlatformAdmin() {
-  return prisma.organization.findMany({
+  const organizations = await prisma.organization.findMany({
     orderBy: [{ isActive: "desc" }, { createdAt: "asc" }],
     include: {
       _count: {
@@ -66,6 +67,19 @@ export async function listOrganizationsForPlatformAdmin() {
         }
       }
     }
+  });
+  const platformOverview = await getPlatformOverview();
+  const readinessMap = new Map(platformOverview.operations.map((operation) => [operation.id, operation]));
+
+  return organizations.map((organization) => {
+    const readiness = readinessMap.get(organization.id);
+
+    return {
+      ...organization,
+      readinessScore: readiness?.readinessScore ?? 0,
+      readinessLabel: readiness?.readinessLabel ?? "Inicial",
+      readinessItems: readiness?.readinessItems ?? []
+    };
   });
 }
 

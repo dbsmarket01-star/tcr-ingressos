@@ -38,7 +38,15 @@ export async function AdminShell({ title, description, children }: AdminShellPro
     <main className="adminShell">
       <aside className="sidebar">
         <Link className="brand sidebarBrand" href="/admin">
-          <span className="brandMark">{brandMark}</span>
+          {currentOrganizationContext.brandLogoUrl ? (
+            <img
+              alt={brandName}
+              className="brandLogo"
+              src={currentOrganizationContext.brandLogoUrl}
+            />
+          ) : (
+            <span className="brandMark">{brandMark}</span>
+          )}
           <span>{brandName}</span>
         </Link>
         <div className="sidebarIntro">

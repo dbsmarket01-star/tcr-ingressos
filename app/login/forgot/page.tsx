@@ -20,7 +20,11 @@ export default async function ForgotPasswordPage({ searchParams }: ForgotPasswor
       <section className="loginPanel adminLoginPanel">
         <div className="loginFormArea">
           <Link className="brand loginBrand loginBrandDark" href="/">
-            <span className="brandMark">{organizationContext.brandMark}</span>
+            {organizationContext.brandLogoUrl ? (
+              <img alt={organizationContext.brandName} className="brandLogo" src={organizationContext.brandLogoUrl} />
+            ) : (
+              <span className="brandMark">{organizationContext.brandMark}</span>
+            )}
             <span>{organizationContext.brandName}</span>
           </Link>
 

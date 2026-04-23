@@ -30,7 +30,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <section className="loginPanel adminLoginPanel">
         <div className="loginFormArea">
           <Link className="brand loginBrand loginBrandDark" href="/">
-            <span className="brandMark">{organizationContext.brandMark}</span>
+            {organizationContext.brandLogoUrl ? (
+              <img alt={loginBrandLabel} className="brandLogo" src={organizationContext.brandLogoUrl} />
+            ) : (
+              <span className="brandMark">{organizationContext.brandMark}</span>
+            )}
             <span>{loginBrandLabel}</span>
           </Link>
 

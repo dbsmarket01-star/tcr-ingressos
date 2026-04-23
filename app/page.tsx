@@ -198,6 +198,20 @@ export default async function Home() {
                     <span>Equipe</span>
                     <strong>{operation.adminCount}</strong>
                   </div>
+                  <div>
+                    <span>Prontidão</span>
+                    <strong>{operation.readinessScore}%</strong>
+                  </div>
+                </div>
+                <div className="platformReadinessBar" aria-label={`Prontidão de ${operation.readinessScore}%`}>
+                  <span style={{ width: `${operation.readinessScore}%` }} />
+                </div>
+                <div className="platformReadinessTags">
+                  {operation.readinessItems.map((item) => (
+                    <span className={item.done ? "isDone" : "isTodo"} key={item.label}>
+                      {item.label}
+                    </span>
+                  ))}
                 </div>
                 <p className="muted">
                   {operation.adminDomain

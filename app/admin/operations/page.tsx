@@ -202,6 +202,18 @@ export default async function AdminOperationsPage() {
                 </span>
               </div>
 
+              <div className="platformReadinessBar" aria-label={`Prontidão de ${organization.readinessScore}%`}>
+                <span style={{ width: `${organization.readinessScore}%` }} />
+              </div>
+
+              <div className="platformReadinessTags">
+                {organization.readinessItems.map((item) => (
+                  <span className={item.done ? "isDone" : "isTodo"} key={item.label}>
+                    {item.label}
+                  </span>
+                ))}
+              </div>
+
               <form action={updateOrganizationAction} className="operationsAdminForm">
                 <input type="hidden" name="organizationId" value={organization.id} />
 
@@ -259,6 +271,29 @@ export default async function AdminOperationsPage() {
                   {organization.isActive ? "Desativar operação" : "Ativar operação"}
                 </button>
               </form>
+
+              <div className="actionRow">
+                {organization.publicDomain ? (
+                  <a
+                    className="secondaryButton smallButton"
+                    href={`https://${organization.publicDomain}`}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    Abrir público
+                  </a>
+                ) : null}
+                {organization.adminDomain ? (
+                  <a
+                    className="secondaryButton smallButton"
+                    href={`https://${organization.adminDomain}/login`}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    Abrir admin
+                  </a>
+                ) : null}
+              </div>
             </article>
           ))}
         </div>

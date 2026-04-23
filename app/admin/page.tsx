@@ -171,6 +171,18 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     </div>
                   </div>
 
+                  <div className="platformReadinessBar" aria-label={`Prontidão de ${operation.readinessScore}%`}>
+                    <span style={{ width: `${operation.readinessScore}%` }} />
+                  </div>
+
+                  <div className="platformReadinessTags">
+                    {operation.readinessItems.map((item) => (
+                      <span className={item.done ? "isDone" : "isTodo"} key={item.label}>
+                        {item.label}
+                      </span>
+                    ))}
+                  </div>
+
                   <div className="platformOperationLinks">
                     <span>{operation.publicDomain || "Domínio público pendente"}</span>
                     <span>{operation.adminDomain || "Domínio admin pendente"}</span>

@@ -55,8 +55,44 @@ export type PlatformOverview = {
     secondaryColor: string | null;
     eventCount: number;
     adminCount: number;
+    readinessScore: number;
+    readinessLabel: string;
+    readinessItems: Array<{
+      label: string;
+      done: boolean;
+    }>;
   }>;
 };
+
+function buildReadiness(operation: {
+  publicDomain: string | null;
+  adminDomain: string | null;
+  supportEmail: string | null;
+  supportPhone: string | null;
+  primaryColor: string | null;
+  secondaryColor: string | null;
+  eventCount: number;
+  adminCount: number;
+}) {
+  const readinessItems = [
+    { label: "Domínio público", done: Boolean(operation.publicDomain) },
+    { label: "Domínio admin", done: Boolean(operation.adminDomain) },
+    { label: "Suporte", done: Boolean(operation.supportEmail || operation.supportPhone) },
+    { label: "Branding", done: Boolean(operation.primaryColor && operation.secondaryColor) },
+    { label: "Equipe inicial", done: operation.adminCount > 0 },
+    { label: "Primeiro evento", done: operation.eventCount > 0 }
+  ];
+  const completed = readinessItems.filter((item) => item.done).length;
+  const readinessScore = Math.round((completed / readinessItems.length) * 100);
+  const readinessLabel =
+    readinessScore >= 100 ? "Pronta" : readinessScore >= 67 ? "Quase pronta" : readinessScore >= 34 ? "Em preparação" : "Inicial";
+
+  return {
+    readinessItems,
+    readinessScore,
+    readinessLabel
+  };
+}
 
 export async function getPlatformOverview(): Promise<PlatformOverview> {
   const [organizations, totalEvents, publishedEvents, totalAdmins] = await Promise.all([
@@ -104,6 +140,16 @@ export async function getPlatformOverview(): Promise<PlatformOverview> {
     totalAdmins,
     childOrganizations,
     operations: organizations.map((item) => ({
+      ...buildReadiness({
+        publicDomain: item.publicDomain,
+        adminDomain: item.adminDomain,
+        supportEmail: item.supportEmail,
+        supportPhone: item.supportPhone,
+        primaryColor: item.primaryColor,
+        secondaryColor: item.secondaryColor,
+        eventCount: item._count.events,
+        adminCount: item._count.adminUsers
+      }),
       id: item.id,
       slug: item.slug,
       name: item.name,

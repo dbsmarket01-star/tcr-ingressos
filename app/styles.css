@@ -86,6 +86,15 @@ textarea {
   width: 38px;
 }
 
+.brandLogo {
+  border-radius: 10px;
+  display: block;
+  flex: 0 0 auto;
+  height: 38px;
+  object-fit: cover;
+  width: 38px;
+}
+
 .nav {
   display: flex;
   flex-wrap: wrap;
@@ -1653,6 +1662,43 @@ textarea {
   display: grid;
   gap: 8px;
   padding: 12px;
+}
+
+.platformReadinessBar {
+  background: #e8eefb;
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.platformReadinessBar span {
+  background: linear-gradient(90deg, var(--brand), #5a8ef2);
+  display: block;
+  height: 100%;
+}
+
+.platformReadinessTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.platformReadinessTags span {
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  min-height: 30px;
+  padding: 6px 10px;
+}
+
+.platformReadinessTags .isDone {
+  background: #e7f7ef;
+  color: #0b684b;
+}
+
+.platformReadinessTags .isTodo {
+  background: #f4f8ff;
+  color: #50637f;
 }
 
 .donutChart {
@@ -5781,6 +5827,11 @@ textarea {
 
   .brandMark {
     flex: 0 0 auto;
+    height: 32px;
+    width: 32px;
+  }
+
+  .brandLogo {
     height: 32px;
     width: 32px;
   }

@@ -41,6 +41,7 @@ export type OrganizationContext = {
   adminBaseUrl: string | null;
   brandName: string;
   brandMark: string;
+  brandLogoUrl: string | null;
 };
 
 const organizationBrandingSelect = {
@@ -104,7 +105,8 @@ function buildOrganizationContext(
     publicBaseUrl,
     adminBaseUrl: buildHttpsUrl(organization.adminDomain),
     brandName: displayName,
-    brandMark: displayName.trim().charAt(0).toUpperCase() || "I"
+    brandMark: displayName.trim().charAt(0).toUpperCase() || "I",
+    brandLogoUrl: platformMode ? null : organization.logoUrl
   };
 }
 
