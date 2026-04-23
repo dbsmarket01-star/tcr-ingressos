@@ -3,13 +3,29 @@ import { normalizeHost } from "@/lib/request-host";
 
 export const DEFAULT_PLATFORM_NAME = "Ingresaas";
 export const DEFAULT_PLATFORM_DOMAIN = "ingresaas.app.br";
+const LEGACY_PLATFORM_DOMAINS = ["ingressas.app.br"];
+
+function getAcceptedPlatformHosts() {
+  const configuredHost = normalizeHost(process.env.PLATFORM_DOMAIN);
+  const hosts = new Set<string>([DEFAULT_PLATFORM_DOMAIN, ...LEGACY_PLATFORM_DOMAINS]);
+
+  if (configuredHost) {
+    hosts.add(configuredHost);
+  }
+
+  for (const host of Array.from(hosts)) {
+    hosts.add(`www.${host}`);
+  }
+
+  return hosts;
+}
 
 export function getPlatformName() {
   return process.env.PLATFORM_NAME?.trim() || DEFAULT_PLATFORM_NAME;
 }
 
 export function getPlatformHost() {
-  return normalizeHost(process.env.PLATFORM_DOMAIN || DEFAULT_PLATFORM_DOMAIN);
+  return normalizeHost(process.env.PLATFORM_DOMAIN) || DEFAULT_PLATFORM_DOMAIN;
 }
 
 export function getPlatformAppUrl() {
@@ -28,13 +44,12 @@ export function getPlatformAppUrl() {
 
 export function isPlatformHost(host?: string | null) {
   const normalizedHost = normalizeHost(host);
-  const platformHost = getPlatformHost();
 
-  if (!normalizedHost || !platformHost) {
+  if (!normalizedHost) {
     return false;
   }
 
-  return normalizedHost === platformHost || normalizedHost === `www.${platformHost}`;
+  return getAcceptedPlatformHosts().has(normalizedHost);
 }
 
 export type PlatformOverview = {
