@@ -1715,6 +1715,38 @@ textarea {
   padding: 18px;
 }
 
+.platformOperationCreateCard {
+  background: linear-gradient(180deg, #ffffff, #f7fbff);
+  border: 1px solid #dce7ff;
+  box-shadow: 0 18px 40px rgba(25, 48, 94, 0.05);
+}
+
+.platformArchitectureCard {
+  background: linear-gradient(180deg, #ffffff, #f8fbff);
+  border: 1px solid #dce7ff;
+  box-shadow: 0 18px 40px rgba(25, 48, 94, 0.05);
+}
+
+.platformCreateHints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.platformCreateHints span {
+  align-items: center;
+  background: #f3f7ff;
+  border: 1px solid #dbe4f4;
+  border-radius: 999px;
+  color: #36568a;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  min-height: 34px;
+  padding: 0 12px;
+  text-transform: uppercase;
+}
+
 .operationsAdminCardHeader {
   align-items: start;
   display: flex;
@@ -1777,6 +1809,12 @@ textarea {
   font-size: 13px;
   font-weight: 800;
   padding: 10px 12px;
+}
+
+.operationsAdminQuickActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .operationsAdminSwatches {

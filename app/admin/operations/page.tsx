@@ -22,6 +22,8 @@ export default async function AdminOperationsPage() {
   }
 
   const organizations = await listOrganizationsForPlatformAdmin();
+  const activeOrganizations = organizations.filter((organization) => organization.isActive);
+  const readyOrganizations = organizations.filter((organization) => organization.readinessScore >= 67);
 
   return (
     <AdminShell
@@ -45,14 +47,43 @@ export default async function AdminOperationsPage() {
         </div>
       </section>
 
+      <section className="grid dashboardGrid platformMasterSnapshot spacedSection" aria-label="Resumo operacional">
+        <article className="card metric dashboardHeroMetric">
+          <span className="muted">Operações cadastradas</span>
+          <strong>{organizations.length}</strong>
+          <small>Base total da plataforma</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Ativas</span>
+          <strong>{activeOrganizations.length}</strong>
+          <small>Já liberadas para uso</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Prontas para revisar</span>
+          <strong>{readyOrganizations.length}</strong>
+          <small>Com estrutura suficiente para avançar</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Ainda montando base</span>
+          <strong>{organizations.length - readyOrganizations.length}</strong>
+          <small>Dependem de domínio, equipe ou branding</small>
+        </article>
+      </section>
+
       <section className="grid twoColumns">
-        <form action={createOrganizationAction} className="card form">
+        <form action={createOrganizationAction} className="card form platformOperationCreateCard">
           <div>
             <span className="eyebrow">Nova operação</span>
             <h2>Criar uma nova bilheteria filha</h2>
             <p className="muted">
               Use esta etapa para preparar a próxima operação antes de apontar o domínio real dela.
             </p>
+          </div>
+
+          <div className="platformCreateHints">
+            <span>Comece pelo nome e domínios</span>
+            <span>Defina branding mínimo</span>
+            <span>Depois libere equipe e evento piloto</span>
           </div>
 
           <label className="field">
@@ -107,7 +138,7 @@ export default async function AdminOperationsPage() {
           </button>
         </form>
 
-        <section className="card">
+        <section className="card platformArchitectureCard">
           <span className="eyebrow">Leitura da arquitetura</span>
           <h2>Como a Ingresaas vai crescer</h2>
           <div className="permissionList">
@@ -174,6 +205,11 @@ export default async function AdminOperationsPage() {
             <h2>Operações cadastradas</h2>
             <p>Edite dados básicos, confira domínios e mantenha o status das operações sob controle.</p>
           </div>
+          <div className="platformSectionActions">
+            <Link className="secondaryButton smallButton" href="/admin">
+              Voltar ao painel master
+            </Link>
+          </div>
         </div>
 
         <div className="operationsAdminList">
@@ -211,6 +247,32 @@ export default async function AdminOperationsPage() {
               <div className="operationsAdminLinks">
                 <span>{organization.publicDomain || "Domínio público pendente"}</span>
                 <span>{organization.adminDomain || "Domínio admin pendente"}</span>
+              </div>
+
+              <div className="operationsAdminQuickActions">
+                <Link className="secondaryButton smallButton" href={`/admin/operations/${organization.id}`}>
+                  Central da operação
+                </Link>
+                {organization.adminDomain ? (
+                  <a
+                    className="secondaryButton smallButton"
+                    href={`https://${organization.adminDomain}/admin`}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    Entrar no admin
+                  </a>
+                ) : null}
+                {organization.publicDomain ? (
+                  <a
+                    className="secondaryButton smallButton"
+                    href={`https://${organization.publicDomain}`}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    Abrir vitrine
+                  </a>
+                ) : null}
               </div>
 
               <div className="operationsAdminSwatches">
@@ -311,7 +373,7 @@ export default async function AdminOperationsPage() {
                 {organization.adminDomain ? (
                   <a
                     className="secondaryButton smallButton"
-                    href={`https://${organization.adminDomain}/login`}
+                    href={`https://${organization.adminDomain}/admin`}
                     rel="noreferrer"
                     target="_blank"
                   >
