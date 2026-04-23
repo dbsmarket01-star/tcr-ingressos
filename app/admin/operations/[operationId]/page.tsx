@@ -76,6 +76,39 @@ export default async function OperationDetailPage({ params }: OperationDetailPag
         </div>
       </section>
 
+      <section className="platformOperationFocusGrid spacedSection" aria-label="Leitura do momento da operação">
+        <article className="dashboardPanel platformOperationFocusCard">
+          <span className="eyebrow">Leitura do momento</span>
+          <h2>{operation.readinessScore >= 67 ? "A operação já está madura para revisão fina." : "A operação ainda está em montagem."}</h2>
+          <p>
+            {operation.readinessScore >= 67
+              ? "Agora o trabalho mais inteligente é revisar a experiência real da filha: dashboard, eventos, pedidos, check-in e financeiro."
+              : "O melhor caminho agora é terminar domínio, branding, equipe e agenda mínima antes de tratar a filha como pronta."}
+          </p>
+        </article>
+
+        <article className="dashboardPanel platformOperationFocusCard">
+          <span className="eyebrow">Próxima ação sugerida</span>
+          <h2>{operation.adminDomain ? "Entrar no admin e revisar a rotina real." : "Terminar a estrutura da filha."}</h2>
+          <div className="platformOperationFocusActions">
+            {operation.adminDomain ? (
+              <>
+                <a className="button smallButton" href={`https://${operation.adminDomain}/admin`} target="_blank" rel="noreferrer">
+                  Entrar no dashboard da filha
+                </a>
+                <a className="secondaryButton smallButton" href={`https://${operation.adminDomain}/admin/events`} target="_blank" rel="noreferrer">
+                  Revisar eventos
+                </a>
+              </>
+            ) : (
+              <Link className="button smallButton" href="/admin/operations">
+                Voltar para completar a operação
+              </Link>
+            )}
+          </div>
+        </article>
+      </section>
+
       {operation.adminDomain ? (
         <section className="platformOperationLaunchpad spacedSection" aria-label="Atalhos internos da operação">
           <article className="platformOperationLaunchpadCard">
@@ -127,6 +160,25 @@ export default async function OperationDetailPage({ params }: OperationDetailPag
           <strong>{formatDateTime(operation.createdAt)}</strong>
           <small>Primeiro registro da operação</small>
         </article>
+      </section>
+
+      <section className="platformOperationHealthStrip spacedSection" aria-label="Resumo rápido da saúde da operação">
+        <div>
+          <span>Base comercial</span>
+          <strong>{operation.paidOrdersCount > 0 ? "Pedidos pagos já apareceram" : "Ainda sem pedidos pagos"}</strong>
+        </div>
+        <div>
+          <span>Agenda</span>
+          <strong>{operation._count.events > 0 ? `${operation._count.events} evento(s) vinculados` : "Agenda ainda vazia"}</strong>
+        </div>
+        <div>
+          <span>Equipe</span>
+          <strong>{operation._count.adminUsers > 0 ? `${operation._count.adminUsers} pessoa(s) operando` : "Equipe ainda não liberada"}</strong>
+        </div>
+        <div>
+          <span>Leads</span>
+          <strong>{operation.totalLeadsCount > 0 ? `${operation.totalLeadsCount} lead(s) captados` : "Sem captação ainda"}</strong>
+        </div>
       </section>
 
       <section className="grid dashboardGrid platformMasterSnapshot spacedSection" aria-label="Indicadores operacionais da filha">

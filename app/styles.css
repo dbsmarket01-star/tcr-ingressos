@@ -1936,6 +1936,40 @@ textarea {
   display: grid;
 }
 
+.platformOperationFocusGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.platformOperationFocusCard {
+  gap: 12px;
+}
+
+.platformOperationFocusCard h2,
+.platformOperationFocusCard p {
+  margin: 0;
+}
+
+.platformOperationFocusCard h2 {
+  color: #14213f;
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.08;
+  max-width: 18ch;
+}
+
+.platformOperationFocusCard p {
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 60ch;
+}
+
+.platformOperationFocusActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .platformOperationLaunchpadCard {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 251, 255, 0.98));
   border: 1px solid #e2eaff;
@@ -2048,6 +2082,35 @@ textarea {
   display: grid;
   gap: 8px;
   padding: 12px;
+}
+
+.platformOperationHealthStrip {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.platformOperationHealthStrip div {
+  background: linear-gradient(180deg, #f8fbff, #f3f7ff);
+  border: 1px solid #dbe4f4;
+  border-radius: 18px;
+  display: grid;
+  gap: 6px;
+  min-height: 98px;
+  padding: 16px;
+}
+
+.platformOperationHealthStrip span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.platformOperationHealthStrip strong {
+  color: #20345f;
+  font-size: 17px;
+  line-height: 1.35;
 }
 
 .platformReadinessBar {
@@ -6345,8 +6408,10 @@ textarea {
   .platformOverviewMetrics,
   .platformHeroMetrics,
   .platformControlGrid,
+  .platformOperationFocusGrid,
   .platformOperationMeta,
   .platformOperationLaunchpadGrid,
+  .platformOperationHealthStrip,
   .operationsAdminStats,
   .operationsAdminForm {
     grid-template-columns: 1fr;
