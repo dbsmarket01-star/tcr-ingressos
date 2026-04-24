@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { cancelPendingOrderAction, expirePendingOrdersAction } from "@/features/orders/order.admin.actions";
-import { getOrdersSummary, listAdminOrders, listOrderFilterEvents } from "@/features/orders/order.admin.service";
+import { getOrdersSummary, listAdminOrders, listOrderFilterEventsScoped } from "@/features/orders/order.admin.service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -31,12 +32,14 @@ type OrdersPageProps = {
 };
 
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
-  await requirePermission("ORDERS");
+  const admin = await requirePermission("ORDERS");
+  const organizationContext = await getCurrentOrganizationContext();
   const params = searchParams ? await searchParams : {};
+  const allowedEventIds = getAdminAllowedEventIds(admin);
   const [{ orders, totalCount }, events, summary] = await Promise.all([
-    listAdminOrders(params),
-    listOrderFilterEvents(),
-    getOrdersSummary(params)
+    listAdminOrders(params, allowedEventIds),
+    listOrderFilterEventsScoped(allowedEventIds),
+    getOrdersSummary(params, allowedEventIds)
   ]);
   const exportHref = `/admin/orders/export?${new URLSearchParams({
     ...(params.eventId ? { eventId: params.eventId } : {}),
@@ -51,6 +54,28 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
       title="Pedidos"
       description="Localize compras, entenda o status rapidamente e resolva atendimento sem ruído."
     >
+      <section className="operationCommandStrip spacedSection" aria-label="Atalhos da área de pedidos">
+        <article className="operationCommandCard">
+          <span className="eyebrow">Atendimento comercial</span>
+          <h2>Pedidos da {organizationContext.brandName} com leitura rápida e ação direta.</h2>
+          <p>Quando houver suporte, o foco aqui é achar o pedido, entender o status e agir no menor número de cliques possível.</p>
+        </article>
+        <div className="operationCommandActions">
+          <Link className="secondaryButton smallButton" href="/admin">
+            Dashboard
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin/events">
+            Eventos
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin/support">
+            Atendimento
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin/finance">
+            Financeiro
+          </Link>
+        </div>
+      </section>
+
       <section className="adminPanelHero compact">
         <div>
           <span className="sectionEyebrow">Atendimento comercial</span>

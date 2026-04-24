@@ -33,6 +33,28 @@ export default async function EventsPage() {
       title="Eventos"
       description="Gerencie publicação, lotes, vendas, faturamento e páginas públicas dos eventos."
     >
+      <section className="operationCommandStrip spacedSection" aria-label="Atalhos da área de eventos">
+        <article className="operationCommandCard">
+          <span className="eyebrow">Centro de agenda</span>
+          <h2>Revise a agenda, a vitrine pública e o preparo comercial.</h2>
+          <p>
+            Esta tela concentra o que mais importa para a operação: publicação, capacidade, faturamento e acesso rápido
+            aos eventos da {organizationContext.brandName}.
+          </p>
+        </article>
+        <div className="operationCommandActions">
+          <Link className="button smallButton" href="/admin/events/new">
+            Novo evento
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin/orders">
+            Ir para pedidos
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin">
+            Voltar ao dashboard
+          </Link>
+        </div>
+      </section>
+
       <section className="grid dashboardGrid">
         <article className="card metric">
           <span className="muted">Eventos publicados</span>

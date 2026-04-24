@@ -266,6 +266,28 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       title="Dashboard"
       description="Acompanhe faturamento, pedidos, meios de pagamento e desempenho dos eventos por período."
     >
+      <section className="operationCommandStrip spacedSection" aria-label="Atalhos da operação">
+        <article className="operationCommandCard">
+          <span className="eyebrow">Rotina da operação</span>
+          <h2>{organizationContext.brandName} em visão rápida</h2>
+          <p>Use estes atalhos para sair do panorama geral e cair direto nas áreas mais operacionais da filha.</p>
+        </article>
+        <div className="operationCommandActions">
+          <Link className="secondaryButton smallButton" href="/admin/events">
+            Eventos
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin/orders">
+            Pedidos
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin/check-in">
+            Check-in
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin/finance">
+            Financeiro
+          </Link>
+        </div>
+      </section>
+
       <section className="dashboardFilterPanel" aria-label="Filtro do dashboard">
         <div>
           <span className="eyebrow">Visão comercial</span>
