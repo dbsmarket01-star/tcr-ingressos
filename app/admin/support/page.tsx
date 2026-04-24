@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { CopyButton } from "@/components/forms/CopyButton";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { resendPendingPaymentEmailAction, resendTicketsEmailAction } from "@/features/support/support.actions";
 import { searchSupportOrders } from "@/features/support/support.service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -36,6 +37,7 @@ const ticketStatusLabels = {
 
 export default async function SupportPage({ searchParams }: SupportPageProps) {
   const admin = await requirePermission("SUPPORT");
+  const organizationContext = await getCurrentOrganizationContext();
   const params = await searchParams;
   const query = params.q?.trim() ?? "";
   const orders = await searchSupportOrders(query, getAdminAllowedEventIds(admin));
@@ -51,6 +53,25 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
       title="Atendimento"
       description="Busque pedidos, clientes e ingressos para resolver suporte na hora."
     >
+      <section className="operationCommandStrip spacedSection" aria-label="Atalhos da área de atendimento">
+        <article className="operationCommandCard">
+          <span className="eyebrow">Atendimento rápido</span>
+          <h2>Resolva suporte da {organizationContext.brandName} sem ficar caçando informação.</h2>
+          <p>Pedido, ingresso, cliente e ação de reenvio precisam viver juntos. Esta tela agora já começa com os atalhos que mais fazem sentido no suporte.</p>
+        </article>
+        <div className="operationCommandActions">
+          <Link className="secondaryButton smallButton" href="/admin/orders">
+            Pedidos
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin/check-in">
+            Check-in
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin">
+            Dashboard
+          </Link>
+        </div>
+      </section>
+
       <section className="card supportSearch">
         <form className="supportSearchForm">
           <label className="field">

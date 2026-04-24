@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { validateTicketAction } from "@/features/check-in/check-in.actions";
 import { getCheckInStats, listRecentCheckIns } from "@/features/check-in/check-in.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { formatDateTime } from "@/lib/format";
 import { CheckInScanner } from "./CheckInScanner";
 
@@ -35,9 +36,14 @@ const statusInstructions = {
 };
 
 export default async function CheckInPage({ searchParams }: CheckInPageProps) {
-  await requirePermission("CHECKIN");
+  const admin = await requirePermission("CHECKIN");
+  const organizationContext = await getCurrentOrganizationContext();
   const result = await searchParams;
-  const [recentCheckIns, stats] = await Promise.all([listRecentCheckIns(), getCheckInStats()]);
+  const allowedEventIds = getAdminAllowedEventIds(admin);
+  const [recentCheckIns, stats] = await Promise.all([
+    listRecentCheckIns(allowedEventIds),
+    getCheckInStats(allowedEventIds)
+  ]);
   const status = result.status as keyof typeof statusLabels | undefined;
 
   return (
@@ -45,6 +51,25 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
       title="Check-in"
       description="Valide QR Code com rapidez, bloqueie reutilização e mantenha a porta fluindo."
     >
+      <section className="operationCommandStrip spacedSection" aria-label="Atalhos da área de check-in">
+        <article className="operationCommandCard">
+          <span className="eyebrow">Operação de portaria</span>
+          <h2>Entrada rápida e leitura segura para a {organizationContext.brandName}</h2>
+          <p>O foco aqui é manter a fila fluindo, bloquear reutilização e ter um caminho claro quando o QR Code falhar.</p>
+        </article>
+        <div className="operationCommandActions">
+          <Link className="secondaryButton smallButton" href="/admin">
+            Dashboard
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin/support">
+            Atendimento
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin/tickets">
+            Ingressos
+          </Link>
+        </div>
+      </section>
+
       <section className="grid dashboardGrid">
         <article className="card metric">
           <span className="muted">Entradas hoje</span>

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { getFinanceReport } from "@/features/finance/finance-report.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -31,9 +32,10 @@ const orderStatusLabels = {
 };
 
 export default async function FinancePage({ searchParams }: FinancePageProps) {
-  await requirePermission("FINANCE");
+  const admin = await requirePermission("FINANCE");
+  const organizationContext = await getCurrentOrganizationContext();
   const params = await searchParams;
-  const report = await getFinanceReport(params);
+  const report = await getFinanceReport(params, getAdminAllowedEventIds(admin));
   const exportHref = `/admin/finance/export?${new URLSearchParams({
     ...(report.filters.eventId ? { eventId: report.filters.eventId } : {}),
     ...(report.filters.startDate ? { startDate: report.filters.startDate } : {}),
@@ -45,6 +47,25 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
       title="Financeiro"
       description="Faturamento, pagamentos e repasses do período com leitura mais objetiva."
     >
+      <section className="operationCommandStrip spacedSection" aria-label="Atalhos da área financeira">
+        <article className="operationCommandCard">
+          <span className="eyebrow">Saúde financeira</span>
+          <h2>Números da {organizationContext.brandName} com leitura mais limpa para decisão rápida.</h2>
+          <p>Use estes atalhos para sair do quadro financeiro e conferir pedidos, eventos ou o panorama geral sem perder contexto.</p>
+        </article>
+        <div className="operationCommandActions">
+          <Link className="secondaryButton smallButton" href="/admin">
+            Dashboard
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin/orders">
+            Pedidos
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin/events">
+            Eventos
+          </Link>
+        </div>
+      </section>
+
       <section className="adminPanelHero compact">
         <div>
           <span className="sectionEyebrow">Saúde financeira</span>
