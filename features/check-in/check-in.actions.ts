@@ -2,12 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requirePermission } from "@/features/auth/auth.service";
 import { validateTicketForCheckIn } from "./check-in.service";
 
 export async function validateTicketAction(formData: FormData) {
+  const admin = await requirePermission("CHECKIN");
   const code = String(formData.get("code") ?? "").trim();
   const deviceName = String(formData.get("deviceName") ?? "").trim();
-  const result = await validateTicketForCheckIn(code, deviceName || undefined);
+  const result = await validateTicketForCheckIn(code, deviceName || undefined, admin);
 
   revalidatePath("/admin/check-in");
 

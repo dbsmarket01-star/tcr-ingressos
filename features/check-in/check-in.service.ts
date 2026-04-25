@@ -1,5 +1,7 @@
 import { CheckInStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import type { CurrentAdmin } from "@/features/auth/auth.service";
+import { canAccessEvent } from "@/features/auth/auth.service";
 import { getCheckInDecision } from "./check-in-policy";
 
 export type CheckInResult = {
@@ -14,7 +16,7 @@ export type CheckInResult = {
   };
 };
 
-export async function validateTicketForCheckIn(inputCode: string, deviceName?: string) {
+export async function validateTicketForCheckIn(inputCode: string, deviceName?: string, admin?: CurrentAdmin) {
   const code = inputCode.trim();
 
   if (!code) {
@@ -47,6 +49,13 @@ export async function validateTicketForCheckIn(inputCode: string, deviceName?: s
         return {
           status: CheckInStatus.INVALID,
           message: "Ingresso nao encontrado."
+        };
+      }
+
+      if (admin && !canAccessEvent(admin, ticket.eventId)) {
+        return {
+          status: CheckInStatus.INVALID,
+          message: "Este ingresso pertence a um evento sem acesso para este usuário."
         };
       }
 
@@ -145,8 +154,9 @@ export async function validateTicketForCheckIn(inputCode: string, deviceName?: s
   );
 }
 
-export async function listRecentCheckIns() {
+export async function listRecentCheckIns(allowedEventIds?: string[] | null) {
   return prisma.checkIn.findMany({
+    where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
     orderBy: {
       checkedAt: "desc"
     },
@@ -167,7 +177,7 @@ export async function listRecentCheckIns() {
   });
 }
 
-export async function getCheckInStats() {
+export async function getCheckInStats(allowedEventIds?: string[] | null) {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
@@ -175,6 +185,7 @@ export async function getCheckInStats() {
     prisma.checkIn.count({
       where: {
         status: CheckInStatus.APPROVED,
+        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
         checkedAt: {
           gte: startOfDay
         }
@@ -185,6 +196,7 @@ export async function getCheckInStats() {
         status: {
           in: [CheckInStatus.ALREADY_USED, CheckInStatus.INVALID, CheckInStatus.CANCELED]
         },
+        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
         checkedAt: {
           gte: startOfDay
         }
@@ -192,6 +204,7 @@ export async function getCheckInStats() {
     }),
     prisma.checkIn.count({
       where: {
+        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
         checkedAt: {
           gte: startOfDay
         }
