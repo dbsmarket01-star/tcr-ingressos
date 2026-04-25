@@ -9,6 +9,8 @@ type FinanceReportFilters = {
   endDate?: string;
 };
 
+type EventScope = string[] | null | undefined;
+
 type PaymentMethod = "PIX" | "CREDIT_CARD" | "SIMULATED" | "OTHER";
 
 function parseStartDate(value?: string) {
@@ -119,13 +121,14 @@ function addBreakdownToMap<
   row.discountInCents += discountInCents;
 }
 
-export async function getFinanceReport(filters: FinanceReportFilters) {
+export async function getFinanceReport(filters: FinanceReportFilters, allowedEventIds?: EventScope) {
   const startDate = parseStartDate(filters.startDate);
   const endDate = parseEndDate(filters.endDate);
   const eventId = filters.eventId || undefined;
 
   const [events, ordersInPeriod, paidOrders] = await Promise.all([
     prisma.event.findMany({
+      where: allowedEventIds ? { id: { in: allowedEventIds } } : undefined,
       orderBy: [{ startsAt: "desc" }, { title: "asc" }],
       select: {
         id: true,
@@ -135,6 +138,7 @@ export async function getFinanceReport(filters: FinanceReportFilters) {
     prisma.order.findMany({
       where: {
         ...(eventId ? { eventId } : {}),
+        ...(!eventId && allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
         createdAt: {
           gte: startDate,
           lte: endDate
@@ -165,6 +169,7 @@ export async function getFinanceReport(filters: FinanceReportFilters) {
       where: {
         status: OrderStatus.PAID,
         ...(eventId ? { eventId } : {}),
+        ...(!eventId && allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
         paidAt: {
           gte: startDate,
           lte: endDate
