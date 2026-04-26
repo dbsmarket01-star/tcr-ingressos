@@ -90,6 +90,24 @@ const platformAccessCards = [
   }
 ];
 
+const platformRevenuePoints = [
+  {
+    label: "Ganho de margem",
+    value: "7% a 20%",
+    note: "A proposta comercial é capturar mais valor por venda com bilheteria própria."
+  },
+  {
+    label: "Domínio do cliente",
+    value: "100% próprio",
+    note: "A operação vende na própria marca, sem parecer mais um perfil perdido em plataforma genérica."
+  },
+  {
+    label: "Operação interna",
+    value: "Tudo em um fluxo",
+    note: "Pedido, ticket, lead, QR Code, check-in e rotina comercial convivem na mesma base."
+  }
+];
+
 export default async function Home() {
   const organizationContext = await getCurrentOrganizationContext();
   const isPlatformHost = organizationContext.isPlatformHost;
@@ -195,6 +213,18 @@ export default async function Home() {
                 <p>O cliente entra com login e senha próprios, enquanto a Ingresaas protege dados, relatórios e configurações por operação.</p>
               </div>
             </aside>
+          </div>
+        </section>
+
+        <section className="container platformSection">
+          <div className="platformRevenueStrip">
+            {platformRevenuePoints.map((item) => (
+              <article className="platformRevenueCard" key={item.label}>
+                <span>{item.label}</span>
+                <strong>{item.value}</strong>
+                <p>{item.note}</p>
+              </article>
+            ))}
           </div>
         </section>
 
@@ -345,6 +375,27 @@ export default async function Home() {
               </article>
             ))}
           </div>
+        </section>
+
+        <section className="container platformSection">
+          <article className="platformClosingCta">
+            <div>
+              <span className="eyebrow">Próximo passo</span>
+              <h2>Tenha uma bilheteria com sua marca, seu domínio e uma operação mais lucrativa.</h2>
+              <p>
+                A Ingresaas foi desenhada para quem quer vender com estrutura própria, mais controle comercial e uma
+                experiência mais profissional para a equipe e para o público.
+              </p>
+            </div>
+            <div className="platformClosingActions">
+              <Link className="button" href="/login">
+                Quero minha bilheteria
+              </Link>
+              <Link className="secondaryButton" href="/admin">
+                Ver a plataforma por dentro
+              </Link>
+            </div>
+          </article>
         </section>
       </main>
     );

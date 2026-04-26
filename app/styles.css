@@ -879,6 +879,43 @@ textarea {
   padding-top: 34px;
 }
 
+.platformRevenueStrip {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.platformRevenueCard {
+  background: linear-gradient(180deg, #ffffff, #f7fbff);
+  border: 1px solid #dfe8fb;
+  border-radius: 24px;
+  box-shadow: 0 18px 38px rgba(26, 46, 85, 0.05);
+  display: grid;
+  gap: 10px;
+  min-height: 180px;
+  padding: 24px;
+}
+
+.platformRevenueCard span {
+  color: #5b71a2;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.platformRevenueCard strong {
+  color: #16325e;
+  font-size: clamp(28px, 3.8vw, 40px);
+  line-height: 1.02;
+}
+
+.platformRevenueCard p {
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
 .platformCapabilityGrid {
   display: grid;
   gap: 18px;
@@ -952,6 +989,46 @@ textarea {
   color: var(--muted);
   line-height: 1.6;
   margin-top: 16px;
+}
+
+.platformClosingCta {
+  align-items: center;
+  background:
+    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.14), transparent 28%),
+    linear-gradient(180deg, #ffffff, #f5f9ff);
+  border: 1px solid #dbe4f6;
+  border-radius: 24px;
+  box-shadow: 0 20px 44px rgba(19, 34, 69, 0.06);
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 28px;
+}
+
+.platformClosingCta h2,
+.platformClosingCta p {
+  margin: 0;
+}
+
+.platformClosingCta h2 {
+  color: #17325f;
+  font-size: clamp(30px, 4vw, 42px);
+  line-height: 1.05;
+  margin-top: 6px;
+  max-width: 16ch;
+}
+
+.platformClosingCta p {
+  color: var(--muted);
+  line-height: 1.65;
+  margin-top: 12px;
+  max-width: 66ch;
+}
+
+.platformClosingActions {
+  display: grid;
+  gap: 10px;
+  min-width: 240px;
 }
 
 .homeHeroContent {
@@ -6681,6 +6758,7 @@ textarea {
   .platformAccessWorkflow,
   .platformSecurityGrid,
   .platformSplitGrid,
+  .platformRevenueStrip,
   .platformOperationsGrid,
   .mediaUploadGrid,
   .mediaSizingGuide,
@@ -6716,6 +6794,7 @@ textarea {
   .platformOverviewMetrics,
   .platformSecurityStack,
   .platformHeroMetrics,
+  .platformClosingCta,
   .platformControlGrid,
   .platformOperationFocusGrid,
   .platformOperationMeta,
