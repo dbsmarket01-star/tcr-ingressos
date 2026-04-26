@@ -39,6 +39,19 @@ body {
 }
 
 .platformTheme {
+  --brand: #4f7df0;
+  --brand-dark: #274b9f;
+  --brand-rgb: 79, 125, 240;
+  --admin-primary: #4f7df0;
+  --admin-primary-dark: #274b9f;
+  --admin-primary-rgb: 79, 125, 240;
+  --admin-lilac: #adc7ff;
+  --admin-cyan: #8bb9ff;
+  --admin-card-soft: #f5f8ff;
+  --admin-plum: #5f86ef;
+  --admin-plum-dark: #3559b4;
+  --admin-indigo-soft: #dce8ff;
+  --admin-surface-tint: #eef4ff;
   --accent: #456cc2;
 }
 
@@ -1677,8 +1690,9 @@ textarea {
 
 .metric small {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
+  line-height: 1.5;
 }
 
 .dashboardInsightsGrid {
@@ -1714,10 +1728,10 @@ textarea {
   box-shadow: 0 18px 42px rgba(31, 53, 97, 0.06);
   color: #1b2d52;
   display: grid;
-  gap: 18px;
+  gap: 14px;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
   overflow: hidden;
-  padding: 24px;
+  padding: 22px;
 }
 
 .platformOverviewHero h2,
@@ -1726,17 +1740,18 @@ textarea {
 }
 
 .platformOverviewHero h2 {
-  font-size: clamp(30px, 4vw, 42px);
-  line-height: 1.04;
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.08;
   margin-top: 4px;
-  max-width: 15ch;
+  max-width: 19ch;
 }
 
 .platformOverviewHero p {
   color: #60708d;
-  line-height: 1.6;
-  margin-top: 12px;
-  max-width: 64ch;
+  font-size: 15px;
+  line-height: 1.62;
+  margin-top: 10px;
+  max-width: 58ch;
 }
 
 .platformOverviewHero .eyebrow {
@@ -1759,8 +1774,8 @@ textarea {
   font-size: 12px;
   font-weight: 900;
   justify-content: center;
-  min-height: 42px;
-  padding: 0 14px;
+  min-height: 36px;
+  padding: 0 12px;
   text-transform: uppercase;
 }
 
@@ -1878,8 +1893,8 @@ textarea {
 
 .platformSecurityStack strong {
   color: #17325f;
-  font-size: 28px;
-  line-height: 1.05;
+  font-size: clamp(22px, 2.6vw, 26px);
+  line-height: 1.08;
 }
 
 .platformAccessWorkflow {
@@ -1900,6 +1915,20 @@ textarea {
 .platformMasterSectionCard h2,
 .platformMasterSectionCard p {
   margin: 0;
+}
+
+.platformMasterSectionCard h2 {
+  color: #17325f;
+  font-size: clamp(22px, 2.7vw, 28px);
+  line-height: 1.12;
+  max-width: 18ch;
+}
+
+.platformMasterSectionCard p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.62;
+  max-width: 58ch;
 }
 
 .platformAccessWorkflowCard {
@@ -1968,9 +1997,9 @@ textarea {
   border-radius: 24px;
   box-shadow: 0 20px 44px rgba(19, 34, 69, 0.05);
   display: grid;
-  gap: 18px;
+  gap: 14px;
   grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-  padding: 24px;
+  padding: 22px;
 }
 
 .platformOperationsHero h2,
@@ -1980,17 +2009,18 @@ textarea {
 
 .platformOperationsHero h2 {
   color: #14213f;
-  font-size: clamp(30px, 4vw, 44px);
-  line-height: 1.04;
-  margin-top: 8px;
-  max-width: 14ch;
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.08;
+  margin-top: 6px;
+  max-width: 18ch;
 }
 
 .platformOperationsHero p {
   color: var(--muted);
-  line-height: 1.65;
-  margin-top: 12px;
-  max-width: 64ch;
+  font-size: 15px;
+  line-height: 1.62;
+  margin-top: 10px;
+  max-width: 58ch;
 }
 
 .platformOperationsHeroBadges {
@@ -2010,8 +2040,8 @@ textarea {
   display: inline-flex;
   font-size: 12px;
   font-weight: 900;
-  min-height: 38px;
-  padding: 0 14px;
+  min-height: 34px;
+  padding: 0 12px;
   text-transform: uppercase;
 }
 
@@ -2033,6 +2063,23 @@ textarea {
   background: linear-gradient(180deg, #ffffff, #f7fbff);
   border: 1px solid #dce7ff;
   box-shadow: 0 18px 40px rgba(25, 48, 94, 0.05);
+}
+
+.platformOperationCreateCard h2,
+.platformOperationsFilterCard h2,
+.platformOperationsGuideCard h2 {
+  color: #17325f;
+  font-size: clamp(22px, 2.5vw, 28px);
+  line-height: 1.12;
+  margin: 0;
+  max-width: 18ch;
+}
+
+.platformOperationCreateCard .muted,
+.platformOperationsFilterCard .muted,
+.platformOperationsGuideCard .muted {
+  font-size: 14px;
+  line-height: 1.58;
 }
 
 .platformArchitectureCard {
@@ -2412,8 +2459,8 @@ textarea {
   border-radius: 22px;
   box-shadow: 0 18px 38px rgba(20, 31, 60, 0.06);
   display: grid;
-  gap: 14px;
-  padding: 18px;
+  gap: 12px;
+  padding: 16px;
 }
 
 .platformOperationAccent {
@@ -2435,7 +2482,8 @@ textarea {
 }
 
 .platformOperationHeader strong {
-  font-size: 20px;
+  font-size: 18px;
+  line-height: 1.2;
 }
 
 .platformOperationHeader span:not(.status) {
@@ -2467,8 +2515,8 @@ textarea {
 }
 
 .platformOperationMeta strong {
-  font-size: 18px;
-  line-height: 1.35;
+  font-size: 16px;
+  line-height: 1.32;
 }
 
 .platformOperationLinks {
@@ -2621,6 +2669,25 @@ textarea {
   line-height: 1.55;
 }
 
+.platformTheme .loginFormArea h2 {
+  font-size: clamp(34px, 4vw, 48px);
+  line-height: 1.02;
+  max-width: 12ch;
+}
+
+.platformTheme .loginIntro h1 {
+  font-size: clamp(44px, 5vw, 72px);
+  line-height: 0.98;
+  max-width: 9ch;
+}
+
+.platformTheme .loginIntro p,
+.platformTheme .loginSupportBox p,
+.platformTheme .platformAccessNotice p {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
 .platformLoginFootnote {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -2642,15 +2709,16 @@ textarea {
 
 .platformReadinessTags span {
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   min-height: 30px;
-  padding: 6px 10px;
+  line-height: 1.25;
+  padding: 7px 10px;
 }
 
 .platformReadinessTags .isDone {
-  background: #e7f7ef;
-  color: #0b684b;
+  background: #e8f0ff;
+  color: #2950a3;
 }
 
 .platformReadinessTags .isTodo {
@@ -3336,8 +3404,8 @@ textarea {
 }
 
 .secondaryMetrics .metric {
-  background: #f7fbfa;
-  border-left-color: #a9c8be;
+  background: #f6f9ff;
+  border-left-color: #b8c9f3;
   box-shadow: none;
 }
 
@@ -3349,8 +3417,8 @@ textarea {
 }
 
 .metric strong {
-  font-size: clamp(22px, 3vw, 30px);
-  line-height: 1.1;
+  font-size: clamp(20px, 2.6vw, 26px);
+  line-height: 1.08;
 }
 
 .sectionHeader {
@@ -3659,6 +3727,18 @@ textarea {
 .status.canceled {
   background: #ffe4e8;
   color: #8f1830;
+}
+
+.platformTheme .status.published,
+.platformTheme .status.paid {
+  background: #e8f0ff;
+  color: #2950a3;
+}
+
+.platformTheme .status.pending,
+.platformTheme .status.draft {
+  background: #f2f5fb;
+  color: #556580;
 }
 
 .form {
@@ -4019,6 +4099,12 @@ textarea {
   color: #0b684b;
   font-weight: 700;
   padding: 12px;
+}
+
+.platformTheme .successBox {
+  background: #eef4ff;
+  border: 1px solid #cfe0ff;
+  color: #274b9f;
 }
 
 .usersSecurityColumn {
