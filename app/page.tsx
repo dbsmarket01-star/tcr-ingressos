@@ -26,52 +26,52 @@ const operationalHighlights = [
 
 const platformPillars = [
   {
-    title: "Motor único",
-    body: "Pagamentos, pedidos, leads, ingressos e check-in continuam centralizados em uma base só."
+    title: "Bilheteria própria",
+    body: "Seu cliente deixa de depender de plataformas genéricas e passa a operar com domínio, painel e identidade próprios."
   },
   {
-    title: "Operações independentes",
-    body: "Cada cliente roda com domínio, equipe, identidade visual e eventos próprios."
+    title: "Mais margem por venda",
+    body: "A proposta comercial da Ingresaas é ajudar a operação a capturar mais margem e lucrar entre 7% e 20% a mais por ingresso vendido."
   },
   {
-    title: "Escala sem retrabalho",
-    body: "A evolução da plataforma acontece uma vez e beneficia todas as bilheterias filhas."
+    title: "Operação profissional",
+    body: "Pedidos, check-in, QR Code, relatórios e rotina comercial ficam organizados em uma experiência mais forte para quem vende."
   }
 ];
 
 const platformAudience = [
-  "Produtores que precisam de uma bilheteria própria sem construir tecnologia do zero",
-  "Operações com domínio próprio, equipe própria e identidade visual separada",
-  "Negócios que precisam vender, validar QR Code, acompanhar leads e operar eventos em uma só base"
+  "Produtores e operações que querem vender com bilheteria própria sem construir tecnologia do zero",
+  "Clientes que querem domínio, equipe, branding e operação separados da plataforma-mãe",
+  "Negócios que precisam vender, captar leads, validar QR Code e acompanhar resultados numa base única"
 ];
 
 const platformCapabilityRows = [
   {
-    title: "Vendas, tickets e QR Code",
-    body: "Checkout, pagamento, emissão de ingresso e validação continuam centralizados na mesma base."
+    title: "Venda, ticket e check-in",
+    body: "Checkout, pagamento, emissão de ingresso e validação ficam centralizados em um fluxo que ajuda a vender e operar com menos ruído."
   },
   {
-    title: "Leads, landing pages e operação",
-    body: "A plataforma sustenta captura, eventos, pedidos, suporte e check-in sem quebrar o fluxo."
+    title: "Captação e comercial",
+    body: "Landing pages, leads, pedidos, atendimento e rotina operacional convivem no mesmo motor, sem quebra de fluxo."
   },
   {
-    title: "Marca e domínio por cliente",
-    body: "Cada bilheteria filha opera com domínio, admin, suporte e identidade visual próprios."
+    title: "Marca e domínio do cliente",
+    body: "Cada operação filha publica no próprio domínio, com login próprio, identidade própria e percepção de marca mais forte."
   }
 ];
 
 const platformControlPoints = [
   {
-    title: "Operações filhas",
-    body: "Cadastre, configure e acompanhe cada bilheteria a partir do painel master."
+    title: "Estrutura de SaaS",
+    body: "Você governa tudo do painel master e entrega ao cliente uma bilheteria pronta para operar."
   },
   {
-    title: "Domínio e branding",
-    body: "Cada operação recebe domínio próprio, admin próprio e uma identidade visual separada."
+    title: "Domínio próprio",
+    body: "O cliente vende no próprio domínio e fortalece a percepção de marca a cada campanha."
   },
   {
-    title: "Base comercial única",
-    body: "Pedidos, leads, tickets, QR Code e check-in continuam evoluindo dentro do mesmo motor."
+    title: "Mais margem",
+    body: "A base é pensada para ajudar a operação a capturar mais valor sobre cada venda realizada."
   }
 ];
 
@@ -108,31 +108,32 @@ export default async function Home() {
                 <span>{organizationContext.platformName}</span>
               </div>
               <span className="homeEyebrow">Plataforma SaaS de bilheteria</span>
-              <h1>Uma base limpa para criar clientes, entregar acesso seguro e sustentar bilheterias com domínio próprio.</h1>
+              <h1>Tenha sua própria bilheteria, venda no seu domínio e capture mais margem em cada ingresso.</h1>
               <p>
-                {organizationContext.platformName} não vende ingressos ao público final. Ela entrega o motor, o acesso
-                interno e a governança para cada cliente operar sua própria bilheteria com identidade e domínio próprios.
+                {organizationContext.platformName} entrega o motor da bilheteria para quem quer operar com marca
+                própria, domínio próprio e mais controle comercial. A proposta é simples: sair da dependência de
+                terceiros e lucrar entre 7% e 20% a mais na venda dos seus ingressos.
               </p>
 
               <div className="platformHeroActions">
                 <Link className="button" href="/login">
-                  Entrar na plataforma
+                  Quero minha bilheteria
                 </Link>
                 <Link className="secondaryButton" href="/admin/operations">
-                  Ver operações
+                  Ver estrutura da plataforma
                 </Link>
               </div>
 
               <div className="homeTrustStrip" aria-label="Diferenciais da plataforma">
-                {["Domínio por operação", "Branding por cliente", "Vendas + leads + QR Code"].map((item) => (
+                {["Bilheteria própria", "Domínio do cliente", "Mais margem por venda"].map((item) => (
                   <span key={item}>{item}</span>
                 ))}
               </div>
 
               <div className="platformHeroChecklist">
-                <span>Cria o cliente</span>
+                <span>Cria a operação</span>
                 <span>Entrega login inicial</span>
-                <span>Protege dados e configuração</span>
+                <span>Libera venda com domínio próprio</span>
               </div>
 
               <div className="platformControlGrid" aria-label="Pontos centrais da plataforma">
@@ -147,7 +148,7 @@ export default async function Home() {
 
             <aside className="platformHeroPanel">
               <div className="platformHeroPanelHeader">
-                <span className="eyebrow">Resumo da base</span>
+                <span className="eyebrow">Resumo comercial</span>
                 <strong>{organizationContext.platformName}</strong>
               </div>
 
@@ -171,10 +172,10 @@ export default async function Home() {
               </div>
 
               <div className="platformHeroNote">
-                <strong>Modelo operacional</strong>
+                <strong>Modelo de negócio</strong>
                 <p>
-                  Uma plataforma controla o motor. Cada bilheteria filha atende seus próprios produtores e eventos sem
-                  misturar domínio, equipe ou identidade.
+                  A plataforma controla o motor, enquanto cada cliente vende com a própria marca, o próprio domínio e
+                  uma operação comercial separada.
                 </p>
               </div>
 
@@ -185,13 +186,13 @@ export default async function Home() {
                 </article>
                 <article>
                   <span>Implantação mínima</span>
-                  <strong>Domínio + usuário + branding</strong>
+                  <strong>Domínio + acesso + marca</strong>
                 </article>
               </div>
 
               <div className="platformHeroSecurityPanel">
                 <strong>Acesso e segurança</strong>
-                <p>Clientes entram com login e senha próprios. A plataforma separa acesso operacional, governança e configuração.</p>
+                <p>O cliente entra com login e senha próprios, enquanto a Ingresaas protege dados, relatórios e configurações por operação.</p>
               </div>
             </aside>
           </div>
@@ -200,8 +201,8 @@ export default async function Home() {
         <section className="container platformSection">
           <div className="sectionHeader homeSectionHeader">
             <div>
-              <span className="eyebrow">Como a Ingresaas funciona</span>
-              <h2>Arquitetura preparada para crescer sem duplicar sistema.</h2>
+              <span className="eyebrow">Por que a Ingresaas existe</span>
+              <h2>Uma forma mais inteligente de vender sem entregar sua margem para plataformas genéricas.</h2>
             </div>
           </div>
 
@@ -219,8 +220,8 @@ export default async function Home() {
         <section className="container platformSection">
           <div className="sectionHeader homeSectionHeader">
             <div>
-              <span className="eyebrow">O que a plataforma entrega</span>
-              <h2>Uma base técnica única para várias bilheterias operarem com autonomia.</h2>
+              <span className="eyebrow">O que o cliente recebe</span>
+              <h2>Uma bilheteria pronta para vender, operar e crescer com a própria marca.</h2>
             </div>
           </div>
 
@@ -237,8 +238,8 @@ export default async function Home() {
         <section className="container platformSection">
           <div className="platformSplitGrid">
             <article className="card platformAudienceCard">
-              <span className="eyebrow">Para quem a plataforma foi pensada</span>
-              <h2>Bilheterias filhas com operação própria, sem reinventar o motor.</h2>
+              <span className="eyebrow">Para quem faz sentido</span>
+              <h2>Operações que querem bilheteria própria, mais controle comercial e uma base mais profissional.</h2>
               <div className="homeSupportList">
                 {platformAudience.map((item) => (
                   <span key={item}>{item}</span>
@@ -247,16 +248,16 @@ export default async function Home() {
             </article>
 
             <article className="card platformOnboardingCard">
-              <span className="eyebrow">Fluxo de implantação</span>
-              <h2>Como nasce uma nova bilheteria dentro da Ingresaas.</h2>
+              <span className="eyebrow">Implantação enxuta</span>
+              <h2>Como o cliente entra, recebe acesso e começa a vender dentro da plataforma.</h2>
               <ol className="platformChecklist">
-                <li>Cadastra a operação no painel master</li>
-                <li>Define domínio público e domínio admin</li>
-                <li>Configura branding, suporte e equipe inicial</li>
+                <li>Cadastra o cliente no painel master</li>
+                <li>Define domínio público, domínio admin e identidade visual</li>
+                <li>Cria o usuário inicial com login e senha</li>
                 <li>Publica eventos e libera o fluxo comercial</li>
               </ol>
               <div className="platformOnboardingFootnote">
-                Isso mantem cada nova operacao embaixo do mesmo motor, sem duplicar projeto, banco ou fluxo comercial.
+                Isso mantém cada novo cliente dentro do mesmo motor técnico, sem duplicar projeto, banco ou operação.
               </div>
             </article>
           </div>
@@ -266,7 +267,7 @@ export default async function Home() {
           <div className="sectionHeader homeSectionHeader">
             <div>
               <span className="eyebrow">Acesso controlado</span>
-              <h2>Quem entra, entra no lugar certo e com o nível certo de permissão.</h2>
+              <h2>Login do cliente, segurança de dados e acesso separado por operação.</h2>
             </div>
           </div>
 
@@ -283,8 +284,8 @@ export default async function Home() {
         <section className="container platformSection">
           <div className="sectionHeader homeSectionHeader">
             <div>
-              <span className="eyebrow">Operações embaixo da base</span>
-              <h2>Bilheterias já preparadas dentro da plataforma.</h2>
+              <span className="eyebrow">Base já operando</span>
+              <h2>Operações já estruturadas dentro da plataforma.</h2>
             </div>
             <div className="platformSectionActions">
               <Link className="secondaryButton smallButton" href="/admin">
