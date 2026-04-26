@@ -3952,6 +3952,42 @@ textarea {
   padding: 12px;
 }
 
+.usersSecurityColumn {
+  display: grid;
+  gap: 20px;
+}
+
+.usersSecurityGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.usersSecurityCard {
+  border: 1px solid rgba(38, 86, 196, 0.14);
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(244, 248, 255, 0.9);
+  display: grid;
+  gap: 8px;
+}
+
+.usersSecurityCard strong {
+  font-size: 1rem;
+  color: #17315f;
+}
+
+.usersSecurityCard p {
+  margin: 0;
+  color: #567095;
+  line-height: 1.5;
+}
+
+.usersProfileCell {
+  display: grid;
+  gap: 6px;
+  min-width: 180px;
+}
+
 .textLink {
   color: var(--primary);
   font-weight: 800;

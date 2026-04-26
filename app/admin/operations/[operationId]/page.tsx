@@ -392,7 +392,13 @@ export default async function OperationDetailPage({ params }: OperationDetailPag
                   </div>
                   <div className="platformMemberMeta">
                     <span className="status published">{member.role}</span>
-                    <small>{member.accessAllEvents ? "Acesso a todos os eventos" : `${member.allowedEventIds.length} evento(s) liberado(s)`}</small>
+                    <small>
+                      {member.role === "OWNER"
+                        ? "Cliente / dono da operação"
+                        : member.accessAllEvents
+                          ? "Acesso a toda a base da operação"
+                          : `${member.allowedEventIds.length} evento(s) liberado(s)`}
+                    </small>
                   </div>
                 </article>
               ))

@@ -2,6 +2,7 @@
 
 import { AdminRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createAuditLog } from "@/features/audit/audit.service";
 import { requirePermission } from "@/features/auth/auth.service";
 import {
@@ -48,20 +49,40 @@ export async function createAdminUserAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const role = parseRole(formData.get("role"));
-  const eventAccess = parseEventAccess(formData, role);
+  let eventAccess: ReturnType<typeof parseEventAccess>;
 
-  if (name.length < 2 || !email.includes("@") || password.length < 8) {
-    throw new Error("Preencha nome, email e senha com pelo menos 8 caracteres.");
+  try {
+    eventAccess = parseEventAccess(formData, role);
+  } catch (error) {
+    redirect(
+      `/admin/users?error=${encodeURIComponent(
+        error instanceof Error ? error.message : "Não foi possível validar o escopo do usuário."
+      )}`
+    );
   }
 
-  const createdUser = await createAdminUser({
-    organizationId: currentAdmin.organizationId!,
-    name,
-    email,
-    password,
-    role,
-    ...eventAccess
-  });
+  if (name.length < 2 || !email.includes("@") || password.length < 8) {
+    redirect(`/admin/users?error=${encodeURIComponent("Preencha nome, email e senha com pelo menos 8 caracteres.")}`);
+  }
+
+  let createdUser: Awaited<ReturnType<typeof createAdminUser>>;
+
+  try {
+    createdUser = await createAdminUser({
+      organizationId: currentAdmin.organizationId!,
+      name,
+      email,
+      password,
+      role,
+      ...eventAccess
+    });
+  } catch (error) {
+    redirect(
+      `/admin/users?error=${encodeURIComponent(
+        error instanceof Error ? error.message : "Não foi possível criar o usuário."
+      )}`
+    );
+  }
 
   await createAuditLog({
     adminUserId: currentAdmin.id,
@@ -78,6 +99,7 @@ export async function createAdminUserAction(formData: FormData) {
 
   revalidatePath("/admin/users");
   revalidatePath("/admin/audit");
+  redirect(`/admin/users?created=${encodeURIComponent(createdUser.email)}`);
 }
 
 export async function updateAdminUserStatusAction(formData: FormData) {
@@ -86,17 +108,17 @@ export async function updateAdminUserStatusAction(formData: FormData) {
   const isActive = String(formData.get("isActive") ?? "") === "true";
 
   if (!userId) {
-    throw new Error("Usuário não informado.");
+    redirect(`/admin/users?error=${encodeURIComponent("Usuário não informado.")}`);
   }
 
   const targetUser = await getAdminUserByIdInOrganization(userId, currentAdmin.organizationId!);
 
   if (!targetUser) {
-    throw new Error("Usuário não encontrado nesta operação.");
+    redirect(`/admin/users?error=${encodeURIComponent("Usuário não encontrado nesta operação.")}`);
   }
 
   if (currentAdmin.id === userId && !isActive) {
-    throw new Error("Você não pode desativar seu próprio usuário.");
+    redirect(`/admin/users?error=${encodeURIComponent("Você não pode desativar seu próprio usuário.")}`);
   }
 
   const updatedUser = await updateAdminUserStatus(userId, isActive);
@@ -113,6 +135,11 @@ export async function updateAdminUserStatusAction(formData: FormData) {
 
   revalidatePath("/admin/users");
   revalidatePath("/admin/audit");
+  redirect(
+    `/admin/users?updated=${encodeURIComponent(
+      `${updatedUser.email} ${isActive ? "ativado" : "desativado"}`
+    )}`
+  );
 }
 
 export async function updateAdminUserRoleAction(formData: FormData) {
@@ -121,17 +148,17 @@ export async function updateAdminUserRoleAction(formData: FormData) {
   const role = parseRole(formData.get("role"));
 
   if (!userId) {
-    throw new Error("Usuário não informado.");
+    redirect(`/admin/users?error=${encodeURIComponent("Usuário não informado.")}`);
   }
 
   const targetUser = await getAdminUserByIdInOrganization(userId, currentAdmin.organizationId!);
 
   if (!targetUser) {
-    throw new Error("Usuário não encontrado nesta operação.");
+    redirect(`/admin/users?error=${encodeURIComponent("Usuário não encontrado nesta operação.")}`);
   }
 
   if (currentAdmin.id === userId && role !== AdminRole.OWNER) {
-    throw new Error("Você não pode remover seu próprio papel de proprietário.");
+    redirect(`/admin/users?error=${encodeURIComponent("Você não pode remover seu próprio papel de proprietário.")}`);
   }
 
   const updatedUser = await updateAdminUserRole(userId, role);
@@ -149,26 +176,44 @@ export async function updateAdminUserRoleAction(formData: FormData) {
 
   revalidatePath("/admin/users");
   revalidatePath("/admin/audit");
+  redirect(`/admin/users?updated=${encodeURIComponent(`Papel atualizado para ${updatedUser.email}`)}`);
 }
 
 export async function updateAdminUserEventAccessAction(formData: FormData) {
   const currentAdmin = await requirePermission("USERS");
   const userId = String(formData.get("userId") ?? "").trim();
   const role = parseRole(formData.get("role"));
-  const { accessAllEvents, allowedEventIds } = parseEventAccess(formData, role);
+  let accessAllEvents = false;
+  let allowedEventIds: string[] = [];
+
+  try {
+    const parsed = parseEventAccess(formData, role);
+    accessAllEvents = parsed.accessAllEvents;
+    allowedEventIds = parsed.allowedEventIds;
+  } catch (error) {
+    redirect(
+      `/admin/users?error=${encodeURIComponent(
+        error instanceof Error ? error.message : "Não foi possível validar o acesso por evento."
+      )}`
+    );
+  }
 
   if (!userId) {
-    throw new Error("Usuário não informado.");
+    redirect(`/admin/users?error=${encodeURIComponent("Usuário não informado.")}`);
   }
 
   const targetUser = await getAdminUserByIdInOrganization(userId, currentAdmin.organizationId!);
 
   if (!targetUser) {
-    throw new Error("Usuário não encontrado nesta operação.");
+    redirect(`/admin/users?error=${encodeURIComponent("Usuário não encontrado nesta operação.")}`);
   }
 
   if (currentAdmin.id === userId && !accessAllEvents && allowedEventIds.length === 0) {
-    throw new Error("Você não pode remover o acesso do seu próprio usuário sem definir eventos.");
+    redirect(
+      `/admin/users?error=${encodeURIComponent(
+        "Você não pode remover o acesso do seu próprio usuário sem definir eventos."
+      )}`
+    );
   }
 
   const updatedUser = await updateAdminUserEventAccess(userId, accessAllEvents, allowedEventIds);
@@ -187,4 +232,5 @@ export async function updateAdminUserEventAccessAction(formData: FormData) {
 
   revalidatePath("/admin/users");
   revalidatePath("/admin/audit");
+  redirect(`/admin/users?updated=${encodeURIComponent(`Escopo atualizado para ${updatedUser.email}`)}`);
 }

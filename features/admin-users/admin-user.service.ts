@@ -31,13 +31,27 @@ export async function createAdminUser(input: {
   accessAllEvents: boolean;
   allowedEventIds: string[];
 }) {
+  const normalizedEmail = input.email.toLowerCase();
+  const existingUser = await prisma.adminUser.findFirst({
+    where: {
+      email: normalizedEmail
+    },
+    select: {
+      id: true
+    }
+  });
+
+  if (existingUser) {
+    throw new Error("Esse e-mail já está em uso em outra conta.");
+  }
+
   const passwordHash = await bcrypt.hash(input.password, 12);
 
   return prisma.adminUser.create({
     data: {
       organizationId: input.organizationId,
       name: input.name,
-      email: input.email.toLowerCase(),
+      email: normalizedEmail,
       passwordHash,
       role: input.role,
       isActive: true,
