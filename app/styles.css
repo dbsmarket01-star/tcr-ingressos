@@ -2039,6 +2039,31 @@ textarea {
   text-transform: uppercase;
 }
 
+.platformCreateFlow {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.platformCreateFlow div {
+  background: rgba(244, 248, 255, 0.94);
+  border: 1px solid rgba(38, 86, 196, 0.12);
+  border-radius: 16px;
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+}
+
+.platformCreateFlow strong {
+  color: #17315f;
+  font-size: 0.95rem;
+}
+
+.platformCreateFlow span {
+  color: #5c7598;
+  font-size: 0.86rem;
+}
+
 .operationsAdminCardHeader {
   align-items: start;
   display: flex;
@@ -2086,6 +2111,16 @@ textarea {
 
 .operationsAdminStats strong {
   line-height: 1.3;
+}
+
+.operationsAdminOnboarding {
+  display: grid;
+  gap: 8px;
+}
+
+.operationsAdminOnboarding small {
+  color: #60789b;
+  line-height: 1.45;
 }
 
 .operationsAdminLinks {

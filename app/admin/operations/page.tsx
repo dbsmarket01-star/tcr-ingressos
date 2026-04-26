@@ -35,6 +35,41 @@ function statusLabel(status: string) {
   return "Todas";
 }
 
+function getOnboardingState(organization: {
+  publicDomain: string | null;
+  adminDomain: string | null;
+  _count: { adminUsers: number; events: number };
+  securityTone: string;
+}) {
+  if (
+    organization.securityTone === "published" &&
+    organization.publicDomain &&
+    organization.adminDomain &&
+    organization._count.adminUsers > 0 &&
+    organization._count.events > 0
+  ) {
+    return {
+      label: "Pronta para operar",
+      note: "Domínio, acesso inicial e agenda já permitem revisão final.",
+      tone: "published"
+    };
+  }
+
+  if (organization.publicDomain && organization.adminDomain && organization._count.adminUsers > 0) {
+    return {
+      label: "Quase pronta",
+      note: "Falta fechar agenda, branding fino ou suporte antes de soltar com menos supervisão.",
+      tone: "pending"
+    };
+  }
+
+  return {
+    label: "Em implantação",
+    note: "Ainda falta concluir domínio, acesso inicial ou base mínima da operação.",
+    tone: "draft"
+  };
+}
+
 export default async function AdminOperationsPage({ searchParams }: AdminOperationsPageProps) {
   await requirePermission("OPERATIONS");
   const organizationContext = await getCurrentOrganizationContext();
@@ -127,6 +162,21 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
             <span>Valida domínio duplicado</span>
             <span>Cria usuário inicial</span>
             <span>Entrega acesso separado</span>
+          </div>
+
+          <div className="platformCreateFlow">
+            <div>
+              <strong>1. Base do cliente</strong>
+              <span>Nome, slug e domínios</span>
+            </div>
+            <div>
+              <strong>2. Acesso inicial</strong>
+              <span>Usuário, e-mail e senha</span>
+            </div>
+            <div>
+              <strong>3. Identidade mínima</strong>
+              <span>Cores, logo e suporte</span>
+            </div>
           </div>
 
           <div className="grid twoColumns">
@@ -245,6 +295,15 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
               <li>A central da operação mostra o que ainda falta para liberar com segurança</li>
             </ol>
           </article>
+
+          <article className="card platformMasterGuide platformOperationsGuideCard">
+            <span className="eyebrow">Onboarding enxuto</span>
+            <div className="permissionList">
+              <p><strong>Passo 1:</strong> criar o cliente com domínio público e admin.</p>
+              <p><strong>Passo 2:</strong> entregar o usuário inicial para o dono da operação.</p>
+              <p><strong>Passo 3:</strong> revisar a central da operação e só depois entrar na rotina da filha.</p>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -271,6 +330,7 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
                   <th>Receita paga</th>
                   <th>Pedidos</th>
                   <th>Leads</th>
+                  <th>Implantação</th>
                   <th>Segurança</th>
                   <th>Domínios</th>
                   <th>Atualizado</th>
@@ -300,6 +360,18 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
                     </td>
                     <td>{organization.leadsCount}</td>
                     <td>
+                      {(() => {
+                        const onboarding = getOnboardingState(organization);
+
+                        return (
+                          <div className="tablePrimaryCell">
+                            <span className={`status ${onboarding.tone}`}>{onboarding.label}</span>
+                            <span>{onboarding.note}</span>
+                          </div>
+                        );
+                      })()}
+                    </td>
+                    <td>
                       <div className="tablePrimaryCell">
                         <span className={`status ${organization.securityTone}`}>{organization.securityLabel}</span>
                         <span>{organization.securityIssues[0] || "Base mínima fechada"}</span>
@@ -311,7 +383,7 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
                         <span>{organization.adminDomain || "Admin pendente"}</span>
                       </div>
                     </td>
-                    <td>{formatDateTime(organization.createdAt)}</td>
+                    <td>{formatDateTime(organization.updatedAt)}</td>
                     <td>
                       <Link className="secondaryButton smallButton" href={`/admin/operations/${organization.id}`}>
                         Abrir central
@@ -337,6 +409,17 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
                 {organization.isActive ? "Ativa" : "Inativa"}
               </span>
             </div>
+
+            {(() => {
+              const onboarding = getOnboardingState(organization);
+
+              return (
+                <div className="operationsAdminOnboarding">
+                  <span className={`status ${onboarding.tone}`}>{onboarding.label}</span>
+                  <small>{onboarding.note}</small>
+                </div>
+              );
+            })()}
 
             <div className="operationsAdminStats">
               <div>
@@ -443,6 +526,9 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
               <div className="operationsAdminQuickActions">
                 <Link className="secondaryButton smallButton" href={`/admin/operations/${organization.id}`}>
                   Central
+                </Link>
+                <Link className="secondaryButton smallButton" href="/admin/users">
+                  Usuários
                 </Link>
                 {organization.adminDomain ? (
                   <a
