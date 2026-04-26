@@ -2197,6 +2197,35 @@ textarea {
   line-height: 1.35;
 }
 
+.platformOperationOwnerStrip {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.platformOperationOwnerStrip div {
+  background: linear-gradient(180deg, #f8fbff, #f3f7ff);
+  border: 1px solid #dbe4f4;
+  border-radius: 18px;
+  display: grid;
+  gap: 6px;
+  min-height: 98px;
+  padding: 16px;
+}
+
+.platformOperationOwnerStrip span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.platformOperationOwnerStrip strong {
+  color: #20345f;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
 .platformReadinessBar {
   background: #e8eefb;
   border-radius: 999px;
@@ -6497,6 +6526,7 @@ textarea {
   .platformOperationMeta,
   .platformOperationLaunchpadGrid,
   .platformOperationHealthStrip,
+  .platformOperationOwnerStrip,
   .operationsAdminStats,
   .operationsAdminForm {
     grid-template-columns: 1fr;
@@ -6797,7 +6827,8 @@ textarea {
   .platformOverviewMetrics,
   .platformOperationMeta,
   .operationsAdminStats,
-  .operationsAdminForm {
+  .operationsAdminForm,
+  .platformOperationOwnerStrip {
     grid-template-columns: 1fr;
   }
 

@@ -41,15 +41,60 @@ export default async function AdminUsersPage() {
     })
   ]);
   const eventTitleById = new Map(events.map((event) => [event.id, event.title]));
+  const activeUsers = users.filter((user) => user.isActive);
+  const restrictedUsers = users.filter((user) => !user.accessAllEvents && user.role !== AdminRole.OWNER);
 
   return (
     <AdminShell
       title="Usuários"
       description={`Gerencie equipe interna, papéis e acesso ao painel da ${organizationContext.brandName}.`}
     >
+      <section className="operationCommandStrip spacedSection" aria-label="Leitura rápida da equipe">
+        <article className="operationCommandCard">
+          <span className="eyebrow">Equipe da operação</span>
+          <h2>Quem entra no painel da {organizationContext.brandName} e com qual nível de acesso.</h2>
+          <p>Use esta tela para liberar o cliente, organizar o time e limitar o acesso por evento quando isso fizer sentido.</p>
+        </article>
+        <div className="operationCommandActions">
+          <a className="secondaryButton smallButton" href="/admin">
+            Dashboard
+          </a>
+          <a className="secondaryButton smallButton" href="/admin/events">
+            Eventos
+          </a>
+          <a className="secondaryButton smallButton" href="/admin/account">
+            Minha conta
+          </a>
+        </div>
+      </section>
+
+      <section className="grid dashboardGrid spacedSection">
+        <article className="card metric dashboardHeroMetric">
+          <span className="muted">Usuários ativos</span>
+          <strong>{activeUsers.length}</strong>
+          <small>Equipe hoje com acesso ao painel</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Total da equipe</span>
+          <strong>{users.length}</strong>
+          <small>Inclui usuários inativos</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Acesso restrito</span>
+          <strong>{restrictedUsers.length}</strong>
+          <small>Usuários limitados a eventos específicos</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Eventos disponíveis</span>
+          <strong>{events.length}</strong>
+          <small>Base usada para liberar escopos</small>
+        </article>
+      </section>
+
       <section className="grid twoColumns">
         <form action={createAdminUserAction} className="card form">
           <h2>Novo usuário</h2>
+          <p className="muted">Crie o acesso do cliente ou da equipe operacional com senha inicial e escopo correto.</p>
           <label className="field">
             <span>Nome</span>
             <input name="name" required />
@@ -88,6 +133,7 @@ export default async function AdminUsersPage() {
 
         <section className="card">
           <h2>Papéis de acesso</h2>
+          <p className="muted">Use isso como régua rápida para não abrir acesso demais sem necessidade.</p>
           <div className="permissionList">
             <p><strong>Proprietário:</strong> acesso total.</p>
             <p><strong>Gerente:</strong> eventos, pedidos, financeiro, atendimento, check-in e ingressos.</p>
@@ -100,6 +146,12 @@ export default async function AdminUsersPage() {
       </section>
 
       <section className="card spacedSection">
+        <div className="sectionHeader inlineHeader">
+          <div>
+            <h2>Equipe cadastrada</h2>
+            <p className="muted">Atualize papel, escopo por evento e status sem sair da tela.</p>
+          </div>
+        </div>
         {users.length === 0 ? (
           <div className="empty">Nenhum usuário cadastrado.</div>
         ) : (

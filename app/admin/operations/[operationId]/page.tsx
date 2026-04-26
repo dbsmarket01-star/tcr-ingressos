@@ -76,6 +76,25 @@ export default async function OperationDetailPage({ params }: OperationDetailPag
         </div>
       </section>
 
+      <section className="platformOperationOwnerStrip spacedSection" aria-label="Resumo executivo da operação">
+        <div>
+          <span>Momento da operação</span>
+          <strong>{operation.paidOrdersCount > 0 ? "Operação já vendendo" : "Operação ainda em preparação comercial"}</strong>
+        </div>
+        <div>
+          <span>Domínio</span>
+          <strong>{operation.publicDomain && operation.adminDomain ? "Público e admin configurados" : "Ainda falta fechar os domínios"}</strong>
+        </div>
+        <div>
+          <span>Equipe</span>
+          <strong>{operation._count.adminUsers > 0 ? `${operation._count.adminUsers} usuário(s) ativos` : "Ainda sem equipe ativa"}</strong>
+        </div>
+        <div>
+          <span>Próxima frente</span>
+          <strong>{operation._count.events > 0 ? "Refinar a rotina interna da filha" : "Cadastrar e revisar o primeiro evento"}</strong>
+        </div>
+      </section>
+
       <section className="platformOperationFocusGrid spacedSection" aria-label="Leitura do momento da operação">
         <article className="dashboardPanel platformOperationFocusCard">
           <span className="eyebrow">Leitura do momento</span>
@@ -274,9 +293,14 @@ export default async function OperationDetailPage({ params }: OperationDetailPag
               </a>
             ) : null}
             {operation.adminDomain ? (
-              <a className="secondaryButton smallButton" href={`https://${operation.adminDomain}/admin`} target="_blank" rel="noreferrer">
-                Ir para o admin da filha
-              </a>
+              <>
+                <a className="secondaryButton smallButton" href={`https://${operation.adminDomain}/admin`} target="_blank" rel="noreferrer">
+                  Ir para o admin da filha
+                </a>
+                <a className="secondaryButton smallButton" href={`https://${operation.adminDomain}/admin/users`} target="_blank" rel="noreferrer">
+                  Revisar equipe
+                </a>
+              </>
             ) : null}
           </div>
         </article>
@@ -307,6 +331,14 @@ export default async function OperationDetailPage({ params }: OperationDetailPag
               <p className="muted">Nenhum usuário ativo ligado a essa operação ainda.</p>
             )}
           </div>
+
+          {operation.adminDomain ? (
+            <div className="actionRow">
+              <a className="button smallButton" href={`https://${operation.adminDomain}/admin/users`} target="_blank" rel="noreferrer">
+                Gerir usuários da operação
+              </a>
+            </div>
+          ) : null}
         </article>
       </section>
 
