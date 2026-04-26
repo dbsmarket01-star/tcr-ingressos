@@ -30,6 +30,12 @@ export const adminNavItems: AdminNavItem[] = [
     area: "OPERATIONS"
   },
   {
+    href: "/admin/leads",
+    label: "Leads",
+    description: "Interesses comerciais da plataforma",
+    area: "OPERATIONS"
+  },
+  {
     href: "/admin/events",
     label: "Eventos",
     description: "Cadastro, publicação e lotes",
@@ -171,7 +177,7 @@ export function getAdminNavGroupsForRole(role: AdminRole, options?: { isPlatform
         label: "Painel",
         description: "Resumo e clientes",
         defaultOpen: true,
-        items: adminNavItems.filter((item) => ["/admin", "/admin/operations"].includes(item.href))
+        items: adminNavItems.filter((item) => ["/admin", "/admin/operations", "/admin/leads"].includes(item.href))
       },
       {
         label: "Acesso",

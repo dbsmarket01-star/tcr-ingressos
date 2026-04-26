@@ -412,6 +412,22 @@ model EventLead {
   @@unique([eventId, email])
 }
 
+model PlatformLead {
+  id                String   @id @default(cuid())
+  name              String
+  email             String
+  phone             String
+  annualRevenueBand String
+  instagramHandle   String?
+  eventNiche        String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([email])
+  @@unique([email])
+}
+
 model EventPresaleCheck {
   id          String   @id @default(cuid())
   eventId     String

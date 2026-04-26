@@ -61,6 +61,17 @@ export type PlatformOverview = {
   publishedEvents: number;
   totalAdmins: number;
   childOrganizations: number;
+  totalPlatformLeads: number;
+  recentPlatformLeads: Array<{
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    annualRevenueBand: string;
+    instagramHandle: string | null;
+    eventNiche: string;
+    createdAt: Date;
+  }>;
   operations: Array<{
     id: string;
     slug: string;
@@ -117,7 +128,7 @@ function buildReadiness(operation: {
 }
 
 export async function getPlatformOverview(): Promise<PlatformOverview> {
-  const [organizations, totalEvents, publishedEvents, totalAdmins] = await Promise.all([
+  const [organizations, totalEvents, publishedEvents, totalAdmins, totalPlatformLeads, recentPlatformLeads] = await Promise.all([
     prisma.organization.findMany({
       orderBy: [{ isActive: "desc" }, { createdAt: "asc" }],
       select: {
@@ -145,7 +156,24 @@ export async function getPlatformOverview(): Promise<PlatformOverview> {
         status: "PUBLISHED"
       }
     }),
-    prisma.adminUser.count()
+    prisma.adminUser.count(),
+    prisma.platformLead.count(),
+    prisma.platformLead.findMany({
+      orderBy: {
+        createdAt: "desc"
+      },
+      take: 6,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        annualRevenueBand: true,
+        instagramHandle: true,
+        eventNiche: true,
+        createdAt: true
+      }
+    })
   ]);
 
   const domainsConfigured = organizations.filter((item) => item.publicDomain || item.adminDomain).length;
@@ -206,6 +234,8 @@ export async function getPlatformOverview(): Promise<PlatformOverview> {
     publishedEvents,
     totalAdmins,
     childOrganizations,
+    totalPlatformLeads,
+    recentPlatformLeads,
     operations: organizations.map((item) => ({
       ...(metricsByOrganization.get(item.id) ?? {
         paidOrdersCount: 0,

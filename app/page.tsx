@@ -1,10 +1,17 @@
 import Link from "next/link";
+import { createPlatformLeadAction } from "@/features/platform-leads/platform-lead.actions";
 import { listCachedPublishedEventShowcase } from "@/features/events/event.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
-import { getPlatformOverview } from "@/features/platform/platform.service";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
+
+type HomePageProps = {
+  searchParams?: Promise<{
+    success?: string;
+    error?: string;
+  }>;
+};
 
 function formatEventCardDate(date: Date) {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -24,375 +31,333 @@ const operationalHighlights = [
   "Painel administrativo para operação diária"
 ];
 
-const platformPillars = [
+const leadAnnualRevenueBands = [
+  "Até R$ 300 mil por ano",
+  "De R$ 300 mil a R$ 1 milhão por ano",
+  "De R$ 1 milhão a R$ 3 milhões por ano",
+  "De R$ 3 milhões a R$ 10 milhões por ano",
+  "Acima de R$ 10 milhões por ano"
+];
+
+const marketingPillars = [
   {
-    title: "Bilheteria própria",
-    body: "Seu cliente deixa de depender de plataformas genéricas e passa a operar com domínio, painel e identidade próprios."
+    title: "Saque e capital de giro",
+    body: "A operação ganha fôlego para antecipar campanha, equipe e estrutura sem esperar o evento acabar para ter acesso ao caixa."
   },
   {
     title: "Mais margem por venda",
-    body: "A proposta comercial da Ingresaas é ajudar a operação a capturar mais margem e lucrar entre 7% e 20% a mais por ingresso vendido."
+    body: "Em vez de lucrar só no ingresso, o produtor pode capturar entre 7% e 20% a mais sobre cada venda realizada."
   },
   {
-    title: "Operação profissional",
-    body: "Pedidos, check-in, QR Code, relatórios e rotina comercial ficam organizados em uma experiência mais forte para quem vende."
+    title: "Base 100% do cliente",
+    body: "Nome, telefone e e-mail ficam sob o domínio da própria operação, sem entregar lead nem relacionamento para concorrente."
   }
 ];
 
-const platformAudience = [
-  "Produtores e operações que querem vender com bilheteria própria sem construir tecnologia do zero",
-  "Clientes que querem domínio, equipe, branding e operação separados da plataforma-mãe",
-  "Negócios que precisam vender, captar leads, validar QR Code e acompanhar resultados numa base única"
-];
-
-const platformCapabilityRows = [
+const advantageCards = [
   {
-    title: "Venda, ticket e check-in",
-    body: "Checkout, pagamento, emissão de ingresso e validação ficam centralizados em um fluxo que ajuda a vender e operar com menos ruído."
+    title: "Autonomia comercial",
+    body: "Você define seu domínio, sua identidade, sua comunicação e a forma como vende, sem depender de uma plataforma genérica tomar a frente da sua marca."
   },
   {
-    title: "Captação e comercial",
-    body: "Landing pages, leads, pedidos, atendimento e rotina operacional convivem no mesmo motor, sem quebra de fluxo."
+    title: "Controle financeiro mais rápido",
+    body: "A operação reduz o tempo entre venda e caixa disponível, o que ajuda a girar mídia, equipe, fornecedores e próximos eventos com mais agilidade."
   },
   {
-    title: "Marca e domínio do cliente",
-    body: "Cada operação filha publica no próprio domínio, com login próprio, identidade própria e percepção de marca mais forte."
+    title: "Base própria para crescer",
+    body: "Cada campanha fortalece uma base de relacionamento que continua sendo sua, o que reduz dependência de terceiros e melhora a lucratividade recorrente."
+  },
+  {
+    title: "Operação em um só fluxo",
+    body: "Venda, pedido, ticket, QR Code, check-in, lead e atendimento convivem no mesmo sistema para a equipe vender melhor e operar com menos ruído."
   }
 ];
 
-const platformControlPoints = [
+const processSteps = [
+  "Você preenche o formulário e o comercial entende o perfil da sua operação.",
+  "A Ingresaas configura domínio, acesso inicial, identidade visual e estrutura de venda.",
+  "Sua bilheteria entra no ar com painel próprio, base própria e fluxo pronto para vender."
+];
+
+const securityPoints = [
   {
-    title: "Estrutura de SaaS",
-    body: "Você governa tudo do painel master e entrega ao cliente uma bilheteria pronta para operar."
+    title: "Login próprio do cliente",
+    body: "Cada operação entra no seu próprio admin com e-mail e senha, sem misturar equipe, dados ou configuração entre clientes."
   },
   {
-    title: "Domínio próprio",
-    body: "O cliente vende no próprio domínio e fortalece a percepção de marca a cada campanha."
+    title: "Acesso separado por papel",
+    body: "A plataforma controla quem pode ver dados, mexer em configurações e operar áreas sensíveis da bilheteria."
   },
   {
-    title: "Mais margem",
-    body: "A base é pensada para ajudar a operação a capturar mais valor sobre cada venda realizada."
+    title: "Governança central da base",
+    body: "A Ingresaas acompanha domínio, branding, saúde da operação e acessos sem virar o painel público ou comercial do cliente final."
   }
 ];
 
-const platformAccessCards = [
-  {
-    title: "Login do cliente",
-    body: "Cada bilheteria filha entra no próprio admin com e-mail e senha, sem misturar acesso entre operações."
-  },
-  {
-    title: "Segurança de acesso",
-    body: "A Ingresaas controla quem pode ver dados, acessar configurações e operar cada cliente."
-  },
-  {
-    title: "Governança central",
-    body: "A plataforma-mãe acompanha domínios, branding, equipe e saúde da operação sem virar o painel do cliente final."
+function getPlatformLeadMessage(success?: string, error?: string) {
+  if (error) {
+    return {
+      tone: "error" as const,
+      text: error
+    };
   }
-];
 
-const platformRevenuePoints = [
-  {
-    label: "Ganho de margem",
-    value: "7% a 20%",
-    note: "A proposta comercial é capturar mais valor por venda com bilheteria própria."
-  },
-  {
-    label: "Domínio do cliente",
-    value: "100% próprio",
-    note: "A operação vende na própria marca, sem parecer mais um perfil perdido em plataforma genérica."
-  },
-  {
-    label: "Operação interna",
-    value: "Tudo em um fluxo",
-    note: "Pedido, ticket, lead, QR Code, check-in e rotina comercial convivem na mesma base."
+  if (success === "existing") {
+    return {
+      tone: "success" as const,
+      text: "Seu interesse já estava registrado. Nosso comercial pode continuar a conversa por esse mesmo contato."
+    };
   }
-];
 
-export default async function Home() {
+  if (success === "created") {
+    return {
+      tone: "success" as const,
+      text: "Recebemos seus dados. Nosso comercial vai falar com você para entender a operação e desenhar a melhor implantação."
+    };
+  }
+
+  return null;
+}
+
+export default async function Home({ searchParams }: HomePageProps) {
   const organizationContext = await getCurrentOrganizationContext();
   const isPlatformHost = organizationContext.isPlatformHost;
+  const query = searchParams ? await searchParams : {};
 
   if (isPlatformHost) {
-    const platformOverview = await getPlatformOverview();
-    const liveOperations = platformOverview.operations.filter((item) => item.isActive);
+    const platformLeadMessage = getPlatformLeadMessage(query.success, query.error);
 
     return (
       <main className="shell homePage platformHomePage">
-        <section className="platformHero">
-          <div className="platformHeroGrid">
-            <div className="platformHeroContent">
+        <section className="platformMarketingHero">
+          <div className="platformMarketingHeroGrid">
+            <div className="platformMarketingHeroContent">
               <div className="brand homeBrand" aria-label={organizationContext.platformName}>
                 <span className="brandMark">{organizationContext.brandMark}</span>
                 <span>{organizationContext.platformName}</span>
               </div>
-              <span className="homeEyebrow">Plataforma SaaS de bilheteria</span>
-              <h1>Tenha sua própria bilheteria, venda no seu domínio e capture mais margem em cada ingresso.</h1>
+              <span className="homeEyebrow">Bilheteria própria para produtores e operações</span>
+              <h1>Tenha sua própria bilheteria e pare de entregar margem, caixa e base de clientes para terceiros.</h1>
               <p>
-                {organizationContext.platformName} entrega o motor da bilheteria para quem quer operar com marca
-                própria, domínio próprio e mais controle comercial. A proposta é simples: sair da dependência de
-                terceiros e lucrar entre 7% e 20% a mais na venda dos seus ingressos.
+                A {organizationContext.platformName} foi desenhada para produtores que querem vender no próprio domínio,
+                sacar o dinheiro com mais liberdade, capturar de 7% a 20% a mais por ingresso e construir uma base de
+                leads que continua sendo da própria operação.
               </p>
 
-              <div className="platformHeroActions">
-                <Link className="button" href="/login">
-                  Quero minha bilheteria
-                </Link>
-                <Link className="secondaryButton" href="/admin/operations">
-                  Ver estrutura da plataforma
+              <div className="platformMarketingHeroActions">
+                <a className="button" href="#quero-minha-bilheteria">
+                  Quero conversar com o comercial
+                </a>
+                <Link className="secondaryButton" href="/login">
+                  Já sou cliente
                 </Link>
               </div>
 
-              <div className="homeTrustStrip" aria-label="Diferenciais da plataforma">
-                {["Bilheteria própria", "Domínio do cliente", "Mais margem por venda"].map((item) => (
+              <div className="homeTrustStrip" aria-label="Principais ganhos para a operação">
+                {["Saque mais livre", "7% a 20% mais margem", "Base 100% própria"].map((item) => (
                   <span key={item}>{item}</span>
                 ))}
               </div>
+            </div>
 
-              <div className="platformHeroChecklist">
-                <span>Cria a operação</span>
-                <span>Entrega login inicial</span>
-                <span>Libera venda com domínio próprio</span>
-              </div>
+            <aside className="platformMarketingHeroPanel" aria-label="Benefícios principais">
+              <article className="platformMarketingHighlightCard">
+                <span>Capital de giro mais rápido</span>
+                <strong>Seu caixa não precisa esperar o evento acabar para continuar girando a operação.</strong>
+                <p>Mais agilidade para mídia, fornecedores, equipe e novas campanhas sem depender da agenda de terceiros.</p>
+              </article>
+              <article className="platformMarketingHighlightCard">
+                <span>Mais lucro por ingresso</span>
+                <strong>Capture entre 7% e 20% a mais em cada venda com a sua própria estrutura.</strong>
+                <p>Você deixa de operar como afiliado de uma plataforma genérica e passa a vender dentro da sua própria máquina comercial.</p>
+              </article>
+              <article className="platformMarketingHighlightCard">
+                <span>Base e relacionamento próprios</span>
+                <strong>Nome, telefone e e-mail ficam na sua operação, não na mão de concorrente.</strong>
+                <p>Isso fortalece remarketing, recorrência, percepção de marca e independência comercial a cada campanha.</p>
+              </article>
+            </aside>
+          </div>
+        </section>
 
-              <div className="platformControlGrid" aria-label="Pontos centrais da plataforma">
-                {platformControlPoints.map((item) => (
-                  <article className="platformControlCard" key={item.title}>
+        <section className="container platformMarketingSection">
+          <div className="platformBenefitGrid">
+            {marketingPillars.map((item) => (
+              <article className="platformBenefitCard" key={item.title}>
+                <strong>{item.title}</strong>
+                <p>{item.body}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="container platformMarketingSection">
+          <div className="sectionHeader homeSectionHeader platformSalesHeader">
+            <div>
+              <span className="eyebrow">Por que trocar a lógica da operação</span>
+              <h2>Uma bilheteria própria muda caixa, margem, dados e autonomia ao mesmo tempo.</h2>
+              <p>
+                A proposta aqui não é só vender ingresso. É dar ao produtor uma estrutura que ajude a vender melhor,
+                lucrar mais e construir uma operação comercial de longo prazo.
+              </p>
+            </div>
+          </div>
+
+          <div className="platformAdvantageGrid">
+            {advantageCards.map((item) => (
+              <article className="platformAdvantageCard" key={item.title}>
+                <strong>{item.title}</strong>
+                <p>{item.body}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="container platformMarketingSection">
+          <article className="platformMarketingBand">
+            <div>
+              <span className="eyebrow">O que o produtor ganha na prática</span>
+              <h2>Mais controle comercial, mais caixa disponível e uma operação com cara de marca própria.</h2>
+              <p>
+                A base técnica cuida de venda, ticket, QR Code, check-in e rotina operacional. A sua equipe fica mais
+                focada em vender, acompanhar resultado e crescer o relacionamento com o público.
+              </p>
+            </div>
+            <a className="button" href="#quero-minha-bilheteria">
+              Quero minha bilheteria
+            </a>
+          </article>
+        </section>
+
+        <section className="container platformMarketingSection">
+          <div className="platformSplitMarketingGrid">
+            <article className="platformProcessCard">
+              <span className="eyebrow">Como a operação entra</span>
+              <h2>Você não precisa construir tecnologia do zero para começar a vender com domínio próprio.</h2>
+              <ol className="platformChecklist">
+                {processSteps.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ol>
+            </article>
+
+            <article className="platformSecurityCard">
+              <span className="eyebrow">Acesso e segurança</span>
+              <h2>O cliente entra com login próprio e a plataforma protege os dados, relatórios e configurações.</h2>
+              <div className="platformAccessGrid compactAccessGrid">
+                {securityPoints.map((item) => (
+                  <article className="platformAccessCard" key={item.title}>
                     <strong>{item.title}</strong>
                     <p>{item.body}</p>
                   </article>
                 ))}
               </div>
-            </div>
-
-            <aside className="platformHeroPanel">
-              <div className="platformHeroPanelHeader">
-                <span className="eyebrow">Resumo comercial</span>
-                <strong>{organizationContext.platformName}</strong>
-              </div>
-
-              <div className="platformHeroMetrics">
-                <article>
-                  <span>Operações ativas</span>
-                  <strong>{platformOverview.activeOrganizations}</strong>
-                </article>
-                <article>
-                  <span>Domínios completos</span>
-                  <strong>{platformOverview.fullyConfiguredOrganizations}</strong>
-                </article>
-                <article>
-                  <span>Eventos publicados</span>
-                  <strong>{platformOverview.publishedEvents}</strong>
-                </article>
-                <article>
-                  <span>Usuários internos</span>
-                  <strong>{platformOverview.totalAdmins}</strong>
-                </article>
-              </div>
-
-              <div className="platformHeroNote">
-                <strong>Modelo de negócio</strong>
-                <p>
-                  A plataforma controla o motor, enquanto cada cliente vende com a própria marca, o próprio domínio e
-                  uma operação comercial separada.
-                </p>
-              </div>
-
-              <div className="platformHeroMiniGrid">
-                <article>
-                  <span>Operações prontas</span>
-                  <strong>{liveOperations.filter((item) => item.readinessScore >= 67).length}</strong>
-                </article>
-                <article>
-                  <span>Implantação mínima</span>
-                  <strong>Domínio + acesso + marca</strong>
-                </article>
-              </div>
-
-              <div className="platformHeroSecurityPanel">
-                <strong>Acesso e segurança</strong>
-                <p>O cliente entra com login e senha próprios, enquanto a Ingresaas protege dados, relatórios e configurações por operação.</p>
-              </div>
-            </aside>
-          </div>
-        </section>
-
-        <section className="container platformSection">
-          <div className="platformRevenueStrip">
-            {platformRevenuePoints.map((item) => (
-              <article className="platformRevenueCard" key={item.label}>
-                <span>{item.label}</span>
-                <strong>{item.value}</strong>
-                <p>{item.note}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="container platformSection">
-          <div className="sectionHeader homeSectionHeader">
-            <div>
-              <span className="eyebrow">Por que a Ingresaas existe</span>
-              <h2>Uma forma mais inteligente de vender sem entregar sua margem para plataformas genéricas.</h2>
-            </div>
-          </div>
-
-          <div className="platformFlowGrid">
-            {platformPillars.map((item, index) => (
-              <article className="card platformFlowCard" key={item.title}>
-                <span>{`0${index + 1}`}</span>
-                <strong>{item.title}</strong>
-                <p>{item.body}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="container platformSection">
-          <div className="sectionHeader homeSectionHeader">
-            <div>
-              <span className="eyebrow">O que o cliente recebe</span>
-              <h2>Uma bilheteria pronta para vender, operar e crescer com a própria marca.</h2>
-            </div>
-          </div>
-
-          <div className="platformCapabilityGrid">
-            {platformCapabilityRows.map((item) => (
-              <article className="card platformCapabilityCard" key={item.title}>
-                <strong>{item.title}</strong>
-                <p>{item.body}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="container platformSection">
-          <div className="platformSplitGrid">
-            <article className="card platformAudienceCard">
-              <span className="eyebrow">Para quem faz sentido</span>
-              <h2>Operações que querem bilheteria própria, mais controle comercial e uma base mais profissional.</h2>
-              <div className="homeSupportList">
-                {platformAudience.map((item) => (
-                  <span key={item}>{item}</span>
-                ))}
-              </div>
-            </article>
-
-            <article className="card platformOnboardingCard">
-              <span className="eyebrow">Implantação enxuta</span>
-              <h2>Como o cliente entra, recebe acesso e começa a vender dentro da plataforma.</h2>
-              <ol className="platformChecklist">
-                <li>Cadastra o cliente no painel master</li>
-                <li>Define domínio público, domínio admin e identidade visual</li>
-                <li>Cria o usuário inicial com login e senha</li>
-                <li>Publica eventos e libera o fluxo comercial</li>
-              </ol>
-              <div className="platformOnboardingFootnote">
-                Isso mantém cada novo cliente dentro do mesmo motor técnico, sem duplicar projeto, banco ou operação.
-              </div>
             </article>
           </div>
         </section>
 
-        <section className="container platformSection">
-          <div className="sectionHeader homeSectionHeader">
-            <div>
-              <span className="eyebrow">Acesso controlado</span>
-              <h2>Login do cliente, segurança de dados e acesso separado por operação.</h2>
-            </div>
-          </div>
+        <section className="container platformMarketingSection" id="quero-minha-bilheteria">
+          <div className="platformLeadSection">
+            <div className="platformLeadIntro">
+              <span className="eyebrow">Fale com o comercial</span>
+              <h2>Conte o perfil da sua produtora e vamos desenhar sua bilheteria própria.</h2>
+              <p>
+                Preencha seus dados para o time comercial entender nicho, porte e momento da operação. A ideia é
+                colocar sua bilheteria no ar com mais velocidade e menos ruído.
+              </p>
 
-          <div className="platformAccessGrid">
-            {platformAccessCards.map((item) => (
-              <article className="card platformAccessCard" key={item.title}>
-                <strong>{item.title}</strong>
-                <p>{item.body}</p>
-              </article>
-            ))}
+              <div className="platformLeadMiniStats">
+                <article>
+                  <span>Margem extra</span>
+                  <strong>7% a 20%</strong>
+                </article>
+                <article>
+                  <span>Base do cliente</span>
+                  <strong>100% sua</strong>
+                </article>
+                <article>
+                  <span>Fluxo</span>
+                  <strong>Saque + venda + lead</strong>
+                </article>
+              </div>
+            </div>
+
+            <form action={createPlatformLeadAction} className="platformLeadForm card">
+              <div className="platformLeadFormHeader">
+                <strong>Quero conhecer a Ingresaas</strong>
+                <p>Preencha e nosso comercial entra em contato para entender a sua operação.</p>
+              </div>
+
+              {platformLeadMessage ? (
+                <div className={`formFeedback ${platformLeadMessage.tone === "error" ? "error" : "success"}`}>
+                  {platformLeadMessage.text}
+                </div>
+              ) : null}
+
+              <div className="platformLeadFormGrid">
+                <label className="platformLeadField">
+                  <span>Nome</span>
+                  <input name="name" type="text" placeholder="Seu nome completo" required />
+                </label>
+
+                <label className="platformLeadField">
+                  <span>E-mail</span>
+                  <input name="email" type="email" placeholder="voce@empresa.com.br" required />
+                </label>
+
+                <label className="platformLeadField">
+                  <span>Telefone</span>
+                  <input name="phone" type="tel" placeholder="(11) 99999-9999" required />
+                </label>
+
+                <label className="platformLeadField">
+                  <span>Faturamento anual da produtora</span>
+                  <select name="annualRevenueBand" defaultValue="" required>
+                    <option value="" disabled>
+                      Selecione uma faixa
+                    </option>
+                    {leadAnnualRevenueBands.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="platformLeadField">
+                  <span>@ do Instagram <small>(opcional)</small></span>
+                  <input name="instagramHandle" type="text" placeholder="@suaprodutora" />
+                </label>
+
+                <label className="platformLeadField platformLeadFieldFull">
+                  <span>Nicho principal dos eventos</span>
+                  <input name="eventNiche" type="text" placeholder="Gospel, samba, funk, conferências, festivais..." required />
+                </label>
+              </div>
+
+              <button className="button fullButton" type="submit">
+                Quero falar com o comercial
+              </button>
+            </form>
           </div>
         </section>
 
-        <section className="container platformSection">
-          <div className="sectionHeader homeSectionHeader">
-            <div>
-              <span className="eyebrow">Base já operando</span>
-              <h2>Operações já estruturadas dentro da plataforma.</h2>
-            </div>
-            <div className="platformSectionActions">
-              <Link className="secondaryButton smallButton" href="/admin">
-                Abrir painel master
-              </Link>
-              <Link className="button smallButton" href="/admin/operations">
-                Gerir operações
-              </Link>
-            </div>
-          </div>
-
-          <div className="platformOperationsGrid">
-            {liveOperations.map((operation) => (
-              <article className="card platformOperationCard" key={operation.id}>
-                <div
-                  className="platformOperationAccent"
-                  style={{ background: operation.primaryColor || "linear-gradient(135deg, #0b7a63, #46a287)" }}
-                />
-                <div className="platformOperationHeader">
-                  <div>
-                    <strong>{operation.name}</strong>
-                    <span>{operation.publicDomain || "Domínio ainda não configurado"}</span>
-                  </div>
-                  <span className={`status ${operation.isActive ? "published" : "draft"}`}>
-                    {operation.isActive ? "Ativa" : "Inativa"}
-                  </span>
-                </div>
-                <div className="platformOperationMeta">
-                  <div>
-                    <span>Eventos</span>
-                    <strong>{operation.eventCount}</strong>
-                  </div>
-                  <div>
-                    <span>Equipe</span>
-                    <strong>{operation.adminCount}</strong>
-                  </div>
-                  <div>
-                    <span>Prontidão</span>
-                    <strong>{operation.readinessScore}%</strong>
-                  </div>
-                </div>
-                <div className="platformReadinessBar" aria-label={`Prontidão de ${operation.readinessScore}%`}>
-                  <span style={{ width: `${operation.readinessScore}%` }} />
-                </div>
-                <div className="platformReadinessTags">
-                  {operation.readinessItems.map((item) => (
-                    <span className={item.done ? "isDone" : "isTodo"} key={item.label}>
-                      {item.label}
-                    </span>
-                  ))}
-                </div>
-                <p className="muted">
-                  {operation.adminDomain
-                    ? `Admin em ${operation.adminDomain}`
-                    : "Ainda falta apontar o domínio administrativo desta operação."}
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="container platformSection">
-          <article className="platformClosingCta">
+        <section className="container platformMarketingSection">
+          <article className="platformClosingCta platformMarketingClosing">
             <div>
               <span className="eyebrow">Próximo passo</span>
-              <h2>Tenha uma bilheteria com sua marca, seu domínio e uma operação mais lucrativa.</h2>
+              <h2>Tenha sua própria bilheteria, preserve sua base e aumente a lucratividade da operação.</h2>
               <p>
-                A Ingresaas foi desenhada para quem quer vender com estrutura própria, mais controle comercial e uma
-                experiência mais profissional para a equipe e para o público.
+                Se a sua produtora já vende evento, já investe em mídia e já movimenta público, faz sentido conversar
+                sobre uma estrutura própria para vender com mais controle e mais margem.
               </p>
             </div>
             <div className="platformClosingActions">
-              <Link className="button" href="/login">
-                Quero minha bilheteria
-              </Link>
-              <Link className="secondaryButton" href="/admin">
-                Ver a plataforma por dentro
+              <a className="button" href="#quero-minha-bilheteria">
+                Solicitar contato
+              </a>
+              <Link className="secondaryButton" href="/login">
+                Já sou cliente
               </Link>
             </div>
           </article>

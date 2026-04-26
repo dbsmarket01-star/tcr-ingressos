@@ -149,6 +149,62 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               <span>Configuração isolada</span>
             </div>
           </article>
+
+          <article className="dashboardPanel platformMasterSectionCard">
+            <span className="eyebrow">Comercial</span>
+            <h2>Leads que chegaram pela home da Ingresaas.</h2>
+            <p>
+              Aqui fica a base inicial para o comercial puxar conversa com produtores que demonstraram
+              interesse na bilheteria própria.
+            </p>
+            <div className="platformSecurityStack compact">
+              <div>
+                <span>Leads da plataforma</span>
+                <strong>{platformOverview.totalPlatformLeads}</strong>
+              </div>
+              <div>
+                <span>Último interesse</span>
+                <strong>
+                  {platformOverview.recentPlatformLeads[0]
+                    ? formatDateTime(platformOverview.recentPlatformLeads[0].createdAt)
+                    : "Sem registro ainda"}
+                </strong>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section className="dashboardPanel spacedSection">
+          <div className="sectionHeader inlineHeader">
+            <div>
+              <h2>Leads comerciais recentes</h2>
+              <p>Leads captados pela home pública da Ingresaas para o time comercial abordar.</p>
+            </div>
+          </div>
+
+          {platformOverview.recentPlatformLeads.length === 0 ? (
+            <p className="muted">Ainda não há leads comerciais registrados pela home da plataforma.</p>
+          ) : (
+            <div className="platformLeadAdminGrid">
+              {platformOverview.recentPlatformLeads.map((lead) => (
+                <article className="card platformLeadAdminCard" key={lead.id}>
+                  <strong>{lead.name}</strong>
+                  <span>{lead.email}</span>
+                  <span>{lead.phone}</span>
+                  <p>
+                    <strong>Faturamento:</strong> {lead.annualRevenueBand}
+                  </p>
+                  <p>
+                    <strong>Nicho:</strong> {lead.eventNiche}
+                  </p>
+                  <p>
+                    <strong>Instagram:</strong> {lead.instagramHandle ? `@${lead.instagramHandle}` : "Não informado"}
+                  </p>
+                  <small>{formatDateTime(lead.createdAt)}</small>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="dashboardPanel platformOperationsPanel spacedSection">

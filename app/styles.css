@@ -7595,3 +7595,485 @@ textarea {
   background: #f8faf9;
   opacity: 0.68;
 }
+
+.platformMarketingHero {
+  background:
+    radial-gradient(circle at top right, rgba(213, 230, 255, 0.9), transparent 26%),
+    radial-gradient(circle at bottom left, rgba(165, 197, 255, 0.42), transparent 32%),
+    linear-gradient(180deg, #eaf2ff 0%, #f6f9ff 58%, #ffffff 100%);
+  color: #17325b;
+}
+
+.platformMarketingHeroGrid {
+  align-items: center;
+  display: grid;
+  gap: 28px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  margin: 0 auto;
+  max-width: 1220px;
+  min-height: 690px;
+  padding: 44px 24px 64px;
+}
+
+.platformMarketingHeroContent {
+  display: grid;
+  gap: 18px;
+  max-width: 760px;
+}
+
+.platformMarketingHeroContent h1 {
+  color: #0f2343;
+  font-size: clamp(46px, 6vw, 78px);
+  line-height: 0.95;
+  margin: 0;
+  max-width: 11ch;
+}
+
+.platformMarketingHeroContent p {
+  color: #42597e;
+  font-size: 19px;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 690px;
+}
+
+.platformMarketingHeroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.platformMarketingHeroPanel {
+  display: grid;
+  gap: 16px;
+}
+
+.platformMarketingHighlightCard {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(154, 179, 226, 0.28);
+  border-radius: 24px;
+  box-shadow: 0 18px 42px rgba(24, 48, 92, 0.08);
+  display: grid;
+  gap: 8px;
+  padding: 22px;
+}
+
+.platformMarketingHighlightCard span {
+  color: #5b78b2;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.platformMarketingHighlightCard strong {
+  color: #12294d;
+  font-size: 24px;
+  line-height: 1.12;
+}
+
+.platformMarketingHighlightCard p {
+  color: #5c6f8f;
+  line-height: 1.58;
+  margin: 0;
+}
+
+.platformMarketingSection {
+  display: grid;
+  gap: 24px;
+  padding-top: 42px;
+}
+
+.platformSalesHeader p {
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.65;
+  margin: 10px 0 0;
+  max-width: 760px;
+}
+
+.platformBenefitGrid,
+.platformAdvantageGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.platformAdvantageGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.platformBenefitCard,
+.platformAdvantageCard,
+.platformProcessCard,
+.platformSecurityCard,
+.platformLeadForm,
+.platformLeadIntro {
+  background: linear-gradient(180deg, #ffffff, #f8fbff);
+  border: 1px solid #dce6fb;
+  border-radius: 24px;
+  box-shadow: 0 20px 44px rgba(19, 34, 69, 0.05);
+}
+
+.platformBenefitCard,
+.platformAdvantageCard {
+  display: grid;
+  gap: 12px;
+  min-height: 198px;
+  padding: 24px;
+}
+
+.platformBenefitCard strong,
+.platformAdvantageCard strong {
+  color: #12294d;
+  font-size: 24px;
+  line-height: 1.14;
+}
+
+.platformBenefitCard p,
+.platformAdvantageCard p {
+  color: var(--muted);
+  line-height: 1.68;
+  margin: 0;
+}
+
+.platformMarketingBand {
+  align-items: center;
+  background: linear-gradient(135deg, #11284d, #315391 70%, #5576b5);
+  border-radius: 28px;
+  color: white;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  overflow: hidden;
+  padding: 32px;
+  position: relative;
+}
+
+.platformMarketingBand::after {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 56px 56px;
+  content: "";
+  inset: 0;
+  opacity: 0.16;
+  pointer-events: none;
+  position: absolute;
+}
+
+.platformMarketingBand > * {
+  position: relative;
+  z-index: 1;
+}
+
+.platformMarketingBand h2,
+.platformMarketingBand p {
+  margin: 0;
+}
+
+.platformMarketingBand h2 {
+  font-size: clamp(30px, 4vw, 46px);
+  line-height: 1.06;
+  max-width: 15ch;
+}
+
+.platformMarketingBand p {
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.65;
+  margin-top: 12px;
+  max-width: 760px;
+}
+
+.platformMarketingBand .button {
+  min-width: 250px;
+}
+
+.platformSplitMarketingGrid,
+.platformLeadSection {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.platformProcessCard,
+.platformSecurityCard {
+  padding: 26px;
+}
+
+.platformProcessCard h2,
+.platformProcessCard p,
+.platformSecurityCard h2,
+.platformSecurityCard p {
+  margin: 0;
+}
+
+.platformProcessCard h2,
+.platformSecurityCard h2 {
+  color: #12294d;
+  font-size: clamp(28px, 3.4vw, 38px);
+  line-height: 1.1;
+  margin-top: 10px;
+}
+
+.platformProcessCard p,
+.platformSecurityCard p {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.compactAccessGrid {
+  margin-top: 18px;
+}
+
+.compactAccessGrid .platformAccessCard {
+  min-height: 0;
+}
+
+.platformLeadIntro {
+  display: grid;
+  gap: 18px;
+  padding: 30px;
+}
+
+.platformLeadIntro h2,
+.platformLeadIntro p {
+  margin: 0;
+}
+
+.platformLeadIntro h2 {
+  color: #12294d;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.08;
+  max-width: 14ch;
+}
+
+.platformLeadIntro p {
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 58ch;
+}
+
+.platformLeadMiniStats {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.platformLeadMiniStats article {
+  background: #f4f8ff;
+  border: 1px solid #dce6fb;
+  border-radius: 18px;
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
+.platformLeadMiniStats span {
+  color: #6984b8;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.platformLeadMiniStats strong {
+  color: #12294d;
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.platformLeadForm {
+  display: grid;
+  gap: 18px;
+  padding: 28px;
+}
+
+.platformLeadFormHeader {
+  display: grid;
+  gap: 6px;
+}
+
+.platformLeadFormHeader strong {
+  color: #13284a;
+  font-size: 26px;
+}
+
+.platformLeadFormHeader p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.platformLeadFormGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.platformLeadField {
+  display: grid;
+  gap: 8px;
+}
+
+.platformLeadField span {
+  color: #233b65;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.platformLeadField span small {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.platformLeadField input,
+.platformLeadField select,
+.platformLeadField textarea {
+  background: #ffffff;
+  border: 1px solid #cedaf0;
+  border-radius: 14px;
+  color: #16305a;
+  min-height: 52px;
+  padding: 0 14px;
+}
+
+.platformLeadField input:focus,
+.platformLeadField select:focus,
+.platformLeadField textarea:focus {
+  border-color: #6d8fd1;
+  box-shadow: 0 0 0 4px rgba(109, 143, 209, 0.12);
+  outline: none;
+}
+
+.platformLeadFieldFull {
+  grid-column: 1 / -1;
+}
+
+.formFeedback {
+  border-radius: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+  padding: 14px 16px;
+}
+
+.formFeedback.success {
+  background: #ebf8f2;
+  border: 1px solid #bfe4d2;
+  color: #155d44;
+}
+
+.formFeedback.error {
+  background: #fff1f0;
+  border: 1px solid #f3c3c0;
+  color: #8c2d2a;
+}
+
+.platformMarketingClosing {
+  background: linear-gradient(180deg, #f8fbff, #eef4ff);
+  border: 1px solid #dce6fb;
+  color: #13284a;
+}
+
+.platformMarketingClosing h2 {
+  max-width: 12ch;
+}
+
+.platformMarketingClosing p {
+  color: var(--muted);
+}
+
+.platformLeadAdminGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.platformLeadAdminCard {
+  display: grid;
+  gap: 8px;
+}
+
+.platformLeadAdminCard strong {
+  color: #13284a;
+}
+
+.platformLeadAdminCard span,
+.platformLeadAdminCard small {
+  color: var(--muted);
+}
+
+.platformLeadAdminCard p {
+  color: #324a73;
+  line-height: 1.5;
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
+  .platformMarketingHeroGrid,
+  .platformSplitMarketingGrid,
+  .platformLeadSection,
+  .platformBenefitGrid,
+  .platformAdvantageGrid,
+  .platformLeadAdminGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .platformMarketingBand {
+    grid-template-columns: 1fr;
+  }
+
+  .platformMarketingBand .button {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 780px) {
+  .platformMarketingHeroGrid {
+    min-height: 0;
+    padding: 28px 16px 46px;
+  }
+
+  .platformMarketingHeroContent h1 {
+    font-size: clamp(38px, 12vw, 54px);
+    max-width: 9.5ch;
+  }
+
+  .platformMarketingHeroContent p,
+  .platformSalesHeader p,
+  .platformLeadIntro p {
+    font-size: 16px;
+  }
+
+  .platformLeadMiniStats,
+  .platformLeadFormGrid,
+  .compactAccessGrid,
+  .platformAccessGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .platformMarketingHeroActions,
+  .platformClosingActions {
+    display: grid;
+    gap: 10px;
+  }
+
+  .platformMarketingHeroActions .button,
+  .platformMarketingHeroActions .secondaryButton,
+  .platformClosingActions .button,
+  .platformClosingActions .secondaryButton {
+    width: 100%;
+  }
+
+  .platformBenefitCard,
+  .platformAdvantageCard,
+  .platformProcessCard,
+  .platformSecurityCard,
+  .platformLeadForm,
+  .platformLeadIntro,
+  .platformMarketingBand {
+    border-radius: 20px;
+    padding: 20px;
+  }
+}
