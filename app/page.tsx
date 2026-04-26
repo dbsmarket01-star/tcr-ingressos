@@ -42,34 +42,34 @@ const leadAnnualRevenueBands = [
 const marketingPillars = [
   {
     title: "Saque e capital de giro",
-    body: "A operação ganha fôlego para antecipar campanha, equipe e estrutura sem esperar o evento acabar para ter acesso ao caixa."
+    body: "Receba com mais liberdade e mantenha mídia, equipe e fornecedores girando sem depender do fim do evento."
   },
   {
     title: "Mais margem por venda",
-    body: "Em vez de lucrar só no ingresso, o produtor pode capturar entre 7% e 20% a mais sobre cada venda realizada."
+    body: "Além do ingresso, a operação captura entre 7% e 20% a mais por venda com a própria estrutura."
   },
   {
     title: "Base 100% do cliente",
-    body: "Nome, telefone e e-mail ficam sob o domínio da própria operação, sem entregar lead nem relacionamento para concorrente."
+    body: "Nome, telefone e e-mail ficam na sua base, não no colo de plataforma concorrente."
   }
 ];
 
 const advantageCards = [
   {
     title: "Autonomia comercial",
-    body: "Você define seu domínio, sua identidade, sua comunicação e a forma como vende, sem depender de uma plataforma genérica tomar a frente da sua marca."
+    body: "Sua marca aparece primeiro. Seu domínio, sua comunicação e sua lógica comercial ficam no controle da operação."
   },
   {
     title: "Controle financeiro mais rápido",
-    body: "A operação reduz o tempo entre venda e caixa disponível, o que ajuda a girar mídia, equipe, fornecedores e próximos eventos com mais agilidade."
+    body: "Menos atraso entre venda e caixa disponível ajuda a girar campanha, equipe e próximos eventos com mais velocidade."
   },
   {
     title: "Base própria para crescer",
-    body: "Cada campanha fortalece uma base de relacionamento que continua sendo sua, o que reduz dependência de terceiros e melhora a lucratividade recorrente."
+    body: "Cada campanha fortalece uma base que continua sendo sua, o que melhora recorrência, remarketing e independência."
   },
   {
     title: "Operação em um só fluxo",
-    body: "Venda, pedido, ticket, QR Code, check-in, lead e atendimento convivem no mesmo sistema para a equipe vender melhor e operar com menos ruído."
+    body: "Venda, pedido, ticket, QR Code, check-in e lead convivem no mesmo sistema para a equipe operar com menos ruído."
   }
 ];
 
@@ -82,16 +82,22 @@ const processSteps = [
 const securityPoints = [
   {
     title: "Login próprio do cliente",
-    body: "Cada operação entra no seu próprio admin com e-mail e senha, sem misturar equipe, dados ou configuração entre clientes."
+    body: "Cada operação entra no próprio admin com e-mail e senha, sem misturar equipe, dado ou configuração."
   },
   {
     title: "Acesso separado por papel",
-    body: "A plataforma controla quem pode ver dados, mexer em configurações e operar áreas sensíveis da bilheteria."
+    body: "A plataforma controla quem pode ver dados, mexer em configuração e operar áreas sensíveis."
   },
   {
     title: "Governança central da base",
-    body: "A Ingresaas acompanha domínio, branding, saúde da operação e acessos sem virar o painel público ou comercial do cliente final."
+    body: "A Ingresaas acompanha domínio, branding e saúde da operação sem virar o painel público do cliente."
   }
+];
+
+const heroProofPoints = [
+  "Venda no próprio domínio e fortaleça sua marca",
+  "Ganhe mais caixa e mais velocidade para operar",
+  "Pare de entregar seus leads para terceiros"
 ];
 
 function getPlatformLeadMessage(success?: string, error?: string) {
@@ -137,11 +143,11 @@ export default async function Home({ searchParams }: HomePageProps) {
                 <span>{organizationContext.platformName}</span>
               </div>
               <span className="homeEyebrow">Bilheteria própria para produtores e operações</span>
-              <h1>Tenha sua própria bilheteria e pare de entregar margem, caixa e base de clientes para terceiros.</h1>
+              <h1>Venda no seu domínio, ganhe mais margem e assuma o controle da sua bilheteria.</h1>
               <p>
-                A {organizationContext.platformName} foi desenhada para produtores que querem vender no próprio domínio,
-                sacar o dinheiro com mais liberdade, capturar de 7% a 20% a mais por ingresso e construir uma base de
-                leads que continua sendo da própria operação.
+                A {organizationContext.platformName} foi desenhada para produtores que querem operar com marca própria,
+                sacar com mais liberdade, capturar de 7% a 20% a mais por venda e manter a base de clientes 100% sob
+                o próprio controle.
               </p>
 
               <div className="platformMarketingHeroActions">
@@ -158,23 +164,36 @@ export default async function Home({ searchParams }: HomePageProps) {
                   <span key={item}>{item}</span>
                 ))}
               </div>
+
+              <div className="platformHeroProofList" aria-label="Resumo do valor da plataforma">
+                {heroProofPoints.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
             </div>
 
             <aside className="platformMarketingHeroPanel" aria-label="Benefícios principais">
-              <article className="platformMarketingHighlightCard">
-                <span>Capital de giro mais rápido</span>
-                <strong>Seu caixa não precisa esperar o evento acabar para continuar girando a operação.</strong>
-                <p>Mais agilidade para mídia, fornecedores, equipe e novas campanhas sem depender da agenda de terceiros.</p>
-              </article>
-              <article className="platformMarketingHighlightCard">
-                <span>Mais lucro por ingresso</span>
-                <strong>Capture entre 7% e 20% a mais em cada venda com a sua própria estrutura.</strong>
-                <p>Você deixa de operar como afiliado de uma plataforma genérica e passa a vender dentro da sua própria máquina comercial.</p>
-              </article>
-              <article className="platformMarketingHighlightCard">
-                <span>Base e relacionamento próprios</span>
-                <strong>Nome, telefone e e-mail ficam na sua operação, não na mão de concorrente.</strong>
-                <p>Isso fortalece remarketing, recorrência, percepção de marca e independência comercial a cada campanha.</p>
+              <article className="platformMarketingSummaryCard">
+                <span className="eyebrow">Resumo comercial</span>
+                <h2>Uma bilheteria própria para vender mais e depender menos de terceiros.</h2>
+                <div className="platformMarketingSummaryGrid">
+                  <div>
+                    <small>Margem extra</small>
+                    <strong>7% a 20%</strong>
+                  </div>
+                  <div>
+                    <small>Base de clientes</small>
+                    <strong>100% sua</strong>
+                  </div>
+                  <div>
+                    <small>Saque e caixa</small>
+                    <strong>Mais agilidade</strong>
+                  </div>
+                </div>
+                <p>
+                  O foco da Ingresaas é simples: colocar sua operação para vender com mais autonomia, mais margem e
+                  mais controle comercial.
+                </p>
               </article>
             </aside>
           </div>
@@ -197,8 +216,8 @@ export default async function Home({ searchParams }: HomePageProps) {
               <span className="eyebrow">Por que trocar a lógica da operação</span>
               <h2>Uma bilheteria própria muda caixa, margem, dados e autonomia ao mesmo tempo.</h2>
               <p>
-                A proposta aqui não é só vender ingresso. É dar ao produtor uma estrutura que ajude a vender melhor,
-                lucrar mais e construir uma operação comercial de longo prazo.
+                Não é só sobre vender ingresso. É sobre vender com mais controle, mais lucro e uma base própria para
+                crescer com mais independência.
               </p>
             </div>
           </div>
@@ -219,8 +238,8 @@ export default async function Home({ searchParams }: HomePageProps) {
               <span className="eyebrow">O que o produtor ganha na prática</span>
               <h2>Mais controle comercial, mais caixa disponível e uma operação com cara de marca própria.</h2>
               <p>
-                A base técnica cuida de venda, ticket, QR Code, check-in e rotina operacional. A sua equipe fica mais
-                focada em vender, acompanhar resultado e crescer o relacionamento com o público.
+                A base técnica cuida de venda, ticket, QR Code e check-in. A equipe fica mais focada em vender,
+                acompanhar resultado e crescer relacionamento com o público.
               </p>
             </div>
             <a className="button" href="#quero-minha-bilheteria">
@@ -263,7 +282,8 @@ export default async function Home({ searchParams }: HomePageProps) {
               <h2>Conte o perfil da sua produtora e vamos desenhar sua bilheteria própria.</h2>
               <p>
                 Preencha seus dados para o time comercial entender nicho, porte e momento da operação. A ideia é
-                colocar sua bilheteria no ar com mais velocidade e menos ruído.
+                colocar sua bilheteria no ar com mais velocidade, menos ruído e uma proposta que faça sentido para a
+                sua realidade.
               </p>
 
               <div className="platformLeadMiniStats">
@@ -349,7 +369,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               <h2>Tenha sua própria bilheteria, preserve sua base e aumente a lucratividade da operação.</h2>
               <p>
                 Se a sua produtora já vende evento, já investe em mídia e já movimenta público, faz sentido conversar
-                sobre uma estrutura própria para vender com mais controle e mais margem.
+                sobre uma estrutura própria para vender com mais controle, mais margem e mais velocidade financeira.
               </p>
             </div>
             <div className="platformClosingActions">
