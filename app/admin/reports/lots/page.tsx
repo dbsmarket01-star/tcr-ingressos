@@ -24,7 +24,7 @@ export default async function LotSalesReportPage({ searchParams }: LotSalesRepor
   return (
     <AdminShell
       title="Relatórios"
-      description="Acompanhe vendas, capacidade e receita por evento e por lote de ingresso."
+      description="Acompanhe vendas pagas, capacidade e bruto confirmado por evento e por lote."
     >
       <section className="adminPanelHero compact">
         <div>
@@ -69,7 +69,7 @@ export default async function LotSalesReportPage({ searchParams }: LotSalesRepor
           <strong>{report.totals.totalCapacity}</strong>
         </article>
         <article className="card metric">
-          <span className="muted">Vendidos</span>
+          <span className="muted">Vendidos pagos</span>
           <strong>{report.totals.totalSold}</strong>
         </article>
         <article className="card metric">
@@ -81,7 +81,7 @@ export default async function LotSalesReportPage({ searchParams }: LotSalesRepor
           <strong>{report.totals.totalAvailable}</strong>
         </article>
         <article className="card metric">
-          <span className="muted">Receita bruta</span>
+          <span className="muted">Bruto pago</span>
           <strong>{formatCurrency(report.totals.totalGrossInCents)}</strong>
         </article>
         <article className="card metric">
@@ -137,13 +137,13 @@ export default async function LotSalesReportPage({ searchParams }: LotSalesRepor
                 <th>Status</th>
                 <th>Alerta</th>
                 <th>Preço</th>
-                <th>Vendido / Total</th>
+                <th>Pago / Total</th>
                 <th>Reservado</th>
                 <th>Disponível</th>
                 <th>Check-ins</th>
                 <th>Ticket médio</th>
                 <th>Taxas</th>
-                <th>Bruto</th>
+                <th>Bruto pago</th>
               </tr>
             </thead>
             <tbody>
