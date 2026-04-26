@@ -4097,6 +4097,43 @@ textarea {
   .loginMetrics {
     display: none;
   }
+
+  .platformTheme .loginFormArea {
+    gap: 16px;
+    padding: 24px 20px 22px;
+  }
+
+  .platformTheme .loginFormArea h2 {
+    font-size: clamp(30px, 9vw, 40px);
+    line-height: 1.04;
+    margin: 6px 0 6px;
+    max-width: 100%;
+  }
+
+  .platformTheme .loginIntro {
+    gap: 18px;
+    padding: 24px 20px;
+  }
+
+  .platformTheme .loginIntro h1 {
+    font-size: clamp(34px, 10vw, 50px);
+    line-height: 1;
+    max-width: 10ch;
+  }
+
+  .platformTheme .loginIntroCopy,
+  .platformTheme .loginFeatureStack,
+  .platformTheme .platformLoginTimeline,
+  .platformTheme .platformLoginSignals {
+    gap: 10px;
+  }
+
+  .platformTheme .platformLoginTimeline article,
+  .platformTheme .loginFeatureCard,
+  .platformTheme .platformAccessNotice,
+  .platformTheme .loginSupportBox {
+    border-radius: 16px;
+  }
 }
 
 .errorBox {
@@ -8293,5 +8330,293 @@ textarea {
   .platformMarketingBand {
     border-radius: 20px;
     padding: 20px;
+  }
+
+  .platformMarketingHeroContent {
+    gap: 14px;
+  }
+
+  .platformMarketingHeroContent h1 {
+    line-height: 1.02;
+    max-width: 11ch;
+  }
+
+  .platformMarketingHeroContent p {
+    line-height: 1.55;
+    max-width: 100%;
+  }
+
+  .platformHeroProofList {
+    gap: 8px;
+  }
+
+  .platformHeroProofList span {
+    font-size: 14px;
+  }
+
+  .platformMarketingSummaryCard,
+  .platformMarketingHighlightCard,
+  .platformOverviewHero,
+  .platformOperationsHero,
+  .platformOperationCommandBar,
+  .platformOperationCard,
+  .platformOperationCreateCard,
+  .platformOperationsFilterCard,
+  .platformOperationsGuideCard,
+  .platformMasterSectionCard,
+  .platformLeadAdminCard {
+    border-radius: 18px;
+    padding: 18px;
+  }
+
+  .platformMarketingSummaryCard h2,
+  .platformMarketingBand h2,
+  .platformProcessCard h2,
+  .platformSecurityCard h2,
+  .platformOverviewHero h2,
+  .platformOperationsHero h2,
+  .platformMasterSectionCard h2,
+  .platformOperationCreateCard h2,
+  .platformOperationsFilterCard h2,
+  .platformOperationsGuideCard h2,
+  .platformOperationCommandCopy h3,
+  .platformLeadIntro h2,
+  .platformLeadFormHeader strong {
+    font-size: clamp(22px, 6vw, 28px);
+    line-height: 1.12;
+    max-width: 100%;
+  }
+
+  .platformOverviewHero p,
+  .platformOperationsHero p,
+  .platformMasterSectionCard p,
+  .platformOperationCreateCard .muted,
+  .platformOperationsFilterCard .muted,
+  .platformOperationsGuideCard .muted,
+  .platformOperationCommandCopy p,
+  .platformLeadFormHeader p,
+  .platformLeadIntro p,
+  .platformLeadAdminCard p {
+    font-size: 14px;
+    line-height: 1.55;
+    max-width: 100%;
+  }
+
+  .platformOperationsWorkspace,
+  .platformOperationsRightColumn,
+  .platformMasterSections,
+  .platformSecurityGrid,
+  .platformAccessWorkflow,
+  .platformExecutiveGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .platformOverviewPanel,
+  .platformOperationsPanel,
+  .platformOverviewHero,
+  .platformOperationsHero,
+  .platformOperationCommandBar {
+    gap: 14px;
+  }
+
+  .platformOverviewBadges,
+  .platformOperationsHeroBadges,
+  .platformMasterActionBar,
+  .platformSecurityList,
+  .platformLoginSignals,
+  .platformOperationCommandActions,
+  .platformSectionActions,
+  .operationsAdminQuickActions {
+    justify-content: flex-start;
+  }
+
+  .platformOverviewBadges span,
+  .platformOperationsHeroBadges span,
+  .platformCreateHints span,
+  .platformSecurityList span,
+  .platformLoginSignals span,
+  .platformReadinessTags span {
+    min-height: 32px;
+    padding: 0 10px;
+  }
+
+  .platformCreateFlow,
+  .platformSecurityStack,
+  .platformOperationLaunchpadGrid,
+  .platformOperationHealthStrip,
+  .platformOperationOwnerStrip,
+  .platformOperationMeta,
+  .platformLeadAdminGrid,
+  .platformOverviewMetrics,
+  .platformMasterSnapshot {
+    grid-template-columns: 1fr;
+  }
+
+  .platformOperationMeta div,
+  .platformOperationHealthStrip div,
+  .platformOperationOwnerStrip div,
+  .platformLeadMiniStats article,
+  .platformSecurityStack div {
+    min-height: 0;
+    padding: 14px;
+  }
+
+  .platformOperationLinks {
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .platformOperationHeader {
+    gap: 8px;
+  }
+
+  .platformOperationHeader strong,
+  .platformLeadAdminCard strong {
+    font-size: 17px;
+  }
+
+  .detailList {
+    gap: 12px;
+  }
+
+  .detailList div {
+    padding-bottom: 10px;
+  }
+
+  .detailList dt {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 420px) {
+  .platformTheme .loginShellAdmin {
+    padding: 14px;
+  }
+
+  .platformTheme .loginFormArea,
+  .platformTheme .loginIntro {
+    padding: 18px 16px;
+  }
+
+  .platformTheme .loginFormArea .form {
+    border-radius: 18px;
+    padding: 16px;
+  }
+
+  .platformTheme .loginFormArea h2 {
+    font-size: 32px;
+  }
+
+  .platformTheme .loginIntro h1 {
+    font-size: 36px;
+    max-width: 9.5ch;
+  }
+
+  .platformTheme .platformLoginTimeline article,
+  .platformTheme .loginFeatureCard,
+  .platformTheme .platformAccessNotice,
+  .platformTheme .loginSupportBox {
+    padding: 14px;
+  }
+
+  .platformMarketingHeroGrid {
+    padding: 24px 14px 38px;
+  }
+
+  .platformMarketingHeroContent h1 {
+    font-size: 34px;
+    max-width: 100%;
+  }
+
+  .platformMarketingHeroContent p,
+  .platformHeroProofList span,
+  .platformMarketingSummaryCard p,
+  .platformMarketingBand p,
+  .platformLeadIntro p,
+  .platformLeadFormHeader p {
+    font-size: 14px;
+  }
+
+  .platformMarketingSummaryCard,
+  .platformMarketingHighlightCard,
+  .platformBenefitCard,
+  .platformAdvantageCard,
+  .platformProcessCard,
+  .platformSecurityCard,
+  .platformLeadForm,
+  .platformLeadIntro,
+  .platformMarketingBand,
+  .platformOverviewHero,
+  .platformOperationsHero,
+  .platformOperationCommandBar,
+  .platformOperationCard,
+  .platformOperationCreateCard,
+  .platformOperationsFilterCard,
+  .platformOperationsGuideCard,
+  .platformMasterSectionCard,
+  .platformLeadAdminCard {
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  .platformBenefitCard strong,
+  .platformAdvantageCard strong,
+  .platformMarketingHighlightCard strong,
+  .platformMarketingSummaryCard h2,
+  .platformMarketingBand h2,
+  .platformLeadIntro h2,
+  .platformLeadFormHeader strong,
+  .platformOverviewHero h2,
+  .platformOperationsHero h2,
+  .platformMasterSectionCard h2,
+  .platformOperationCreateCard h2,
+  .platformOperationsFilterCard h2,
+  .platformOperationsGuideCard h2,
+  .platformOperationCommandCopy h3 {
+    font-size: 22px;
+    line-height: 1.14;
+  }
+
+  .platformMarketingSummaryGrid div,
+  .platformLeadMiniStats article,
+  .platformOperationMeta div,
+  .platformOperationHealthStrip div,
+  .platformOperationOwnerStrip div,
+  .platformSecurityStack div {
+    padding: 12px;
+  }
+
+  .platformOperationHeader {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .platformOperationHeader .status {
+    align-self: flex-start;
+  }
+
+  .platformOperationLinks span,
+  .platformCreateHints span,
+  .platformSecurityList span,
+  .platformLoginSignals span,
+  .platformOverviewBadges span,
+  .platformOperationsHeroBadges span {
+    font-size: 11px;
+  }
+
+  .platformLeadField input,
+  .platformLeadField select,
+  .platformLeadField textarea {
+    min-height: 48px;
+  }
+
+  .platformMarketingBand .button,
+  .platformMasterActionBar .button,
+  .platformMasterActionBar .secondaryButton,
+  .platformOperationCommandActions .button,
+  .platformOperationCommandActions .secondaryButton,
+  .platformSectionActions .button,
+  .platformSectionActions .secondaryButton {
+    width: 100%;
   }
 }
