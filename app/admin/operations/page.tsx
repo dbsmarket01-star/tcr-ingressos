@@ -9,11 +9,30 @@ import {
 } from "@/features/organizations/organization.actions";
 import { listOrganizationsForPlatformAdmin } from "@/features/organizations/organization.admin.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
-import { formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminOperationsPage() {
+type AdminOperationsPageProps = {
+  searchParams?: Promise<{
+    q?: string;
+    status?: string;
+  }>;
+};
+
+function statusLabel(status: string) {
+  if (status === "active") {
+    return "Somente ativas";
+  }
+
+  if (status === "inactive") {
+    return "Somente inativas";
+  }
+
+  return "Todas";
+}
+
+export default async function AdminOperationsPage({ searchParams }: AdminOperationsPageProps) {
   await requirePermission("OPERATIONS");
   const organizationContext = await getCurrentOrganizationContext();
 
@@ -21,94 +40,106 @@ export default async function AdminOperationsPage() {
     redirect("/admin");
   }
 
-  const organizations = await listOrganizationsForPlatformAdmin();
+  const params = searchParams ? await searchParams : {};
+  const query = typeof params.q === "string" ? params.q : "";
+  const status = params.status === "active" || params.status === "inactive" ? params.status : "all";
+  const organizations = await listOrganizationsForPlatformAdmin({ query, status });
   const activeOrganizations = organizations.filter((organization) => organization.isActive);
-  const readyOrganizations = organizations.filter((organization) => organization.readinessScore >= 67);
+  const totalRevenueInCents = organizations.reduce((total, organization) => total + organization.paidRevenueInCents, 0);
+  const totalPaidOrders = organizations.reduce((total, organization) => total + organization.paidOrdersCount, 0);
+  const totalLeads = organizations.reduce((total, organization) => total + organization.leadsCount, 0);
 
   return (
     <AdminShell
       title="Operações"
-      description="Cadastre e organize as bilheterias filhas da Ingresaas, com domínio, equipe e operação separados."
+      description="Cadastre clientes, ligue domínio e identidade, e acompanhe receita e saúde de cada operação em um só lugar."
     >
       <section className="platformOperationsHero spacedSection" aria-label="Visão geral das operações">
         <div>
-          <span className="eyebrow">Gestão das bilheterias filhas</span>
-          <h2>Cadastre, prepare e acompanhe cada operação a partir do painel master.</h2>
+          <span className="eyebrow">Mesa de controle</span>
+          <h2>Uma tela só para criar cliente, revisar domínio e acompanhar o que cada bilheteria já está movimentando.</h2>
           <p>
-            Esta é a mesa de controle da Ingresaas. Aqui você liga domínio, branding, equipe e suporte antes de a
-            bilheteria filha entrar em operação pública.
+            Aqui a Ingresaas deixa de ser conceito e vira operação. Você cria o cliente novo, entrega o acesso inicial
+            e acompanha receita, pedidos e leads sem misturar as bases.
           </p>
         </div>
         <div className="platformOperationsHeroBadges">
-          <span>Domínio público</span>
-          <span>Domínio admin</span>
-          <span>Branding por operação</span>
-          <span>Onboarding guiado</span>
+          <span>{organizations.length} cliente(s)</span>
+          <span>{statusLabel(status)}</span>
+          {query ? <span>Busca: {query}</span> : null}
         </div>
       </section>
 
       <section className="grid dashboardGrid platformMasterSnapshot spacedSection" aria-label="Resumo operacional">
         <article className="card metric dashboardHeroMetric">
-          <span className="muted">Operações cadastradas</span>
-          <strong>{organizations.length}</strong>
-          <small>Base total da plataforma</small>
-        </article>
-        <article className="card metric">
-          <span className="muted">Ativas</span>
+          <span className="muted">Clientes ativos</span>
           <strong>{activeOrganizations.length}</strong>
-          <small>Já liberadas para uso</small>
+          <small>Bilheterias já liberadas para operar</small>
         </article>
         <article className="card metric">
-          <span className="muted">Prontas para revisar</span>
-          <strong>{readyOrganizations.length}</strong>
-          <small>Com estrutura suficiente para avançar</small>
+          <span className="muted">Receita paga</span>
+          <strong>{formatCurrency(totalRevenueInCents)}</strong>
+          <small>Soma do faturamento confirmado das operações filtradas</small>
         </article>
         <article className="card metric">
-          <span className="muted">Ainda montando base</span>
-          <strong>{organizations.length - readyOrganizations.length}</strong>
-          <small>Dependem de domínio, equipe ou branding</small>
+          <span className="muted">Pedidos pagos</span>
+          <strong>{totalPaidOrders}</strong>
+          <small>Compras confirmadas nas operações filtradas</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Leads</span>
+          <strong>{totalLeads}</strong>
+          <small>Captações já armazenadas nas operações filtradas</small>
         </article>
       </section>
 
-      <section className="grid twoColumns">
+      <section className="grid twoColumns spacedSection platformOperationsWorkspace">
         <form action={createOrganizationAction} className="card form platformOperationCreateCard">
           <div>
-            <span className="eyebrow">Nova operação</span>
-            <h2>Criar uma nova bilheteria filha</h2>
-            <p className="muted">
-              Use esta etapa para preparar a próxima operação antes de apontar o domínio real dela.
-            </p>
+            <span className="eyebrow">Novo cliente</span>
+            <h2>Criar bilheteria filha</h2>
+            <p className="muted">Preencha o essencial: quem é o cliente, qual domínio ele vai usar e qual será a identidade dele.</p>
           </div>
 
-          <div className="platformCreateHints">
-            <span>Comece pelo nome e domínios</span>
-            <span>Defina branding mínimo</span>
-            <span>Depois libere equipe e evento piloto</span>
+          <div className="grid twoColumns">
+            <label className="field">
+              <span>Nome da operação</span>
+              <input name="name" placeholder="Ex.: TCR Ingressos" required />
+            </label>
+
+            <label className="field">
+              <span>Slug interno</span>
+              <input name="slug" placeholder="Ex.: tcr-ingressos" />
+            </label>
+          </div>
+
+          <div className="grid twoColumns">
+            <label className="field">
+              <span>Domínio público</span>
+              <input name="publicDomain" placeholder="Ex.: bilheteria.cliente.com.br" />
+            </label>
+
+            <label className="field">
+              <span>Domínio admin</span>
+              <input name="adminDomain" placeholder="Ex.: produtor.cliente.com.br" />
+            </label>
+          </div>
+
+          <div className="grid twoColumns">
+            <label className="field">
+              <span>Nome do usuário inicial</span>
+              <input name="ownerName" placeholder="Ex.: Ana Paula" required />
+            </label>
+
+            <label className="field">
+              <span>E-mail do usuário inicial</span>
+              <input name="ownerEmail" type="email" placeholder="Ex.: contato@cliente.com.br" required />
+            </label>
           </div>
 
           <label className="field">
-            <span>Nome da operação</span>
-            <input name="name" placeholder="Ex.: A2 imergidos" required />
-          </label>
-
-          <label className="field">
-            <span>Slug interno</span>
-            <input name="slug" placeholder="Ex.: a2-imergidos" />
-          </label>
-
-          <label className="field">
-            <span>Domínio público</span>
-            <input name="publicDomain" placeholder="Ex.: a2ingressos.app.br" />
-          </label>
-
-          <label className="field">
-            <span>Domínio admin</span>
-            <input name="adminDomain" placeholder="Ex.: produtor.a2ingressos.app.br" />
-          </label>
-
-          <label className="field">
-            <span>Logo (URL)</span>
-            <input name="logoUrl" placeholder="Ex.: https://cdn.seudominio.com/logo.png" />
+            <span>Senha inicial</span>
+            <input name="ownerPassword" type="password" placeholder="No mínimo 8 caracteres" required />
           </label>
 
           <div className="grid twoColumns">
@@ -123,135 +154,241 @@ export default async function AdminOperationsPage() {
             </label>
           </div>
 
-          <label className="field">
-            <span>E-mail de suporte</span>
-            <input name="supportEmail" type="email" placeholder="Ex.: suporte@a2ingressos.app.br" />
-          </label>
+          <div className="grid twoColumns">
+            <label className="field">
+              <span>Logo (URL)</span>
+              <input name="logoUrl" placeholder="Ex.: https://cdn.cliente.com/logo.png" />
+            </label>
+
+            <label className="field">
+              <span>Contato de suporte</span>
+              <input name="supportPhone" placeholder="Ex.: +55 11 99999-9999" />
+            </label>
+          </div>
 
           <label className="field">
-            <span>WhatsApp / telefone</span>
-            <input name="supportPhone" placeholder="Ex.: +55 11 99999-9999" />
+            <span>E-mail de suporte</span>
+            <input name="supportEmail" type="email" placeholder="Ex.: suporte@cliente.com.br" />
           </label>
 
           <button className="button" type="submit">
-            Criar operação
+            Criar cliente
           </button>
         </form>
 
-        <section className="card platformArchitectureCard">
-          <span className="eyebrow">Leitura da arquitetura</span>
-          <h2>Como a Ingresaas vai crescer</h2>
-          <div className="permissionList">
-            <p>
-              <strong>Ingresaas:</strong> a plataforma-mãe que administra o motor SaaS.
-            </p>
-            <p>
-              <strong>Operação filha:</strong> uma bilheteria com marca, domínio, equipe e eventos próprios.
-            </p>
-            <p>
-              <strong>Primeira filha:</strong> a base atual pode ser refinada aqui antes de nascer a próxima operação.
-            </p>
-            <p>
-              <strong>Escala:</strong> novas bilheterias entram pela mesma tela, depois recebem domínio, branding e equipe.
-            </p>
-          </div>
-        </section>
-      </section>
-
-      <section className="grid twoColumns spacedSection">
-        <article className="dashboardPanel platformMasterGuide">
-          <div className="sectionHeader inlineHeader">
+        <div className="platformOperationsRightColumn">
+          <form className="card form platformOperationsFilterCard">
             <div>
-              <h2>Checklist de onboarding</h2>
-              <p>Use esta ordem para cada operação nova nascer com menos dependência manual.</p>
+              <span className="eyebrow">Relatório das operações</span>
+              <h2>Filtrar clientes</h2>
+              <p className="muted">Busque por nome ou domínio e veja só as bilheterias ativas ou inativas.</p>
             </div>
-          </div>
-          <ol className="platformChecklist">
-            <li>Cadastrar nome, domínio público e domínio admin</li>
-            <li>Definir cores, logo e suporte</li>
-            <li>Criar usuário proprietário da operação</li>
-            <li>Publicar primeiro evento e revisar a home da bilheteria</li>
-            <li>Testar pedido, e-mail, ingresso e check-in no domínio certo</li>
-          </ol>
-        </article>
 
-        <article className="dashboardPanel platformMasterGuide">
-          <div className="sectionHeader inlineHeader">
-            <div>
-              <h2>Padrão de domínio</h2>
-              <p>Estrutura recomendada para manter o SaaS limpo e previsível.</p>
+            <label className="field">
+              <span>Buscar cliente</span>
+              <input name="q" defaultValue={query} placeholder="Nome, slug, domínio ou e-mail de suporte" />
+            </label>
+
+            <label className="field">
+              <span>Status</span>
+              <select name="status" defaultValue={status}>
+                <option value="all">Todas</option>
+                <option value="active">Ativas</option>
+                <option value="inactive">Inativas</option>
+              </select>
+            </label>
+
+            <div className="actionRow">
+              <button className="button" type="submit">
+                Aplicar filtro
+              </button>
+              <Link className="secondaryButton" href="/admin/operations">
+                Limpar
+              </Link>
             </div>
-          </div>
-          <div className="permissionList">
-            <p>
-              <strong>Master:</strong> ingresaas.app.br
-            </p>
-            <p>
-              <strong>Público da operação:</strong> bilheteria no domínio do cliente final
-            </p>
-            <p>
-              <strong>Admin da operação:</strong> produtor.seudominio.com.br
-            </p>
-            <p>
-              <strong>Suporte:</strong> cada operação mantém seu e-mail e WhatsApp próprios
-            </p>
-          </div>
-        </article>
+          </form>
+
+          <article className="card platformMasterGuide platformOperationsGuideCard">
+            <span className="eyebrow">Fluxo enxuto</span>
+            <ol className="platformChecklist">
+              <li>Crie o cliente com domínio, identidade e usuário inicial</li>
+              <li>Abra a central da operação</li>
+              <li>Entre no admin do cliente e revise eventos, pedidos e check-in</li>
+              <li>Use o relatório abaixo para acompanhar a saúde do cliente</li>
+            </ol>
+          </article>
+        </div>
       </section>
 
       <section className="card spacedSection">
         <div className="sectionHeader inlineHeader">
           <div>
-            <h2>Operações cadastradas</h2>
-            <p>Edite dados básicos, confira domínios e mantenha o status das operações sob controle.</p>
+            <h2>Clientes da plataforma</h2>
+            <p>Relatório por operação com receita, pedidos, leads, domínios e acesso rápido à central de gestão.</p>
           </div>
-          <div className="platformSectionActions">
-            <Link className="secondaryButton smallButton" href="/admin">
-              Voltar ao painel master
-            </Link>
-          </div>
+          <Link className="secondaryButton smallButton" href="/admin">
+            Voltar ao painel master
+          </Link>
         </div>
 
-        <div className="operationsAdminList">
-          {organizations.map((organization) => (
-            <article className="operationsAdminCard" key={organization.id}>
-              <div className="operationsAdminCardHeader">
-                <div>
-                  <strong>{organization.name}</strong>
-                  <span>{organization.slug}</span>
-                </div>
-                <span className={`status ${organization.isActive ? "published" : "draft"}`}>
-                  {organization.isActive ? "Ativa" : "Inativa"}
-                </span>
-              </div>
+        {organizations.length === 0 ? (
+          <div className="empty">Nenhuma operação encontrada com esse filtro.</div>
+        ) : (
+          <div className="tableScroll">
+            <table className="table operationalTable">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Status</th>
+                  <th>Receita paga</th>
+                  <th>Pedidos</th>
+                  <th>Leads</th>
+                  <th>Domínios</th>
+                  <th>Atualizado</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {organizations.map((organization) => (
+                  <tr key={organization.id}>
+                    <td>
+                      <div className="tablePrimaryCell">
+                        <strong>{organization.name}</strong>
+                        <span>{organization.slug}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`status ${organization.isActive ? "published" : "draft"}`}>
+                        {organization.isActive ? "Ativa" : "Inativa"}
+                      </span>
+                    </td>
+                    <td>{formatCurrency(organization.paidRevenueInCents)}</td>
+                    <td>
+                      <div className="tablePrimaryCell">
+                        <strong>{organization.paidOrdersCount}</strong>
+                        <span>{organization.totalOrdersCount} no total</span>
+                      </div>
+                    </td>
+                    <td>{organization.leadsCount}</td>
+                    <td>
+                      <div className="tablePrimaryCell">
+                        <span>{organization.publicDomain || "Público pendente"}</span>
+                        <span>{organization.adminDomain || "Admin pendente"}</span>
+                      </div>
+                    </td>
+                    <td>{formatDateTime(organization.createdAt)}</td>
+                    <td>
+                      <Link className="secondaryButton smallButton" href={`/admin/operations/${organization.id}`}>
+                        Abrir central
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
-              <div className="operationsAdminStats">
-                <div>
-                  <span>Eventos</span>
-                  <strong>{organization._count.events}</strong>
-                </div>
-                <div>
-                  <span>Equipe</span>
-                  <strong>{organization._count.adminUsers}</strong>
-                </div>
-                <div>
-                  <span>Criada em</span>
-                  <strong>{formatDateTime(organization.createdAt)}</strong>
-                </div>
-                <div>
-                  <span>Prontidão</span>
-                  <strong>{organization.readinessScore}%</strong>
-                </div>
+      <section className="operationsAdminList spacedSection">
+        {organizations.map((organization) => (
+          <article className="operationsAdminCard" key={organization.id}>
+            <div className="operationsAdminCardHeader">
+              <div>
+                <strong>{organization.name}</strong>
+                <span>{organization.slug}</span>
               </div>
+              <span className={`status ${organization.isActive ? "published" : "draft"}`}>
+                {organization.isActive ? "Ativa" : "Inativa"}
+              </span>
+            </div>
 
-              <div className="operationsAdminLinks">
-                <span>{organization.publicDomain || "Domínio público pendente"}</span>
-                <span>{organization.adminDomain || "Domínio admin pendente"}</span>
+            <div className="operationsAdminStats">
+              <div>
+                <span>Receita paga</span>
+                <strong>{formatCurrency(organization.paidRevenueInCents)}</strong>
               </div>
+              <div>
+                <span>Pedidos pagos</span>
+                <strong>{organization.paidOrdersCount}</strong>
+              </div>
+              <div>
+                <span>Leads</span>
+                <strong>{organization.leadsCount}</strong>
+              </div>
+              <div>
+                <span>Prontidão</span>
+                <strong>{organization.readinessScore}%</strong>
+              </div>
+            </div>
 
+            <div className="operationsAdminLinks">
+              <span>{organization.publicDomain || "Domínio público pendente"}</span>
+              <span>{organization.adminDomain || "Domínio admin pendente"}</span>
+            </div>
+
+            <div className="operationsAdminSwatches">
+              <span>
+                <i style={{ background: organization.primaryColor || "#1f5fbf" }} />
+                Principal
+              </span>
+              <span>
+                <i style={{ background: organization.secondaryColor || "#dce9ff" }} />
+                Secundária
+              </span>
+            </div>
+
+            <div className="platformReadinessBar" aria-label={`Prontidão de ${organization.readinessScore}%`}>
+              <span style={{ width: `${organization.readinessScore}%` }} />
+            </div>
+
+            <form action={updateOrganizationAction} className="operationsAdminForm">
+              <input name="organizationId" type="hidden" value={organization.id} />
+
+              <label className="field">
+                <span>Nome</span>
+                <input defaultValue={organization.name} name="name" required />
+              </label>
+              <label className="field">
+                <span>Domínio público</span>
+                <input defaultValue={organization.publicDomain ?? ""} name="publicDomain" />
+              </label>
+              <label className="field">
+                <span>Domínio admin</span>
+                <input defaultValue={organization.adminDomain ?? ""} name="adminDomain" />
+              </label>
+              <label className="field">
+                <span>Logo (URL)</span>
+                <input defaultValue={organization.logoUrl ?? ""} name="logoUrl" />
+              </label>
+              <label className="field">
+                <span>Cor principal</span>
+                <input defaultValue={organization.primaryColor ?? ""} name="primaryColor" />
+              </label>
+              <label className="field">
+                <span>Cor secundária</span>
+                <input defaultValue={organization.secondaryColor ?? ""} name="secondaryColor" />
+              </label>
+              <label className="field">
+                <span>E-mail de suporte</span>
+                <input defaultValue={organization.supportEmail ?? ""} name="supportEmail" />
+              </label>
+              <label className="field">
+                <span>Telefone / WhatsApp</span>
+                <input defaultValue={organization.supportPhone ?? ""} name="supportPhone" />
+              </label>
+
+              <div className="operationsAdminInlineActions">
+                <button className="button smallButton" type="submit">
+                  Salvar
+                </button>
+              </div>
+            </form>
+
+            <div className="operationsAdminCardFooter">
               <div className="operationsAdminQuickActions">
                 <Link className="secondaryButton smallButton" href={`/admin/operations/${organization.id}`}>
-                  Central da operação
+                  Central
                 </Link>
                 {organization.adminDomain ? (
                   <a
@@ -260,130 +397,21 @@ export default async function AdminOperationsPage() {
                     rel="noreferrer"
                     target="_blank"
                   >
-                    Entrar no admin
-                  </a>
-                ) : null}
-                {organization.publicDomain ? (
-                  <a
-                    className="secondaryButton smallButton"
-                    href={`https://${organization.publicDomain}`}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    Abrir vitrine
+                    Admin
                   </a>
                 ) : null}
               </div>
 
-              <div className="operationsAdminSwatches">
-                <span>
-                  <i style={{ background: organization.primaryColor || "#0b7a63" }} />
-                  Principal
-                </span>
-                <span>
-                  <i style={{ background: organization.secondaryColor || "#dff3ec" }} />
-                  Secundária
-                </span>
-              </div>
-
-              <div className="platformReadinessBar" aria-label={`Prontidão de ${organization.readinessScore}%`}>
-                <span style={{ width: `${organization.readinessScore}%` }} />
-              </div>
-
-              <div className="platformReadinessTags">
-                {organization.readinessItems.map((item) => (
-                  <span className={item.done ? "isDone" : "isTodo"} key={item.label}>
-                    {item.label}
-                  </span>
-                ))}
-              </div>
-
-              <form action={updateOrganizationAction} className="operationsAdminForm">
-                <input type="hidden" name="organizationId" value={organization.id} />
-
-                <label className="field">
-                  <span>Nome</span>
-                  <input name="name" defaultValue={organization.name} required />
-                </label>
-
-                <label className="field">
-                  <span>Domínio público</span>
-                  <input name="publicDomain" defaultValue={organization.publicDomain || ""} />
-                </label>
-
-                <label className="field">
-                  <span>Domínio admin</span>
-                  <input name="adminDomain" defaultValue={organization.adminDomain || ""} />
-                </label>
-
-                <label className="field">
-                  <span>Logo (URL)</span>
-                  <input name="logoUrl" defaultValue={organization.logoUrl || ""} />
-                </label>
-
-                <label className="field">
-                  <span>Cor principal</span>
-                  <input name="primaryColor" defaultValue={organization.primaryColor || ""} />
-                </label>
-
-                <label className="field">
-                  <span>Cor secundária</span>
-                  <input name="secondaryColor" defaultValue={organization.secondaryColor || ""} />
-                </label>
-
-                <label className="field">
-                  <span>E-mail de suporte</span>
-                  <input name="supportEmail" type="email" defaultValue={organization.supportEmail || ""} />
-                </label>
-
-                <label className="field">
-                  <span>Telefone / WhatsApp</span>
-                  <input name="supportPhone" defaultValue={organization.supportPhone || ""} />
-                </label>
-
-                <div className="actionRow">
-                  <button className="secondaryButton smallButton" type="submit">
-                    Salvar dados
-                  </button>
-                </div>
-              </form>
-
-              <form action={updateOrganizationStatusAction} className="inlineForm">
-                <input type="hidden" name="organizationId" value={organization.id} />
-                <input type="hidden" name="isActive" value={String(!organization.isActive)} />
+              <form action={updateOrganizationStatusAction} className="operationsAdminQuickActions">
+                <input name="organizationId" type="hidden" value={organization.id} />
+                <input name="isActive" type="hidden" value={organization.isActive ? "false" : "true"} />
                 <button className="secondaryButton smallButton" type="submit">
-                  {organization.isActive ? "Desativar operação" : "Ativar operação"}
+                  {organization.isActive ? "Desativar" : "Ativar"}
                 </button>
               </form>
-
-              <div className="actionRow">
-                <Link className="button smallButton" href={`/admin/operations/${organization.id}`}>
-                  Ver detalhe
-                </Link>
-                {organization.publicDomain ? (
-                  <a
-                    className="secondaryButton smallButton"
-                    href={`https://${organization.publicDomain}`}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    Abrir público
-                  </a>
-                ) : null}
-                {organization.adminDomain ? (
-                  <a
-                    className="secondaryButton smallButton"
-                    href={`https://${organization.adminDomain}/admin`}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    Abrir admin
-                  </a>
-                ) : null}
-              </div>
-            </article>
-          ))}
-        </div>
+            </div>
+          </article>
+        ))}
       </section>
     </AdminShell>
   );

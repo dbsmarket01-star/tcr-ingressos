@@ -46,6 +46,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
   if (organizationContext.isPlatformHost) {
     const platformOverview = await getPlatformOverview();
+    const activeOperations = platformOverview.operations.filter((item) => item.isActive);
+    const revenueInCents = activeOperations.reduce((total, item) => total + item.paidRevenueInCents, 0);
 
     return (
       <AdminShell
@@ -56,64 +58,44 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <div className="platformOverviewHero">
             <div>
               <span className="eyebrow">Painel master</span>
-              <h2>A Ingresaas administra o motor SaaS. As operações filhas atendem o mercado.</h2>
+              <h2>Cadastre clientes, acompanhe a saúde de cada operação e entre na bilheteria certa sem ruído.</h2>
               <p>
-                Esta tela acompanha a saude da plataforma, a prontidao das bilheterias filhas e os passos necessarios
-                para colocar cada nova operacao no ar com dominio, equipe e identidade proprios.
+                A Ingresaas fica no topo. As bilheterias filhas vivem embaixo com domínio, equipe, identidade e
+                relatórios separados.
               </p>
             </div>
             <div className="platformOverviewBadges">
-              <span>Plataforma-mãe</span>
-              <span>Bilheterias filhas</span>
-              <span>Domínio por operação</span>
+              <span>Cliente novo</span>
+              <span>Domínio próprio</span>
+              <span>Relatórios por operação</span>
             </div>
           </div>
 
           <div className="grid dashboardGrid platformOverviewMetrics">
-            {metric("Operações", platformOverview.totalOrganizations, `${platformOverview.childOrganizations} filhas embaixo da base`)}
+            {metric("Operações", platformOverview.childOrganizations, "Bilheterias filhas cadastradas")}
             {metric("Ativas", platformOverview.activeOrganizations, `${platformOverview.fullyConfiguredOrganizations} com público + admin completos`, true)}
-            {metric("Domínios configurados", platformOverview.domainsConfigured, "Público ou admin já definidos")}
-            {metric("Equipe somada", platformOverview.totalAdmins, "Usuários internos cadastrados nas operações")}
+            {metric("Eventos publicados", platformOverview.publishedEvents, "Eventos ativos nas operações")}
+            {metric("Equipe somada", platformOverview.totalAdmins, "Usuários internos cadastrados")}
           </div>
 
           <div className="platformMasterActionBar">
             <Link className="button smallButton" href="/admin/operations">
-              Abrir gestão das operações
-            </Link>
-            <Link className="secondaryButton smallButton" href="/login">
-              Validar acesso master
+              Abrir operações
             </Link>
           </div>
         </section>
 
-        <section className="platformExecutiveGrid spacedSection" aria-label="Ações rápidas da plataforma">
+        <section className="platformExecutiveGrid spacedSection" aria-label="Leitura rápida da plataforma">
           <article className="dashboardPanel platformExecutiveCard">
-            <span className="eyebrow">Próximo passo</span>
-            <h2>Continue a lapidar a primeira bilheteria filha antes de abrir a próxima.</h2>
-            <p>
-              Use a TCR como operação piloto: refine a experiência, valide o fluxo master -&gt; operação e só depois
-              replique o modelo para o A2.
-            </p>
-            <div className="actionRow">
-              <Link className="button smallButton" href="/admin/operations">
-                Escolher operação
-              </Link>
-            </div>
+            <span className="eyebrow">Próxima ação</span>
+            <h2>Use a TCR como filha piloto até o fluxo master -&gt; operação ficar redondo.</h2>
+            <p>Depois disso, replicar para um novo cliente fica muito mais leve.</p>
           </article>
 
           <article className="dashboardPanel platformExecutiveCard">
-            <span className="eyebrow">Atalhos úteis</span>
-            <div className="platformExecutiveLinks">
-              <Link className="secondaryButton smallButton" href="/admin/operations">
-                Operações
-              </Link>
-              <Link className="secondaryButton smallButton" href="/admin">
-                Dashboard master
-              </Link>
-              <Link className="secondaryButton smallButton" href="/login">
-                Login master
-              </Link>
-            </div>
+            <span className="eyebrow">Receita consolidada</span>
+            <h2>{formatCurrency(revenueInCents)}</h2>
+            <p>Soma do faturamento pago das operações ativas já cadastradas na plataforma.</p>
           </article>
         </section>
 
@@ -121,46 +103,37 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <article className="dashboardPanel platformMasterGuide">
             <div className="sectionHeader inlineHeader">
               <div>
-                <h2>Checklist de implantação</h2>
-                <p>O fluxo mínimo para uma nova bilheteria filha nascer dentro da Ingresaas sem bagunça.</p>
+                <h2>Fluxo de implantação</h2>
+                <p>O caminho mínimo para um cliente nascer dentro da Ingresaas sem bagunça.</p>
               </div>
             </div>
             <ol className="platformChecklist">
-              <li>Criar a operação com nome, domínios e canais de suporte</li>
-              <li>Definir branding mínimo para site público e admin</li>
+              <li>Criar o cliente com domínio, identidade e usuário inicial</li>
               <li>Apontar domínio público e domínio do produtor</li>
-              <li>Liberar equipe inicial e configurar permissões</li>
-              <li>Publicar os primeiros eventos sem misturar dados com outra operação</li>
+              <li>Entrar na central da operação e revisar eventos, pedidos e check-in</li>
+              <li>Conferir relatórios da filha sem misturar dados de outra operação</li>
             </ol>
-            <div className="actionRow">
-              <Link className="button smallButton" href="/admin/operations">
-                Abrir operações
-              </Link>
-              <Link className="secondaryButton smallButton" href="/login">
-                Ver acesso master
-              </Link>
-            </div>
           </article>
 
           <article className="dashboardPanel platformMasterGuide">
             <div className="sectionHeader inlineHeader">
               <div>
-                <h2>Leitura da arquitetura</h2>
-                <p>Critérios para a Ingresaas parar de parecer uma bilheteria e se comportar como plataforma.</p>
+                <h2>Estrutura da plataforma</h2>
+                <p>O que precisa continuar separado para a Ingresaas crescer sem virar bagunça.</p>
               </div>
             </div>
             <div className="permissionList">
               <p>
-                <strong>Ingresaas:</strong> dominio institucional, login master e gestao das bilheterias filhas.
+                <strong>Ingresaas:</strong> domínio institucional, login master e gestão das bilheterias filhas.
               </p>
               <p>
-                <strong>Bilheteria filha:</strong> dominio publico para cliente final e dominio admin para produtores.
+                <strong>Bilheteria filha:</strong> domínio público para cliente final e domínio admin para produtores.
               </p>
               <p>
-                <strong>Branding:</strong> cada operacao precisa refletir suas proprias cores, suporte e linguagem.
+                <strong>Branding:</strong> cada operação precisa refletir suas próprias cores, suporte e linguagem.
               </p>
               <p>
-                <strong>Base unica:</strong> o motor tecnico continua compartilhado, sem clonar codigo ou banco.
+                <strong>Base única:</strong> o motor técnico continua compartilhado, sem clonar código ou banco.
               </p>
             </div>
           </article>
@@ -176,11 +149,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         <section className="dashboardPanel platformOperationsPanel spacedSection">
           <div className="sectionHeader inlineHeader">
             <div>
-              <h2>Bilheterias na base</h2>
-              <p>Leitura rápida do que já está ativo, do que ainda depende de domínio e do que já tem equipe própria.</p>
+              <h2>Resumo das operações</h2>
+              <p>Clientes já cadastrados com sinais rápidos de receita, equipe, domínio e prontidão.</p>
             </div>
             <Link className="button" href="/admin/operations">
-              Gerir operações
+              Ver relatório por operação
             </Link>
           </div>
 

@@ -1892,6 +1892,48 @@ textarea {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.platformOperationsWorkspace {
+  align-items: start;
+}
+
+.platformOperationsRightColumn {
+  display: grid;
+  gap: 18px;
+}
+
+.platformOperationsFilterCard,
+.platformOperationsGuideCard {
+  gap: 14px;
+}
+
+.operationsAdminInlineActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.operationsAdminCardFooter {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.tablePrimaryCell {
+  display: grid;
+  gap: 4px;
+}
+
+.tablePrimaryCell strong {
+  font-size: 14px;
+}
+
+.tablePrimaryCell span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .platformMemberList {
   display: grid;
   gap: 12px;

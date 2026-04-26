@@ -74,6 +74,9 @@ export type PlatformOverview = {
     secondaryColor: string | null;
     eventCount: number;
     adminCount: number;
+    paidRevenueInCents: number;
+    paidOrdersCount: number;
+    leadsCount: number;
     readinessScore: number;
     readinessLabel: string;
     readinessItems: Array<{
@@ -148,6 +151,51 @@ export async function getPlatformOverview(): Promise<PlatformOverview> {
   const domainsConfigured = organizations.filter((item) => item.publicDomain || item.adminDomain).length;
   const fullyConfiguredOrganizations = organizations.filter((item) => item.publicDomain && item.adminDomain).length;
   const childOrganizations = Math.max(organizations.length - 1, 0);
+  const metricsByOrganization = new Map(
+    (
+      await Promise.all(
+        organizations.map(async (item) => {
+          const [paidOrdersCount, leadsCount, paidRevenue] = await prisma.$transaction([
+            prisma.order.count({
+              where: {
+                event: {
+                  organizationId: item.id
+                },
+                status: "PAID"
+              }
+            }),
+            prisma.eventLead.count({
+              where: {
+                event: {
+                  organizationId: item.id
+                }
+              }
+            }),
+            prisma.order.aggregate({
+              where: {
+                event: {
+                  organizationId: item.id
+                },
+                status: "PAID"
+              },
+              _sum: {
+                totalInCents: true
+              }
+            })
+          ]);
+
+          return [
+            item.id,
+            {
+              paidOrdersCount,
+              leadsCount,
+              paidRevenueInCents: paidRevenue._sum.totalInCents ?? 0
+            }
+          ] as const;
+        })
+      )
+    ).map(([id, metrics]) => [id, metrics] as const)
+  );
 
   return {
     totalOrganizations: organizations.length,
@@ -159,6 +207,11 @@ export async function getPlatformOverview(): Promise<PlatformOverview> {
     totalAdmins,
     childOrganizations,
     operations: organizations.map((item) => ({
+      ...(metricsByOrganization.get(item.id) ?? {
+        paidOrdersCount: 0,
+        leadsCount: 0,
+        paidRevenueInCents: 0
+      }),
       ...buildReadiness({
         publicDomain: item.publicDomain,
         adminDomain: item.adminDomain,

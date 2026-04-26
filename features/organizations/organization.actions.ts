@@ -17,9 +17,16 @@ export async function createOrganizationAction(formData: FormData) {
   const admin = await requirePermission("OPERATIONS");
   const name = readText(formData, "name");
   const slug = readText(formData, "slug");
+  const ownerName = readText(formData, "ownerName");
+  const ownerEmail = readText(formData, "ownerEmail");
+  const ownerPassword = readText(formData, "ownerPassword");
 
   if (name.length < 2) {
     throw new Error("Informe o nome da operação.");
+  }
+
+  if (ownerName.length < 2 || !ownerEmail.includes("@") || ownerPassword.length < 8) {
+    throw new Error("Informe nome, e-mail e senha inicial do cliente com pelo menos 8 caracteres.");
   }
 
   const organization = await createOrganization({
@@ -31,7 +38,10 @@ export async function createOrganizationAction(formData: FormData) {
     primaryColor: readText(formData, "primaryColor"),
     secondaryColor: readText(formData, "secondaryColor"),
     supportEmail: readText(formData, "supportEmail"),
-    supportPhone: readText(formData, "supportPhone")
+    supportPhone: readText(formData, "supportPhone"),
+    ownerName,
+    ownerEmail,
+    ownerPassword
   });
 
   await createAuditLog({
