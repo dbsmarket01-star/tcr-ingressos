@@ -55,7 +55,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
         <article className="operationCommandCard">
           <span className="eyebrow">Operação de portaria</span>
           <h2>Entrada rápida e leitura segura para a {organizationContext.brandName}</h2>
-          <p>O foco aqui é manter a fila fluindo, bloquear reutilização e ter um caminho claro quando o QR Code falhar.</p>
+          <p>O foco aqui é manter a fila fluindo, bloquear reutilização e ter um caminho claro quando o QR Code falhar, já dentro da rotina da bilheteria filha.</p>
         </article>
         <div className="operationCommandActions">
           <Link className="secondaryButton smallButton" href="/admin">

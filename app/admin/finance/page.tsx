@@ -45,13 +45,13 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
   return (
     <AdminShell
       title="Financeiro"
-      description="Faturamento, pagamentos e repasses do período com leitura mais objetiva."
+      description="Faturamento pago, pagamentos e repasses da TCR com leitura mais objetiva."
     >
       <section className="operationCommandStrip spacedSection" aria-label="Atalhos da área financeira">
         <article className="operationCommandCard">
           <span className="eyebrow">Saúde financeira</span>
           <h2>Números da {organizationContext.brandName} com leitura mais limpa para decisão rápida.</h2>
-          <p>Use estes atalhos para sair do quadro financeiro e conferir pedidos, eventos ou o panorama geral sem perder contexto.</p>
+          <p>Use estes atalhos para sair do quadro financeiro e conferir pedidos, eventos ou o panorama geral sem perder contexto nem misturar pedido pendente com receita confirmada.</p>
         </article>
         <div className="operationCommandActions">
           <Link className="secondaryButton smallButton" href="/admin">

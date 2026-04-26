@@ -30,9 +30,9 @@ export async function AdminShell({ title, description, children }: AdminShellPro
   const pulseTitle = isPlatformHost ? "Plataforma em evolução" : "Operação em andamento";
   const pulseText = isPlatformHost
     ? "A base da Ingresaas sustenta o motor, enquanto cada bilheteria filha mantém sua própria marca e domínio."
-    : "Vendas, atendimento e check-in centralizados para a rotina do produtor.";
-  const headerActionHref = isPlatformHost ? "/admin/operations" : publicSiteHref;
-  const headerActionLabel = isPlatformHost ? "Gerir operações" : "Ver site";
+    : `A ${brandName} opera como bilheteria filha da Ingresaas, com domínio, equipe e rotina próprios.`;
+  const headerActionHref = isPlatformHost ? "/admin/operations" : `${currentOrganizationContext.platformAppUrl}/admin/operations`;
+  const headerActionLabel = isPlatformHost ? "Gerir operações" : "Voltar à Ingresaas";
 
   return (
     <main className="adminShell">
@@ -76,6 +76,11 @@ export async function AdminShell({ title, description, children }: AdminShellPro
             <Link className="secondaryButton" href={headerActionHref}>
               {headerActionLabel}
             </Link>
+            {!isPlatformHost ? (
+              <Link className="secondaryButton" href={publicSiteHref}>
+                Ver site
+              </Link>
+            ) : null}
             <form action={logoutAction}>
               <button className="secondaryButton" type="submit">
                 Sair

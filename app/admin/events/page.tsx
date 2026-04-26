@@ -31,7 +31,7 @@ export default async function EventsPage() {
   return (
     <AdminShell
       title="Eventos"
-      description="Gerencie publicação, lotes, vendas, faturamento e páginas públicas dos eventos."
+      description="Gerencie publicação, lotes, vendas pagas e páginas públicas dos eventos da TCR."
     >
       <section className="operationCommandStrip spacedSection" aria-label="Atalhos da área de eventos">
         <article className="operationCommandCard">
@@ -39,7 +39,7 @@ export default async function EventsPage() {
           <h2>Revise a agenda, a vitrine pública e o preparo comercial.</h2>
           <p>
             Esta tela concentra o que mais importa para a operação: publicação, capacidade, faturamento e acesso rápido
-            aos eventos da {organizationContext.brandName}.
+            aos eventos da {organizationContext.brandName}, já no contexto da bilheteria filha.
           </p>
         </article>
         <div className="operationCommandActions">
@@ -62,9 +62,9 @@ export default async function EventsPage() {
           <small>{draftEvents} em preparação ou despublicados</small>
         </article>
         <article className="card metric">
-          <span className="muted">Faturamento total</span>
+          <span className="muted">Faturamento pago</span>
           <strong>{formatCurrency(totalRevenueInCents)}</strong>
-          <small>Receita acumulada dos eventos cadastrados</small>
+          <small>Receita confirmada dos eventos cadastrados</small>
         </article>
         <article className="card metric">
           <span className="muted">Ingressos vendidos</span>
@@ -72,7 +72,7 @@ export default async function EventsPage() {
           <small>{totalCapacity} lugares na capacidade total</small>
         </article>
         <article className="card metric">
-          <span className="muted">Operação preparada</span>
+          <span className="muted">Prontos para vender</span>
           <strong>{preparedEvents}</strong>
           <small>Eventos com lotes prontos para vender</small>
         </article>

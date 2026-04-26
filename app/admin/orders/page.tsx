@@ -52,13 +52,13 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   return (
     <AdminShell
       title="Pedidos"
-      description="Localize compras, entenda o status rapidamente e resolva atendimento sem ruído."
+      description="Localize compras, entenda o status rapidamente e acompanhe só faturamento efetivamente pago."
     >
       <section className="operationCommandStrip spacedSection" aria-label="Atalhos da área de pedidos">
         <article className="operationCommandCard">
           <span className="eyebrow">Atendimento comercial</span>
           <h2>Pedidos da {organizationContext.brandName} com leitura rápida e ação direta.</h2>
-          <p>Quando houver suporte, o foco aqui é achar o pedido, entender o status e agir no menor número de cliques possível.</p>
+          <p>Quando houver suporte, o foco aqui é achar o pedido, entender o status e agir no menor número de cliques possível, sem confundir pedido pendente com venda confirmada.</p>
         </article>
         <div className="operationCommandActions">
           <Link className="secondaryButton smallButton" href="/admin">

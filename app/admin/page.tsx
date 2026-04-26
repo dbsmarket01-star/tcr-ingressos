@@ -314,13 +314,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   return (
     <AdminShell
       title="Dashboard"
-      description="Acompanhe faturamento, pedidos, meios de pagamento e desempenho dos eventos por período."
+      description="Acompanhe faturamento pago, pedidos, meios de pagamento e o estado operacional da TCR por período."
     >
       <section className="operationCommandStrip spacedSection" aria-label="Atalhos da operação">
         <article className="operationCommandCard">
-          <span className="eyebrow">Rotina da operação</span>
-          <h2>{organizationContext.brandName} em visão rápida</h2>
-          <p>Use estes atalhos para sair do panorama geral e cair direto nas áreas mais operacionais da filha.</p>
+          <span className="eyebrow">Rotina da operação filha</span>
+          <h2>{organizationContext.brandName} em visão rápida dentro da Ingresaas</h2>
+          <p>Use estes atalhos para sair do panorama geral e cair direto nas áreas mais operacionais da bilheteria, sem perder a ponte com o painel master.</p>
         </article>
         <div className="operationCommandActions">
           <Link className="secondaryButton smallButton" href="/admin/events">
@@ -341,14 +341,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       <section className="dashboardFilterPanel" aria-label="Filtro do dashboard">
         <div>
           <span className="eyebrow">Visão comercial</span>
-          <h2>Resumo da operação</h2>
-          <p>{periodLabel}. Ajuste as datas para comparar vendas, clientes e desempenho por evento.</p>
+          <h2>Resumo comercial da TCR</h2>
+          <p>{periodLabel}. Ajuste as datas para comparar apenas o que foi pago, o avanço da agenda e o desempenho por evento.</p>
           <div className="dashboardQuickFilters">
             <Link className="secondaryButton smallButton" href="/admin">
-              Hoje
+              Últimos 7 dias
             </Link>
             <Link className="secondaryButton smallButton" href="/admin?startDate=&endDate=">
-              Janela padrão
+              Limpar datas
             </Link>
             <Link className="secondaryButton smallButton" href="/admin/orders">
               Ver pedidos
@@ -376,7 +376,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
       <section className="grid dashboardGrid dashboardPrimaryGrid" aria-label="Indicadores principais">
         {metric(
-          "Valor faturado",
+          "Faturamento pago",
           formatCurrency(dashboard.totals.revenueInCents),
           `${dashboard.totals.paidOrders} pedido(s) pagos no período`,
           true
@@ -386,12 +386,43 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           formatCurrency(dashboard.periodMetrics.averageTicketInCents),
           "Média por pedido aprovado"
         )}
-        {metric("Pedidos vendidos", dashboard.totals.paidOrders, approvedRateLabel)}
+        {metric("Pedidos pagos", dashboard.totals.paidOrders, approvedRateLabel)}
         {metric(
           "Clientes únicos",
           dashboard.periodMetrics.uniqueCustomers,
           `${dashboard.periodMetrics.newCustomerRate}% novos compradores`
         )}
+      </section>
+
+      <section className="grid twoColumns spacedSection" aria-label="Checklist final da operação">
+        <article className="dashboardPanel">
+          <div className="sectionHeader inlineHeader">
+            <div>
+              <h2>Checklist operacional final</h2>
+              <p>Um retrato rápido do que já está pronto para a TCR operar com menos supervisão.</p>
+            </div>
+          </div>
+          <ol className="platformChecklist">
+            <li>{dashboard.events.some((event) => event.status === "PUBLISHED") ? "Existe agenda publicada para venda" : "Ainda falta publicar pelo menos um evento"}</li>
+            <li>{dashboard.totals.paidOrders > 0 ? "Já existem pedidos pagos válidos" : "Ainda não há pedidos pagos no recorte atual"}</li>
+            <li>{dashboard.totals.ticketsActive > 0 ? "Ingressos ativos já estão emitidos" : "Ainda falta emitir ingressos ativos"}</li>
+            <li>{dashboard.totals.checkInsApproved > 0 ? "Check-in já rodou na operação" : "Check-in ainda não foi exercitado no recorte atual"}</li>
+          </ol>
+        </article>
+
+        <article className="dashboardPanel">
+          <div className="sectionHeader inlineHeader">
+            <div>
+              <h2>Ponte com a Ingresaas</h2>
+              <p>A TCR já roda como filha oficial, mas continua governada pelo painel master.</p>
+            </div>
+          </div>
+          <div className="permissionList">
+            <p><strong>Painel master:</strong> cria clientes, acompanha relatórios e governa acessos.</p>
+            <p><strong>TCR:</strong> vende, atende, faz check-in e opera a própria agenda.</p>
+            <p><strong>Próximo uso ideal:</strong> sair da Ingresaas só para entrar aqui no ponto exato do trabalho.</p>
+          </div>
+        </article>
       </section>
 
       <section className="dashboardInsightsGrid" aria-label="Pagamentos e clientes">
@@ -474,7 +505,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         <div className="sectionHeader inlineHeader">
           <div>
             <h2>Visão por evento</h2>
-            <p>Capacidade, vendidos, reservas e faturamento da operação atual.</p>
+            <p>Capacidade, vendidos, reservas e faturamento pago da operação atual.</p>
           </div>
           <Link className="button" href="/admin/events/new">
             Novo evento
