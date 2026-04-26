@@ -7,6 +7,8 @@ export type AdminTicketFilters = {
   search?: string;
 };
 
+type EventScope = string[] | null | undefined;
+
 function parseStatus(value?: string) {
   if (!value || !Object.values(TicketStatus).includes(value as TicketStatus)) {
     return undefined;
@@ -15,12 +17,16 @@ function parseStatus(value?: string) {
   return value as TicketStatus;
 }
 
-function buildTicketWhere(filters: AdminTicketFilters): Prisma.TicketWhereInput {
+function buildTicketWhere(filters: AdminTicketFilters, allowedEventIds?: EventScope): Prisma.TicketWhereInput {
   const search = filters.search?.trim();
   const status = parseStatus(filters.status);
 
   return {
-    ...(filters.eventId ? { eventId: filters.eventId } : {}),
+    ...(filters.eventId
+      ? { eventId: filters.eventId }
+      : allowedEventIds
+        ? { eventId: { in: allowedEventIds } }
+        : {}),
     ...(status ? { status } : {}),
     ...(search
       ? {
@@ -37,8 +43,9 @@ function buildTicketWhere(filters: AdminTicketFilters): Prisma.TicketWhereInput 
   };
 }
 
-export async function listTicketFilterEvents() {
+export async function listTicketFilterEvents(allowedEventIds?: EventScope) {
   return prisma.event.findMany({
+    where: allowedEventIds ? { id: { in: allowedEventIds } } : undefined,
     orderBy: [{ startsAt: "desc" }, { title: "asc" }],
     select: {
       id: true,
@@ -47,10 +54,10 @@ export async function listTicketFilterEvents() {
   });
 }
 
-export async function listAdminTickets(filters: AdminTicketFilters = {}) {
-  const where = buildTicketWhere(filters);
+export async function listAdminTickets(filters: AdminTicketFilters = {}, allowedEventIds?: EventScope) {
+  const where = buildTicketWhere(filters, allowedEventIds);
 
-  const [tickets, totalCount] = await Promise.all([
+  const [tickets, totalCount, groupedStatusCounts] = await Promise.all([
     prisma.ticket.findMany({
       where,
       orderBy: {
@@ -67,15 +74,35 @@ export async function listAdminTickets(filters: AdminTicketFilters = {}) {
         }
       }
     }),
-    prisma.ticket.count({ where })
+    prisma.ticket.count({ where }),
+    prisma.ticket.groupBy({
+      by: ["status"],
+      where,
+      _count: {
+        _all: true
+      }
+    })
   ]);
 
-  return { tickets, totalCount };
+  const statusCounts = groupedStatusCounts.reduce<Record<TicketStatus, number>>(
+    (acc, item) => {
+      acc[item.status] = item._count._all;
+      return acc;
+    },
+    {
+      ACTIVE: 0,
+      USED: 0,
+      CANCELED: 0,
+      INVALID: 0
+    }
+  );
+
+  return { tickets, totalCount, statusCounts };
 }
 
-export async function listTicketsForCsvExport(filters: AdminTicketFilters = {}) {
+export async function listTicketsForCsvExport(filters: AdminTicketFilters = {}, allowedEventIds?: EventScope) {
   return prisma.ticket.findMany({
-    where: buildTicketWhere(filters),
+    where: buildTicketWhere(filters, allowedEventIds),
     orderBy: {
       issuedAt: "desc"
     },

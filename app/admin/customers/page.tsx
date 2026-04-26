@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { Prisma } from "@prisma/client";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
@@ -14,88 +16,131 @@ type CustomersPageProps = {
 
 export default async function CustomersPage({ searchParams }: CustomersPageProps) {
   const admin = await requirePermission("CUSTOMERS");
+  const organizationContext = await getCurrentOrganizationContext();
   const params = searchParams ? await searchParams : {};
   const query = params.q?.trim() ?? "";
   const allowedEventIds = getAdminAllowedEventIds(admin);
-
-  const customers = await prisma.customer.findMany({
-    where: query
+  const customerSearchConditions: Prisma.CustomerWhereInput["OR"] = query
+    ? [
+        { name: { contains: query, mode: "insensitive" } },
+        { email: { contains: query, mode: "insensitive" } },
+        { document: { contains: query } },
+        { phone: { contains: query } }
+      ]
+    : undefined;
+  const customerWhere: Prisma.CustomerWhereInput = query
+    ? {
+        AND: [
+          ...(allowedEventIds ? [{ orders: { some: { eventId: { in: allowedEventIds } } } }] : []),
+          {
+            OR: customerSearchConditions
+          }
+        ]
+      }
+    : allowedEventIds
       ? {
-          AND: [
-            ...(allowedEventIds ? [{ orders: { some: { eventId: { in: allowedEventIds } } } }] : []),
-            {
-              OR: [
-                { name: { contains: query, mode: "insensitive" } },
-                { email: { contains: query, mode: "insensitive" } },
-                { document: { contains: query } },
-                { phone: { contains: query } }
-              ]
-            }
-          ]
-        }
-      : allowedEventIds
-        ? {
-            orders: {
-              some: {
-                eventId: { in: allowedEventIds }
-              }
-            }
-          }
-        : undefined,
-    orderBy: [{ createdAt: "desc" }],
-    take: 100,
-    include: {
-      _count: {
-        select: {
-          orders: allowedEventIds
-            ? {
-                where: {
-                  eventId: { in: allowedEventIds }
-                }
-              }
-            : true,
-          participants: true
-        }
-      },
-      orders: {
-        where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
-        orderBy: [{ createdAt: "desc" }],
-        take: 5,
-        select: {
-          code: true,
-          status: true,
-          totalInCents: true,
-          createdAt: true,
-          event: {
-            select: {
-              title: true
+          orders: {
+            some: {
+              eventId: { in: allowedEventIds }
             }
           }
         }
-      }
-    }
-  });
+      : {};
+  const orderScopeWhere: Prisma.OrderWhereInput = {
+    ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+    ...(customerSearchConditions ? { customer: { OR: customerSearchConditions } } : {})
+  };
 
-  const summary = customers.reduce(
-    (acc, customer) => {
-      acc.total += 1;
-      acc.orders += customer._count.orders;
-      acc.revenue += customer.orders
-        .filter((order) => order.status === "PAID")
-        .reduce((sum, order) => sum + order.totalInCents, 0);
-      if (customer._count.orders > 1) {
-        acc.returning += 1;
+  const [customers, totalCustomers, totalOrdersInScope, paidRevenue, returningGroups] = await Promise.all([
+    prisma.customer.findMany({
+      where: customerWhere,
+      orderBy: [{ createdAt: "desc" }],
+      take: 100,
+      include: {
+        _count: {
+          select: {
+            orders: allowedEventIds
+              ? {
+                  where: {
+                    eventId: { in: allowedEventIds }
+                  }
+                }
+              : true,
+            participants: true
+          }
+        },
+        orders: {
+          where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
+          orderBy: [{ createdAt: "desc" }],
+          take: 5,
+          select: {
+            code: true,
+            status: true,
+            totalInCents: true,
+            createdAt: true,
+            event: {
+              select: {
+                title: true
+              }
+            }
+          }
+        }
       }
-      return acc;
-    },
-    { total: 0, orders: 0, revenue: 0, returning: 0 }
-  );
+    }),
+    prisma.customer.count({ where: customerWhere }),
+    prisma.order.count({ where: orderScopeWhere }),
+    prisma.order.aggregate({
+      where: {
+        ...orderScopeWhere,
+        status: "PAID"
+      },
+      _sum: {
+        totalInCents: true
+      }
+    }),
+    prisma.order.groupBy({
+      by: ["customerId"],
+      where: orderScopeWhere,
+      _count: {
+        customerId: true
+      }
+    })
+  ]);
+
+  const summary = {
+    total: totalCustomers,
+    orders: totalOrdersInScope,
+    revenue: paidRevenue._sum.totalInCents ?? 0,
+    returning: returningGroups.filter((group) => group._count.customerId > 1).length
+  };
 
   return (
     <AdminShell
       title="Clientes"
       description="Base de compradores para localizar histórico, recorrência e contato com mais velocidade."
     >
+      <section className="operationCommandStrip spacedSection" aria-label="Atalhos da área de clientes">
+        <article className="operationCommandCard">
+          <span className="eyebrow">Relacionamento</span>
+          <h2>Veja a base da {organizationContext.brandName} com número exato e contato rápido.</h2>
+          <p>
+            Aqui o foco é saber quem já comprou, quem voltou a comprar e quanto a base realmente
+            gerou em pedidos pagos no recorte atual, sem distorcer a leitura com últimos itens listados.
+          </p>
+        </article>
+        <div className="operationCommandActions">
+          <Link className="secondaryButton smallButton" href="/admin/orders">
+            Pedidos
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin/support">
+            Atendimento
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin">
+            Dashboard
+          </Link>
+        </div>
+      </section>
+
       <section className="adminPanelHero compact">
         <div>
           <span className="sectionEyebrow">Relacionamento</span>
@@ -121,9 +166,9 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
           <strong>{summary.returning}</strong>
         </article>
         <article className="card metric">
-          <span className="muted">Receita dos últimos pedidos</span>
+          <span className="muted">Receita paga no recorte</span>
           <strong>{formatCurrency(summary.revenue)}</strong>
-          <small>Somente pedidos pagos do recorte</small>
+          <small>Somente pedidos com pagamento confirmado</small>
         </article>
       </section>
 

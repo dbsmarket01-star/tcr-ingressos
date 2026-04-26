@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { listAdminTickets, listTicketFilterEvents } from "@/features/tickets/ticket.admin.service";
 import { formatDateTime } from "@/lib/format";
 
@@ -22,15 +23,14 @@ type TicketsPageProps = {
 };
 
 export default async function TicketsPage({ searchParams }: TicketsPageProps) {
-  await requirePermission("TICKETS");
+  const admin = await requirePermission("TICKETS");
+  const organizationContext = await getCurrentOrganizationContext();
   const params = searchParams ? await searchParams : {};
-  const [{ tickets, totalCount }, events] = await Promise.all([
-    listAdminTickets(params),
-    listTicketFilterEvents()
+  const allowedEventIds = getAdminAllowedEventIds(admin);
+  const [{ tickets, totalCount, statusCounts }, events] = await Promise.all([
+    listAdminTickets(params, allowedEventIds),
+    listTicketFilterEvents(allowedEventIds)
   ]);
-  const activeCount = tickets.filter((ticket) => ticket.status === "ACTIVE").length;
-  const usedCount = tickets.filter((ticket) => ticket.status === "USED").length;
-  const canceledCount = tickets.filter((ticket) => ticket.status === "CANCELED").length;
   const exportHref = `/admin/tickets/export?${new URLSearchParams({
     ...(params.eventId ? { eventId: params.eventId } : {}),
     ...(params.status ? { status: params.status } : {}),
@@ -42,22 +42,44 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
       title="Ingressos"
       description="Ingressos emitidos, status, comprador e vínculo com pedido."
     >
+      <section className="operationCommandStrip spacedSection" aria-label="Atalhos da área de ingressos">
+        <article className="operationCommandCard">
+          <span className="eyebrow">Controle de ingresso</span>
+          <h2>Veja a emissão real da {organizationContext.brandName} sem misturar recorte com página listada.</h2>
+          <p>
+            Esta área mostra o status exato do recorte atual, ajuda a localizar o QR certo e reduz o
+            caminho entre localizar o ingresso e abrir o pedido ou o atendimento.
+          </p>
+        </article>
+        <div className="operationCommandActions">
+          <Link className="secondaryButton smallButton" href="/admin">
+            Dashboard
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin/check-in">
+            Check-in
+          </Link>
+          <Link className="secondaryButton smallButton" href="/admin/support">
+            Atendimento
+          </Link>
+        </div>
+      </section>
+
       <section className="grid dashboardGrid">
         <article className="card metric">
-          <span className="muted">Total listado</span>
-          <strong>{tickets.length}</strong>
+          <span className="muted">Total no recorte</span>
+          <strong>{totalCount}</strong>
         </article>
         <article className="card metric">
           <span className="muted">Ativos</span>
-          <strong>{activeCount}</strong>
+          <strong>{statusCounts.ACTIVE}</strong>
         </article>
         <article className="card metric">
           <span className="muted">Usados</span>
-          <strong>{usedCount}</strong>
+          <strong>{statusCounts.USED}</strong>
         </article>
         <article className="card metric">
           <span className="muted">Cancelados</span>
-          <strong>{canceledCount}</strong>
+          <strong>{statusCounts.CANCELED}</strong>
         </article>
       </section>
 
