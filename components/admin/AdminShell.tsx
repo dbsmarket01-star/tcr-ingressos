@@ -25,11 +25,11 @@ export async function AdminShell({ title, description, children }: AdminShellPro
   const publicSiteHref = isPlatformHost ? currentOrganizationContext.platformAppUrl || "/" : currentOrganizationContext.publicBaseUrl || "/";
   const sidebarEyebrow = isPlatformHost ? "Central da plataforma" : "Central de operação";
   const sidebarText = isPlatformHost
-    ? "Operações, domínios, equipes e evolução do motor de bilheteria em um painel-mãe."
+    ? "Use o Dashboard para ver a plataforma e Operações para criar e administrar clientes."
     : "Eventos, pedidos, leads, check-in e financeiro em uma operação mais organizada para a equipe.";
   const pulseTitle = isPlatformHost ? "Plataforma em evolução" : "Operação em andamento";
   const pulseText = isPlatformHost
-    ? "A base da Ingresaas sustenta o motor, enquanto cada bilheteria filha mantém sua própria marca e domínio."
+    ? "A Ingresaas governa os clientes e cada bilheteria filha segue com domínio, equipe e identidade próprios."
     : `A ${brandName} opera como bilheteria filha da Ingresaas, com domínio, equipe e rotina próprios.`;
   const headerActionHref = isPlatformHost ? "/admin/operations" : `${currentOrganizationContext.platformAppUrl}/admin/operations`;
   const headerActionLabel = isPlatformHost ? "Gerir operações" : "Voltar à Ingresaas";

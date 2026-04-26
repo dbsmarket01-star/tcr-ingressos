@@ -168,14 +168,14 @@ export function getAdminNavGroupsForRole(role: AdminRole, options?: { isPlatform
   if (options?.isPlatformHost) {
     const platformGroups: AdminNavGroup[] = [
       {
-        label: "Plataforma",
-        description: "Visão da Ingresaas",
+        label: "Painel",
+        description: "Resumo e clientes",
         defaultOpen: true,
         items: adminNavItems.filter((item) => ["/admin", "/admin/operations"].includes(item.href))
       },
       {
-        label: "Governança",
-        description: "Equipe e histórico",
+        label: "Acesso",
+        description: "Equipe e segurança",
         items: adminNavItems.filter((item) =>
           ["/admin/users", "/admin/audit", "/admin/account"].includes(item.href)
         )

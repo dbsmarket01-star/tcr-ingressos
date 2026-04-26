@@ -979,6 +979,10 @@ textarea {
   padding-left: 22px;
 }
 
+.platformChecklist.compact {
+  gap: 8px;
+}
+
 .platformChecklist li {
   color: var(--ink);
   font-weight: 700;
@@ -1850,6 +1854,10 @@ textarea {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.platformSecurityStack.compact {
+  grid-template-columns: 1fr;
+}
+
 .platformSecurityStack div {
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid #dbe4f6;
@@ -1878,6 +1886,20 @@ textarea {
   display: grid;
   gap: 18px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.platformMasterSections {
+  align-items: stretch;
+}
+
+.platformMasterSectionCard {
+  display: grid;
+  gap: 14px;
+}
+
+.platformMasterSectionCard h2,
+.platformMasterSectionCard p {
+  margin: 0;
 }
 
 .platformAccessWorkflowCard {

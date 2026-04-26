@@ -48,11 +48,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     const platformOverview = await getPlatformOverview();
     const activeOperations = platformOverview.operations.filter((item) => item.isActive);
     const revenueInCents = activeOperations.reduce((total, item) => total + item.paidRevenueInCents, 0);
+    const paidOrders = activeOperations.reduce((total, item) => total + item.paidOrdersCount, 0);
+    const activeLeads = activeOperations.reduce((total, item) => total + item.leadsCount, 0);
     const operationsWithInitialTeam = activeOperations.filter((item) => item.adminCount > 0).length;
     const operationsWithFullDomains = activeOperations.filter((item) => item.publicDomain && item.adminDomain).length;
     const operationsWithSecurityBase = activeOperations.filter(
       (item) => item.adminCount > 0 && item.publicDomain && item.adminDomain
     ).length;
+    const readyOperations = activeOperations.filter((item) => item.readinessScore >= 67).length;
 
     return (
       <AdminShell
@@ -63,174 +66,99 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <div className="platformOverviewHero">
             <div>
               <span className="eyebrow">Painel master</span>
-              <h2>Uma central mais limpa para criar clientes, proteger acessos e administrar a base inteira sem ruído.</h2>
+              <h2>Você está no comando da plataforma. Aqui enxergamos o todo; em Operações, cuidamos de cada cliente.</h2>
               <p>
-                A Ingresaas fica no topo do guarda-chuva. Cada bilheteria filha entra com login e senha próprios,
-                carrega seu domínio e mantém dados, equipe e relatórios separados.
+                Use esta tela para ter uma leitura rápida da base inteira. Quando quiser criar cliente,
+                revisar domínio ou entrar numa bilheteria filha, o próximo lugar é Operações.
               </p>
             </div>
             <div className="platformOverviewBadges">
-              <span>Cliente novo</span>
-              <span>Acesso separado</span>
-              <span>Domínio próprio</span>
+              <span>Visão geral</span>
+              <span>Clientes</span>
+              <span>Segurança</span>
             </div>
-          </div>
-
-          <div className="grid dashboardGrid platformOverviewMetrics">
-            {metric("Operações", platformOverview.childOrganizations, "Bilheterias filhas cadastradas")}
-            {metric("Ativas", platformOverview.activeOrganizations, `${platformOverview.fullyConfiguredOrganizations} com público + admin completos`, true)}
-            {metric("Eventos publicados", platformOverview.publishedEvents, "Eventos ativos nas operações")}
-            {metric("Equipe somada", platformOverview.totalAdmins, "Usuários internos cadastrados")}
           </div>
 
           <div className="platformMasterActionBar">
             <Link className="button smallButton" href="/admin/operations">
-              Abrir operações
+              Ir para clientes
             </Link>
           </div>
         </section>
 
-        <section className="platformExecutiveGrid spacedSection" aria-label="Leitura rápida da plataforma">
-          <article className="dashboardPanel platformExecutiveCard">
-            <span className="eyebrow">Acesso do cliente</span>
-            <h2>{operationsWithInitialTeam} operação(ões) já têm equipe inicial pronta para entrar.</h2>
-            <p>O cliente nasce com usuário inicial, depois a equipe cresce dentro da própria bilheteria, sem cruzar acessos.</p>
-          </article>
-
-          <article className="dashboardPanel platformExecutiveCard">
-            <span className="eyebrow">Segurança da base</span>
-            <h2>{operationsWithSecurityBase} operação(ões) já têm domínio e acesso administrativo fechados.</h2>
-            <p>Essa é a base mínima para o cliente operar com separação entre público, admin e governança master.</p>
-          </article>
+        <section className="grid dashboardGrid platformOverviewMetrics spacedSection">
+          {metric("Clientes ativos", activeOperations.length, `${readyOperations} prontos para operar`, true)}
+          {metric("Receita paga", formatCurrency(revenueInCents), `${paidOrders} pedido(s) pagos nas operações`)}
+          {metric("Eventos publicados", platformOverview.publishedEvents, "Eventos ativos nas bilheterias filhas")}
+          {metric("Leads", activeLeads, "Captações registradas na base")}
         </section>
 
-        <section className="platformSecurityGrid spacedSection" aria-label="Acesso e segurança da plataforma">
-          <article className="dashboardPanel platformSecurityCard">
-            <span className="eyebrow">Login e senha dos clientes</span>
-            <h2>Cada cliente entra no próprio admin, com usuário inicial criado junto da operação.</h2>
+        <section className="grid twoColumns spacedSection platformMasterSections">
+          <article className="dashboardPanel platformMasterSectionCard">
+            <span className="eyebrow">Dashboard</span>
+            <h2>Leitura rápida da plataforma</h2>
             <p>
-              O fluxo fica simples: você cria o cliente, define domínio, identidade e usuário inicial. Depois disso, o
-              próprio cliente passa a operar a equipe dele lá dentro.
+              Veja quantos clientes estão ativos, quanto já foi pago, quantos eventos já estão publicados
+              e se a base está saudável para crescer.
             </p>
-            <div className="platformSecurityStack">
+            <div className="platformSecurityStack compact">
               <div>
-                <span>Clientes ativos</span>
-                <strong>{activeOperations.length}</strong>
-              </div>
-              <div>
-                <span>Com equipe inicial</span>
+                <span>Clientes com equipe inicial</span>
                 <strong>{operationsWithInitialTeam}</strong>
               </div>
               <div>
-                <span>Com domínio admin</span>
+                <span>Clientes com domínio completo</span>
                 <strong>{operationsWithFullDomains}</strong>
               </div>
+              <div>
+                <span>Clientes com base segura</span>
+                <strong>{operationsWithSecurityBase}</strong>
+              </div>
             </div>
           </article>
 
-          <article className="dashboardPanel platformSecurityCard">
-            <span className="eyebrow">Segurança e governança</span>
-            <h2>Dados, relatórios e configurações sensíveis continuam isolados por operação.</h2>
+          <article className="dashboardPanel platformMasterSectionCard">
+            <span className="eyebrow">Clientes</span>
+            <h2>Crie e administre bilheterias filhas sem bagunça.</h2>
             <p>
-              A Ingresaas governa a base toda, mas o cliente só enxerga a própria bilheteria. Isso mantém números,
-              equipe, eventos e configuração separados mesmo com um motor único embaixo.
+              Em Operações você cadastra domínio, branding, usuário inicial e depois entra na central
+              do cliente para revisar equipe, eventos, pedidos e financeiro.
+            </p>
+            <ol className="platformChecklist compact">
+              <li>Criar cliente</li>
+              <li>Definir domínio e identidade</li>
+              <li>Entregar acesso inicial</li>
+              <li>Abrir a central da operação</li>
+            </ol>
+            <Link className="secondaryButton smallButton" href="/admin/operations">
+              Abrir operações
+            </Link>
+          </article>
+
+          <article className="dashboardPanel platformMasterSectionCard">
+            <span className="eyebrow">Segurança</span>
+            <h2>A plataforma vê tudo; cada cliente vê só o que é dele.</h2>
+            <p>
+              A separação entre master, cliente e equipe restrita continua sendo a base para não
+              misturar dados, permissões e configurações entre operações.
             </p>
             <div className="platformSecurityList">
-              <span>Domínio público separado</span>
-              <span>Admin separado</span>
-              <span>Usuários por cliente</span>
-              <span>Permissões por papel</span>
+              <span>Login por cliente</span>
+              <span>Domínio admin separado</span>
+              <span>Papel restrito por equipe</span>
+              <span>Configuração isolada</span>
             </div>
           </article>
-        </section>
-
-        <section className="platformAccessWorkflow spacedSection" aria-label="Fluxo de acesso e proteção">
-          <article className="dashboardPanel platformAccessWorkflowCard">
-            <span className="eyebrow">Fluxo de criação</span>
-            <h2>Crie o cliente uma vez e entregue uma entrada limpa para ele operar.</h2>
-            <ol className="platformChecklist">
-              <li>Cadastre nome, domínio público e domínio admin</li>
-              <li>Defina as cores e a identidade mínima da operação</li>
-              <li>Crie o usuário inicial com login e senha</li>
-              <li>Abra a central da operação e revise equipe, eventos e pedidos</li>
-            </ol>
-          </article>
-
-          <article className="dashboardPanel platformAccessWorkflowCard">
-            <span className="eyebrow">Proteção de acesso</span>
-            <h2>Uma camada simples para não misturar plataforma, cliente e rotina operacional.</h2>
-            <div className="platformProtectionList">
-              <div>
-                <strong>Master</strong>
-                <p>Cria clientes, governa domínios e acompanha a saúde das operações.</p>
-              </div>
-              <div>
-                <strong>Cliente</strong>
-                <p>Entra no admin da própria bilheteria e cuida de equipe, eventos e vendas.</p>
-              </div>
-              <div>
-                <strong>Papel restrito</strong>
-                <p>Pode operar só os eventos ou áreas que você liberar, sem abrir a base inteira.</p>
-              </div>
-            </div>
-          </article>
-        </section>
-
-        <section className="grid twoColumns spacedSection">
-          <article className="dashboardPanel platformMasterGuide">
-            <div className="sectionHeader inlineHeader">
-              <div>
-                <h2>Fluxo de implantação</h2>
-                <p>O caminho mínimo para um cliente nascer dentro da Ingresaas sem bagunça.</p>
-              </div>
-            </div>
-            <ol className="platformChecklist">
-              <li>Criar o cliente com domínio, identidade e usuário inicial</li>
-              <li>Apontar domínio público e domínio do produtor</li>
-              <li>Entrar na central da operação e revisar eventos, pedidos e check-in</li>
-              <li>Conferir relatórios da filha sem misturar dados de outra operação</li>
-            </ol>
-          </article>
-
-          <article className="dashboardPanel platformMasterGuide">
-            <div className="sectionHeader inlineHeader">
-              <div>
-                <h2>Estrutura da plataforma</h2>
-                <p>O que precisa continuar separado para a Ingresaas crescer sem virar bagunça.</p>
-              </div>
-            </div>
-            <div className="permissionList">
-              <p>
-                <strong>Ingresaas:</strong> domínio institucional, login master e gestão das bilheterias filhas.
-              </p>
-              <p>
-                <strong>Bilheteria filha:</strong> domínio público para cliente final e domínio admin para produtores.
-              </p>
-              <p>
-                <strong>Branding:</strong> cada operação precisa refletir suas próprias cores, suporte e linguagem.
-              </p>
-              <p>
-                <strong>Base única:</strong> o motor técnico continua compartilhado, sem clonar código ou banco.
-              </p>
-            </div>
-          </article>
-        </section>
-
-        <section className="grid dashboardGrid platformMasterSnapshot spacedSection" aria-label="Próximos movimentos da plataforma">
-          {metric("Prontas para operar", platformOverview.operations.filter((item) => item.readinessScore >= 67).length, "Operações com estrutura suficiente para revisão final")}
-          {metric("Ainda montando base", platformOverview.operations.filter((item) => item.readinessScore < 67).length, "Dependem de domínio, branding ou equipe")}
-          {metric("Eventos publicados", platformOverview.publishedEvents, "Já ativos em alguma bilheteria filha")}
-          {metric("Domínios completos", platformOverview.fullyConfiguredOrganizations, "Público + admin cadastrados")}
         </section>
 
         <section className="dashboardPanel platformOperationsPanel spacedSection">
           <div className="sectionHeader inlineHeader">
             <div>
-              <h2>Resumo das operações</h2>
-              <p>Clientes já cadastrados com sinais rápidos de receita, equipe, domínio e prontidão.</p>
+              <h2>Resumo dos clientes</h2>
+              <p>Uma leitura rápida para saber quem já está pronto, quem ainda está montando base e quem já está vendendo.</p>
             </div>
             <Link className="button" href="/admin/operations">
-              Ver relatório por operação
+              Ver clientes
             </Link>
           </div>
 

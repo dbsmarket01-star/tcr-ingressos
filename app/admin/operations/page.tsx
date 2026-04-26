@@ -104,10 +104,10 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
       <section className="platformOperationsHero spacedSection" aria-label="Visão geral das operações">
         <div>
           <span className="eyebrow">Mesa de controle</span>
-          <h2>Uma tela só para criar cliente, revisar domínio e acompanhar o que cada bilheteria já está movimentando.</h2>
+          <h2>Esta é a área dos clientes da Ingresaas: criar, revisar e entrar em cada bilheteria filha.</h2>
           <p>
-            Aqui a Ingresaas deixa de ser conceito e vira operação. Você cria o cliente novo, entrega o acesso inicial
-            e acompanha receita, pedidos e leads sem misturar as bases.
+            Pense assim: aqui não é dashboard geral. Aqui é onde você cria cliente novo, revisa domínio,
+            entrega o acesso inicial e acompanha o que cada operação já está movimentando.
           </p>
         </div>
         <div className="platformOperationsHeroBadges">
@@ -153,7 +153,7 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
       <section className="grid twoColumns spacedSection platformOperationsWorkspace">
         <form action={createOrganizationAction} className="card form platformOperationCreateCard">
           <div>
-            <span className="eyebrow">Novo cliente</span>
+            <span className="eyebrow">Etapa 1</span>
             <h2>Criar bilheteria filha</h2>
             <p className="muted">Preencha o essencial: quem é o cliente, qual domínio ele vai usar e qual será a identidade dele.</p>
           </div>
@@ -257,8 +257,8 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
         <div className="platformOperationsRightColumn">
           <form className="card form platformOperationsFilterCard">
             <div>
-              <span className="eyebrow">Relatório das operações</span>
-              <h2>Filtrar clientes</h2>
+              <span className="eyebrow">Etapa 2</span>
+              <h2>Revisar clientes existentes</h2>
               <p className="muted">Busque por nome ou domínio e veja só as bilheterias ativas ou inativas.</p>
             </div>
 
@@ -311,7 +311,7 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
         <div className="sectionHeader inlineHeader">
           <div>
             <h2>Clientes da plataforma</h2>
-            <p>Relatório por operação com receita, pedidos, leads, domínios e acesso rápido à central de gestão.</p>
+            <p>Relatório por cliente com receita paga, pedidos, leads, domínios e acesso rápido à central de gestão.</p>
           </div>
           <Link className="secondaryButton smallButton" href="/admin">
             Voltar ao painel master
