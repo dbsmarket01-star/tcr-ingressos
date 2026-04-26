@@ -17,6 +17,9 @@ type AdminOperationsPageProps = {
   searchParams?: Promise<{
     q?: string;
     status?: string;
+    error?: string;
+    created?: string;
+    updated?: string;
   }>;
 };
 
@@ -43,17 +46,26 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
   const params = searchParams ? await searchParams : {};
   const query = typeof params.q === "string" ? params.q : "";
   const status = params.status === "active" || params.status === "inactive" ? params.status : "all";
+  const error = typeof params.error === "string" ? params.error : "";
+  const created = typeof params.created === "string" ? params.created : "";
+  const updated = typeof params.updated === "string" ? params.updated : "";
   const organizations = await listOrganizationsForPlatformAdmin({ query, status });
   const activeOrganizations = organizations.filter((organization) => organization.isActive);
   const totalRevenueInCents = organizations.reduce((total, organization) => total + organization.paidRevenueInCents, 0);
   const totalPaidOrders = organizations.reduce((total, organization) => total + organization.paidOrdersCount, 0);
   const totalLeads = organizations.reduce((total, organization) => total + organization.leadsCount, 0);
+  const secureOrganizations = organizations.filter((organization) => organization.securityTone === "published");
+  const operationsWithInitialTeam = organizations.filter((organization) => organization._count.adminUsers > 0);
 
   return (
     <AdminShell
       title="Operações"
       description="Cadastre clientes, ligue domínio e identidade, e acompanhe receita e saúde de cada operação em um só lugar."
     >
+      {error ? <div className="errorBox spacedSection">{error}</div> : null}
+      {created ? <div className="successBox spacedSection">Cliente criado: {created}</div> : null}
+      {updated ? <div className="successBox spacedSection">{updated}</div> : null}
+
       <section className="platformOperationsHero spacedSection" aria-label="Visão geral das operações">
         <div>
           <span className="eyebrow">Mesa de controle</span>
@@ -91,6 +103,16 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
           <strong>{totalLeads}</strong>
           <small>Captações já armazenadas nas operações filtradas</small>
         </article>
+        <article className="card metric">
+          <span className="muted">Base protegida</span>
+          <strong>{secureOrganizations.length}</strong>
+          <small>Operações com domínio, equipe e suporte minimamente fechados</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Usuário inicial</span>
+          <strong>{operationsWithInitialTeam.length}</strong>
+          <small>Clientes que já têm acesso inicial criado</small>
+        </article>
       </section>
 
       <section className="grid twoColumns spacedSection platformOperationsWorkspace">
@@ -99,6 +121,12 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
             <span className="eyebrow">Novo cliente</span>
             <h2>Criar bilheteria filha</h2>
             <p className="muted">Preencha o essencial: quem é o cliente, qual domínio ele vai usar e qual será a identidade dele.</p>
+          </div>
+
+          <div className="platformCreateHints">
+            <span>Valida domínio duplicado</span>
+            <span>Cria usuário inicial</span>
+            <span>Entrega acesso separado</span>
           </div>
 
           <div className="grid twoColumns">
@@ -209,12 +237,12 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
           </form>
 
           <article className="card platformMasterGuide platformOperationsGuideCard">
-            <span className="eyebrow">Fluxo enxuto</span>
+            <span className="eyebrow">Segurança e governança</span>
             <ol className="platformChecklist">
-              <li>Crie o cliente com domínio, identidade e usuário inicial</li>
-              <li>Abra a central da operação</li>
-              <li>Entre no admin do cliente e revise eventos, pedidos e check-in</li>
-              <li>Use o relatório abaixo para acompanhar a saúde do cliente</li>
+              <li>O cliente nasce com login e senha iniciais próprios</li>
+              <li>Domínio público e domínio admin ficam separados por operação</li>
+              <li>Relatórios e configuração sensível não se misturam entre clientes</li>
+              <li>A central da operação mostra o que ainda falta para liberar com segurança</li>
             </ol>
           </article>
         </div>
@@ -243,6 +271,7 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
                   <th>Receita paga</th>
                   <th>Pedidos</th>
                   <th>Leads</th>
+                  <th>Segurança</th>
                   <th>Domínios</th>
                   <th>Atualizado</th>
                   <th>Ação</th>
@@ -270,6 +299,12 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
                       </div>
                     </td>
                     <td>{organization.leadsCount}</td>
+                    <td>
+                      <div className="tablePrimaryCell">
+                        <span className={`status ${organization.securityTone}`}>{organization.securityLabel}</span>
+                        <span>{organization.securityIssues[0] || "Base mínima fechada"}</span>
+                      </div>
+                    </td>
                     <td>
                       <div className="tablePrimaryCell">
                         <span>{organization.publicDomain || "Público pendente"}</span>
@@ -320,6 +355,10 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
                 <span>Prontidão</span>
                 <strong>{organization.readinessScore}%</strong>
               </div>
+              <div>
+                <span>Segurança</span>
+                <strong>{organization.securityLabel}</strong>
+              </div>
             </div>
 
             <div className="operationsAdminLinks">
@@ -340,6 +379,21 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
 
             <div className="platformReadinessBar" aria-label={`Prontidão de ${organization.readinessScore}%`}>
               <span style={{ width: `${organization.readinessScore}%` }} />
+            </div>
+
+            <div className="operationsAdminSecurity">
+              <span className={`status ${organization.securityTone}`}>{organization.securityLabel}</span>
+              <div className="platformReadinessTags">
+                {organization.securityIssues.length > 0 ? (
+                  organization.securityIssues.map((issue) => (
+                    <span className="isTodo" key={issue}>
+                      {issue}
+                    </span>
+                  ))
+                ) : (
+                  <span className="isDone">Domínio, equipe e acesso inicial ok</span>
+                )}
+              </div>
             </div>
 
             <form action={updateOrganizationAction} className="operationsAdminForm">

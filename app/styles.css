@@ -2136,6 +2136,11 @@ textarea {
   width: 12px;
 }
 
+.operationsAdminSecurity {
+  display: grid;
+  gap: 12px;
+}
+
 .operationsAdminForm {
   display: grid;
   gap: 14px;

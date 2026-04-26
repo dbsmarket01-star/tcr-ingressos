@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getPlatformOverview } from "@/features/platform/platform.service";
-import { AdminRole } from "@prisma/client";
+import { AdminRole, Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 type CreateOrganizationInput = {
@@ -30,6 +30,14 @@ type UpdateOrganizationInput = {
   supportPhone?: string | null;
 };
 
+type OrganizationConflictInput = {
+  slug: string;
+  publicDomain?: string | null;
+  adminDomain?: string | null;
+  ownerEmail?: string | null;
+  excludeId?: string | null;
+};
+
 function normalizeValue(value?: string | null) {
   const trimmed = value?.trim() || "";
   return trimmed.length > 0 ? trimmed : null;
@@ -56,6 +64,34 @@ function normalizeHexColor(value?: string | null) {
   return `#${hex.toLowerCase()}`;
 }
 
+function normalizeDomain(value?: string | null) {
+  const normalized = normalizeValue(value);
+
+  if (!normalized) {
+    return null;
+  }
+
+  return normalized
+    .replace(/^https?:\/\//i, "")
+    .replace(/\/.*$/, "")
+    .replace(/\.+$/, "")
+    .toLowerCase();
+}
+
+function validateDomain(value?: string | null) {
+  const normalized = normalizeDomain(value);
+
+  if (!normalized) {
+    return null;
+  }
+
+  if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(normalized)) {
+    throw new Error("Informe um domínio válido, sem http:// e sem barras.");
+  }
+
+  return normalized;
+}
+
 function slugify(value: string) {
   return value
     .normalize("NFD")
@@ -64,6 +100,105 @@ function slugify(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 60);
+}
+
+function buildSecurityState(operation: {
+  publicDomain: string | null;
+  adminDomain: string | null;
+  supportEmail: string | null;
+  supportPhone: string | null;
+  adminCount: number;
+}) {
+  const issues = [
+    !operation.publicDomain ? "Domínio público pendente" : null,
+    !operation.adminDomain ? "Domínio admin pendente" : null,
+    operation.adminCount === 0 ? "Sem equipe inicial" : null,
+    !operation.supportEmail && !operation.supportPhone ? "Suporte não definido" : null
+  ].filter(Boolean) as string[];
+
+  if (issues.length === 0) {
+    return {
+      securityLabel: "Base protegida",
+      securityTone: "published",
+      securityIssues: issues
+    };
+  }
+
+  if (issues.length <= 2) {
+    return {
+      securityLabel: "Quase protegida",
+      securityTone: "pending",
+      securityIssues: issues
+    };
+  }
+
+  return {
+    securityLabel: "Exige atenção",
+    securityTone: "draft",
+    securityIssues: issues
+  };
+}
+
+async function ensureOrganizationUniqueness(
+  tx: Prisma.TransactionClient | typeof prisma,
+  input: OrganizationConflictInput
+) {
+  const checks = [
+    input.slug
+      ? tx.organization.findFirst({
+          where: {
+            slug: input.slug,
+            ...(input.excludeId ? { id: { not: input.excludeId } } : {})
+          },
+          select: { id: true, name: true }
+        })
+      : Promise.resolve(null),
+    input.publicDomain
+      ? tx.organization.findFirst({
+          where: {
+            publicDomain: input.publicDomain,
+            ...(input.excludeId ? { id: { not: input.excludeId } } : {})
+          },
+          select: { id: true, name: true }
+        })
+      : Promise.resolve(null),
+    input.adminDomain
+      ? tx.organization.findFirst({
+          where: {
+            adminDomain: input.adminDomain,
+            ...(input.excludeId ? { id: { not: input.excludeId } } : {})
+          },
+          select: { id: true, name: true }
+        })
+      : Promise.resolve(null),
+    input.ownerEmail
+      ? tx.adminUser.findFirst({
+          where: {
+            email: input.ownerEmail,
+            ...(input.excludeId ? { organizationId: { not: input.excludeId } } : {})
+          },
+          select: { id: true, name: true }
+        })
+      : Promise.resolve(null)
+  ];
+
+  const [slugConflict, publicDomainConflict, adminDomainConflict, ownerConflict] = await Promise.all(checks);
+
+  if (slugConflict) {
+    throw new Error("Já existe um cliente com esse slug interno.");
+  }
+
+  if (publicDomainConflict) {
+    throw new Error("Esse domínio público já está vinculado a outro cliente.");
+  }
+
+  if (adminDomainConflict) {
+    throw new Error("Esse domínio admin já está vinculado a outro cliente.");
+  }
+
+  if (ownerConflict) {
+    throw new Error("O e-mail do usuário inicial já está em uso em outra conta.");
+  }
 }
 
 export async function listOrganizationsForPlatformAdmin(filters?: {
@@ -163,6 +298,13 @@ export async function listOrganizationsForPlatformAdmin(filters?: {
       readinessScore: readiness?.readinessScore ?? 0,
       readinessLabel: readiness?.readinessLabel ?? "Inicial",
       readinessItems: readiness?.readinessItems ?? [],
+      ...buildSecurityState({
+        publicDomain: organization.publicDomain,
+        adminDomain: organization.adminDomain,
+        supportEmail: organization.supportEmail,
+        supportPhone: organization.supportPhone,
+        adminCount: organization._count.adminUsers
+      }),
       paidOrdersCount: metrics?.paidOrdersCount ?? 0,
       totalOrdersCount: metrics?.totalOrdersCount ?? 0,
       leadsCount: metrics?.leadsCount ?? 0,
@@ -282,6 +424,13 @@ export async function getOrganizationDetailForPlatformAdmin(id: string) {
 
   const platformOverview = await getPlatformOverview();
   const readiness = platformOverview.operations.find((operation) => operation.id === organization.id);
+  const securityState = buildSecurityState({
+    publicDomain: organization.publicDomain,
+    adminDomain: organization.adminDomain,
+    supportEmail: organization.supportEmail,
+    supportPhone: organization.supportPhone,
+    adminCount: organization._count.adminUsers
+  });
 
   return {
     ...organization,
@@ -294,7 +443,8 @@ export async function getOrganizationDetailForPlatformAdmin(id: string) {
     paidRevenueInCents: paidRevenue._sum.totalInCents ?? 0,
     readinessScore: readiness?.readinessScore ?? 0,
     readinessLabel: readiness?.readinessLabel ?? "Inicial",
-    readinessItems: readiness?.readinessItems ?? []
+    readinessItems: readiness?.readinessItems ?? [],
+    ...securityState
   };
 }
 
@@ -304,14 +454,24 @@ export async function createOrganization(input: CreateOrganizationInput) {
   const ownerPassword = input.ownerPassword?.trim() || "";
   const shouldCreateOwner = Boolean(ownerName && ownerEmail && ownerPassword);
   const passwordHash = shouldCreateOwner ? await bcrypt.hash(ownerPassword, 12) : null;
+  const normalizedSlug = slugify(input.slug || input.name);
+  const publicDomain = validateDomain(input.publicDomain);
+  const adminDomain = validateDomain(input.adminDomain);
 
   return prisma.$transaction(async (tx) => {
+    await ensureOrganizationUniqueness(tx, {
+      slug: normalizedSlug,
+      publicDomain,
+      adminDomain,
+      ownerEmail
+    });
+
     const organization = await tx.organization.create({
       data: {
         name: input.name.trim(),
-        slug: slugify(input.slug || input.name),
-        publicDomain: normalizeValue(input.publicDomain),
-        adminDomain: normalizeValue(input.adminDomain),
+        slug: normalizedSlug,
+        publicDomain,
+        adminDomain,
         logoUrl: normalizeValue(input.logoUrl),
         primaryColor: normalizeHexColor(input.primaryColor),
         secondaryColor: normalizeHexColor(input.secondaryColor),
@@ -340,14 +500,24 @@ export async function createOrganization(input: CreateOrganizationInput) {
 }
 
 export async function updateOrganization(input: UpdateOrganizationInput) {
+  const publicDomain = validateDomain(input.publicDomain);
+  const adminDomain = validateDomain(input.adminDomain);
+
+  await ensureOrganizationUniqueness(prisma, {
+    slug: "",
+    publicDomain,
+    adminDomain,
+    excludeId: input.id
+  });
+
   return prisma.organization.update({
     where: {
       id: input.id
     },
     data: {
       name: input.name.trim(),
-      publicDomain: normalizeValue(input.publicDomain),
-      adminDomain: normalizeValue(input.adminDomain),
+      publicDomain,
+      adminDomain,
       logoUrl: normalizeValue(input.logoUrl),
       primaryColor: normalizeHexColor(input.primaryColor),
       secondaryColor: normalizeHexColor(input.secondaryColor),

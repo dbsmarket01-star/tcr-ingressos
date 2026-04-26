@@ -200,6 +200,75 @@ export default async function OperationDetailPage({ params }: OperationDetailPag
         </div>
       </section>
 
+      <section className="grid twoColumns spacedSection">
+        <article className="dashboardPanel">
+          <div className="sectionHeader inlineHeader">
+            <div>
+              <h2>Camada de segurança</h2>
+              <p>Leitura rápida do que protege o acesso, os dados e as configurações dessa operação.</p>
+            </div>
+          </div>
+          <div className="operationsAdminSecurity">
+            <span className={`status ${operation.securityTone}`}>{operation.securityLabel}</span>
+            <div className="platformReadinessTags">
+              {operation.securityIssues.length > 0 ? (
+                operation.securityIssues.map((issue) => (
+                  <span className="isTodo" key={issue}>
+                    {issue}
+                  </span>
+                ))
+              ) : (
+                <span className="isDone">Domínio, acesso inicial e suporte ok</span>
+              )}
+            </div>
+          </div>
+          <div className="permissionList">
+            <p>
+              <strong>Login inicial:</strong>{" "}
+              {operation._count.adminUsers > 0 ? "já existe equipe ativa para entrar no admin" : "ainda falta liberar o primeiro acesso do cliente"}.
+            </p>
+            <p>
+              <strong>Domínio do cliente:</strong>{" "}
+              {operation.publicDomain ? operation.publicDomain : "pendente"}.
+            </p>
+            <p>
+              <strong>Domínio admin:</strong>{" "}
+              {operation.adminDomain ? operation.adminDomain : "pendente"}.
+            </p>
+            <p>
+              <strong>Governança:</strong> a Ingresaas mantém a visão master, enquanto essa operação enxerga só os próprios dados.
+            </p>
+          </div>
+        </article>
+
+        <article className="dashboardPanel">
+          <div className="sectionHeader inlineHeader">
+            <div>
+              <h2>Relatório do cliente</h2>
+              <p>Resumo executivo para decidir se a operação já pode tocar com menos supervisão.</p>
+            </div>
+          </div>
+          <div className="operationsAdminStats">
+            <div>
+              <span>Receita paga</span>
+              <strong>{formatCurrency(operation.paidRevenueInCents)}</strong>
+            </div>
+            <div>
+              <span>Pedidos pagos</span>
+              <strong>{operation.paidOrdersCount}</strong>
+            </div>
+            <div>
+              <span>Leads</span>
+              <strong>{operation.totalLeadsCount}</strong>
+            </div>
+            <div>
+              <span>Equipe ativa</span>
+              <strong>{operation._count.adminUsers}</strong>
+            </div>
+          </div>
+        </article>
+      </section>
+
       <section className="grid dashboardGrid platformMasterSnapshot spacedSection" aria-label="Indicadores operacionais da filha">
         <article className="card metric dashboardHeroMetric">
           <span className="muted">Faturamento pago</span>

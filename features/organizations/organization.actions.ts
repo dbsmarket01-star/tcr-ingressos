@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createAuditLog } from "@/features/audit/audit.service";
 import { requirePermission } from "@/features/auth/auth.service";
 import {
@@ -26,23 +27,37 @@ export async function createOrganizationAction(formData: FormData) {
   }
 
   if (ownerName.length < 2 || !ownerEmail.includes("@") || ownerPassword.length < 8) {
-    throw new Error("Informe nome, e-mail e senha inicial do cliente com pelo menos 8 caracteres.");
+    redirect(
+      `/admin/operations?error=${encodeURIComponent(
+        "Informe nome, e-mail e senha inicial do cliente com pelo menos 8 caracteres."
+      )}`
+    );
   }
 
-  const organization = await createOrganization({
-    name,
-    slug,
-    publicDomain: readText(formData, "publicDomain"),
-    adminDomain: readText(formData, "adminDomain"),
-    logoUrl: readText(formData, "logoUrl"),
-    primaryColor: readText(formData, "primaryColor"),
-    secondaryColor: readText(formData, "secondaryColor"),
-    supportEmail: readText(formData, "supportEmail"),
-    supportPhone: readText(formData, "supportPhone"),
-    ownerName,
-    ownerEmail,
-    ownerPassword
-  });
+  let organization: Awaited<ReturnType<typeof createOrganization>>;
+
+  try {
+    organization = await createOrganization({
+      name,
+      slug,
+      publicDomain: readText(formData, "publicDomain"),
+      adminDomain: readText(formData, "adminDomain"),
+      logoUrl: readText(formData, "logoUrl"),
+      primaryColor: readText(formData, "primaryColor"),
+      secondaryColor: readText(formData, "secondaryColor"),
+      supportEmail: readText(formData, "supportEmail"),
+      supportPhone: readText(formData, "supportPhone"),
+      ownerName,
+      ownerEmail,
+      ownerPassword
+    });
+  } catch (error) {
+    redirect(
+      `/admin/operations?error=${encodeURIComponent(
+        error instanceof Error ? error.message : "Não foi possível criar o cliente."
+      )}`
+    );
+  }
 
   await createAuditLog({
     adminUserId: admin.id,
@@ -63,6 +78,7 @@ export async function createOrganizationAction(formData: FormData) {
   revalidatePath("/admin/operations");
   revalidatePath("/");
   revalidatePath("/login");
+  redirect(`/admin/operations?created=${encodeURIComponent(organization.name)}`);
 }
 
 export async function updateOrganizationAction(formData: FormData) {
@@ -74,17 +90,27 @@ export async function updateOrganizationAction(formData: FormData) {
     throw new Error("Operação inválida.");
   }
 
-  const organization = await updateOrganization({
-    id,
-    name,
-    publicDomain: readText(formData, "publicDomain"),
-    adminDomain: readText(formData, "adminDomain"),
-    logoUrl: readText(formData, "logoUrl"),
-    primaryColor: readText(formData, "primaryColor"),
-    secondaryColor: readText(formData, "secondaryColor"),
-    supportEmail: readText(formData, "supportEmail"),
-    supportPhone: readText(formData, "supportPhone")
-  });
+  let organization: Awaited<ReturnType<typeof updateOrganization>>;
+
+  try {
+    organization = await updateOrganization({
+      id,
+      name,
+      publicDomain: readText(formData, "publicDomain"),
+      adminDomain: readText(formData, "adminDomain"),
+      logoUrl: readText(formData, "logoUrl"),
+      primaryColor: readText(formData, "primaryColor"),
+      secondaryColor: readText(formData, "secondaryColor"),
+      supportEmail: readText(formData, "supportEmail"),
+      supportPhone: readText(formData, "supportPhone")
+    });
+  } catch (error) {
+    redirect(
+      `/admin/operations?error=${encodeURIComponent(
+        error instanceof Error ? error.message : "Não foi possível atualizar o cliente."
+      )}`
+    );
+  }
 
   await createAuditLog({
     adminUserId: admin.id,
@@ -104,6 +130,7 @@ export async function updateOrganizationAction(formData: FormData) {
   revalidatePath("/admin/operations");
   revalidatePath("/");
   revalidatePath("/login");
+  redirect(`/admin/operations?updated=${encodeURIComponent(organization.name)}`);
 }
 
 export async function updateOrganizationStatusAction(formData: FormData) {
@@ -115,7 +142,17 @@ export async function updateOrganizationStatusAction(formData: FormData) {
     throw new Error("Operação inválida.");
   }
 
-  const organization = await updateOrganizationStatus(id, isActive);
+  let organization: Awaited<ReturnType<typeof updateOrganizationStatus>>;
+
+  try {
+    organization = await updateOrganizationStatus(id, isActive);
+  } catch (error) {
+    redirect(
+      `/admin/operations?error=${encodeURIComponent(
+        error instanceof Error ? error.message : "Não foi possível atualizar o status do cliente."
+      )}`
+    );
+  }
 
   await createAuditLog({
     adminUserId: admin.id,
@@ -131,4 +168,9 @@ export async function updateOrganizationStatusAction(formData: FormData) {
   revalidatePath("/admin/operations");
   revalidatePath("/");
   revalidatePath("/login");
+  redirect(
+    `/admin/operations?updated=${encodeURIComponent(
+      `${organization.name} ${isActive ? "ativada" : "desativada"}`
+    )}`
+  );
 }
