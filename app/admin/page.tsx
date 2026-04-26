@@ -48,6 +48,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     const platformOverview = await getPlatformOverview();
     const activeOperations = platformOverview.operations.filter((item) => item.isActive);
     const revenueInCents = activeOperations.reduce((total, item) => total + item.paidRevenueInCents, 0);
+    const operationsWithInitialTeam = activeOperations.filter((item) => item.adminCount > 0).length;
+    const operationsWithFullDomains = activeOperations.filter((item) => item.publicDomain && item.adminDomain).length;
+    const operationsWithSecurityBase = activeOperations.filter(
+      (item) => item.adminCount > 0 && item.publicDomain && item.adminDomain
+    ).length;
 
     return (
       <AdminShell
@@ -58,16 +63,16 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <div className="platformOverviewHero">
             <div>
               <span className="eyebrow">Painel master</span>
-              <h2>Cadastre clientes, acompanhe a saúde de cada operação e entre na bilheteria certa sem ruído.</h2>
+              <h2>Uma central mais limpa para criar clientes, proteger acessos e administrar a base inteira sem ruído.</h2>
               <p>
-                A Ingresaas fica no topo. As bilheterias filhas vivem embaixo com domínio, equipe, identidade e
-                relatórios separados.
+                A Ingresaas fica no topo do guarda-chuva. Cada bilheteria filha entra com login e senha próprios,
+                carrega seu domínio e mantém dados, equipe e relatórios separados.
               </p>
             </div>
             <div className="platformOverviewBadges">
               <span>Cliente novo</span>
+              <span>Acesso separado</span>
               <span>Domínio próprio</span>
-              <span>Relatórios por operação</span>
             </div>
           </div>
 
@@ -87,39 +92,86 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
         <section className="platformExecutiveGrid spacedSection" aria-label="Leitura rápida da plataforma">
           <article className="dashboardPanel platformExecutiveCard">
-            <span className="eyebrow">Próxima ação</span>
-            <h2>Use a TCR como filha piloto até o fluxo master -&gt; operação ficar redondo.</h2>
-            <p>Depois disso, replicar para um novo cliente fica muito mais leve.</p>
+            <span className="eyebrow">Acesso do cliente</span>
+            <h2>{operationsWithInitialTeam} operação(ões) já têm equipe inicial pronta para entrar.</h2>
+            <p>O cliente nasce com usuário inicial, depois a equipe cresce dentro da própria bilheteria, sem cruzar acessos.</p>
           </article>
 
           <article className="dashboardPanel platformExecutiveCard">
-            <span className="eyebrow">Receita consolidada</span>
-            <h2>{formatCurrency(revenueInCents)}</h2>
-            <p>Soma do faturamento pago das operações ativas já cadastradas na plataforma.</p>
+            <span className="eyebrow">Segurança da base</span>
+            <h2>{operationsWithSecurityBase} operação(ões) já têm domínio e acesso administrativo fechados.</h2>
+            <p>Essa é a base mínima para o cliente operar com separação entre público, admin e governança master.</p>
           </article>
         </section>
 
         <section className="platformSecurityGrid spacedSection" aria-label="Acesso e segurança da plataforma">
           <article className="dashboardPanel platformSecurityCard">
             <span className="eyebrow">Login e senha dos clientes</span>
-            <h2>Cada cliente entra no próprio painel com acesso separado.</h2>
-            <p>O usuário inicial nasce junto com a operação. Depois, a equipe do cliente pode ser ampliada dentro da própria bilheteria, sem misturar acessos entre operações.</p>
-            <div className="actionRow">
-              <Link className="button smallButton" href="/admin/operations">
-                Criar cliente
-              </Link>
+            <h2>Cada cliente entra no próprio admin, com usuário inicial criado junto da operação.</h2>
+            <p>
+              O fluxo fica simples: você cria o cliente, define domínio, identidade e usuário inicial. Depois disso, o
+              próprio cliente passa a operar a equipe dele lá dentro.
+            </p>
+            <div className="platformSecurityStack">
+              <div>
+                <span>Clientes ativos</span>
+                <strong>{activeOperations.length}</strong>
+              </div>
+              <div>
+                <span>Com equipe inicial</span>
+                <strong>{operationsWithInitialTeam}</strong>
+              </div>
+              <div>
+                <span>Com domínio admin</span>
+                <strong>{operationsWithFullDomains}</strong>
+              </div>
             </div>
           </article>
 
           <article className="dashboardPanel platformSecurityCard">
             <span className="eyebrow">Segurança e governança</span>
-            <h2>Dados, relatórios e configurações ficam isolados por operação.</h2>
-            <p>A Ingresaas controla quem pode acessar a base do cliente, quem pode ver números e quem pode alterar configuração sensível.</p>
+            <h2>Dados, relatórios e configurações sensíveis continuam isolados por operação.</h2>
+            <p>
+              A Ingresaas governa a base toda, mas o cliente só enxerga a própria bilheteria. Isso mantém números,
+              equipe, eventos e configuração separados mesmo com um motor único embaixo.
+            </p>
             <div className="platformSecurityList">
               <span>Domínio público separado</span>
               <span>Admin separado</span>
               <span>Usuários por cliente</span>
               <span>Permissões por papel</span>
+            </div>
+          </article>
+        </section>
+
+        <section className="platformAccessWorkflow spacedSection" aria-label="Fluxo de acesso e proteção">
+          <article className="dashboardPanel platformAccessWorkflowCard">
+            <span className="eyebrow">Fluxo de criação</span>
+            <h2>Crie o cliente uma vez e entregue uma entrada limpa para ele operar.</h2>
+            <ol className="platformChecklist">
+              <li>Cadastre nome, domínio público e domínio admin</li>
+              <li>Defina as cores e a identidade mínima da operação</li>
+              <li>Crie o usuário inicial com login e senha</li>
+              <li>Abra a central da operação e revise equipe, eventos e pedidos</li>
+            </ol>
+          </article>
+
+          <article className="dashboardPanel platformAccessWorkflowCard">
+            <span className="eyebrow">Proteção de acesso</span>
+            <h2>Uma camada simples para não misturar plataforma, cliente e rotina operacional.</h2>
+            <div className="platformProtectionList">
+              <div>
+                <strong>Master</strong>
+                <p>Cria clientes, governa domínios e acompanha a saúde das operações.</p>
+              </div>
+              <div>
+                <strong>Cliente</strong>
+                <p>Entra no admin da própria bilheteria e cuida de equipe, eventos e vendas.</p>
+              </div>
+              <div>
+                <strong>Papel restrito</strong>
+                <p>Pode operar só os eventos ou áreas que você liberar, sem abrir a base inteira.</p>
+              </div>
             </div>
           </article>
         </section>

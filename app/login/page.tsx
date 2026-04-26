@@ -43,7 +43,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <h2>{isPlatformHost ? `Acesso à ${organizationContext.platformName}` : "Bem-vindo de volta"}</h2>
             <p className="muted">
               {isPlatformHost
-                ? `Entre para administrar a plataforma, organizar operações filhas e acompanhar a evolução da ${organizationContext.platformName}.`
+                ? `Entre para administrar a plataforma, organizar os clientes e proteger o acesso de cada operação em um só lugar.`
                 : `Entre para acompanhar vendas, check-in, pedidos, leads e a operação da ${organizationContext.brandName} em um só lugar.`}
             </p>
           </div>
@@ -107,7 +107,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           {isPlatformHost ? (
             <div className="platformAccessNotice">
               <strong>Acesso dos clientes</strong>
-              <p>O cliente da bilheteria entra com login e senha próprios. A Ingresaas decide quem pode operar, quem pode ver configuração e quem só acompanha a rotina.</p>
+              <p>O cliente da bilheteria entra com login e senha próprios. A Ingresaas separa o painel master, os dados da operação e os níveis de permissão da equipe.</p>
             </div>
           ) : null}
         </div>
@@ -139,8 +139,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 <span>Administra a plataforma e acompanha a prontidão das filhas.</span>
               </article>
               <article>
-                <strong>2. Abre a operação</strong>
-                <span>Escolhe a bilheteria filha e confere branding, domínio, equipe e eventos.</span>
+                <strong>2. Cria o cliente</strong>
+                <span>Define domínio, identidade, usuário inicial e a base mínima de acesso.</span>
               </article>
               <article>
                 <strong>3. Entra na rotina</strong>

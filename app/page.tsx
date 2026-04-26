@@ -108,7 +108,7 @@ export default async function Home() {
                 <span>{organizationContext.platformName}</span>
               </div>
               <span className="homeEyebrow">Plataforma SaaS de bilheteria</span>
-              <h1>Uma base limpa para criar bilheterias, controlar acesso e operar clientes com domínio próprio.</h1>
+              <h1>Uma base limpa para criar clientes, entregar acesso seguro e sustentar bilheterias com domínio próprio.</h1>
               <p>
                 {organizationContext.platformName} não vende ingressos ao público final. Ela entrega o motor, o acesso
                 interno e a governança para cada cliente operar sua própria bilheteria com identidade e domínio próprios.
@@ -131,8 +131,8 @@ export default async function Home() {
 
               <div className="platformHeroChecklist">
                 <span>Cria o cliente</span>
-                <span>Define domínio e identidade</span>
-                <span>Libera o acesso da equipe</span>
+                <span>Entrega login inicial</span>
+                <span>Protege dados e configuração</span>
               </div>
 
               <div className="platformControlGrid" aria-label="Pontos centrais da plataforma">
