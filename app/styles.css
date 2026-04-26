@@ -602,9 +602,9 @@ textarea {
 
 .platformHero {
   background:
-    radial-gradient(circle at top right, rgba(160, 196, 255, 0.28), transparent 20%),
-    radial-gradient(circle at bottom left, rgba(106, 151, 245, 0.16), transparent 26%),
-    linear-gradient(155deg, #1b2f53, #2f4e84 58%, #46639a);
+    radial-gradient(circle at top right, rgba(201, 221, 255, 0.42), transparent 24%),
+    radial-gradient(circle at bottom left, rgba(146, 184, 255, 0.2), transparent 28%),
+    linear-gradient(155deg, #23406e, #395a94 58%, #6a8dc6);
   color: white;
   overflow: hidden;
   position: relative;
@@ -698,10 +698,10 @@ textarea {
 }
 
 .platformHeroPanel {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.12));
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.14));
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 24px;
-  box-shadow: 0 28px 60px rgba(20, 34, 66, 0.18);
+  box-shadow: 0 28px 60px rgba(20, 34, 66, 0.16);
   display: grid;
   gap: 18px;
   padding: 22px;
@@ -823,6 +823,54 @@ textarea {
   color: white;
   font-size: 18px;
   line-height: 1.2;
+}
+
+.platformHeroSecurityPanel {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+}
+
+.platformHeroSecurityPanel strong {
+  color: white;
+  font-size: 16px;
+}
+
+.platformHeroSecurityPanel p {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+.platformAccessGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.platformAccessCard {
+  background: linear-gradient(180deg, #ffffff, #f7fbff);
+  border: 1px solid #dfe8fb;
+  border-radius: 20px;
+  box-shadow: 0 16px 34px rgba(26, 46, 85, 0.05);
+  display: grid;
+  gap: 10px;
+  min-height: 170px;
+  padding: 20px;
+}
+
+.platformAccessCard strong {
+  color: #183566;
+  font-size: 20px;
+  line-height: 1.15;
+}
+
+.platformAccessCard p {
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
 }
 
 .platformSection {
@@ -1578,12 +1626,12 @@ textarea {
 
 .platformOverviewHero {
   background:
-    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.2), transparent 34%),
-    linear-gradient(135deg, #243c69, #36568a 58%, #5377af);
+    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.16), transparent 34%),
+    linear-gradient(135deg, #f7fbff, #eef4ff 58%, #e4edff);
   border: 1px solid rgba(var(--brand-rgb), 0.16);
   border-radius: 24px;
-  box-shadow: 0 26px 60px rgba(31, 53, 97, 0.14);
-  color: white;
+  box-shadow: 0 26px 60px rgba(31, 53, 97, 0.08);
+  color: #1b2d52;
   display: grid;
   gap: 18px;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
@@ -1604,14 +1652,14 @@ textarea {
 }
 
 .platformOverviewHero p {
-  color: rgba(255, 255, 255, 0.8);
+  color: #60708d;
   line-height: 1.6;
   margin-top: 12px;
   max-width: 64ch;
 }
 
 .platformOverviewHero .eyebrow {
-  color: color-mix(in srgb, var(--surface) 62%, var(--brand) 38%);
+  color: #4f6da4;
 }
 
 .platformOverviewBadges {
@@ -1622,10 +1670,10 @@ textarea {
 
 .platformOverviewBadges span {
   align-items: center;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: white;
+  border: 1px solid #dbe5fa;
   border-radius: 999px;
-  color: rgba(255, 255, 255, 0.92);
+  color: #3e5f97;
   display: inline-flex;
   font-size: 12px;
   font-weight: 900;
@@ -1669,6 +1717,52 @@ textarea {
 .platformExecutiveCard p {
   color: var(--muted);
   line-height: 1.6;
+}
+
+.platformSecurityGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.platformSecurityCard {
+  gap: 12px;
+}
+
+.platformSecurityCard h2,
+.platformSecurityCard p {
+  margin: 0;
+}
+
+.platformSecurityCard h2 {
+  color: #183566;
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.08;
+  max-width: 16ch;
+}
+
+.platformSecurityCard p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.platformSecurityList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.platformSecurityList span {
+  align-items: center;
+  background: #f3f7ff;
+  border: 1px solid #dce6fb;
+  border-radius: 999px;
+  color: #3c5b95;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 800;
+  min-height: 34px;
+  padding: 0 12px;
 }
 
 .platformExecutiveLinks {
@@ -2263,6 +2357,24 @@ textarea {
   min-height: 34px;
   padding: 0 12px;
   text-transform: uppercase;
+}
+
+.platformAccessNotice {
+  background: linear-gradient(180deg, #f7fbff, #f1f6ff);
+  border: 1px solid #dbe4f4;
+  border-radius: 18px;
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
+.platformAccessNotice strong {
+  color: #1f3e73;
+}
+
+.platformAccessNotice p {
+  color: var(--muted);
+  margin: 0;
 }
 
 .platformLoginTimeline {
@@ -6486,6 +6598,8 @@ textarea {
   .homeEventsLayout,
   .homeHeroInner,
   .platformHeroGrid,
+  .platformAccessGrid,
+  .platformSecurityGrid,
   .platformSplitGrid,
   .platformOperationsGrid,
   .mediaUploadGrid,

@@ -99,6 +99,31 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </article>
         </section>
 
+        <section className="platformSecurityGrid spacedSection" aria-label="Acesso e segurança da plataforma">
+          <article className="dashboardPanel platformSecurityCard">
+            <span className="eyebrow">Login e senha dos clientes</span>
+            <h2>Cada cliente entra no próprio painel com acesso separado.</h2>
+            <p>O usuário inicial nasce junto com a operação. Depois, a equipe do cliente pode ser ampliada dentro da própria bilheteria, sem misturar acessos entre operações.</p>
+            <div className="actionRow">
+              <Link className="button smallButton" href="/admin/operations">
+                Criar cliente
+              </Link>
+            </div>
+          </article>
+
+          <article className="dashboardPanel platformSecurityCard">
+            <span className="eyebrow">Segurança e governança</span>
+            <h2>Dados, relatórios e configurações ficam isolados por operação.</h2>
+            <p>A Ingresaas controla quem pode acessar a base do cliente, quem pode ver números e quem pode alterar configuração sensível.</p>
+            <div className="platformSecurityList">
+              <span>Domínio público separado</span>
+              <span>Admin separado</span>
+              <span>Usuários por cliente</span>
+              <span>Permissões por papel</span>
+            </div>
+          </article>
+        </section>
+
         <section className="grid twoColumns spacedSection">
           <article className="dashboardPanel platformMasterGuide">
             <div className="sectionHeader inlineHeader">

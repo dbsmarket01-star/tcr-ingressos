@@ -75,6 +75,21 @@ const platformControlPoints = [
   }
 ];
 
+const platformAccessCards = [
+  {
+    title: "Login do cliente",
+    body: "Cada bilheteria filha entra no próprio admin com e-mail e senha, sem misturar acesso entre operações."
+  },
+  {
+    title: "Segurança de acesso",
+    body: "A Ingresaas controla quem pode ver dados, acessar configurações e operar cada cliente."
+  },
+  {
+    title: "Governança central",
+    body: "A plataforma-mãe acompanha domínios, branding, equipe e saúde da operação sem virar o painel do cliente final."
+  }
+];
+
 export default async function Home() {
   const organizationContext = await getCurrentOrganizationContext();
   const isPlatformHost = organizationContext.isPlatformHost;
@@ -93,10 +108,10 @@ export default async function Home() {
                 <span>{organizationContext.platformName}</span>
               </div>
               <span className="homeEyebrow">Plataforma SaaS de bilheteria</span>
-              <h1>O painel-mãe que cria, sustenta e escala bilheterias com domínio próprio.</h1>
+              <h1>Uma base limpa para criar bilheterias, controlar acesso e operar clientes com domínio próprio.</h1>
               <p>
-                {organizationContext.platformName} nao vende ingressos direto ao publico. Ela fornece o motor, o painel
-                e a estrutura para cada bilheteria filha operar com dominio, equipe, branding e rotina comercial proprios.
+                {organizationContext.platformName} não vende ingressos ao público final. Ela entrega o motor, o acesso
+                interno e a governança para cada cliente operar sua própria bilheteria com identidade e domínio próprios.
               </p>
 
               <div className="platformHeroActions">
@@ -115,9 +130,9 @@ export default async function Home() {
               </div>
 
               <div className="platformHeroChecklist">
-                <span>Cria a bilheteria filha</span>
-                <span>Define domínio e branding</span>
-                <span>Entrega uma operação pronta para vender</span>
+                <span>Cria o cliente</span>
+                <span>Define domínio e identidade</span>
+                <span>Libera o acesso da equipe</span>
               </div>
 
               <div className="platformControlGrid" aria-label="Pontos centrais da plataforma">
@@ -170,8 +185,13 @@ export default async function Home() {
                 </article>
                 <article>
                   <span>Implantação mínima</span>
-                  <strong>Domínio + equipe + branding</strong>
+                  <strong>Domínio + usuário + branding</strong>
                 </article>
+              </div>
+
+              <div className="platformHeroSecurityPanel">
+                <strong>Acesso e segurança</strong>
+                <p>Clientes entram com login e senha próprios. A plataforma separa acesso operacional, governança e configuração.</p>
               </div>
             </aside>
           </div>
@@ -239,6 +259,24 @@ export default async function Home() {
                 Isso mantem cada nova operacao embaixo do mesmo motor, sem duplicar projeto, banco ou fluxo comercial.
               </div>
             </article>
+          </div>
+        </section>
+
+        <section className="container platformSection">
+          <div className="sectionHeader homeSectionHeader">
+            <div>
+              <span className="eyebrow">Acesso controlado</span>
+              <h2>Quem entra, entra no lugar certo e com o nível certo de permissão.</h2>
+            </div>
+          </div>
+
+          <div className="platformAccessGrid">
+            {platformAccessCards.map((item) => (
+              <article className="card platformAccessCard" key={item.title}>
+                <strong>{item.title}</strong>
+                <p>{item.body}</p>
+              </article>
+            ))}
           </div>
         </section>
 

@@ -53,6 +53,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <span>Painel master</span>
               <span>Operações filhas</span>
               <span>Governança central</span>
+              <span>Login por cliente</span>
             </div>
           ) : null}
 
@@ -102,6 +103,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 : "Novos acessos internos devem ser liberados pelo proprietário dentro do painel, em Usuários."}
             </p>
           </div>
+
+          {isPlatformHost ? (
+            <div className="platformAccessNotice">
+              <strong>Acesso dos clientes</strong>
+              <p>O cliente da bilheteria entra com login e senha próprios. A Ingresaas decide quem pode operar, quem pode ver configuração e quem só acompanha a rotina.</p>
+            </div>
+          ) : null}
         </div>
 
         <div className="loginIntro loginAdminShowcase">
@@ -166,6 +174,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   : "Libere acessos internos e, quando precisar, restrinja por evento."}
               </span>
             </article>
+            {isPlatformHost ? (
+              <article className="loginFeatureCard">
+                <strong>Segurança dos dados</strong>
+                <span>Os acessos de clientes e equipes ficam separados por operação, protegendo dados, relatórios e configurações de cada bilheteria.</span>
+              </article>
+            ) : null}
           </div>
 
           {isPlatformHost ? (
