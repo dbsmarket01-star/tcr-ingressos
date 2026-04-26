@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminAccountPage({ searchParams }: AdminAccountPageProps) {
   const admin = await requirePermission("ACCOUNT");
   const organizationContext = await getCurrentOrganizationContext();
+  const isPlatformHost = organizationContext.isPlatformHost;
   const params = searchParams ? await searchParams : {};
   const hasError = params.error === "invalid";
   const changed = params.changed === "1";
@@ -21,8 +22,25 @@ export default async function AdminAccountPage({ searchParams }: AdminAccountPag
       title="Minha conta"
       description={`Gerencie seus dados de acesso interno ao painel da ${organizationContext.brandName}.`}
     >
-      <section className="grid twoColumns">
-        <form action={changePasswordAction} className="card form">
+      <section className="platformOperationsHero spacedSection" aria-label="Conta e segurança">
+        <div>
+          <span className="eyebrow">Acesso interno</span>
+          <h2>{isPlatformHost ? "Controle seu acesso ao painel master com uma leitura mais clara." : "Gerencie seu acesso interno com mais segurança."}</h2>
+          <p>
+            {isPlatformHost
+              ? "Atualize sua senha, revise seu perfil e mantenha a entrada no painel master protegida. Esta área é para a sua conta pessoal, não para configurar clientes."
+              : `Atualize sua senha e revise os dados da sua conta para manter o acesso interno à ${organizationContext.brandName} mais seguro.`}
+          </p>
+        </div>
+        <div className="platformOperationsHeroBadges">
+          <span>Conta pessoal</span>
+          <span>Segurança</span>
+          <span>Acesso interno</span>
+        </div>
+      </section>
+
+      <section className="grid twoColumns spacedSection">
+        <form action={changePasswordAction} className="card form platformOperationsFilterCard">
           <h2>Trocar senha</h2>
           {hasError ? (
             <div className="errorBox">Confira a senha atual e confirme a nova senha corretamente.</div>
@@ -47,7 +65,7 @@ export default async function AdminAccountPage({ searchParams }: AdminAccountPag
           </button>
         </form>
 
-        <section className="card">
+        <section className="card platformOperationsGuideCard">
           <h2>Dados do usuário</h2>
           <dl className="detailList">
             <div>
