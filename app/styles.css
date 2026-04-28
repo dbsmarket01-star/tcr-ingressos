@@ -7653,7 +7653,16 @@ textarea {
   }
 
   .leadCaptureHeroMedia img {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: auto;
+    height: auto;
+    max-height: min(78svh, 760px);
+    object-fit: unset;
+    width: 100%;
+  }
+
+  .leadCaptureHeroMedia.hasCrop img.croppedImage {
+    object-position: center top !important;
+    transform: none !important;
   }
 
   .leadBenefitRow {
@@ -8121,7 +8130,7 @@ textarea {
   }
 
   .leadCaptureHeroMedia img {
-    aspect-ratio: 4 / 4.8;
+    max-height: min(72svh, 640px);
   }
 
   .leadCaptureHeroCopy h1 {
