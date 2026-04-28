@@ -28,11 +28,11 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
     notFound();
   }
 
-  const title = event.leadCaptureThankYouTitle || "Último passo";
+  const title = event.leadCaptureThankYouTitle || "Seu cadastro foi concluído";
   const description =
     event.leadCaptureThankYouDescription ||
-    "Entre agora no grupo oficial para receber as informações do evento e a oferta especial de abertura.";
-  const buttonText = event.leadCaptureThankYouButtonText || "Quero entrar no grupo oficial no WhatsApp";
+    "Último passo: entre no grupo oficial para receber um desconto de até 30% e acompanhar as informações deste lançamento.";
+  const buttonText = event.leadCaptureThankYouButtonText || "Quero entrar no grupo do WhatsApp";
   const location = [event.city, event.state].filter(Boolean).join(", ");
   const isExistingLead = query.existing === "1";
 
@@ -70,7 +70,7 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
           </div>
           <div>
             <strong>Agora entre no grupo</strong>
-            <small>É lá que você vai receber a abertura e as orientações deste evento.</small>
+            <small>É lá que você vai receber o desconto, a abertura e as orientações deste evento.</small>
           </div>
         </div>
         {event.leadCaptureWhatsappGroupUrl ? (
@@ -83,9 +83,7 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
             {buttonText}
           </a>
         ) : null}
-        <small>
-          O acesso à lista foi registrado. Agora entre no grupo para acompanhar as informações e os descontos deste lançamento.
-        </small>
+        <small>Seu cadastro já está salvo. Agora entre no grupo para liberar a próxima etapa e receber as condições deste lançamento.</small>
       </section>
     </main>
   );

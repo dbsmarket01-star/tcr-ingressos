@@ -372,15 +372,24 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               defaultValue={event.leadCaptureWhatsappGroupUrl ?? ""}
               placeholder="https://chat.whatsapp.com/..."
             />
+            <small>Esse botão aparece na página de obrigado, como último passo depois do cadastro.</small>
           </label>
           <div className="grid twoColumns">
             <label className="field">
               <span>Título do agradecimento</span>
-              <input name="leadCaptureThankYouTitle" defaultValue={event.leadCaptureThankYouTitle ?? ""} />
+              <input
+                name="leadCaptureThankYouTitle"
+                defaultValue={event.leadCaptureThankYouTitle ?? ""}
+                placeholder="Ex: Seu cadastro foi concluído"
+              />
             </label>
             <label className="field">
               <span>Texto do botão final</span>
-              <input name="leadCaptureThankYouButtonText" defaultValue={event.leadCaptureThankYouButtonText ?? ""} />
+              <input
+                name="leadCaptureThankYouButtonText"
+                defaultValue={event.leadCaptureThankYouButtonText ?? ""}
+                placeholder="Ex: Quero entrar no grupo do WhatsApp"
+              />
             </label>
           </div>
           <label className="field">
@@ -389,6 +398,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               name="leadCaptureThankYouDescription"
               rows={3}
               defaultValue={event.leadCaptureThankYouDescription ?? ""}
+              placeholder="Ex: Último passo: entre no grupo oficial para receber um desconto de até 30% e acompanhar as informações deste lançamento."
             />
           </label>
         </details>

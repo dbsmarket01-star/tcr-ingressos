@@ -258,11 +258,11 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           <div className="grid twoColumns">
             <label className="field">
               <span>Título do agradecimento</span>
-              <input name="leadCaptureThankYouTitle" placeholder="Ex: Último passo" />
+              <input name="leadCaptureThankYouTitle" placeholder="Ex: Seu cadastro foi concluído" />
             </label>
             <label className="field">
               <span>Texto do botão final</span>
-              <input name="leadCaptureThankYouButtonText" placeholder="Ex: Quero entrar no grupo oficial" />
+              <input name="leadCaptureThankYouButtonText" placeholder="Ex: Quero entrar no grupo do WhatsApp" />
             </label>
           </div>
           <label className="field">
@@ -270,7 +270,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             <textarea
               name="leadCaptureThankYouDescription"
               rows={3}
-              placeholder="Ex: Entre agora no grupo oficial para receber as informações e a abertura com desconto."
+              placeholder="Ex: Último passo: entre no grupo oficial para receber um desconto de até 30% e acompanhar as informações deste lançamento."
             />
           </label>
         </details>
