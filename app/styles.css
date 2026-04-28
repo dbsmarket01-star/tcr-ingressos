@@ -7655,13 +7655,17 @@ body.operationTheme .topbar {
 
   .leadCaptureHero {
     border-radius: 24px;
-    gap: 14px;
-    padding: 16px;
+    gap: 10px;
+    padding: 14px;
   }
 
   .leadCaptureHeroBottom,
   .channelFocusGrid {
     grid-template-columns: 1fr;
+  }
+
+  .leadCaptureHeroBottom {
+    gap: 10px;
   }
 
   .leadCaptureForm {
@@ -7691,7 +7695,7 @@ body.operationTheme .topbar {
   .leadCaptureHeroMedia img {
     aspect-ratio: auto;
     height: auto;
-    max-height: min(78svh, 760px);
+    max-height: min(66svh, 620px);
     object-fit: unset;
     width: 100%;
   }
@@ -7711,20 +7715,28 @@ body.operationTheme .topbar {
 
   .leadCaptureHeroCopy {
     border-radius: 18px;
-    gap: 10px;
-    padding: 18px;
+    gap: 8px;
+    padding: 16px 18px;
   }
 
   .leadCaptureForm {
     border-radius: 20px;
     gap: 10px;
-    margin-top: -6px;
+    margin-top: -14px;
     padding: 18px;
+    box-shadow:
+      0 18px 38px rgba(13, 43, 36, 0.12),
+      0 0 0 10px rgba(var(--brand-rgb), 0.07);
   }
 
   .leadCaptureHeroCopy h1 {
-    font-size: 34px;
+    font-size: 30px;
     max-width: 100%;
+  }
+
+  .leadCaptureHeroCopy p {
+    font-size: 15px;
+    line-height: 1.45;
   }
 
   .leadCaptureInlineCta .button,
@@ -8178,11 +8190,11 @@ body.operationTheme .topbar {
   }
 
   .leadCaptureHeroMedia img {
-    max-height: min(72svh, 640px);
+    max-height: min(58svh, 520px);
   }
 
   .leadCaptureHeroCopy h1 {
-    font-size: 28px;
+    font-size: 26px;
   }
 
   .leadCaptureMeta span,
@@ -8192,7 +8204,7 @@ body.operationTheme .topbar {
   }
 
   .leadCaptureForm h2 {
-    font-size: 22px;
+    font-size: 21px;
   }
 
   .leadCaptureForm::before {
