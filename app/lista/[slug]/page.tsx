@@ -188,6 +188,14 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             <input type="hidden" name="utmTerm" value={tracking.utmTerm || ""} />
             <input type="hidden" name="referrer" value={tracking.referrer || ""} />
             <input type="hidden" name="landingPage" value={tracking.landingPage || ""} />
+            <input
+              aria-hidden="true"
+              autoComplete="off"
+              className="leadHoneypotField"
+              name="company"
+              tabIndex={-1}
+              type="text"
+            />
             <span className="leadFormEyebrow">Cadastre seu interesse</span>
             <h2>Receba o aviso de abertura e o link do grupo oficial</h2>
             <p className="muted">

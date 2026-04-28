@@ -1,6 +1,7 @@
 import { ensureDefaultOrganizationBackfill } from "@/features/organizations/organization.service";
 import { prisma } from "@/lib/prisma";
 import type { CompanySettingsInput } from "./company-settings.schema";
+import { unstable_cache } from "next/cache";
 
 export const COMPANY_SETTINGS_ID = "tcr-company-settings";
 
@@ -55,11 +56,16 @@ export async function getCompanySettings() {
 }
 
 export async function getCompanySettingsByOrganizationId(organizationId: string) {
-  const settings = await prisma.companySettings.findFirst({
-    where: {
-      organizationId
-    }
-  });
+  const settings = await unstable_cache(
+    async (lookupOrganizationId: string) =>
+      prisma.companySettings.findFirst({
+        where: {
+          organizationId: lookupOrganizationId
+        }
+      }),
+    ["company-settings-by-organization"],
+    { revalidate: 60 }
+  )(organizationId);
 
   if (settings) {
     return settings;

@@ -388,6 +388,7 @@ model Event {
   coupons   Coupon[]
   presaleChecks EventPresaleCheck[]
   leads     EventLead[]
+  leadCaptureAttempts LeadCaptureAttempt[]
 
   @@index([organizationId])
   @@index([status, startsAt])
@@ -415,6 +416,18 @@ model EventLead {
   @@index([eventId, createdAt])
   @@index([email])
   @@unique([eventId, email])
+}
+
+model LeadCaptureAttempt {
+  id        String   @id @default(cuid())
+  eventId   String
+  ipHash    String
+  createdAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, ipHash, createdAt])
+  @@index([createdAt])
 }
 
 model PlatformLead {

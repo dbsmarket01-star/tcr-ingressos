@@ -7081,6 +7081,15 @@ body.operationTheme .topbar {
   text-align: center;
 }
 
+.leadHoneypotField {
+  height: 0;
+  left: -9999px;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  width: 0;
+}
+
 .leadThankYouCard {
   display: grid;
   gap: 14px;

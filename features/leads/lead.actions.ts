@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { eventLeadSchema } from "./lead.schema";
 import { createOrUpdateEventLead } from "./lead.service";
@@ -25,8 +26,25 @@ function validationMessage(error: unknown) {
   return "Revise os dados e tente novamente.";
 }
 
+async function getClientIp() {
+  const requestHeaders = await headers();
+  const forwardedFor = requestHeaders.get("x-forwarded-for");
+
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0]?.trim() || null;
+  }
+
+  return requestHeaders.get("x-real-ip")?.trim() || null;
+}
+
 export async function createEventLeadAction(formData: FormData) {
   const eventSlug = String(formData.get("eventSlug") ?? "").trim();
+  const honeypot = String(formData.get("company") ?? "").trim();
+
+  if (honeypot) {
+    redirect(`/lista/${eventSlug}/obrigado`);
+  }
+
   const parsed = eventLeadSchema.safeParse({
     eventId: String(formData.get("eventId") ?? "").trim(),
     eventSlug,
@@ -48,7 +66,8 @@ export async function createEventLeadAction(formData: FormData) {
 
   try {
     const organizationContext = await getCurrentOrganizationContext();
-    const result = await createOrUpdateEventLead(parsed.data, organizationContext.organization.id);
+    const clientIp = await getClientIp();
+    const result = await createOrUpdateEventLead(parsed.data, organizationContext.organization.id, clientIp);
     revalidatePath(`/admin/events/${parsed.data.eventId}/leads`);
     revalidatePath(`/admin/events/${parsed.data.eventId}`);
 

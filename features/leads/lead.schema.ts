@@ -3,8 +3,8 @@ import { z } from "zod";
 export const eventLeadSchema = z.object({
   eventId: z.string().min(1),
   eventSlug: z.string().min(3),
-  name: z.string().min(3, "Informe seu nome completo."),
-  email: z.string().email("Informe um e-mail válido."),
+  name: z.string().trim().min(3, "Informe seu nome completo."),
+  email: z.string().trim().toLowerCase().email("Informe um e-mail válido."),
   phone: z.string().min(8, "Informe um telefone com DDD.").optional(),
   utmSource: z.string().max(240).optional(),
   utmMedium: z.string().max(240).optional(),

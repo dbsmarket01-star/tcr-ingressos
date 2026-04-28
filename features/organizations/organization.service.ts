@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getPlatformAppUrl, getPlatformHost, getPlatformName, isPlatformHost } from "@/features/platform/platform.service";
 import { getRequestHost, normalizeHost } from "@/lib/request-host";
+import { unstable_cache } from "next/cache";
 
 export const DEFAULT_ORGANIZATION_SLUG = "tcr-ingressos";
 export const DEFAULT_ORGANIZATION_NAME = "TCR Ingressos";
@@ -147,13 +148,18 @@ export async function getOrganizationByHost(host?: string | null) {
     return null;
   }
 
-  return prisma.organization.findFirst({
-    where: {
-      isActive: true,
-      OR: [{ publicDomain: normalizedHost }, { adminDomain: normalizedHost }]
-    },
-    select: organizationBrandingSelect
-  });
+  return unstable_cache(
+    async (lookupHost: string) =>
+      prisma.organization.findFirst({
+        where: {
+          isActive: true,
+          OR: [{ publicDomain: lookupHost }, { adminDomain: lookupHost }]
+        },
+        select: organizationBrandingSelect
+      }),
+    ["organization-by-host"],
+    { revalidate: 60 }
+  )(normalizedHost);
 }
 
 export async function getDefaultOrganizationId() {
