@@ -7434,23 +7434,48 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .leadCaptureForm {
+    order: 1;
+  }
+
+  .leadCapturePresentation {
+    order: 2;
+  }
+
   .leadCaptureHeroMedia {
     border-radius: 18px;
     min-height: 320px;
   }
 
   .leadCaptureHeroOverlay {
-    padding: 20px;
+    align-content: start;
+    gap: 10px;
+    justify-items: start;
+    padding: 18px;
   }
 
   .leadCaptureHeroOverlay h1 {
-    font-size: 34px;
-    max-width: 100%;
+    font-size: 30px;
+    line-height: 1.02;
+    max-width: 9.5ch;
   }
 
   .leadCaptureHeroOverlay p,
   .leadThankYouCard p {
     font-size: 16px;
+  }
+
+  .leadCaptureHeroOverlay p {
+    display: none;
+  }
+
+  .leadCaptureHeroOverlay .leadCaptureMeta {
+    gap: 8px;
+  }
+
+  .leadCaptureHeroOverlay .leadCaptureMeta span:nth-child(3),
+  .leadCaptureHeroOverlay .leadBenefitRow span:nth-child(3) {
+    display: none;
   }
 
   .leadBenefitRow {
@@ -7895,15 +7920,24 @@ textarea {
   }
 
   .leadCaptureHeroMedia {
-    min-height: 280px;
+    min-height: 260px;
   }
 
   .leadCaptureHeroOverlay {
+    gap: 8px;
     padding: 16px;
   }
 
   .leadCaptureHeroOverlay h1 {
-    font-size: 30px;
+    font-size: 28px;
+    max-width: 8.5ch;
+  }
+
+  .leadCaptureHeroOverlay .leadEyebrow,
+  .leadCaptureHeroOverlay .leadCaptureMeta span,
+  .leadCaptureHeroOverlay .leadBenefitRow span {
+    font-size: 10px;
+    padding: 6px 9px;
   }
 
   .leadCapturePresentation h2 {
