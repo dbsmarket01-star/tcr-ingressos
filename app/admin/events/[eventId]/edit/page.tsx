@@ -327,6 +327,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           <label className="field">
             <span>Descrição da captação</span>
             <textarea name="leadCaptureDescription" rows={4} defaultValue={event.leadCaptureDescription ?? ""} />
+            <small>Você pode usar **texto** para destacar partes importantes em negrito na landing.</small>
           </label>
           <div className="grid twoColumns">
             <label className="field">
@@ -336,6 +337,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
                 defaultValue={event.leadCaptureOfferText ?? ""}
                 placeholder="Ex: Cadastre-se e receba até 20% de desconto na abertura."
               />
+              <small>Use uma promessa curta e forte. Também aceita **negrito** com **texto**.</small>
             </label>
             <label className="field">
               <span>Texto do botão</span>
@@ -410,6 +412,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               defaultValue={event.leadCaptureThankYouDescription ?? ""}
               placeholder="Ex: Último passo: entre no grupo oficial para receber um desconto de até 30% e acompanhar as informações deste lançamento."
             />
+            <small>Esse texto aparece após o cadastro. Você também pode destacar trechos com **negrito**.</small>
           </label>
         </details>
 

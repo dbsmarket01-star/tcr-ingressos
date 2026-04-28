@@ -86,6 +86,25 @@ function getVenueGalleryUrls(value?: string | null) {
     .filter((item) => item && (item.startsWith("http://") || item.startsWith("https://") || item.startsWith("/uploads/")));
 }
 
+function renderEditableText(value: string, keyPrefix: string) {
+  return value.split("\n").map((line, lineIndex) => {
+    const parts = line.split(/(\*\*.*?\*\*)/g).filter(Boolean);
+
+    return (
+      <span key={`${keyPrefix}-${lineIndex}`}>
+        {parts.map((part, partIndex) =>
+          part.startsWith("**") && part.endsWith("**") ? (
+            <strong key={`${keyPrefix}-${lineIndex}-${partIndex}`}>{part.slice(2, -2)}</strong>
+          ) : (
+            <span key={`${keyPrefix}-${lineIndex}-${partIndex}`}>{part}</span>
+          )
+        )}
+        {lineIndex < value.split("\n").length - 1 ? <br /> : null}
+      </span>
+    );
+  });
+}
+
 export default async function LeadCapturePage({ params, searchParams }: LeadCapturePageProps) {
   const { slug } = await params;
   const query = searchParams ? await searchParams : {};
@@ -137,7 +156,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
           <div className="leadCaptureHeroOverlay">
             <span className="leadEyebrow">Pré-lista oficial do evento</span>
             <h1>{headline}</h1>
-            <p>{description}</p>
+            <p>{renderEditableText(description, "hero-description")}</p>
             <div className="leadCaptureMeta">
               <span>{formatDateTime(event.startsAt)}</span>
               <span>
@@ -158,10 +177,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
         <article className="card leadCapturePresentation">
           <span className="leadEyebrow">Antes da abertura</span>
           <h2>Entre na lista oficial e receba o caminho certo para este lançamento.</h2>
-          <p>
-            {offerText} O objetivo aqui é simples: organizar a comunicação, levar você para o grupo oficial e evitar que o
-            lançamento fique perdido no meio dos anúncios.
-          </p>
+          <p>{renderEditableText(`${offerText}\nO objetivo aqui é simples: organizar a comunicação, levar você para o grupo oficial e evitar que o lançamento fique perdido no meio dos anúncios.`, "presentation-copy")}</p>
           <div className="leadCaptureTrustBar" aria-label="Pontos de valor da landing">
             <div>
               <strong>Cadastro rápido</strong>
@@ -190,7 +206,12 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
           <input type="hidden" name="landingPage" value={tracking.landingPage || ""} />
           <span className="leadFormEyebrow">Cadastre seu interesse</span>
           <h2>Receba o aviso de abertura e o link do grupo oficial</h2>
-          <p className="muted">Preencha seus dados e conclua o último passo na página de obrigado para entrar no grupo.</p>
+          <p className="muted">
+            {renderEditableText(
+              "Preencha seus dados e conclua o último passo na página de obrigado para entrar no grupo.",
+              "form-copy"
+            )}
+          </p>
           {error ? <div className="errorBox">{error}</div> : null}
           <label className="field">
             <span>Nome completo</span>
@@ -252,8 +273,10 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             <span className="leadEyebrow">Por que entrar agora</span>
             <h2>Mais clareza, mais contexto e mais chance de comprar no melhor momento.</h2>
             <p>
-              A lista de interesse evita que você dependa de anúncio solto ou de link perdido. Você entra no funil oficial deste
-              lançamento e recebe as próximas instruções no canal certo.
+              {renderEditableText(
+                "A lista de interesse evita que você dependa de anúncio solto ou de link perdido. Você entra no funil oficial deste lançamento e recebe as próximas instruções no canal certo.",
+                "highlight-copy"
+              )}
             </p>
             <ul className="leadChecklist">
               <li>cadastro confirmado em poucos segundos</li>
@@ -265,7 +288,12 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
           <article className="card leadCaptureSupportCard">
             <span className="leadEyebrow">Próximo passo</span>
             <h2>Seu lugar na lista começa com este cadastro.</h2>
-            <p>Faça seu cadastro agora e siga para a página final, onde você entra no grupo do evento e conclui a etapa de prioridade.</p>
+            <p>
+              {renderEditableText(
+                "Faça seu cadastro agora e siga para a página final, onde você entra no grupo do evento e conclui a etapa de prioridade.",
+                "support-copy"
+              )}
+            </p>
             <a className="secondaryButton" href="#lead-capture-form">
               Fazer cadastro agora
             </a>
@@ -280,7 +308,12 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
                 <h2>Assista ao convite e entenda a proposta do evento</h2>
               </div>
             </div>
-            <p className="muted">Esse vídeo ajuda a aquecer a decisão e aumentar a intenção antes da abertura oficial.</p>
+            <p className="muted">
+              {renderEditableText(
+                "Esse vídeo ajuda a aquecer a decisão e aumentar a intenção antes da abertura oficial.",
+                "video-copy"
+              )}
+            </p>
             <div className="leadVideoFrame">
               <iframe
                 src={youtubeEmbedUrl}

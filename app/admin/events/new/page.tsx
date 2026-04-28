@@ -214,6 +214,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               rows={4}
               placeholder="Explique rapidamente o evento e convide a pessoa a entrar na lista de interesse."
             />
+            <small>Você pode usar **texto** para destacar partes importantes em negrito na landing.</small>
           </label>
           <div className="grid twoColumns">
             <label className="field">
@@ -222,6 +223,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
                 name="leadCaptureOfferText"
                 placeholder="Ex: Cadastre-se e receba até 20% de desconto na abertura."
               />
+              <small>Use uma promessa curta e forte. Também aceita **negrito** com **texto**.</small>
             </label>
             <label className="field">
               <span>Texto do botão</span>
@@ -281,6 +283,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               rows={3}
               placeholder="Ex: Último passo: entre no grupo oficial para receber um desconto de até 30% e acompanhar as informações deste lançamento."
             />
+            <small>Esse texto aparece após o cadastro. Você também pode destacar trechos com **negrito**.</small>
           </label>
         </details>
 
