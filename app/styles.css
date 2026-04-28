@@ -4661,7 +4661,7 @@ textarea {
   align-items: center;
   background: var(--brand);
   border-radius: 8px;
-  color: white;
+  color: #ffffff !important;
   display: inline-flex;
   font-size: 13px;
   font-weight: 900;
@@ -4669,6 +4669,12 @@ textarea {
   min-height: 38px;
   padding: 0 12px;
   text-align: center;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+}
+
+.fileDropField .uploadActionText,
+.imageUploadField .uploadActionText {
+  color: #ffffff !important;
 }
 
 .mediaUrlFallback {
