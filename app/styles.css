@@ -6541,29 +6541,23 @@ textarea {
 }
 
 .leadCaptureHero {
-  display: block;
+  display: grid;
+  gap: 22px;
   margin: 0 auto;
   max-width: 1280px;
-  padding: 18px 24px 18px;
+  padding: 18px 24px 26px;
 }
 
 .leadCaptureHeroMedia {
   border-radius: 32px;
-  min-height: 480px;
+  min-height: 0;
   overflow: hidden;
   position: relative;
 }
 
-.leadCaptureHeroMedia::after {
-  background: linear-gradient(180deg, rgba(8, 19, 17, 0.12), rgba(8, 19, 17, 0.74));
-  content: "";
-  inset: 0;
-  position: absolute;
-}
-
 .leadCaptureHeroMedia img {
+  aspect-ratio: 16 / 7;
   display: block;
-  height: 100%;
   object-fit: cover;
   width: 100%;
 }
@@ -6572,15 +6566,16 @@ textarea {
   object-fit: cover;
 }
 
-.leadCaptureHeroOverlay {
-  align-content: end;
-  color: white;
+.leadCaptureHeroBottom {
   display: grid;
-  gap: 12px;
-  inset: 0;
-  padding: 32px;
-  position: absolute;
-  z-index: 1;
+  gap: 22px;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
+}
+
+.leadCaptureHeroCopy {
+  display: grid;
+  gap: 14px;
+  padding: 24px;
 }
 
 .leadEyebrow {
@@ -6591,26 +6586,20 @@ textarea {
   text-transform: uppercase;
 }
 
-.leadCaptureHeroOverlay .leadEyebrow,
-.leadCaptureHeroOverlay .leadBenefitRow span,
-.leadCaptureHeroOverlay .leadCaptureMeta span {
-  color: white;
-}
-
-.leadCaptureHeroOverlay h1 {
-  color: white;
-  font-size: clamp(34px, 3.8vw, 56px);
-  line-height: 0.98;
+.leadCaptureHeroCopy h1 {
+  color: var(--ink);
+  font-size: clamp(34px, 3.4vw, 52px);
+  line-height: 0.96;
   margin: 0;
-  max-width: 11ch;
+  max-width: 10ch;
 }
 
-.leadCaptureHeroOverlay p {
-  color: rgba(255, 255, 255, 0.9);
+.leadCaptureHeroCopy p {
+  color: #365249;
   font-size: 16px;
   line-height: 1.52;
   margin: 0;
-  max-width: 44ch;
+  max-width: 46ch;
 }
 
 .leadCaptureMeta {
@@ -6627,11 +6616,6 @@ textarea {
   font-size: 12px;
   font-weight: 800;
   padding: 7px 11px;
-}
-
-.leadCaptureHeroOverlay .leadCaptureMeta span {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .leadBenefitRow {
@@ -6651,9 +6635,8 @@ textarea {
   text-transform: uppercase;
 }
 
-.leadCaptureHeroOverlay .leadBenefitRow span {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.18);
+.leadCaptureHeroAction {
+  padding-top: 4px;
 }
 
 .leadOfferBox {
@@ -6729,39 +6712,6 @@ textarea {
   margin: 0 auto;
   max-width: 1240px;
   padding: 0 24px 56px;
-}
-
-.leadCaptureLeadRow {
-  align-items: start;
-  display: grid;
-  gap: 22px;
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
-  margin: 0 auto;
-  max-width: 1240px;
-  padding: 0 24px 26px;
-}
-
-.leadCapturePresentation {
-  display: grid;
-  gap: 14px;
-  min-height: 100%;
-  padding: 24px;
-}
-
-.leadCapturePresentation h2 {
-  color: var(--brand-dark);
-  font-size: clamp(28px, 3vw, 42px);
-  line-height: 1;
-  margin: 0;
-  max-width: 13ch;
-}
-
-.leadCapturePresentation p {
-  color: #365249;
-  font-size: 15px;
-  line-height: 1.58;
-  margin: 0;
-  max-width: 58ch;
 }
 
 .leadCaptureInlineCta {
@@ -7492,16 +7442,15 @@ textarea {
     padding: 18px 18px 34px;
   }
 
+  .leadCaptureHeroBottom,
   .channelFocusGrid {
     grid-template-columns: 1fr;
   }
 
-  .leadCaptureLeadRow,
   .leadCaptureBody {
     padding: 0 18px 34px;
   }
 
-  .leadCaptureLeadRow,
   .leadStepsGrid,
   .leadCaptureSectionSplit,
   .leadCaptureTrustBar,
@@ -7509,48 +7458,12 @@ textarea {
     grid-template-columns: 1fr;
   }
 
-  .leadCaptureForm {
-    order: 1;
-  }
-
-  .leadCapturePresentation {
-    order: 2;
-  }
-
   .leadCaptureHeroMedia {
     border-radius: 18px;
-    min-height: 320px;
   }
 
-  .leadCaptureHeroOverlay {
-    align-content: start;
-    gap: 10px;
-    justify-items: start;
-    padding: 18px;
-  }
-
-  .leadCaptureHeroOverlay h1 {
-    font-size: 30px;
-    line-height: 1.02;
-    max-width: 9.5ch;
-  }
-
-  .leadCaptureHeroOverlay p,
-  .leadThankYouCard p {
-    font-size: 16px;
-  }
-
-  .leadCaptureHeroOverlay p {
-    display: none;
-  }
-
-  .leadCaptureHeroOverlay .leadCaptureMeta {
-    gap: 8px;
-  }
-
-  .leadCaptureHeroOverlay .leadCaptureMeta span:nth-child(3),
-  .leadCaptureHeroOverlay .leadBenefitRow span:nth-child(3) {
-    display: none;
+  .leadCaptureHeroMedia img {
+    aspect-ratio: 16 / 10;
   }
 
   .leadBenefitRow {
@@ -7561,12 +7474,12 @@ textarea {
     grid-template-columns: 1fr;
   }
 
-  .leadCapturePresentation {
+  .leadCaptureHeroCopy {
     padding: 20px;
   }
 
-  .leadCapturePresentation h2 {
-    font-size: 28px;
+  .leadCaptureHeroCopy h1 {
+    font-size: 34px;
     max-width: 100%;
   }
 
@@ -7986,12 +7899,12 @@ textarea {
     font-size: 16px;
   }
 
-  .leadCaptureLeadRow,
   .leadCaptureBody {
     padding-left: 14px;
     padding-right: 14px;
   }
 
+  .leadCaptureHeroCopy,
   .leadCaptureForm,
   .leadThankYouCard {
     border-radius: 16px;
@@ -8004,33 +7917,18 @@ textarea {
     padding: 14px 18px;
   }
 
-  .leadCaptureHeroMedia {
-    min-height: 260px;
+  .leadCaptureHeroMedia img {
+    aspect-ratio: 1 / 1;
   }
 
-  .leadCaptureHeroOverlay {
-    gap: 8px;
-    padding: 16px;
-  }
-
-  .leadCaptureHeroOverlay h1 {
+  .leadCaptureHeroCopy h1 {
     font-size: 28px;
-    max-width: 8.5ch;
   }
 
-  .leadCaptureHeroOverlay .leadEyebrow,
-  .leadCaptureHeroOverlay .leadCaptureMeta span,
-  .leadCaptureHeroOverlay .leadBenefitRow span {
+  .leadCaptureMeta span,
+  .leadBenefitRow span {
     font-size: 10px;
     padding: 6px 9px;
-  }
-
-  .leadCapturePresentation h2 {
-    font-size: 24px;
-  }
-
-  .leadCapturePresentation p {
-    font-size: 14px;
   }
 
   .leadCaptureForm h2 {
