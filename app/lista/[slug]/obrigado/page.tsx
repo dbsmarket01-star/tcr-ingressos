@@ -1,8 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
 import { getLeadCaptureEventBySlug } from "@/features/leads/lead.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
+import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 
 type LeadCaptureThankYouPageProps = {
   params: Promise<{
@@ -35,6 +37,13 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
   const buttonText = event.leadCaptureThankYouButtonText || "Quero entrar no grupo do WhatsApp";
   const location = [event.city, event.state].filter(Boolean).join(", ");
   const isExistingLead = query.existing === "1";
+  const companySettings = await getCompanySettingsByOrganizationId(organizationContext.organization.id);
+  const publicSocialSettings = companySettings as typeof companySettings & {
+    instagramUrl?: string | null;
+    facebookUrl?: string | null;
+    youtubeUrl?: string | null;
+    whatsappUrl?: string | null;
+  };
 
   return (
     <main className="shell leadCaptureThanksShell">
@@ -95,6 +104,7 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
         </div>
         <small>Seu cadastro já está salvo. Agora entre no grupo para liberar a próxima etapa e receber as condições deste lançamento.</small>
       </section>
+      <PublicSiteFooter brandName={organizationContext.brandName} settings={publicSocialSettings} />
     </main>
   );
 }

@@ -55,6 +55,12 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     getOrCreateDefaultProtectionPolicy(),
     listProtectionSources()
   ]);
+  const companyIdentity = companySettings as typeof companySettings & {
+    instagramUrl?: string | null;
+    facebookUrl?: string | null;
+    youtubeUrl?: string | null;
+    whatsappUrl?: string | null;
+  };
   const splitRows = Array.from({ length: 6 }).map((_, index) => splitRules[index] ?? null);
   const splitPreview = buildSplitRulesPreview(splitRules);
 
@@ -122,6 +128,26 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           <label className="field">
             <span>Telefone de suporte</span>
             <input name="supportPhone" defaultValue={companySettings.supportPhone ?? ""} />
+          </label>
+        </div>
+        <div className="grid twoColumns">
+          <label className="field">
+            <span>Instagram</span>
+            <input name="instagramUrl" defaultValue={companyIdentity.instagramUrl ?? ""} placeholder="https://instagram.com/suaempresa" />
+          </label>
+          <label className="field">
+            <span>Facebook</span>
+            <input name="facebookUrl" defaultValue={companyIdentity.facebookUrl ?? ""} placeholder="https://facebook.com/suaempresa" />
+          </label>
+        </div>
+        <div className="grid twoColumns">
+          <label className="field">
+            <span>YouTube</span>
+            <input name="youtubeUrl" defaultValue={companyIdentity.youtubeUrl ?? ""} placeholder="https://youtube.com/@seucanal" />
+          </label>
+          <label className="field">
+            <span>WhatsApp</span>
+            <input name="whatsappUrl" defaultValue={companyIdentity.whatsappUrl ?? ""} placeholder="https://wa.me/5511999999999" />
           </label>
         </div>
         <label className="field">

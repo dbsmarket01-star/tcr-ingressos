@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { createPlatformLeadAction } from "@/features/platform-leads/platform-lead.actions";
+import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
 import { listCachedPublishedEventShowcase } from "@/features/events/event.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
+import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
@@ -387,6 +389,13 @@ export default async function Home({ searchParams }: HomePageProps) {
   }
 
   const events = await listCachedPublishedEventShowcase(6, organizationContext.organization.id);
+  const companySettings = await getCompanySettingsByOrganizationId(organizationContext.organization.id);
+  const publicSocialSettings = companySettings as typeof companySettings & {
+    instagramUrl?: string | null;
+    facebookUrl?: string | null;
+    youtubeUrl?: string | null;
+    whatsappUrl?: string | null;
+  };
   const featuredEvent = events[0] ?? null;
 
   return (
@@ -395,7 +404,11 @@ export default async function Home({ searchParams }: HomePageProps) {
         <div className="homeHeroInner">
           <div className="homeHeroContent">
             <div className="brand homeBrand" aria-label={organizationContext.brandName}>
-              <span className="brandMark">{organizationContext.brandMark}</span>
+              {organizationContext.brandLogoUrl ? (
+                <img alt={organizationContext.brandName} className="brandLogo" src={organizationContext.brandLogoUrl} />
+              ) : (
+                <span className="brandMark">{organizationContext.brandMark}</span>
+              )}
               <span>{organizationContext.brandName}</span>
             </div>
             <span className="homeEyebrow">Bilheteria oficial</span>
@@ -509,6 +522,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           </div>
         </aside>
       </section>
+      <PublicSiteFooter brandName={organizationContext.brandName} settings={publicSocialSettings} />
     </main>
   );
 }

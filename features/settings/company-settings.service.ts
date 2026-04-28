@@ -42,12 +42,30 @@ export async function getCompanySettings() {
       document: "00.000.000/0001-00",
       supportEmail: "contato@tcringressos.com.br",
       supportPhone: null,
+      instagramUrl: null,
+      facebookUrl: null,
+      youtubeUrl: null,
+      whatsappUrl: null,
       defaultCurrency: "BRL",
       platformFeeBps: 0,
       orderReservationMinutes: 120,
       cardPendingReservationMinutes: 30
     }
   });
+}
+
+export async function getCompanySettingsByOrganizationId(organizationId: string) {
+  const settings = await prisma.companySettings.findFirst({
+    where: {
+      organizationId
+    }
+  });
+
+  if (settings) {
+    return settings;
+  }
+
+  return getCompanySettings();
 }
 
 export async function getOrderReservationMinutes() {
@@ -88,6 +106,10 @@ export async function updateCompanySettings(input: CompanySettingsInput) {
           document: input.document,
           supportEmail: input.supportEmail,
           supportPhone: input.supportPhone || null,
+          instagramUrl: input.instagramUrl || null,
+          facebookUrl: input.facebookUrl || null,
+          youtubeUrl: input.youtubeUrl || null,
+          whatsappUrl: input.whatsappUrl || null,
           defaultCurrency: input.defaultCurrency.toUpperCase(),
           platformFeeBps: Math.round(input.platformFeePercent * 100),
           orderReservationMinutes: input.orderReservationMinutes,
@@ -109,6 +131,10 @@ export async function updateCompanySettings(input: CompanySettingsInput) {
         document: input.document,
         supportEmail: input.supportEmail,
         supportPhone: input.supportPhone || null,
+        instagramUrl: input.instagramUrl || null,
+        facebookUrl: input.facebookUrl || null,
+        youtubeUrl: input.youtubeUrl || null,
+        whatsappUrl: input.whatsappUrl || null,
         defaultCurrency: input.defaultCurrency.toUpperCase(),
         platformFeeBps: Math.round(input.platformFeePercent * 100),
         orderReservationMinutes: input.orderReservationMinutes,
@@ -125,6 +151,10 @@ export async function updateCompanySettings(input: CompanySettingsInput) {
       document: input.document,
       supportEmail: input.supportEmail,
       supportPhone: input.supportPhone || null,
+      instagramUrl: input.instagramUrl || null,
+      facebookUrl: input.facebookUrl || null,
+      youtubeUrl: input.youtubeUrl || null,
+      whatsappUrl: input.whatsappUrl || null,
       defaultCurrency: input.defaultCurrency.toUpperCase(),
       platformFeeBps: Math.round(input.platformFeePercent * 100),
       orderReservationMinutes: input.orderReservationMinutes,

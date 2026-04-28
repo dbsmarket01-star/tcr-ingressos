@@ -1,10 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { createEventLeadAction } from "@/features/leads/lead.actions";
 import { getLeadCaptureEventBySlug } from "@/features/leads/lead.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
+import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { formatDateTime } from "@/lib/format";
 import { imageCropStyle, parseImageCrop } from "@/lib/image-crop";
@@ -132,6 +134,13 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
   const ctaText = event.leadCaptureCtaText || "Quero entrar na lista";
   const youtubeEmbedUrl = getYoutubeEmbedUrl(event.leadCaptureVideoUrl);
   const tracking = getTrackingParamsFromSearch(query, `/lista/${event.slug}`);
+  const companySettings = await getCompanySettingsByOrganizationId(organizationContext.organization.id);
+  const publicSocialSettings = companySettings as typeof companySettings & {
+    instagramUrl?: string | null;
+    facebookUrl?: string | null;
+    youtubeUrl?: string | null;
+    whatsappUrl?: string | null;
+  };
   const venueGallery = getVenueGalleryUrls(event.leadCaptureVenueGallery);
 
   return (
@@ -306,6 +315,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
         ) : null}
 
       </section>
+      <PublicSiteFooter brandName={organizationContext.brandName} settings={publicSocialSettings} />
     </main>
   );
 }

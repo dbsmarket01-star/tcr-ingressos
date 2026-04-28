@@ -2,11 +2,13 @@ import Link from "next/link";
 import Script from "next/script";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
 import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getBuyerProfile } from "@/features/customer-auth/google-buyer.service";
 import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrganization } from "@/features/events/event.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
+import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { createCheckoutOrderAction } from "@/features/orders/order.actions";
 import { calculatePixDiscountInCents, calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import { buildEventSeo } from "@/features/seo/event-seo";
@@ -114,6 +116,13 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     name: lot.name,
     totalWithFeeInCents: lot.priceInCents + calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps)
   }));
+  const companySettings = await getCompanySettingsByOrganizationId(organizationContext.organization.id);
+  const publicSocialSettings = companySettings as typeof companySettings & {
+    instagramUrl?: string | null;
+    facebookUrl?: string | null;
+    youtubeUrl?: string | null;
+    whatsappUrl?: string | null;
+  };
 
   return (
     <main className="shell">
@@ -164,7 +173,11 @@ export default async function EventPage({ params, searchParams }: EventPageProps
       />
       <header className="topbar">
         <Link className="brand" href="/">
-          <span className="brandMark">{organizationContext.brandMark}</span>
+          {organizationContext.brandLogoUrl ? (
+            <img alt={organizationContext.brandName} className="brandLogo" src={organizationContext.brandLogoUrl} />
+          ) : (
+            <span className="brandMark">{organizationContext.brandMark}</span>
+          )}
           <span>{organizationContext.brandName}</span>
         </Link>
         <nav className="nav" aria-label="Navegação">
@@ -452,6 +465,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           <strong>{ctaText}</strong>
         </a>
       ) : null}
+      <PublicSiteFooter brandName={organizationContext.brandName} settings={publicSocialSettings} />
       {event.supportWhatsappUrl ? <WhatsappFloatingButton href={event.supportWhatsappUrl} /> : null}
     </main>
   );

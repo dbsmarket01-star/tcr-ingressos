@@ -291,6 +291,10 @@ model CompanySettings {
   document        String
   supportEmail    String
   supportPhone    String?
+  instagramUrl    String?
+  facebookUrl     String?
+  youtubeUrl      String?
+  whatsappUrl     String?
   defaultCurrency String   @default("BRL")
   platformFeeBps  Int      @default(1000)
   orderReservationMinutes Int @default(120)

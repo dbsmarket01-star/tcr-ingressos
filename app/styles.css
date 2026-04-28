@@ -1355,6 +1355,69 @@ textarea {
   padding: 10px;
 }
 
+.publicSiteFooter {
+  border-top: 1px solid rgba(217, 224, 231, 0.9);
+  margin-top: 28px;
+  padding: 22px 0 30px;
+}
+
+.publicSiteFooterInner {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+}
+
+.publicSiteFooterBrand {
+  display: grid;
+  gap: 6px;
+}
+
+.publicSiteFooterBrand strong {
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.publicSiteFooterBrand span {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.publicSiteFooterSocials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.publicSiteFooterSocials a {
+  align-items: center;
+  background: #f1f5f7;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  display: inline-flex;
+  height: 44px;
+  justify-content: center;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease;
+  width: 44px;
+}
+
+.publicSiteFooterSocials a:hover {
+  background: #e7edf2;
+  border-color: #c8d3dd;
+  transform: translateY(-1px);
+}
+
+.publicSiteFooterSocials svg {
+  display: block;
+  height: 20px;
+  width: 20px;
+}
+
 .platformFlowSection {
   margin-top: 28px;
 }
@@ -7460,6 +7523,16 @@ textarea {
   .homeFeaturePanel,
   .homeSupportPanel {
     position: static;
+  }
+
+  .publicSiteFooterInner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .publicSiteFooterSocials a {
+    height: 42px;
+    width: 42px;
   }
 
   .homeFeaturedEventCard,
