@@ -61,6 +61,7 @@ function validationMessage(error: unknown) {
         leadCaptureCtaText: "Texto do botão da captação",
         leadCaptureHeroImageUrl: "Imagem da captação",
         leadCaptureHeroCrop: "Enquadramento da imagem da captação",
+        leadCaptureVenueGallery: "Imagens do local",
         leadCaptureVideoUrl: "Vídeo da captação",
         leadCaptureWhatsappGroupUrl: "Link do grupo de WhatsApp",
         leadCaptureThankYouTitle: "Título do agradecimento",
@@ -140,6 +141,7 @@ export async function createEventAction(formData: FormData) {
     leadCaptureCtaText: String(formData.get("leadCaptureCtaText") ?? "").trim() || undefined,
     leadCaptureHeroImageUrl: leadHeroUploadUrl || String(formData.get("leadCaptureHeroImageUrl") ?? "").trim(),
     leadCaptureHeroCrop: String(formData.get("leadCaptureHeroCrop") ?? "").trim() || undefined,
+    leadCaptureVenueGallery: String(formData.get("leadCaptureVenueGallery") ?? "").trim() || undefined,
     leadCaptureVideoUrl: String(formData.get("leadCaptureVideoUrl") ?? "").trim() || undefined,
     leadCaptureWhatsappGroupUrl: String(formData.get("leadCaptureWhatsappGroupUrl") ?? "").trim() || undefined,
     leadCaptureThankYouTitle: String(formData.get("leadCaptureThankYouTitle") ?? "").trim() || undefined,
@@ -240,6 +242,7 @@ export async function updateEventAction(formData: FormData) {
       String(formData.get("leadCaptureHeroImageUrl") ?? "").trim() ||
       String(formData.get("currentLeadCaptureHeroImageUrl") ?? "").trim(),
     leadCaptureHeroCrop: String(formData.get("leadCaptureHeroCrop") ?? "").trim() || undefined,
+    leadCaptureVenueGallery: String(formData.get("leadCaptureVenueGallery") ?? "").trim() || undefined,
     leadCaptureVideoUrl: String(formData.get("leadCaptureVideoUrl") ?? "").trim() || undefined,
     leadCaptureWhatsappGroupUrl: String(formData.get("leadCaptureWhatsappGroupUrl") ?? "").trim() || undefined,
     leadCaptureThankYouTitle: String(formData.get("leadCaptureThankYouTitle") ?? "").trim() || undefined,

@@ -240,6 +240,15 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             />
           </div>
           <label className="field">
+            <span>Imagens do local (uma URL por linha)</span>
+            <textarea
+              name="leadCaptureVenueGallery"
+              rows={4}
+              placeholder={"https://...\nhttps://...\nhttps://..."}
+            />
+            <small>Opcional. Use uma URL por linha para mostrar fotos do local na landing de captação.</small>
+          </label>
+          <label className="field">
             <span>Vídeo do YouTube</span>
             <input
               name="leadCaptureVideoUrl"

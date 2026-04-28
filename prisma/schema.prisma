@@ -361,6 +361,7 @@ model Event {
   leadCaptureCtaText  String?
   leadCaptureHeroImageUrl String?
   leadCaptureHeroCrop String?
+  leadCaptureVenueGallery String?
   leadCaptureVideoUrl String?
   leadCaptureWhatsappGroupUrl String?
   leadCaptureThankYouTitle String?

@@ -75,6 +75,17 @@ function getYoutubeEmbedUrl(url?: string | null) {
   return null;
 }
 
+function getVenueGalleryUrls(value?: string | null) {
+  if (!value) {
+    return [];
+  }
+
+  return value
+    .split("\n")
+    .map((item) => item.trim())
+    .filter((item) => item && (item.startsWith("http://") || item.startsWith("https://") || item.startsWith("/uploads/")));
+}
+
 export default async function LeadCapturePage({ params, searchParams }: LeadCapturePageProps) {
   const { slug } = await params;
   const query = searchParams ? await searchParams : {};
@@ -97,10 +108,11 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
     event.subtitle ||
     "Cadastre-se para receber as informações do evento, prioridade de abertura e o link do grupo oficial.";
   const offerText =
-    event.leadCaptureOfferText || "Entre na lista e receba condições especiais na abertura das vendas.";
-  const ctaText = event.leadCaptureCtaText || "Garantir meu super desconto";
+    event.leadCaptureOfferText || "Entre na lista e receba prioridade no lançamento, desconto e informações oficiais.";
+  const ctaText = event.leadCaptureCtaText || "Quero entrar na lista";
   const youtubeEmbedUrl = getYoutubeEmbedUrl(event.leadCaptureVideoUrl);
   const tracking = getTrackingParamsFromSearch(query, `/lista/${event.slug}`);
+  const venueGallery = getVenueGalleryUrls(event.leadCaptureVenueGallery);
 
   return (
     <main className="shell leadCaptureShell">
@@ -122,25 +134,28 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             src={heroImage}
             style={imageCropStyle(leadHeroCrop)}
           />
+          <div className="leadCaptureHeroOverlay">
+            <span className="leadEyebrow">Pré-lista oficial do evento</span>
+            <h1>{headline}</h1>
+            <p>{description}</p>
+            <div className="leadCaptureMeta">
+              <span>{formatDateTime(event.startsAt)}</span>
+              <span>
+                {event.city}, {event.state}
+              </span>
+              <span>{event.venueName}</span>
+            </div>
+            <div className="leadBenefitRow" aria-label="Benefícios da lista de interesse">
+              <span>desconto na abertura</span>
+              <span>grupo oficial</span>
+              <span>prioridade no aviso</span>
+            </div>
+          </div>
         </div>
         <div className="leadCaptureHeroContent">
-          <span className="leadEyebrow">Lista de interesse oficial</span>
-          <h1>{headline}</h1>
-          <p>{description}</p>
-          <div className="leadCaptureMeta">
-            <span>{formatDateTime(event.startsAt)}</span>
-            <span>
-              {event.city}, {event.state}
-            </span>
-          </div>
           <div className="leadOfferBox">
             <strong>{offerText}</strong>
-            <small>Cadastre-se e siga para a página final com o grupo oficial do WhatsApp.</small>
-          </div>
-          <div className="leadBenefitRow" aria-label="Benefícios da lista de interesse">
-            <span>Lista oficial</span>
-            <span>Prioridade na abertura</span>
-            <span>Grupo no WhatsApp</span>
+            <small>Cadastre-se agora e siga para a página final com o grupo oficial no WhatsApp.</small>
           </div>
           <form action={createEventLeadAction} className="leadCaptureForm card" id="lead-capture-form">
             <input type="hidden" name="eventId" value={event.id} />
@@ -152,10 +167,9 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             <input type="hidden" name="utmTerm" value={tracking.utmTerm || ""} />
             <input type="hidden" name="referrer" value={tracking.referrer || ""} />
             <input type="hidden" name="landingPage" value={tracking.landingPage || ""} />
-            <h2>Garanta sua prioridade</h2>
-            <p className="muted">
-              Preencha seus dados para entrar na lista de interesse e receber a abertura deste evento.
-            </p>
+            <span className="leadFormEyebrow">Cadastre seu interesse</span>
+            <h2>Receba o aviso de abertura e o link do grupo oficial</h2>
+            <p className="muted">Preencha seus dados e conclua o último passo na página de obrigado para entrar no grupo.</p>
             {error ? <div className="errorBox">{error}</div> : null}
             <label className="field">
               <span>Nome</span>
@@ -173,47 +187,94 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
               {ctaText}
             </SubmitButton>
             <small className="leadCaptureFootnote">
-              Seus dados serão usados apenas para avisos deste lançamento e acesso ao grupo oficial.
+              Seus dados serão usados apenas para este lançamento, avisos oficiais e acesso ao grupo.
             </small>
           </form>
+          <div className="leadCaptureTrustBar" aria-label="Pontos de valor da landing">
+            <div>
+              <strong>Cadastro rápido</strong>
+              <span>Leva menos de um minuto.</span>
+            </div>
+            <div>
+              <strong>Grupo oficial</strong>
+              <span>Sem depender de link perdido.</span>
+            </div>
+            <div>
+              <strong>Condição especial</strong>
+              <span>Oferta antes da abertura geral.</span>
+            </div>
+          </div>
         </div>
       </section>
 
       <section className="leadCaptureBody">
+        <div className="leadCaptureInlineCta card">
+          <div>
+            <span className="leadEyebrow">Faça agora</span>
+            <strong>Entre na lista e vá para o grupo com desconto deste lançamento.</strong>
+          </div>
+          <a className="button" href="#lead-capture-form">
+            {ctaText}
+          </a>
+        </div>
+
         <article className="leadCaptureSection card">
           <div className="sectionHeader">
             <div>
               <span className="leadEyebrow">Como funciona</span>
-              <h2>Entre na lista antes da abertura oficial</h2>
+              <h2>Um fluxo simples para não perder a abertura</h2>
             </div>
           </div>
           <div className="leadStepsGrid">
             <article className="leadStepCard">
               <strong>1. Cadastre seus dados</strong>
-              <p>Leva poucos segundos. Você entra na lista oficial deste lançamento.</p>
+              <p>Você deixa seu nome, e-mail e telefone para entrar na pré-lista oficial deste evento.</p>
             </article>
             <article className="leadStepCard">
               <strong>2. Acesse o grupo no WhatsApp</strong>
-              <p>É por lá que vamos concentrar avisos, abertura e condições especiais.</p>
+              <p>Na página seguinte, você entra no grupo onde vamos liberar avisos, bônus e o desconto da abertura.</p>
             </article>
             <article className="leadStepCard">
               <strong>3. Receba prioridade na abertura</strong>
-              <p>Quem estiver no grupo acompanha primeiro a liberação dos ingressos.</p>
+              <p>Quem estiver no grupo acompanha primeiro a liberação e recebe o contexto completo do lançamento.</p>
             </article>
           </div>
         </article>
+
+        <section className="leadCaptureSection leadCaptureSectionSplit">
+          <article className="card leadCaptureHighlight">
+            <span className="leadEyebrow">Por que entrar agora</span>
+            <h2>Mais clareza, mais contexto e mais chance de comprar no melhor momento.</h2>
+            <p>
+              A lista de interesse evita que você dependa de anúncio solto ou de link perdido. Você entra no funil oficial deste
+              lançamento e recebe as próximas instruções no canal certo.
+            </p>
+            <ul className="leadChecklist">
+              <li>cadastro confirmado em poucos segundos</li>
+              <li>grupo oficial para concentrar avisos e condições especiais</li>
+              <li>comunicação mais organizada antes da venda abrir</li>
+            </ul>
+          </article>
+
+          <article className="card leadCaptureSupportCard">
+            <span className="leadEyebrow">Próximo passo</span>
+            <h2>Seu lugar na lista começa com este cadastro.</h2>
+            <p>Faça seu cadastro agora e siga para a página final, onde você entra no grupo do evento e conclui a etapa de prioridade.</p>
+            <a className="secondaryButton" href="#lead-capture-form">
+              Fazer cadastro agora
+            </a>
+          </article>
+        </section>
 
         {youtubeEmbedUrl ? (
           <section className="leadCaptureSection card leadVideoSection">
             <div className="sectionHeader">
               <div>
                 <span className="leadEyebrow">Convite em vídeo</span>
-                <h2>Assista antes de entrar na lista</h2>
+                <h2>Assista ao convite e entenda a proposta do evento</h2>
               </div>
             </div>
-            <p className="muted">
-              Separamos um vídeo opcional para apresentar melhor a proposta deste evento e aumentar a intenção de compra.
-            </p>
+            <p className="muted">Esse vídeo ajuda a aquecer a decisão e aumentar a intenção antes da abertura oficial.</p>
             <div className="leadVideoFrame">
               <iframe
                 src={youtubeEmbedUrl}
@@ -226,30 +287,42 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
           </section>
         ) : null}
 
-        <section className="leadCaptureSection leadCaptureSectionSplit">
-          <article className="card leadCaptureHighlight">
-            <span className="leadEyebrow">O que você vai receber</span>
-            <h2>Uma comunicação mais organizada e direta</h2>
-            <p>
-              A landing de captação existe para separar o interesse da compra. Primeiro você registra a intenção, entra no grupo e
-              acompanha o lançamento. Depois, quando a venda abrir, seguimos para a página oficial de ingressos.
-            </p>
-            <ul className="leadChecklist">
-              <li>aviso de abertura com antecedência</li>
-              <li>acesso ao grupo oficial deste evento</li>
-              <li>melhor contexto antes de tomar a decisão de compra</li>
-            </ul>
-          </article>
+        {venueGallery.length > 0 ? (
+          <section className="leadCaptureSection card leadCaptureVenueSection">
+            <div className="sectionHeader">
+              <div>
+                <span className="leadEyebrow">Conheça o local</span>
+                <h2>Veja o ambiente onde este encontro vai acontecer</h2>
+              </div>
+              <a className="secondaryButton" href="#lead-capture-form">
+                Entrar na lista
+              </a>
+            </div>
+            <div className="leadCaptureVenueInfo">
+              <strong>{event.venueName}</strong>
+              <p>
+                {event.venueAddress} · {event.city}, {event.state}
+              </p>
+            </div>
+            <div className="leadCaptureVenueGallery">
+              {venueGallery.map((imageUrl, index) => (
+                <figure className="leadCaptureVenueCard" key={`${imageUrl}-${index}`}>
+                  <img alt={`${event.venueName} ${index + 1}`} src={imageUrl} />
+                </figure>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
-          <article className="card leadCaptureSupportCard">
-            <span className="leadEyebrow">Convite rápido</span>
-            <h2>Quer garantir prioridade neste lançamento?</h2>
-            <p>Preencha o formulário no topo e siga para a próxima etapa. O processo foi pensado para ser rápido, leve e direto.</p>
-            <a className="secondaryButton" href="#lead-capture-form">
-              Ir para o formulário
-            </a>
-          </article>
-        </section>
+        <div className="leadCaptureInlineCta card">
+          <div>
+            <span className="leadEyebrow">Última chamada</span>
+            <strong>Não espere a venda abrir para tentar achar o link depois.</strong>
+          </div>
+          <a className="button" href="#lead-capture-form">
+            Quero minha prioridade
+          </a>
+        </div>
       </section>
     </main>
   );

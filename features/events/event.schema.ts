@@ -86,6 +86,7 @@ export const eventDraftSchema = z.object({
   leadCaptureCtaText: z.string().max(80).optional(),
   leadCaptureHeroImageUrl: imageUrlSchema,
   leadCaptureHeroCrop: imageCropSchema,
+  leadCaptureVenueGallery: z.string().max(5000).optional(),
   leadCaptureVideoUrl: youtubeUrlSchema,
   leadCaptureWhatsappGroupUrl: whatsappGroupUrlSchema,
   leadCaptureThankYouTitle: z.string().max(120).optional(),

@@ -357,6 +357,16 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
             />
           </div>
           <label className="field">
+            <span>Imagens do local (uma URL por linha)</span>
+            <textarea
+              name="leadCaptureVenueGallery"
+              rows={4}
+              defaultValue={event.leadCaptureVenueGallery ?? ""}
+              placeholder={"https://...\nhttps://...\nhttps://..."}
+            />
+            <small>Opcional. Use uma URL por linha para exibir a estrutura e o ambiente do local na landing.</small>
+          </label>
+          <label className="field">
             <span>Vídeo do YouTube</span>
             <input
               name="leadCaptureVideoUrl"
