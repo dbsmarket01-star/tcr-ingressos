@@ -6470,18 +6470,15 @@ textarea {
 }
 
 .leadCaptureHero {
-  align-items: stretch;
-  display: grid;
-  gap: 22px;
-  grid-template-columns: minmax(0, 1.15fr) minmax(340px, 420px);
+  display: block;
   margin: 0 auto;
   max-width: 1240px;
-  padding: 28px 24px 36px;
+  padding: 28px 24px 20px;
 }
 
 .leadCaptureHeroMedia {
   border-radius: 30px;
-  min-height: 620px;
+  min-height: 520px;
   overflow: hidden;
   position: relative;
 }
@@ -6513,11 +6510,6 @@ textarea {
   padding: 36px;
   position: absolute;
   z-index: 1;
-}
-
-.leadCaptureHeroContent {
-  display: grid;
-  gap: 16px;
 }
 
 .leadEyebrow {
@@ -6666,6 +6658,39 @@ textarea {
   margin: 0 auto;
   max-width: 1240px;
   padding: 0 24px 56px;
+}
+
+.leadCaptureLeadRow {
+  align-items: start;
+  display: grid;
+  gap: 22px;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+  margin: 0 auto;
+  max-width: 1240px;
+  padding: 0 24px 28px;
+}
+
+.leadCapturePresentation {
+  display: grid;
+  gap: 16px;
+  min-height: 100%;
+  padding: 28px;
+}
+
+.leadCapturePresentation h2 {
+  color: var(--brand-dark);
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 0.98;
+  margin: 0;
+  max-width: 12ch;
+}
+
+.leadCapturePresentation p {
+  color: #365249;
+  font-size: 17px;
+  line-height: 1.62;
+  margin: 0;
+  max-width: 58ch;
 }
 
 .leadCaptureInlineCta {
@@ -7374,14 +7399,15 @@ textarea {
   }
 
   .leadCaptureHero {
-    grid-template-columns: 1fr;
     padding: 18px 18px 34px;
   }
 
+  .leadCaptureLeadRow,
   .leadCaptureBody {
     padding: 0 18px 34px;
   }
 
+  .leadCaptureLeadRow,
   .leadStepsGrid,
   .leadCaptureSectionSplit,
   .leadCaptureTrustBar,
@@ -7414,6 +7440,15 @@ textarea {
 
   .leadCaptureInlineCta {
     grid-template-columns: 1fr;
+  }
+
+  .leadCapturePresentation {
+    padding: 22px;
+  }
+
+  .leadCapturePresentation h2 {
+    font-size: 32px;
+    max-width: 100%;
   }
 
   .leadCaptureInlineCta .button,
@@ -7822,6 +7857,7 @@ textarea {
     padding-right: 14px;
   }
 
+  .leadCaptureLeadRow,
   .leadCaptureBody {
     padding-left: 14px;
     padding-right: 14px;
@@ -7843,6 +7879,14 @@ textarea {
 
   .leadCaptureHeroOverlay h1 {
     font-size: 34px;
+  }
+
+  .leadCapturePresentation h2 {
+    font-size: 28px;
+  }
+
+  .leadCapturePresentation p {
+    font-size: 15px;
   }
 
   .leadCaptureForm h2 {

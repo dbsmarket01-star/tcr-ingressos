@@ -12,6 +12,29 @@ function formatDate(value: Date) {
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(value);
 }
 
+function splitPhoneParts(phone?: string | null) {
+  const digits = (phone ?? "").replace(/\D/g, "");
+
+  if (!digits) {
+    return {
+      countryCode: "",
+      areaCode: "",
+      localNumber: ""
+    };
+  }
+
+  const normalized = digits.length <= 11 ? `55${digits}` : digits;
+  const countryCode = normalized.slice(0, normalized.length - 11);
+  const areaCode = normalized.slice(-11, -9);
+  const localNumber = normalized.slice(-9);
+
+  return {
+    countryCode,
+    areaCode,
+    localNumber
+  };
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ eventId: string }> }
@@ -27,8 +50,10 @@ export async function GET(
   const leads = await listEventLeads(event.id);
 
   const headers = [
-    "Nome",
+    "Nome completo",
     "E-mail",
+    "Código do país",
+    "DDD",
     "Telefone",
     "Evento",
     "Cidade",
@@ -42,22 +67,28 @@ export async function GET(
     "Landing",
     "Cadastrado em"
   ];
-  const rows = leads.map((lead) => [
-    lead.name,
-    lead.email,
-    lead.phone || "",
-    event.title,
-    event.city,
-    event.state,
-    lead.utmSource || "",
-    lead.utmMedium || "",
-    lead.utmCampaign || "",
-    lead.utmContent || "",
-    lead.utmTerm || "",
-    lead.referrer || "",
-    lead.landingPage || "",
-    formatDate(lead.createdAt)
-  ]);
+  const rows = leads.map((lead) => {
+    const phone = splitPhoneParts(lead.phone);
+
+    return [
+      lead.name,
+      lead.email,
+      phone.countryCode,
+      phone.areaCode,
+      phone.localNumber,
+      event.title,
+      event.city,
+      event.state,
+      lead.utmSource || "",
+      lead.utmMedium || "",
+      lead.utmCampaign || "",
+      lead.utmContent || "",
+      lead.utmTerm || "",
+      lead.referrer || "",
+      lead.landingPage || "",
+      formatDate(lead.createdAt)
+    ];
+  });
 
   const csv = [headers, ...rows].map((row) => row.map(csvValue).join(";")).join("\n");
 

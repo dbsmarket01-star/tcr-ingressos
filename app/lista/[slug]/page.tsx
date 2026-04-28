@@ -152,44 +152,16 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             </div>
           </div>
         </div>
-        <div className="leadCaptureHeroContent">
-          <div className="leadOfferBox">
-            <strong>{offerText}</strong>
-            <small>Cadastre-se agora e siga para a página final com o grupo oficial no WhatsApp.</small>
-          </div>
-          <form action={createEventLeadAction} className="leadCaptureForm card" id="lead-capture-form">
-            <input type="hidden" name="eventId" value={event.id} />
-            <input type="hidden" name="eventSlug" value={event.slug} />
-            <input type="hidden" name="utmSource" value={tracking.utmSource || ""} />
-            <input type="hidden" name="utmMedium" value={tracking.utmMedium || ""} />
-            <input type="hidden" name="utmCampaign" value={tracking.utmCampaign || ""} />
-            <input type="hidden" name="utmContent" value={tracking.utmContent || ""} />
-            <input type="hidden" name="utmTerm" value={tracking.utmTerm || ""} />
-            <input type="hidden" name="referrer" value={tracking.referrer || ""} />
-            <input type="hidden" name="landingPage" value={tracking.landingPage || ""} />
-            <span className="leadFormEyebrow">Cadastre seu interesse</span>
-            <h2>Receba o aviso de abertura e o link do grupo oficial</h2>
-            <p className="muted">Preencha seus dados e conclua o último passo na página de obrigado para entrar no grupo.</p>
-            {error ? <div className="errorBox">{error}</div> : null}
-            <label className="field">
-              <span>Nome</span>
-              <input name="name" placeholder="Seu nome completo" required />
-            </label>
-            <label className="field">
-              <span>E-mail</span>
-              <input name="email" type="email" placeholder="Digite seu melhor e-mail" required />
-            </label>
-            <label className="field">
-              <span>DDD + Celular</span>
-              <input name="phone" inputMode="tel" placeholder="DDD + Celular" required />
-            </label>
-            <SubmitButton className="button fullButton" pendingText="Enviando cadastro...">
-              {ctaText}
-            </SubmitButton>
-            <small className="leadCaptureFootnote">
-              Seus dados serão usados apenas para este lançamento, avisos oficiais e acesso ao grupo.
-            </small>
-          </form>
+      </section>
+
+      <section className="leadCaptureLeadRow">
+        <article className="card leadCapturePresentation">
+          <span className="leadEyebrow">Antes da abertura</span>
+          <h2>Entre na lista oficial e receba o caminho certo para este lançamento.</h2>
+          <p>
+            {offerText} O objetivo aqui é simples: organizar a comunicação, levar você para o grupo oficial e evitar que o
+            lançamento fique perdido no meio dos anúncios.
+          </p>
           <div className="leadCaptureTrustBar" aria-label="Pontos de valor da landing">
             <div>
               <strong>Cadastro rápido</strong>
@@ -204,7 +176,41 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
               <span>Oferta antes da abertura geral.</span>
             </div>
           </div>
-        </div>
+        </article>
+
+        <form action={createEventLeadAction} className="leadCaptureForm card" id="lead-capture-form">
+          <input type="hidden" name="eventId" value={event.id} />
+          <input type="hidden" name="eventSlug" value={event.slug} />
+          <input type="hidden" name="utmSource" value={tracking.utmSource || ""} />
+          <input type="hidden" name="utmMedium" value={tracking.utmMedium || ""} />
+          <input type="hidden" name="utmCampaign" value={tracking.utmCampaign || ""} />
+          <input type="hidden" name="utmContent" value={tracking.utmContent || ""} />
+          <input type="hidden" name="utmTerm" value={tracking.utmTerm || ""} />
+          <input type="hidden" name="referrer" value={tracking.referrer || ""} />
+          <input type="hidden" name="landingPage" value={tracking.landingPage || ""} />
+          <span className="leadFormEyebrow">Cadastre seu interesse</span>
+          <h2>Receba o aviso de abertura e o link do grupo oficial</h2>
+          <p className="muted">Preencha seus dados e conclua o último passo na página de obrigado para entrar no grupo.</p>
+          {error ? <div className="errorBox">{error}</div> : null}
+          <label className="field">
+            <span>Nome completo</span>
+            <input name="name" placeholder="Seu nome completo" required />
+          </label>
+          <label className="field">
+            <span>E-mail</span>
+            <input name="email" type="email" placeholder="Digite seu melhor e-mail" required />
+          </label>
+          <label className="field">
+            <span>Telefone com DDI + DDD</span>
+            <input name="phone" inputMode="tel" placeholder="Ex: 55 11 99999-9999" required />
+          </label>
+          <SubmitButton className="button fullButton" pendingText="Enviando cadastro...">
+            {ctaText}
+          </SubmitButton>
+          <small className="leadCaptureFootnote">
+            Seus dados serão usados apenas para este lançamento, avisos oficiais e acesso ao grupo.
+          </small>
+        </form>
       </section>
 
       <section className="leadCaptureBody">
