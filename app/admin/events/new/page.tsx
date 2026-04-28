@@ -138,6 +138,22 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             </div>
             <p className="muted">Janela de vendas, suporte e publicação. Tracking fica escondido para não poluir o cadastro principal.</p>
           </div>
+          <div className="channelFocusGrid">
+            <div className="channelFocusCard salesFocusCard">
+              <span className="channelFocusEyebrow">Venda de ingressos</span>
+              <strong>Página pública, janela de venda, suporte e rastreamento do checkout.</strong>
+              <small>Este bloco controla o que entra no ar para vender, receber pedidos e acompanhar campanhas.</small>
+            </div>
+            <div className="channelFocusChecklist">
+              <span className="channelFocusEyebrow">O que configurar aqui</span>
+              <ul>
+                <li>Quando a venda abre e fecha</li>
+                <li>Status publicado ou rascunho</li>
+                <li>WhatsApp de suporte ao comprador</li>
+                <li>Pixel e GTM quando houver tráfego</li>
+              </ul>
+            </div>
+          </div>
           <div className="grid twoColumns">
             <label className="field">
               <span>Início das vendas</span>
@@ -196,6 +212,22 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               <p className="muted">Página separada da venda para captar intenção de compra e levar para o grupo de WhatsApp.</p>
             </div>
           </summary>
+          <div className="channelFocusGrid">
+            <div className="channelFocusCard leadFocusCard">
+              <span className="channelFocusEyebrow">Captação de leads</span>
+              <strong>Landing de pré-lista, página de obrigado e grupo oficial antes da abertura.</strong>
+              <small>Use este bloco quando quiser aquecer a audiência, captar contatos e organizar o lançamento antes de vender.</small>
+            </div>
+            <div className="channelFocusChecklist">
+              <span className="channelFocusEyebrow">O que configurar aqui</span>
+              <ul>
+                <li>Headline, oferta e CTA da landing</li>
+                <li>Imagem, vídeo e fotos do local</li>
+                <li>Link do grupo de WhatsApp</li>
+                <li>Texto da página de obrigado</li>
+              </ul>
+            </div>
+          </div>
           <label className="field checkboxField">
             <input name="leadCaptureEnabled" type="checkbox" />
             <span>Ativar página de captação para este evento</span>
