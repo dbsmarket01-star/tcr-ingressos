@@ -47,7 +47,7 @@ export async function AdminShell({ title, description, children }: AdminShellPro
           ) : (
             <span className="brandMark">{brandMark}</span>
           )}
-          <span>{brandName}</span>
+          {!currentOrganizationContext.brandLogoUrl ? <span>{brandName}</span> : null}
         </Link>
         <div className="sidebarIntro">
           <span className="eyebrow">{sidebarEyebrow}</span>

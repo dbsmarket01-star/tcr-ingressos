@@ -178,7 +178,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           ) : (
             <span className="brandMark">{organizationContext.brandMark}</span>
           )}
-          <span>{organizationContext.brandName}</span>
+          {!organizationContext.brandLogoUrl ? <span>{organizationContext.brandName}</span> : null}
         </Link>
         <nav className="nav" aria-label="Navegação">
           <Link href="/">Eventos</Link>

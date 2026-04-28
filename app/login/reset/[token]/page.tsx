@@ -26,7 +26,7 @@ export default async function ResetPasswordPage({ params, searchParams }: ResetP
             ) : (
               <span className="brandMark">{organizationContext.brandMark}</span>
             )}
-            <span>{organizationContext.brandName}</span>
+            {!organizationContext.brandLogoUrl ? <span>{organizationContext.brandName}</span> : null}
           </Link>
 
           <div>

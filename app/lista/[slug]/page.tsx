@@ -152,7 +152,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
           ) : (
             <span className="brandMark">{organizationContext.brandMark}</span>
           )}
-          <span>{organizationContext.brandName}</span>
+          {!organizationContext.brandLogoUrl ? <span>{organizationContext.brandName}</span> : null}
         </Link>
       </header>
 

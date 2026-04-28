@@ -106,12 +106,14 @@ textarea {
 }
 
 .brandLogo {
-  border-radius: 10px;
+  border-radius: 0;
   display: block;
   flex: 0 0 auto;
   height: 38px;
-  object-fit: cover;
-  width: 38px;
+  max-width: min(220px, 42vw);
+  object-fit: contain;
+  object-position: left center;
+  width: auto;
 }
 
 .nav {
@@ -7354,7 +7356,8 @@ textarea {
 
   .brandLogo {
     height: 32px;
-    width: 32px;
+    max-width: 160px;
+    width: auto;
   }
 
   .settingsBrandPreviewBox,
@@ -7913,6 +7916,11 @@ textarea {
     border-radius: 8px;
     height: 34px;
     width: 34px;
+  }
+
+  .brandLogo {
+    height: 34px;
+    max-width: 150px;
   }
 
   .nav a {

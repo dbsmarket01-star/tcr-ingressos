@@ -409,7 +409,7 @@ export default async function Home({ searchParams }: HomePageProps) {
               ) : (
                 <span className="brandMark">{organizationContext.brandMark}</span>
               )}
-              <span>{organizationContext.brandName}</span>
+              {!organizationContext.brandLogoUrl ? <span>{organizationContext.brandName}</span> : null}
             </div>
             <span className="homeEyebrow">Bilheteria oficial</span>
             <h1>Eventos em cartaz com compra segura, operação rápida e experiência profissional.</h1>

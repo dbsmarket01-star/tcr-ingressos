@@ -25,7 +25,7 @@ export default async function ForgotPasswordPage({ searchParams }: ForgotPasswor
             ) : (
               <span className="brandMark">{organizationContext.brandMark}</span>
             )}
-            <span>{organizationContext.brandName}</span>
+            {!organizationContext.brandLogoUrl ? <span>{organizationContext.brandName}</span> : null}
           </Link>
 
           <div>

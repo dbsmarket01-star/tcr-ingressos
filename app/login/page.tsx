@@ -35,7 +35,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             ) : (
               <span className="brandMark">{organizationContext.brandMark}</span>
             )}
-            <span>{loginBrandLabel}</span>
+            {!organizationContext.brandLogoUrl ? <span>{loginBrandLabel}</span> : null}
           </Link>
 
           <div>
