@@ -157,7 +157,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
         </div>
         <div className="leadCaptureHeroBottom">
           <article className="leadCaptureHeroCopy">
-            <span className="leadEyebrow">Pré-lista oficial do evento</span>
             <h1>{headline}</h1>
             <p>{renderEditableText(description, "hero-description")}</p>
             <div className="leadCaptureMeta">
@@ -166,30 +165,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
                 {event.city}, {event.state}
               </span>
               <span>{event.venueName}</span>
-            </div>
-            <div className="leadBenefitRow" aria-label="Benefícios da lista de interesse">
-              <span>desconto na abertura</span>
-              <span>grupo oficial</span>
-              <span>prioridade no aviso</span>
-            </div>
-            <div className="leadCaptureTrustBar" aria-label="Pontos de valor da landing">
-              <div>
-                <strong>Cadastro rápido</strong>
-                <span>Leva menos de um minuto.</span>
-              </div>
-              <div>
-                <strong>Grupo oficial</strong>
-                <span>Sem depender de link perdido.</span>
-              </div>
-              <div>
-                <strong>Condição especial</strong>
-                <span>Oferta antes da abertura geral.</span>
-              </div>
-            </div>
-            <div className="leadCaptureHeroAction">
-              <a className="button" href="#lead-capture-form">
-                {ctaText}
-              </a>
             </div>
           </article>
 
@@ -235,16 +210,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
       </section>
 
       <section className="leadCaptureBody">
-        <div className="leadCaptureInlineCta card">
-          <div>
-            <span className="leadEyebrow">Faça agora</span>
-            <strong>Entre na lista e vá para o grupo com desconto deste lançamento.</strong>
-          </div>
-          <a className="button" href="#lead-capture-form">
-            {ctaText}
-          </a>
-        </div>
-
         <article className="leadCaptureSection card">
           <div className="sectionHeader">
             <div>
@@ -283,20 +248,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
               <li>grupo oficial para concentrar avisos e condições especiais</li>
               <li>comunicação mais organizada antes da venda abrir</li>
             </ul>
-          </article>
-
-          <article className="card leadCaptureSupportCard">
-            <span className="leadEyebrow">Próximo passo</span>
-            <h2>Seu lugar na lista começa com este cadastro.</h2>
-            <p>
-              {renderEditableText(
-                "Faça seu cadastro agora e siga para a página final, onde você entra no grupo do evento e conclui a etapa de prioridade.",
-                "support-copy"
-              )}
-            </p>
-            <a className="secondaryButton" href="#lead-capture-form">
-              Fazer cadastro agora
-            </a>
           </article>
         </section>
 
@@ -353,15 +304,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
           </section>
         ) : null}
 
-        <div className="leadCaptureInlineCta card">
-          <div>
-            <span className="leadEyebrow">Última chamada</span>
-            <strong>Não espere a venda abrir para tentar achar o link depois.</strong>
-          </div>
-          <a className="button" href="#lead-capture-form">
-            Quero minha prioridade
-          </a>
-        </div>
       </section>
     </main>
   );
