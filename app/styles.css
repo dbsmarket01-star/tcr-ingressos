@@ -6842,6 +6842,12 @@ textarea {
   padding: 0 24px 56px;
 }
 
+.leadCaptureInfoGrid {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+}
+
 .leadCaptureInlineCta {
   align-items: center;
   display: grid;
@@ -6865,6 +6871,38 @@ textarea {
   display: grid;
   gap: 18px;
   padding: 24px;
+}
+
+.leadCaptureSectionTone {
+  position: relative;
+}
+
+.leadCaptureSectionTone::before {
+  border-radius: 999px;
+  content: "";
+  height: 4px;
+  left: 24px;
+  position: absolute;
+  top: 22px;
+  width: 56px;
+}
+
+.leadToneProcess::before {
+  background: linear-gradient(90deg, #0b7a63, #24a37c);
+}
+
+.leadToneValue::before {
+  background: linear-gradient(90deg, #456cc2, #7f9eff);
+}
+
+.leadToneVenue::before {
+  background: linear-gradient(90deg, #7d5a16, #d0a133);
+}
+
+.leadCaptureSectionTone .sectionHeader,
+.leadCaptureSectionTone > .leadEyebrow:first-child,
+.leadCaptureSectionTone > h2:first-of-type {
+  padding-top: 12px;
 }
 
 .leadCaptureSectionSplit {
@@ -6906,8 +6944,13 @@ textarea {
 
 .leadVideoSection {
   background:
-    radial-gradient(circle at top right, rgba(68, 153, 123, 0.08), transparent 26%),
+    radial-gradient(circle at top right, rgba(79, 125, 240, 0.12), transparent 26%),
     white;
+}
+
+.leadCapturePrioritySection {
+  border-color: rgba(69, 108, 194, 0.16);
+  box-shadow: 0 18px 36px rgba(45, 76, 142, 0.08);
 }
 
 .leadVideoFrame {
@@ -7597,6 +7640,7 @@ textarea {
     padding: 0 18px 34px;
   }
 
+  .leadCaptureInfoGrid,
   .leadStepsGrid,
   .leadCaptureSectionSplit,
   .leadCaptureTrustBar,
@@ -8054,9 +8098,20 @@ textarea {
 
   .leadCaptureHeroCopy,
   .leadCaptureForm,
+  .leadCaptureSection,
+  .leadCaptureHighlight,
   .leadThankYouCard {
     border-radius: 16px;
     padding: 16px;
+  }
+
+  .leadCaptureInfoGrid {
+    gap: 18px;
+  }
+
+  .leadCaptureSectionTone::before {
+    left: 16px;
+    top: 16px;
   }
 
   .whatsappGroupButtonLarge {

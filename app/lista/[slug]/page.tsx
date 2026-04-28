@@ -220,58 +220,17 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
       </section>
 
       <section className="leadCaptureBody">
-        <article className="leadCaptureSection card">
-          <div className="sectionHeader">
-            <div>
-              <span className="leadEyebrow">Como funciona</span>
-              <h2>Um fluxo simples para não perder a abertura</h2>
-            </div>
-          </div>
-          <div className="leadStepsGrid">
-            <article className="leadStepCard">
-              <strong>1. Cadastre seus dados</strong>
-              <p>Você deixa seu nome, e-mail e telefone para entrar na pré-lista oficial deste evento.</p>
-            </article>
-            <article className="leadStepCard">
-              <strong>2. Acesse o grupo no WhatsApp</strong>
-              <p>Na página seguinte, você entra no grupo onde vamos liberar avisos, bônus e o desconto da abertura.</p>
-            </article>
-            <article className="leadStepCard">
-              <strong>3. Receba prioridade na abertura</strong>
-              <p>Quem estiver no grupo acompanha primeiro a liberação e recebe o contexto completo do lançamento.</p>
-            </article>
-          </div>
-        </article>
-
-        <section className="leadCaptureSection leadCaptureSectionSplit">
-          <article className="card leadCaptureHighlight">
-            <span className="leadEyebrow">Por que entrar agora</span>
-            <h2>Mais clareza, mais contexto e mais chance de comprar no melhor momento.</h2>
-            <p>
-              {renderEditableText(
-                "A lista de interesse evita que você dependa de anúncio solto ou de link perdido. Você entra no funil oficial deste lançamento e recebe as próximas instruções no canal certo.",
-                "highlight-copy"
-              )}
-            </p>
-            <ul className="leadChecklist">
-              <li>cadastro confirmado em poucos segundos</li>
-              <li>grupo oficial para concentrar avisos e condições especiais</li>
-              <li>comunicação mais organizada antes da venda abrir</li>
-            </ul>
-          </article>
-        </section>
-
         {youtubeEmbedUrl ? (
-          <section className="leadCaptureSection card leadVideoSection">
+          <section className="leadCaptureSection card leadVideoSection leadCapturePrioritySection">
             <div className="sectionHeader">
               <div>
-                <span className="leadEyebrow">Convite em vídeo</span>
-                <h2>Assista ao convite e entenda a proposta do evento</h2>
+                <span className="leadEyebrow">Vídeo de apresentação</span>
+                <h2>Veja o convite antes de entrar no grupo oficial</h2>
               </div>
             </div>
             <p className="muted">
               {renderEditableText(
-                "Esse vídeo ajuda a aquecer a decisão e aumentar a intenção antes da abertura oficial.",
+                "Cole o link do YouTube no evento e use esse espaço para dar contexto, aquecer o interesse e preparar a entrada no grupo.",
                 "video-copy"
               )}
             </p>
@@ -287,8 +246,49 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
           </section>
         ) : null}
 
+        <div className="leadCaptureInfoGrid">
+          <article className="leadCaptureSection card leadCaptureSectionTone leadToneProcess">
+            <div className="sectionHeader">
+              <div>
+                <span className="leadEyebrow">Como funciona</span>
+                <h2>Um fluxo simples para não perder a abertura</h2>
+              </div>
+            </div>
+            <div className="leadStepsGrid">
+              <article className="leadStepCard">
+                <strong>1. Cadastre seus dados</strong>
+                <p>Você deixa seu nome, e-mail e telefone para entrar na pré-lista oficial deste evento.</p>
+              </article>
+              <article className="leadStepCard">
+                <strong>2. Acesse o grupo no WhatsApp</strong>
+                <p>Na página seguinte, você entra no grupo onde vamos liberar avisos, bônus e o desconto da abertura.</p>
+              </article>
+              <article className="leadStepCard">
+                <strong>3. Receba prioridade na abertura</strong>
+                <p>Quem estiver no grupo acompanha primeiro a liberação e recebe o contexto completo do lançamento.</p>
+              </article>
+            </div>
+          </article>
+
+          <article className="card leadCaptureHighlight leadCaptureSectionTone leadToneValue">
+            <span className="leadEyebrow">Por que entrar agora</span>
+            <h2>Mais clareza, mais contexto e mais chance de comprar no melhor momento.</h2>
+            <p>
+              {renderEditableText(
+                "A lista de interesse evita que você dependa de anúncio solto ou de link perdido. Você entra no funil oficial deste lançamento e recebe as próximas instruções no canal certo.",
+                "highlight-copy"
+              )}
+            </p>
+            <ul className="leadChecklist">
+              <li>cadastro confirmado em poucos segundos</li>
+              <li>grupo oficial para concentrar avisos e condições especiais</li>
+              <li>comunicação mais organizada antes da venda abrir</li>
+            </ul>
+          </article>
+        </div>
+
         {venueGallery.length > 0 ? (
-          <section className="leadCaptureSection card leadCaptureVenueSection">
+          <section className="leadCaptureSection card leadCaptureVenueSection leadCaptureSectionTone leadToneVenue">
             <div className="sectionHeader">
               <div>
                 <span className="leadEyebrow">Conheça o local</span>

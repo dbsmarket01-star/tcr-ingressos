@@ -401,13 +401,13 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
             <small>Opcional. Use uma URL por linha para exibir a estrutura e o ambiente do local na landing.</small>
           </label>
           <label className="field">
-            <span>Vídeo do YouTube</span>
+            <span>Vídeo de apresentação (YouTube)</span>
             <input
               name="leadCaptureVideoUrl"
               defaultValue={event.leadCaptureVideoUrl ?? ""}
               placeholder="https://www.youtube.com/watch?v=... ou https://youtu.be/..."
             />
-            <small>Opcional. Se você informar um vídeo, ele aparece abaixo do topo da landing.</small>
+            <small>Opcional. Cole só o link do YouTube e ele aparece no meio da landing, logo depois do cadastro.</small>
           </label>
           <label className="field">
             <span>Link do grupo de WhatsApp</span>

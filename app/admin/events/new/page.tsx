@@ -283,12 +283,12 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             <small>Opcional. Use uma URL por linha para mostrar fotos do local na landing de captação.</small>
           </label>
           <label className="field">
-            <span>Vídeo do YouTube</span>
+            <span>Vídeo de apresentação (YouTube)</span>
             <input
               name="leadCaptureVideoUrl"
               placeholder="https://www.youtube.com/watch?v=... ou https://youtu.be/..."
             />
-            <small>Opcional. Se você informar um vídeo, ele aparece abaixo do topo da landing.</small>
+            <small>Opcional. Cole só o link do YouTube e ele aparece no meio da landing, logo depois do cadastro.</small>
           </label>
           <label className="field">
             <span>Link do grupo de WhatsApp</span>
