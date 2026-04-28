@@ -3,8 +3,6 @@ import { ModuleCard } from "@/components/admin/ModuleCard";
 import { CopyButton } from "@/components/forms/CopyButton";
 import { ImageUploadField } from "@/components/forms/ImageUploadField";
 import { requirePermission } from "@/features/auth/auth.service";
-import { updateProtectionPolicyAction } from "@/features/security-center/protection-policy.actions";
-import { getOrCreateDefaultProtectionPolicy, listProtectionSources } from "@/features/security-center/protection-policy.service";
 import {
   updateCompanySettingsAction,
   updateOrganizationLogoAction,
@@ -48,12 +46,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   const params = searchParams ? await searchParams : {};
   const error = typeof params.error === "string" ? params.error : null;
   const saved = params.saved === "1";
-  const [health, companySettings, splitRules, protectionPolicy, protectionSources] = await Promise.all([
+  const [health, companySettings, splitRules] = await Promise.all([
     getPaymentHealth(),
     getCompanySettings(),
-    listPaymentSplitRules(),
-    getOrCreateDefaultProtectionPolicy(),
-    listProtectionSources()
+    listPaymentSplitRules()
   ]);
   const companyIdentity = companySettings as typeof companySettings & {
     instagramUrl?: string | null;
@@ -99,7 +95,6 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         {saved ? <div className="successBox">Configurações salvas com sucesso.</div> : null}
         {params.brandingSaved === "1" ? <div className="successBox">Logo da operação salva com sucesso.</div> : null}
         {params.splitSaved === "1" ? <div className="successBox">Regras de split salvas com sucesso.</div> : null}
-        {params.policySaved === "1" ? <div className="successBox">Politica de protecao salva com sucesso.</div> : null}
         <div className="grid twoColumns">
           <label className="field">
             <span>Razão social</span>
@@ -240,107 +235,6 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         <div className="formActions">
           <button className="button" type="submit">
             Salvar logo da operação
-          </button>
-        </div>
-      </form>
-
-      <section className="sectionHeader">
-        <div>
-          <h2>Politica de protecao</h2>
-          <p className="muted">Define as regras remotas que Android e iOS devem sincronizar para bloquear conteudo adulto e reagir a bypass.</p>
-        </div>
-      </section>
-
-      <form action={updateProtectionPolicyAction} className="card form wideForm">
-        <div className="grid twoColumns">
-          <label className="field">
-            <span>Nome da politica</span>
-            <input name="policyName" defaultValue={protectionPolicy.name} required />
-          </label>
-          <label className="field">
-            <span>Foco</span>
-            <input value={`Versao ${protectionPolicy.version} · pornografia em prioridade`} disabled />
-          </label>
-        </div>
-        <label className="field">
-          <span>Descricao</span>
-          <textarea name="policyDescription" defaultValue={protectionPolicy.description ?? ""} rows={3} />
-        </label>
-        <div className="grid twoColumns">
-          <label className="field checkboxField">
-            <input name="targetPornographyOnly" type="checkbox" defaultChecked={protectionPolicy.targetPornographyOnly} />
-            <span>Priorizar pornografia como categoria principal</span>
-          </label>
-          <label className="field checkboxField">
-            <input name="pinRequiredToDisable" type="checkbox" defaultChecked={protectionPolicy.pinRequiredToDisable} />
-            <span>Exigir PIN para desativar protecao</span>
-          </label>
-          <label className="field checkboxField">
-            <input name="enforceAndroidVpn" type="checkbox" defaultChecked={protectionPolicy.enforceAndroidVpn} />
-            <span>Obrigar VPN local no Android</span>
-          </label>
-          <label className="field checkboxField">
-            <input name="enforceIosDnsProxy" type="checkbox" defaultChecked={protectionPolicy.enforceIosDnsProxy} />
-            <span>Exigir DNS proxy no iOS</span>
-          </label>
-          <label className="field checkboxField">
-            <input name="blockUnknownDnsChanges" type="checkbox" defaultChecked={protectionPolicy.blockUnknownDnsChanges} />
-            <span>Tratar troca de DNS como risco</span>
-          </label>
-          <label className="field checkboxField">
-            <input name="detectExternalVpn" type="checkbox" defaultChecked={protectionPolicy.detectExternalVpn} />
-            <span>Detectar VPN externa</span>
-          </label>
-          <label className="field checkboxField">
-            <input name="detectProxy" type="checkbox" defaultChecked={protectionPolicy.detectProxy} />
-            <span>Detectar proxy</span>
-          </label>
-          <label className="field checkboxField">
-            <input name="detectDeveloperMode" type="checkbox" defaultChecked={protectionPolicy.detectDeveloperMode} />
-            <span>Detectar modo desenvolvedor</span>
-          </label>
-        </div>
-        <div className="grid twoColumns">
-          <label className="field">
-            <span>Heartbeat esperado (minutos)</span>
-            <input
-              name="heartbeatIntervalMinutes"
-              type="number"
-              min="1"
-              max="120"
-              defaultValue={protectionPolicy.heartbeatIntervalMinutes}
-              required
-            />
-          </label>
-          <label className="field">
-            <span>Janela de tolerancia sem heartbeat (minutos)</span>
-            <input
-              name="staleHeartbeatGraceMinutes"
-              type="number"
-              min="5"
-              max="360"
-              defaultValue={protectionPolicy.staleHeartbeatGraceMinutes}
-              required
-            />
-          </label>
-        </div>
-        <div className="settingsWebhookBox">
-          <h3>Blocklists sincronizadas</h3>
-          {protectionSources.length === 0 ? (
-            <p>Nenhuma fonte cadastrada ainda.</p>
-          ) : (
-            <ul className="launchChecklistList">
-              {protectionSources.map((source: any) => (
-                <li key={source.id}>
-                  <strong>{source.name}</strong> · {source.isEnabled ? "ativa" : "inativa"} · versao {source.version} · {source.entries.length} entrada(s)
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="formActions">
-          <button className="button" type="submit">
-            Salvar politica
           </button>
         </div>
       </form>
