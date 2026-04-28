@@ -222,18 +222,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
       <section className="leadCaptureBody">
         {youtubeEmbedUrl ? (
           <section className="leadCaptureSection card leadVideoSection leadCapturePrioritySection">
-            <div className="sectionHeader">
-              <div>
-                <span className="leadEyebrow">Vídeo de apresentação</span>
-                <h2>Veja o convite antes de entrar no grupo oficial</h2>
-              </div>
-            </div>
-            <p className="muted">
-              {renderEditableText(
-                "Cole o link do YouTube no evento e use esse espaço para dar contexto, aquecer o interesse e preparar a entrada no grupo.",
-                "video-copy"
-              )}
-            </p>
+            <span className="leadEyebrow">MAIS IFORMAÇÕES</span>
             <div className="leadVideoFrame">
               <iframe
                 src={youtubeEmbedUrl}
