@@ -73,16 +73,22 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
             <small>É lá que você vai receber o desconto, a abertura e as orientações deste evento.</small>
           </div>
         </div>
-        {event.leadCaptureWhatsappGroupUrl ? (
-          <a
-            className="button fullButton whatsappGroupButton"
-            href={event.leadCaptureWhatsappGroupUrl}
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            {buttonText}
-          </a>
-        ) : null}
+        <div className="leadThankYouAction">
+          {event.leadCaptureWhatsappGroupUrl ? (
+            <a
+              className="button fullButton whatsappGroupButton whatsappGroupButtonLarge"
+              href={event.leadCaptureWhatsappGroupUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              {buttonText}
+            </a>
+          ) : (
+            <div className="infoBox">
+              Adicione o link do grupo de WhatsApp na captação do evento para liberar este último passo.
+            </div>
+          )}
+        </div>
         <small>Seu cadastro já está salvo. Agora entre no grupo para liberar a próxima etapa e receber as condições deste lançamento.</small>
       </section>
     </main>

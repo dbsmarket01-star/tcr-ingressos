@@ -6928,12 +6928,29 @@ textarea {
   line-height: 1.45;
 }
 
+.leadThankYouAction {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+
 .whatsappGroupButton {
   background: #25d366;
 }
 
 .whatsappGroupButton:hover {
   background: #20bf5c;
+}
+
+.whatsappGroupButtonLarge {
+  align-items: center;
+  border-radius: 18px;
+  box-shadow: 0 16px 32px rgba(37, 211, 102, 0.22);
+  font-size: 18px;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 62px;
+  padding: 16px 22px;
 }
 
 .readinessList {
@@ -7869,6 +7886,12 @@ textarea {
   .leadThankYouCard {
     border-radius: 16px;
     padding: 16px;
+  }
+
+  .whatsappGroupButtonLarge {
+    font-size: 16px;
+    min-height: 56px;
+    padding: 14px 18px;
   }
 
   .leadCaptureHeroMedia {
