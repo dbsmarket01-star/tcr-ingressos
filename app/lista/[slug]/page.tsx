@@ -120,6 +120,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
     event.bannerUrl ||
     "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1800&q=80";
   const leadHeroCrop = parseImageCrop(event.leadCaptureHeroCrop) || parseImageCrop(event.bannerCrop);
+  const publicLeadHeroCrop = leadHeroCrop ? { ...leadHeroCrop, zoom: Math.max(1, leadHeroCrop.zoom) } : null;
   const error = typeof query.error === "string" ? query.error : null;
   const headline = event.leadCaptureHeadline || event.title;
   const description =
@@ -151,11 +152,11 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             className={leadHeroCrop ? "croppedImage" : ""}
             alt={headline}
             src={heroImage}
-            style={imageCropStyle(leadHeroCrop)}
+            style={imageCropStyle(publicLeadHeroCrop)}
           />
         </div>
         <div className="leadCaptureHeroBottom">
-          <article className="card leadCaptureHeroCopy">
+          <article className="leadCaptureHeroCopy">
             <span className="leadEyebrow">Pré-lista oficial do evento</span>
             <h1>{headline}</h1>
             <p>{renderEditableText(description, "hero-description")}</p>
