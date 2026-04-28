@@ -88,9 +88,9 @@ textarea {
 }
 
 body.operationTheme .topbar {
-  background: linear-gradient(180deg, rgba(var(--brand-rgb), 0.16), rgba(var(--brand-rgb), 0.11));
-  border-bottom-color: rgba(var(--brand-rgb), 0.22);
-  box-shadow: 0 10px 30px rgba(var(--brand-rgb), 0.08);
+  background: linear-gradient(180deg, rgba(var(--brand-rgb), 0.92), rgba(var(--brand-rgb), 0.82));
+  border-bottom-color: rgba(var(--brand-rgb), 0.42);
+  box-shadow: 0 10px 30px rgba(var(--brand-rgb), 0.2);
 }
 
 .brand {
