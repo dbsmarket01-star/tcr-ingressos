@@ -1,10 +1,7 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
 import { getLeadCaptureEventBySlug } from "@/features/leads/lead.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
-import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 
 type LeadCaptureThankYouPageProps = {
   params: Promise<{
@@ -35,29 +32,10 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
     event.leadCaptureThankYouDescription ||
     "Último passo: entre no grupo oficial para receber um desconto de até 30% e acompanhar as informações deste lançamento.";
   const buttonText = event.leadCaptureThankYouButtonText || "Quero entrar no grupo do WhatsApp";
-  const location = [event.city, event.state].filter(Boolean).join(", ");
   const isExistingLead = query.existing === "1";
-  const companySettings = await getCompanySettingsByOrganizationId(organizationContext.organization.id);
-  const publicSocialSettings = companySettings as typeof companySettings & {
-    instagramUrl?: string | null;
-    facebookUrl?: string | null;
-    youtubeUrl?: string | null;
-    whatsappUrl?: string | null;
-  };
 
   return (
     <main className="shell leadCaptureThanksShell">
-      <header className="topbar">
-        <Link className="brand" href="/">
-          {organizationContext.brandLogoUrl ? (
-            <img alt={organizationContext.brandName} className="brandLogo" src={organizationContext.brandLogoUrl} />
-          ) : (
-            <span className="brandMark">{organizationContext.brandMark}</span>
-          )}
-          <span>{organizationContext.brandName}</span>
-        </Link>
-      </header>
-
       <section className="leadThankYouCard card">
         <span className="leadEyebrow">Cadastro confirmado</span>
         <h1>{title}</h1>
@@ -67,15 +45,6 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
           </div>
         ) : null}
         <p>{description}</p>
-        <div className="leadCaptureMeta leadThankYouMeta">
-          <span>{event.title}</span>
-          <span>{location}</span>
-        </div>
-        <div className="leadThankYouProgress" aria-hidden="true">
-          <span className="isDone" />
-          <span className="isDone" />
-          <span className="isActive" />
-        </div>
         <div className="leadThankYouChecklist">
           <div>
             <strong>Cadastro feito</strong>
@@ -104,7 +73,6 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
         </div>
         <small>Seu cadastro já está salvo. Agora entre no grupo para liberar a próxima etapa e receber as condições deste lançamento.</small>
       </section>
-      <PublicSiteFooter brandName={organizationContext.brandName} settings={publicSocialSettings} />
     </main>
   );
 }
