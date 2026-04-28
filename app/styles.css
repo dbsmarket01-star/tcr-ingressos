@@ -4210,6 +4210,56 @@ textarea {
   max-width: 980px;
 }
 
+.settingsBrandPanel {
+  align-items: start;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+}
+
+.settingsBrandPreview {
+  display: grid;
+  gap: 10px;
+}
+
+.fieldLabel {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.settingsBrandPreviewBox,
+.settingsBrandPreviewFallback {
+  align-items: center;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.98));
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  min-height: 180px;
+  padding: 24px;
+}
+
+.settingsBrandPreviewImage {
+  display: block;
+  max-height: 84px;
+  max-width: 100%;
+  object-fit: contain;
+  width: auto;
+}
+
+.settingsBrandPreviewFallback strong {
+  color: var(--text);
+  font-size: 18px;
+}
+
+.settingsBrandFields {
+  display: grid;
+  gap: 18px;
+}
+
 .formSection {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 250, 0.98));
@@ -7201,6 +7251,11 @@ textarea {
     width: 32px;
   }
 
+  .settingsBrandPreviewBox,
+  .settingsBrandPreviewFallback {
+    min-height: 140px;
+  }
+
   .nav {
     flex: 0 0 auto;
   }
@@ -7239,6 +7294,7 @@ textarea {
   .supportDetailsGrid,
   .supportSearchForm,
   .ticketDetailsGrid,
+  .settingsBrandPanel,
   .settingsGrid,
   .settingsStatusList,
   .ticketPageGrid,

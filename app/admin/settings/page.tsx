@@ -1,10 +1,15 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { ModuleCard } from "@/components/admin/ModuleCard";
 import { CopyButton } from "@/components/forms/CopyButton";
+import { ImageUploadField } from "@/components/forms/ImageUploadField";
 import { requirePermission } from "@/features/auth/auth.service";
 import { updateProtectionPolicyAction } from "@/features/security-center/protection-policy.actions";
 import { getOrCreateDefaultProtectionPolicy, listProtectionSources } from "@/features/security-center/protection-policy.service";
-import { updateCompanySettingsAction, updatePaymentSplitRulesAction } from "@/features/settings/company-settings.actions";
+import {
+  updateCompanySettingsAction,
+  updateOrganizationLogoAction,
+  updatePaymentSplitRulesAction
+} from "@/features/settings/company-settings.actions";
 import { getCompanySettings } from "@/features/settings/company-settings.service";
 import { getPaymentHealth } from "@/features/settings/payment-health.service";
 import { buildSplitRulesPreview, listPaymentSplitRules } from "@/features/settings/split-settings.service";
@@ -86,6 +91,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
       <form action={updateCompanySettingsAction} className="card form wideForm">
         {error ? <div className="errorBox">{error}</div> : null}
         {saved ? <div className="successBox">Configurações salvas com sucesso.</div> : null}
+        {params.brandingSaved === "1" ? <div className="successBox">Logo da operação salva com sucesso.</div> : null}
         {params.splitSaved === "1" ? <div className="successBox">Regras de split salvas com sucesso.</div> : null}
         {params.policySaved === "1" ? <div className="successBox">Politica de protecao salva com sucesso.</div> : null}
         <div className="grid twoColumns">
@@ -158,6 +164,56 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         <div className="formActions">
           <button className="button" type="submit">
             Salvar configurações
+          </button>
+        </div>
+      </form>
+
+      <section className="sectionHeader">
+        <div>
+          <h2>Marca da operação</h2>
+          <p className="muted">Use a logo oficial da TCR para substituir o selo textual no topo do sistema.</p>
+        </div>
+      </section>
+
+      <form action={updateOrganizationLogoAction} className="card form wideForm">
+        <div className="settingsBrandPanel">
+          <div className="settingsBrandPreview">
+            <span className="fieldLabel">Prévia atual</span>
+            {organizationContext.brandLogoUrl ? (
+              <div className="settingsBrandPreviewBox">
+                <img alt={organizationContext.brandName} className="settingsBrandPreviewImage" src={organizationContext.brandLogoUrl} />
+              </div>
+            ) : (
+              <div className="settingsBrandPreviewFallback">
+                <span className="brandMark">{organizationContext.brandMark}</span>
+                <strong>{organizationContext.brandName}</strong>
+              </div>
+            )}
+          </div>
+          <div className="settingsBrandFields">
+            <ImageUploadField
+              name="organizationLogoFile"
+              label="Logo da operação"
+              currentImageUrl={organizationContext.brandLogoUrl}
+              emptyText="Envie a logo oficial da TCR"
+              recommendedSize="PNG ou WEBP com fundo transparente"
+              usageHint="Ela aparece no topo do admin e nas páginas públicas da operação."
+              aspect="share"
+            />
+            <label className="field">
+              <span>Ou informe uma URL da logo</span>
+              <input
+                name="organizationLogoUrl"
+                defaultValue={organizationContext.brandLogoUrl ?? ""}
+                placeholder="https://cdn.sualogo.com/logo.png"
+              />
+              <small>Se enviar um arquivo acima, ele tem prioridade sobre esta URL.</small>
+            </label>
+          </div>
+        </div>
+        <div className="formActions">
+          <button className="button" type="submit">
+            Salvar logo da operação
           </button>
         </div>
       </form>

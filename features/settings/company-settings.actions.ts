@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAuditLog } from "@/features/audit/audit.service";
 import { requirePermission } from "@/features/auth/auth.service";
+import { getOrganizationBrandingById } from "@/features/organizations/organization.service";
+import { updateOrganizationLogo } from "@/features/organizations/organization.admin.service";
+import { savePublicImageUpload } from "@/features/uploads/local-upload.service";
 import { companySettingsSchema } from "./company-settings.schema";
 import { updateCompanySettings } from "./company-settings.service";
 import { splitRuleFormSchema } from "./split-settings.schema";
@@ -89,4 +92,54 @@ export async function updatePaymentSplitRulesAction(formData: FormData) {
   revalidatePath("/admin/production");
   revalidatePath("/admin/audit");
   redirect("/admin/settings?splitSaved=1");
+}
+
+export async function updateOrganizationLogoAction(formData: FormData) {
+  const admin = await requirePermission("SETTINGS");
+
+  if (!admin.organizationId) {
+    redirect("/admin/settings?error=Organizacao%20nao%20encontrada.");
+  }
+
+  const organization = await getOrganizationBrandingById(admin.organizationId);
+
+  if (!organization) {
+    redirect("/admin/settings?error=Organizacao%20nao%20encontrada.");
+  }
+
+  let logoUploadUrl: string | null = null;
+
+  try {
+    logoUploadUrl = await savePublicImageUpload(
+      formData.get("organizationLogoFile") as File | null,
+      `organizations/${organization.slug || organization.id}/logo`
+    );
+  } catch (error) {
+    redirect(
+      `/admin/settings?error=${encodeURIComponent(
+        error instanceof Error ? error.message : "Nao foi possivel salvar a logo."
+      )}`
+    );
+  }
+
+  const fallbackUrl = String(formData.get("organizationLogoUrl") ?? "").trim() || null;
+  const nextLogoUrl = logoUploadUrl || fallbackUrl;
+
+  const updatedOrganization = await updateOrganizationLogo(admin.organizationId, nextLogoUrl);
+
+  await createAuditLog({
+    adminUserId: admin.id,
+    action: "ORGANIZATION_LOGO_UPDATED",
+    entityType: "Organization",
+    entityId: updatedOrganization.id,
+    metadata: {
+      logoUrl: updatedOrganization.logoUrl
+    }
+  });
+
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin");
+  revalidatePath("/login");
+  revalidatePath("/");
+  redirect("/admin/settings?brandingSaved=1");
 }

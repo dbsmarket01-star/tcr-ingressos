@@ -138,12 +138,13 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
     <main className="shell leadCaptureShell">
       <header className="topbar">
         <Link className="brand" href="/">
-          <span className="brandMark">{organizationContext.brandMark}</span>
+          {organizationContext.brandLogoUrl ? (
+            <img alt={organizationContext.brandName} className="brandLogo" src={organizationContext.brandLogoUrl} />
+          ) : (
+            <span className="brandMark">{organizationContext.brandMark}</span>
+          )}
           <span>{organizationContext.brandName}</span>
         </Link>
-        <nav className="nav" aria-label="Navegação">
-          <Link href="/">Eventos</Link>
-        </nav>
       </header>
 
       <section className="leadCaptureHero">

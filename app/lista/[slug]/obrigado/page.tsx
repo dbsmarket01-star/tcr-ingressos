@@ -40,7 +40,11 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
     <main className="shell leadCaptureThanksShell">
       <header className="topbar">
         <Link className="brand" href="/">
-          <span className="brandMark">{organizationContext.brandMark}</span>
+          {organizationContext.brandLogoUrl ? (
+            <img alt={organizationContext.brandName} className="brandLogo" src={organizationContext.brandLogoUrl} />
+          ) : (
+            <span className="brandMark">{organizationContext.brandMark}</span>
+          )}
           <span>{organizationContext.brandName}</span>
         </Link>
       </header>

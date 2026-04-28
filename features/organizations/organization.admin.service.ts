@@ -537,3 +537,14 @@ export async function updateOrganizationStatus(id: string, isActive: boolean) {
     }
   });
 }
+
+export async function updateOrganizationLogo(id: string, logoUrl?: string | null) {
+  return prisma.organization.update({
+    where: {
+      id
+    },
+    data: {
+      logoUrl: normalizeValue(logoUrl)
+    }
+  });
+}
