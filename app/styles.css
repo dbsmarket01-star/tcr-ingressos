@@ -88,9 +88,11 @@ textarea {
 }
 
 body.operationTheme .topbar {
-  background: linear-gradient(180deg, rgba(var(--brand-rgb), 0.92), rgba(var(--brand-rgb), 0.82));
-  border-bottom-color: rgba(var(--brand-rgb), 0.42);
-  box-shadow: 0 10px 30px rgba(var(--brand-rgb), 0.2);
+  background:
+    linear-gradient(90deg, rgba(4, 55, 42, 0.98), rgba(8, 78, 59, 0.94)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
+  border-bottom-color: rgba(151, 214, 187, 0.18);
+  box-shadow: 0 12px 34px rgba(4, 55, 42, 0.26);
 }
 
 .brand {
@@ -115,8 +117,8 @@ body.operationTheme .topbar {
   border-radius: 0;
   display: block;
   flex: 0 0 auto;
-  height: 38px;
-  max-width: min(220px, 42vw);
+  height: 44px;
+  max-width: min(248px, 48vw);
   object-fit: contain;
   object-position: left center;
   width: auto;
@@ -7361,8 +7363,8 @@ body.operationTheme .topbar {
   }
 
   .brandLogo {
-    height: 32px;
-    max-width: 160px;
+    height: 36px;
+    max-width: 176px;
     width: auto;
   }
 
@@ -7925,8 +7927,8 @@ body.operationTheme .topbar {
   }
 
   .brandLogo {
-    height: 34px;
-    max-width: 150px;
+    height: 38px;
+    max-width: 182px;
   }
 
   .nav a {
