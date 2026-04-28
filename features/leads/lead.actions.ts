@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { eventLeadSchema } from "./lead.schema";
 import { createOrUpdateEventLead } from "./lead.service";
+import { verifyTurnstileToken } from "./turnstile.service";
 
 function validationMessage(error: unknown) {
   if (error && typeof error === "object" && "issues" in error) {
@@ -67,6 +68,7 @@ export async function createEventLeadAction(formData: FormData) {
   try {
     const organizationContext = await getCurrentOrganizationContext();
     const clientIp = await getClientIp();
+    await verifyTurnstileToken(String(formData.get("cf-turnstile-response") ?? "").trim() || null, clientIp);
     const result = await createOrUpdateEventLead(parsed.data, organizationContext.organization.id, clientIp);
     revalidatePath(`/admin/events/${parsed.data.eventId}/leads`);
     revalidatePath(`/admin/events/${parsed.data.eventId}`);
