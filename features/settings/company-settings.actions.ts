@@ -13,11 +13,95 @@ import { splitRuleFormSchema } from "./split-settings.schema";
 import { replacePaymentSplitRules } from "./split-settings.service";
 
 function settingsValidationMessage() {
-  return "Verifique nome da empresa, documento, e-mail e taxa padrao.";
+  return "Verifique nome da empresa, documento, e-mail, taxa padrão e links sociais.";
 }
 
 function normalizeDecimal(value: FormDataEntryValue | null) {
   return String(value ?? "0").trim().replace(",", ".");
+}
+
+function normalizeUrlLike(value: FormDataEntryValue | null) {
+  return String(value ?? "").trim();
+}
+
+function withHttps(value: string) {
+  if (!value) {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  return `https://${value}`;
+}
+
+function normalizeInstagramUrl(raw: string) {
+  const value = raw.trim();
+
+  if (!value) {
+    return "";
+  }
+
+  if (value.startsWith("@")) {
+    return `https://instagram.com/${value.slice(1)}`;
+  }
+
+  if (!value.includes("/") && !value.includes(".")) {
+    return `https://instagram.com/${value}`;
+  }
+
+  return withHttps(value);
+}
+
+function normalizeFacebookUrl(raw: string) {
+  const value = raw.trim();
+
+  if (!value) {
+    return "";
+  }
+
+  if (value.startsWith("@")) {
+    return `https://facebook.com/${value.slice(1)}`;
+  }
+
+  if (!value.includes("/") && !value.includes(".")) {
+    return `https://facebook.com/${value}`;
+  }
+
+  return withHttps(value);
+}
+
+function normalizeYoutubeUrl(raw: string) {
+  const value = raw.trim();
+
+  if (!value) {
+    return "";
+  }
+
+  if (value.startsWith("@")) {
+    return `https://youtube.com/${value}`;
+  }
+
+  if (!value.includes("/") && !value.includes(".")) {
+    return `https://youtube.com/@${value}`;
+  }
+
+  return withHttps(value);
+}
+
+function normalizeWhatsappUrl(raw: string) {
+  const value = raw.trim();
+
+  if (!value) {
+    return "";
+  }
+
+  if (/^\+?\d+$/.test(value.replace(/\s+/g, ""))) {
+    return `https://wa.me/${value.replace(/\D/g, "")}`;
+  }
+
+  return withHttps(value);
 }
 
 export async function updateCompanySettingsAction(formData: FormData) {
@@ -29,10 +113,10 @@ export async function updateCompanySettingsAction(formData: FormData) {
     document: String(formData.get("document") ?? ""),
     supportEmail: String(formData.get("supportEmail") ?? ""),
     supportPhone: String(formData.get("supportPhone") ?? "") || undefined,
-    instagramUrl: String(formData.get("instagramUrl") ?? "").trim(),
-    facebookUrl: String(formData.get("facebookUrl") ?? "").trim(),
-    youtubeUrl: String(formData.get("youtubeUrl") ?? "").trim(),
-    whatsappUrl: String(formData.get("whatsappUrl") ?? "").trim(),
+    instagramUrl: normalizeInstagramUrl(normalizeUrlLike(formData.get("instagramUrl"))),
+    facebookUrl: normalizeFacebookUrl(normalizeUrlLike(formData.get("facebookUrl"))),
+    youtubeUrl: normalizeYoutubeUrl(normalizeUrlLike(formData.get("youtubeUrl"))),
+    whatsappUrl: normalizeWhatsappUrl(normalizeUrlLike(formData.get("whatsappUrl"))),
     defaultCurrency: String(formData.get("defaultCurrency") ?? "BRL"),
     platformFeePercent: normalizeDecimal(formData.get("platformFeePercent")),
     orderReservationMinutes: String(formData.get("orderReservationMinutes") ?? "120"),
@@ -58,6 +142,7 @@ export async function updateCompanySettingsAction(formData: FormData) {
 
   revalidatePath("/admin/settings");
   revalidatePath("/admin/audit");
+  revalidatePath("/");
   redirect("/admin/settings?saved=1");
 }
 
