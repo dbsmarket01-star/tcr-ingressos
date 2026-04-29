@@ -99,6 +99,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     event.bannerUrl ||
     "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1600&q=80";
   const bannerCrop = parseImageCrop(event.bannerCrop) || imageCropFromBannerPosition(event.bannerPosition);
+  const publicBannerCrop = bannerCrop ? { ...bannerCrop, zoom: Math.max(1, bannerCrop.zoom) } : null;
   const mapCrop = parseImageCrop(event.eventMapCrop);
   const socialProofText = event.conversionSocialProofText?.trim() || "Vendas abertas";
   const urgencyText =
@@ -187,14 +188,14 @@ export default async function EventPage({ params, searchParams }: EventPageProps
       </header>
 
       <section className="publicHero">
-        <div className={`publicHeroMedia ${bannerCrop ? "hasCrop" : ""}`}>
+        <div className={`publicHeroMedia ${publicBannerCrop ? "hasCrop" : ""}`}>
           <img
-            className={`publicHeroImage ${bannerCrop ? "croppedImage" : ""}`}
+            className={`publicHeroImage ${publicBannerCrop ? "croppedImage" : ""}`}
             src={heroImage}
             alt={`Banner do evento ${event.title}`}
             decoding="async"
             loading="eager"
-            style={imageCropStyle(bannerCrop)}
+            style={imageCropStyle(publicBannerCrop)}
           />
         </div>
         <div className="publicHeroInner">
