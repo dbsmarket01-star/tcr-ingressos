@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Script from "next/script";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
@@ -12,6 +13,8 @@ import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { getTurnstileSiteKey } from "@/features/leads/turnstile.service";
 import { formatDateTime } from "@/lib/format";
 import { imageCropStyle, parseImageCrop } from "@/lib/image-crop";
+import { MetaTrackingFields } from "@/app/evento/[slug]/MetaTrackingFields";
+import { LeadCaptureTrackingRuntime } from "./LeadCaptureTrackingRuntime";
 
 type LeadCapturePageProps = {
   params: Promise<{
@@ -148,6 +151,52 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
 
   return (
     <main className="shell leadCaptureShell">
+      {event.googleTagManagerId ? (
+        <>
+          <Script id="lead-capture-gtm-script" strategy="afterInteractive">
+            {`
+              (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+              new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+              j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+              'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+              })(window,document,'script','dataLayer',${JSON.stringify(event.googleTagManagerId)});
+            `}
+          </Script>
+          <noscript>
+            <iframe
+              title="Google Tag Manager"
+              src={`https://www.googletagmanager.com/ns.html?id=${event.googleTagManagerId}`}
+              height="0"
+              width="0"
+              style={{ display: "none", visibility: "hidden" }}
+            />
+          </noscript>
+        </>
+      ) : null}
+      {event.metaPixelId ? (
+        <Script id="lead-capture-meta-pixel" strategy="afterInteractive">
+          {`
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', ${JSON.stringify(event.metaPixelId)});
+            fbq('track', 'PageView');
+          `}
+        </Script>
+      ) : null}
+      <LeadCaptureTrackingRuntime
+        eventTitle={event.title}
+        eventSlug={event.slug}
+        metaPixelId={event.metaPixelId}
+        googleTagManagerId={event.googleTagManagerId}
+        tracking={tracking}
+        mode="view"
+      />
       <header className="topbar">
         <Link className="brand" href="/">
           {organizationContext.brandLogoUrl ? (
@@ -199,6 +248,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
           <form action={createEventLeadAction} className="leadCaptureForm card" id="lead-capture-form">
             <input type="hidden" name="eventId" value={event.id} />
             <input type="hidden" name="eventSlug" value={event.slug} />
+            <MetaTrackingFields />
             <input type="hidden" name="utmSource" value={tracking.utmSource || ""} />
             <input type="hidden" name="utmMedium" value={tracking.utmMedium || ""} />
             <input type="hidden" name="utmCampaign" value={tracking.utmCampaign || ""} />

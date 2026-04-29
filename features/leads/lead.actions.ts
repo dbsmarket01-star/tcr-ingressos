@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
+import { trackMetaLeadForEventSubmission } from "@/features/tracking/meta-conversions.service";
 import { eventLeadSchema } from "./lead.schema";
 import { createOrUpdateEventLead } from "./lead.service";
 import { verifyTurnstileToken } from "./turnstile.service";
@@ -38,6 +39,11 @@ async function getClientIp() {
   return requestHeaders.get("x-real-ip")?.trim() || null;
 }
 
+async function getClientUserAgent() {
+  const requestHeaders = await headers();
+  return requestHeaders.get("user-agent")?.trim() || null;
+}
+
 export async function createEventLeadAction(formData: FormData) {
   const eventSlug = String(formData.get("eventSlug") ?? "").trim();
   const honeypot = String(formData.get("company") ?? "").trim();
@@ -68,10 +74,32 @@ export async function createEventLeadAction(formData: FormData) {
   try {
     const organizationContext = await getCurrentOrganizationContext();
     const clientIp = await getClientIp();
+    const clientUserAgent = await getClientUserAgent();
+    const metaFbp = String(formData.get("metaFbp") ?? "").trim() || null;
+    const metaFbc = String(formData.get("metaFbc") ?? "").trim() || null;
     await verifyTurnstileToken(String(formData.get("cf-turnstile-response") ?? "").trim() || null, clientIp);
     const result = await createOrUpdateEventLead(parsed.data, organizationContext.organization.id, clientIp);
     revalidatePath(`/admin/events/${parsed.data.eventId}/leads`);
     revalidatePath(`/admin/events/${parsed.data.eventId}`);
+
+    if (!result.isExisting) {
+      await trackMetaLeadForEventSubmission({
+        eventId: parsed.data.eventId,
+        eventTitle: result.lead.event.title,
+        email: result.lead.email,
+        phone: result.lead.phone,
+        landingPage: parsed.data.landingPage || null,
+        utmSource: parsed.data.utmSource || null,
+        utmMedium: parsed.data.utmMedium || null,
+        utmCampaign: parsed.data.utmCampaign || null,
+        utmContent: parsed.data.utmContent || null,
+        utmTerm: parsed.data.utmTerm || null,
+        clientIpAddress: clientIp,
+        clientUserAgent,
+        metaFbp,
+        metaFbc
+      });
+    }
 
     if (result.isExisting) {
       redirect(`/lista/${eventSlug}/obrigado?existing=1`);

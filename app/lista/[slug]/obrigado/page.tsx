@@ -1,7 +1,10 @@
+import Script from "next/script";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getLeadCaptureEventBySlug } from "@/features/leads/lead.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
+import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
+import { LeadCaptureTrackingRuntime } from "../LeadCaptureTrackingRuntime";
 
 type LeadCaptureThankYouPageProps = {
   params: Promise<{
@@ -33,9 +36,56 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
     "Último passo: entre no grupo oficial para receber um desconto de até 30% e acompanhar as informações deste lançamento.";
   const buttonText = event.leadCaptureThankYouButtonText || "Quero entrar no grupo do WhatsApp";
   const isExistingLead = query.existing === "1";
+  const tracking = getTrackingParamsFromSearch(query, `/lista/${event.slug}/obrigado`);
 
   return (
     <main className="shell leadCaptureThanksShell">
+      {event.googleTagManagerId ? (
+        <>
+          <Script id="lead-thanks-gtm-script" strategy="afterInteractive">
+            {`
+              (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+              new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+              j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+              'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+              })(window,document,'script','dataLayer',${JSON.stringify(event.googleTagManagerId)});
+            `}
+          </Script>
+          <noscript>
+            <iframe
+              title="Google Tag Manager"
+              src={`https://www.googletagmanager.com/ns.html?id=${event.googleTagManagerId}`}
+              height="0"
+              width="0"
+              style={{ display: "none", visibility: "hidden" }}
+            />
+          </noscript>
+        </>
+      ) : null}
+      {event.metaPixelId ? (
+        <Script id="lead-thanks-meta-pixel" strategy="afterInteractive">
+          {`
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', ${JSON.stringify(event.metaPixelId)});
+            fbq('track', 'PageView');
+          `}
+        </Script>
+      ) : null}
+      <LeadCaptureTrackingRuntime
+        eventTitle={event.title}
+        eventSlug={event.slug}
+        metaPixelId={event.metaPixelId}
+        googleTagManagerId={event.googleTagManagerId}
+        tracking={tracking}
+        mode={isExistingLead ? "view" : "lead"}
+      />
       <section className="leadThankYouCard card">
         <span className="leadEyebrow">Cadastro confirmado</span>
         <h1>{title}</h1>

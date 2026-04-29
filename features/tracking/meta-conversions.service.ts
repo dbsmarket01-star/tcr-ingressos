@@ -18,6 +18,10 @@ function normalizePhone(value?: string | null) {
   return digits ? sha256(digits) : undefined;
 }
 
+function buildLeadEventId(eventId: string, email: string) {
+  return `lead:${eventId}:${sha256(email.trim().toLowerCase()).slice(0, 16)}`;
+}
+
 async function getPaidOrderForMeta(orderId: string) {
   return prisma.order.findUnique({
     where: { id: orderId },
@@ -142,6 +146,91 @@ export async function trackMetaPurchaseForPaidOrder(orderId: string) {
       metaPurchaseTrackedAt: new Date()
     }
   });
+
+  return { tracked: true as const };
+}
+
+type TrackMetaLeadPayload = {
+  eventId: string;
+  eventTitle: string;
+  email: string;
+  phone?: string | null;
+  landingPage?: string | null;
+  utmSource?: string | null;
+  utmMedium?: string | null;
+  utmCampaign?: string | null;
+  utmContent?: string | null;
+  utmTerm?: string | null;
+  clientIpAddress?: string | null;
+  clientUserAgent?: string | null;
+  metaFbp?: string | null;
+  metaFbc?: string | null;
+};
+
+export async function trackMetaLeadForEventSubmission(payload: TrackMetaLeadPayload) {
+  const event = await prisma.event.findUnique({
+    where: { id: payload.eventId },
+    select: {
+      id: true,
+      metaPixelId: true,
+      metaConversionsApiToken: true,
+      metaTestEventCode: true
+    }
+  });
+
+  if (!event?.metaPixelId || !event.metaConversionsApiToken) {
+    return { tracked: false as const, reason: "tracking_not_configured" as const };
+  }
+
+  const userData = Object.fromEntries(
+    Object.entries({
+      em: [sha256(payload.email.trim().toLowerCase())],
+      ph: payload.phone ? [sha256(payload.phone.replace(/\D/g, ""))] : undefined,
+      client_ip_address: payload.clientIpAddress || undefined,
+      client_user_agent: payload.clientUserAgent || undefined,
+      fbp: payload.metaFbp || undefined,
+      fbc: payload.metaFbc || undefined
+    }).filter(([, value]) => value !== undefined)
+  );
+
+  const body = {
+    data: [
+      {
+        event_name: "Lead",
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: buildLeadEventId(payload.eventId, payload.email),
+        action_source: "website",
+        event_source_url: payload.landingPage || undefined,
+        user_data: userData,
+        custom_data: {
+          content_name: payload.eventTitle,
+          content_category: "lead_capture",
+          utm_source: payload.utmSource || undefined,
+          utm_medium: payload.utmMedium || undefined,
+          utm_campaign: payload.utmCampaign || undefined,
+          utm_content: payload.utmContent || undefined,
+          utm_term: payload.utmTerm || undefined
+        }
+      }
+    ],
+    test_event_code: event.metaTestEventCode || undefined
+  };
+
+  const endpoint = new URL(`https://graph.facebook.com/${META_GRAPH_API_VERSION}/${event.metaPixelId}/events`);
+  endpoint.searchParams.set("access_token", event.metaConversionsApiToken);
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text().catch(() => "");
+    throw new Error(`Meta CAPI rejeitou o lead: ${response.status} ${errorBody}`.trim());
+  }
 
   return { tracked: true as const };
 }

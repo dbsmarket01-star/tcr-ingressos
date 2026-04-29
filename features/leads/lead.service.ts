@@ -62,7 +62,8 @@ export async function createOrUpdateEventLead(
       leadCaptureEnabled: true
     },
     select: {
-      id: true
+      id: true,
+      title: true
     }
   });
 
@@ -117,6 +118,13 @@ export async function createOrUpdateEventLead(
       utmTerm: input.utmTerm || null,
       referrer: input.referrer || null,
       landingPage: input.landingPage || null
+    },
+    include: {
+      event: {
+        select: {
+          title: true
+        }
+      }
     }
   });
 
@@ -140,6 +148,10 @@ export async function getLeadCaptureEventBySlug(slug: string, organizationId?: s
           slug: true,
           title: true,
           subtitle: true,
+          metaPixelId: true,
+          metaConversionsApiToken: true,
+          metaTestEventCode: true,
+          googleTagManagerId: true,
           bannerUrl: true,
           bannerCrop: true,
           venueName: true,
