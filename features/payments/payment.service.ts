@@ -12,7 +12,7 @@ import type { CreditCardPaymentInput as CreditCardFormInput } from "./credit-car
 type WebhookPayload = {
   externalId: string;
   orderCode?: string;
-  status: "APPROVED" | "FAILED" | "CANCELED" | "PENDING";
+  status: "APPROVED" | "FAILED" | "CANCELED" | "PENDING" | "REFUNDED";
   reason?: string;
   rawPayload?: unknown;
 };
@@ -74,7 +74,7 @@ function mapAsaasPaymentStatus(status?: string) {
   }
 
   if (status === "REFUNDED") {
-    return "CANCELED" as const;
+    return "REFUNDED" as const;
   }
 
   if (status === "OVERDUE") {
@@ -474,7 +474,10 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         throw new Error("Pagamento nao encontrado para o webhook.");
       }
 
-      if (payment.status === PaymentStatus.APPROVED || payment.order.status === OrderStatus.PAID) {
+      if (
+        (payment.status === PaymentStatus.APPROVED || payment.order.status === OrderStatus.PAID) &&
+        payload.status !== "REFUNDED"
+      ) {
         const approvedTicketsEmail =
           payment.order.tickets.length > 0 && !payment.order.ticketsEmailSentAt
             ? {
@@ -626,14 +629,64 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         };
       }
 
-      if (payload.status === "FAILED" || payload.status === "CANCELED") {
-        if (payment.order.status === OrderStatus.PENDING_PAYMENT) {
+      if (payload.status === "REFUNDED") {
+        if (payment.order.status === OrderStatus.PAID) {
           for (const item of payment.order.items) {
             await tx.$executeRaw`
               UPDATE "TicketLot"
-              SET "reservedQuantity" = GREATEST("reservedQuantity" - ${item.quantity}, 0)
+              SET "soldQuantity" = GREATEST("soldQuantity" - ${item.quantity}, 0)
               WHERE "id" = ${item.lotId}
             `;
+          }
+
+          if (payment.order.tickets.length > 0) {
+            await tx.ticket.updateMany({
+              where: {
+                orderId: payment.orderId,
+                status: {
+                  in: ["ACTIVE", "INVALID", "USED"]
+                }
+              },
+              data: {
+                status: "CANCELED",
+                canceledAt: new Date()
+              }
+            });
+          }
+        }
+
+        await tx.order.update({
+          where: { id: payment.orderId },
+          data: {
+            status: OrderStatus.REFUNDED,
+            canceledAt: new Date()
+          }
+        });
+
+        const updatedPayment = await tx.payment.update({
+          where: { id: payment.id },
+          data: {
+            status: PaymentStatus.REFUNDED,
+            externalId: payload.externalId || payment.externalId,
+            failedAt: null,
+            failureReason: payload.reason || null,
+            rawPayload: (payload.rawPayload || payload) as Prisma.InputJsonValue
+          }
+        });
+
+        return { payment: updatedPayment, orderId: payment.orderId, email: null };
+      }
+
+      if (payload.status === "FAILED" || payload.status === "CANCELED") {
+        if (payment.order.status === OrderStatus.PENDING_PAYMENT || payment.order.status === OrderStatus.EXPIRED) {
+          for (const item of payment.order.items) {
+            if (payment.order.status === OrderStatus.PENDING_PAYMENT) {
+              await tx.$executeRaw`
+                UPDATE "TicketLot"
+                SET "reservedQuantity" = GREATEST("reservedQuantity" - ${item.quantity}, 0)
+                WHERE "id" = ${item.lotId}
+              `;
+            }
           }
 
           await tx.order.update({

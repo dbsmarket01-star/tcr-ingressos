@@ -32,7 +32,7 @@ function mapAsaasStatus(event?: string, status?: string) {
     event === "PAYMENT_REFUND_IN_PROGRESS" ||
     status === "REFUNDED"
   ) {
-    return "CANCELED" as const;
+    return "REFUNDED" as const;
   }
 
   if (event === "PAYMENT_OVERDUE" || status === "OVERDUE") {
@@ -114,12 +114,25 @@ export async function POST(request: Request) {
 
     return webhookResponse({ received: true });
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+
+    if (message.includes("Pagamento nao encontrado para o webhook")) {
+      console.warn("[asaas-webhook] Evento ignorado por nao existir no sistema.", {
+        paymentId,
+        orderCode,
+        event: body?.event,
+        status: body?.payment?.status
+      });
+
+      return webhookResponse({ received: true, ignored: true });
+    }
+
     console.error("[asaas-webhook] Falha ao processar webhook.", {
       paymentId,
       orderCode,
       event: body?.event,
       status: body?.payment?.status,
-      error: error instanceof Error ? error.message : error
+      error: message
     });
 
     return webhookResponse({ error: "Falha ao processar webhook." }, { status: 500 });
