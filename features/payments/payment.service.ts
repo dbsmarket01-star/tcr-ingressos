@@ -435,9 +435,15 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
             },
         include: {
           order: {
-            include: {
-              items: true,
+            select: {
+              id: true,
+              code: true,
+              eventId: true,
+              couponId: true,
+              status: true,
+              ticketsEmailSentAt: true,
               customer: true,
+              items: true,
               event: {
                 include: {
                   organization: {
@@ -448,7 +454,6 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
                   }
                 }
               },
-              ticketsEmailSentAt: true,
               tickets: {
                 select: {
                   id: true,
@@ -569,7 +574,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           where: { id: payment.orderId },
           data: {
             status: OrderStatus.PAID,
-            paidAt: new Date()
+            paidAt: new Date(),
+            canceledAt: null
           }
         });
 
@@ -592,6 +598,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
             status: PaymentStatus.APPROVED,
             externalId: payload.externalId || payment.externalId,
             paidAt: new Date(),
+            failedAt: null,
+            failureReason: null,
             rawPayload: (payload.rawPayload || payload) as Prisma.InputJsonValue
           }
         });
