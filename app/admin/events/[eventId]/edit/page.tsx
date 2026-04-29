@@ -376,106 +376,150 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
             <input name="leadCaptureEnabled" type="checkbox" defaultChecked={event.leadCaptureEnabled} />
             <span>Ativar página de captação para este evento</span>
           </label>
-          <div className="infoBox">
-            Link público da captação:{" "}
-            <Link href={getPublicLeadCaptureUrl(event.slug)} target="_blank">
-              /lista/{event.slug}
-            </Link>
+          <div className="leadAdminUtilityBar">
+            <div className="infoBox">
+              Link público da captação:{" "}
+              <Link href={getPublicLeadCaptureUrl(event.slug)} target="_blank">
+                /lista/{event.slug}
+              </Link>
+            </div>
+            <div className="leadAdminQuickLinks">
+              <Link className="secondaryButton" href={getPublicLeadCaptureUrl(event.slug)} target="_blank">
+                Ver landing
+              </Link>
+              <Link className="secondaryButton" href={`${getPublicLeadCaptureUrl(event.slug)}/obrigado`} target="_blank">
+                Ver obrigado
+              </Link>
+              <Link className="secondaryButton" href={`/admin/events/${event.id}/leads`}>
+                Ver leads
+              </Link>
+            </div>
           </div>
-          <label className="field">
-            <span>Título da captação</span>
-            <input name="leadCaptureHeadline" defaultValue={event.leadCaptureHeadline ?? ""} />
-          </label>
-          <label className="field">
-            <span>Descrição da captação</span>
-            <textarea name="leadCaptureDescription" rows={4} defaultValue={event.leadCaptureDescription ?? ""} />
-            <small>Você pode usar **texto** para destacar partes importantes em negrito na landing.</small>
-          </label>
-          <div className="grid twoColumns">
-            <label className="field">
-              <span>Oferta / incentivo</span>
-              <input
-                name="leadCaptureOfferText"
-                defaultValue={event.leadCaptureOfferText ?? ""}
-                placeholder="Ex: Cadastre-se e receba até 20% de desconto na abertura."
-              />
-              <small>Use uma promessa curta e forte. Também aceita **negrito** com **texto**.</small>
-            </label>
-            <label className="field">
-              <span>Texto do botão</span>
-              <input name="leadCaptureCtaText" defaultValue={event.leadCaptureCtaText ?? ""} />
-            </label>
+          <div className="leadCaptureAdminSections">
+            <section className="leadAdminBlock leadAdminBlockMessage">
+              <div className="leadAdminBlockHeader">
+                <div>
+                  <span className="sectionEyebrow">Oferta e mensagem</span>
+                  <h3>O texto que chama o lead para a lista</h3>
+                </div>
+                <p className="muted">Esses campos definem o que a pessoa lê logo depois do banner e o que ela entende como benefício imediato.</p>
+              </div>
+              <label className="field">
+                <span>Título da captação</span>
+                <input name="leadCaptureHeadline" defaultValue={event.leadCaptureHeadline ?? ""} />
+              </label>
+              <label className="field">
+                <span>Descrição da captação</span>
+                <textarea name="leadCaptureDescription" rows={4} defaultValue={event.leadCaptureDescription ?? ""} />
+                <small>Você pode usar **texto** para destacar partes importantes em negrito na landing.</small>
+              </label>
+              <div className="grid twoColumns">
+                <label className="field">
+                  <span>Oferta / incentivo</span>
+                  <input
+                    name="leadCaptureOfferText"
+                    defaultValue={event.leadCaptureOfferText ?? ""}
+                    placeholder="Ex: Cadastre-se e receba até 20% de desconto na abertura."
+                  />
+                  <small>Use uma promessa curta e forte. Também aceita **negrito** com **texto**.</small>
+                </label>
+                <label className="field">
+                  <span>Texto do botão</span>
+                  <input name="leadCaptureCtaText" defaultValue={event.leadCaptureCtaText ?? ""} />
+                </label>
+              </div>
+            </section>
+
+            <section className="leadAdminBlock leadAdminBlockMedia">
+              <div className="leadAdminBlockHeader">
+                <div>
+                  <span className="sectionEyebrow">Mídia da landing</span>
+                  <h3>Banner, vídeo e fotos do local</h3>
+                </div>
+                <p className="muted">Essa parte segura o enquadramento da página e ajuda a deixar o mobile e o desktop com mais cara de campanha.</p>
+              </div>
+              <div className="mediaUploadGrid">
+                <ImageUploadField
+                  name="leadCaptureHeroFile"
+                  label="Imagem da captação"
+                  currentImageUrl={event.leadCaptureHeroImageUrl ?? undefined}
+                  currentCropValue={event.leadCaptureHeroCrop}
+                  recommendedSize="Ideal: 1600 x 900 px"
+                  usageHint="Essa imagem aparece só na landing de captação. Use o recorte guiado para deixar a arte bem encaixada."
+                  help="Use JPG, PNG, WEBP ou GIF até 10MB."
+                  emptyText="Sem imagem da captação"
+                  aspect="banner"
+                  cropFieldName="leadCaptureHeroCrop"
+                />
+              </div>
+              <label className="field">
+                <span>Vídeo de apresentação (YouTube)</span>
+                <input
+                  name="leadCaptureVideoUrl"
+                  defaultValue={event.leadCaptureVideoUrl ?? ""}
+                  placeholder="https://www.youtube.com/watch?v=... ou https://youtu.be/..."
+                />
+                <small>Opcional. Cole só o link do YouTube e ele aparece no meio da landing, logo depois do cadastro.</small>
+              </label>
+              <label className="field">
+                <span>Imagens do local (uma URL por linha)</span>
+                <textarea
+                  name="leadCaptureVenueGallery"
+                  rows={4}
+                  defaultValue={event.leadCaptureVenueGallery ?? ""}
+                  placeholder={"https://...\nhttps://...\nhttps://..."}
+                />
+                <small>Opcional. Use uma URL por linha para exibir a estrutura e o ambiente do local na landing.</small>
+              </label>
+            </section>
+
+            <section className="leadAdminBlock leadAdminBlockConversion">
+              <div className="leadAdminBlockHeader">
+                <div>
+                  <span className="sectionEyebrow">Conversão final</span>
+                  <h3>Obrigado + botão do grupo</h3>
+                </div>
+                <p className="muted">Esse é o fechamento do funil. Depois do cadastro, o lead precisa seguir para o grupo de forma objetiva.</p>
+              </div>
+              <label className="field">
+                <span>Link do grupo de WhatsApp</span>
+                <input
+                  name="leadCaptureWhatsappGroupUrl"
+                  defaultValue={event.leadCaptureWhatsappGroupUrl ?? ""}
+                  placeholder="https://chat.whatsapp.com/..."
+                />
+                <small>Esse botão aparece na página de obrigado, como último passo depois do cadastro.</small>
+              </label>
+              <div className="grid twoColumns">
+                <label className="field">
+                  <span>Título do agradecimento</span>
+                  <input
+                    name="leadCaptureThankYouTitle"
+                    defaultValue={event.leadCaptureThankYouTitle ?? ""}
+                    placeholder="Ex: Seu cadastro foi concluído"
+                  />
+                </label>
+                <label className="field">
+                  <span>Texto do botão final</span>
+                  <input
+                    name="leadCaptureThankYouButtonText"
+                    defaultValue={event.leadCaptureThankYouButtonText ?? ""}
+                    placeholder="Ex: Quero entrar no grupo do WhatsApp"
+                  />
+                </label>
+              </div>
+              <label className="field">
+                <span>Descrição do agradecimento</span>
+                <textarea
+                  name="leadCaptureThankYouDescription"
+                  rows={3}
+                  defaultValue={event.leadCaptureThankYouDescription ?? ""}
+                  placeholder="Ex: Último passo: entre no grupo oficial para receber um desconto de até 30% e acompanhar as informações deste lançamento."
+                />
+                <small>Esse texto aparece após o cadastro. Você também pode destacar trechos com **negrito**.</small>
+              </label>
+            </section>
           </div>
-          <div className="mediaUploadGrid">
-            <ImageUploadField
-              name="leadCaptureHeroFile"
-              label="Imagem da captação"
-              currentImageUrl={event.leadCaptureHeroImageUrl ?? undefined}
-              currentCropValue={event.leadCaptureHeroCrop}
-              recommendedSize="Ideal: 1600 x 900 px"
-              usageHint="Essa imagem aparece só na landing de captação. Use o recorte guiado para deixar a arte bem encaixada."
-              help="Use JPG, PNG, WEBP ou GIF até 10MB."
-              emptyText="Sem imagem da captação"
-              aspect="banner"
-              cropFieldName="leadCaptureHeroCrop"
-            />
-          </div>
-          <label className="field">
-            <span>Imagens do local (uma URL por linha)</span>
-            <textarea
-              name="leadCaptureVenueGallery"
-              rows={4}
-              defaultValue={event.leadCaptureVenueGallery ?? ""}
-              placeholder={"https://...\nhttps://...\nhttps://..."}
-            />
-            <small>Opcional. Use uma URL por linha para exibir a estrutura e o ambiente do local na landing.</small>
-          </label>
-          <label className="field">
-            <span>Vídeo de apresentação (YouTube)</span>
-            <input
-              name="leadCaptureVideoUrl"
-              defaultValue={event.leadCaptureVideoUrl ?? ""}
-              placeholder="https://www.youtube.com/watch?v=... ou https://youtu.be/..."
-            />
-            <small>Opcional. Cole só o link do YouTube e ele aparece no meio da landing, logo depois do cadastro.</small>
-          </label>
-          <label className="field">
-            <span>Link do grupo de WhatsApp</span>
-            <input
-              name="leadCaptureWhatsappGroupUrl"
-              defaultValue={event.leadCaptureWhatsappGroupUrl ?? ""}
-              placeholder="https://chat.whatsapp.com/..."
-            />
-            <small>Esse botão aparece na página de obrigado, como último passo depois do cadastro.</small>
-          </label>
-          <div className="grid twoColumns">
-            <label className="field">
-              <span>Título do agradecimento</span>
-              <input
-                name="leadCaptureThankYouTitle"
-                defaultValue={event.leadCaptureThankYouTitle ?? ""}
-                placeholder="Ex: Seu cadastro foi concluído"
-              />
-            </label>
-            <label className="field">
-              <span>Texto do botão final</span>
-              <input
-                name="leadCaptureThankYouButtonText"
-                defaultValue={event.leadCaptureThankYouButtonText ?? ""}
-                placeholder="Ex: Quero entrar no grupo do WhatsApp"
-              />
-            </label>
-          </div>
-          <label className="field">
-            <span>Descrição do agradecimento</span>
-            <textarea
-              name="leadCaptureThankYouDescription"
-              rows={3}
-              defaultValue={event.leadCaptureThankYouDescription ?? ""}
-              placeholder="Ex: Último passo: entre no grupo oficial para receber um desconto de até 30% e acompanhar as informações deste lançamento."
-            />
-            <small>Esse texto aparece após o cadastro. Você também pode destacar trechos com **negrito**.</small>
-          </label>
         </details>
 
         <details className="formSection advancedSection formSectionTone toneMap">

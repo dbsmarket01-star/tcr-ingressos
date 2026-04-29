@@ -247,88 +247,119 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           <div className="infoBox">
             Link público da captação após salvar: <strong>/lista/{`{slug-do-evento}`}</strong>
           </div>
-          <label className="field">
-            <span>Título da captação</span>
-            <input name="leadCaptureHeadline" placeholder="Ex: Cláudio Duarte em Santo André" />
-          </label>
-          <label className="field">
-            <span>Descrição da captação</span>
-            <textarea
-              name="leadCaptureDescription"
-              rows={4}
-              placeholder="Explique rapidamente o evento e convide a pessoa a entrar na lista de interesse."
-            />
-            <small>Você pode usar **texto** para destacar partes importantes em negrito na landing.</small>
-          </label>
-          <div className="grid twoColumns">
-            <label className="field">
-              <span>Oferta / incentivo</span>
-              <input
-                name="leadCaptureOfferText"
-                placeholder="Ex: Cadastre-se e receba até 20% de desconto na abertura."
-              />
-              <small>Use uma promessa curta e forte. Também aceita **negrito** com **texto**.</small>
-            </label>
-            <label className="field">
-              <span>Texto do botão</span>
-              <input name="leadCaptureCtaText" placeholder="Ex: Garantir meu super desconto" />
-            </label>
+          <div className="leadCaptureAdminSections">
+            <section className="leadAdminBlock leadAdminBlockMessage">
+              <div className="leadAdminBlockHeader">
+                <div>
+                  <span className="sectionEyebrow">Oferta e mensagem</span>
+                  <h3>O texto que convence a pessoa a entrar na lista</h3>
+                </div>
+                <p className="muted">Aqui entram o título, a explicação curta, a promessa e o texto do botão principal.</p>
+              </div>
+              <label className="field">
+                <span>Título da captação</span>
+                <input name="leadCaptureHeadline" placeholder="Ex: Cláudio Duarte em Santo André" />
+              </label>
+              <label className="field">
+                <span>Descrição da captação</span>
+                <textarea
+                  name="leadCaptureDescription"
+                  rows={4}
+                  placeholder="Explique rapidamente o evento e convide a pessoa a entrar na lista de interesse."
+                />
+                <small>Você pode usar **texto** para destacar partes importantes em negrito na landing.</small>
+              </label>
+              <div className="grid twoColumns">
+                <label className="field">
+                  <span>Oferta / incentivo</span>
+                  <input
+                    name="leadCaptureOfferText"
+                    placeholder="Ex: Cadastre-se e receba até 20% de desconto na abertura."
+                  />
+                  <small>Use uma promessa curta e forte. Também aceita **negrito** com **texto**.</small>
+                </label>
+                <label className="field">
+                  <span>Texto do botão</span>
+                  <input name="leadCaptureCtaText" placeholder="Ex: Garantir meu super desconto" />
+                </label>
+              </div>
+            </section>
+
+            <section className="leadAdminBlock leadAdminBlockMedia">
+              <div className="leadAdminBlockHeader">
+                <div>
+                  <span className="sectionEyebrow">Mídia da landing</span>
+                  <h3>Banner, vídeo e fotos do local</h3>
+                </div>
+                <p className="muted">Essa parte sustenta a estética da landing e ajuda a deixar a experiência mais forte no mobile e no desktop.</p>
+              </div>
+              <div className="mediaUploadGrid">
+                <ImageUploadField
+                  name="leadCaptureHeroFile"
+                  label="Imagem da captação"
+                  recommendedSize="Ideal: 1600 x 900 px"
+                  usageHint="Use uma arte bonita e informativa. O recorte guiado mostra como ela ficará no topo da landing."
+                  help="JPG, PNG, WEBP ou GIF até 10MB."
+                  aspect="banner"
+                  cropFieldName="leadCaptureHeroCrop"
+                />
+              </div>
+              <label className="field">
+                <span>Vídeo de apresentação (YouTube)</span>
+                <input
+                  name="leadCaptureVideoUrl"
+                  placeholder="https://www.youtube.com/watch?v=... ou https://youtu.be/..."
+                />
+                <small>Opcional. Cole só o link do YouTube e ele aparece no meio da landing, logo depois do cadastro.</small>
+              </label>
+              <label className="field">
+                <span>Imagens do local (uma URL por linha)</span>
+                <textarea
+                  name="leadCaptureVenueGallery"
+                  rows={4}
+                  placeholder={"https://...\nhttps://...\nhttps://..."}
+                />
+                <small>Opcional. Use uma URL por linha para mostrar fotos do local na landing de captação.</small>
+              </label>
+            </section>
+
+            <section className="leadAdminBlock leadAdminBlockConversion">
+              <div className="leadAdminBlockHeader">
+                <div>
+                  <span className="sectionEyebrow">Conversão final</span>
+                  <h3>Página de obrigado e grupo de WhatsApp</h3>
+                </div>
+                <p className="muted">Depois do cadastro, a pessoa precisa cair numa página curta e seguir para o grupo sem ruído.</p>
+              </div>
+              <label className="field">
+                <span>Link do grupo de WhatsApp</span>
+                <input
+                  name="leadCaptureWhatsappGroupUrl"
+                  placeholder="https://chat.whatsapp.com/..."
+                />
+                <small>Esse botão aparece na página de obrigado.</small>
+              </label>
+              <div className="grid twoColumns">
+                <label className="field">
+                  <span>Título do agradecimento</span>
+                  <input name="leadCaptureThankYouTitle" placeholder="Ex: Seu cadastro foi concluído" />
+                </label>
+                <label className="field">
+                  <span>Texto do botão final</span>
+                  <input name="leadCaptureThankYouButtonText" placeholder="Ex: Quero entrar no grupo do WhatsApp" />
+                </label>
+              </div>
+              <label className="field">
+                <span>Descrição do agradecimento</span>
+                <textarea
+                  name="leadCaptureThankYouDescription"
+                  rows={3}
+                  placeholder="Ex: Último passo: entre no grupo oficial para receber um desconto de até 30% e acompanhar as informações deste lançamento."
+                />
+                <small>Esse texto aparece após o cadastro. Você também pode destacar trechos com **negrito**.</small>
+              </label>
+            </section>
           </div>
-          <div className="mediaUploadGrid">
-            <ImageUploadField
-              name="leadCaptureHeroFile"
-              label="Imagem da captação"
-              recommendedSize="Ideal: 1600 x 900 px"
-              usageHint="Use uma arte bonita e informativa. O recorte guiado mostra como ela ficará no topo da landing."
-              help="JPG, PNG, WEBP ou GIF até 10MB."
-              aspect="banner"
-              cropFieldName="leadCaptureHeroCrop"
-            />
-          </div>
-          <label className="field">
-            <span>Imagens do local (uma URL por linha)</span>
-            <textarea
-              name="leadCaptureVenueGallery"
-              rows={4}
-              placeholder={"https://...\nhttps://...\nhttps://..."}
-            />
-            <small>Opcional. Use uma URL por linha para mostrar fotos do local na landing de captação.</small>
-          </label>
-          <label className="field">
-            <span>Vídeo de apresentação (YouTube)</span>
-            <input
-              name="leadCaptureVideoUrl"
-              placeholder="https://www.youtube.com/watch?v=... ou https://youtu.be/..."
-            />
-            <small>Opcional. Cole só o link do YouTube e ele aparece no meio da landing, logo depois do cadastro.</small>
-          </label>
-          <label className="field">
-            <span>Link do grupo de WhatsApp</span>
-            <input
-              name="leadCaptureWhatsappGroupUrl"
-              placeholder="https://chat.whatsapp.com/..."
-            />
-            <small>Esse botão aparece na página de obrigado.</small>
-          </label>
-          <div className="grid twoColumns">
-            <label className="field">
-              <span>Título do agradecimento</span>
-              <input name="leadCaptureThankYouTitle" placeholder="Ex: Seu cadastro foi concluído" />
-            </label>
-            <label className="field">
-              <span>Texto do botão final</span>
-              <input name="leadCaptureThankYouButtonText" placeholder="Ex: Quero entrar no grupo do WhatsApp" />
-            </label>
-          </div>
-          <label className="field">
-            <span>Descrição do agradecimento</span>
-            <textarea
-              name="leadCaptureThankYouDescription"
-              rows={3}
-              placeholder="Ex: Último passo: entre no grupo oficial para receber um desconto de até 30% e acompanhar as informações deste lançamento."
-            />
-            <small>Esse texto aparece após o cadastro. Você também pode destacar trechos com **negrito**.</small>
-          </label>
         </details>
 
         <details className="formSection advancedSection formSectionTone toneMap">

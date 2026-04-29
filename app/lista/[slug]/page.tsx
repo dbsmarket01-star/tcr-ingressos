@@ -184,6 +184,16 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
               </span>
               <span>{event.venueName}</span>
             </div>
+            <div className="leadCaptureHeroProof">
+              <div>
+                <strong>Cadastro em menos de 1 minuto</strong>
+                <small>Você deixa seus dados e segue para o grupo oficial na página seguinte.</small>
+              </div>
+              <div>
+                <strong>Comunicação no canal certo</strong>
+                <small>O grupo concentra abertura, orientações e condições do lançamento.</small>
+              </div>
+            </div>
           </article>
 
           <form action={createEventLeadAction} className="leadCaptureForm card" id="lead-capture-form">
