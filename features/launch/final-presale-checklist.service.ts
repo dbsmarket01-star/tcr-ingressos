@@ -204,11 +204,14 @@ export async function getFinalPresaleChecklist(eventId?: string, allowedEventIds
       href: `/admin/events/${event.id}/edit`
     },
     {
-      label: "Pixel/GTM para trafego pago",
+      label: "Pixel/GTM/CAPI para trafego pago",
       description: "Tracking configurado antes de rodar anuncios.",
-      status: status(Boolean(event.metaPixelId || event.googleTagManagerId)),
-      evidence: event.metaPixelId || event.googleTagManagerId ? "Tracking configurado." : "Sem Pixel/GTM no evento.",
-      action: "Inserir Meta Pixel ID ou Google Tag Manager ID.",
+      status: status(Boolean(event.metaPixelId || event.googleTagManagerId || (event.metaPixelId && event.metaConversionsApiToken))),
+      evidence:
+        event.metaPixelId || event.googleTagManagerId || (event.metaPixelId && event.metaConversionsApiToken)
+          ? "Tracking configurado."
+          : "Sem Pixel/GTM/CAPI no evento.",
+      action: "Inserir Meta Pixel ID, token da API de conversão ou Google Tag Manager ID.",
       href: `/admin/events/${event.id}/edit`
     }
   ];

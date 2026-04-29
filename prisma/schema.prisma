@@ -352,6 +352,8 @@ model Event {
   salesEndsAt         DateTime?
   importantInfo       String?
   metaPixelId         String?
+  metaConversionsApiToken String?
+  metaTestEventCode   String?
   googleTagManagerId  String?
   seoTitle            String?
   seoDescription      String?
@@ -554,6 +556,11 @@ model Order {
   utmTerm         String?
   referrer        String?
   landingPage     String?
+  metaFbp         String?
+  metaFbc         String?
+  clientIpAddress String?
+  clientUserAgent String?
+  metaPurchaseTrackedAt DateTime?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 

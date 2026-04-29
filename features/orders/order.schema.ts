@@ -15,6 +15,10 @@ export const checkoutOrderSchema = z.object({
   utmTerm: z.string().optional(),
   referrer: z.string().optional(),
   landingPage: z.string().optional(),
+  metaFbp: z.string().optional(),
+  metaFbc: z.string().optional(),
+  clientIpAddress: z.string().optional(),
+  clientUserAgent: z.string().optional(),
   items: z
     .array(
       z.object({

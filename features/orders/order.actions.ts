@@ -39,6 +39,7 @@ export async function createCheckoutOrderAction(formData: FormData) {
   const eventSlug = String(formData.get("eventSlug") ?? "").trim();
   const headerStore = await headers();
   const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() || headerStore.get("x-real-ip")?.trim() || "local";
+  const userAgent = headerStore.get("user-agent")?.trim() || undefined;
 
   try {
     assertRateLimit(`checkout:${ip}`, { limit: 15, windowMs: 60_000 });
@@ -62,6 +63,10 @@ export async function createCheckoutOrderAction(formData: FormData) {
     utmTerm: String(formData.get("utmTerm") ?? "").trim() || undefined,
     referrer: String(formData.get("referrer") ?? "").trim() || undefined,
     landingPage: String(formData.get("landingPage") ?? "").trim() || undefined,
+    metaFbp: String(formData.get("metaFbp") ?? "").trim() || undefined,
+    metaFbc: String(formData.get("metaFbc") ?? "").trim() || undefined,
+    clientIpAddress: ip,
+    clientUserAgent: userAgent,
     items: lotIds.map((lotId) => ({
       lotId,
       quantity: Number(formData.get(`quantity_${lotId}`) ?? 0)

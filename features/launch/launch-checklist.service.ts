@@ -208,10 +208,16 @@ export async function getLaunchChecklist(eventId?: string, allowedEventIds?: Eve
       href: `/admin/events/${event.id}/edit`
     },
     {
-      label: "Pixel/GTM",
-      description: "Tracking ajuda a medir anuncio, checkout e compra.",
-      status: event.metaPixelId || event.googleTagManagerId ? "READY" : "WARNING",
-      action: event.metaPixelId || event.googleTagManagerId ? undefined : "Configurar Meta Pixel ou Google Tag Manager no evento.",
+      label: "Pixel/GTM/CAPI",
+      description: "Tracking ajuda a medir anuncio, checkout e compra aprovada.",
+      status:
+        event.metaPixelId || event.googleTagManagerId || (event.metaPixelId && event.metaConversionsApiToken)
+          ? "READY"
+          : "WARNING",
+      action:
+        event.metaPixelId || event.googleTagManagerId || (event.metaPixelId && event.metaConversionsApiToken)
+          ? undefined
+          : "Configurar Meta Pixel, Conversions API ou Google Tag Manager no evento.",
       href: `/admin/events/${event.id}/edit`
     }
   ];

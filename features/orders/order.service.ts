@@ -167,6 +167,10 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           utmTerm: input.utmTerm || null,
           referrer: input.referrer || null,
           landingPage: input.landingPage || null,
+          metaFbp: input.metaFbp || null,
+          metaFbc: input.metaFbc || null,
+          clientIpAddress: input.clientIpAddress || null,
+          clientUserAgent: input.clientUserAgent || null,
           items: {
             create: orderItems.map((item) => ({
               lotId: item.lotId,

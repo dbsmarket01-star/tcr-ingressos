@@ -24,6 +24,15 @@ const metaPixelIdSchema = z
   .string()
   .regex(/^\d{8,25}$/, "Meta Pixel ID deve conter apenas numeros.")
   .optional();
+const metaConversionsApiTokenSchema = z
+  .string()
+  .min(20, "Token da API de conversao parece incompleto.")
+  .max(400)
+  .optional();
+const metaTestEventCodeSchema = z
+  .string()
+  .regex(/^[A-Z0-9_-]{6,120}$/i, "Codigo de teste do Meta parece invalido.")
+  .optional();
 const googleTagManagerIdSchema = z
   .string()
   .regex(/^GTM-[A-Z0-9]{4,}$/i, "Google Tag Manager ID deve seguir o formato GTM-XXXXXXX.")
@@ -73,6 +82,8 @@ export const eventDraftSchema = z.object({
   eventMapNotes: z.string().max(500).optional(),
   importantInfo: z.string().optional(),
   metaPixelId: metaPixelIdSchema,
+  metaConversionsApiToken: metaConversionsApiTokenSchema,
+  metaTestEventCode: metaTestEventCodeSchema,
   googleTagManagerId: googleTagManagerIdSchema,
   seoTitle: z.string().max(70).optional(),
   seoDescription: z.string().max(180).optional(),

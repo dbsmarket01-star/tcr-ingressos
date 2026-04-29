@@ -27,6 +27,10 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
     notFound();
   }
 
+  const hasPixel = Boolean(event.metaPixelId);
+  const hasGtm = Boolean(event.googleTagManagerId);
+  const hasMetaCapi = Boolean(event.metaPixelId && event.metaConversionsApiToken);
+
   const seo = buildEventSeo(event);
   const mediaReadiness = [
     {
@@ -52,8 +56,8 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
     },
     {
       label: "Tracking",
-      status: Boolean(event.metaPixelId || event.googleTagManagerId),
-      description: event.metaPixelId || event.googleTagManagerId ? "Configurado" : "Sem Pixel/GTM"
+      status: hasPixel || hasGtm || hasMetaCapi,
+      description: hasMetaCapi ? "Pixel + CAPI" : hasPixel || hasGtm ? "Parcial" : "Sem Pixel/GTM/CAPI"
     }
   ];
 
@@ -289,6 +293,27 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
                 <small>Somente números.</small>
               </label>
               <label className="field">
+                <span>Token da API de conversão do Meta</span>
+                <input
+                  name="metaConversionsApiToken"
+                  defaultValue={event.metaConversionsApiToken ?? ""}
+                  placeholder="Ex: EAA..."
+                  type="password"
+                />
+                <small>Usado para enviar a venda confirmada direto do servidor para o Meta.</small>
+              </label>
+            </div>
+            <div className="grid twoColumns">
+              <label className="field">
+                <span>Código de teste do Meta</span>
+                <input
+                  name="metaTestEventCode"
+                  defaultValue={event.metaTestEventCode ?? ""}
+                  placeholder="Ex: TEST12345"
+                />
+                <small>Opcional. Preencha só enquanto estiver validando no Events Manager.</small>
+              </label>
+              <label className="field">
                 <span>Google Tag Manager ID</span>
                 <input
                   name="googleTagManagerId"
@@ -313,6 +338,11 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
                 <span>Compra aprovada</span>
                 <strong>purchase / Purchase</strong>
                 <small>Dispara quando o pedido está pago e com valor em BRL.</small>
+              </div>
+              <div>
+                <span>Venda via servidor</span>
+                <strong>Conversions API</strong>
+                <small>Quando Pixel ID e token estiverem preenchidos juntos, a venda aprovada sobe também pelo backend.</small>
               </div>
             </div>
           </details>

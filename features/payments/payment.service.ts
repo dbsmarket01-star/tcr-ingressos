@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { createPublicTicketUrl, sendTicketsEmail } from "@/features/email/email.service";
 import { expirePendingOrderByCode } from "@/features/orders/order.service";
 import { calculateCardInterestInCents } from "@/features/pricing/pricing";
+import { trackMetaPurchaseForPaidOrder } from "@/features/tracking/meta-conversions.service";
 import { createQrCodeToken, createTicketCode } from "@/features/tickets/ticket-code";
 import { buildAsaasSplitsForOrder } from "./asaas-split.service";
 import { getAsaasProvider, getPaymentProvider } from "./payment-provider";
@@ -660,6 +661,17 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
   );
 
   await sendTicketsEmailSafely(result.orderId, result.email);
+
+  try {
+    await trackMetaPurchaseForPaidOrder(result.orderId);
+  } catch (error) {
+    console.error("[meta-capi] Falha ao enviar Purchase", {
+      orderId: result.orderId,
+      externalId: payload.externalId,
+      orderCode: payload.orderCode,
+      error: error instanceof Error ? error.message : error
+    });
+  }
 
   return result.payment;
 }

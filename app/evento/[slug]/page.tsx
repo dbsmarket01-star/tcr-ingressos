@@ -15,6 +15,7 @@ import { buildEventSeo } from "@/features/seo/event-seo";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { imageCropFromBannerPosition, imageCropStyle, parseImageCrop } from "@/lib/image-crop";
+import { MetaTrackingFields } from "./MetaTrackingFields";
 import { TrackingRuntime } from "./TrackingRuntime";
 import { CheckoutEstimator } from "./CheckoutEstimator";
 
@@ -307,6 +308,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
               <input type="hidden" name="utmTerm" value={tracking.utmTerm ?? ""} />
               <input type="hidden" name="referrer" value={tracking.referrer ?? ""} />
               <input type="hidden" name="landingPage" value={tracking.landingPage ?? ""} />
+              <MetaTrackingFields />
               {activeLots.map((lot, index) => {
                 const available = lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity;
                 const isLowStock = available <= 25;

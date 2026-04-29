@@ -197,6 +197,18 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
                 <input name="metaPixelId" inputMode="numeric" placeholder="Ex: 123456789012345" />
               </label>
               <label className="field">
+                <span>Token da API de conversão do Meta</span>
+                <input name="metaConversionsApiToken" placeholder="Ex: EAA..." type="password" />
+                <small>Usado para a venda confirmada subir ao Meta mesmo quando o navegador não devolve a conversão.</small>
+              </label>
+            </div>
+            <div className="grid twoColumns">
+              <label className="field">
+                <span>Código de teste do Meta</span>
+                <input name="metaTestEventCode" placeholder="Ex: TEST12345" />
+                <small>Opcional. Bom para validar a CAPI no Events Manager antes do lançamento.</small>
+              </label>
+              <label className="field">
                 <span>Google Tag Manager ID</span>
                 <input name="googleTagManagerId" placeholder="Ex: GTM-ABC1234" />
               </label>
