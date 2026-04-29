@@ -47,6 +47,12 @@ export async function verifyTurnstileToken(token?: string | null, remoteIp?: str
   const payload = (await response.json()) as TurnstileResponse;
 
   if (!payload.success) {
+    const errorCodes = payload["error-codes"] || [];
+
+    if (errorCodes.includes("timeout-or-duplicate")) {
+      throw new Error("Confirme a verificação novamente e envie seu cadastro mais uma vez.");
+    }
+
     throw new Error("A validação anti-bot falhou. Atualize a página e tente novamente.");
   }
 

@@ -35,7 +35,6 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
     event.leadCaptureThankYouDescription ||
     "Último passo: entre no grupo oficial para receber um desconto de até 30% e acompanhar as informações deste lançamento.";
   const buttonText = event.leadCaptureThankYouButtonText || "Quero entrar no grupo do WhatsApp";
-  const isExistingLead = query.existing === "1";
   const tracking = getTrackingParamsFromSearch(query, `/lista/${event.slug}/obrigado`);
 
   return (
@@ -84,16 +83,11 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
         metaPixelId={event.metaPixelId}
         googleTagManagerId={event.googleTagManagerId}
         tracking={tracking}
-        mode={isExistingLead ? "view" : "lead"}
+        mode="lead"
       />
       <section className="leadThankYouCard card">
         <span className="leadEyebrow">Cadastro confirmado</span>
         <h1>{title}</h1>
-        {isExistingLead ? (
-          <div className="infoBox">
-            Você já estava nesta lista. Atualizamos seus dados e mantivemos seu acesso à próxima etapa.
-          </div>
-        ) : null}
         <p>{description}</p>
         <div className="leadThankYouChecklist">
           <div>

@@ -101,9 +101,6 @@ export async function createEventLeadAction(formData: FormData) {
       });
     }
 
-    if (result.isExisting) {
-      redirect(`/lista/${eventSlug}/obrigado?existing=1`);
-    }
   } catch (error) {
     redirect(`/lista/${eventSlug}?error=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível concluir seu cadastro.")}`);
   }

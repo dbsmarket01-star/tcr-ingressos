@@ -15,6 +15,7 @@ declare global {
           "error-callback"?: () => void;
         }
       ) => string;
+      reset?: (widgetId?: string) => void;
       remove?: (widgetId: string) => void;
     };
     __turnstileScriptPromise?: Promise<void>;
@@ -113,6 +114,28 @@ export function TurnstileField({ siteKey }: TurnstileFieldProps) {
       }
     };
   }, [containerId, siteKey]);
+
+  useEffect(() => {
+    if (!siteKey) {
+      return;
+    }
+
+    const resetWidget = () => {
+      if (hiddenInputRef.current) {
+        hiddenInputRef.current.value = "";
+      }
+
+      if (widgetIdRef.current && window.turnstile?.reset) {
+        window.turnstile.reset(widgetIdRef.current);
+      }
+    };
+
+    window.addEventListener("pageshow", resetWidget);
+
+    return () => {
+      window.removeEventListener("pageshow", resetWidget);
+    };
+  }, [siteKey]);
 
   if (!siteKey) {
     return null;
