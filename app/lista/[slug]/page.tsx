@@ -170,8 +170,13 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
         </div>
         <div className="leadCaptureHeroBottom">
           <article className="leadCaptureHeroCopy">
+            <span className="leadEyebrow">Pré-lista oficial do evento</span>
             <h1>{headline}</h1>
             <p>{renderEditableText(description, "hero-description")}</p>
+            <div className="leadOfferBox">
+              <strong>{offerText}</strong>
+              <small>Entre agora, receba o aviso de abertura e siga para o grupo oficial na próxima etapa.</small>
+            </div>
             <div className="leadCaptureMeta">
               <span>{formatDateTime(event.startsAt)}</span>
               <span>
@@ -252,7 +257,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             <div className="sectionHeader">
               <div>
                 <span className="leadEyebrow">Como funciona</span>
-                <h2>Um fluxo simples para não perder a abertura</h2>
+                <h2>3 passos para receber o aviso e entrar no grupo</h2>
               </div>
             </div>
             <div className="leadStepsGrid">
@@ -273,7 +278,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
 
           <article className="card leadCaptureHighlight leadCaptureSectionTone leadToneValue">
             <span className="leadEyebrow">Por que entrar agora</span>
-            <h2>Mais clareza, mais contexto e mais chance de comprar no melhor momento.</h2>
+            <h2>Receba a abertura no canal certo e chegue mais preparado ao lançamento.</h2>
             <p>
               {renderEditableText(
                 "A lista de interesse evita que você dependa de anúncio solto ou de link perdido. Você entra no funil oficial deste lançamento e recebe as próximas instruções no canal certo.",

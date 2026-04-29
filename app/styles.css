@@ -6712,7 +6712,7 @@ body.operationTheme .topbar {
   border: 1px solid rgba(171, 195, 187, 0.24);
   border-radius: 22px;
   display: grid;
-  gap: 12px;
+  gap: 14px;
   padding: 22px;
 }
 
@@ -6782,19 +6782,20 @@ body.operationTheme .topbar {
   border: 1px solid rgba(42, 126, 94, 0.14);
   border-radius: 22px;
   display: grid;
-  gap: 6px;
-  padding: 18px 18px;
+  gap: 8px;
+  padding: 18px;
 }
 
 .leadOfferBox strong {
   color: var(--brand-dark);
   font-size: 18px;
-  line-height: 1.32;
+  line-height: 1.28;
 }
 
 .leadOfferBox small {
   color: var(--muted);
-  line-height: 1.45;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .leadFormEyebrow {
@@ -6918,12 +6919,26 @@ body.operationTheme .topbar {
   background: linear-gradient(90deg, #0b7a63, #24a37c);
 }
 
+.leadToneProcess {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(242, 249, 246, 0.98));
+  border-color: rgba(36, 163, 124, 0.14);
+}
+
 .leadToneValue::before {
   background: linear-gradient(90deg, #456cc2, #7f9eff);
 }
 
+.leadToneValue {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 248, 255, 0.98));
+  border-color: rgba(127, 158, 255, 0.16);
+}
+
 .leadToneVenue::before {
   background: linear-gradient(90deg, #7d5a16, #d0a133);
+}
+
+.leadToneVenue {
+  border-color: rgba(208, 161, 51, 0.18);
 }
 
 .leadCaptureSectionTone .sectionHeader,
@@ -6949,7 +6964,7 @@ body.operationTheme .topbar {
   border: 1px solid rgba(13, 43, 36, 0.08);
   border-radius: 20px;
   display: grid;
-  gap: 8px;
+  gap: 10px;
   padding: 18px;
 }
 
@@ -6965,7 +6980,7 @@ body.operationTheme .topbar {
 .leadCaptureSupportCard p {
   color: #365249;
   font-size: 15px;
-  line-height: 1.58;
+  line-height: 1.55;
   margin: 0;
 }
 
@@ -7744,6 +7759,11 @@ body.operationTheme .topbar {
     padding: 16px 18px;
   }
 
+  .leadOfferBox {
+    border-radius: 18px;
+    padding: 16px;
+  }
+
   .leadCaptureForm {
     border-radius: 20px;
     gap: 10px;
@@ -7762,6 +7782,10 @@ body.operationTheme .topbar {
   .leadCaptureHeroCopy p {
     font-size: 15px;
     line-height: 1.45;
+  }
+
+  .leadOfferBox strong {
+    font-size: 17px;
   }
 
   .leadCaptureInlineCta .button,
@@ -8220,6 +8244,10 @@ body.operationTheme .topbar {
 
   .leadCaptureHeroCopy h1 {
     font-size: 26px;
+  }
+
+  .leadOfferBox strong {
+    font-size: 16px;
   }
 
   .leadCaptureMeta span,
