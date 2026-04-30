@@ -6,6 +6,7 @@ export const eventLeadSchema = z.object({
   name: z.string().trim().min(3, "Informe seu nome completo."),
   email: z.string().trim().toLowerCase().email("Informe um e-mail válido."),
   phone: z.string().min(8, "Informe um telefone com DDD.").optional(),
+  municipality: z.string().trim().min(2, "Informe seu município.").max(120).optional(),
   utmSource: z.string().max(240).optional(),
   utmMedium: z.string().max(240).optional(),
   utmCampaign: z.string().max(240).optional(),

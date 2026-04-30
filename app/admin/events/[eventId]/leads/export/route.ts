@@ -49,6 +49,13 @@ export async function GET(
   }
 
   const leads = await listEventLeads(event.id);
+  const municipalityRanking = Array.from(
+    leads.reduce((acc, lead) => {
+      const key = lead.municipality?.trim() || "Não informado";
+      acc.set(key, (acc.get(key) ?? 0) + 1);
+      return acc;
+    }, new Map<string, number>())
+  ).sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], "pt-BR"));
 
   const headers = [
     "Nome completo",
@@ -57,8 +64,9 @@ export async function GET(
     "DDD",
     "Telefone",
     "Evento",
-    "Cidade",
-    "UF",
+    "Município do lead",
+    "Cidade do evento",
+    "UF do evento",
     "UTM source",
     "UTM medium",
     "UTM campaign",
@@ -78,6 +86,7 @@ export async function GET(
       phone.areaCode,
       phone.localNumber,
       event.title,
+      lead.municipality || "",
       event.city,
       event.state,
       lead.utmSource || "",
@@ -91,7 +100,12 @@ export async function GET(
     ];
   });
 
-  const csv = [headers, ...rows].map((row) => row.map(csvValue).join(";")).join("\n");
+  const municipalitySummaryHeader = ["Resumo por município", "Quantidade de leads"];
+  const municipalitySummaryRows = municipalityRanking.map(([municipality, count]) => [municipality, count]);
+  const csv = [
+    [headers, ...rows].map((row) => row.map(csvValue).join(";")).join("\n"),
+    [municipalitySummaryHeader, ...municipalitySummaryRows].map((row) => row.map(csvValue).join(";")).join("\n")
+  ].join("\n\n");
 
   return new NextResponse(`\uFEFF${csv}`, {
     headers: {

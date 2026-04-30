@@ -48,14 +48,101 @@ export function getTrackingParamsFromSearch(
   };
 }
 
-export function getSourceLabel(source?: string | null, medium?: string | null) {
+function normalizeSourceName(source?: string | null) {
+  const value = source?.trim().toLowerCase();
+
+  if (!value) {
+    return "Direto";
+  }
+
+  if (["ig", "insta", "instagram"].includes(value)) {
+    return "Instagram";
+  }
+
+  if (["fb", "face", "facebook", "meta"].includes(value)) {
+    return "Facebook";
+  }
+
+  if (["google", "gads", "googleads", "adwords"].includes(value)) {
+    return "Google";
+  }
+
+  if (["yt", "youtube"].includes(value)) {
+    return "YouTube";
+  }
+
+  if (["wa", "wpp", "whatsapp"].includes(value)) {
+    return "WhatsApp";
+  }
+
+  if (["email", "e-mail", "mail"].includes(value)) {
+    return "E-mail";
+  }
+
+  return value
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function normalizeMediumCategory(medium?: string | null) {
+  const value = medium?.trim().toLowerCase();
+
+  if (!value) {
+    return "orgânico";
+  }
+
+  if (
+    /(paid|cpc|ppc|ads?|adset|campaign|sponsored|paid_social|social_paid|boost)/.test(value)
+  ) {
+    return "anúncio";
+  }
+
+  if (/(email|newsletter)/.test(value)) {
+    return "e-mail";
+  }
+
+  if (/(referral|partner|affiliate)/.test(value)) {
+    return "parceria";
+  }
+
+  if (/(organic|seo|social|direct|direto)/.test(value)) {
+    return "orgânico";
+  }
+
+  return value;
+}
+
+export function getLeadOriginBucket(source?: string | null, medium?: string | null) {
+  const category = normalizeMediumCategory(medium);
+
+  if (category === "anúncio") {
+    return "Anúncio";
+  }
+
+  if (category === "e-mail") {
+    return "E-mail";
+  }
+
+  if (category === "parceria") {
+    return "Parceria";
+  }
+
   if (!source && !medium) {
-    return "Direto/organico";
+    return "Orgânico";
   }
 
-  if (source && medium) {
-    return `${source} / ${medium}`;
+  return "Orgânico";
+}
+
+export function getSourceLabel(source?: string | null, medium?: string | null) {
+  const sourceLabel = normalizeSourceName(source);
+  const mediumLabel = normalizeMediumCategory(medium);
+
+  if (!source && !medium) {
+    return "Direto / orgânico";
   }
 
-  return source || medium || "Direto/organico";
+  return `${sourceLabel} / ${mediumLabel}`;
 }

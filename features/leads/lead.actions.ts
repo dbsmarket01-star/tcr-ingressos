@@ -18,7 +18,8 @@ function validationMessage(error: unknown) {
     const fieldLabels: Record<string, string> = {
       name: "nome",
       email: "e-mail",
-      phone: "telefone"
+      phone: "telefone",
+      municipality: "município"
     };
 
     if (typeof field === "string") {
@@ -59,6 +60,7 @@ export async function createEventLeadAction(formData: FormData) {
     name: String(formData.get("name") ?? "").trim(),
     email: String(formData.get("email") ?? "").trim(),
     phone: String(formData.get("phone") ?? "").trim() || undefined,
+    municipality: String(formData.get("municipality") ?? "").trim() || undefined,
     utmSource: String(formData.get("utmSource") ?? "").trim() || undefined,
     utmMedium: String(formData.get("utmMedium") ?? "").trim() || undefined,
     utmCampaign: String(formData.get("utmCampaign") ?? "").trim() || undefined,

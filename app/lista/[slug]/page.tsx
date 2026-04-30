@@ -266,6 +266,14 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
               <input name="email" type="email" placeholder="Digite seu melhor e-mail" required />
             </label>
             <label className="field">
+              <span>Município</span>
+              <input
+                name="municipality"
+                placeholder="Ex: Santo André, São Caetano, São Bernardo"
+                required
+              />
+            </label>
+            <label className="field">
               <span>Telefone com DDI + DDD</span>
               <input name="phone" inputMode="tel" placeholder="Ex: 55 11 99999-9999" required />
             </label>

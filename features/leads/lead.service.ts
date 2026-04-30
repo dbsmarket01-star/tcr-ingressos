@@ -11,6 +11,11 @@ function sanitizePhone(value?: string) {
   return digits || null;
 }
 
+function sanitizeMunicipality(value?: string) {
+  const text = (value ?? "").trim().replace(/\s+/g, " ");
+  return text || null;
+}
+
 function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
 }
@@ -98,6 +103,7 @@ export async function createOrUpdateEventLead(
       name: input.name,
       email: normalizedEmail,
       phone: sanitizePhone(input.phone),
+      municipality: sanitizeMunicipality(input.municipality),
       utmSource: input.utmSource || null,
       utmMedium: input.utmMedium || null,
       utmCampaign: input.utmCampaign || null,
@@ -111,6 +117,7 @@ export async function createOrUpdateEventLead(
       name: input.name,
       email: normalizedEmail,
       phone: sanitizePhone(input.phone),
+      municipality: sanitizeMunicipality(input.municipality),
       utmSource: input.utmSource || null,
       utmMedium: input.utmMedium || null,
       utmCampaign: input.utmCampaign || null,

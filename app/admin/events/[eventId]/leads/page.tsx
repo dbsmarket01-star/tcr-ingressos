@@ -7,7 +7,7 @@ import { getEventForManagement } from "@/features/events/event.service";
 import { listEventLeads } from "@/features/leads/lead.service";
 import { formatDateTime } from "@/lib/format";
 import { getPublicLeadCaptureUrl } from "@/lib/public-url";
-import { getSourceLabel } from "@/features/tracking/tracking";
+import { getLeadOriginBucket, getSourceLabel } from "@/features/tracking/tracking";
 
 type EventLeadsPageProps = {
   params: Promise<{
@@ -28,8 +28,23 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
   const leads = await listEventLeads(event.id);
   const leadsWithPhone = leads.filter((lead) => Boolean(lead.phone)).length;
   const leadsWithEmail = leads.filter((lead) => Boolean(lead.email)).length;
+  const leadsWithMunicipality = leads.filter((lead) => Boolean(lead.municipality)).length;
   const exportHref = `/admin/events/${event.id}/leads/export`;
   const publicLandingUrl = getPublicLeadCaptureUrl(event.slug);
+  const municipalityRanking = Array.from(
+    leads.reduce((acc, lead) => {
+      const key = lead.municipality?.trim() || "Não informado";
+      acc.set(key, (acc.get(key) ?? 0) + 1);
+      return acc;
+    }, new Map<string, number>())
+  ).sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], "pt-BR"));
+  const originRanking = Array.from(
+    leads.reduce((acc, lead) => {
+      const key = getLeadOriginBucket(lead.utmSource, lead.utmMedium);
+      acc.set(key, (acc.get(key) ?? 0) + 1);
+      return acc;
+    }, new Map<string, number>())
+  ).sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], "pt-BR"));
 
   function getWhatsappUrl(phone?: string | null) {
     const digits = (phone ?? "").replace(/\D/g, "");
@@ -89,8 +104,53 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
             <span className="muted">Com e-mail</span>
             <strong>{leadsWithEmail}</strong>
           </div>
+          <div className="card metric">
+            <span className="muted">Com município</span>
+            <strong>{leadsWithMunicipality}</strong>
+          </div>
         </div>
       </section>
+
+      {leads.length > 0 ? (
+        <section className="card spacedSection">
+          <div className="sectionHeader">
+            <div>
+              <h2>Leitura comercial</h2>
+              <p className="muted">Veja de onde vem mais interesse e quais municípios concentram mais cadastros.</p>
+            </div>
+          </div>
+          <div className="leadInsightsGrid">
+            <article className="leadInsightCard">
+              <div className="leadInsightHeader">
+                <strong>Municípios com mais leads</strong>
+                <span>{municipalityRanking.length} grupos</span>
+              </div>
+              <div className="leadInsightList">
+                {municipalityRanking.slice(0, 8).map(([municipality, count]) => (
+                  <div key={municipality} className="leadInsightRow">
+                    <span>{municipality}</span>
+                    <strong>{count}</strong>
+                  </div>
+                ))}
+              </div>
+            </article>
+            <article className="leadInsightCard">
+              <div className="leadInsightHeader">
+                <strong>Origem dos cadastros</strong>
+                <span>{originRanking.length} grupos</span>
+              </div>
+              <div className="leadInsightList">
+                {originRanking.map(([origin, count]) => (
+                  <div key={origin} className="leadInsightRow">
+                    <span>{origin}</span>
+                    <strong>{count}</strong>
+                  </div>
+                ))}
+              </div>
+            </article>
+          </div>
+        </section>
+      ) : null}
 
       <section className="card">
         <div className="sectionHeader inlineHeader">
@@ -116,6 +176,7 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
                   <th>Nome</th>
                   <th>E-mail</th>
                   <th>Telefone</th>
+                  <th>Município</th>
                   <th>Origem</th>
                   <th>Cadastrado em</th>
                   <th>Ações</th>
@@ -127,6 +188,7 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
                     <td>{lead.name}</td>
                     <td>{lead.email}</td>
                     <td>{lead.phone || "-"}</td>
+                    <td>{lead.municipality || "-"}</td>
                     <td>{getSourceLabel(lead.utmSource, lead.utmMedium)}</td>
                     <td>{formatDateTime(lead.createdAt)}</td>
                     <td>

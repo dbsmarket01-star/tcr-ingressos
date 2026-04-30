@@ -403,6 +403,7 @@ model EventLead {
   name       String
   email      String
   phone      String?
+  municipality String?
   utmSource  String?
   utmMedium  String?
   utmCampaign String?
