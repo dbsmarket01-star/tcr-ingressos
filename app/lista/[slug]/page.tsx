@@ -289,6 +289,11 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             <SubmitButton className="button fullButton" pendingText="Enviando cadastro...">
               {ctaText}
             </SubmitButton>
+            <div className="leadCaptureFormBenefits">
+              <span>Aviso da abertura</span>
+              <span>Grupo oficial</span>
+              <span>Prioridade no lançamento</span>
+            </div>
             <small className="leadCaptureFootnote">
               Seus dados serão usados apenas para este lançamento, avisos oficiais e acesso ao grupo.
             </small>

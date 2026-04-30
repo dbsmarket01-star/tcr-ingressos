@@ -89,6 +89,10 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
         <span className="leadEyebrow">Cadastro confirmado</span>
         <h1>{title}</h1>
         <p>{description}</p>
+        <div className="leadThankYouEvent">
+          <strong>{event.title}</strong>
+          <small>Seu nome já está na pré-lista. Agora falta só entrar no grupo para receber a abertura e as condições deste lançamento.</small>
+        </div>
         <div className="leadThankYouChecklist">
           <div>
             <strong>Cadastro feito</strong>
@@ -115,7 +119,7 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
             </div>
           )}
         </div>
-        <small>Seu cadastro já está salvo. Agora entre no grupo para liberar a próxima etapa e receber as condições deste lançamento.</small>
+        <small>Entre no grupo agora para não perder o aviso de abertura e as próximas instruções do evento.</small>
       </section>
     </main>
   );

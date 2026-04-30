@@ -6673,12 +6673,14 @@ body.operationTheme .topbar {
   background: rgba(255, 255, 255, 0.88);
   border: 1px solid rgba(171, 195, 187, 0.28);
   border-radius: 32px;
-  box-shadow: 0 18px 48px rgba(18, 39, 35, 0.08);
+  box-shadow:
+    0 18px 48px rgba(18, 39, 35, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
   display: grid;
-  gap: 16px;
+  gap: 18px;
   margin: 0 auto;
   max-width: 1280px;
-  padding: 18px;
+  padding: 20px;
 }
 
 .leadCaptureHeroMedia {
@@ -6712,8 +6714,8 @@ body.operationTheme .topbar {
   border: 1px solid rgba(171, 195, 187, 0.24);
   border-radius: 22px;
   display: grid;
-  gap: 14px;
-  padding: 22px;
+  gap: 16px;
+  padding: 24px;
 }
 
 .leadEyebrow {
@@ -6727,9 +6729,9 @@ body.operationTheme .topbar {
 .leadCaptureHeroCopy h1 {
   color: var(--ink);
   font-size: clamp(34px, 3.4vw, 52px);
-  line-height: 0.96;
+  line-height: 0.98;
   margin: 0;
-  max-width: 10ch;
+  max-width: 11ch;
 }
 
 .leadCaptureHeroCopy p {
@@ -6810,7 +6812,7 @@ body.operationTheme .topbar {
   border-radius: 22px;
   display: grid;
   gap: 8px;
-  padding: 18px;
+  padding: 18px 18px 16px;
 }
 
 .leadOfferBox strong {
@@ -6842,8 +6844,8 @@ body.operationTheme .topbar {
     0 18px 42px rgba(13, 43, 36, 0.12),
     0 0 0 8px rgba(var(--brand-rgb), 0.06);
   display: grid;
-  gap: 12px;
-  padding: 22px;
+  gap: 14px;
+  padding: 24px 22px 22px;
   position: relative;
 }
 
@@ -7123,6 +7125,24 @@ body.operationTheme .topbar {
   text-align: center;
 }
 
+.leadCaptureFormBenefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.leadCaptureFormBenefits span {
+  background: rgba(11, 122, 99, 0.08);
+  border: 1px solid rgba(11, 122, 99, 0.1);
+  border-radius: 999px;
+  color: var(--brand-dark);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  padding: 8px 11px;
+}
+
 .leadAdminUtilityBar {
   display: grid;
   gap: 14px;
@@ -7204,17 +7224,39 @@ body.operationTheme .topbar {
 
 .leadThankYouCard {
   display: grid;
-  gap: 14px;
-  margin: 48px auto;
+  gap: 16px;
+  margin: 42px auto;
   max-width: 720px;
-  padding: 32px;
+  padding: 34px 32px 30px;
   text-align: center;
 }
 
 .leadThankYouCard p {
-  font-size: 20px;
-  line-height: 1.5;
+  font-size: 18px;
+  line-height: 1.45;
   margin: 0;
+}
+
+.leadThankYouEvent {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 248, 246, 0.98));
+  border: 1px solid rgba(13, 43, 36, 0.08);
+  border-radius: 18px;
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+  text-align: left;
+}
+
+.leadThankYouEvent strong {
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1.15;
+}
+
+.leadThankYouEvent small {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .leadThankYouMeta {
@@ -7250,12 +7292,12 @@ body.operationTheme .topbar {
 }
 
 .leadThankYouChecklist div {
-  background: #f7faf9;
-  border: 1px solid var(--line);
-  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(247, 250, 249, 0.96), rgba(255, 255, 255, 0.96));
+  border: 1px solid rgba(13, 43, 36, 0.08);
+  border-radius: 16px;
   display: grid;
   gap: 4px;
-  padding: 14px;
+  padding: 15px 16px;
 }
 
 .leadThankYouChecklist strong,
@@ -7881,6 +7923,10 @@ body.operationTheme .topbar {
     width: 100%;
   }
 
+  .leadCaptureFormBenefits {
+    justify-content: flex-start;
+  }
+
   .leadAdminQuickLinks .secondaryButton {
     width: 100%;
   }
@@ -8354,6 +8400,14 @@ body.operationTheme .topbar {
 
   .leadCaptureForm h2 {
     font-size: 21px;
+  }
+
+  .leadThankYouCard p {
+    font-size: 16px;
+  }
+
+  .leadThankYouEvent strong {
+    font-size: 16px;
   }
 
   .leadCaptureForm::before {
