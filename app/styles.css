@@ -7125,6 +7125,12 @@ body.operationTheme .topbar {
   text-align: center;
 }
 
+.leadCaptureFootnoteSoft {
+  color: #5e7a71;
+  font-size: 12px;
+  margin-top: -6px;
+}
+
 .leadCaptureFormBenefits {
   display: flex;
   flex-wrap: wrap;
@@ -7314,6 +7320,12 @@ body.operationTheme .topbar {
   display: grid;
   gap: 12px;
   width: 100%;
+}
+
+.leadThankYouClosing {
+  color: #4b665d;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .whatsappGroupButton {

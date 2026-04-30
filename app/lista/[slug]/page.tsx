@@ -135,7 +135,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
     event.subtitle ||
     "Cadastre-se para receber as informações do evento, prioridade de abertura e o link do grupo oficial.";
   const offerText =
-    event.leadCaptureOfferText || "Entre na lista e receba prioridade no lançamento, desconto e informações oficiais.";
+    event.leadCaptureOfferText || "Entre na lista e receba o aviso de abertura, o desconto e o acesso ao grupo oficial.";
   const ctaText = event.leadCaptureCtaText || "Quero entrar na lista";
   const youtubeEmbedUrl = getYoutubeEmbedUrl(event.leadCaptureVideoUrl);
   const tracking = getTrackingParamsFromSearch(query, `/lista/${event.slug}`);
@@ -224,7 +224,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             <p>{renderEditableText(description, "hero-description")}</p>
             <div className="leadOfferBox">
               <strong>{offerText}</strong>
-              <small>Entre agora, receba o aviso de abertura e siga para o grupo oficial na próxima etapa.</small>
+              <small>Cadastro rápido, grupo oficial e instruções certas no mesmo fluxo.</small>
             </div>
             <div className="leadCaptureMeta">
               <span>{formatDateTime(event.startsAt)}</span>
@@ -235,12 +235,12 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             </div>
             <div className="leadCaptureHeroProof">
               <div>
-                <strong>Cadastro em menos de 1 minuto</strong>
-                <small>Você deixa seus dados e segue para o grupo oficial na página seguinte.</small>
+                <strong>Cadastro rápido</strong>
+                <small>Você entra na lista e segue para o grupo na próxima etapa.</small>
               </div>
               <div>
-                <strong>Comunicação no canal certo</strong>
-                <small>O grupo concentra abertura, orientações e condições do lançamento.</small>
+                <strong>Grupo oficial do lançamento</strong>
+                <small>É lá que ficam abertura, orientações e as condições especiais.</small>
               </div>
             </div>
           </article>
@@ -265,10 +265,10 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
               type="text"
             />
             <span className="leadFormEyebrow">Cadastre seu interesse</span>
-            <h2>Receba o aviso de abertura e o link do grupo oficial</h2>
+            <h2>Entre na lista e receba o link do grupo oficial</h2>
             <p className="muted">
               {renderEditableText(
-                "Preencha seus dados e conclua o último passo na página de obrigado para entrar no grupo.",
+                "Preencha seus dados e, na próxima tela, entre no grupo para receber a abertura e o desconto.",
                 "form-copy"
               )}
             </p>
@@ -296,6 +296,9 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             </div>
             <small className="leadCaptureFootnote">
               Seus dados serão usados apenas para este lançamento, avisos oficiais e acesso ao grupo.
+            </small>
+            <small className="leadCaptureFootnote leadCaptureFootnoteSoft">
+              Sem pagamento agora. Você só entra na lista e segue para o grupo oficial.
             </small>
           </form>
         </div>
@@ -328,7 +331,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             <div className="leadStepsGrid">
               <article className="leadStepCard">
                 <strong>1. Cadastre seus dados</strong>
-                <p>Você deixa seu nome, e-mail e telefone para entrar na pré-lista oficial deste evento.</p>
+                <p>Você deixa nome, e-mail e telefone para entrar na pré-lista oficial deste evento.</p>
               </article>
               <article className="leadStepCard">
                 <strong>2. Acesse o grupo no WhatsApp</strong>
@@ -336,7 +339,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
               </article>
               <article className="leadStepCard">
                 <strong>3. Receba prioridade na abertura</strong>
-                <p>Quem estiver no grupo acompanha primeiro a liberação e recebe o contexto completo do lançamento.</p>
+                <p>Quem estiver no grupo acompanha primeiro a liberação e recebe a comunicação completa do lançamento.</p>
               </article>
             </div>
           </article>

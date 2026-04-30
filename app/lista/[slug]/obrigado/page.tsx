@@ -33,7 +33,7 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
   const title = event.leadCaptureThankYouTitle || "Seu cadastro foi concluído";
   const description =
     event.leadCaptureThankYouDescription ||
-    "Último passo: entre no grupo oficial para receber um desconto de até 30% e acompanhar as informações deste lançamento.";
+    "Último passo: entre no grupo oficial para receber o desconto e acompanhar a abertura deste lançamento.";
   const buttonText = event.leadCaptureThankYouButtonText || "Quero entrar no grupo do WhatsApp";
   const tracking = getTrackingParamsFromSearch(query, `/lista/${event.slug}/obrigado`);
 
@@ -96,7 +96,7 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
         <div className="leadThankYouChecklist">
           <div>
             <strong>Cadastro feito</strong>
-            <small>Seu interesse já foi registrado.</small>
+            <small>Seu interesse já foi registrado com sucesso.</small>
           </div>
           <div>
             <strong>Agora entre no grupo</strong>
@@ -119,7 +119,9 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
             </div>
           )}
         </div>
-        <small>Entre no grupo agora para não perder o aviso de abertura e as próximas instruções do evento.</small>
+        <small className="leadThankYouClosing">
+          Entre no grupo agora para não perder o aviso de abertura e as próximas instruções do evento.
+        </small>
       </section>
     </main>
   );
