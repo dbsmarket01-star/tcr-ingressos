@@ -6702,6 +6702,24 @@ body.operationTheme .topbar {
   object-fit: cover;
 }
 
+.leadCaptureHeroIntro {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  margin: 2px auto 0;
+  max-width: 780px;
+  padding: 4px 12px 0;
+  text-align: center;
+}
+
+.leadCaptureHeroIntro h1 {
+  color: var(--ink);
+  font-size: clamp(34px, 3.4vw, 52px);
+  line-height: 0.98;
+  margin: 0;
+  max-width: 12ch;
+}
+
 .leadCaptureHeroBottom {
   align-items: start;
   display: grid;
@@ -6714,7 +6732,7 @@ body.operationTheme .topbar {
   border: 1px solid rgba(171, 195, 187, 0.24);
   border-radius: 22px;
   display: grid;
-  gap: 16px;
+  gap: 14px;
   padding: 24px;
 }
 
@@ -6726,20 +6744,12 @@ body.operationTheme .topbar {
   text-transform: uppercase;
 }
 
-.leadCaptureHeroCopy h1 {
-  color: var(--ink);
-  font-size: clamp(34px, 3.4vw, 52px);
-  line-height: 0.98;
-  margin: 0;
-  max-width: 11ch;
-}
-
 .leadCaptureHeroCopy p {
   color: #365249;
-  font-size: 16px;
-  line-height: 1.52;
+  font-size: 15px;
+  line-height: 1.48;
   margin: 0;
-  max-width: 46ch;
+  max-width: 42ch;
 }
 
 .leadCaptureMeta {
@@ -6748,14 +6758,21 @@ body.operationTheme .topbar {
   gap: 10px;
 }
 
+.leadCaptureMetaCentered {
+  justify-content: center;
+}
+
 .leadCaptureMeta span {
-  background: rgba(13, 43, 36, 0.08);
-  border: 1px solid rgba(13, 43, 36, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(237, 245, 242, 0.96));
+  border: 1px solid rgba(13, 43, 36, 0.1);
   border-radius: 999px;
   color: var(--brand-dark);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 8px 18px rgba(13, 43, 36, 0.06);
   font-size: 12px;
   font-weight: 800;
-  padding: 7px 11px;
+  padding: 9px 13px;
 }
 
 .leadCaptureHeroProof {
@@ -7875,6 +7892,11 @@ body.operationTheme .topbar {
     order: 2;
   }
 
+  .leadCaptureHeroIntro {
+    gap: 10px;
+    padding: 2px 6px 0;
+  }
+
   .leadCaptureBody {
     padding: 0 18px 34px;
   }
@@ -7952,18 +7974,14 @@ body.operationTheme .topbar {
     box-shadow: 0 14px 28px rgba(11, 122, 99, 0.24);
   }
 
-  .leadCaptureHeroCopy h1 {
+  .leadCaptureHeroIntro h1 {
     font-size: 30px;
     max-width: 100%;
   }
 
-  .leadCaptureHeroCopy .leadEyebrow {
-    display: none;
-  }
-
   .leadCaptureHeroCopy p {
-    font-size: 15px;
-    line-height: 1.45;
+    font-size: 14px;
+    line-height: 1.42;
   }
 
   .leadOfferBox strong {
@@ -8433,8 +8451,12 @@ body.operationTheme .topbar {
     max-height: min(58svh, 520px);
   }
 
-  .leadCaptureHeroCopy h1 {
+  .leadCaptureHeroIntro h1 {
     font-size: 26px;
+  }
+
+  .leadCaptureHeroIntro .leadEyebrow {
+    font-size: 11px;
   }
 
   .leadAdminBlockHeader h3 {
@@ -8448,7 +8470,7 @@ body.operationTheme .topbar {
   .leadCaptureMeta span,
   .leadBenefitRow span {
     font-size: 10px;
-    padding: 6px 9px;
+    padding: 7px 10px;
   }
 
   .leadCaptureForm h2 {

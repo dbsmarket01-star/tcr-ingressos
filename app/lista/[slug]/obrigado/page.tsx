@@ -93,16 +93,6 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
           <strong>{event.title}</strong>
           <small>Seu nome já está na pré-lista. Agora falta só entrar no grupo para receber a abertura e as condições deste lançamento.</small>
         </div>
-        <div className="leadThankYouChecklist">
-          <div>
-            <strong>Cadastro feito</strong>
-            <small>Seu interesse já foi registrado com sucesso.</small>
-          </div>
-          <div>
-            <strong>Agora entre no grupo</strong>
-            <small>É lá que você vai receber o desconto, a abertura e as orientações deste evento.</small>
-          </div>
-        </div>
         <div className="leadThankYouAction">
           {event.leadCaptureWhatsappGroupUrl ? (
             <a

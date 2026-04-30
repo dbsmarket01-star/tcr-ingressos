@@ -217,21 +217,23 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             style={imageCropStyle(publicLeadHeroCrop)}
           />
         </div>
+        <article className="leadCaptureHeroIntro">
+          <span className="leadEyebrow">Pré-lista oficial do evento</span>
+          <h1>{headline}</h1>
+          <div className="leadCaptureMeta leadCaptureMetaCentered">
+            <span>{formatDateTime(event.startsAt)}</span>
+            <span>
+              {event.city}, {event.state}
+            </span>
+            <span>{event.venueName}</span>
+          </div>
+        </article>
         <div className="leadCaptureHeroBottom">
           <article className="leadCaptureHeroCopy">
-            <span className="leadEyebrow">Pré-lista oficial do evento</span>
-            <h1>{headline}</h1>
             <p>{renderEditableText(description, "hero-description")}</p>
             <div className="leadOfferBox">
               <strong>{offerText}</strong>
               <small>Cadastro rápido, grupo oficial e instruções certas no mesmo fluxo.</small>
-            </div>
-            <div className="leadCaptureMeta">
-              <span>{formatDateTime(event.startsAt)}</span>
-              <span>
-                {event.city}, {event.state}
-              </span>
-              <span>{event.venueName}</span>
             </div>
             <div className="leadCaptureHeroProof">
               <div>
@@ -268,7 +270,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             <h2>Entre na lista e receba o link do grupo oficial</h2>
             <p className="muted">
               {renderEditableText(
-                "Preencha seus dados e, na próxima tela, entre no grupo para receber a abertura e o desconto.",
+                "Preencha seus dados e siga para o grupo oficial na próxima etapa.",
                 "form-copy"
               )}
             </p>
