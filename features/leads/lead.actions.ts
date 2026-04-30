@@ -74,38 +74,47 @@ export async function createEventLeadAction(formData: FormData) {
     redirect(`/lista/${eventSlug}?error=${encodeURIComponent(validationMessage(parsed.error))}`);
   }
 
+  let leadEventId = randomUUID();
+
   try {
     const organizationContext = await getCurrentOrganizationContext();
     const clientIp = await getClientIp();
     const clientUserAgent = await getClientUserAgent();
     const metaFbp = String(formData.get("metaFbp") ?? "").trim() || null;
     const metaFbc = String(formData.get("metaFbc") ?? "").trim() || null;
-    const leadEventId = randomUUID();
     await verifyTurnstileToken(String(formData.get("cf-turnstile-response") ?? "").trim() || null, clientIp);
     const result = await createOrUpdateEventLead(parsed.data, organizationContext.organization.id, clientIp);
     revalidatePath(`/admin/events/${parsed.data.eventId}/leads`);
     revalidatePath(`/admin/events/${parsed.data.eventId}`);
 
-    await trackMetaLeadForEventSubmission({
-      eventId: parsed.data.eventId,
-      eventTitle: result.lead.event.title,
-      email: result.lead.email,
-      leadEventId,
-      phone: result.lead.phone,
-      landingPage: parsed.data.landingPage || null,
-      utmSource: parsed.data.utmSource || null,
-      utmMedium: parsed.data.utmMedium || null,
-      utmCampaign: parsed.data.utmCampaign || null,
-      utmContent: parsed.data.utmContent || null,
-      utmTerm: parsed.data.utmTerm || null,
-      clientIpAddress: clientIp,
-      clientUserAgent,
-      metaFbp,
-      metaFbc
-    });
-
-    redirect(`/lista/${eventSlug}/obrigado?leid=${encodeURIComponent(leadEventId)}`);
+    try {
+      await trackMetaLeadForEventSubmission({
+        eventId: parsed.data.eventId,
+        eventTitle: result.lead.event.title,
+        email: result.lead.email,
+        leadEventId,
+        phone: result.lead.phone,
+        landingPage: parsed.data.landingPage || null,
+        utmSource: parsed.data.utmSource || null,
+        utmMedium: parsed.data.utmMedium || null,
+        utmCampaign: parsed.data.utmCampaign || null,
+        utmContent: parsed.data.utmContent || null,
+        utmTerm: parsed.data.utmTerm || null,
+        clientIpAddress: clientIp,
+        clientUserAgent,
+        metaFbp,
+        metaFbc
+      });
+    } catch (trackingError) {
+      console.error("[lead-capture] Falha ao enviar evento Lead para o Meta", {
+        eventId: parsed.data.eventId,
+        eventSlug,
+        error: trackingError instanceof Error ? trackingError.message : trackingError
+      });
+    }
   } catch (error) {
     redirect(`/lista/${eventSlug}?error=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível concluir seu cadastro.")}`);
   }
+
+  redirect(`/lista/${eventSlug}/obrigado?leid=${encodeURIComponent(leadEventId)}`);
 }

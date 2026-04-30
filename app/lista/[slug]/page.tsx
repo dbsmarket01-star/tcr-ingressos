@@ -130,7 +130,8 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
     "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1800&q=80";
   const leadHeroCrop = parseImageCrop(event.leadCaptureHeroCrop) || parseImageCrop(event.bannerCrop);
   const publicLeadHeroCrop = leadHeroCrop ? { ...leadHeroCrop, zoom: Math.max(1, leadHeroCrop.zoom) } : null;
-  const error = typeof query.error === "string" ? query.error : null;
+  const rawError = typeof query.error === "string" ? query.error : null;
+  const error = rawError === "NEXT_REDIRECT" ? null : rawError;
   const headline = event.leadCaptureHeadline || event.title;
   const description =
     event.leadCaptureDescription ||
