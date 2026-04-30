@@ -24,10 +24,20 @@ export async function listEvents(organizationId: string, allowedEventIds?: strin
       },
       orders: {
         where: {
-          status: "PAID"
+          status: "PAID",
+          payment: {
+            is: {
+              status: "APPROVED"
+            }
+          }
         },
         select: {
-          totalInCents: true
+          totalInCents: true,
+          payment: {
+            select: {
+              amountInCents: true
+            }
+          }
         }
       },
       coupons: {
@@ -164,10 +174,20 @@ export async function getEventForManagement(
       },
       orders: {
         where: {
-          status: "PAID"
+          status: "PAID",
+          payment: {
+            is: {
+              status: "APPROVED"
+            }
+          }
         },
         select: {
-          totalInCents: true
+          totalInCents: true,
+          payment: {
+            select: {
+              amountInCents: true
+            }
+          }
         }
       },
       coupons: {
@@ -445,5 +465,5 @@ export function getEventCapacity(event: Pick<EventListItem, "lots">) {
 }
 
 export function getEventRevenueInCents(event: Pick<EventListItem, "orders">) {
-  return event.orders.reduce((sum, order) => sum + order.totalInCents, 0);
+  return event.orders.reduce((sum, order) => sum + (order.payment?.amountInCents ?? order.totalInCents), 0);
 }
