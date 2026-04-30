@@ -84,6 +84,29 @@ function mapAsaasPaymentStatus(status?: string) {
   return "PENDING" as const;
 }
 
+function resolveCapturedAmountInCents(
+  payment: { amountInCents: number },
+  rawPayload?: unknown
+) {
+  if (!rawPayload || typeof rawPayload !== "object") {
+    return payment.amountInCents;
+  }
+
+  const value = (rawPayload as { value?: unknown }).value;
+  const numericValue =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number.parseFloat(value.replace(",", "."))
+        : Number.NaN;
+
+  if (!Number.isFinite(numericValue) || numericValue <= 0) {
+    return payment.amountInCents;
+  }
+
+  return Math.round(numericValue * 100);
+}
+
 export async function startPaymentForOrder(orderCode: string) {
   await expirePendingOrderByCode(orderCode);
 
@@ -513,6 +536,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
       }
 
       if (payload.status === "APPROVED") {
+        const capturedAmountInCents = resolveCapturedAmountInCents(payment, payload.rawPayload);
+
         for (const item of payment.order.items) {
           let updatedRows = await tx.$executeRaw`
             UPDATE "TicketLot"
@@ -577,6 +602,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           where: { id: payment.orderId },
           data: {
             status: OrderStatus.PAID,
+            totalInCents: capturedAmountInCents,
             paidAt: new Date(),
             canceledAt: null
           }
@@ -600,6 +626,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           data: {
             status: PaymentStatus.APPROVED,
             externalId: payload.externalId || payment.externalId,
+            amountInCents: capturedAmountInCents,
             paidAt: new Date(),
             failedAt: null,
             failureReason: null,

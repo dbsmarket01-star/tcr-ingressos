@@ -171,7 +171,7 @@ export default async function AdminOrderDetailPage({ params, searchParams }: Adm
         </div>
         <div className="financeStatusGrid">
           <div>
-            <span>Ingressos</span>
+            <span>Valor nominal dos ingressos</span>
             <strong>{formatCurrency(order.subtotalInCents)}</strong>
           </div>
           <div>
@@ -181,6 +181,10 @@ export default async function AdminOrderDetailPage({ params, searchParams }: Adm
           <div>
             <span>Juros do cartão</span>
             <strong>{formatCurrency(order.cardInterestInCents)}</strong>
+          </div>
+          <div>
+            <span>Desconto Pix</span>
+            <strong>{order.pixDiscountInCents > 0 ? `- ${formatCurrency(order.pixDiscountInCents)}` : "-"}</strong>
           </div>
           <div>
             <span>Desconto</span>
@@ -242,7 +246,7 @@ export default async function AdminOrderDetailPage({ params, searchParams }: Adm
                 <th>Qtd.</th>
                 <th>Unitário</th>
                 <th>Taxa</th>
-                <th>Subtotal</th>
+                <th>Valor bruto</th>
               </tr>
             </thead>
             <tbody>
@@ -258,6 +262,12 @@ export default async function AdminOrderDetailPage({ params, searchParams }: Adm
             </tbody>
           </table>
         </div>
+        {order.pixDiscountInCents > 0 ? (
+          <p className="muted">
+            O lote mantém o valor nominal de {formatCurrency(order.subtotalInCents)}, mas o faturamento real deste
+            pedido foi {formatCurrency(order.totalInCents)} após o desconto no Pix.
+          </p>
+        ) : null}
       </section>
 
       <section className="card spacedSection">

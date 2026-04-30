@@ -3,6 +3,7 @@ import Script from "next/script";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CopyButton } from "@/components/forms/CopyButton";
+import { OrderStatusWatcher } from "@/components/orders/OrderStatusWatcher";
 import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
@@ -112,6 +113,11 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
 
   return (
     <main className="shell">
+      <OrderStatusWatcher
+        code={order.code}
+        initialStatus={order.status}
+        initialPaymentStatus={order.payment?.status}
+      />
       {order.event.googleTagManagerId ? (
         <>
           <Script id="tcr-order-gtm-script" strategy="afterInteractive">
