@@ -154,6 +154,7 @@ type TrackMetaLeadPayload = {
   eventId: string;
   eventTitle: string;
   email: string;
+  leadEventId?: string | null;
   phone?: string | null;
   landingPage?: string | null;
   utmSource?: string | null;
@@ -198,7 +199,7 @@ export async function trackMetaLeadForEventSubmission(payload: TrackMetaLeadPayl
       {
         event_name: "Lead",
         event_time: Math.floor(Date.now() / 1000),
-        event_id: buildLeadEventId(payload.eventId, payload.email),
+        event_id: payload.leadEventId || buildLeadEventId(payload.eventId, payload.email),
         action_source: "website",
         event_source_url: payload.landingPage || undefined,
         user_data: userData,

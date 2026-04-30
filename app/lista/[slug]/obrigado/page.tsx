@@ -35,6 +35,7 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
     event.leadCaptureThankYouDescription ||
     "Último passo: entre no grupo oficial para receber o desconto e acompanhar a abertura deste lançamento.";
   const buttonText = event.leadCaptureThankYouButtonText || "Quero entrar no grupo do WhatsApp";
+  const leadEventId = typeof query.leid === "string" ? query.leid : null;
   const tracking = getTrackingParamsFromSearch(query, `/lista/${event.slug}/obrigado`);
 
   return (
@@ -84,6 +85,7 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
         googleTagManagerId={event.googleTagManagerId}
         tracking={tracking}
         mode="lead"
+        leadEventId={leadEventId}
       />
       <section className="leadThankYouCard card">
         <span className="leadEyebrow">Cadastro confirmado</span>

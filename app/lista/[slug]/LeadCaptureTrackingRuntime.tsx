@@ -10,6 +10,7 @@ type LeadCaptureTrackingRuntimeProps = {
   googleTagManagerId?: string | null;
   tracking: TrackingParams;
   mode: "view" | "lead";
+  leadEventId?: string | null;
 };
 
 declare global {
@@ -26,7 +27,8 @@ export function LeadCaptureTrackingRuntime({
   metaPixelId,
   googleTagManagerId,
   tracking,
-  mode
+  mode,
+  leadEventId
 }: LeadCaptureTrackingRuntimeProps) {
   const firedRef = useRef(false);
 
@@ -35,7 +37,6 @@ export function LeadCaptureTrackingRuntime({
       return;
     }
 
-    firedRef.current = true;
     const payload = {
       event_name: eventTitle,
       event_slug: eventSlug,
@@ -55,13 +56,38 @@ export function LeadCaptureTrackingRuntime({
       });
     }
 
-    if (metaPixelId && window.fbq) {
+    if (!metaPixelId) {
+      firedRef.current = true;
+      return;
+    }
+
+    let attempts = 0;
+    const maxAttempts = 40;
+
+    const firePixelEvent = () => {
+      if (typeof window.fbq !== "function") {
+        attempts += 1;
+
+        if (attempts < maxAttempts) {
+          window.setTimeout(firePixelEvent, 120);
+        }
+
+        return;
+      }
+
+      firedRef.current = true;
+
       if (mode === "lead") {
-        window.fbq("track", "Lead", {
-          content_name: eventTitle,
-          content_category: "lead_capture",
-          ...payload
-        });
+        window.fbq(
+          "track",
+          "Lead",
+          {
+            content_name: eventTitle,
+            content_category: "lead_capture",
+            ...payload
+          },
+          leadEventId ? { eventID: leadEventId } : undefined
+        );
       } else {
         window.fbq("track", "ViewContent", {
           content_name: eventTitle,
@@ -69,8 +95,10 @@ export function LeadCaptureTrackingRuntime({
           ...payload
         });
       }
-    }
-  }, [eventSlug, eventTitle, googleTagManagerId, metaPixelId, mode, tracking]);
+    };
+
+    firePixelEvent();
+  }, [eventSlug, eventTitle, googleTagManagerId, leadEventId, metaPixelId, mode, tracking]);
 
   return null;
 }

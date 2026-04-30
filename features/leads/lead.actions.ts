@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
@@ -77,32 +78,32 @@ export async function createEventLeadAction(formData: FormData) {
     const clientUserAgent = await getClientUserAgent();
     const metaFbp = String(formData.get("metaFbp") ?? "").trim() || null;
     const metaFbc = String(formData.get("metaFbc") ?? "").trim() || null;
+    const leadEventId = randomUUID();
     await verifyTurnstileToken(String(formData.get("cf-turnstile-response") ?? "").trim() || null, clientIp);
     const result = await createOrUpdateEventLead(parsed.data, organizationContext.organization.id, clientIp);
     revalidatePath(`/admin/events/${parsed.data.eventId}/leads`);
     revalidatePath(`/admin/events/${parsed.data.eventId}`);
 
-    if (!result.isExisting) {
-      await trackMetaLeadForEventSubmission({
-        eventId: parsed.data.eventId,
-        eventTitle: result.lead.event.title,
-        email: result.lead.email,
-        phone: result.lead.phone,
-        landingPage: parsed.data.landingPage || null,
-        utmSource: parsed.data.utmSource || null,
-        utmMedium: parsed.data.utmMedium || null,
-        utmCampaign: parsed.data.utmCampaign || null,
-        utmContent: parsed.data.utmContent || null,
-        utmTerm: parsed.data.utmTerm || null,
-        clientIpAddress: clientIp,
-        clientUserAgent,
-        metaFbp,
-        metaFbc
-      });
-    }
+    await trackMetaLeadForEventSubmission({
+      eventId: parsed.data.eventId,
+      eventTitle: result.lead.event.title,
+      email: result.lead.email,
+      leadEventId,
+      phone: result.lead.phone,
+      landingPage: parsed.data.landingPage || null,
+      utmSource: parsed.data.utmSource || null,
+      utmMedium: parsed.data.utmMedium || null,
+      utmCampaign: parsed.data.utmCampaign || null,
+      utmContent: parsed.data.utmContent || null,
+      utmTerm: parsed.data.utmTerm || null,
+      clientIpAddress: clientIp,
+      clientUserAgent,
+      metaFbp,
+      metaFbc
+    });
 
+    redirect(`/lista/${eventSlug}/obrigado?leid=${encodeURIComponent(leadEventId)}`);
   } catch (error) {
     redirect(`/lista/${eventSlug}?error=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível concluir seu cadastro.")}`);
   }
-  redirect(`/lista/${eventSlug}/obrigado`);
 }
