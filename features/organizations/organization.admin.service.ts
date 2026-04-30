@@ -30,6 +30,13 @@ type UpdateOrganizationInput = {
   supportPhone?: string | null;
 };
 
+type CreateOrganizationInitialOwnerInput = {
+  organizationId: string;
+  name: string;
+  email: string;
+  password: string;
+};
+
 type OrganizationConflictInput = {
   slug: string;
   publicDomain?: string | null;
@@ -616,6 +623,81 @@ export async function updateOrganizationStatus(id: string, isActive: boolean) {
       isActive
     }
   });
+}
+
+export async function createOrganizationInitialOwner(input: CreateOrganizationInitialOwnerInput) {
+  const normalizedEmail = normalizeEmail(input.email);
+
+  if (!normalizedEmail || !normalizedEmail.includes("@")) {
+    throw new Error("Informe um e-mail válido para o acesso inicial.");
+  }
+
+  if (input.password.trim().length < 8) {
+    throw new Error("A senha inicial precisa ter pelo menos 8 caracteres.");
+  }
+
+  const organization = await prisma.organization.findUnique({
+    where: {
+      id: input.organizationId
+    },
+    select: {
+      id: true,
+      name: true,
+      _count: {
+        select: {
+          adminUsers: true
+        }
+      }
+    }
+  });
+
+  if (!organization) {
+    throw new Error("Operação não encontrada.");
+  }
+
+  if (organization._count.adminUsers > 0) {
+    throw new Error("Esta operação já possui acesso inicial criado.");
+  }
+
+  const existingUser = await prisma.adminUser.findFirst({
+    where: {
+      email: normalizedEmail
+    },
+    select: {
+      id: true
+    }
+  });
+
+  if (existingUser) {
+    throw new Error("Esse e-mail já está em uso em outra conta.");
+  }
+
+  const passwordHash = await bcrypt.hash(input.password.trim(), 12);
+
+  const adminUser = await prisma.adminUser.create({
+    data: {
+      organizationId: input.organizationId,
+      name: input.name.trim(),
+      email: normalizedEmail,
+      passwordHash,
+      role: AdminRole.OWNER,
+      isActive: true,
+      accessAllEvents: true,
+      allowedEventIds: []
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      organizationId: true
+    }
+  });
+
+  return {
+    organization,
+    adminUser
+  };
 }
 
 export async function updateOrganizationLogo(id: string, logoUrl?: string | null) {

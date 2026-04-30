@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { requirePermission } from "@/features/auth/auth.service";
+import { createOrganizationInitialOwnerAction } from "@/features/organizations/organization.actions";
 import { getOrganizationDetailForPlatformAdmin } from "@/features/organizations/organization.admin.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -12,12 +13,19 @@ type OperationDetailPageProps = {
   params: Promise<{
     operationId: string;
   }>;
+  searchParams?: Promise<{
+    error?: string;
+    updated?: string;
+  }>;
 };
 
-export default async function OperationDetailPage({ params }: OperationDetailPageProps) {
+export default async function OperationDetailPage({ params, searchParams }: OperationDetailPageProps) {
   await requirePermission("OPERATIONS");
   const { operationId } = await params;
   const organizationContext = await getCurrentOrganizationContext();
+  const query = searchParams ? await searchParams : {};
+  const error = typeof query.error === "string" ? query.error : "";
+  const updated = typeof query.updated === "string" ? query.updated : "";
 
   if (!organizationContext.isPlatformHost) {
     redirect("/admin");
@@ -34,6 +42,9 @@ export default async function OperationDetailPage({ params }: OperationDetailPag
       title={operation.name}
       description="Visão detalhada da bilheteria filha, com branding, equipe, eventos e links rápidos da operação."
     >
+      {error ? <div className="errorBox spacedSection">{error}</div> : null}
+      {updated ? <div className="successBox spacedSection">{updated}</div> : null}
+
       <section className="platformOperationsHero spacedSection" aria-label="Cabeçalho da operação">
         <div>
           <span className="eyebrow">Detalhe da operação</span>
@@ -198,6 +209,108 @@ export default async function OperationDetailPage({ params }: OperationDetailPag
           <span>Leads</span>
           <strong>{operation.totalLeadsCount > 0 ? `${operation.totalLeadsCount} lead(s) captados` : "Sem captação ainda"}</strong>
         </div>
+      </section>
+
+      <section className="grid twoColumns spacedSection">
+        <article className="dashboardPanel">
+          <div className="sectionHeader inlineHeader">
+            <div>
+              <h2>Acesso inicial da filha</h2>
+              <p>É aqui que a A2 deixa de ser só operação cadastrada e passa a ter dono entrando no próprio admin.</p>
+            </div>
+          </div>
+          {operation.adminUsers.length > 0 ? (
+            <div className="platformMemberList">
+              {operation.adminUsers.map((member) => (
+                <article className="platformMemberCard" key={member.id}>
+                  <div>
+                    <strong>{member.name}</strong>
+                    <span>{member.email}</span>
+                  </div>
+                  <div className="platformMemberMeta">
+                    <span className="status published">{member.role}</span>
+                    <small>{member.accessAllEvents ? "Acesso total à operação" : "Escopo por evento"}</small>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <form action={createOrganizationInitialOwnerAction} className="form">
+              <input type="hidden" name="organizationId" value={operation.id} />
+              <div className="platformCreateFlow platformCreateFlowCompact">
+                <div>
+                  <strong>1. Nome do responsável</strong>
+                  <span>Quem vai assumir a bilheteria no dia a dia</span>
+                </div>
+                <div>
+                  <strong>2. E-mail de acesso</strong>
+                  <span>Login exclusivo da operação A2</span>
+                </div>
+                <div>
+                  <strong>3. Senha inicial</strong>
+                  <span>Pelo menos 8 caracteres para o primeiro acesso</span>
+                </div>
+              </div>
+              <div className="grid twoColumns">
+                <label className="field">
+                  <span>Nome do usuário inicial</span>
+                  <input name="ownerName" placeholder="Ex.: Ministério A2" required />
+                </label>
+                <label className="field">
+                  <span>E-mail do usuário inicial</span>
+                  <input name="ownerEmail" type="email" placeholder="Ex.: contato@a2imergidos.com.br" required />
+                </label>
+              </div>
+              <label className="field">
+                <span>Senha inicial</span>
+                <input name="ownerPassword" type="password" placeholder="No mínimo 8 caracteres" required />
+              </label>
+              <button className="button" type="submit">
+                Liberar acesso inicial da A2
+              </button>
+            </form>
+          )}
+        </article>
+
+        <article className="dashboardPanel">
+          <div className="sectionHeader inlineHeader">
+            <div>
+              <h2>Identidade base</h2>
+              <p>Antes do primeiro evento, vale garantir que domínio, marca e suporte já estejam minimamente fechados.</p>
+            </div>
+          </div>
+          <div className="platformOperationMeta">
+            <div>
+              <span>Site público</span>
+              <strong>{operation.publicDomain || "Pendente"}</strong>
+            </div>
+            <div>
+              <span>Admin</span>
+              <strong>{operation.adminDomain || "Pendente"}</strong>
+            </div>
+            <div>
+              <span>Logo</span>
+              <strong>{operation.logoUrl ? "Logo configurada" : "Logo pendente"}</strong>
+            </div>
+            <div>
+              <span>Cor principal</span>
+              <strong>{operation.primaryColor || "Padrão da Ingresaas"}</strong>
+            </div>
+            <div>
+              <span>Suporte</span>
+              <strong>{operation.supportEmail || operation.supportPhone || "Contato pendente"}</strong>
+            </div>
+            <div>
+              <span>Próximo passo</span>
+              <strong>{operation._count.events > 0 ? "Revisar agenda da A2" : "Cadastrar o primeiro evento"}</strong>
+            </div>
+          </div>
+          <div className="platformOperationFocusActions">
+            <Link className="secondaryButton smallButton" href="/admin/operations">
+              Editar dados da operação
+            </Link>
+          </div>
+        </article>
       </section>
 
       <section className="grid twoColumns spacedSection">

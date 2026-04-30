@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createAuditLog } from "@/features/audit/audit.service";
 import { requirePermission } from "@/features/auth/auth.service";
 import {
+  createOrganizationInitialOwner,
   createOrganization,
   updateOrganization,
   updateOrganizationStatus
@@ -171,6 +172,60 @@ export async function updateOrganizationStatusAction(formData: FormData) {
   redirect(
     `/admin/operations?updated=${encodeURIComponent(
       `${organization.name} ${isActive ? "ativada" : "desativada"}`
+    )}`
+  );
+}
+
+export async function createOrganizationInitialOwnerAction(formData: FormData) {
+  const admin = await requirePermission("OPERATIONS");
+  const organizationId = readText(formData, "organizationId");
+  const ownerName = readText(formData, "ownerName");
+  const ownerEmail = readText(formData, "ownerEmail");
+  const ownerPassword = readText(formData, "ownerPassword");
+
+  if (!organizationId || ownerName.length < 2 || !ownerEmail.includes("@") || ownerPassword.length < 8) {
+    redirect(
+      `/admin/operations/${organizationId}?error=${encodeURIComponent(
+        "Informe nome, e-mail e senha inicial com pelo menos 8 caracteres."
+      )}`
+    );
+  }
+
+  let result: Awaited<ReturnType<typeof createOrganizationInitialOwner>>;
+
+  try {
+    result = await createOrganizationInitialOwner({
+      organizationId,
+      name: ownerName,
+      email: ownerEmail,
+      password: ownerPassword
+    });
+  } catch (error) {
+    redirect(
+      `/admin/operations/${organizationId}?error=${encodeURIComponent(
+        error instanceof Error ? error.message : "Não foi possível liberar o acesso inicial da operação."
+      )}`
+    );
+  }
+
+  await createAuditLog({
+    adminUserId: admin.id,
+    action: "ORGANIZATION_INITIAL_OWNER_CREATED",
+    entityType: "Organization",
+    entityId: result.organization.id,
+    metadata: {
+      organizationName: result.organization.name,
+      ownerEmail: result.adminUser.email
+    }
+  });
+
+  revalidatePath("/admin/operations");
+  revalidatePath(`/admin/operations/${organizationId}`);
+  revalidatePath("/admin/users");
+  revalidatePath("/login");
+  redirect(
+    `/admin/operations/${organizationId}?updated=${encodeURIComponent(
+      `Acesso inicial liberado para ${result.adminUser.email}`
     )}`
   );
 }
