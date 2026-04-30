@@ -238,6 +238,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
           <div className="actionRow spacedSection">
             <form action={updateEventStatusAction}>
               <input type="hidden" name="eventId" value={event.id} />
+              <input type="hidden" name="eventSlug" value={event.slug} />
               <input type="hidden" name="status" value="PUBLISHED" />
               <button className="button smallButton" type="submit">
                 Publicar
@@ -245,13 +246,15 @@ export default async function EventManagementPage({ params, searchParams }: Even
             </form>
             <form action={updateEventStatusAction}>
               <input type="hidden" name="eventId" value={event.id} />
+              <input type="hidden" name="eventSlug" value={event.slug} />
               <input type="hidden" name="status" value="UNPUBLISHED" />
               <button className="secondaryButton smallButton" type="submit">
-                Despublicar
+                Ocultar venda pública
               </button>
             </form>
             <form action={updateEventStatusAction}>
               <input type="hidden" name="eventId" value={event.id} />
+              <input type="hidden" name="eventSlug" value={event.slug} />
               <input type="hidden" name="status" value="DRAFT" />
               <button className="secondaryButton smallButton" type="submit">
                 Voltar para rascunho
@@ -273,6 +276,11 @@ export default async function EventManagementPage({ params, searchParams }: Even
               </Link>
             ) : null}
           </div>
+          {event.leadCaptureEnabled ? (
+            <p className="muted">
+              Quando a venda pública fica oculta, a landing de captação em <strong>/lista/{event.slug}</strong> continua no ar.
+            </p>
+          ) : null}
         </div>
 
         <form action={createTicketLotAction} className="card form">

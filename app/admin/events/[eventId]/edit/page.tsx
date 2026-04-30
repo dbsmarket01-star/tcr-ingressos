@@ -267,11 +267,16 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
             <span>Status</span>
             <select
               name="status"
-              defaultValue={event.status === "PUBLISHED" ? "PUBLISHED" : "DRAFT"}
+              defaultValue={event.status}
             >
               <option value="DRAFT">Rascunho</option>
               <option value="PUBLISHED">Publicado</option>
+              <option value="UNPUBLISHED">Venda pública oculta</option>
             </select>
+            <small>
+              Use &quot;Venda pública oculta&quot; para tirar <code>/evento/{event.slug}</code> do ar sem desligar a captação em
+              <code> /lista/{event.slug}</code>.
+            </small>
           </label>
           <details className="advancedSection adminInlineDetails">
             <summary className="formSectionSummary">

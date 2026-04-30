@@ -163,7 +163,12 @@ export async function createEventAction(formData: FormData) {
 
   await createEvent({
     ...parsed.data,
-    status: status === "PUBLISHED" ? EventStatus.PUBLISHED : EventStatus.DRAFT
+    status:
+      status === "PUBLISHED"
+        ? EventStatus.PUBLISHED
+        : status === "UNPUBLISHED"
+          ? EventStatus.UNPUBLISHED
+          : EventStatus.DRAFT
   }, admin.organizationId!);
 
   revalidatePath("/admin/events");
@@ -266,7 +271,12 @@ export async function updateEventAction(formData: FormData) {
 
   await updateEvent(eventId, {
     ...parsed.data,
-    status: status === "PUBLISHED" ? EventStatus.PUBLISHED : EventStatus.DRAFT
+    status:
+      status === "PUBLISHED"
+        ? EventStatus.PUBLISHED
+        : status === "UNPUBLISHED"
+          ? EventStatus.UNPUBLISHED
+          : EventStatus.DRAFT
   });
 
   revalidatePath("/admin/events");
@@ -282,6 +292,7 @@ export async function updateEventAction(formData: FormData) {
 export async function updateEventStatusAction(formData: FormData) {
   await requirePermission("EVENTS");
   const eventId = String(formData.get("eventId") ?? "").trim();
+  const eventSlug = String(formData.get("eventSlug") ?? "").trim();
   const status = String(formData.get("status") ?? "").trim();
 
   if (!eventId) {
@@ -303,6 +314,11 @@ export async function updateEventStatusAction(formData: FormData) {
   revalidatePath("/admin/events");
   revalidatePath(`/admin/events/${eventId}`);
   revalidatePath("/");
+  if (eventSlug) {
+    revalidatePath(`/evento/${eventSlug}`);
+    revalidatePath(`/lista/${eventSlug}`);
+    revalidatePath(`/lista/${eventSlug}/obrigado`);
+  }
   redirect(`/admin/events/${eventId}?eventSaved=1`);
 }
 
