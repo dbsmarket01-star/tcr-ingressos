@@ -181,7 +181,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             <select name="status" defaultValue="DRAFT">
               <option value="DRAFT">Rascunho</option>
               <option value="PUBLISHED">Publicado</option>
-              <option value="UNPUBLISHED">Venda pública oculta</option>
+              <option value="UNPUBLISHED">Venda pública pausada</option>
             </select>
             <small>Use essa opção quando quiser rodar captação antes de abrir a venda pública.</small>
           </label>

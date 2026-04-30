@@ -26,7 +26,7 @@ type EventManagementPageProps = {
 const statusLabels = {
   DRAFT: "Rascunho",
   PUBLISHED: "Publicado",
-  UNPUBLISHED: "Despublicado",
+  UNPUBLISHED: "Venda pública oculta",
   FINISHED: "Encerrado",
   CANCELED: "Cancelado"
 };
@@ -241,7 +241,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
               <input type="hidden" name="eventSlug" value={event.slug} />
               <input type="hidden" name="status" value="PUBLISHED" />
               <button className="button smallButton" type="submit">
-                Publicar
+                Ativar venda pública
               </button>
             </form>
             <form action={updateEventStatusAction}>
@@ -249,7 +249,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
               <input type="hidden" name="eventSlug" value={event.slug} />
               <input type="hidden" name="status" value="UNPUBLISHED" />
               <button className="secondaryButton smallButton" type="submit">
-                Ocultar venda pública
+                Pausar venda pública
               </button>
             </form>
             <form action={updateEventStatusAction}>

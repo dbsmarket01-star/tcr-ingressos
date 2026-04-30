@@ -271,7 +271,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
             >
               <option value="DRAFT">Rascunho</option>
               <option value="PUBLISHED">Publicado</option>
-              <option value="UNPUBLISHED">Venda pública oculta</option>
+              <option value="UNPUBLISHED">Venda pública pausada</option>
             </select>
             <small>
               Use &quot;Venda pública oculta&quot; para tirar <code>/evento/{event.slug}</code> do ar sem desligar a captação em
