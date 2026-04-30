@@ -92,6 +92,66 @@ function validateDomain(value?: string | null) {
   return normalized;
 }
 
+function buildOrganizationSupportEmail(input: {
+  supportEmail?: string | null;
+  publicDomain?: string | null;
+}) {
+  const explicit = normalizeEmail(input.supportEmail);
+
+  if (explicit) {
+    return explicit;
+  }
+
+  const publicDomain = normalizeDomain(input.publicDomain);
+
+  if (publicDomain) {
+    return `contato@${publicDomain}`;
+  }
+
+  return "contato@ingresaas.app.br";
+}
+
+async function upsertOrganizationCompanySettings(
+  tx: Prisma.TransactionClient | typeof prisma,
+  input: {
+    organizationId: string;
+    name: string;
+    publicDomain?: string | null;
+    supportEmail?: string | null;
+    supportPhone?: string | null;
+  }
+) {
+  const supportEmail = buildOrganizationSupportEmail({
+    supportEmail: input.supportEmail,
+    publicDomain: input.publicDomain
+  });
+  const supportPhone = normalizeValue(input.supportPhone);
+
+  return tx.companySettings.upsert({
+    where: {
+      organizationId: input.organizationId
+    },
+    update: {
+      companyName: input.name.trim(),
+      tradeName: input.name.trim(),
+      supportEmail,
+      supportPhone
+    },
+    create: {
+      organizationId: input.organizationId,
+      companyName: input.name.trim(),
+      tradeName: input.name.trim(),
+      document: "00.000.000/0001-00",
+      supportEmail,
+      supportPhone,
+      defaultCurrency: "BRL",
+      platformFeeBps: 0,
+      orderReservationMinutes: 120,
+      cardPendingReservationMinutes: 30
+    }
+  });
+}
+
 function slugify(value: string) {
   return value
     .normalize("NFD")
@@ -495,6 +555,14 @@ export async function createOrganization(input: CreateOrganizationInput) {
       });
     }
 
+    await upsertOrganizationCompanySettings(tx, {
+      organizationId: organization.id,
+      name: organization.name,
+      publicDomain: organization.publicDomain,
+      supportEmail: organization.supportEmail,
+      supportPhone: organization.supportPhone
+    });
+
     return organization;
   });
 }
@@ -510,20 +578,32 @@ export async function updateOrganization(input: UpdateOrganizationInput) {
     excludeId: input.id
   });
 
-  return prisma.organization.update({
-    where: {
-      id: input.id
-    },
-    data: {
-      name: input.name.trim(),
-      publicDomain,
-      adminDomain,
-      logoUrl: normalizeValue(input.logoUrl),
-      primaryColor: normalizeHexColor(input.primaryColor),
-      secondaryColor: normalizeHexColor(input.secondaryColor),
-      supportEmail: normalizeValue(input.supportEmail),
-      supportPhone: normalizeValue(input.supportPhone)
-    }
+  return prisma.$transaction(async (tx) => {
+    const organization = await tx.organization.update({
+      where: {
+        id: input.id
+      },
+      data: {
+        name: input.name.trim(),
+        publicDomain,
+        adminDomain,
+        logoUrl: normalizeValue(input.logoUrl),
+        primaryColor: normalizeHexColor(input.primaryColor),
+        secondaryColor: normalizeHexColor(input.secondaryColor),
+        supportEmail: normalizeValue(input.supportEmail),
+        supportPhone: normalizeValue(input.supportPhone)
+      }
+    });
+
+    await upsertOrganizationCompanySettings(tx, {
+      organizationId: organization.id,
+      name: organization.name,
+      publicDomain: organization.publicDomain,
+      supportEmail: organization.supportEmail,
+      supportPhone: organization.supportPhone
+    });
+
+    return organization;
   });
 }
 
