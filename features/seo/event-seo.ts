@@ -1,4 +1,5 @@
 import type { Event } from "@prisma/client";
+import { BRAZIL_TIME_ZONE } from "@/lib/format";
 
 type EventSeoInput = Pick<
   Event,
@@ -30,7 +31,8 @@ function compactText(value: string, maxLength: number) {
 function formatEventDate(value: Date) {
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "long",
-    timeStyle: "short"
+    timeStyle: "short",
+    timeZone: BRAZIL_TIME_ZONE
   }).format(value);
 }
 

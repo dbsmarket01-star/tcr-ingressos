@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requirePermission } from "@/features/auth/auth.service";
 import { listTicketsForCsvExport } from "@/features/tickets/ticket.admin.service";
+import { formatDateTime } from "@/lib/format";
 
 function csvValue(value: unknown) {
   const normalized = value == null ? "" : String(value);
@@ -8,7 +9,7 @@ function csvValue(value: unknown) {
 }
 
 function formatDate(value?: Date | null) {
-  return value ? new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(value) : "";
+  return value ? formatDateTime(value) : "";
 }
 
 export async function GET(request: Request) {

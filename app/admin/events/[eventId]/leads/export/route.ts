@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requirePermission } from "@/features/auth/auth.service";
 import { getEventForManagement } from "@/features/events/event.service";
 import { listEventLeads } from "@/features/leads/lead.service";
+import { formatDateTime } from "@/lib/format";
 
 function csvValue(value: unknown) {
   const normalized = value == null ? "" : String(value);
@@ -9,7 +10,7 @@ function csvValue(value: unknown) {
 }
 
 function formatDate(value: Date) {
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(value);
+  return formatDateTime(value);
 }
 
 function splitPhoneParts(phone?: string | null) {

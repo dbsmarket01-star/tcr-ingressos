@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { getAdminBaseUrl, getPublicBaseUrl } from "@/lib/public-url";
+import { formatLongDateTime } from "@/lib/format";
 
 type EmailOrganization = {
   name?: string | null;
@@ -64,10 +65,7 @@ type UnlockApprovalEmailInput = {
 };
 
 function formatDate(value: Date) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "full",
-    timeStyle: "short"
-  }).format(value);
+  return formatLongDateTime(value);
 }
 
 function formatCurrency(valueInCents: number) {
