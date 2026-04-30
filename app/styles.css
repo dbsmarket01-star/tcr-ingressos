@@ -7368,6 +7368,13 @@ body.operationTheme .topbar {
   line-height: 1.5;
 }
 
+.leadThankYouRedirectNote {
+  color: #557168;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}
+
 .whatsappGroupButton {
   background: #25d366;
 }

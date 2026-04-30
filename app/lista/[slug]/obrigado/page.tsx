@@ -5,6 +5,7 @@ import { getLeadCaptureEventBySlug } from "@/features/leads/lead.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { LeadCaptureTrackingRuntime } from "../LeadCaptureTrackingRuntime";
+import { WhatsAppGroupRedirect } from "./WhatsAppGroupRedirect";
 
 type LeadCaptureThankYouPageProps = {
   params: Promise<{
@@ -95,22 +96,15 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
           <strong>{event.title}</strong>
           <small>Seu nome já está na pré-lista. Agora falta só entrar no grupo para receber a abertura e as condições deste lançamento.</small>
         </div>
-        <div className="leadThankYouAction">
-          {event.leadCaptureWhatsappGroupUrl ? (
-            <a
-              className="button fullButton whatsappGroupButton whatsappGroupButtonLarge"
-              href={event.leadCaptureWhatsappGroupUrl}
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              {buttonText}
-            </a>
-          ) : (
+        {event.leadCaptureWhatsappGroupUrl ? (
+          <WhatsAppGroupRedirect buttonText={buttonText} url={event.leadCaptureWhatsappGroupUrl} />
+        ) : (
+          <div className="leadThankYouAction">
             <div className="infoBox">
               Adicione o link do grupo de WhatsApp na captação do evento para liberar este último passo.
             </div>
-          )}
-        </div>
+          </div>
+        )}
         <small className="leadThankYouClosing">
           Entre no grupo agora para não perder o aviso de abertura e as próximas instruções do evento.
         </small>
