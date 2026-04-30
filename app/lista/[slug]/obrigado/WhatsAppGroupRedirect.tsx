@@ -8,7 +8,7 @@ type WhatsAppGroupRedirectProps = {
 };
 
 export function WhatsAppGroupRedirect({ buttonText, url }: WhatsAppGroupRedirectProps) {
-  const [countdown, setCountdown] = useState(2);
+  const [countdown, setCountdown] = useState(1);
 
   useEffect(() => {
     const countdownInterval = window.setInterval(() => {
@@ -16,8 +16,8 @@ export function WhatsAppGroupRedirect({ buttonText, url }: WhatsAppGroupRedirect
     }, 1000);
 
     const redirectTimer = window.setTimeout(() => {
-      window.location.assign(url);
-    }, 1800);
+      window.location.replace(url);
+    }, 650);
 
     return () => {
       window.clearInterval(countdownInterval);

@@ -22,9 +22,12 @@ export const metadata: Metadata = {
 };
 
 export default async function LeadCaptureThankYouPage({ params, searchParams }: LeadCaptureThankYouPageProps) {
-  const { slug } = await params;
-  const query = searchParams ? await searchParams : {};
-  const organizationContext = await getCurrentOrganizationContext();
+  const emptySearchParams: Record<string, string | string[] | undefined> = {};
+  const [{ slug }, query, organizationContext] = await Promise.all([
+    params,
+    searchParams ? searchParams : Promise.resolve(emptySearchParams),
+    getCurrentOrganizationContext()
+  ]);
   const event = await getLeadCaptureEventBySlug(slug, organizationContext.organization.id);
 
   if (!event) {

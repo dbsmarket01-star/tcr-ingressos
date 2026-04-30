@@ -8,7 +8,6 @@ import { TurnstileField } from "@/components/forms/TurnstileField";
 import { createEventLeadAction } from "@/features/leads/lead.actions";
 import { getLeadCaptureEventBySlug } from "@/features/leads/lead.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
-import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { getTurnstileSiteKey } from "@/features/leads/turnstile.service";
 import { formatDateTime } from "@/lib/format";
@@ -113,9 +112,12 @@ function renderEditableText(value: string, keyPrefix: string) {
 }
 
 export default async function LeadCapturePage({ params, searchParams }: LeadCapturePageProps) {
-  const { slug } = await params;
-  const query = searchParams ? await searchParams : {};
-  const organizationContext = await getCurrentOrganizationContext();
+  const emptySearchParams: Record<string, string | string[] | undefined> = {};
+  const [{ slug }, query, organizationContext] = await Promise.all([
+    params,
+    searchParams ? searchParams : Promise.resolve(emptySearchParams),
+    getCurrentOrganizationContext()
+  ]);
   const event = await getLeadCaptureEventBySlug(slug, organizationContext.organization.id);
 
   if (!event) {
@@ -140,13 +142,13 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
   const youtubeEmbedUrl = getYoutubeEmbedUrl(event.leadCaptureVideoUrl);
   const tracking = getTrackingParamsFromSearch(query, `/lista/${event.slug}`);
   const turnstileSiteKey = getTurnstileSiteKey();
-  const companySettings = await getCompanySettingsByOrganizationId(organizationContext.organization.id);
-  const publicSocialSettings = companySettings as typeof companySettings & {
+  const publicSocialSettings = (event.organization?.companySettings?.[0] || null) as {
     instagramUrl?: string | null;
     facebookUrl?: string | null;
     youtubeUrl?: string | null;
     whatsappUrl?: string | null;
-  };
+    supportEmail?: string | null;
+  } | null;
   const venueGallery = getVenueGalleryUrls(event.leadCaptureVenueGallery);
 
   return (
@@ -213,6 +215,8 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
           <img
             className={leadHeroCrop ? "croppedImage" : ""}
             alt={headline}
+            decoding="async"
+            fetchPriority="high"
             src={heroImage}
             style={imageCropStyle(publicLeadHeroCrop)}
           />
@@ -368,7 +372,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             <div className="leadCaptureVenueGallery">
               {venueGallery.map((imageUrl, index) => (
                 <figure className="leadCaptureVenueCard" key={`${imageUrl}-${index}`}>
-                  <img alt={`${event.venueName} ${index + 1}`} src={imageUrl} />
+                  <img alt={`${event.venueName} ${index + 1}`} decoding="async" loading="lazy" src={imageUrl} />
                 </figure>
               ))}
             </div>
@@ -376,7 +380,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
         ) : null}
 
       </section>
-      <PublicSiteFooter brandName={organizationContext.brandName} settings={publicSocialSettings} />
+      <PublicSiteFooter brandName={organizationContext.brandName} settings={publicSocialSettings || {}} />
     </main>
   );
 }

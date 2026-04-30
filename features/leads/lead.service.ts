@@ -177,11 +177,25 @@ export async function getLeadCaptureEventBySlug(slug: string, organizationId?: s
           leadCaptureWhatsappGroupUrl: true,
           leadCaptureThankYouTitle: true,
           leadCaptureThankYouDescription: true,
-          leadCaptureThankYouButtonText: true
+          leadCaptureThankYouButtonText: true,
+          organization: {
+            select: {
+              companySettings: {
+                select: {
+                  instagramUrl: true,
+                  facebookUrl: true,
+                  youtubeUrl: true,
+                  whatsappUrl: true,
+                  supportEmail: true
+                },
+                take: 1
+              }
+            }
+          }
         }
       }),
     ["lead-capture-event-by-slug"],
-    { revalidate: 60 }
+    { revalidate: 300 }
   )(slug, organizationId ?? null);
 }
 
