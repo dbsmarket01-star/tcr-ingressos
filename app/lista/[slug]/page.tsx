@@ -229,24 +229,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
           </div>
         </article>
         <div className="leadCaptureHeroBottom">
-          <article className="leadCaptureHeroCopy">
-            <p>{renderEditableText(description, "hero-description")}</p>
-            <div className="leadOfferBox">
-              <strong>{offerText}</strong>
-              <small>Cadastro rápido, grupo oficial e instruções certas no mesmo fluxo.</small>
-            </div>
-            <div className="leadCaptureHeroProof">
-              <div>
-                <strong>Cadastro rápido</strong>
-                <small>Você entra na lista e segue para o grupo na próxima etapa.</small>
-              </div>
-              <div>
-                <strong>Grupo oficial do lançamento</strong>
-                <small>É lá que ficam abertura, orientações e as condições especiais.</small>
-              </div>
-            </div>
-          </article>
-
           <form action={createEventLeadAction} className="leadCaptureForm card" id="lead-capture-form">
             <input type="hidden" name="eventId" value={event.id} />
             <input type="hidden" name="eventSlug" value={event.slug} />
@@ -291,11 +273,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             <SubmitButton className="button fullButton" pendingText="Enviando cadastro...">
               {ctaText}
             </SubmitButton>
-            <div className="leadCaptureFormBenefits">
-              <span>Aviso da abertura</span>
-              <span>Grupo oficial</span>
-              <span>Prioridade no lançamento</span>
-            </div>
             <small className="leadCaptureFootnote">
               Seus dados serão usados apenas para este lançamento, avisos oficiais e acesso ao grupo.
             </small>

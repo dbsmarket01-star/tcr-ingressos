@@ -6721,19 +6721,9 @@ body.operationTheme .topbar {
 }
 
 .leadCaptureHeroBottom {
-  align-items: start;
   display: grid;
-  gap: 16px;
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
-}
-
-.leadCaptureHeroCopy {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 250, 249, 0.96));
-  border: 1px solid rgba(171, 195, 187, 0.24);
-  border-radius: 22px;
-  display: grid;
-  gap: 14px;
-  padding: 24px;
+  justify-items: center;
+  margin-top: 10px;
 }
 
 .leadEyebrow {
@@ -6775,33 +6765,6 @@ body.operationTheme .topbar {
   padding: 9px 13px;
 }
 
-.leadCaptureHeroProof {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.leadCaptureHeroProof div {
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(13, 43, 36, 0.08);
-  border-radius: 16px;
-  display: grid;
-  gap: 6px;
-  padding: 14px;
-}
-
-.leadCaptureHeroProof strong {
-  color: var(--brand-dark);
-  font-size: 14px;
-  line-height: 1.3;
-}
-
-.leadCaptureHeroProof small {
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.45;
-}
-
 .leadBenefitRow {
   display: flex;
   flex-wrap: wrap;
@@ -6823,27 +6786,6 @@ body.operationTheme .topbar {
   padding-top: 4px;
 }
 
-.leadOfferBox {
-  background: linear-gradient(135deg, rgba(42, 126, 94, 0.12), rgba(42, 126, 94, 0.04));
-  border: 1px solid rgba(42, 126, 94, 0.14);
-  border-radius: 22px;
-  display: grid;
-  gap: 8px;
-  padding: 18px 18px 16px;
-}
-
-.leadOfferBox strong {
-  color: var(--brand-dark);
-  font-size: 18px;
-  line-height: 1.28;
-}
-
-.leadOfferBox small {
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
 .leadFormEyebrow {
   color: var(--brand-dark);
   font-size: 12px;
@@ -6862,8 +6804,10 @@ body.operationTheme .topbar {
     0 0 0 10px rgba(18, 39, 35, 0.035);
   display: grid;
   gap: 14px;
+  max-width: 420px;
   padding: 24px 22px 22px;
   position: relative;
+  width: 100%;
 }
 
 .leadCaptureForm h2 {
@@ -7167,27 +7111,6 @@ body.operationTheme .topbar {
   margin-top: -8px;
   padding-top: 0;
   border-top: 0;
-}
-
-.leadCaptureFormBenefits {
-  border-top: 1px solid rgba(13, 43, 36, 0.08);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  margin-top: 4px;
-  padding-top: 14px;
-}
-
-.leadCaptureFormBenefits span {
-  background: rgba(79, 125, 240, 0.08);
-  border: 1px solid rgba(79, 125, 240, 0.14);
-  border-radius: 999px;
-  color: #2f4d91;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.02em;
-  padding: 8px 11px;
 }
 
 .leadAdminUtilityBar {
@@ -7882,14 +7805,7 @@ body.operationTheme .topbar {
 
   .leadCaptureHeroBottom {
     gap: 10px;
-  }
-
-  .leadCaptureForm {
-    order: 1;
-  }
-
-  .leadCaptureHeroCopy {
-    order: 2;
+    margin-top: 6px;
   }
 
   .leadCaptureHeroIntro {
@@ -7906,7 +7822,6 @@ body.operationTheme .topbar {
   .leadCaptureSectionSplit,
   .leadCaptureTrustBar,
   .leadCaptureVenueGallery,
-  .leadCaptureHeroProof,
   .leadAdminBlockHeader {
     grid-template-columns: 1fr;
   }
@@ -7936,24 +7851,13 @@ body.operationTheme .topbar {
     grid-template-columns: 1fr;
   }
 
-  .leadCaptureHeroCopy {
-    border-radius: 18px;
-    gap: 8px;
-    padding: 16px 18px;
-  }
-
-  .leadOfferBox {
-    border-radius: 18px;
-    padding: 16px;
-  }
-
   .leadCaptureForm {
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(244, 248, 255, 0.98));
     border: 1px solid rgba(79, 125, 240, 0.22);
     border-radius: 20px;
     gap: 10px;
-    margin-top: -14px;
+    margin-top: 4px;
     padding: 18px;
     box-shadow:
       0 20px 40px rgba(13, 43, 36, 0.16),
@@ -7979,23 +7883,10 @@ body.operationTheme .topbar {
     max-width: 100%;
   }
 
-  .leadCaptureHeroCopy p {
-    font-size: 14px;
-    line-height: 1.42;
-  }
-
-  .leadOfferBox strong {
-    font-size: 17px;
-  }
-
   .leadCaptureInlineCta .button,
   .leadCaptureInlineCta .secondaryButton {
     justify-content: center;
     width: 100%;
-  }
-
-  .leadCaptureFormBenefits {
-    justify-content: flex-start;
   }
 
   .leadAdminQuickLinks .secondaryButton {
@@ -8422,7 +8313,6 @@ body.operationTheme .topbar {
     padding-right: 14px;
   }
 
-  .leadCaptureHeroCopy,
   .leadCaptureForm,
   .leadCaptureSection,
   .leadCaptureHighlight,
@@ -8461,10 +8351,6 @@ body.operationTheme .topbar {
 
   .leadAdminBlockHeader h3 {
     font-size: 19px;
-  }
-
-  .leadOfferBox strong {
-    font-size: 16px;
   }
 
   .leadCaptureMeta span,
