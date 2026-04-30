@@ -7926,13 +7926,30 @@ body.operationTheme .topbar {
   }
 
   .leadCaptureForm {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(244, 248, 255, 0.98));
+    border: 1px solid rgba(79, 125, 240, 0.22);
     border-radius: 20px;
     gap: 10px;
     margin-top: -14px;
     padding: 18px;
     box-shadow:
-      0 18px 38px rgba(13, 43, 36, 0.12),
-      0 0 0 8px rgba(18, 39, 35, 0.04);
+      0 20px 40px rgba(13, 43, 36, 0.16),
+      0 0 0 10px rgba(79, 125, 240, 0.08);
+  }
+
+  .leadCaptureForm::before {
+    left: 18px;
+    width: 94px;
+  }
+
+  .leadCaptureForm::after {
+    background: linear-gradient(180deg, rgba(79, 125, 240, 0.08), rgba(11, 122, 99, 0.03));
+    inset: 10px;
+  }
+
+  .leadCaptureForm .button.fullButton {
+    box-shadow: 0 14px 28px rgba(11, 122, 99, 0.24);
   }
 
   .leadCaptureHeroCopy h1 {
@@ -8449,6 +8466,21 @@ body.operationTheme .topbar {
   .leadCaptureForm::before {
     left: 16px;
     width: 64px;
+  }
+
+  .leadCaptureForm {
+    border-color: rgba(79, 125, 240, 0.26);
+    box-shadow:
+      0 18px 30px rgba(13, 43, 36, 0.16),
+      0 0 0 7px rgba(79, 125, 240, 0.1);
+  }
+
+  .leadCaptureForm::after {
+    inset: 8px;
+  }
+
+  .leadCaptureForm .button.fullButton {
+    min-height: 54px;
   }
 
   .leadCaptureInlineCta strong {
