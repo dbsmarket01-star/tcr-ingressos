@@ -2542,6 +2542,543 @@ body.operationTheme .topbar {
   font-weight: 700;
 }
 
+.eventsIndexShell {
+  display: grid;
+  gap: 20px;
+  max-width: 1480px;
+}
+
+.eventsIndexHeaderCard,
+.eventsIndexPanel {
+  background:
+    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.06), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(247, 250, 248, 0.98));
+  border: 1px solid #dce9e4;
+  border-radius: 24px;
+  box-shadow: 0 18px 36px rgba(22, 32, 42, 0.045);
+}
+
+.eventsIndexHeaderCard {
+  align-items: start;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  padding: 26px 28px;
+}
+
+.eventsIndexHeaderCard h2,
+.eventsIndexHeaderCard p {
+  margin: 0;
+}
+
+.eventsIndexHeaderCard h2 {
+  color: #111827;
+  font-size: clamp(30px, 3.6vw, 48px);
+  line-height: 1.02;
+}
+
+.eventsIndexHeaderCard p {
+  color: #6b7280;
+  margin-top: 8px;
+}
+
+.eventsIndexPrimaryAction {
+  align-items: center;
+  border-radius: 14px;
+  box-shadow: 0 12px 24px rgba(11, 122, 99, 0.18);
+  display: inline-flex;
+  font-weight: 800;
+  gap: 8px;
+  justify-content: center;
+  min-height: 46px;
+  min-width: 164px;
+}
+
+.eventsIndexPrimaryAction::after {
+  color: rgba(255, 255, 255, 0.94);
+  content: "+";
+  font-size: 18px;
+  line-height: 1;
+}
+
+.eventsIndexPanel {
+  display: grid;
+  gap: 24px;
+  padding: 22px;
+}
+
+.eventsIndexFiltersBar {
+  align-items: end;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(240px, 1.3fr) repeat(3, minmax(180px, 0.92fr)) auto;
+}
+
+.eventsIndexSearchField,
+.eventsIndexFilterField {
+  display: grid;
+  gap: 8px;
+}
+
+.eventsIndexSearchField {
+  align-items: center;
+  background: white;
+  border: 1px solid #dce9e4;
+  border-radius: 16px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 18px minmax(0, 1fr) 40px;
+  min-height: 54px;
+  padding: 0 16px;
+}
+
+.eventsIndexSearchField svg {
+  color: #6f7f79;
+  display: block;
+  height: 18px;
+  width: 18px;
+}
+
+.eventsIndexSearchField input {
+  background: transparent;
+  border: 0;
+  color: #223040;
+  font: inherit;
+  min-width: 0;
+  outline: none;
+}
+
+.eventsIndexSearchSubmit {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 12px;
+  color: #425466;
+  cursor: pointer;
+  display: inline-flex;
+  height: 36px;
+  justify-content: center;
+  padding: 0;
+  width: 36px;
+}
+
+.eventsIndexSearchSubmit svg {
+  height: 18px;
+  width: 18px;
+}
+
+.eventsIndexFilterField span,
+.eventsIndexPageSizeField span {
+  color: #596679;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.eventsIndexFilterField select,
+.eventsIndexPageSizeField select {
+  background: white;
+  border: 1px solid #dce9e4;
+  border-radius: 14px;
+  color: #162130;
+  min-height: 54px;
+  padding: 0 14px;
+}
+
+.eventsIndexFilterActions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.eventsIndexFilterActions > * {
+  min-height: 54px;
+}
+
+.eventsIndexTableWrap {
+  display: grid;
+  gap: 12px;
+}
+
+.eventsIndexTableHead {
+  color: #64748b;
+  display: grid;
+  font-size: 12px;
+  font-weight: 900;
+  gap: 18px;
+  grid-template-columns: minmax(280px, 1.4fr) minmax(130px, 0.58fr) minmax(210px, 1fr) minmax(170px, 0.78fr) minmax(140px, 0.62fr) minmax(140px, 0.58fr) minmax(176px, 0.72fr);
+  padding: 0 14px;
+  text-transform: uppercase;
+}
+
+.eventsIndexRows {
+  display: grid;
+  gap: 12px;
+}
+
+.eventsIndexRowCard {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #e3ece7;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(18, 36, 48, 0.04);
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(280px, 1.4fr) minmax(130px, 0.58fr) minmax(210px, 1fr) minmax(170px, 0.78fr) minmax(140px, 0.62fr) minmax(140px, 0.58fr) minmax(176px, 0.72fr);
+  padding: 14px;
+}
+
+.eventsIndexEventCell {
+  align-items: center;
+  display: inline-flex;
+  gap: 16px;
+  min-width: 0;
+}
+
+.eventsIndexThumb {
+  align-items: center;
+  background: #eff5f2;
+  border-radius: 16px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 92px;
+  justify-content: center;
+  overflow: hidden;
+  width: 92px;
+}
+
+.eventsIndexThumb img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.eventsIndexThumb strong {
+  color: var(--brand);
+  font-size: 22px;
+}
+
+.eventsIndexEventCopy,
+.eventsIndexDateCell,
+.eventsIndexLocationCell,
+.eventsIndexSalesCell,
+.eventsIndexRevenueCell,
+.eventsIndexStatusCell {
+  display: grid;
+  gap: 6px;
+}
+
+.eventsIndexEventCopy strong,
+.eventsIndexDateCell strong,
+.eventsIndexLocationCell strong,
+.eventsIndexRevenueCell strong {
+  color: #111827;
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.eventsIndexEventCopy span,
+.eventsIndexDateCell span,
+.eventsIndexLocationCell span {
+  color: #64748b;
+}
+
+.eventsIndexMetaLine {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.eventsIndexMetaLine svg {
+  color: #607080;
+  flex: 0 0 auto;
+  height: 15px;
+  width: 15px;
+}
+
+.eventsIndexMetaLine.muted {
+  color: #64748b;
+}
+
+.eventsIndexDateCell,
+.eventsIndexRevenueCell,
+.eventsIndexStatusCell {
+  align-content: center;
+}
+
+.eventsIndexSalesCell strong {
+  color: #223040;
+}
+
+.eventsIndexSalesCell small {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.eventsIndexProgressLine {
+  background: #e8eeea;
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.eventsIndexProgressLine span {
+  background: linear-gradient(90deg, #0b7a63, #27a07c);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+}
+
+.eventsIndexActionsCell {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.eventsIndexActionsCell .secondaryButton {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  justify-content: center;
+  min-width: 106px;
+}
+
+.eventsIndexActionsCell .secondaryButton svg {
+  height: 15px;
+  width: 15px;
+}
+
+.eventsIndexMoreMenu {
+  position: relative;
+}
+
+.eventsIndexMoreMenu summary {
+  align-items: center;
+  background: white;
+  border: 1px solid #dce9e4;
+  border-radius: 14px;
+  color: #425466;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 22px;
+  font-weight: 800;
+  height: 42px;
+  justify-content: center;
+  list-style: none;
+  width: 42px;
+}
+
+.eventsIndexMoreMenu summary::-webkit-details-marker {
+  display: none;
+}
+
+.eventsIndexMoreMenu[open] > div {
+  background: white;
+  border: 1px solid #dce9e4;
+  border-radius: 16px;
+  box-shadow: 0 16px 32px rgba(18, 36, 48, 0.12);
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 168px;
+  z-index: 4;
+}
+
+.eventsIndexMoreMenu a,
+.eventsIndexMoreMenu button {
+  align-items: center;
+  background: #f8fbf9;
+  border: 1px solid #e3ece7;
+  border-radius: 12px;
+  color: #23303d;
+  display: inline-flex;
+  font: inherit;
+  font-weight: 700;
+  justify-content: flex-start;
+  min-height: 40px;
+  padding: 0 12px;
+  text-decoration: none;
+  width: 100%;
+}
+
+.eventsIndexMoreMenu form {
+  margin: 0;
+}
+
+.eventsIndexPaginationBar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.eventsIndexPaginationBar > span {
+  color: #596679;
+}
+
+.eventsIndexPagination,
+.eventsIndexPageGroup {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.eventsIndexPageGap {
+  color: #7d8793;
+  font-weight: 800;
+  padding: 0 2px;
+}
+
+.eventsIndexPageButton {
+  align-items: center;
+  background: white;
+  border: 1px solid #dce9e4;
+  border-radius: 14px;
+  color: #23303d;
+  display: inline-flex;
+  font-weight: 800;
+  height: 42px;
+  justify-content: center;
+  min-width: 42px;
+  padding: 0 12px;
+  text-decoration: none;
+}
+
+.eventsIndexPageButton.isActive {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: white;
+}
+
+.eventsIndexPageButton.isDisabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.eventsIndexPageSizeField {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.eventsIndexPageSizeField select {
+  min-height: 42px;
+}
+
+@media (max-width: 1440px) {
+  .eventsIndexTableHead,
+  .eventsIndexRowCard {
+    grid-template-columns:
+      minmax(240px, 1.32fr)
+      minmax(126px, 0.58fr)
+      minmax(190px, 0.95fr)
+      minmax(150px, 0.74fr)
+      minmax(130px, 0.58fr)
+      minmax(126px, 0.54fr)
+      minmax(164px, 0.72fr);
+  }
+}
+
+@media (max-width: 1240px) {
+  .eventsIndexHeaderCard {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .eventsIndexPrimaryAction {
+    align-self: flex-start;
+  }
+
+  .eventsIndexFiltersBar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .eventsIndexSearchField,
+  .eventsIndexFilterActions {
+    grid-column: span 2;
+  }
+
+  .eventsIndexTableHead {
+    display: none;
+  }
+
+  .eventsIndexRows {
+    gap: 16px;
+  }
+
+  .eventsIndexRowCard {
+    align-items: start;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 18px;
+  }
+
+  .eventsIndexEventCell {
+    grid-column: 1 / -1;
+  }
+
+  .eventsIndexActionsCell {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 780px) {
+  .eventsIndexHeaderCard,
+  .eventsIndexPanel {
+    border-radius: 20px;
+    padding: 18px;
+  }
+
+  .eventsIndexHeaderCard h2 {
+    font-size: clamp(28px, 8vw, 38px);
+  }
+
+  .eventsIndexFiltersBar,
+  .eventsIndexSearchField,
+  .eventsIndexFilterActions,
+  .eventsIndexRowCard {
+    grid-template-columns: 1fr;
+  }
+
+  .eventsIndexSearchField,
+  .eventsIndexFilterActions {
+    grid-column: auto;
+  }
+
+  .eventsIndexSearchField {
+    grid-template-columns: 18px minmax(0, 1fr) 40px;
+  }
+
+  .eventsIndexThumb {
+    height: 76px;
+    width: 76px;
+  }
+
+  .eventsIndexPaginationBar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .eventsIndexPagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .eventsIndexPageSizeField {
+    justify-content: space-between;
+  }
+}
+
 .platformOverviewPanel {
   display: grid;
   gap: 18px;
@@ -4549,6 +5086,28 @@ body.operationTheme .topbar {
   margin-top: 18px;
 }
 
+.eventManagementOverviewGrid {
+  align-items: start;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+}
+
+.eventManagementSummaryCard {
+  align-content: start;
+  min-width: 0;
+}
+
+.eventLotFormCard {
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.eventLotFieldGrid {
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .status {
   border-radius: 999px;
   display: inline-flex;
@@ -5581,6 +6140,18 @@ body.operationTheme .topbar {
 
 .imageCropControls .field small {
   color: var(--muted);
+}
+
+@media (max-width: 1320px) {
+  .eventManagementOverviewGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1180px) {
+  .eventLotFieldGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 780px) {

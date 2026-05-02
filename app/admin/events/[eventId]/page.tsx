@@ -200,8 +200,8 @@ export default async function EventManagementPage({ params, searchParams }: Even
         </article>
       </section>
 
-      <section className="grid twoColumns spacedSection">
-        <div className="card">
+      <section className="grid twoColumns spacedSection eventManagementOverviewGrid">
+        <div className="card eventManagementSummaryCard">
           <div className="sectionHeader inlineHeader">
           <h2>Operação do evento</h2>
             <div className="actionRow">
@@ -283,7 +283,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
           ) : null}
         </div>
 
-        <form action={createTicketLotAction} className="card form">
+        <form action={createTicketLotAction} className="card form eventLotFormCard">
           <h2>Novo lote</h2>
           <input type="hidden" name="eventId" value={event.id} />
           <label className="field">
@@ -294,7 +294,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
             <span>Descrição</span>
             <input name="description" placeholder="Opcional" />
           </label>
-          <div className="grid twoColumns">
+          <div className="grid eventLotFieldGrid">
             <label className="field">
               <span>Preço</span>
               <input name="price" type="number" min="0" step="0.01" required />
@@ -304,7 +304,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
               <input name="totalQuantity" type="number" min="1" required />
             </label>
           </div>
-          <div className="grid twoColumns">
+          <div className="grid eventLotFieldGrid">
             <label className="field">
               <span>Taxa sobre ingresso (%)</span>
               <input name="serviceFeePercent" type="number" min="0" max="30" step="0.01" defaultValue="0" required />
@@ -320,7 +320,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
               <small>Escolha se o desconto no Pix será em porcentagem ou em valor fixo.</small>
             </label>
           </div>
-          <div className="grid twoColumns">
+          <div className="grid eventLotFieldGrid">
             <label className="field">
               <span>Desconto Pix (%)</span>
               <input name="pixDiscountPercent" type="number" min="0" max="100" step="0.01" defaultValue="0" />
@@ -332,7 +332,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
               <small>Preencha apenas se o tipo acima for valor fixo.</small>
             </label>
           </div>
-          <div className="grid twoColumns">
+          <div className="grid eventLotFieldGrid">
             <label className="field">
               <span>Juros do cartão por parcela (%)</span>
               <input
