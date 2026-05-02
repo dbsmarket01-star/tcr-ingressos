@@ -13,7 +13,7 @@ export function LeadBroadcastSubmitButton() {
           Enviando e-mails...
         </>
       ) : (
-        "Enviar e-mail para todos os leads"
+        "Enviar e-mail"
       )}
     </button>
   );

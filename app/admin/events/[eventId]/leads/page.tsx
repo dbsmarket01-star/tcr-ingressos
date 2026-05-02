@@ -41,6 +41,8 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
   const publicLandingUrl = getPublicLeadCaptureUrl(event.slug);
   const sendResult = typeof query.sent === "string" ? query.sent : null;
   const sendError = typeof query.error === "string" ? query.error : null;
+  const sendMode = typeof query.mode === "string" ? query.mode : null;
+  const sendScope = typeof query.scope === "string" ? query.scope : null;
   const municipalityRanking = getMunicipalityRanking(leads.map((lead) => lead.municipality));
   const originRanking = Array.from(
     leads.reduce((acc, lead) => {
@@ -122,18 +124,28 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
             <strong>{whatsappClicks}</strong>
           </div>
         </div>
-        {sendResult ? <div className="successBox">Disparo concluído para {sendResult} lead(s).</div> : null}
+        {sendResult ? (
+          <div className="successBox">
+            {sendMode === "test" ? `Teste enviado com sucesso para ${sendResult} destinatário.` : `Disparo concluído para ${sendResult} lead(s).`}
+            {sendScope ? <small className="feedbackScopeText">{sendScope}</small> : null}
+          </div>
+        ) : null}
         {sendError ? <div className="errorBox">{sendError}</div> : null}
       </section>
 
       <section className="card spacedSection" id="lead-broadcast">
         <div className="sectionHeader">
           <div>
-            <h2>E-mail para toda a lista</h2>
-            <p className="muted">Escreva a mensagem e envie para todos os leads já cadastrados deste evento.</p>
+            <h2>E-mail para a lista</h2>
+            <p className="muted">Dispare para toda a base, filtre por período/município ou envie um teste para uma pessoa só.</p>
           </div>
         </div>
-        {sendResult ? <div className="successBox inlineFeedbackBox">Disparo concluído para {sendResult} lead(s).</div> : null}
+        {sendResult ? (
+          <div className="successBox inlineFeedbackBox">
+            {sendMode === "test" ? `Teste enviado com sucesso para ${sendResult} destinatário.` : `Disparo concluído para ${sendResult} lead(s).`}
+            {sendScope ? <small className="feedbackScopeText">{sendScope}</small> : null}
+          </div>
+        ) : null}
         {sendError ? <div className="errorBox inlineFeedbackBox">{sendError}</div> : null}
         <form action={sendLeadBroadcastAction} className="stackForm">
           <input type="hidden" name="eventId" value={event.id} />
@@ -170,6 +182,38 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                 name="destinationUrl"
                 defaultValue={event.leadCaptureWhatsappGroupUrl ?? ""}
                 placeholder="https://chat.whatsapp.com/... ou outro link"
+              />
+            </label>
+          </div>
+          <div className="leadBroadcastFilterCard">
+            <div className="leadBroadcastFilterHeader">
+              <strong>Quem vai receber</strong>
+              <small>Sem filtro, o disparo vai para toda a lista. Para um dia só, repita a mesma data no início e no fim.</small>
+            </div>
+            <div className="grid twoColumnGrid">
+              <label className="field">
+                <span>Data inicial</span>
+                <input name="dateFrom" type="date" />
+              </label>
+              <label className="field">
+                <span>Data final</span>
+                <input name="dateTo" type="date" />
+              </label>
+            </div>
+            <label className="field">
+              <span>Municípios</span>
+              <textarea
+                name="municipalities"
+                rows={3}
+                placeholder={`Ex.: Santo André, São Bernardo\nVocê pode separar por vírgula ou uma cidade por linha.`}
+              />
+            </label>
+            <label className="field">
+              <span>E-mail de teste individual</span>
+              <input
+                name="testRecipientEmail"
+                placeholder="Se preencher aqui, o sistema envia só para esse e-mail."
+                type="email"
               />
             </label>
           </div>

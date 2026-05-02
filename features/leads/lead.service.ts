@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { createHash } from "node:crypto";
 import type { EventLeadInput } from "./lead.schema";
 import { unstable_cache } from "next/cache";
+import { normalizeMunicipalityKey } from "./lead-normalization";
 
 const LEAD_CAPTURE_LIMIT_WINDOW_MINUTES = 10;
 const LEAD_CAPTURE_MAX_ATTEMPTS_PER_IP = 18;
@@ -255,6 +256,40 @@ export async function listEventLeads(eventId: string) {
       createdAt: "desc"
     }
   });
+}
+
+type LeadBroadcastFilters = {
+  dateFrom?: Date | null;
+  dateTo?: Date | null;
+  municipalities?: string[];
+};
+
+export async function listEventLeadsForBroadcast(eventId: string, filters: LeadBroadcastFilters = {}) {
+  const municipalityKeys = (filters.municipalities ?? [])
+    .map((value) => normalizeMunicipalityKey(value))
+    .filter((value, index, array) => value !== "nao-informado" && array.indexOf(value) === index);
+
+  const leads = await prisma.eventLead.findMany({
+    where: {
+      eventId,
+      createdAt:
+        filters.dateFrom || filters.dateTo
+          ? {
+              ...(filters.dateFrom ? { gte: filters.dateFrom } : {}),
+              ...(filters.dateTo ? { lte: filters.dateTo } : {})
+            }
+          : undefined
+    },
+    orderBy: {
+      createdAt: "desc"
+    }
+  });
+
+  if (municipalityKeys.length === 0) {
+    return leads;
+  }
+
+  return leads.filter((lead) => municipalityKeys.includes(normalizeMunicipalityKey(lead.municipality)));
 }
 
 export async function listLeadEmailCampaignSummaries(eventId: string) {

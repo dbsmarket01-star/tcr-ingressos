@@ -4242,6 +4242,14 @@ body.operationTheme .topbar {
   margin-bottom: 14px;
 }
 
+.feedbackScopeText {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 8px;
+  opacity: 0.82;
+}
+
 .leadBroadcastActionRow {
   align-items: center;
   justify-content: space-between;
@@ -4249,6 +4257,30 @@ body.operationTheme .topbar {
 
 .leadBroadcastSubmitButton {
   min-width: 248px;
+}
+
+.leadBroadcastFilterCard {
+  background: rgba(245, 250, 255, 0.82);
+  border: 1px solid rgba(13, 43, 36, 0.08);
+  border-radius: 16px;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.leadBroadcastFilterHeader {
+  display: grid;
+  gap: 4px;
+}
+
+.leadBroadcastFilterHeader strong {
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.leadBroadcastFilterHeader small {
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 .usersSecurityColumn {
