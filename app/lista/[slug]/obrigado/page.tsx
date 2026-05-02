@@ -34,11 +34,7 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
     notFound();
   }
 
-  const title = event.leadCaptureThankYouTitle || "Seu cadastro foi concluído";
-  const description =
-    event.leadCaptureThankYouDescription ||
-    "Último passo: entre no grupo oficial para receber o desconto e acompanhar a abertura deste lançamento.";
-  const buttonText = event.leadCaptureThankYouButtonText || "Quero entrar no grupo do WhatsApp";
+  const buttonText = "ENTRAR AGORA NO GRUPO E GARANTIR 30% OFF";
   const leadEventId = typeof query.leid === "string" ? query.leid : null;
   const tracking = getTrackingParamsFromSearch(query, `/lista/${event.slug}/obrigado`);
 
@@ -92,12 +88,52 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
         leadEventId={leadEventId}
       />
       <section className="leadThankYouCard card">
-        <span className="leadEyebrow">Cadastro confirmado</span>
-        <h1>{title}</h1>
-        <p>{description}</p>
-        <div className="leadThankYouEvent">
-          <strong>{event.title}</strong>
-          <small>Seu nome já está na pré-lista. Agora falta só entrar no grupo para receber a abertura e as condições deste lançamento.</small>
+        <div className="leadThankYouCheckmark" aria-hidden="true">
+          ✓
+        </div>
+        <h1 className="leadThankYouHeadline">
+          <span>FALTA SÓ 1 PASSO PARA</span>
+          <strong>GARANTIR SEU DESCONTO!</strong>
+        </h1>
+        <p className="leadThankYouSubheadline">Seu cadastro foi concluído com sucesso.</p>
+        <div className="leadThankYouWarning">
+          <span className="leadThankYouWarningIcon" aria-hidden="true">
+            ⚠️
+          </span>
+          <div>
+            <strong>ATENÇÃO:</strong> Se você sair desta página, pode perder o acesso ao grupo.
+            <br />
+            <span>Entre agora e garanta sua participação.</span>
+          </div>
+        </div>
+        <div className="leadThankYouBenefits">
+          <article>
+            <span className="leadThankYouBenefitIcon" aria-hidden="true">
+              %
+            </span>
+            <div>
+              <strong>Receba até 30% de desconto</strong>
+              <small>Desconto exclusivo para membros do grupo oficial.</small>
+            </div>
+          </article>
+          <article>
+            <span className="leadThankYouBenefitIcon" aria-hidden="true">
+              ◔
+            </span>
+            <div>
+              <strong>Acesso antecipado aos ingressos</strong>
+              <small>Seja o primeiro a garantir o seu ingresso.</small>
+            </div>
+          </article>
+          <article>
+            <span className="leadThankYouBenefitIcon" aria-hidden="true">
+              ★
+            </span>
+            <div>
+              <strong>Prioridade antes da abertura oficial</strong>
+              <small>Tenha prioridade e não fique de fora.</small>
+            </div>
+          </article>
         </div>
         {event.leadCaptureWhatsappGroupUrl ? (
           <WhatsAppGroupRedirect buttonText={buttonText} url={event.leadCaptureWhatsappGroupUrl} />
@@ -109,7 +145,7 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
           </div>
         )}
         <small className="leadThankYouClosing">
-          Entre no grupo agora para não perder o aviso de abertura e as próximas instruções do evento.
+          🔒 O grupo pode ser fechado a qualquer momento após atingir o limite de vagas.
         </small>
       </section>
     </main>

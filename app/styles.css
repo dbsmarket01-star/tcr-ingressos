@@ -7275,10 +7275,10 @@ body.operationTheme .topbar {
 
 .leadThankYouCard {
   display: grid;
-  gap: 16px;
+  gap: 22px;
   margin: 42px auto;
-  max-width: 720px;
-  padding: 34px 32px 30px;
+  max-width: 980px;
+  padding: 30px 54px 34px;
   text-align: center;
 }
 
@@ -7288,88 +7288,147 @@ body.operationTheme .topbar {
   margin: 0;
 }
 
-.leadThankYouEvent {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 248, 246, 0.98));
-  border: 1px solid rgba(13, 43, 36, 0.08);
-  border-radius: 18px;
-  display: grid;
-  gap: 6px;
-  padding: 16px 18px;
-  text-align: left;
-}
-
-.leadThankYouEvent strong {
-  color: var(--ink);
-  font-size: 18px;
-  line-height: 1.15;
-}
-
-.leadThankYouEvent small {
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.leadThankYouMeta {
-  justify-content: center;
-}
-
-.leadThankYouProgress {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 4px auto;
-  max-width: 420px;
-  width: 100%;
-}
-
-.leadThankYouProgress span {
+.leadThankYouCheckmark {
+  align-items: center;
+  background: linear-gradient(180deg, #1bd14f, #14b13f);
   border-radius: 999px;
-  height: 14px;
+  color: #fff;
+  display: inline-flex;
+  font-size: 36px;
+  font-weight: 900;
+  height: 74px;
+  justify-content: center;
+  margin: 0 auto;
+  width: 74px;
 }
 
-.leadThankYouProgress .isDone {
-  background: rgba(42, 126, 94, 0.36);
-}
-
-.leadThankYouProgress .isActive {
-  background: rgba(42, 126, 94, 0.95);
-}
-
-.leadThankYouChecklist {
+.leadThankYouHeadline {
   display: grid;
-  gap: 12px;
-  text-align: left;
-}
-
-.leadThankYouChecklist div {
-  background: linear-gradient(180deg, rgba(247, 250, 249, 0.96), rgba(255, 255, 255, 0.96));
-  border: 1px solid rgba(13, 43, 36, 0.08);
-  border-radius: 16px;
-  display: grid;
-  gap: 4px;
-  padding: 15px 16px;
-}
-
-.leadThankYouChecklist strong,
-.leadThankYouChecklist small {
+  gap: 2px;
+  justify-items: center;
   margin: 0;
 }
 
-.leadThankYouChecklist small {
-  color: var(--muted);
+.leadThankYouHeadline span,
+.leadThankYouHeadline strong {
+  display: block;
+}
+
+.leadThankYouHeadline span {
+  color: #0d1726;
+  font-size: clamp(40px, 4.4vw, 68px);
+  font-weight: 900;
+  line-height: 0.95;
+  max-width: 16ch;
+  text-wrap: balance;
+}
+
+.leadThankYouHeadline strong {
+  color: #18ad39;
+  font-size: clamp(40px, 4.4vw, 68px);
+  font-weight: 900;
+  line-height: 0.95;
+  max-width: 16ch;
+  text-wrap: balance;
+}
+
+.leadThankYouSubheadline {
+  color: #182334;
+  font-size: clamp(20px, 2.2vw, 28px);
+  font-weight: 700;
+}
+
+.leadThankYouWarning {
+  align-items: center;
+  background: linear-gradient(180deg, rgba(241, 250, 241, 0.98), rgba(248, 252, 248, 0.96));
+  border: 1px solid rgba(46, 126, 85, 0.14);
+  border-radius: 18px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 18px 24px;
+  text-align: left;
+}
+
+.leadThankYouWarningIcon {
+  font-size: 46px;
+  line-height: 1;
+}
+
+.leadThankYouWarning div {
+  color: #172233;
+  font-size: 20px;
   line-height: 1.45;
+}
+
+.leadThankYouWarning strong {
+  font-weight: 900;
+}
+
+.leadThankYouWarning span {
+  color: #17a336;
+  font-weight: 800;
+}
+
+.leadThankYouBenefits {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 251, 252, 0.96));
+  border: 1px solid rgba(13, 43, 36, 0.08);
+  border-radius: 22px;
+  display: grid;
+  overflow: hidden;
+  text-align: left;
+}
+
+.leadThankYouBenefits article {
+  align-items: center;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 22px 26px;
+}
+
+.leadThankYouBenefits article + article {
+  border-top: 1px solid rgba(13, 43, 36, 0.08);
+}
+
+.leadThankYouBenefitIcon {
+  align-items: center;
+  background: linear-gradient(180deg, #1ac747, #12a83a);
+  border-radius: 999px;
+  color: #fff;
+  display: inline-flex;
+  font-size: 28px;
+  font-weight: 900;
+  height: 54px;
+  justify-content: center;
+  width: 54px;
+}
+
+.leadThankYouBenefits strong {
+  color: #0d1726;
+  display: block;
+  font-size: 20px;
+  line-height: 1.15;
+  margin: 0 0 4px;
+}
+
+.leadThankYouBenefits small {
+  color: #607089;
+  display: block;
+  font-size: 14px;
+  line-height: 1.45;
+  margin: 0;
 }
 
 .leadThankYouAction {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
 }
 
 .leadThankYouClosing {
-  color: #4b665d;
-  font-size: 13px;
+  color: #667387;
+  font-size: 14px;
   line-height: 1.5;
 }
 
@@ -7381,22 +7440,38 @@ body.operationTheme .topbar {
 }
 
 .whatsappGroupButton {
-  background: #25d366;
+  background: linear-gradient(180deg, #18c54b, #0ea837);
 }
 
 .whatsappGroupButton:hover {
-  background: #20bf5c;
+  background: linear-gradient(180deg, #19cf4f, #12b23d);
 }
 
 .whatsappGroupButtonLarge {
   align-items: center;
-  border-radius: 18px;
-  box-shadow: 0 16px 32px rgba(37, 211, 102, 0.22);
-  font-size: 18px;
+  border-radius: 20px;
+  box-shadow: 0 18px 36px rgba(22, 186, 66, 0.28);
+  font-size: 19px;
   font-weight: 900;
+  gap: 14px;
   justify-content: center;
-  min-height: 62px;
-  padding: 16px 22px;
+  min-height: 72px;
+  padding: 18px 26px;
+}
+
+.whatsappGroupButtonIcon {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.16);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  color: #fff;
+  display: inline-flex;
+  font-size: 24px;
+  font-weight: 900;
+  height: 44px;
+  justify-content: center;
+  line-height: 1;
+  width: 44px;
 }
 
 .readinessList {
@@ -8426,6 +8501,71 @@ body.operationTheme .topbar {
     padding: 14px 18px;
   }
 
+  .leadThankYouCard {
+    gap: 18px;
+    margin: 24px auto;
+    max-width: 100%;
+    padding: 24px 18px 26px;
+  }
+
+  .leadThankYouCheckmark {
+    font-size: 28px;
+    height: 58px;
+    width: 58px;
+  }
+
+  .leadThankYouHeadline span,
+  .leadThankYouHeadline strong {
+    font-size: clamp(26px, 9vw, 42px);
+    max-width: 14ch;
+  }
+
+  .leadThankYouSubheadline {
+    font-size: 16px;
+  }
+
+  .leadThankYouWarning {
+    gap: 12px;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 16px 14px;
+    text-align: center;
+  }
+
+  .leadThankYouWarningIcon {
+    font-size: 40px;
+  }
+
+  .leadThankYouWarning div {
+    font-size: 16px;
+  }
+
+  .leadThankYouBenefits article {
+    gap: 12px;
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 16px 14px;
+  }
+
+  .leadThankYouBenefitIcon {
+    font-size: 22px;
+    height: 44px;
+    width: 44px;
+  }
+
+  .leadThankYouBenefits strong {
+    font-size: 16px;
+  }
+
+  .leadThankYouBenefits small {
+    font-size: 13px;
+  }
+
+  .whatsappGroupButtonIcon {
+    font-size: 20px;
+    height: 36px;
+    width: 36px;
+  }
+
   .leadCaptureHeroMedia img {
     max-height: min(58svh, 520px);
   }
@@ -8453,10 +8593,6 @@ body.operationTheme .topbar {
   }
 
   .leadThankYouCard p {
-    font-size: 16px;
-  }
-
-  .leadThankYouEvent strong {
     font-size: 16px;
   }
 
