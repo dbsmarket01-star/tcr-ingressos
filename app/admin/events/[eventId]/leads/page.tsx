@@ -4,6 +4,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { CopyButton } from "@/components/forms/CopyButton";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { getEventForManagement } from "@/features/events/event.service";
+import { sendLeadBroadcastAction } from "@/features/leads/lead.admin.actions";
 import { listEventLeads } from "@/features/leads/lead.service";
 import { formatDateTime } from "@/lib/format";
 import { getPublicLeadCaptureUrl } from "@/lib/public-url";
@@ -13,11 +14,13 @@ type EventLeadsPageProps = {
   params: Promise<{
     eventId: string;
   }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
+export default async function EventLeadsPage({ params, searchParams }: EventLeadsPageProps) {
   const admin = await requirePermission("EVENTS");
-  const { eventId } = await params;
+  const emptySearchParams: Record<string, string | string[] | undefined> = {};
+  const [{ eventId }, query] = await Promise.all([params, searchParams ? searchParams : Promise.resolve(emptySearchParams)]);
   await requireEventAccess(eventId);
   const event = await getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin));
 
@@ -31,6 +34,8 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
   const leadsWithMunicipality = leads.filter((lead) => Boolean(lead.municipality)).length;
   const exportHref = `/admin/events/${event.id}/leads/export`;
   const publicLandingUrl = getPublicLeadCaptureUrl(event.slug);
+  const sendResult = typeof query.sent === "string" ? query.sent : null;
+  const sendError = typeof query.error === "string" ? query.error : null;
   const municipalityRanking = Array.from(
     leads.reduce((acc, lead) => {
       const key = lead.municipality?.trim() || "Não informado";
@@ -109,6 +114,46 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
             <strong>{leadsWithMunicipality}</strong>
           </div>
         </div>
+        {sendResult ? <div className="successBox">Disparo concluído para {sendResult} lead(s).</div> : null}
+        {sendError ? <div className="errorBox">{sendError}</div> : null}
+      </section>
+
+      <section className="card spacedSection">
+        <div className="sectionHeader">
+          <div>
+            <h2>E-mail para toda a lista</h2>
+            <p className="muted">Escreva a mensagem e envie para todos os leads já cadastrados deste evento.</p>
+          </div>
+        </div>
+        <form action={sendLeadBroadcastAction} className="stackForm">
+          <input type="hidden" name="eventId" value={event.id} />
+          <label className="field">
+            <span>Assunto do e-mail</span>
+            <input
+              name="subject"
+              placeholder="Ex.: Entre agora no grupo para garantir até 30% de desconto"
+              required
+            />
+          </label>
+          <label className="field">
+            <span>Mensagem</span>
+            <textarea
+              name="body"
+              placeholder={`Olá!\n\nEntrando no grupo agora você garante o desconto especial e recebe primeiro as próximas informações do evento.`}
+              rows={7}
+              required
+            />
+          </label>
+          <label className="field">
+            <span>Imagem opcional</span>
+            <input accept="image/png,image/jpeg,image/webp,image/gif" name="imageFile" type="file" />
+          </label>
+          <div className="actionRow">
+            <button className="button" type="submit">
+              Enviar e-mail para todos os leads
+            </button>
+          </div>
+        </form>
       </section>
 
       {leads.length > 0 ? (

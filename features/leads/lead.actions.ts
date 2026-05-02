@@ -6,8 +6,9 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { trackMetaLeadForEventSubmission } from "@/features/tracking/meta-conversions.service";
+import { sendLeadCaptureConfirmationEmail } from "@/features/email/email.service";
 import { eventLeadSchema } from "./lead.schema";
-import { createOrUpdateEventLead } from "./lead.service";
+import { createOrUpdateEventLead, getLeadCaptureEventBySlug } from "./lead.service";
 import { verifyTurnstileToken } from "./turnstile.service";
 
 function validationMessage(error: unknown) {
@@ -110,6 +111,26 @@ export async function createEventLeadAction(formData: FormData) {
         eventId: parsed.data.eventId,
         eventSlug,
         error: trackingError instanceof Error ? trackingError.message : trackingError
+      });
+    }
+
+    try {
+      const eventForEmail = await getLeadCaptureEventBySlug(eventSlug, organizationContext.organization.id);
+      const supportEmail = eventForEmail?.organization?.companySettings?.[0]?.supportEmail || null;
+
+      await sendLeadCaptureConfirmationEmail({
+        to: result.lead.email,
+        name: result.lead.name,
+        eventTitle: result.lead.event.title,
+        whatsappGroupUrl: eventForEmail?.leadCaptureWhatsappGroupUrl || null,
+        brandName: organizationContext.brandName,
+        supportEmail
+      });
+    } catch (emailError) {
+      console.error("[lead-capture] Falha ao enviar e-mail de confirmacao", {
+        eventId: parsed.data.eventId,
+        eventSlug,
+        error: emailError instanceof Error ? emailError.message : emailError
       });
     }
   } catch (error) {

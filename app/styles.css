@@ -4233,6 +4233,11 @@ body.operationTheme .topbar {
   color: #274b9f;
 }
 
+.stackForm {
+  display: grid;
+  gap: 16px;
+}
+
 .usersSecurityColumn {
   display: grid;
   gap: 20px;

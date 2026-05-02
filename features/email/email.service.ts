@@ -64,6 +64,27 @@ type UnlockApprovalEmailInput = {
   reason?: string | null;
 };
 
+type LeadCaptureConfirmationEmailInput = {
+  to: string;
+  name: string;
+  eventTitle: string;
+  whatsappGroupUrl?: string | null;
+  brandName?: string;
+  supportEmail?: string | null;
+};
+
+type LeadBroadcastEmailInput = {
+  to: string;
+  name: string;
+  subject: string;
+  body: string;
+  imageUrl?: string | null;
+  brandName?: string;
+  eventTitle: string;
+  whatsappGroupUrl?: string | null;
+  supportEmail?: string | null;
+};
+
 function formatDate(value: Date) {
   return formatLongDateTime(value);
 }
@@ -397,5 +418,151 @@ export async function sendUnlockApprovalEmail(input: UnlockApprovalEmailInput) {
     subject: "Código de aprovação - Guerra à Pornografia",
     html: buildUnlockApprovalHtml(input),
     text: buildUnlockApprovalText(input)
+  });
+}
+
+function buildLeadCaptureConfirmationHtml(input: LeadCaptureConfirmationEmailInput) {
+  const brandName = input.brandName || "TCR Ingressos";
+  const whatsappButton = input.whatsappGroupUrl
+    ? `
+      <p>
+        <a href="${input.whatsappGroupUrl}" style="background: #14b866; border-radius: 10px; color: white; display: inline-block; font-weight: 700; padding: 14px 20px; text-decoration: none;">
+          Entrar no grupo do WhatsApp
+        </a>
+      </p>
+    `
+    : "";
+
+  const supportLine = input.supportEmail
+    ? `<p>Se precisar de ajuda, responda este e-mail ou fale com a equipe em <strong>${input.supportEmail}</strong>.</p>`
+    : "";
+
+  return `
+    <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.6;">
+      <h1 style="margin: 0 0 12px;">Cadastro recebido - ${brandName}</h1>
+      <p>Olá, ${input.name}.</p>
+      <p>Seu cadastro para <strong>${input.eventTitle}</strong> foi realizado com sucesso.</p>
+      <p><strong>Último passo:</strong> entre no grupo oficial do WhatsApp para garantir o acesso às condições especiais e receber o desconto de até 30% na abertura.</p>
+      ${whatsappButton}
+      <p>É no grupo que vamos liberar o aviso de abertura, o link certo e as próximas informações do evento.</p>
+      ${supportLine}
+    </div>
+  `;
+}
+
+function buildLeadCaptureConfirmationText(input: LeadCaptureConfirmationEmailInput) {
+  return [
+    `Olá, ${input.name}.`,
+    "",
+    `Seu cadastro para ${input.eventTitle} foi realizado com sucesso.`,
+    "Último passo: entre no grupo oficial do WhatsApp para garantir o acesso às condições especiais e receber o desconto de até 30% na abertura.",
+    input.whatsappGroupUrl ? `Entrar no grupo: ${input.whatsappGroupUrl}` : null,
+    "",
+    "É no grupo que vamos liberar o aviso de abertura, o link certo e as próximas informações do evento.",
+    input.supportEmail ? `Suporte: ${input.supportEmail}` : null
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+export async function sendLeadCaptureConfirmationEmail(input: LeadCaptureConfirmationEmailInput) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.com.br>`;
+
+  if (!apiKey) {
+    console.log("[email:dry-run] Confirmacao de lead", {
+      to: input.to,
+      eventTitle: input.eventTitle,
+      whatsappGroupUrl: input.whatsappGroupUrl
+    });
+    return;
+  }
+
+  const resend = new Resend(apiKey);
+
+  await resend.emails.send({
+    from,
+    to: input.to,
+    subject: `Entre no grupo para garantir seu desconto - ${input.eventTitle}`,
+    html: buildLeadCaptureConfirmationHtml(input),
+    text: buildLeadCaptureConfirmationText(input)
+  });
+}
+
+function renderBroadcastBodyAsHtml(body: string) {
+  return body
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => `<p style="margin: 0 0 14px;">${line}</p>`)
+    .join("");
+}
+
+function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
+  const brandName = input.brandName || "TCR Ingressos";
+  const imageBlock = input.imageUrl
+    ? `<p style="margin: 0 0 18px;"><img src="${input.imageUrl}" alt="${input.eventTitle}" style="max-width: 100%; border-radius: 14px; display: block;" /></p>`
+    : "";
+  const whatsappButton = input.whatsappGroupUrl
+    ? `
+      <p style="margin: 20px 0 0;">
+        <a href="${input.whatsappGroupUrl}" style="background: #14b866; border-radius: 10px; color: white; display: inline-block; font-weight: 700; padding: 14px 20px; text-decoration: none;">
+          Entrar no grupo do WhatsApp
+        </a>
+      </p>
+    `
+    : "";
+  const supportLine = input.supportEmail
+    ? `<p style="margin: 20px 0 0; color: #607089;">Suporte: ${input.supportEmail}</p>`
+    : "";
+
+  return `
+    <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.6;">
+      <p style="margin: 0 0 8px; color: #607089;">${brandName}</p>
+      <h1 style="margin: 0 0 16px;">${input.subject}</h1>
+      <p style="margin: 0 0 16px;">Olá, ${input.name}.</p>
+      ${imageBlock}
+      ${renderBroadcastBodyAsHtml(input.body)}
+      ${whatsappButton}
+      ${supportLine}
+    </div>
+  `;
+}
+
+function buildLeadBroadcastText(input: LeadBroadcastEmailInput) {
+  return [
+    `Olá, ${input.name}.`,
+    "",
+    input.subject,
+    "",
+    input.body,
+    input.whatsappGroupUrl ? `Entrar no grupo: ${input.whatsappGroupUrl}` : null,
+    input.supportEmail ? `Suporte: ${input.supportEmail}` : null
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+export async function sendLeadBroadcastEmail(input: LeadBroadcastEmailInput) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.com.br>`;
+
+  if (!apiKey) {
+    console.log("[email:dry-run] Disparo de leads", {
+      to: input.to,
+      subject: input.subject,
+      imageUrl: input.imageUrl
+    });
+    return;
+  }
+
+  const resend = new Resend(apiKey);
+
+  await resend.emails.send({
+    from,
+    to: input.to,
+    subject: input.subject,
+    html: buildLeadBroadcastHtml(input),
+    text: buildLeadBroadcastText(input)
   });
 }
