@@ -26,13 +26,13 @@ export async function AdminShell({ title, description, children }: AdminShellPro
   const sidebarEyebrow = isPlatformHost ? "Central da plataforma" : "Central de operação";
   const sidebarText = isPlatformHost
     ? "Use o Dashboard para ver a plataforma e Operações para criar e administrar clientes."
-    : "Eventos, pedidos, leads, check-in e financeiro em uma operação mais organizada para a equipe.";
+    : "Eventos, pedidos, leads, check-in e financeiro em um painel mais organizado para a equipe.";
   const pulseTitle = isPlatformHost ? "Plataforma em evolução" : "Operação em andamento";
   const pulseText = isPlatformHost
     ? "A Ingresaas governa os clientes e cada bilheteria filha segue com domínio, equipe e identidade próprios."
-    : `A ${brandName} opera como bilheteria filha da Ingresaas, com domínio, equipe e rotina próprios.`;
-  const headerActionHref = isPlatformHost ? "/admin/operations" : `${currentOrganizationContext.platformAppUrl}/admin/operations`;
-  const headerActionLabel = isPlatformHost ? "Gerir operações" : "Voltar à Ingresaas";
+    : `${brandName} opera com domínio, equipe e rotina próprios.`;
+  const headerActionHref = isPlatformHost ? "/admin/operations" : null;
+  const headerActionLabel = isPlatformHost ? "Gerir operações" : null;
 
   return (
     <main className="adminShell">
@@ -73,9 +73,11 @@ export async function AdminShell({ title, description, children }: AdminShellPro
               <strong>{pulseTitle}</strong>
               <span>{pulseText}</span>
             </div>
-            <Link className="secondaryButton" href={headerActionHref}>
-              {headerActionLabel}
-            </Link>
+            {headerActionHref && headerActionLabel ? (
+              <Link className="secondaryButton" href={headerActionHref}>
+                {headerActionLabel}
+              </Link>
+            ) : null}
             {!isPlatformHost ? (
               <Link className="secondaryButton" href={publicSiteHref}>
                 Ver site
