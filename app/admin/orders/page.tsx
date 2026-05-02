@@ -52,13 +52,13 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   return (
     <AdminShell
       title="Pedidos"
-      description="Localize compras, entenda o status rapidamente e acompanhe só faturamento efetivamente pago."
+      description="Gerencie pedidos gerados que ainda não foram pagos, foram cancelados, expiraram ou acabaram reembolsados."
     >
       <section className="operationCommandStrip spacedSection" aria-label="Atalhos da área de pedidos">
         <article className="operationCommandCard">
           <span className="eyebrow">Atendimento comercial</span>
-          <h2>Pedidos da {organizationContext.brandName} com leitura rápida e ação direta.</h2>
-          <p>Quando houver suporte, o foco aqui é achar o pedido, entender o status e agir no menor número de cliques possível, sem confundir pedido pendente com venda confirmada.</p>
+          <h2>Pedidos gerados da {organizationContext.brandName} com leitura rápida e ação direta.</h2>
+          <p>Aqui entram só os pedidos que ainda pedem ação: pendentes, cancelados, expirados, rascunhos ou reembolsados.</p>
         </article>
         <div className="operationCommandActions">
           <Link className="secondaryButton smallButton" href="/admin">
@@ -79,20 +79,16 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
       <section className="adminPanelHero compact">
         <div>
           <span className="sectionEyebrow">Atendimento comercial</span>
-          <h2>Pedidos com leitura mais direta para o dia a dia</h2>
-          <p className="muted">A ideia aqui é simples: achar rápido, entender o status sem interpretar demais e agir em poucos cliques.</p>
+          <h2>Pedidos que ainda exigem gestão</h2>
+          <p className="muted">A ideia aqui é simples: localizar o pedido, entender o que aconteceu e decidir a próxima ação em poucos cliques.</p>
         </div>
       </section>
 
       <section className="grid dashboardGrid">
         <article className="card dashboardHeroMetric metric">
-          <span className="muted">Faturamento confirmado</span>
-          <strong>{formatCurrency(summary.totalInCents)}</strong>
-          <small>Com base no recorte atual</small>
-        </article>
-        <article className="card metric">
-          <span className="muted">Pedidos pagos</span>
-          <strong>{summary.paidOrders}</strong>
+          <span className="muted">Pedidos no recorte</span>
+          <strong>{summary.pendingOrders + summary.canceledOrders}</strong>
+          <small>Pendentes, cancelados, expirados ou reembolsados</small>
         </article>
         <article className="card metric">
           <span className="muted">Pendentes</span>
@@ -101,6 +97,10 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         <article className="card metric">
           <span className="muted">Cancelados/expirados</span>
           <strong>{summary.canceledOrders}</strong>
+        </article>
+        <article className="card metric">
+          <span className="muted">Valor em pendência</span>
+          <strong>{formatCurrency(summary.totalInCents)}</strong>
         </article>
       </section>
 
@@ -198,8 +198,8 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
       <section className="card adminPanelBlock">
         <div className="sectionHeader inlineHeader">
           <div>
-            <h2>Lista de pedidos</h2>
-            <p className="muted">Mantivemos só o que ajuda de verdade no atendimento: quem comprou, o quê, por quanto e o que fazer agora.</p>
+            <h2>Lista de pedidos gerados</h2>
+            <p className="muted">Mantivemos aqui só o que ajuda de verdade na gestão de pedidos que ainda não viraram venda confirmada ou precisaram de intervenção.</p>
           </div>
         </div>
         {orders.length === 0 ? (

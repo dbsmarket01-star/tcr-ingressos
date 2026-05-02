@@ -37,8 +37,8 @@ export const adminNavItems: AdminNavItem[] = [
   },
   {
     href: "/admin/events",
-    label: "Eventos",
-    description: "Cadastro, publicação e lotes",
+    label: "Congressos e eventos",
+    description: "Lista dos eventos e visão geral de cada um",
     area: "EVENTS"
   },
   {
@@ -56,7 +56,7 @@ export const adminNavItems: AdminNavItem[] = [
   {
     href: "/admin/orders",
     label: "Pedidos",
-    description: "Compras, pagamentos e reservas",
+    description: "Gerados, pendentes, cancelados e reembolsados",
     area: "ORDERS"
   },
   {
@@ -67,8 +67,8 @@ export const adminNavItems: AdminNavItem[] = [
   },
   {
     href: "/admin/finance",
-    label: "Financeiro",
-    description: "Receita, taxas, split e repasses",
+    label: "Venda de ingressos",
+    description: "Vendas pagas por dia, período, evento e comprador",
     area: "FINANCE"
   },
   {
@@ -143,15 +143,15 @@ export const adminNavGroups: AdminNavGroup[] = [
     description: "Evento e atendimento",
     defaultOpen: true,
     items: adminNavItems.filter((item) =>
-      ["/admin/events", "/admin/support", "/admin/check-in"].includes(item.href)
+      ["/admin/support", "/admin/check-in"].includes(item.href)
     )
   },
   {
     label: "Vendas",
-    description: "Pedidos, ingressos e receita",
+    description: "Eventos, vendas pagas e pedidos gerados",
     defaultOpen: true,
     items: adminNavItems.filter((item) =>
-      ["/admin/orders", "/admin/tickets", "/admin/finance", "/admin/customers"].includes(item.href)
+      ["/admin/events", "/admin/finance", "/admin/orders"].includes(item.href)
     )
   },
   {

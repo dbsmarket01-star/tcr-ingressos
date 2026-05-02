@@ -44,14 +44,14 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
 
   return (
     <AdminShell
-      title="Financeiro"
-      description="Faturamento pago, pagamentos e repasses da TCR com leitura mais objetiva."
+      title="Venda de ingressos"
+      description="Acompanhe apenas as vendas pagas por dia, período, evento e comprador."
     >
       <section className="operationCommandStrip spacedSection" aria-label="Atalhos da área financeira">
         <article className="operationCommandCard">
           <span className="eyebrow">Saúde financeira</span>
-          <h2>Números da {organizationContext.brandName} com leitura mais limpa para decisão rápida.</h2>
-          <p>Use estes atalhos para sair do quadro financeiro e conferir pedidos, eventos ou o panorama geral sem perder contexto nem misturar pedido pendente com receita confirmada.</p>
+          <h2>Vendas pagas da {organizationContext.brandName} com leitura direta para operação.</h2>
+          <p>Use esta tela para ver quantas vendas pagas entraram hoje ou no período, quem comprou, de qual evento foi a venda e qual ingresso saiu.</p>
         </article>
         <div className="operationCommandActions">
           <Link className="secondaryButton smallButton" href="/admin">
@@ -69,9 +69,9 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
       <section className="adminPanelHero compact">
         <div>
           <span className="sectionEyebrow">Saúde financeira</span>
-          <h2>Números mais claros para decidir rápido</h2>
+          <h2>Vendas pagas com leitura comercial mais simples</h2>
           <p className="muted">
-            O objetivo desta tela é bater o olho e entender o que entrou, o que ainda está pendente e quanto já saiu em split, sem ficar caçando informação em blocos demais.
+            O objetivo desta tela é bater o olho e entender o que foi vendido de verdade no período, sem misturar pedido pendente com venda confirmada.
           </p>
         </div>
       </section>
@@ -111,68 +111,69 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
 
       <section className="grid dashboardGrid">
         <article className="card dashboardHeroMetric metric">
-          <span className="muted">Líquido aproximado</span>
-          <strong>{formatCurrency(report.totals.netRevenueInCents)}</strong>
-          <small>Referência principal do período filtrado</small>
-        </article>
-        <article className="card metric">
-          <span className="muted">Bruto confirmado</span>
-          <strong>{formatCurrency(report.totals.grossRevenueInCents)}</strong>
-        </article>
-        <article className="card metric">
-          <span className="muted">Ingressos</span>
-          <strong>{formatCurrency(report.totals.ticketSubtotalInCents)}</strong>
-        </article>
-        <article className="card metric">
-          <span className="muted">Taxas e impostos</span>
-          <strong>{formatCurrency(report.totals.serviceFeeInCents)}</strong>
-        </article>
-        <article className="card metric">
-          <span className="muted">Juros de cartão</span>
-          <strong>{formatCurrency(report.totals.cardInterestInCents)}</strong>
-        </article>
-        <article className="card metric">
-          <span className="muted">Descontos</span>
-          <strong>{formatCurrency(report.totals.discountInCents)}</strong>
-        </article>
-      </section>
-
-      <section className="grid dashboardGrid spacedSection">
-        <article className="card metric">
-          <span className="muted">Taxas identificadas</span>
-          <strong>{formatCurrency(report.totals.estimatedFeesInCents)}</strong>
-        </article>
-        <article className="card metric">
-          <span className="muted">Pedidos pagos</span>
+          <span className="muted">Vendas pagas</span>
           <strong>{report.totals.paidOrders}</strong>
+          <small>Pedidos confirmados no período filtrado</small>
         </article>
         <article className="card metric">
-          <span className="muted">Pendente no período</span>
-          <strong>{formatCurrency(report.totals.pendingAmountInCents)}</strong>
-        </article>
-      </section>
-
-      <section className="grid dashboardGrid spacedSection">
-        <article className="card metric">
-          <span className="muted">Cancelado/expirado</span>
-          <strong>{formatCurrency(report.totals.canceledAmountInCents)}</strong>
+          <span className="muted">Faturamento pago</span>
+          <strong>{formatCurrency(report.totals.grossRevenueInCents)}</strong>
         </article>
         <article className="card metric">
           <span className="muted">Ingressos emitidos</span>
           <strong>{report.totals.ticketsIssued}</strong>
         </article>
         <article className="card metric">
-          <span className="muted">Líquido real Asaas</span>
-          <strong>{report.totals.netValueCoverage}%</strong>
+          <span className="muted">Líquido aproximado</span>
+          <strong>{formatCurrency(report.totals.netRevenueInCents)}</strong>
         </article>
-        <article className="card metric">
-          <span className="muted">Split enviado</span>
-          <strong>{formatCurrency(report.totals.splitTotalInCents)}</strong>
-        </article>
-        <article className="card metric">
-          <span className="muted">TCR após split</span>
-          <strong>{formatCurrency(report.totals.tcrAfterSplitInCents)}</strong>
-        </article>
+      </section>
+
+      <section className="card spacedSection">
+        <div className="sectionHeader inlineHeader">
+          <div>
+            <h2>Vendas pagas no período</h2>
+            <p className="muted">Aqui entram apenas vendas confirmadas, com horário, comprador, evento e itens vendidos.</p>
+          </div>
+        </div>
+        {report.recentPaidOrders.length === 0 ? (
+          <div className="empty">Nenhuma venda paga encontrada nesse recorte.</div>
+        ) : (
+          <div className="tableScroll">
+            <table className="table financeTable">
+              <thead>
+                <tr>
+                  <th>Horário</th>
+                  <th>Comprador</th>
+                  <th>Evento</th>
+                  <th>Ingresso</th>
+                  <th>Total</th>
+                  <th>Pago</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.recentPaidOrders.map((order) => (
+                  <tr key={order.id}>
+                    <td>{formatDateTime(order.paidAt ?? order.createdAt)}</td>
+                    <td>
+                      {order.customer.name}
+                      <br />
+                      <span className="muted">{order.customer.email}</span>
+                    </td>
+                    <td>{order.event.title}</td>
+                    <td>
+                      {Array.from(new Set(order.items.map((item) => item.lot.name))).join(", ")}
+                    </td>
+                    <td>{formatCurrency(order.totalInCents)}</td>
+                    <td>
+                      <span className="status published">Sim</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <section className="card spacedSection">

@@ -30,16 +30,16 @@ export default async function EventsPage() {
 
   return (
     <AdminShell
-      title="Eventos"
-      description="Gerencie publicação, lotes, vendas pagas e páginas públicas dos eventos da TCR."
+      title="Congressos e eventos"
+      description="Veja a lista dos eventos disponíveis, entre em cada um e acompanhe a operação comercial de forma centralizada."
     >
       <section className="operationCommandStrip spacedSection" aria-label="Atalhos da área de eventos">
         <article className="operationCommandCard">
           <span className="eyebrow">Centro de agenda</span>
-          <h2>Revise a agenda, a vitrine pública e o preparo comercial.</h2>
+          <h2>Revise a agenda comercial e entre em cada evento para ver os números dele.</h2>
           <p>
-            Esta tela concentra o que mais importa para a operação: publicação, capacidade, faturamento e acesso rápido
-            aos eventos da {organizationContext.brandName}, já no contexto da bilheteria filha.
+            Aqui fica a lista de congressos e eventos da {organizationContext.brandName}. Cada item leva para o painel
+            completo daquele evento, com vendas, leads, lotes e leitura operacional.
           </p>
         </article>
         <div className="operationCommandActions">
@@ -86,8 +86,8 @@ export default async function EventsPage() {
       <section className="card">
         <div className="sectionHeader inlineHeader">
           <div>
-            <h2>Lista operacional</h2>
-            <p className="muted">Acompanhe status, capacidade, faturamento e acesso rápido à página pública.</p>
+            <h2>Lista de congressos e eventos</h2>
+            <p className="muted">Abra cada evento para ver os números gerais, leads, lotes, vendas e operação.</p>
           </div>
           <Link className="button" href="/admin/events/new">
             Novo evento

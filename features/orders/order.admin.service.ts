@@ -48,7 +48,19 @@ function buildOrderWhere(filters: AdminOrderFilters, allowedEventIds?: EventScop
       : allowedEventIds
         ? { eventId: { in: allowedEventIds } }
         : {}),
-    ...(status ? { status } : {}),
+    ...(status
+      ? { status }
+      : {
+          status: {
+            in: [
+              OrderStatus.DRAFT,
+              OrderStatus.PENDING_PAYMENT,
+              OrderStatus.CANCELED,
+              OrderStatus.EXPIRED,
+              OrderStatus.REFUNDED
+            ]
+          }
+        }),
     ...(startDate || endDate
       ? {
           createdAt: {
@@ -127,10 +139,6 @@ export async function getOrdersSummary(filters: AdminOrderFilters = {}, allowedE
   await expirePendingOrders({ limit: 100 });
 
   const where = buildOrderWhere(filters, allowedEventIds);
-  const paidWhere: Prisma.OrderWhereInput = {
-    ...where,
-    status: OrderStatus.PAID
-  };
 
   const [statusGroups, totals] = await Promise.all([
     prisma.order.groupBy({
@@ -141,7 +149,7 @@ export async function getOrdersSummary(filters: AdminOrderFilters = {}, allowedE
       }
     }),
     prisma.order.aggregate({
-      where: paidWhere,
+      where,
       _sum: {
         totalInCents: true,
         serviceFeeInCents: true,

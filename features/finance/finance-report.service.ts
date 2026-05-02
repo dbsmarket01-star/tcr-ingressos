@@ -184,6 +184,11 @@ export async function getFinanceReport(filters: FinanceReportFilters, allowedEve
         },
         customer: true,
         payment: true,
+        items: {
+          include: {
+            lot: true
+          }
+        },
         tickets: {
           select: {
             id: true,
