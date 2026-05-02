@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { getAdminBaseUrl, getPublicBaseUrl } from "@/lib/public-url";
+import { getAdminBaseUrl, getPublicBaseUrl, getPublicOrderUrl, getPublicTicketUrl } from "@/lib/public-url";
 import { formatLongDateTime } from "@/lib/format";
 
 type EmailOrganization = {
@@ -177,11 +177,11 @@ export async function sendTicketsEmail(input: TicketEmailInput) {
 }
 
 export function createPublicTicketUrl(ticketCode: string, organization?: EmailOrganization | null) {
-  return `${getPublicBaseUrl(organization)}/ingresso/${ticketCode}`;
+  return getPublicTicketUrl(ticketCode, organization);
 }
 
 export function createPublicOrderUrl(orderCode: string, organization?: EmailOrganization | null) {
-  return `${getPublicBaseUrl(organization)}/pedido/${orderCode}`;
+  return getPublicOrderUrl(orderCode, organization);
 }
 
 function buildPasswordResetHtml(input: PasswordResetEmailInput) {

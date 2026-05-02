@@ -11,7 +11,17 @@ export async function getAdminOrderDetail(code: string, allowedEventIds?: EventS
     },
     include: {
       customer: true,
-      event: true,
+      event: {
+        include: {
+          organization: {
+            select: {
+              name: true,
+              publicDomain: true,
+              adminDomain: true
+            }
+          }
+        }
+      },
       coupon: true,
       payment: true,
       items: {

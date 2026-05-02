@@ -2,7 +2,7 @@ import { PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getPaymentHealth } from "@/features/settings/payment-health.service";
 import { summarizeAsaasSplit } from "@/features/payments/split-report.service";
-import { getPublicEventUrl } from "@/lib/public-url";
+import { getPublicEventUrl, getPublicTicketUrl } from "@/lib/public-url";
 import { manualPresaleChecklistItems } from "./manual-presale-checklist";
 
 type FinalCheckStatus = "READY" | "WARNING" | "BLOCKED";
@@ -73,6 +73,12 @@ export async function getFinalPresaleChecklist(eventId?: string, allowedEventIds
             AND: [{ id: selectedEventId }, ...(allowedEventIds ? [{ id: { in: allowedEventIds } }] : [])]
           },
           include: {
+            organization: {
+              select: {
+                publicDomain: true,
+                adminDomain: true
+              }
+            },
             lots: true,
             orders: {
               include: {
@@ -266,7 +272,7 @@ export async function getFinalPresaleChecklist(eventId?: string, allowedEventIds
       status: status(emittedTickets > 0),
       evidence: `${emittedTickets} ingresso(s) emitido(s), ${activeTickets} ativo(s).`,
       action: "Abrir ingresso teste.",
-      href: latestTicket ? `/ingresso/${latestTicket.code}` : `/admin/tickets?eventId=${event.id}`
+      href: latestTicket ? getPublicTicketUrl(latestTicket.code, event.organization) : `/admin/tickets?eventId=${event.id}`
     },
     {
       label: "Check-in aprovado",
@@ -362,7 +368,9 @@ export async function getFinalPresaleChecklist(eventId?: string, allowedEventIds
     nextActions,
     evidence: [
       latestPaidOrder ? { label: "Pedido pago recente", value: latestPaidOrder.code, href: `/admin/orders/${latestPaidOrder.code}` } : null,
-      latestTicket ? { label: "Ingresso recente", value: latestTicket.code, href: `/ingresso/${latestTicket.code}` } : null
+      latestTicket
+        ? { label: "Ingresso recente", value: latestTicket.code, href: getPublicTicketUrl(latestTicket.code, event.organization) }
+        : null
     ].filter((item): item is { label: string; value: string; href: string } => Boolean(item))
   };
 }

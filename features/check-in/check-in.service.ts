@@ -1,5 +1,6 @@
 import { CheckInStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getPublicTicketUrl } from "@/lib/public-url";
 import type { CurrentAdmin } from "@/features/auth/auth.service";
 import { canAccessEvent } from "@/features/auth/auth.service";
 import { getCheckInDecision } from "./check-in-policy";
@@ -13,6 +14,7 @@ export type CheckInResult = {
     lotName: string;
     buyerName: string;
     checkedAt?: Date;
+    publicUrl: string;
   };
 };
 
@@ -33,7 +35,16 @@ export async function validateTicketForCheckIn(inputCode: string, deviceName?: s
           OR: [{ code }, { qrCodeToken: code }]
         },
         include: {
-          event: true,
+          event: {
+            include: {
+              organization: {
+                select: {
+                  publicDomain: true,
+                  adminDomain: true
+                }
+              }
+            }
+          },
           lot: true,
           order: {
             include: {
@@ -83,7 +94,8 @@ export async function validateTicketForCheckIn(inputCode: string, deviceName?: s
             eventTitle: ticket.event.title,
             lotName: ticket.lot.name,
             buyerName: ticket.order.customer.name,
-            checkedAt: ticket.usedAt || undefined
+            checkedAt: ticket.usedAt || undefined,
+            publicUrl: getPublicTicketUrl(ticket.code, ticket.event.organization)
           }
         };
       }
@@ -119,7 +131,8 @@ export async function validateTicketForCheckIn(inputCode: string, deviceName?: s
             eventTitle: ticket.event.title,
             lotName: ticket.lot.name,
             buyerName: ticket.order.customer.name,
-            checkedAt: ticket.usedAt || undefined
+            checkedAt: ticket.usedAt || undefined,
+            publicUrl: getPublicTicketUrl(ticket.code, ticket.event.organization)
           }
         };
       }
@@ -142,7 +155,8 @@ export async function validateTicketForCheckIn(inputCode: string, deviceName?: s
           eventTitle: ticket.event.title,
           lotName: ticket.lot.name,
           buyerName: ticket.order.customer.name,
-          checkedAt: usedAt
+          checkedAt: usedAt,
+          publicUrl: getPublicTicketUrl(ticket.code, ticket.event.organization)
         }
       };
     },

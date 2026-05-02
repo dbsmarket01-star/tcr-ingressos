@@ -4,6 +4,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { getAdminOrderDetail } from "@/features/orders/order-detail.service";
 import { refundPaidOrderAction } from "@/features/orders/order.admin.actions";
+import { getPublicOrderUrl, getPublicTicketUrl } from "@/lib/public-url";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -57,6 +58,7 @@ export default async function AdminOrderDetailPage({ params, searchParams }: Adm
 
   const refundSuccess = query.refunded === "1";
   const orderError = typeof query.orderError === "string" ? query.orderError : null;
+  const publicOrderUrl = getPublicOrderUrl(order.code, order.event.organization);
 
   return (
     <AdminShell
@@ -82,7 +84,7 @@ export default async function AdminOrderDetailPage({ params, searchParams }: Adm
         <Link className="secondaryButton" href="/admin/orders">
           Voltar para pedidos
         </Link>
-        <Link className="button" href={`/pedido/${order.code}`}>
+        <Link className="button" href={publicOrderUrl} target="_blank" rel="noreferrer noopener">
           Ver tela do cliente
         </Link>
         {order.status === "PAID" ? (
@@ -319,7 +321,12 @@ export default async function AdminOrderDetailPage({ params, searchParams }: Adm
                       )}
                     </td>
                     <td>
-                      <Link className="secondaryButton smallButton" href={`/ingresso/${ticket.code}`}>
+                      <Link
+                        className="secondaryButton smallButton"
+                        href={getPublicTicketUrl(ticket.code, order.event.organization)}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
                         Ver ingresso
                       </Link>
                     </td>

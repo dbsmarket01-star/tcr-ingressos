@@ -4,6 +4,7 @@ import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { listAdminTickets, listTicketFilterEvents } from "@/features/tickets/ticket.admin.service";
 import { formatDateTime } from "@/lib/format";
+import { getPublicTicketUrl } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -157,7 +158,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                 {tickets.map((ticket) => (
                   <tr key={ticket.id}>
                     <td>
-                      <Link href={`/ingresso/${ticket.code}`}>
+                      <Link href={getPublicTicketUrl(ticket.code, ticket.event.organization)} target="_blank" rel="noreferrer noopener">
                         <strong>{ticket.code}</strong>
                       </Link>
                     </td>
@@ -179,7 +180,12 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                     <td>{formatDateTime(ticket.issuedAt)}</td>
                     <td>
                       <div className="actionRow">
-                        <Link className="secondaryButton smallButton" href={`/ingresso/${ticket.code}`}>
+                        <Link
+                          className="secondaryButton smallButton"
+                          href={getPublicTicketUrl(ticket.code, ticket.event.organization)}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                        >
                           Abrir QR
                         </Link>
                         <Link className="secondaryButton smallButton" href={`/admin/support?q=${encodeURIComponent(ticket.code)}`}>

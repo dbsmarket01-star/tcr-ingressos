@@ -1,4 +1,4 @@
-type PublicUrlOrganization = {
+export type PublicUrlOrganization = {
   publicDomain?: string | null;
   adminDomain?: string | null;
 };
@@ -42,4 +42,12 @@ export function getPublicEventUrl(slug: string, organization?: PublicUrlOrganiza
 
 export function getPublicLeadCaptureUrl(slug: string, organization?: PublicUrlOrganization | null) {
   return `${getPublicBaseUrl(organization)}/lista/${slug}`;
+}
+
+export function getPublicOrderUrl(orderCode: string, organization?: PublicUrlOrganization | null) {
+  return `${getPublicBaseUrl(organization)}/pedido/${orderCode}`;
+}
+
+export function getPublicTicketUrl(ticketCode: string, organization?: PublicUrlOrganization | null) {
+  return `${getPublicBaseUrl(organization)}/ingresso/${ticketCode}`;
 }

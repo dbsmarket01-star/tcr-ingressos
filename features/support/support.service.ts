@@ -46,7 +46,17 @@ export async function searchSupportOrders(query?: string, allowedEventIds?: Even
     take: 30,
     include: {
       customer: true,
-      event: true,
+      event: {
+        include: {
+          organization: {
+            select: {
+              name: true,
+              publicDomain: true,
+              adminDomain: true
+            }
+          }
+        }
+      },
       payment: true,
       items: {
         include: {

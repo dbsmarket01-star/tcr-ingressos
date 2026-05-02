@@ -23,6 +23,7 @@ export async function validateTicketAction(formData: FormData) {
     params.set("event", result.ticket.eventTitle);
     params.set("lot", result.ticket.lotName);
     params.set("buyer", result.ticket.buyerName);
+    params.set("ticketUrl", result.ticket.publicUrl);
     if (result.ticket.checkedAt) {
       params.set("checkedAt", result.ticket.checkedAt.toISOString());
     }

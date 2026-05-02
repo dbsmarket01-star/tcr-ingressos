@@ -6,6 +6,7 @@ import { getCurrentOrganizationContext } from "@/features/organizations/organiza
 import { resendPendingPaymentEmailAction, resendTicketsEmailAction } from "@/features/support/support.actions";
 import { searchSupportOrders } from "@/features/support/support.service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { getPublicOrderUrl, getPublicTicketUrl } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -242,7 +243,13 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
                   <p className="muted">Ingressos ainda não emitidos.</p>
                 ) : (
                   order.tickets.map((ticket) => (
-                    <Link className="ticketCard" href={`/ingresso/${ticket.code}`} key={ticket.id}>
+                    <Link
+                      className="ticketCard"
+                      href={getPublicTicketUrl(ticket.code, order.event.organization)}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      key={ticket.id}
+                    >
                       <div>
                         <strong>{ticket.code}</strong>
                         <span className="muted">{ticket.lot.name}</span>
@@ -264,7 +271,12 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
               </div>
 
               <div className="supportActions">
-                <Link className="secondaryButton" href={`/pedido/${order.code}`}>
+                <Link
+                  className="secondaryButton"
+                  href={getPublicOrderUrl(order.code, order.event.organization)}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
                   Abrir pedido
                 </Link>
                 <Link className="secondaryButton" href={`/admin/orders/${order.code}`}>

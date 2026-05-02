@@ -65,7 +65,17 @@ export async function listAdminTickets(filters: AdminTicketFilters = {}, allowed
       },
       take: 120,
       include: {
-        event: true,
+        event: {
+          include: {
+            organization: {
+              select: {
+                name: true,
+                publicDomain: true,
+                adminDomain: true
+              }
+            }
+          }
+        },
         lot: true,
         order: {
           include: {
@@ -108,7 +118,17 @@ export async function listTicketsForCsvExport(filters: AdminTicketFilters = {}, 
     },
     take: 10000,
     include: {
-      event: true,
+      event: {
+        include: {
+          organization: {
+            select: {
+              name: true,
+              publicDomain: true,
+              adminDomain: true
+            }
+          }
+        }
+      },
       lot: true,
       order: {
         include: {

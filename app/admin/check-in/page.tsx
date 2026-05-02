@@ -14,6 +14,7 @@ type CheckInPageProps = {
     status?: string;
     message?: string;
     ticket?: string;
+    ticketUrl?: string;
     event?: string;
     lot?: string;
     buyer?: string;
@@ -161,8 +162,8 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
                 </div>
               ) : null}
               <div className="checkInResultActions">
-                {result.ticket ? (
-                  <a className="secondaryButton fullButton" href={`/ingresso/${result.ticket}`}>
+                {result.ticket && result.ticketUrl ? (
+                  <a className="secondaryButton fullButton" href={result.ticketUrl} target="_blank" rel="noreferrer noopener">
                     Abrir ingresso
                   </a>
                 ) : null}
