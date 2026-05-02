@@ -8,7 +8,20 @@ const LEAD_CAPTURE_MAX_ATTEMPTS_PER_IP = 18;
 
 function sanitizePhone(value?: string) {
   const digits = (value ?? "").replace(/\D/g, "");
-  return digits || null;
+
+  if (!digits) {
+    return null;
+  }
+
+  if (digits.startsWith("00") && digits.length > 4) {
+    return digits.slice(2);
+  }
+
+  if (digits.length <= 11) {
+    return `55${digits}`;
+  }
+
+  return digits;
 }
 
 function sanitizeMunicipality(value?: string) {

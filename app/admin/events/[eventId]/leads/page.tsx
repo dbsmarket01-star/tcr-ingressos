@@ -48,7 +48,7 @@ export default async function EventLeadsPage({ params }: EventLeadsPageProps) {
 
   function getWhatsappUrl(phone?: string | null) {
     const digits = (phone ?? "").replace(/\D/g, "");
-    return digits ? `https://wa.me/55${digits}` : null;
+    return digits ? `https://wa.me/${digits}` : null;
   }
 
   return (

@@ -36,6 +36,24 @@ function splitPhoneParts(phone?: string | null) {
   };
 }
 
+function getNormalizedPhone(phone?: string | null) {
+  const digits = (phone ?? "").replace(/\D/g, "");
+
+  if (!digits) {
+    return "";
+  }
+
+  if (digits.startsWith("00") && digits.length > 4) {
+    return digits.slice(2);
+  }
+
+  if (digits.length <= 11) {
+    return `55${digits}`;
+  }
+
+  return digits;
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ eventId: string }> }
@@ -60,6 +78,7 @@ export async function GET(
   const headers = [
     "Nome completo",
     "E-mail",
+    "Telefone completo",
     "Código do país",
     "DDD",
     "Telefone",
@@ -82,6 +101,7 @@ export async function GET(
     return [
       lead.name,
       lead.email,
+      getNormalizedPhone(lead.phone),
       phone.countryCode,
       phone.areaCode,
       phone.localNumber,
