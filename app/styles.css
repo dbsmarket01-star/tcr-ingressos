@@ -4238,6 +4238,19 @@ body.operationTheme .topbar {
   gap: 16px;
 }
 
+.inlineFeedbackBox {
+  margin-bottom: 14px;
+}
+
+.leadBroadcastActionRow {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.leadBroadcastSubmitButton {
+  min-width: 248px;
+}
+
 .usersSecurityColumn {
   display: grid;
   gap: 20px;
@@ -8092,6 +8105,15 @@ body.operationTheme .topbar {
 
   .leadCaptureInlineCta {
     grid-template-columns: 1fr;
+  }
+
+  .leadBroadcastActionRow {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .leadBroadcastSubmitButton {
+    width: 100%;
   }
 
   .campaignInsightRow {

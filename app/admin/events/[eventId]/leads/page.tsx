@@ -11,6 +11,7 @@ import { formatDateTime } from "@/lib/format";
 import { getPublicLeadCaptureUrl } from "@/lib/public-url";
 import { getLeadOriginBucket, getSourceLabel } from "@/features/tracking/tracking";
 import { LeadBroadcastTemplates } from "./LeadBroadcastTemplates";
+import { LeadBroadcastSubmitButton } from "./LeadBroadcastSubmitButton";
 
 type EventLeadsPageProps = {
   params: Promise<{
@@ -125,13 +126,15 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
         {sendError ? <div className="errorBox">{sendError}</div> : null}
       </section>
 
-      <section className="card spacedSection">
+      <section className="card spacedSection" id="lead-broadcast">
         <div className="sectionHeader">
           <div>
             <h2>E-mail para toda a lista</h2>
             <p className="muted">Escreva a mensagem e envie para todos os leads já cadastrados deste evento.</p>
           </div>
         </div>
+        {sendResult ? <div className="successBox inlineFeedbackBox">Disparo concluído para {sendResult} lead(s).</div> : null}
+        {sendError ? <div className="errorBox inlineFeedbackBox">{sendError}</div> : null}
         <form action={sendLeadBroadcastAction} className="stackForm">
           <input type="hidden" name="eventId" value={event.id} />
           <LeadBroadcastTemplates />
@@ -174,10 +177,9 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
             <span>Imagem opcional</span>
             <input accept="image/png,image/jpeg,image/webp,image/gif" name="imageFile" type="file" />
           </label>
-          <div className="actionRow">
-            <button className="button" type="submit">
-              Enviar e-mail para todos os leads
-            </button>
+          <div className="actionRow leadBroadcastActionRow">
+            <LeadBroadcastSubmitButton />
+            <small className="muted">O botão trava enquanto o disparo está em andamento para evitar envio duplicado.</small>
           </div>
         </form>
       </section>

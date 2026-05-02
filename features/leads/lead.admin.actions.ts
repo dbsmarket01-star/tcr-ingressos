@@ -39,6 +39,10 @@ function normalizeDestinationUrl(value: string, fallbackUrl?: string | null) {
   return `https://${text}`;
 }
 
+function normalizeBodySignature(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
 export async function sendLeadBroadcastAction(formData: FormData) {
   const admin = await requirePermission("EVENTS");
   const organizationContext = await getCurrentOrganizationContext();
@@ -91,11 +95,36 @@ export async function sendLeadBroadcastAction(formData: FormData) {
     redirect(`/admin/events/${eventId}/leads?error=${encodeURIComponent("Informe um link de destino válido para o e-mail.")}`);
   }
 
+  const recentDuplicateWindow = new Date(Date.now() - 3 * 60 * 1000);
+  const duplicateCampaign = await prisma.leadEmailCampaign.findFirst({
+    where: {
+      eventId: event.id,
+      subject,
+      body: normalizeBodySignature(body),
+      destinationUrl: normalizedDestinationUrl,
+      ctaLabel: ctaLabel || null,
+      createdAt: {
+        gte: recentDuplicateWindow
+      }
+    },
+    orderBy: {
+      createdAt: "desc"
+    }
+  });
+
+  if (duplicateCampaign) {
+    redirect(
+      `/admin/events/${eventId}/leads?error=${encodeURIComponent(
+        "Encontramos um disparo idêntico feito há poucos minutos. Aguarde um pouco antes de enviar de novo."
+      )}#lead-broadcast`
+    );
+  }
+
   const campaign = await prisma.leadEmailCampaign.create({
     data: {
       eventId: event.id,
       subject,
-      body,
+      body: normalizeBodySignature(body),
       imageUrl,
       ctaLabel: ctaLabel || null,
       destinationUrl: normalizedDestinationUrl
@@ -139,5 +168,5 @@ export async function sendLeadBroadcastAction(formData: FormData) {
     }
   });
 
-  redirect(`/admin/events/${eventId}/leads?sent=${sentCount}`);
+  redirect(`/admin/events/${eventId}/leads?sent=${sentCount}#lead-broadcast`);
 }
