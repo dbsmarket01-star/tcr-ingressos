@@ -6679,6 +6679,10 @@ body.operationTheme .topbar {
   padding: 0 18px;
 }
 
+.leadCaptureThanksShell .brandLogo {
+  max-height: 32px;
+}
+
 .leadCaptureHero {
   background: rgba(255, 255, 255, 0.88);
   border: 1px solid rgba(171, 195, 187, 0.28);
@@ -8504,89 +8508,100 @@ body.operationTheme .topbar {
     top: 16px;
   }
 
+  .leadCaptureThanksShell .topbar {
+    min-height: 48px;
+    padding: 0 12px;
+  }
+
+  .leadCaptureThanksShell .brandLogo {
+    max-height: 24px;
+  }
+
   .whatsappGroupButtonLarge {
-    font-size: 14px;
-    min-height: 50px;
-    padding: 11px 14px;
+    font-size: 13px;
+    min-height: 46px;
+    padding: 10px 12px;
   }
 
   .leadThankYouCard {
-    gap: 12px;
-    margin: 10px auto;
+    gap: 10px;
+    margin: 8px auto;
     max-width: 100%;
-    padding: 16px 14px 18px;
+    padding: 14px 12px 14px;
   }
 
   .leadThankYouCheckmark {
-    font-size: 20px;
-    height: 42px;
-    width: 42px;
+    font-size: 18px;
+    height: 38px;
+    width: 38px;
   }
 
   .leadThankYouHeadline span,
   .leadThankYouHeadline strong {
-    font-size: clamp(18px, 6.4vw, 28px);
+    font-size: clamp(16px, 5.8vw, 24px);
     max-width: 14ch;
   }
 
   .leadThankYouSubheadline {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .leadThankYouWarning {
-    gap: 10px;
+    gap: 8px;
     grid-template-columns: 1fr;
     justify-items: center;
-    padding: 12px;
+    padding: 10px;
     text-align: center;
   }
 
   .leadThankYouWarningIcon {
-    font-size: 28px;
+    font-size: 24px;
   }
 
   .leadThankYouWarning div {
-    font-size: 13px;
-  }
-
-  .leadThankYouBenefits article {
-    gap: 10px;
-    grid-template-columns: auto minmax(0, 1fr);
-    padding: 11px 12px;
-  }
-
-  .leadThankYouBenefitIcon {
-    font-size: 16px;
-    height: 32px;
-    width: 32px;
-  }
-
-  .leadThankYouBenefits strong {
-    font-size: 13px;
-  }
-
-  .leadThankYouBenefits small {
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.25;
   }
 
-  .whatsappGroupButtonIcon {
+  .leadThankYouBenefits article {
+    gap: 8px;
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 9px 10px;
+  }
+
+  .leadThankYouBenefitIcon {
+    font-size: 14px;
     height: 28px;
     width: 28px;
   }
 
+  .leadThankYouBenefits strong {
+    font-size: 12px;
+    line-height: 1.1;
+  }
+
+  .leadThankYouBenefits small {
+    font-size: 10px;
+    line-height: 1.15;
+  }
+
+  .whatsappGroupButtonIcon {
+    height: 24px;
+    width: 24px;
+  }
+
   .whatsappGroupButtonIcon svg {
-    height: 14px;
-    width: 14px;
+    height: 12px;
+    width: 12px;
   }
 
   .leadThankYouClosing {
-    font-size: 11px;
-    line-height: 1.25;
+    font-size: 10px;
+    line-height: 1.15;
   }
 
   .leadThankYouRedirectNote {
-    font-size: 10px;
+    display: none;
   }
 
   .leadCaptureHeroMedia img {
