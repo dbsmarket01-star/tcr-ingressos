@@ -5,6 +5,7 @@ import { getLeadCaptureEventBySlug } from "@/features/leads/lead.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { LeadCaptureTrackingRuntime } from "../LeadCaptureTrackingRuntime";
+import { LeadThankYouTracker } from "./LeadThankYouTracker";
 import { WhatsAppGroupRedirect } from "./WhatsAppGroupRedirect";
 
 type LeadCaptureThankYouPageProps = {
@@ -36,6 +37,7 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
 
   const buttonText = "ENTRAR AGORA NO GRUPO E GARANTIR 30% OFF";
   const leadEventId = typeof query.leid === "string" ? query.leid : null;
+  const leadId = typeof query.lead === "string" ? query.lead : null;
   const tracking = getTrackingParamsFromSearch(query, `/lista/${event.slug}/obrigado`);
 
   return (
@@ -87,6 +89,7 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
         mode="lead"
         leadEventId={leadEventId}
       />
+      <LeadThankYouTracker leadId={leadId} />
       <section className="leadThankYouCard card">
         <div className="leadThankYouCheckmark" aria-hidden="true">
           ✓
@@ -136,7 +139,12 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
           </article>
         </div>
         {event.leadCaptureWhatsappGroupUrl ? (
-          <WhatsAppGroupRedirect buttonText={buttonText} url={event.leadCaptureWhatsappGroupUrl} />
+          <WhatsAppGroupRedirect
+            buttonText={buttonText}
+            url={event.leadCaptureWhatsappGroupUrl}
+            leadId={leadId}
+            eventTitle={event.title}
+          />
         ) : (
           <div className="leadThankYouAction">
             <div className="infoBox">

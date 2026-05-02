@@ -6,10 +6,11 @@ import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "
 import { getEventForManagement } from "@/features/events/event.service";
 import { sendLeadBroadcastAction } from "@/features/leads/lead.admin.actions";
 import { getMunicipalityRanking } from "@/features/leads/lead-normalization";
-import { listEventLeads } from "@/features/leads/lead.service";
+import { listEventLeads, listLeadEmailCampaignSummaries } from "@/features/leads/lead.service";
 import { formatDateTime } from "@/lib/format";
 import { getPublicLeadCaptureUrl } from "@/lib/public-url";
 import { getLeadOriginBucket, getSourceLabel } from "@/features/tracking/tracking";
+import { LeadBroadcastTemplates } from "./LeadBroadcastTemplates";
 
 type EventLeadsPageProps = {
   params: Promise<{
@@ -29,10 +30,12 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
     notFound();
   }
 
-  const leads = await listEventLeads(event.id);
+  const [leads, emailCampaigns] = await Promise.all([listEventLeads(event.id), listLeadEmailCampaignSummaries(event.id)]);
   const leadsWithPhone = leads.filter((lead) => Boolean(lead.phone)).length;
   const leadsWithEmail = leads.filter((lead) => Boolean(lead.email)).length;
   const leadsWithMunicipality = leads.filter((lead) => Boolean(lead.municipality)).length;
+  const thankYouViews = leads.filter((lead) => Boolean(lead.thankYouViewedAt)).length;
+  const whatsappClicks = leads.filter((lead) => Boolean(lead.whatsappClickedAt)).length;
   const exportHref = `/admin/events/${event.id}/leads/export`;
   const publicLandingUrl = getPublicLeadCaptureUrl(event.slug);
   const sendResult = typeof query.sent === "string" ? query.sent : null;
@@ -45,6 +48,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
       return acc;
     }, new Map<string, number>())
   ).sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], "pt-BR"));
+  const totalLeads = leads.length || 1;
 
   function getWhatsappUrl(phone?: string | null) {
     const digits = (phone ?? "").replace(/\D/g, "");
@@ -108,6 +112,14 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
             <span className="muted">Com município</span>
             <strong>{leadsWithMunicipality}</strong>
           </div>
+          <div className="card metric">
+            <span className="muted">Viu a página de obrigado</span>
+            <strong>{thankYouViews}</strong>
+          </div>
+          <div className="card metric">
+            <span className="muted">Clicou no grupo</span>
+            <strong>{whatsappClicks}</strong>
+          </div>
         </div>
         {sendResult ? <div className="successBox">Disparo concluído para {sendResult} lead(s).</div> : null}
         {sendError ? <div className="errorBox">{sendError}</div> : null}
@@ -122,6 +134,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
         </div>
         <form action={sendLeadBroadcastAction} className="stackForm">
           <input type="hidden" name="eventId" value={event.id} />
+          <LeadBroadcastTemplates />
           <label className="field">
             <span>Assunto do e-mail</span>
             <input
@@ -139,6 +152,24 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
               required
             />
           </label>
+          <div className="grid twoColumnGrid">
+            <label className="field">
+              <span>Texto do botão</span>
+              <input
+                name="ctaLabel"
+                defaultValue="Entrar no grupo agora"
+                placeholder="Ex.: Entrar no grupo agora"
+              />
+            </label>
+            <label className="field">
+              <span>Link de destino</span>
+              <input
+                name="destinationUrl"
+                defaultValue={event.leadCaptureWhatsappGroupUrl ?? ""}
+                placeholder="https://chat.whatsapp.com/... ou outro link"
+              />
+            </label>
+          </div>
           <label className="field">
             <span>Imagem opcional</span>
             <input accept="image/png,image/jpeg,image/webp,image/gif" name="imageFile" type="file" />
@@ -169,7 +200,9 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                 {municipalityRanking.slice(0, 8).map((entry) => (
                   <div key={entry.label} className="leadInsightRow">
                     <span>{entry.label}</span>
-                    <strong>{entry.count}</strong>
+                    <strong>
+                      {entry.count} <small>({Math.round((entry.count / totalLeads) * 100)}%)</small>
+                    </strong>
                   </div>
                 ))}
               </div>
@@ -183,11 +216,46 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                 {originRanking.map(([origin, count]) => (
                   <div key={origin} className="leadInsightRow">
                     <span>{origin}</span>
-                    <strong>{count}</strong>
+                    <strong>
+                      {count} <small>({Math.round((count / totalLeads) * 100)}%)</small>
+                    </strong>
                   </div>
                 ))}
               </div>
             </article>
+          </div>
+        </section>
+      ) : null}
+
+      {emailCampaigns.length > 0 ? (
+        <section className="card spacedSection">
+          <div className="sectionHeader">
+            <div>
+              <h2>Termômetro dos e-mails</h2>
+              <p className="muted">Acompanhe quantas pessoas receberam e clicaram em cada disparo.</p>
+            </div>
+          </div>
+          <div className="leadInsightList campaignInsightList">
+            {emailCampaigns.slice(0, 8).map((campaign) => {
+              const clicks = campaign._count.clicks;
+              const ctr = campaign.sentCount > 0 ? Math.round((clicks / campaign.sentCount) * 100) : 0;
+
+              return (
+                <div key={campaign.id} className="campaignInsightRow">
+                  <div>
+                    <strong>{campaign.subject}</strong>
+                    <small>
+                      {formatDateTime(campaign.createdAt)} · {campaign.ctaLabel || "Abrir link"}
+                    </small>
+                  </div>
+                  <div className="campaignInsightStats">
+                    <span>{campaign.sentCount} enviados</span>
+                    <span>{clicks} cliques</span>
+                    <strong>{ctr}% CTR</strong>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
       ) : null}

@@ -1,5 +1,7 @@
 "use server";
 
+import { prisma } from "@/lib/prisma";
+import { getPublicBaseUrl } from "@/lib/public-url";
 import { redirect } from "next/navigation";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { sendLeadBroadcastEmail } from "@/features/email/email.service";
@@ -19,12 +21,32 @@ function splitIntoBatches<T>(items: T[], size: number) {
   return batches;
 }
 
+function normalizeDestinationUrl(value: string, fallbackUrl?: string | null) {
+  const text = value.trim();
+
+  if (!text) {
+    return fallbackUrl?.trim() || null;
+  }
+
+  if (/^https?:\/\//i.test(text)) {
+    return text;
+  }
+
+  if (text.startsWith("www.")) {
+    return `https://${text}`;
+  }
+
+  return `https://${text}`;
+}
+
 export async function sendLeadBroadcastAction(formData: FormData) {
   const admin = await requirePermission("EVENTS");
   const organizationContext = await getCurrentOrganizationContext();
   const eventId = String(formData.get("eventId") ?? "").trim();
   const subject = String(formData.get("subject") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim();
+  const ctaLabel = String(formData.get("ctaLabel") ?? "").trim();
+  const destinationUrl = String(formData.get("destinationUrl") ?? "").trim();
 
   if (!eventId) {
     redirect("/admin/events?error=Evento%20nao%20informado.");
@@ -59,10 +81,30 @@ export async function sendLeadBroadcastAction(formData: FormData) {
 
   const leads = await listEventLeads(event.id);
   const companySettings = await getCompanySettingsByOrganizationId(admin.organizationId!);
+  const normalizedDestinationUrl = normalizeDestinationUrl(destinationUrl, event.leadCaptureWhatsappGroupUrl);
 
   if (leads.length === 0) {
     redirect(`/admin/events/${eventId}/leads?error=${encodeURIComponent("Ainda não existem leads cadastrados para este evento.")}`);
   }
+
+  if (!normalizedDestinationUrl) {
+    redirect(`/admin/events/${eventId}/leads?error=${encodeURIComponent("Informe um link de destino válido para o e-mail.")}`);
+  }
+
+  const campaign = await prisma.leadEmailCampaign.create({
+    data: {
+      eventId: event.id,
+      subject,
+      body,
+      imageUrl,
+      ctaLabel: ctaLabel || null,
+      destinationUrl: normalizedDestinationUrl
+    }
+  });
+
+  const publicBaseUrl = getPublicBaseUrl({
+    publicDomain: organizationContext.organization.publicDomain
+  });
 
   const batches = splitIntoBatches(leads, 20);
   let sentCount = 0;
@@ -78,7 +120,8 @@ export async function sendLeadBroadcastAction(formData: FormData) {
           imageUrl,
           brandName: organizationContext.brandName,
           eventTitle: event.title,
-          whatsappGroupUrl: event.leadCaptureWhatsappGroupUrl,
+          ctaLabel: ctaLabel || "Abrir link",
+          ctaUrl: `${publicBaseUrl}/r/lead-email/${campaign.id}/${lead.id}`,
           supportEmail: companySettings.supportEmail
         })
       )
@@ -86,6 +129,15 @@ export async function sendLeadBroadcastAction(formData: FormData) {
 
     sentCount += results.filter((result) => result.status === "fulfilled").length;
   }
+
+  await prisma.leadEmailCampaign.update({
+    where: {
+      id: campaign.id
+    },
+    data: {
+      sentCount
+    }
+  });
 
   redirect(`/admin/events/${eventId}/leads?sent=${sentCount}`);
 }

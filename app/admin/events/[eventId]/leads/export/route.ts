@@ -79,6 +79,9 @@ export async function GET(
     "Telefone",
     "Evento",
     "Município do lead",
+    "Viu obrigado",
+    "Clicou no grupo",
+    "Cliques no grupo",
     "Cidade do evento",
     "UF do evento",
     "UTM source",
@@ -102,6 +105,9 @@ export async function GET(
       phone.localNumber,
       event.title,
       lead.municipality || "",
+      lead.thankYouViewedAt ? "Sim" : "Não",
+      lead.whatsappClickedAt ? "Sim" : "Não",
+      String(lead.whatsappClickCount ?? 0),
       event.city,
       event.state,
       lead.utmSource || "",
@@ -115,8 +121,12 @@ export async function GET(
     ];
   });
 
-  const municipalitySummaryHeader = ["Resumo por município", "Quantidade de leads"];
-  const municipalitySummaryRows = municipalityRanking.map((entry) => [entry.label, entry.count]);
+  const municipalitySummaryHeader = ["Resumo por município", "Quantidade de leads", "Percentual"];
+  const municipalitySummaryRows = municipalityRanking.map((entry) => [
+    entry.label,
+    entry.count,
+    `${Math.round((entry.count / Math.max(leads.length, 1)) * 100)}%`
+  ]);
   const csv = [
     [headers, ...rows].map((row) => row.map(csvValue).join(";")).join("\n"),
     [municipalitySummaryHeader, ...municipalitySummaryRows].map((row) => row.map(csvValue).join(";")).join("\n")

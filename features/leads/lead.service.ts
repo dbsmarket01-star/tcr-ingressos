@@ -154,6 +154,40 @@ export async function createOrUpdateEventLead(
   };
 }
 
+export async function markLeadThankYouViewed(leadId: string) {
+  if (!leadId) {
+    return;
+  }
+
+  await prisma.eventLead.updateMany({
+    where: {
+      id: leadId,
+      thankYouViewedAt: null
+    },
+    data: {
+      thankYouViewedAt: new Date()
+    }
+  });
+}
+
+export async function markLeadWhatsappClicked(leadId: string) {
+  if (!leadId) {
+    return;
+  }
+
+  await prisma.eventLead.updateMany({
+    where: {
+      id: leadId
+    },
+    data: {
+      whatsappClickedAt: new Date(),
+      whatsappClickCount: {
+        increment: 1
+      }
+    }
+  });
+}
+
 export async function getLeadCaptureEventBySlug(slug: string, organizationId?: string | null) {
   return unstable_cache(
     async (eventSlug: string, eventOrganizationId?: string | null) =>
@@ -219,6 +253,30 @@ export async function listEventLeads(eventId: string) {
     },
     orderBy: {
       createdAt: "desc"
+    }
+  });
+}
+
+export async function listLeadEmailCampaignSummaries(eventId: string) {
+  return prisma.leadEmailCampaign.findMany({
+    where: {
+      eventId
+    },
+    orderBy: {
+      createdAt: "desc"
+    },
+    select: {
+      id: true,
+      subject: true,
+      ctaLabel: true,
+      destinationUrl: true,
+      sentCount: true,
+      createdAt: true,
+      _count: {
+        select: {
+          clicks: true
+        }
+      }
     }
   });
 }

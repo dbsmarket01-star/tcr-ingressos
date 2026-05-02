@@ -7222,6 +7222,71 @@ body.operationTheme .topbar {
   font-size: 15px;
 }
 
+.leadInsightRow strong small {
+  color: #5d7a73;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.twoColumnGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.templateButtonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.campaignInsightList {
+  gap: 12px;
+}
+
+.campaignInsightRow {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(13, 43, 36, 0.08);
+  border-radius: 16px;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  padding: 14px 16px;
+}
+
+.campaignInsightRow strong {
+  color: var(--ink);
+  display: block;
+  margin: 0 0 6px;
+}
+
+.campaignInsightRow small {
+  color: var(--muted);
+  display: block;
+  line-height: 1.45;
+}
+
+.campaignInsightStats {
+  align-items: flex-end;
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+  text-align: right;
+}
+
+.campaignInsightStats span {
+  color: #4f6862;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.campaignInsightStats strong {
+  color: var(--brand-dark);
+  font-size: 16px;
+  margin: 0;
+}
+
 @media (min-width: 980px) {
   .leadCaptureHeroBottom {
     margin: 14px auto 0;
@@ -7999,7 +8064,8 @@ body.operationTheme .topbar {
   .leadCaptureTrustBar,
   .leadCaptureVenueGallery,
   .leadAdminBlockHeader,
-  .leadInsightsGrid {
+  .leadInsightsGrid,
+  .twoColumnGrid {
     grid-template-columns: 1fr;
   }
 
@@ -8026,6 +8092,17 @@ body.operationTheme .topbar {
 
   .leadCaptureInlineCta {
     grid-template-columns: 1fr;
+  }
+
+  .campaignInsightRow {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .campaignInsightStats {
+    align-items: start;
+    justify-items: start;
+    text-align: left;
   }
 
   .leadCaptureForm {

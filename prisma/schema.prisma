@@ -391,6 +391,7 @@ model Event {
   presaleChecks EventPresaleCheck[]
   leads     EventLead[]
   leadCaptureAttempts LeadCaptureAttempt[]
+  leadEmailCampaigns LeadEmailCampaign[]
 
   @@index([organizationId])
   @@index([status, startsAt])
@@ -404,6 +405,9 @@ model EventLead {
   email      String
   phone      String?
   municipality String?
+  thankYouViewedAt DateTime?
+  whatsappClickedAt DateTime?
+  whatsappClickCount Int @default(0)
   utmSource  String?
   utmMedium  String?
   utmCampaign String?
@@ -415,10 +419,43 @@ model EventLead {
   updatedAt  DateTime @updatedAt
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  emailCampaignClicks LeadEmailCampaignClick[]
 
   @@index([eventId, createdAt])
   @@index([email])
   @@unique([eventId, email])
+}
+
+model LeadEmailCampaign {
+  id             String   @id @default(cuid())
+  eventId        String
+  subject        String
+  body           String
+  imageUrl       String?
+  ctaLabel       String?
+  destinationUrl String
+  sentCount      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  event  Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  clicks LeadEmailCampaignClick[]
+
+  @@index([eventId, createdAt])
+}
+
+model LeadEmailCampaignClick {
+  id         String   @id @default(cuid())
+  campaignId String
+  leadId     String
+  createdAt  DateTime @default(now())
+
+  campaign LeadEmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  lead     EventLead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, leadId])
+  @@index([campaignId, createdAt])
+  @@index([leadId])
 }
 
 model LeadCaptureAttempt {

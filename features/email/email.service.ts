@@ -81,7 +81,8 @@ type LeadBroadcastEmailInput = {
   imageUrl?: string | null;
   brandName?: string;
   eventTitle: string;
-  whatsappGroupUrl?: string | null;
+  ctaLabel?: string | null;
+  ctaUrl?: string | null;
   supportEmail?: string | null;
 };
 
@@ -503,11 +504,11 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
   const imageBlock = input.imageUrl
     ? `<p style="margin: 0 0 18px;"><img src="${input.imageUrl}" alt="${input.eventTitle}" style="max-width: 100%; border-radius: 14px; display: block;" /></p>`
     : "";
-  const whatsappButton = input.whatsappGroupUrl
+  const ctaButton = input.ctaUrl
     ? `
       <p style="margin: 20px 0 0;">
-        <a href="${input.whatsappGroupUrl}" style="background: #14b866; border-radius: 10px; color: white; display: inline-block; font-weight: 700; padding: 14px 20px; text-decoration: none;">
-          Entrar no grupo do WhatsApp
+        <a href="${input.ctaUrl}" style="background: #14b866; border-radius: 10px; color: white; display: inline-block; font-weight: 700; padding: 14px 20px; text-decoration: none;">
+          ${input.ctaLabel || "Abrir link"}
         </a>
       </p>
     `
@@ -523,7 +524,7 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
       <p style="margin: 0 0 16px;">Olá, ${input.name}.</p>
       ${imageBlock}
       ${renderBroadcastBodyAsHtml(input.body)}
-      ${whatsappButton}
+      ${ctaButton}
       ${supportLine}
     </div>
   `;
@@ -536,7 +537,7 @@ function buildLeadBroadcastText(input: LeadBroadcastEmailInput) {
     input.subject,
     "",
     input.body,
-    input.whatsappGroupUrl ? `Entrar no grupo: ${input.whatsappGroupUrl}` : null,
+    input.ctaUrl ? `${input.ctaLabel || "Abrir link"}: ${input.ctaUrl}` : null,
     input.supportEmail ? `Suporte: ${input.supportEmail}` : null
   ]
     .filter(Boolean)
@@ -551,7 +552,8 @@ export async function sendLeadBroadcastEmail(input: LeadBroadcastEmailInput) {
     console.log("[email:dry-run] Disparo de leads", {
       to: input.to,
       subject: input.subject,
-      imageUrl: input.imageUrl
+      imageUrl: input.imageUrl,
+      ctaUrl: input.ctaUrl
     });
     return;
   }

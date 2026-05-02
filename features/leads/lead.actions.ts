@@ -76,6 +76,7 @@ export async function createEventLeadAction(formData: FormData) {
   }
 
   let leadEventId = randomUUID();
+  let leadId: string | null = null;
 
   try {
     const organizationContext = await getCurrentOrganizationContext();
@@ -85,6 +86,7 @@ export async function createEventLeadAction(formData: FormData) {
     const metaFbc = String(formData.get("metaFbc") ?? "").trim() || null;
     await verifyTurnstileToken(String(formData.get("cf-turnstile-response") ?? "").trim() || null, clientIp);
     const result = await createOrUpdateEventLead(parsed.data, organizationContext.organization.id, clientIp);
+    leadId = result.lead.id;
     revalidatePath(`/admin/events/${parsed.data.eventId}/leads`);
     revalidatePath(`/admin/events/${parsed.data.eventId}`);
 
@@ -137,5 +139,12 @@ export async function createEventLeadAction(formData: FormData) {
     redirect(`/lista/${eventSlug}?error=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível concluir seu cadastro.")}`);
   }
 
-  redirect(`/lista/${eventSlug}/obrigado?leid=${encodeURIComponent(leadEventId)}`);
+  const redirectParams = new URLSearchParams();
+  redirectParams.set("leid", leadEventId);
+
+  if (leadId) {
+    redirectParams.set("lead", leadId);
+  }
+
+  redirect(`/lista/${eventSlug}/obrigado?${redirectParams.toString()}`);
 }

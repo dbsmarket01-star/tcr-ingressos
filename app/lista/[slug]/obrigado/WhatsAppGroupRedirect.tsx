@@ -3,12 +3,63 @@
 type WhatsAppGroupRedirectProps = {
   buttonText: string;
   url: string;
+  leadId?: string | null;
+  eventTitle?: string;
 };
 
-export function WhatsAppGroupRedirect({ buttonText, url }: WhatsAppGroupRedirectProps) {
+declare global {
+  interface Window {
+    dataLayer?: Array<Record<string, unknown>>;
+    fbq?: (...args: unknown[]) => void;
+  }
+}
+
+export function WhatsAppGroupRedirect({ buttonText, url, leadId, eventTitle }: WhatsAppGroupRedirectProps) {
+  function handleClick() {
+    if (typeof window !== "undefined") {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: "clicked_whatsapp_group",
+        funnel: "lead_capture",
+        event_name: eventTitle || undefined,
+        lead_id: leadId || undefined
+      });
+
+      if (typeof window.fbq === "function") {
+        window.fbq("trackCustom", "ClickedWhatsAppGroup", {
+          content_name: eventTitle,
+          funnel: "lead_capture"
+        });
+      }
+    }
+
+    if (!leadId) {
+      return;
+    }
+
+    const payload = JSON.stringify({
+      leadId,
+      type: "whatsapp_click"
+    });
+
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon("/api/leads/track", new Blob([payload], { type: "application/json" }));
+      return;
+    }
+
+    void fetch("/api/leads/track", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: payload,
+      keepalive: true
+    });
+  }
+
   return (
     <div className="leadThankYouAction">
-      <a className="button fullButton whatsappGroupButton whatsappGroupButtonLarge" href={url}>
+      <a className="button fullButton whatsappGroupButton whatsappGroupButtonLarge" href={url} onClick={handleClick}>
         <span className="whatsappGroupButtonIcon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path
