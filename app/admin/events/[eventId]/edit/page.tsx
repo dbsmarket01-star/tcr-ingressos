@@ -527,6 +527,63 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           </div>
         </details>
 
+        <details className="formSection advancedSection formSectionTone toneSummary">
+          <summary className="formSectionSummary">
+            <div>
+              <span className="sectionEyebrow">Comunicação do evento</span>
+              <h2>E-mails automáticos e disparos opcionais</h2>
+              <p className="muted">Defina o que o sistema envia sozinho e o que a equipe usa manualmente no momento comercial certo.</p>
+            </div>
+          </summary>
+          <div className="communicationAdminGrid">
+            <section className="communicationAdminCard">
+              <div className="leadAdminBlockHeader">
+                <div>
+                  <span className="sectionEyebrow">Automático</span>
+                  <h3>O sistema envia sozinho</h3>
+                </div>
+                <p className="muted">Esses e-mails entram no fluxo natural do evento e podem ser pausados por evento quando você quiser.</p>
+              </div>
+              <div className="communicationToggleList">
+                <label className="field checkboxField">
+                  <input name="autoLeadCaptureEmailEnabled" type="checkbox" defaultChecked={event.autoLeadCaptureEmailEnabled !== false} />
+                  <span>Lead se cadastrou → enviar e-mail automaticamente</span>
+                </label>
+                <label className="field checkboxField">
+                  <input name="autoPendingPaymentEmailEnabled" type="checkbox" defaultChecked={event.autoPendingPaymentEmailEnabled !== false} />
+                  <span>Pedido pendente → enviar e-mail automaticamente</span>
+                </label>
+                <label className="field checkboxField">
+                  <input name="autoPurchaseApprovedEmailEnabled" type="checkbox" defaultChecked={event.autoPurchaseApprovedEmailEnabled !== false} />
+                  <span>Compra aprovada → enviar e-mail automaticamente</span>
+                </label>
+              </div>
+            </section>
+            <section className="communicationAdminCard">
+              <div className="leadAdminBlockHeader">
+                <div>
+                  <span className="sectionEyebrow">Opcional</span>
+                  <h3>Disparos manuais da operação</h3>
+                </div>
+                <p className="muted">Use a central de leads quando quiser fazer ações mais comerciais, pontuais ou segmentadas.</p>
+              </div>
+              <ul className="channelFocusChecklistList">
+                <li>Últimas vagas ou virada de lote</li>
+                <li>Lembrete do próximo evento</li>
+                <li>Mudança importante de horário ou local</li>
+                <li>Reativação de base antiga</li>
+                <li>Remarketing por município ou período</li>
+                <li>Pós-evento e nova pré-lista</li>
+              </ul>
+              <div className="actionRow">
+                <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}/leads#lead-broadcast`}>
+                  Abrir central de e-mails
+                </Link>
+              </div>
+            </section>
+          </div>
+        </details>
+
         <details className="formSection advancedSection formSectionTone toneMap">
           <summary className="formSectionSummary">
             <div>

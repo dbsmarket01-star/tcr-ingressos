@@ -474,7 +474,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
                       name: true,
                       publicDomain: true
                     }
-                  }
+                  },
+                  autoPurchaseApprovedEmailEnabled: true
                 }
               },
               tickets: {
@@ -502,7 +503,9 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         payload.status !== "REFUNDED"
       ) {
         const approvedTicketsEmail =
-          payment.order.tickets.length > 0 && !payment.order.ticketsEmailSentAt
+          payment.order.event.autoPurchaseApprovedEmailEnabled !== false &&
+          payment.order.tickets.length > 0 &&
+          !payment.order.ticketsEmailSentAt
             ? {
                 to: payment.order.customer.email,
                 buyerName: payment.order.customer.name,
@@ -638,7 +641,9 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           payment: updatedPayment,
           orderId: payment.orderId,
           email:
-            generatedTickets.length > 0 && !payment.order.ticketsEmailSentAt
+            payment.order.event.autoPurchaseApprovedEmailEnabled !== false &&
+            generatedTickets.length > 0 &&
+            !payment.order.ticketsEmailSentAt
               ? {
                   to: payment.order.customer.email,
                   buyerName: payment.order.customer.name,

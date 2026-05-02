@@ -373,6 +373,9 @@ model Event {
   leadCaptureThankYouTitle String?
   leadCaptureThankYouDescription String?
   leadCaptureThankYouButtonText String?
+  autoLeadCaptureEmailEnabled Boolean @default(true)
+  autoPurchaseApprovedEmailEnabled Boolean @default(true)
+  autoPendingPaymentEmailEnabled Boolean @default(true)
   conversionSocialProofText String?
   conversionUrgencyText     String?
   conversionCtaText         String?

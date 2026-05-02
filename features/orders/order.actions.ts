@@ -87,12 +87,13 @@ export async function createCheckoutOrderAction(formData: FormData) {
     redirect(`/evento/${eventSlug || parsed.data.eventSlug}?checkoutError=${encodeURIComponent(message)}#ingressos`);
   }
 
-  try {
-    await sendOrderPendingPaymentEmail({
-      to: order.customer.email,
-      buyerName: order.customer.name,
-      orderCode: order.code,
-      brandName: order.event.organization?.name || "TCR Ingressos",
+  if (order.event.autoPendingPaymentEmailEnabled !== false) {
+    try {
+      await sendOrderPendingPaymentEmail({
+        to: order.customer.email,
+        buyerName: order.customer.name,
+        orderCode: order.code,
+        brandName: order.event.organization?.name || "TCR Ingressos",
       eventTitle: order.event.title,
       eventDate: order.event.startsAt,
       venueName: order.event.venueName,
@@ -101,7 +102,8 @@ export async function createCheckoutOrderAction(formData: FormData) {
       orderUrl: createPublicOrderUrl(order.code, order.event.organization)
     });
   } catch (error) {
-    console.error("[email] Falha ao enviar pedido pendente", error);
+      console.error("[email] Falha ao enviar pedido pendente", error);
+    }
   }
 
   redirect(`/pedido/${order.code}`);

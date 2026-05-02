@@ -226,6 +226,7 @@ export async function getLeadCaptureEventBySlug(slug: string, organizationId?: s
           leadCaptureThankYouTitle: true,
           leadCaptureThankYouDescription: true,
           leadCaptureThankYouButtonText: true,
+          autoLeadCaptureEmailEnabled: true,
           organization: {
             select: {
               companySettings: {

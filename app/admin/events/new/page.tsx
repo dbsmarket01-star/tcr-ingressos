@@ -364,6 +364,61 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           </div>
         </details>
 
+        <details className="formSection advancedSection formSectionTone toneSummary">
+          <summary className="formSectionSummary">
+            <div>
+              <span className="sectionEyebrow">Comunicação do evento</span>
+              <h2>E-mails automáticos e disparos opcionais</h2>
+              <p className="muted">Defina o que o sistema dispara sozinho e o que a equipe envia manualmente no momento certo.</p>
+            </div>
+          </summary>
+          <div className="communicationAdminGrid">
+            <section className="communicationAdminCard">
+              <div className="leadAdminBlockHeader">
+                <div>
+                  <span className="sectionEyebrow">Automático</span>
+                  <h3>O sistema envia sozinho</h3>
+                </div>
+                <p className="muted">Esses e-mails podem sair sem intervenção da equipe quando o evento estiver operando.</p>
+              </div>
+              <div className="communicationToggleList">
+                <label className="field checkboxField">
+                  <input name="autoLeadCaptureEmailEnabled" type="checkbox" defaultChecked />
+                  <span>Lead se cadastrou → enviar e-mail automaticamente</span>
+                </label>
+                <label className="field checkboxField">
+                  <input name="autoPendingPaymentEmailEnabled" type="checkbox" defaultChecked />
+                  <span>Pedido pendente → enviar e-mail automaticamente</span>
+                </label>
+                <label className="field checkboxField">
+                  <input name="autoPurchaseApprovedEmailEnabled" type="checkbox" defaultChecked />
+                  <span>Compra aprovada → enviar e-mail automaticamente</span>
+                </label>
+              </div>
+            </section>
+            <section className="communicationAdminCard">
+              <div className="leadAdminBlockHeader">
+                <div>
+                  <span className="sectionEyebrow">Opcional</span>
+                  <h3>Disparos manuais da operação</h3>
+                </div>
+                <p className="muted">Esses ficam disponíveis depois, na central de leads do evento, para quando fizer sentido comercialmente.</p>
+              </div>
+              <ul className="channelFocusChecklistList">
+                <li>Últimas vagas ou virada de lote</li>
+                <li>Lembrete do próximo evento</li>
+                <li>Mudança importante de horário ou local</li>
+                <li>Reativação de base antiga</li>
+                <li>Remarketing por município ou período</li>
+                <li>Pós-evento e nova pré-lista</li>
+              </ul>
+              <div className="infoBox">
+                Depois de salvar o evento, a equipe usa a área de leads para disparar esses e-mails com filtro por data, município ou teste individual.
+              </div>
+            </section>
+          </div>
+        </details>
+
         <details className="formSection advancedSection formSectionTone toneMap">
           <summary className="formSectionSummary">
             <div>

@@ -206,6 +206,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
                   publicDomain: true
                 }
               },
+              autoPendingPaymentEmailEnabled: true,
               title: true,
               startsAt: true,
               venueName: true

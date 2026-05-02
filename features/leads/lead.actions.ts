@@ -120,14 +120,16 @@ export async function createEventLeadAction(formData: FormData) {
       const eventForEmail = await getLeadCaptureEventBySlug(eventSlug, organizationContext.organization.id);
       const supportEmail = eventForEmail?.organization?.companySettings?.[0]?.supportEmail || null;
 
-      await sendLeadCaptureConfirmationEmail({
-        to: result.lead.email,
-        name: result.lead.name,
-        eventTitle: result.lead.event.title,
-        whatsappGroupUrl: eventForEmail?.leadCaptureWhatsappGroupUrl || null,
-        brandName: organizationContext.brandName,
-        supportEmail
-      });
+      if (eventForEmail?.autoLeadCaptureEmailEnabled !== false) {
+        await sendLeadCaptureConfirmationEmail({
+          to: result.lead.email,
+          name: result.lead.name,
+          eventTitle: result.lead.event.title,
+          whatsappGroupUrl: eventForEmail?.leadCaptureWhatsappGroupUrl || null,
+          brandName: organizationContext.brandName,
+          supportEmail
+        });
+      }
     } catch (emailError) {
       console.error("[lead-capture] Falha ao enviar e-mail de confirmacao", {
         eventId: parsed.data.eventId,
