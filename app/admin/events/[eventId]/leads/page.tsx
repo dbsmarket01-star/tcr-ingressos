@@ -5,6 +5,7 @@ import { CopyButton } from "@/components/forms/CopyButton";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { getEventForManagement } from "@/features/events/event.service";
 import { sendLeadBroadcastAction } from "@/features/leads/lead.admin.actions";
+import { getMunicipalityRanking } from "@/features/leads/lead-normalization";
 import { listEventLeads } from "@/features/leads/lead.service";
 import { formatDateTime } from "@/lib/format";
 import { getPublicLeadCaptureUrl } from "@/lib/public-url";
@@ -36,13 +37,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
   const publicLandingUrl = getPublicLeadCaptureUrl(event.slug);
   const sendResult = typeof query.sent === "string" ? query.sent : null;
   const sendError = typeof query.error === "string" ? query.error : null;
-  const municipalityRanking = Array.from(
-    leads.reduce((acc, lead) => {
-      const key = lead.municipality?.trim() || "Não informado";
-      acc.set(key, (acc.get(key) ?? 0) + 1);
-      return acc;
-    }, new Map<string, number>())
-  ).sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], "pt-BR"));
+  const municipalityRanking = getMunicipalityRanking(leads.map((lead) => lead.municipality));
   const originRanking = Array.from(
     leads.reduce((acc, lead) => {
       const key = getLeadOriginBucket(lead.utmSource, lead.utmMedium);
@@ -171,10 +166,10 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                 <span>{municipalityRanking.length} grupos</span>
               </div>
               <div className="leadInsightList">
-                {municipalityRanking.slice(0, 8).map(([municipality, count]) => (
-                  <div key={municipality} className="leadInsightRow">
-                    <span>{municipality}</span>
-                    <strong>{count}</strong>
+                {municipalityRanking.slice(0, 8).map((entry) => (
+                  <div key={entry.label} className="leadInsightRow">
+                    <span>{entry.label}</span>
+                    <strong>{entry.count}</strong>
                   </div>
                 ))}
               </div>

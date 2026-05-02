@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requirePermission } from "@/features/auth/auth.service";
 import { getEventForManagement } from "@/features/events/event.service";
+import { getMunicipalityRanking } from "@/features/leads/lead-normalization";
 import { listEventLeads } from "@/features/leads/lead.service";
 import { formatDateTime } from "@/lib/format";
 
@@ -67,13 +68,7 @@ export async function GET(
   }
 
   const leads = await listEventLeads(event.id);
-  const municipalityRanking = Array.from(
-    leads.reduce((acc, lead) => {
-      const key = lead.municipality?.trim() || "Não informado";
-      acc.set(key, (acc.get(key) ?? 0) + 1);
-      return acc;
-    }, new Map<string, number>())
-  ).sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], "pt-BR"));
+  const municipalityRanking = getMunicipalityRanking(leads.map((lead) => lead.municipality));
 
   const headers = [
     "Nome completo",
@@ -121,7 +116,7 @@ export async function GET(
   });
 
   const municipalitySummaryHeader = ["Resumo por município", "Quantidade de leads"];
-  const municipalitySummaryRows = municipalityRanking.map(([municipality, count]) => [municipality, count]);
+  const municipalitySummaryRows = municipalityRanking.map((entry) => [entry.label, entry.count]);
   const csv = [
     [headers, ...rows].map((row) => row.map(csvValue).join(";")).join("\n"),
     [municipalitySummaryHeader, ...municipalitySummaryRows].map((row) => row.map(csvValue).join(";")).join("\n")
