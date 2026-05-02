@@ -3,11 +3,25 @@ function stripAccents(value: string) {
 }
 
 function toTitleCase(value: string) {
+  const particles = new Set(["de", "da", "do", "das", "dos", "e"]);
+
   return value
     .split(" ")
     .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .map((part, index, array) => {
+      const lower = part.toLowerCase();
+
+      if (index > 0 && index < array.length - 1 && particles.has(lower)) {
+        return lower;
+      }
+
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
     .join(" ");
+}
+
+function countAccentedCharacters(value: string) {
+  return Array.from(value).filter((char) => stripAccents(char) !== char).length;
 }
 
 export function normalizeMunicipalityKey(value?: string | null) {
@@ -36,18 +50,28 @@ export function getMunicipalityGroupLabel(values: Array<string | null | undefine
   const counts = new Map<string, number>();
 
   for (const value of cleaned) {
-    const key = stripAccents(value).toLowerCase();
     counts.set(value, (counts.get(value) ?? 0) + 1);
-    counts.set(key, counts.get(key) ?? 0);
   }
 
   const [bestMatch] = cleaned
     .slice()
     .sort((left, right) => {
+      const accentDiff = countAccentedCharacters(right) - countAccentedCharacters(left);
+
+      if (accentDiff !== 0) {
+        return accentDiff;
+      }
+
       const countDiff = (counts.get(right) ?? 0) - (counts.get(left) ?? 0);
 
       if (countDiff !== 0) {
         return countDiff;
+      }
+
+      const lengthDiff = right.length - left.length;
+
+      if (lengthDiff !== 0) {
+        return lengthDiff;
       }
 
       return left.localeCompare(right, "pt-BR");
