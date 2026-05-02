@@ -1786,6 +1786,762 @@ body.operationTheme .topbar {
   padding: 18px;
 }
 
+.dashboardGeneralShell {
+  display: grid;
+  gap: 18px;
+}
+
+.dashboardGeneralTopbar,
+.dashboardGeneralHeader,
+.dashboardGeneralKpiGrid,
+.dashboardGeneralMainGrid,
+.dashboardGeneralMidGrid,
+.dashboardGeneralOpsGrid,
+.dashboardGeneralBottomGrid {
+  display: grid;
+  gap: 18px;
+}
+
+.dashboardGeneralTopbar {
+  align-items: center;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.dashboardGeneralTopbarMenu {
+  align-content: center;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  min-width: 40px;
+}
+
+.dashboardGeneralTopbarMenu span {
+  background: #6f7f79;
+  border-radius: 999px;
+  display: block;
+  height: 2.5px;
+  width: 18px;
+}
+
+.dashboardGeneralSearch {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #dce9e4;
+  border-radius: 18px;
+  box-shadow: 0 12px 26px rgba(20, 31, 29, 0.04);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  min-height: 56px;
+  padding: 0 16px;
+}
+
+.dashboardGeneralSearch input {
+  background: transparent;
+  border: 0;
+  color: #23303d;
+  font: inherit;
+  min-width: 0;
+  outline: none;
+}
+
+.dashboardGeneralSearch input::placeholder {
+  color: #6f7f79;
+}
+
+.dashboardGeneralSearchIcon,
+.dashboardGeneralSearchHint,
+.dashboardGeneralBell,
+.dashboardGeneralUserCard span,
+.dashboardGeneralDateSummary svg,
+.dashboardGeneralOperationItem i,
+.dashboardGeneralActivityItem i {
+  color: #6f7f79;
+}
+
+.dashboardGeneralSearchIcon svg,
+.dashboardGeneralBell svg,
+.dashboardGeneralDateSummary svg,
+.dashboardGeneralOperationItem i svg,
+.dashboardGeneralActivityItem i svg,
+.dashboardGeneralKpiIcon svg {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.dashboardGeneralSearchHint {
+  align-items: center;
+  background: #f5f8f6;
+  border: 1px solid #e2ebe6;
+  border-radius: 10px;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 32px;
+  min-width: 42px;
+  padding: 0 8px;
+}
+
+.dashboardGeneralUserBar {
+  align-items: center;
+  display: inline-flex;
+  gap: 12px;
+}
+
+.dashboardGeneralBell {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #dce9e4;
+  border-radius: 16px;
+  display: inline-flex;
+  height: 52px;
+  justify-content: center;
+  position: relative;
+  width: 52px;
+}
+
+.dashboardGeneralBell i {
+  align-items: center;
+  background: var(--brand);
+  border: 2px solid white;
+  border-radius: 999px;
+  color: white;
+  display: inline-flex;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+  height: 18px;
+  justify-content: center;
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  width: 18px;
+}
+
+.dashboardGeneralUserCard {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #dce9e4;
+  border-radius: 18px;
+  box-shadow: 0 12px 26px rgba(20, 31, 29, 0.04);
+  display: inline-flex;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 14px 0 10px;
+}
+
+.dashboardGeneralUserCard strong,
+.dashboardGeneralUserCard span {
+  display: block;
+}
+
+.dashboardGeneralUserCard strong {
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.dashboardGeneralUserCard span {
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.dashboardGeneralAvatar {
+  align-items: center;
+  background:
+    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.28), transparent 35%),
+    linear-gradient(135deg, #f3f8f6, #ddebe6);
+  border: 1px solid rgba(var(--brand-rgb), 0.12);
+  border-radius: 999px;
+  color: var(--brand);
+  display: inline-flex;
+  font-size: 16px;
+  font-weight: 900;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.dashboardGeneralHeader {
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.dashboardGeneralHeader h1,
+.dashboardGeneralHeader p {
+  margin: 0;
+}
+
+.dashboardGeneralHeader h1 {
+  color: #111827;
+  font-size: clamp(34px, 4vw, 48px);
+  line-height: 1;
+}
+
+.dashboardGeneralHeader p {
+  color: #6b7280;
+  margin-top: 8px;
+}
+
+.dashboardGeneralDateCard {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #dce9e4;
+  border-radius: 18px;
+  box-shadow: 0 12px 26px rgba(20, 31, 29, 0.04);
+  display: grid;
+  gap: 14px;
+  min-width: 320px;
+  padding: 14px 16px;
+}
+
+.dashboardGeneralDateSummary {
+  align-items: center;
+  display: flex;
+  font-weight: 800;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.dashboardGeneralDateSummary svg {
+  height: 18px;
+  width: 18px;
+}
+
+.dashboardGeneralDateFields {
+  align-items: end;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, auto));
+}
+
+.dashboardGeneralDateFields label {
+  display: grid;
+  gap: 6px;
+}
+
+.dashboardGeneralDateFields label span {
+  color: #6f7f79;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dashboardGeneralDateFields input {
+  background: white;
+  border: 1px solid #dce9e4;
+  border-radius: 10px;
+  min-height: 40px;
+  padding: 0 10px;
+}
+
+.dashboardGeneralKpiGrid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.dashboardGeneralKpiCard {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid #dce9e4;
+  border-radius: 20px;
+  box-shadow: 0 18px 36px rgba(22, 32, 42, 0.045);
+  display: grid;
+  gap: 10px;
+  min-height: 174px;
+  padding: 20px;
+}
+
+.dashboardGeneralKpiIcon {
+  align-items: center;
+  background:
+    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.24), transparent 35%),
+    linear-gradient(135deg, #f3fbf7, #e8f4ef);
+  border: 1px solid rgba(var(--brand-rgb), 0.12);
+  border-radius: 999px;
+  color: var(--brand);
+  display: inline-flex;
+  height: 46px;
+  justify-content: center;
+  width: 46px;
+}
+
+.dashboardGeneralKpiLabel {
+  color: #354253;
+  display: block;
+  font-size: 14px;
+}
+
+.dashboardGeneralKpiCard strong {
+  color: #121c2d;
+  font-size: clamp(24px, 2vw, 36px);
+  line-height: 1.05;
+}
+
+.dashboardGeneralDelta {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.dashboardGeneralDelta.is-up {
+  color: #0b7a63;
+}
+
+.dashboardGeneralDelta.is-down {
+  color: #dc2626;
+}
+
+.dashboardGeneralDelta.is-flat {
+  color: #6f7f79;
+}
+
+.dashboardGeneralMainGrid {
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.82fr);
+}
+
+.dashboardGeneralPanel {
+  background:
+    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.05), transparent 22%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(247, 250, 248, 0.98));
+  border: 1px solid #dce9e4;
+  border-radius: 24px;
+  box-shadow: 0 18px 36px rgba(22, 32, 42, 0.045);
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+}
+
+.dashboardGeneralPanelHeader {
+  align-items: start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.dashboardGeneralPanelHeader h2,
+.dashboardGeneralPanelHeader p {
+  margin: 0;
+}
+
+.dashboardGeneralPanelHeader h2 {
+  font-size: 30px;
+  line-height: 1.08;
+}
+
+.dashboardGeneralPanelHeader p {
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+.dashboardGeneralPill {
+  align-items: center;
+  background: #f7faf8;
+  border: 1px solid #dce9e4;
+  border-radius: 999px;
+  color: #374151;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 800;
+  min-height: 40px;
+  padding: 0 14px;
+  white-space: nowrap;
+}
+
+.dashboardGeneralLineChartWrap {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.dashboardGeneralYAxis {
+  color: #6b7280;
+  display: grid;
+  font-size: 12px;
+  gap: 0;
+  height: 280px;
+  padding-top: 8px;
+}
+
+.dashboardGeneralYAxis span {
+  align-self: start;
+}
+
+.dashboardGeneralLineChart {
+  display: grid;
+  gap: 12px;
+}
+
+.dashboardGeneralLineChart svg {
+  height: 280px;
+  width: 100%;
+}
+
+.dashboardGeneralGridLine {
+  stroke: #e6eeea;
+  stroke-width: 1;
+}
+
+.dashboardGeneralAreaPath {
+  fill: rgba(var(--brand-rgb), 0.14);
+}
+
+.dashboardGeneralLinePath {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 3;
+}
+
+.dashboardGeneralLinePoint {
+  fill: white;
+  stroke: var(--brand);
+  stroke-width: 3;
+}
+
+.dashboardGeneralXAxis {
+  color: #6b7280;
+  display: grid;
+  font-size: 12px;
+  gap: 12px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.dashboardGeneralXAxis span {
+  text-align: center;
+}
+
+.dashboardGeneralPaymentGrid {
+  align-items: center;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 190px minmax(0, 1fr);
+}
+
+.dashboardGeneralDonut {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  height: 190px;
+  justify-content: center;
+  margin: 0 auto;
+  width: 190px;
+}
+
+.dashboardGeneralDonut.is-small {
+  height: 160px;
+  width: 160px;
+}
+
+.dashboardGeneralDonut span {
+  background: white;
+  border-radius: 999px;
+  display: block;
+  height: 58%;
+  width: 58%;
+}
+
+.dashboardGeneralPaymentLegend,
+.dashboardGeneralLocationList,
+.dashboardGeneralActivityList {
+  display: grid;
+  gap: 14px;
+}
+
+.dashboardGeneralLegendRow {
+  align-items: center;
+  display: grid;
+  gap: 8px 12px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.dashboardGeneralLegendRow div {
+  align-items: center;
+  display: inline-flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.dashboardGeneralLegendRow i {
+  border-radius: 999px;
+  display: inline-block;
+  flex: 0 0 auto;
+  height: 10px;
+  width: 10px;
+}
+
+.dashboardGeneralLegendRow i.is-pix {
+  background: #0b7a63;
+}
+
+.dashboardGeneralLegendRow i.is-card {
+  background: #b8c4bf;
+}
+
+.dashboardGeneralLegendRow i.is-other {
+  background: #dfe6e2;
+}
+
+.dashboardGeneralLegendRow span,
+.dashboardGeneralTotalsFooter span,
+.dashboardGeneralLocationMeta span,
+.dashboardGeneralOperationItem span,
+.dashboardGeneralCustomerStats span,
+.dashboardGeneralActivityItem span {
+  color: #374151;
+}
+
+.dashboardGeneralLegendRow small,
+.dashboardGeneralCustomerStats small,
+.dashboardGeneralActivityItem small {
+  color: #6b7280;
+}
+
+.dashboardGeneralTotalsFooter {
+  align-items: center;
+  border-top: 1px solid #e7efeb;
+  display: flex;
+  justify-content: space-between;
+  padding-top: 14px;
+}
+
+.dashboardGeneralMidGrid {
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.82fr);
+}
+
+.dashboardGeneralEventTable {
+  display: grid;
+  gap: 8px;
+}
+
+.dashboardGeneralEventTableHead,
+.dashboardGeneralEventRow {
+  align-items: center;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(240px, 1fr) 70px 110px 86px;
+}
+
+.dashboardGeneralEventTableHead {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 0 8px;
+  text-transform: uppercase;
+}
+
+.dashboardGeneralEventRow {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid #e5eeea;
+  border-radius: 16px;
+  color: inherit;
+  padding: 10px 12px;
+  text-decoration: none;
+}
+
+.dashboardGeneralEventCell {
+  align-items: center;
+  display: inline-flex;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dashboardGeneralEventCell strong {
+  min-width: 0;
+}
+
+.dashboardGeneralEventThumb {
+  align-items: center;
+  background: #edf4f0;
+  border-radius: 12px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 44px;
+  justify-content: center;
+  overflow: hidden;
+  width: 44px;
+}
+
+.dashboardGeneralEventThumb img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.dashboardGeneralGhostLink {
+  align-items: center;
+  border: 1px solid #dce9e4;
+  border-radius: 14px;
+  color: var(--brand);
+  display: inline-flex;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 18px;
+  text-decoration: none;
+}
+
+.dashboardGeneralGhostLink.compact {
+  min-height: 38px;
+  padding: 0 14px;
+}
+
+.dashboardGeneralFunnel {
+  align-items: center;
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  padding-top: 6px;
+}
+
+.dashboardGeneralFunnelStep {
+  border-radius: 18px;
+  color: white;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  min-height: 82px;
+  padding: 16px 20px;
+}
+
+.dashboardGeneralFunnelStep span {
+  color: inherit;
+  font-size: 14px;
+}
+
+.dashboardGeneralFunnelStep strong {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.dashboardGeneralFunnelStep.is-light {
+  background: linear-gradient(180deg, #e5f6ef, #d4eee3);
+  color: #165043;
+  width: 100%;
+}
+
+.dashboardGeneralFunnelStep.is-mid {
+  background: linear-gradient(180deg, #0f8f72, #0a775f);
+  width: 84%;
+}
+
+.dashboardGeneralFunnelStep.is-dark {
+  background: linear-gradient(180deg, #066953, #055142);
+  width: 68%;
+}
+
+.dashboardGeneralFunnelRate {
+  align-items: center;
+  display: grid;
+  justify-items: center;
+  padding-top: 4px;
+}
+
+.dashboardGeneralFunnelRate span {
+  color: #6b7280;
+}
+
+.dashboardGeneralFunnelRate strong {
+  color: var(--brand);
+  font-size: 52px;
+  line-height: 1;
+}
+
+.dashboardGeneralOpsGrid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.15fr);
+}
+
+.dashboardGeneralOperationList,
+.dashboardGeneralCustomerStats {
+  display: grid;
+  gap: 12px;
+}
+
+.dashboardGeneralOperationItem {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid #e5eeea;
+  border-radius: 16px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 14px 16px;
+}
+
+.dashboardGeneralOperationItem strong,
+.dashboardGeneralCustomerStats strong,
+.dashboardGeneralLocationMeta strong,
+.dashboardGeneralActivityItem strong {
+  color: #111827;
+  display: block;
+}
+
+.dashboardGeneralOperationItem i,
+.dashboardGeneralActivityItem i {
+  align-items: center;
+  background: #f3f8f6;
+  border: 1px solid #dce9e4;
+  border-radius: 14px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+
+.dashboardGeneralCustomerMix {
+  align-items: center;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.dashboardGeneralLocationRow {
+  display: grid;
+  gap: 8px;
+}
+
+.dashboardGeneralLocationMeta {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.dashboardGeneralLocationBar {
+  background: #e8efec;
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.dashboardGeneralLocationBar span {
+  background: var(--brand);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+}
+
+.dashboardGeneralBottomGrid {
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.85fr);
+}
+
+.dashboardGeneralOrdersTable td,
+.dashboardGeneralOrdersTable th {
+  white-space: nowrap;
+}
+
+.dashboardGeneralActivityItem {
+  align-items: start;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid #e5eeea;
+  border-radius: 16px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: 14px 16px;
+}
+
+.dashboardGeneralActivityItem time {
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .platformOverviewPanel {
   display: grid;
   gap: 18px;
@@ -7897,6 +8653,71 @@ body.operationTheme .topbar {
   .dashboardDateForm input,
   .dashboardDateForm button {
     width: 100%;
+  }
+
+  .dashboardGeneralTopbar,
+  .dashboardGeneralHeader,
+  .dashboardGeneralMainGrid,
+  .dashboardGeneralMidGrid,
+  .dashboardGeneralOpsGrid,
+  .dashboardGeneralBottomGrid,
+  .dashboardGeneralPaymentGrid,
+  .dashboardGeneralCustomerMix,
+  .dashboardGeneralDateFields {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardGeneralTopbar {
+    justify-items: stretch;
+  }
+
+  .dashboardGeneralTopbarMenu,
+  .dashboardGeneralSearchHint {
+    display: none;
+  }
+
+  .dashboardGeneralUserBar {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .dashboardGeneralDateCard {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .dashboardGeneralKpiGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboardGeneralPanelHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboardGeneralPanelHeader h2 {
+    font-size: 24px;
+  }
+
+  .dashboardGeneralLineChartWrap {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardGeneralYAxis {
+    display: none;
+  }
+
+  .dashboardGeneralXAxis {
+    gap: 6px;
+  }
+
+  .dashboardGeneralEventTableHead,
+  .dashboardGeneralEventRow {
+    grid-template-columns: minmax(0, 1fr) 60px 92px 72px;
+  }
+
+  .dashboardGeneralFunnelRate strong {
+    font-size: 40px;
   }
 
   .platformOverviewHero,

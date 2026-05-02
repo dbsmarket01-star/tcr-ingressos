@@ -5,7 +5,6 @@ import { getDashboardMetrics } from "@/features/dashboard/dashboard.service";
 import { getPlatformOverview } from "@/features/platform/platform.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
-import { getPublicEventUrl } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +36,228 @@ function formatPeriodLabel(startDate: string, endDate: string) {
   });
 
   return `De ${formatter.format(start)} a ${formatter.format(end)}`;
+}
+
+function formatDateRangeLabel(startDate: string, endDate: string) {
+  const start = new Date(`${startDate}T00:00:00-03:00`);
+  const end = new Date(`${endDate}T00:00:00-03:00`);
+
+  const formatter = new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "America/Sao_Paulo"
+  });
+
+  return `${formatter.format(start)} - ${formatter.format(end)}`;
+}
+
+function formatKpiDelta(value: number) {
+  const signal = value > 0 ? "up" : value < 0 ? "down" : "flat";
+  const prefix = value > 0 ? "+" : value < 0 ? "" : "";
+  return {
+    signal,
+    label: `${prefix}${value.toFixed(1).replace(".", ",")}% vs período anterior`
+  };
+}
+
+function formatPercentage(value: number, fractionDigits = 2) {
+  return `${value.toFixed(fractionDigits).replace(".", ",")}%`;
+}
+
+function formatCompactDateTime(value: Date) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Sao_Paulo"
+  }).format(value);
+}
+
+function formatRelativeTime(value: Date) {
+  const diffInMs = Date.now() - value.getTime();
+  const diffInMinutes = Math.max(1, Math.round(diffInMs / 60000));
+
+  if (diffInMinutes < 60) {
+    return `Há ${diffInMinutes} min`;
+  }
+
+  const diffInHours = Math.round(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `Há ${diffInHours} h`;
+  }
+
+  const diffInDays = Math.round(diffInHours / 24);
+  return `Há ${diffInDays} dia${diffInDays > 1 ? "s" : ""}`;
+}
+
+function humanizeOrderStatus(status: string) {
+  if (status === "PAID") return "Pago";
+  if (status === "PENDING_PAYMENT") return "Pendente";
+  if (status === "REFUNDED") return "Reembolsado";
+  if (status === "CANCELED") return "Cancelado";
+  if (status === "EXPIRED") return "Expirado";
+  return "Rascunho";
+}
+
+function humanizePaymentMethod(method: "PIX" | "CREDIT_CARD" | "SIMULATED" | "OTHER") {
+  if (method === "PIX") return "Pix";
+  if (method === "CREDIT_CARD") return "Cartão";
+  if (method === "SIMULATED") return "Simulado";
+  return "Outros";
+}
+
+function buildSalesChart(series: Array<{ label: string; revenueInCents: number }>, maxRevenueInCents: number) {
+  const width = 640;
+  const height = 280;
+  const paddingLeft = 26;
+  const paddingRight = 18;
+  const paddingTop = 18;
+  const paddingBottom = 34;
+  const usableWidth = width - paddingLeft - paddingRight;
+  const usableHeight = height - paddingTop - paddingBottom;
+  const safeMax = maxRevenueInCents > 0 ? maxRevenueInCents : 1;
+
+  const points = series.map((item, index) => {
+    const x = paddingLeft + (usableWidth * index) / Math.max(1, series.length - 1);
+    const y = paddingTop + usableHeight - (item.revenueInCents / safeMax) * usableHeight;
+    return { ...item, x, y };
+  });
+
+  const linePath = points
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`)
+    .join(" ");
+
+  const areaPath = points.length
+    ? `${linePath} L ${points[points.length - 1].x.toFixed(1)} ${(height - paddingBottom).toFixed(1)} L ${points[0].x.toFixed(1)} ${(height - paddingBottom).toFixed(1)} Z`
+    : "";
+
+  return { width, height, paddingBottom, points, linePath, areaPath };
+}
+
+function DashboardIcon({
+  kind
+}: {
+  kind:
+    | "money"
+    | "ticket"
+    | "chart"
+    | "users"
+    | "repeat"
+    | "percent"
+    | "qr"
+    | "clock"
+    | "alert"
+    | "activity";
+}) {
+  const common = {
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "1.9",
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const
+  };
+
+  if (kind === "money") {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 8v8" />
+        <path d="M15 10.5c0-1.2-1.34-2.18-3-2.18s-3 .98-3 2.18 1.34 2.18 3 2.18 3 .98 3 2.18-1.34 2.18-3 2.18-3-.98-3-2.18" />
+      </svg>
+    );
+  }
+
+  if (kind === "ticket") {
+    return (
+      <svg {...common}>
+        <path d="M4 9a2.5 2.5 0 0 0 0 6v3h16v-3a2.5 2.5 0 0 0 0-6V6H4z" />
+        <path d="M9 8v8" />
+      </svg>
+    );
+  }
+
+  if (kind === "chart") {
+    return (
+      <svg {...common}>
+        <path d="M6 18V9" />
+        <path d="M12 18V6" />
+        <path d="M18 18v-4" />
+      </svg>
+    );
+  }
+
+  if (kind === "users") {
+    return (
+      <svg {...common}>
+        <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
+        <circle cx="9.5" cy="7.5" r="3.5" />
+        <path d="M17 11a3 3 0 1 0 0-6" />
+        <path d="M21 21v-2a4 4 0 0 0-3-3.87" />
+      </svg>
+    );
+  }
+
+  if (kind === "repeat") {
+    return (
+      <svg {...common}>
+        <path d="M17 2l4 4-4 4" />
+        <path d="M3 11V9a3 3 0 0 1 3-3h15" />
+        <path d="M7 22l-4-4 4-4" />
+        <path d="M21 13v2a3 3 0 0 1-3 3H3" />
+      </svg>
+    );
+  }
+
+  if (kind === "percent") {
+    return (
+      <svg {...common}>
+        <path d="M19 5L5 19" />
+        <circle cx="7" cy="7" r="2.5" />
+        <circle cx="17" cy="17" r="2.5" />
+      </svg>
+    );
+  }
+
+  if (kind === "qr") {
+    return (
+      <svg {...common}>
+        <rect x="4" y="4" width="6" height="6" rx="1" />
+        <rect x="14" y="4" width="6" height="6" rx="1" />
+        <rect x="4" y="14" width="6" height="6" rx="1" />
+        <path d="M15 15h2v2h-2z" />
+        <path d="M19 15h1v1h-1z" />
+        <path d="M15 19h1v1h-1z" />
+      </svg>
+    );
+  }
+
+  if (kind === "clock") {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 8v5l3 2" />
+      </svg>
+    );
+  }
+
+  if (kind === "alert") {
+    return (
+      <svg {...common}>
+        <path d="M12 3l9 16H3z" />
+        <path d="M12 9v4" />
+        <path d="M12 17h.01" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg {...common}>
+      <path d="M4 14c2-1 4-3 5-6 1.5 3 3 5 6 6 2 1 4 1 5 1-1 2-3 4-5 5-2 1-4 1-6 0-2-1-4-3-5-5 1 0 3 0 5-1z" />
+    </svg>
+  );
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
@@ -290,352 +511,499 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
   const dashboard = await getDashboardMetrics(params, getAdminAllowedEventIds(admin));
   const periodLabel = formatPeriodLabel(dashboard.period.startDate, dashboard.period.endDate);
-  const approvedRateLabel =
-    dashboard.periodMetrics.ordersCreated > 0
-      ? `${dashboard.periodMetrics.approvedRate}% dos pedidos criados`
-      : "Sem pedidos criados no período";
+  const dateRangeLabel = formatDateRangeLabel(dashboard.period.startDate, dashboard.period.endDate);
+  const salesChart = buildSalesChart(dashboard.salesByDay, dashboard.maxDailyRevenueInCents);
+  const paymentMethodsChart = `conic-gradient(
+    #0b7a63 0deg ${(dashboard.paymentMethods.pix.rate / 100) * 360}deg,
+    #b8c4bf ${(dashboard.paymentMethods.pix.rate / 100) * 360}deg ${((dashboard.paymentMethods.pix.rate + dashboard.paymentMethods.card.rate) / 100) * 360}deg,
+    #dfe6e2 ${((dashboard.paymentMethods.pix.rate + dashboard.paymentMethods.card.rate) / 100) * 360}deg 360deg
+  )`;
+  const customerMixChart = `conic-gradient(
+    #0b7a63 0deg ${(dashboard.customers.newCustomerRate / 100) * 360}deg,
+    #d4dad7 ${(dashboard.customers.newCustomerRate / 100) * 360}deg 360deg
+  )`;
+  const kpis = [
+    {
+      label: "Faturamento total",
+      value: formatCurrency(dashboard.kpis.revenueInCents),
+      delta: formatKpiDelta(dashboard.kpis.revenueChangePercent),
+      icon: "money" as const
+    },
+    {
+      label: "Vendas realizadas",
+      value: dashboard.kpis.paidOrders,
+      delta: formatKpiDelta(dashboard.kpis.paidOrdersChangePercent),
+      icon: "ticket" as const
+    },
+    {
+      label: "Ticket médio",
+      value: formatCurrency(dashboard.kpis.averageTicketInCents),
+      delta: formatKpiDelta(dashboard.kpis.averageTicketChangePercent),
+      icon: "chart" as const
+    },
+    {
+      label: "Novos clientes",
+      value: dashboard.kpis.newCustomers,
+      delta: formatKpiDelta(dashboard.kpis.newCustomersChangePercent),
+      icon: "users" as const
+    },
+    {
+      label: "Clientes recorrentes",
+      value: dashboard.kpis.recurringCustomers,
+      delta: formatKpiDelta(dashboard.kpis.recurringCustomersChangePercent),
+      icon: "repeat" as const
+    },
+    {
+      label: "Taxa de conversão",
+      value: formatPercentage(dashboard.kpis.conversionRate),
+      delta: formatKpiDelta(dashboard.kpis.conversionRateChangePercent),
+      icon: "percent" as const
+    }
+  ];
 
   return (
     <AdminShell
-      title="Dashboard"
-      description="Acompanhe faturamento pago, pedidos, meios de pagamento e o estado operacional da TCR por período."
+      title="Dashboard geral"
+      description="Visão completa da sua bilheteria, com foco em faturamento, pedidos, eventos e operação."
     >
-      <section className="operationCommandStrip spacedSection" aria-label="Atalhos da operação">
-        <article className="operationCommandCard">
-          <span className="eyebrow">Rotina da operação filha</span>
-          <h2>{organizationContext.brandName} em visão rápida dentro da Ingresaas</h2>
-          <p>Use estes atalhos para sair do panorama geral e cair direto nas áreas mais operacionais da bilheteria, sem perder a ponte com o painel master.</p>
-        </article>
-        <div className="operationCommandActions">
-          <Link className="secondaryButton smallButton" href="/admin/events">
-            Eventos
-          </Link>
-          <Link className="secondaryButton smallButton" href="/admin/orders">
-            Pedidos
-          </Link>
-          <Link className="secondaryButton smallButton" href="/admin/check-in">
-            Check-in
-          </Link>
-          <Link className="secondaryButton smallButton" href="/admin/finance">
-            Financeiro
-          </Link>
-        </div>
-      </section>
-
-      <section className="dashboardFilterPanel" aria-label="Filtro do dashboard">
-        <div>
-          <span className="eyebrow">Visão comercial</span>
-          <h2>Resumo comercial da TCR</h2>
-          <p>{periodLabel}. Ajuste as datas para comparar apenas o que foi pago, o avanço da agenda e o desempenho por evento.</p>
-          <div className="dashboardQuickFilters">
-            <Link className="secondaryButton smallButton" href="/admin">
-              Últimos 7 dias
-            </Link>
-            <Link className="secondaryButton smallButton" href="/admin?startDate=&endDate=">
-              Limpar datas
-            </Link>
-            <Link className="secondaryButton smallButton" href="/admin/orders">
-              Ver pedidos
-            </Link>
-            <Link className="secondaryButton smallButton" href="/admin/finance">
-              Ir para financeiro
-            </Link>
+      <div className="dashboardGeneralShell">
+        <section className="dashboardGeneralTopbar" aria-label="Comandos do dashboard">
+          <div className="dashboardGeneralTopbarMenu" aria-hidden="true">
+            <span />
+            <span />
+            <span />
           </div>
-        </div>
 
-        <form className="dashboardDateForm">
-          <label>
-            <span>Início</span>
-            <input type="date" name="startDate" defaultValue={dashboard.period.startDate} />
-          </label>
-          <label>
-            <span>Fim</span>
-            <input type="date" name="endDate" defaultValue={dashboard.period.endDate} />
-          </label>
-          <button className="button" type="submit">
-            Filtrar
-          </button>
-        </form>
-      </section>
+          <form action="/admin/support" className="dashboardGeneralSearch">
+            <div className="dashboardGeneralSearchIcon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-3.5-3.5" />
+              </svg>
+            </div>
+            <input name="q" placeholder="Buscar eventos, pedidos, clientes..." />
+            <span className="dashboardGeneralSearchHint">⌘ K</span>
+          </form>
 
-      <section className="grid dashboardGrid dashboardPrimaryGrid" aria-label="Indicadores principais">
-        {metric(
-          "Faturamento pago",
-          formatCurrency(dashboard.totals.revenueInCents),
-          `${dashboard.totals.paidOrders} pedido(s) pagos no período`,
-          true
-        )}
-        {metric(
-          "Ticket médio",
-          formatCurrency(dashboard.periodMetrics.averageTicketInCents),
-          "Média por pedido aprovado"
-        )}
-        {metric("Pedidos pagos", dashboard.totals.paidOrders, approvedRateLabel)}
-        {metric(
-          "Clientes únicos",
-          dashboard.periodMetrics.uniqueCustomers,
-          `${dashboard.periodMetrics.newCustomerRate}% novos compradores`
-        )}
-      </section>
-
-      <section className="grid twoColumns spacedSection" aria-label="Checklist final da operação">
-        <article className="dashboardPanel">
-          <div className="sectionHeader inlineHeader">
-            <div>
-              <h2>Checklist operacional final</h2>
-              <p>Um retrato rápido do que já está pronto para a TCR operar com menos supervisão.</p>
+          <div className="dashboardGeneralUserBar">
+            <button className="dashboardGeneralBell" type="button" aria-label="Notificações">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 17H5.5a1.5 1.5 0 0 1-1.2-2.4L6 12.5V10a6 6 0 1 1 12 0v2.5l1.7 2.1A1.5 1.5 0 0 1 18.5 17H15" />
+                <path d="M10 20a2 2 0 0 0 4 0" />
+              </svg>
+              <i>3</i>
+            </button>
+            <div className="dashboardGeneralUserCard">
+              <div className="dashboardGeneralAvatar">{admin.name.slice(0, 1).toUpperCase()}</div>
+              <div>
+                <strong>{admin.name}</strong>
+                <span>{admin.role === "OWNER" ? "Administrador" : "Equipe da operação"}</span>
+              </div>
             </div>
           </div>
-          <ol className="platformChecklist">
-            <li>{dashboard.events.some((event) => event.status === "PUBLISHED") ? "Existe agenda publicada para venda" : "Ainda falta publicar pelo menos um evento"}</li>
-            <li>{dashboard.totals.paidOrders > 0 ? "Já existem pedidos pagos válidos" : "Ainda não há pedidos pagos no recorte atual"}</li>
-            <li>{dashboard.totals.ticketsActive > 0 ? "Ingressos ativos já estão emitidos" : "Ainda falta emitir ingressos ativos"}</li>
-            <li>{dashboard.totals.checkInsApproved > 0 ? "Check-in já rodou na operação" : "Check-in ainda não foi exercitado no recorte atual"}</li>
-          </ol>
-        </article>
+        </section>
 
-        <article className="dashboardPanel">
-          <div className="sectionHeader inlineHeader">
-            <div>
-              <h2>Ponte com a Ingresaas</h2>
-              <p>A TCR já roda como filha oficial, mas continua governada pelo painel master.</p>
-            </div>
-          </div>
-          <div className="permissionList">
-            <p><strong>Painel master:</strong> cria clientes, acompanha relatórios e governa acessos.</p>
-            <p><strong>TCR:</strong> vende, atende, faz check-in e opera a própria agenda.</p>
-            <p><strong>Próximo uso ideal:</strong> sair da Ingresaas só para entrar aqui no ponto exato do trabalho.</p>
-          </div>
-        </article>
-      </section>
-
-      <section className="dashboardInsightsGrid" aria-label="Pagamentos e clientes">
-        <div className="dashboardPanel">
-          <div className="sectionHeader inlineHeader">
-            <div>
-              <h2>Meios de pagamento</h2>
-              <p>Distribuição das vendas aprovadas no período selecionado.</p>
-            </div>
-          </div>
-          <div className="chartLegend">
-            <div>
-              <span className="legendDot pixDot" />
-              <strong>Pix</strong>
-              <small>
-                {dashboard.periodMetrics.paymentMethods.pix.count} pedido(s) •{" "}
-                {formatCurrency(dashboard.periodMetrics.paymentMethods.pix.revenueInCents)} •{" "}
-                {dashboard.periodMetrics.paymentMethods.pix.rate}%
-              </small>
-            </div>
-            <div>
-              <span className="legendDot cardDot" />
-              <strong>Cartão</strong>
-              <small>
-                {dashboard.periodMetrics.paymentMethods.card.count} pedido(s) •{" "}
-                {formatCurrency(dashboard.periodMetrics.paymentMethods.card.revenueInCents)} •{" "}
-                {dashboard.periodMetrics.paymentMethods.card.rate}%
-              </small>
-            </div>
-            <div>
-              <span className="legendDot otherDot" />
-              <strong>Outros</strong>
-              <small>
-                {dashboard.periodMetrics.paymentMethods.other.count} pedido(s) •{" "}
-                {formatCurrency(dashboard.periodMetrics.paymentMethods.other.revenueInCents)} •{" "}
-                {dashboard.periodMetrics.paymentMethods.other.rate}%
-              </small>
-            </div>
-          </div>
-        </div>
-
-        <div className="dashboardPanel">
-          <div className="sectionHeader inlineHeader">
-            <div>
-              <h2>Clientes</h2>
-              <p>Novos compradores versus retorno de clientes já existentes.</p>
-            </div>
-          </div>
-          <div className="chartLegend">
-            <div>
-              <span className="legendDot pixDot" />
-              <strong>Novos</strong>
-              <small>
-                {dashboard.periodMetrics.newCustomerOrders} pedido(s) • {dashboard.periodMetrics.newCustomerRate}%
-              </small>
-            </div>
-            <div>
-              <span className="legendDot cardDot" />
-              <strong>Recorrentes</strong>
-              <small>
-                {dashboard.periodMetrics.returningCustomerOrders} pedido(s) •{" "}
-                {dashboard.periodMetrics.returningCustomerRate}%
-              </small>
-            </div>
-          </div>
-          <div className="dashboardNote">
-            Base de {dashboard.totals.paidOrders} pedido(s) aprovados com cliente identificado.
-          </div>
-        </div>
-      </section>
-
-      <section className="grid dashboardGrid spacedSection" aria-label="Visão acumulada da operação">
-        {metric("Pedidos pendentes", dashboard.totals.pendingOrders, "Pagamentos ainda não confirmados")}
-        {metric("Pedidos cancelados", dashboard.totals.canceledOrders, "Cancelados, expirados ou reembolsados")}
-        {metric("Ingressos ativos", dashboard.totals.ticketsActive, "Prontos para entrada")}
-        {metric("Check-ins aprovados", dashboard.totals.checkInsApproved, "Entradas já validadas")}
-      </section>
-
-      <section className="dashboardPanel spacedSection">
-        <div className="sectionHeader inlineHeader">
+        <section className="dashboardGeneralHeader">
           <div>
-            <h2>Visão por evento</h2>
-            <p>Capacidade, vendidos, reservas e faturamento pago da operação atual.</p>
+            <h1>Dashboard geral</h1>
+            <p>Visão completa da sua bilheteria</p>
           </div>
-          <Link className="button" href="/admin/events/new">
-            Novo evento
-          </Link>
-        </div>
 
-        {dashboard.events.length === 0 ? (
-          <div className="empty">Nenhum evento cadastrado ainda.</div>
-        ) : (
-          <div className="tableScroll">
-            <table className="table operationalTable">
-              <thead>
-                <tr>
-                  <th>Evento</th>
-                  <th>Status</th>
-                  <th>Data</th>
-                  <th>Vendidos</th>
-                  <th>Reservados</th>
-                  <th>Faturamento</th>
-                  <th>Check-in</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dashboard.events.map((event) => {
-                  const soldRate =
-                    event.totalCapacity > 0 ? Math.round((event.soldQuantity / event.totalCapacity) * 100) : 0;
+          <form className="dashboardGeneralDateCard">
+            <div className="dashboardGeneralDateSummary">
+              <span>{dateRangeLabel}</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="17" rx="2" />
+                <path d="M16 2v4" />
+                <path d="M8 2v4" />
+                <path d="M3 10h18" />
+              </svg>
+            </div>
+            <div className="dashboardGeneralDateFields">
+              <label>
+                <span>Início</span>
+                <input type="date" name="startDate" defaultValue={dashboard.period.startDate} />
+              </label>
+              <label>
+                <span>Fim</span>
+                <input type="date" name="endDate" defaultValue={dashboard.period.endDate} />
+              </label>
+              <button className="button smallButton" type="submit">
+                Atualizar
+              </button>
+            </div>
+          </form>
+        </section>
 
-                  return (
-                    <tr key={event.id}>
-                      <td>
-                        <strong>{event.title}</strong>
-                        <br />
-                        <span className="muted">
-                          {event.city}, {event.state}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`status ${event.status === "PUBLISHED" ? "published" : "draft"}`}>
-                          {event.status === "PUBLISHED" ? "Publicado" : "Em preparação"}
-                        </span>
-                      </td>
-                      <td>{formatDateTime(event.startsAt)}</td>
-                      <td>
-                        <div className="progressCell">
-                          <div className="progressMeta">
-                            <span>
-                              {event.soldQuantity} / {event.totalCapacity}
-                            </span>
-                            <strong>{soldRate}%</strong>
-                          </div>
-                          <div className="progressTrack" aria-label={`${soldRate}% vendido`}>
-                            <span style={{ width: `${soldRate}%` }} />
-                          </div>
-                        </div>
-                      </td>
-                      <td>{event.reservedQuantity}</td>
-                      <td>{formatCurrency(event.revenueInCents)}</td>
-                      <td>
-                        {event.usedTickets} usado(s)
-                        <br />
-                        <span className="muted">{event.activeTickets} ativo(s)</span>
-                      </td>
-                      <td>
-                        <div className="actionRow">
-                          <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}`}>
-                            Gerenciar
-                          </Link>
-                          <Link className="secondaryButton smallButton" href={getPublicEventUrl(event.slug)}>
-                            Público
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+        <section className="dashboardGeneralKpiGrid" aria-label="Indicadores principais">
+          {kpis.map((item) => (
+            <article className="dashboardGeneralKpiCard" key={item.label}>
+              <span className="dashboardGeneralKpiIcon">
+                <DashboardIcon kind={item.icon} />
+              </span>
+              <span className="dashboardGeneralKpiLabel">{item.label}</span>
+              <strong>{item.value}</strong>
+              <small className={`dashboardGeneralDelta is-${item.delta.signal}`}>{item.delta.label}</small>
+            </article>
+          ))}
+        </section>
 
-      <section className="dashboardPanel spacedSection">
-        <div className="sectionHeader inlineHeader">
-          <div>
-            <h2>Pedidos recentes</h2>
-            <p>Últimas movimentações para acompanhar suporte, aprovação e conferência rápida.</p>
-          </div>
-          <Link className="secondaryButton" href="/admin/orders">
-            Ver todos
-          </Link>
-        </div>
+        <section className="dashboardGeneralMainGrid">
+          <article className="dashboardGeneralPanel dashboardGeneralChartPanel">
+            <div className="dashboardGeneralPanelHeader">
+              <div>
+                <h2>Vendas por dia</h2>
+                <p>{periodLabel}</p>
+              </div>
+              <span className="dashboardGeneralPill">
+                {dashboard.salesByDay.length <= 7 ? "Últimos 7 dias" : `${dashboard.salesByDay.length} dias`}
+              </span>
+            </div>
 
-        {dashboard.recentOrders.length === 0 ? (
-          <div className="empty">Nenhum pedido registrado ainda.</div>
-        ) : (
-          <div className="tableScroll wideTableScroll">
-            <table className="table operationalTable ordersTable">
-              <thead>
-                <tr>
-                  <th>Pedido</th>
-                  <th>Cliente</th>
-                  <th>Evento</th>
-                  <th>Status</th>
-                  <th>Pagamento</th>
-                  <th>Total</th>
-                  <th>Criado em</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dashboard.recentOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td>
-                      <Link href={`/admin/orders/${order.code}`}>
-                        <strong>{order.code}</strong>
-                      </Link>
-                    </td>
-                    <td>
-                      {order.customer.name}
-                      <br />
-                      <span className="muted">{order.customer.email}</span>
-                    </td>
-                    <td>{order.event.title}</td>
-                    <td>
-                      <span className={`status ${order.status === "PAID" ? "published" : "draft"}`}>
-                        {order.status === "PAID"
-                          ? "Pago"
-                          : order.status === "PENDING_PAYMENT"
-                            ? "Pendente"
-                            : order.status === "EXPIRED"
-                              ? "Expirado"
-                              : order.status === "CANCELED"
-                                ? "Cancelado"
-                                : "Rascunho"}
-                      </span>
-                    </td>
-                    <td>{order.payment?.status ?? "-"}</td>
-                    <td>{formatCurrency(order.totalInCents)}</td>
-                    <td>{formatDateTime(order.createdAt)}</td>
-                  </tr>
+            <div className="dashboardGeneralLineChartWrap">
+              <div className="dashboardGeneralYAxis">
+                {[1, 0.75, 0.5, 0.25, 0].map((ratio) => (
+                  <span key={ratio}>{formatCurrency(Math.round(dashboard.maxDailyRevenueInCents * ratio))}</span>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+              </div>
+              <div className="dashboardGeneralLineChart">
+                <svg viewBox={`0 0 ${salesChart.width} ${salesChart.height}`} preserveAspectRatio="none">
+                  {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+                    const y = 18 + (salesChart.height - 52) * ratio;
+                    return <line className="dashboardGeneralGridLine" key={ratio} x1="26" x2="622" y1={y} y2={y} />;
+                  })}
+                  <path className="dashboardGeneralAreaPath" d={salesChart.areaPath} />
+                  <path className="dashboardGeneralLinePath" d={salesChart.linePath} />
+                  {salesChart.points.map((point, index) => (
+                    <circle className="dashboardGeneralLinePoint" cx={point.x} cy={point.y} key={`${point.label}-${index}`} r="5.5" />
+                  ))}
+                </svg>
+                <div
+                  className="dashboardGeneralXAxis"
+                  style={{ gridTemplateColumns: `repeat(${Math.max(dashboard.salesByDay.length, 1)}, minmax(0, 1fr))` }}
+                >
+                  {dashboard.salesByDay.map((item) => (
+                    <span key={item.date}>{item.label}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article className="dashboardGeneralPanel">
+            <div className="dashboardGeneralPanelHeader">
+              <div>
+                <h2>Meios de pagamento</h2>
+                <p>Composição da receita paga</p>
+              </div>
+            </div>
+
+            <div className="dashboardGeneralPaymentGrid">
+              <div className="dashboardGeneralDonut" style={{ background: paymentMethodsChart }}>
+                <span />
+              </div>
+              <div className="dashboardGeneralPaymentLegend">
+                {[
+                  {
+                    label: "Pix",
+                    colorClass: "is-pix",
+                    value: dashboard.paymentMethods.pix.revenueInCents,
+                    rate: dashboard.paymentMethods.pix.rate
+                  },
+                  {
+                    label: "Cartão de crédito",
+                    colorClass: "is-card",
+                    value: dashboard.paymentMethods.card.revenueInCents,
+                    rate: dashboard.paymentMethods.card.rate
+                  },
+                  {
+                    label: "Outros",
+                    colorClass: "is-other",
+                    value: dashboard.paymentMethods.other.revenueInCents,
+                    rate: dashboard.paymentMethods.other.rate
+                  }
+                ].map((item) => (
+                  <div className="dashboardGeneralLegendRow" key={item.label}>
+                    <div>
+                      <i className={item.colorClass} />
+                      <span>{item.label}</span>
+                    </div>
+                    <strong>{formatCurrency(item.value)}</strong>
+                    <small>{formatPercentage(item.rate, 1)}</small>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="dashboardGeneralTotalsFooter">
+              <span>Total</span>
+              <strong>{formatCurrency(dashboard.paymentMethods.totalRevenueInCents)}</strong>
+            </div>
+          </article>
+        </section>
+
+        <section className="dashboardGeneralMidGrid">
+          <article className="dashboardGeneralPanel">
+            <div className="dashboardGeneralPanelHeader">
+              <div>
+                <h2>Performance dos eventos</h2>
+                <p>Os eventos que mais puxaram receita no período.</p>
+              </div>
+            </div>
+
+            {dashboard.eventPerformance.length === 0 ? (
+              <div className="empty">Nenhuma venda paga no período selecionado.</div>
+            ) : (
+              <>
+                <div className="dashboardGeneralEventTable">
+                  <div className="dashboardGeneralEventTableHead">
+                    <span>Evento</span>
+                    <span>Vendas</span>
+                    <span>Receita</span>
+                    <span>Conversão</span>
+                  </div>
+                  {dashboard.eventPerformance.map((event) => (
+                    <Link className="dashboardGeneralEventRow" href={`/admin/events/${event.id}`} key={event.id}>
+                      <div className="dashboardGeneralEventCell">
+                        <span className="dashboardGeneralEventThumb">
+                          {event.bannerUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img alt={event.title} src={event.bannerUrl} />
+                          ) : (
+                            <b>{event.title.slice(0, 1).toUpperCase()}</b>
+                          )}
+                        </span>
+                        <strong>{event.title}</strong>
+                      </div>
+                      <span>{event.periodSalesCount}</span>
+                      <span>{formatCurrency(event.periodRevenueInCents)}</span>
+                      <span>{formatPercentage(event.conversionRate)}</span>
+                    </Link>
+                  ))}
+                </div>
+                <Link className="dashboardGeneralGhostLink" href="/admin/events">
+                  Ver todos os eventos
+                </Link>
+              </>
+            )}
+          </article>
+
+          <article className="dashboardGeneralPanel">
+            <div className="dashboardGeneralPanelHeader">
+              <div>
+                <h2>Funil de vendas</h2>
+                <p>Leitura rápida do avanço até a compra.</p>
+              </div>
+            </div>
+
+            <div className="dashboardGeneralFunnel">
+              <div className="dashboardGeneralFunnelStep is-light">
+                <span>Visitantes</span>
+                <strong>{dashboard.funnel.visitors.toLocaleString("pt-BR")}</strong>
+              </div>
+              <div className="dashboardGeneralFunnelStep is-mid">
+                <span>Iniciaram compra</span>
+                <strong>{dashboard.funnel.startedCheckout.toLocaleString("pt-BR")}</strong>
+              </div>
+              <div className="dashboardGeneralFunnelStep is-dark">
+                <span>Compraram</span>
+                <strong>{dashboard.funnel.purchased.toLocaleString("pt-BR")}</strong>
+              </div>
+            </div>
+
+            <div className="dashboardGeneralFunnelRate">
+              <span>Taxa de conversão</span>
+              <strong>{formatPercentage(dashboard.funnel.conversionRate)}</strong>
+            </div>
+          </article>
+        </section>
+
+        <section className="dashboardGeneralOpsGrid">
+          <article className="dashboardGeneralPanel">
+            <div className="dashboardGeneralPanelHeader">
+              <div>
+                <h2>Check-in & Operação</h2>
+                <p>Resumo rápido do que já foi emitido e usado.</p>
+              </div>
+            </div>
+
+            <div className="dashboardGeneralOperationList">
+              <div className="dashboardGeneralOperationItem">
+                <div>
+                  <span>Ingressos emitidos</span>
+                  <strong>{dashboard.operations.ticketsIssued.toLocaleString("pt-BR")}</strong>
+                </div>
+                <i><DashboardIcon kind="qr" /></i>
+              </div>
+              <div className="dashboardGeneralOperationItem">
+                <div>
+                  <span>Check-ins realizados</span>
+                  <strong>{dashboard.operations.checkInsApproved.toLocaleString("pt-BR")}</strong>
+                </div>
+                <i><DashboardIcon kind="activity" /></i>
+              </div>
+              <div className="dashboardGeneralOperationItem">
+                <div>
+                  <span>Pendentes</span>
+                  <strong>{Math.max(0, dashboard.operations.pendingOrders).toLocaleString("pt-BR")}</strong>
+                </div>
+                <i><DashboardIcon kind="clock" /></i>
+              </div>
+            </div>
+          </article>
+
+          <article className="dashboardGeneralPanel">
+            <div className="dashboardGeneralPanelHeader">
+              <div>
+                <h2>Novos vs. recorrentes</h2>
+                <p>Quem está chegando agora e quem voltou a comprar.</p>
+              </div>
+            </div>
+
+            <div className="dashboardGeneralCustomerMix">
+              <div className="dashboardGeneralCustomerStats">
+                <div>
+                  <strong>{formatPercentage(dashboard.customers.newCustomerRate, 0)}</strong>
+                  <span>Novos clientes</span>
+                  <small>{dashboard.customers.newCustomers}</small>
+                </div>
+                <div>
+                  <strong>{formatPercentage(dashboard.customers.recurringCustomerRate, 0)}</strong>
+                  <span>Recorrentes</span>
+                  <small>{dashboard.customers.recurringCustomers}</small>
+                </div>
+              </div>
+              <div className="dashboardGeneralDonut is-small" style={{ background: customerMixChart }}>
+                <span />
+              </div>
+            </div>
+          </article>
+
+          <article className="dashboardGeneralPanel">
+            <div className="dashboardGeneralPanelHeader">
+              <div>
+                <h2>Top locais</h2>
+                <p>Praças que mais geraram venda aprovada.</p>
+              </div>
+            </div>
+
+            <div className="dashboardGeneralLocationList">
+              {dashboard.topLocations.length === 0 ? (
+                <div className="empty">Sem local suficiente no período.</div>
+              ) : (
+                dashboard.topLocations.map((item) => (
+                  <div className="dashboardGeneralLocationRow" key={item.label}>
+                    <div className="dashboardGeneralLocationMeta">
+                      <span>{item.label}</span>
+                      <strong>{item.count}</strong>
+                    </div>
+                    <div className="dashboardGeneralLocationBar">
+                      <span style={{ width: `${Math.max(item.rate, 4)}%` }} />
+                    </div>
+                    <small>{formatPercentage(item.rate, 0)}</small>
+                  </div>
+                ))
+              )}
+            </div>
+          </article>
+        </section>
+
+        <section className="dashboardGeneralBottomGrid">
+          <article className="dashboardGeneralPanel">
+            <div className="dashboardGeneralPanelHeader">
+              <div>
+                <h2>Pedidos recentes</h2>
+                <p>Últimas compras e movimentações do caixa.</p>
+              </div>
+              <Link className="dashboardGeneralGhostLink compact" href="/admin/orders">
+                Ver todos os pedidos
+              </Link>
+            </div>
+
+            <div className="tableScroll wideTableScroll">
+              <table className="table dashboardGeneralOrdersTable">
+                <thead>
+                  <tr>
+                    <th>Pedido</th>
+                    <th>Cliente</th>
+                    <th>Evento</th>
+                    <th>Status</th>
+                    <th>Pagamento</th>
+                    <th>Total</th>
+                    <th>Data</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dashboard.recentOrders.map((order) => (
+                    <tr key={order.id}>
+                      <td>
+                        <Link href={`/admin/orders/${order.code}`}>
+                          <strong>{order.code}</strong>
+                        </Link>
+                      </td>
+                      <td>{order.customer.name}</td>
+                      <td>{order.event.title}</td>
+                      <td>
+                        <span className={`status ${order.status === "PAID" ? "published" : order.status === "REFUNDED" ? "pending" : "draft"}`}>
+                          {humanizeOrderStatus(order.status)}
+                        </span>
+                      </td>
+                      <td>
+                        {humanizePaymentMethod(
+                          order.payment?.provider === "ASAAS" && order.payment?.pixQrCodePayload
+                            ? "PIX"
+                            : order.payment?.provider === "MERCADO_PAGO" || order.payment?.provider === "PAGARME"
+                              ? "CREDIT_CARD"
+                              : order.payment?.provider === "SIMULATED"
+                                ? "SIMULATED"
+                                : "OTHER"
+                        )}
+                      </td>
+                      <td>{formatCurrency(order.totalInCents)}</td>
+                      <td>{formatCompactDateTime(order.paidAt ?? order.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article className="dashboardGeneralPanel">
+            <div className="dashboardGeneralPanelHeader">
+              <div>
+                <h2>Atividades recentes</h2>
+                <p>O que acabou de acontecer na operação.</p>
+              </div>
+            </div>
+
+            <div className="dashboardGeneralActivityList">
+              {dashboard.recentActivities.map((activity) => (
+                <article className="dashboardGeneralActivityItem" key={activity.id}>
+                  <i>
+                    <DashboardIcon
+                      kind={
+                        activity.title.includes("Venda")
+                          ? "money"
+                          : activity.title.includes("Check-in")
+                            ? "qr"
+                            : activity.title.includes("Reembolso")
+                              ? "alert"
+                              : "users"
+                      }
+                    />
+                  </i>
+                  <div>
+                    <strong>{activity.title}</strong>
+                    <span>{activity.subtitle}</span>
+                    <small>{activity.meta}</small>
+                  </div>
+                  <time>{formatRelativeTime(activity.happenedAt)}</time>
+                </article>
+              ))}
+            </div>
+          </article>
+        </section>
+      </div>
     </AdminShell>
   );
 }

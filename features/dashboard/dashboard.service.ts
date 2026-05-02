@@ -7,7 +7,6 @@ type DashboardFilters = {
 };
 
 type EventScope = string[] | null | undefined;
-
 type PaymentMethod = "PIX" | "CREDIT_CARD" | "SIMULATED" | "OTHER";
 
 function parseStartDate(value?: string) {
@@ -78,78 +77,238 @@ function percentage(value: number, total: number) {
     return 0;
   }
 
-  return Math.round((value / total) * 100);
+  return Number(((value / total) * 100).toFixed(2));
+}
+
+function changePercent(current: number, previous: number) {
+  if (previous <= 0) {
+    return current > 0 ? 100 : 0;
+  }
+
+  return Number((((current - previous) / previous) * 100).toFixed(1));
+}
+
+function formatDayKey(value: Date) {
+  return formatDateInput(value);
+}
+
+function formatDayLabel(value: Date) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "America/Sao_Paulo"
+  }).format(value);
+}
+
+function buildDateSeries(start: Date, end: Date) {
+  const days: Array<{ key: string; label: string; date: Date }> = [];
+  const cursor = new Date(start);
+
+  while (cursor <= end) {
+    days.push({
+      key: formatDayKey(cursor),
+      label: formatDayLabel(cursor),
+      date: new Date(cursor)
+    });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return days;
+}
+
+type PaidOrderLite = {
+  customerId: string;
+  totalInCents: number;
+  paidAt: Date | null;
+  createdAt: Date;
+  event: {
+    id: string;
+    title: string;
+    city: string;
+    state: string;
+    bannerUrl: string | null;
+  };
+  customer: {
+    name: string;
+    email: string;
+  };
+  payment: {
+    provider: PaymentProvider;
+    pixQrCodePayload: string | null;
+    rawPayload: unknown;
+  } | null;
+  items: Array<{
+    quantity: number;
+    lot: {
+      name: string;
+    };
+  }>;
+  tickets: Array<{
+    id: string;
+    status: string;
+  }>;
+};
+
+function computeCustomerBreakdown(orders: PaidOrderLite[], previousCustomerIds: Set<string>) {
+  const paidOrdersTotal = orders.length;
+  const uniqueCustomers = new Set<string>();
+  const newCustomers = new Set<string>();
+  const recurringCustomers = new Set<string>();
+
+  for (const order of orders) {
+    uniqueCustomers.add(order.customerId);
+    if (previousCustomerIds.has(order.customerId)) {
+      recurringCustomers.add(order.customerId);
+    } else {
+      newCustomers.add(order.customerId);
+    }
+  }
+
+  return {
+    paidOrdersTotal,
+    uniqueCustomers: uniqueCustomers.size,
+    newCustomers: newCustomers.size,
+    recurringCustomers: recurringCustomers.size,
+    newCustomerRate: percentage(newCustomers.size, uniqueCustomers.size),
+    recurringCustomerRate: percentage(recurringCustomers.size, uniqueCustomers.size)
+  };
 }
 
 export async function getDashboardMetrics(filters: DashboardFilters = {}, allowedEventIds?: EventScope) {
   const periodStart = parseStartDate(filters.startDate);
   const periodEnd = parseEndDate(filters.endDate);
-  const paidAtPeriod = {
-    gte: periodStart,
-    lte: periodEnd
+  const periodMs = periodEnd.getTime() - periodStart.getTime() + 1;
+  const previousPeriodEnd = new Date(periodStart.getTime() - 1);
+  const previousPeriodStart = new Date(periodStart.getTime() - periodMs);
+
+  const paidPeriodWhere = {
+    status: "PAID" as const,
+    ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+    paidAt: {
+      gte: periodStart,
+      lte: periodEnd
+    }
   };
-  const createdAtPeriod = {
-    gte: periodStart,
-    lte: periodEnd
+
+  const previousPaidPeriodWhere = {
+    status: "PAID" as const,
+    ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+    paidAt: {
+      gte: previousPeriodStart,
+      lte: previousPeriodEnd
+    }
+  };
+
+  const createdPeriodWhere = {
+    ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+    createdAt: {
+      gte: periodStart,
+      lte: periodEnd
+    }
+  };
+
+  const previousCreatedPeriodWhere = {
+    ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+    createdAt: {
+      gte: previousPeriodStart,
+      lte: previousPeriodEnd
+    }
   };
 
   const [
-    revenue,
-    orderCounts,
-    periodOrderCounts,
-    paidOrdersInPeriod,
-    previousPaidCustomers,
+    currentPaidOrders,
+    previousPaidOrders,
+    currentOrdersCreated,
+    previousOrdersCreated,
+    previousCustomersBeforePeriod,
+    previousCustomersBeforePreviousPeriod,
     ticketCounts,
     checkInCounts,
     events,
     eventTicketCounts,
-    recentOrders
+    recentOrders,
+    recentLeads,
+    recentCheckIns
   ] = await Promise.all([
-    prisma.order.aggregate({
-      where: {
-        status: "PAID",
-        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
-        paidAt: paidAtPeriod
-      },
-      _sum: {
-        totalInCents: true
-      }
-    }),
-    prisma.order.groupBy({
-      by: ["status"],
-      where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
-      _count: {
-        _all: true
-      }
-    }),
-    prisma.order.groupBy({
-      by: ["status"],
-      where: {
-        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
-        createdAt: createdAtPeriod
-      },
-      _count: {
-        _all: true
-      }
-    }),
     prisma.order.findMany({
-      where: {
-        status: "PAID",
-        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
-        paidAt: paidAtPeriod
+      where: paidPeriodWhere,
+      orderBy: {
+        paidAt: "desc"
       },
-      select: {
-        id: true,
-        customerId: true,
-        totalInCents: true,
+      include: {
+        event: {
+          select: {
+            id: true,
+            slug: true,
+            title: true,
+            city: true,
+            state: true,
+            bannerUrl: true
+          }
+        },
+        customer: true,
         payment: {
           select: {
             provider: true,
             pixQrCodePayload: true,
             rawPayload: true
           }
+        },
+        items: {
+          include: {
+            lot: true
+          }
+        },
+        tickets: {
+          select: {
+            id: true,
+            status: true
+          }
         }
       }
+    }),
+    prisma.order.findMany({
+      where: previousPaidPeriodWhere,
+      orderBy: {
+        paidAt: "desc"
+      },
+      include: {
+        event: {
+          select: {
+            id: true,
+            slug: true,
+            title: true,
+            city: true,
+            state: true,
+            bannerUrl: true
+          }
+        },
+        customer: true,
+        payment: {
+          select: {
+            provider: true,
+            pixQrCodePayload: true,
+            rawPayload: true
+          }
+        },
+        items: {
+          include: {
+            lot: true
+          }
+        },
+        tickets: {
+          select: {
+            id: true,
+            status: true
+          }
+        }
+      }
+    }),
+    prisma.order.count({
+      where: createdPeriodWhere
+    }),
+    prisma.order.count({
+      where: previousCreatedPeriodWhere
     }),
     prisma.order.findMany({
       where: {
@@ -157,6 +316,19 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
         ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
         paidAt: {
           lt: periodStart
+        }
+      },
+      distinct: ["customerId"],
+      select: {
+        customerId: true
+      }
+    }),
+    prisma.order.findMany({
+      where: {
+        status: "PAID",
+        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+        paidAt: {
+          lt: previousPeriodStart
         }
       },
       distinct: ["customerId"],
@@ -184,9 +356,7 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
       include: {
         lots: true,
         orders: {
-          where: {
-            status: "PAID"
-          },
+          where: paidPeriodWhere,
           select: {
             totalInCents: true
           }
@@ -209,37 +379,141 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
       include: {
         customer: true,
         event: true,
-        payment: true
+        payment: true,
+        items: {
+          include: {
+            lot: true
+          }
+        }
+      }
+    }),
+    prisma.eventLead.findMany({
+      where: {
+        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+        createdAt: {
+          gte: periodStart,
+          lte: periodEnd
+        }
+      },
+      orderBy: {
+        createdAt: "desc"
+      },
+      take: 6,
+      include: {
+        event: {
+          select: {
+            title: true
+          }
+        }
+      }
+    }),
+    prisma.checkIn.findMany({
+      where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
+      orderBy: {
+        checkedAt: "desc"
+      },
+      take: 6,
+      include: {
+        ticket: {
+          include: {
+            order: {
+              include: {
+                customer: true
+              }
+            }
+          }
+        },
+        event: true
       }
     })
   ]);
 
-  const countByOrderStatus = Object.fromEntries(
-    orderCounts.map((item) => [item.status, item._count._all])
+  const currentRevenueInCents = currentPaidOrders.reduce((sum, order) => sum + order.totalInCents, 0);
+  const previousRevenueInCents = previousPaidOrders.reduce((sum, order) => sum + order.totalInCents, 0);
+  const currentAverageTicket = currentPaidOrders.length > 0 ? Math.round(currentRevenueInCents / currentPaidOrders.length) : 0;
+  const previousAverageTicket = previousPaidOrders.length > 0 ? Math.round(previousRevenueInCents / previousPaidOrders.length) : 0;
+
+  const currentCustomerBreakdown = computeCustomerBreakdown(
+    currentPaidOrders as PaidOrderLite[],
+    new Set(previousCustomersBeforePeriod.map((item) => item.customerId))
   );
-  const countByPeriodOrderStatus = Object.fromEntries(
-    periodOrderCounts.map((item) => [item.status, item._count._all])
+  const previousCustomerBreakdown = computeCustomerBreakdown(
+    previousPaidOrders as PaidOrderLite[],
+    new Set(previousCustomersBeforePreviousPeriod.map((item) => item.customerId))
   );
-  const countByTicketStatus = Object.fromEntries(
-    ticketCounts.map((item) => [item.status, item._count._all])
-  );
-  const countByCheckInStatus = Object.fromEntries(
-    checkInCounts.map((item) => [item.status, item._count._all])
-  );
+
+  const countByTicketStatus = Object.fromEntries(ticketCounts.map((item) => [item.status, item._count._all]));
+  const countByCheckInStatus = Object.fromEntries(checkInCounts.map((item) => [item.status, item._count._all]));
   const ticketCountByEvent = new Map<string, { active: number; used: number }>();
 
   for (const item of eventTicketCounts) {
     const current = ticketCountByEvent.get(item.eventId) ?? { active: 0, used: 0 };
-
-    if (item.status === "ACTIVE") {
-      current.active = item._count._all;
-    }
-
-    if (item.status === "USED") {
-      current.used = item._count._all;
-    }
-
+    if (item.status === "ACTIVE") current.active = item._count._all;
+    if (item.status === "USED") current.used = item._count._all;
     ticketCountByEvent.set(item.eventId, current);
+  }
+
+  const eventPerformanceMap = new Map<
+    string,
+    {
+      id: string;
+      slug: string;
+      title: string;
+      bannerUrl: string | null;
+      count: number;
+      revenueInCents: number;
+    }
+  >();
+
+  const dailySalesMap = new Map<string, number>();
+  const topCitiesMap = new Map<string, { label: string; count: number }>();
+  const paymentMethodTotals = {
+    pix: { revenueInCents: 0, count: 0 },
+    card: { revenueInCents: 0, count: 0 },
+    other: { revenueInCents: 0, count: 0 }
+  };
+
+  for (const order of currentPaidOrders as PaidOrderLite[]) {
+    const paidAt = order.paidAt ?? order.createdAt;
+    const dayKey = formatDayKey(paidAt);
+    dailySalesMap.set(dayKey, (dailySalesMap.get(dayKey) ?? 0) + order.totalInCents);
+
+    const eventPerformance = eventPerformanceMap.get(order.event.id) ?? {
+      id: order.event.id,
+      slug: (order.event as { slug?: string }).slug ?? "",
+      title: order.event.title,
+      bannerUrl: order.event.bannerUrl,
+      count: 0,
+      revenueInCents: 0
+    };
+    eventPerformance.count += 1;
+    eventPerformance.revenueInCents += order.totalInCents;
+    eventPerformanceMap.set(order.event.id, eventPerformance);
+
+    const cityKey = `${order.event.city.trim().toLocaleLowerCase("pt-BR")}|${order.event.state.trim().toLocaleLowerCase("pt-BR")}`;
+    const cityEntry = topCitiesMap.get(cityKey) ?? {
+      label: `${order.event.city}, ${order.event.state}`,
+      count: 0
+    };
+    cityEntry.count += 1;
+    topCitiesMap.set(cityKey, cityEntry);
+
+    const method = extractBillingType(
+      order.payment?.rawPayload,
+      order.payment?.provider ?? PaymentProvider.SIMULATED,
+      Boolean(order.payment?.pixQrCodePayload)
+    );
+
+    if (method === "PIX") {
+      paymentMethodTotals.pix.count += 1;
+      paymentMethodTotals.pix.revenueInCents += order.totalInCents;
+    } else if (method === "CREDIT_CARD") {
+      paymentMethodTotals.card.count += 1;
+      paymentMethodTotals.card.revenueInCents += order.totalInCents;
+    } else {
+      paymentMethodTotals.other.count += 1;
+      paymentMethodTotals.other.revenueInCents += order.totalInCents;
+    }
   }
 
   const eventRows = events.map((event) => {
@@ -248,11 +522,14 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
     const reservedQuantity = event.lots.reduce((sum, lot) => sum + lot.reservedQuantity, 0);
     const revenueInCents = event.orders.reduce((sum, order) => sum + order.totalInCents, 0);
     const eventTickets = ticketCountByEvent.get(event.id) ?? { active: 0, used: 0 };
+    const periodEventPerformance = eventPerformanceMap.get(event.id);
+    const conversionRate = totalCapacity > 0 ? percentage(periodEventPerformance?.count ?? 0, totalCapacity) : 0;
 
     return {
       id: event.id,
       slug: event.slug,
       title: event.title,
+      bannerUrl: event.bannerUrl,
       status: event.status,
       startsAt: event.startsAt,
       city: event.city,
@@ -262,106 +539,141 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
       reservedQuantity,
       revenueInCents,
       activeTickets: eventTickets.active,
-      usedTickets: eventTickets.used
+      usedTickets: eventTickets.used,
+      periodSalesCount: periodEventPerformance?.count ?? 0,
+      periodRevenueInCents: periodEventPerformance?.revenueInCents ?? 0,
+      conversionRate
     };
   });
 
-  const previousCustomerIds = new Set(previousPaidCustomers.map((item) => item.customerId));
-  const periodCustomerIds = new Set<string>();
-  const paidByPaymentMethod = {
-    pix: { count: 0, revenueInCents: 0 },
-    card: { count: 0, revenueInCents: 0 },
-    other: { count: 0, revenueInCents: 0 }
-  };
+  const dateSeries = buildDateSeries(periodStart, periodEnd);
+  const salesByDay = dateSeries.map((day) => ({
+    date: day.key,
+    label: day.label,
+    revenueInCents: dailySalesMap.get(day.key) ?? 0
+  }));
+  const maxDailyRevenueInCents = Math.max(...salesByDay.map((item) => item.revenueInCents), 0);
 
-  let returningCustomerOrders = 0;
+  const totalPaymentRevenueInCents =
+    paymentMethodTotals.pix.revenueInCents +
+    paymentMethodTotals.card.revenueInCents +
+    paymentMethodTotals.other.revenueInCents;
 
-  for (const order of paidOrdersInPeriod) {
-    periodCustomerIds.add(order.customerId);
+  const topLocations = Array.from(topCitiesMap.values())
+    .sort((left, right) => right.count - left.count)
+    .slice(0, 5)
+    .map((item) => ({
+      ...item,
+      rate: percentage(item.count, currentPaidOrders.length)
+    }));
 
-    if (previousCustomerIds.has(order.customerId)) {
-      returningCustomerOrders += 1;
-    }
-
-    const method = extractBillingType(
-      order.payment?.rawPayload,
-      order.payment?.provider ?? PaymentProvider.SIMULATED,
-      Boolean(order.payment?.pixQrCodePayload)
-    );
-
-    if (method === "PIX") {
-      paidByPaymentMethod.pix.count += 1;
-      paidByPaymentMethod.pix.revenueInCents += order.totalInCents;
-      continue;
-    }
-
-    if (method === "CREDIT_CARD") {
-      paidByPaymentMethod.card.count += 1;
-      paidByPaymentMethod.card.revenueInCents += order.totalInCents;
-      continue;
-    }
-
-    paidByPaymentMethod.other.count += 1;
-    paidByPaymentMethod.other.revenueInCents += order.totalInCents;
-  }
-
-  const paidOrdersTotal = paidOrdersInPeriod.length;
-  const newCustomerOrders = paidOrdersTotal - returningCustomerOrders;
+  const recentActivities = [
+    ...recentOrders.map((order) => ({
+      id: `order-${order.id}`,
+      title:
+        order.status === "PAID"
+          ? "Venda realizada"
+          : order.status === "REFUNDED"
+            ? "Reembolso processado"
+            : order.status === "PENDING_PAYMENT"
+              ? "Pedido iniciado"
+              : "Movimentação de pedido",
+      subtitle: `Pedido ${order.code}`,
+      meta:
+        order.status === "PAID"
+          ? order.customer.name
+          : order.event.title,
+      happenedAt: order.paidAt ?? order.updatedAt ?? order.createdAt
+    })),
+    ...recentCheckIns.map((checkIn) => ({
+      id: `checkin-${checkIn.id}`,
+      title: "Check-in realizado",
+      subtitle: `Ingresso ${checkIn.ticket.code}`,
+      meta: checkIn.ticket.order.customer.name,
+      happenedAt: checkIn.checkedAt
+    })),
+    ...recentLeads.map((lead) => ({
+      id: `lead-${lead.id}`,
+      title: "Novo cliente cadastrado",
+      subtitle: lead.name,
+      meta: lead.event.title,
+      happenedAt: lead.createdAt
+    }))
+  ]
+    .sort((left, right) => right.happenedAt.getTime() - left.happenedAt.getTime())
+    .slice(0, 8);
 
   return {
     period: {
       startDate: formatDateInput(periodStart),
       endDate: formatDateInput(periodEnd)
     },
-    totals: {
-      revenueInCents: revenue._sum.totalInCents ?? 0,
-      orders: orderCounts.reduce((sum, item) => sum + item._count._all, 0),
-      paidOrders: paidOrdersTotal,
-      pendingOrders: countByPeriodOrderStatus.PENDING_PAYMENT ?? 0,
-      canceledOrders:
-        (countByPeriodOrderStatus.CANCELED ?? 0) +
-        (countByPeriodOrderStatus.EXPIRED ?? 0) +
-        (countByPeriodOrderStatus.REFUNDED ?? 0),
+    kpis: {
+      revenueInCents: currentRevenueInCents,
+      revenueChangePercent: changePercent(currentRevenueInCents, previousRevenueInCents),
+      paidOrders: currentPaidOrders.length,
+      paidOrdersChangePercent: changePercent(currentPaidOrders.length, previousPaidOrders.length),
+      averageTicketInCents: currentAverageTicket,
+      averageTicketChangePercent: changePercent(currentAverageTicket, previousAverageTicket),
+      newCustomers: currentCustomerBreakdown.newCustomers,
+      newCustomersChangePercent: changePercent(
+        currentCustomerBreakdown.newCustomers,
+        previousCustomerBreakdown.newCustomers
+      ),
+      recurringCustomers: currentCustomerBreakdown.recurringCustomers,
+      recurringCustomersChangePercent: changePercent(
+        currentCustomerBreakdown.recurringCustomers,
+        previousCustomerBreakdown.recurringCustomers
+      ),
+      conversionRate: percentage(currentPaidOrders.length, currentOrdersCreated),
+      conversionRateChangePercent: changePercent(
+        percentage(currentPaidOrders.length, currentOrdersCreated),
+        percentage(previousPaidOrders.length, previousOrdersCreated)
+      )
+    },
+    salesByDay,
+    maxDailyRevenueInCents,
+    paymentMethods: {
+      pix: {
+        ...paymentMethodTotals.pix,
+        rate: percentage(paymentMethodTotals.pix.revenueInCents, totalPaymentRevenueInCents)
+      },
+      card: {
+        ...paymentMethodTotals.card,
+        rate: percentage(paymentMethodTotals.card.revenueInCents, totalPaymentRevenueInCents)
+      },
+      other: {
+        ...paymentMethodTotals.other,
+        rate: percentage(paymentMethodTotals.other.revenueInCents, totalPaymentRevenueInCents)
+      },
+      totalRevenueInCents: totalPaymentRevenueInCents
+    },
+    eventPerformance: eventRows
+      .filter((event) => event.periodSalesCount > 0)
+      .sort((left, right) => right.periodRevenueInCents - left.periodRevenueInCents)
+      .slice(0, 5),
+    funnel: {
+      visitors: currentOrdersCreated + recentLeads.length,
+      startedCheckout: currentOrdersCreated,
+      purchased: currentPaidOrders.length,
+      conversionRate: percentage(currentPaidOrders.length, currentOrdersCreated)
+    },
+    operations: {
       ticketsIssued: ticketCounts.reduce((sum, item) => sum + item._count._all, 0),
-      ticketsActive: countByTicketStatus.ACTIVE ?? 0,
-      ticketsUsed: countByTicketStatus.USED ?? 0,
       checkInsApproved: countByCheckInStatus.APPROVED ?? 0,
-      checkInsBlocked:
-        (countByCheckInStatus.ALREADY_USED ?? 0) +
-        (countByCheckInStatus.INVALID ?? 0) +
-        (countByCheckInStatus.CANCELED ?? 0)
+      pendingOrders: currentOrdersCreated - currentPaidOrders.length
     },
-    periodMetrics: {
-      ordersCreated: periodOrderCounts.reduce((sum, item) => sum + item._count._all, 0),
-      approvedRate: percentage(paidOrdersTotal, periodOrderCounts.reduce((sum, item) => sum + item._count._all, 0)),
-      averageTicketInCents:
-        paidOrdersTotal > 0 ? Math.round((revenue._sum.totalInCents ?? 0) / paidOrdersTotal) : 0,
-      uniqueCustomers: periodCustomerIds.size,
-      newCustomerOrders,
-      returningCustomerOrders,
-      newCustomerRate: percentage(newCustomerOrders, paidOrdersTotal),
-      returningCustomerRate: percentage(returningCustomerOrders, paidOrdersTotal),
-      paymentMethods: {
-        pix: {
-          ...paidByPaymentMethod.pix,
-          rate: percentage(paidByPaymentMethod.pix.count, paidOrdersTotal)
-        },
-        card: {
-          ...paidByPaymentMethod.card,
-          rate: percentage(paidByPaymentMethod.card.count, paidOrdersTotal)
-        },
-        other: {
-          ...paidByPaymentMethod.other,
-          rate: percentage(paidByPaymentMethod.other.count, paidOrdersTotal)
-        }
-      }
+    customers: {
+      newCustomers: currentCustomerBreakdown.newCustomers,
+      recurringCustomers: currentCustomerBreakdown.recurringCustomers,
+      newCustomerRate: currentCustomerBreakdown.newCustomerRate,
+      recurringCustomerRate: currentCustomerBreakdown.recurringCustomerRate
     },
-    allTime: {
-      paidOrders: countByOrderStatus.PAID ?? 0,
-      pendingOrders: countByOrderStatus.PENDING_PAYMENT ?? 0,
-      canceledOrders: countByOrderStatus.CANCELED ?? 0
-    },
-    events: eventRows,
-    recentOrders
+    topLocations,
+    recentOrders,
+    recentActivities,
+    totals: {
+      ticketsIssued: ticketCounts.reduce((sum, item) => sum + item._count._all, 0)
+    }
   };
 }
