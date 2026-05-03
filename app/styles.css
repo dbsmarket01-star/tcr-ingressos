@@ -2621,7 +2621,7 @@ body.operationTheme .topbar {
 
 .eventsIndexHeaderCard h2 {
   color: #111827;
-  font-size: clamp(30px, 3.6vw, 48px);
+  font-size: clamp(28px, 3.1vw, 42px);
   line-height: 1.02;
 }
 
@@ -2823,12 +2823,16 @@ body.operationTheme .topbar {
   color: #111827;
   font-size: 16px;
   line-height: 1.25;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .eventsIndexEventCopy span,
 .eventsIndexDateCell span,
 .eventsIndexLocationCell span {
   color: #64748b;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .eventsIndexMetaLine {
@@ -2856,6 +2860,8 @@ body.operationTheme .topbar {
 
 .eventsIndexSalesCell strong {
   color: #223040;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .eventsIndexSalesCell small {
@@ -2885,6 +2891,7 @@ body.operationTheme .topbar {
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
+  min-width: 0;
 }
 
 .eventsIndexActionsCell .secondaryButton {
@@ -2892,7 +2899,7 @@ body.operationTheme .topbar {
   display: inline-flex;
   gap: 8px;
   justify-content: center;
-  min-width: 106px;
+  min-width: 0;
 }
 
 .eventsIndexActionsCell .secondaryButton svg {
@@ -3023,6 +3030,40 @@ body.operationTheme .topbar {
   min-height: 42px;
 }
 
+@media (max-width: 1560px) {
+  .eventsIndexFiltersBar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .eventsIndexSearchField,
+  .eventsIndexFilterActions {
+    grid-column: span 2;
+  }
+
+  .eventsIndexTableHead {
+    display: none;
+  }
+
+  .eventsIndexRows {
+    gap: 16px;
+  }
+
+  .eventsIndexRowCard {
+    align-items: start;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 18px;
+  }
+
+  .eventsIndexEventCell,
+  .eventsIndexActionsCell {
+    grid-column: 1 / -1;
+  }
+
+  .eventsIndexActionsCell {
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 1440px) {
   .eventsIndexTableHead,
   .eventsIndexRowCard {
@@ -3054,29 +3095,6 @@ body.operationTheme .topbar {
   .eventsIndexSearchField,
   .eventsIndexFilterActions {
     grid-column: span 2;
-  }
-
-  .eventsIndexTableHead {
-    display: none;
-  }
-
-  .eventsIndexRows {
-    gap: 16px;
-  }
-
-  .eventsIndexRowCard {
-    align-items: start;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    padding: 18px;
-  }
-
-  .eventsIndexEventCell {
-    grid-column: 1 / -1;
-  }
-
-  .eventsIndexActionsCell {
-    grid-column: 1 / -1;
-    justify-content: flex-start;
   }
 }
 
