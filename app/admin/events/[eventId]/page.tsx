@@ -526,6 +526,25 @@ export default async function EventManagementPage({ params, searchParams }: Even
                 ))}
               </svg>
               <div
+                className="eventOverviewChartHotspots"
+                style={{ gridTemplateColumns: `repeat(${Math.max(salesSeries.length, 1)}, minmax(0, 1fr))` }}
+              >
+                {salesSeries.map((item, index) => (
+                  <button
+                    aria-label={`${item.label}: ${item.salesCount} ingresso(s) faturado(s), ${formatCurrency(item.revenueInCents)}`}
+                    className="eventOverviewChartHotspot"
+                    key={`hotspot-${item.key}-${index}`}
+                    type="button"
+                  >
+                    <span className="eventOverviewChartTooltip">
+                      <strong>{item.label}</strong>
+                      <small>{item.salesCount} ingresso(s) faturado(s)</small>
+                      <small>{formatCurrency(item.revenueInCents)}</small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <div
                 className="eventOverviewChartAxis"
                 style={{ gridTemplateColumns: `repeat(${Math.max(salesSeries.length, 1)}, minmax(0, 1fr))` }}
               >

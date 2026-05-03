@@ -2991,11 +2991,79 @@ body.operationTheme .topbar {
 .eventOverviewChartWrap {
   display: grid;
   gap: 12px;
+  position: relative;
 }
 
 .eventOverviewChartWrap svg {
   height: 300px;
   width: 100%;
+}
+
+.eventOverviewChartHotspots {
+  inset: 0 0 26px;
+  display: grid;
+  pointer-events: none;
+  position: absolute;
+}
+
+.eventOverviewChartHotspot {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  min-width: 0;
+  padding: 0;
+  pointer-events: auto;
+  position: relative;
+}
+
+.eventOverviewChartHotspot::after {
+  content: "";
+  inset: 18px 0 10px;
+  position: absolute;
+}
+
+.eventOverviewChartTooltip {
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 14px;
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.22);
+  color: white;
+  display: grid;
+  gap: 4px;
+  left: 50%;
+  min-width: 168px;
+  opacity: 0;
+  padding: 12px 14px;
+  pointer-events: none;
+  position: absolute;
+  top: 18px;
+  transform: translate(-50%, -10px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  z-index: 2;
+}
+
+.eventOverviewChartTooltip strong,
+.eventOverviewChartTooltip small {
+  margin: 0;
+}
+
+.eventOverviewChartTooltip strong {
+  font-size: 13px;
+}
+
+.eventOverviewChartTooltip small {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.eventOverviewChartHotspot:hover .eventOverviewChartTooltip,
+.eventOverviewChartHotspot:focus-visible .eventOverviewChartTooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.eventOverviewChartHotspot:focus-visible {
+  outline: none;
 }
 
 .eventOverviewGridLine {
