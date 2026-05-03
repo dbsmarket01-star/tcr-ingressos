@@ -1,18 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { CopyButton } from "@/components/forms/CopyButton";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
-import { createCouponAction, updateCouponStatusAction } from "@/features/coupons/coupon.actions";
 import { duplicateEventAction, updateEventStatusAction } from "@/features/events/event.actions";
 import { getEventCapacity, getEventForManagement, getEventRevenueInCents } from "@/features/events/event.service";
-import {
-  createTicketLotAction,
-  updateTicketLotPricingAction,
-  updateTicketLotStatusAction
-} from "@/features/lots/lot.actions";
-import { formatPercentageFromBps } from "@/features/pricing/pricing";
-import { formatCurrency, formatDateTime } from "@/lib/format";
-import { getPublicEventUrl, getPublicLeadCaptureUrl } from "@/lib/public-url";
+import { getLeadOriginBucket } from "@/features/tracking/tracking";
+import { formatCurrency } from "@/lib/format";
+import { getPublicEventUrl } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -24,42 +19,283 @@ type EventManagementPageProps = {
 };
 
 const statusLabels = {
-  DRAFT: "Rascunho",
+  DRAFT: "Em preparação",
   PUBLISHED: "Publicado",
-  UNPUBLISHED: "Venda pública oculta",
+  UNPUBLISHED: "Pausado",
   FINISHED: "Encerrado",
   CANCELED: "Cancelado"
-};
+} as const;
 
-const lotStatusLabels = {
-  DRAFT: "Rascunho",
-  ACTIVE: "Ativo",
-  PAUSED: "Pausado",
-  SOLD_OUT: "Esgotado",
-  CLOSED: "Encerrado"
-};
+function formatEventDate(value: Date) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "America/Sao_Paulo"
+  }).format(value);
+}
 
-const couponStatusLabels = {
-  ACTIVE: "Ativo",
-  PAUSED: "Pausado",
-  EXPIRED: "Expirado"
-};
+function formatEventTime(value: Date) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Sao_Paulo"
+  }).format(value);
+}
 
-const couponTypeLabels = {
-  PERCENTAGE: "Percentual",
-  FIXED_AMOUNT: "Valor fixo"
-};
+function getStatusClass(status: keyof typeof statusLabels) {
+  if (status === "PUBLISHED") return "published";
+  if (status === "DRAFT" || status === "UNPUBLISHED") return "pending";
+  if (status === "FINISHED") return "draft";
+  return "canceled";
+}
 
-function getPixDiscountType(lot: { pixDiscountPercentBps: number; pixDiscountFixedInCents: number }) {
-  if (lot.pixDiscountPercentBps > 0) {
-    return "PERCENTAGE";
+function percentage(value: number, total: number) {
+  if (total <= 0) {
+    return 0;
   }
 
-  if (lot.pixDiscountFixedInCents > 0) {
-    return "FIXED";
+  return Number(((value / total) * 100).toFixed(2));
+}
+
+function formatPercentage(value: number, fractionDigits = 2) {
+  return `${value.toFixed(fractionDigits).replace(".", ",")}%`;
+}
+
+function getDaysUntil(startsAt: Date) {
+  const now = new Date();
+  const midnightNow = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const midnightEvent = new Date(startsAt.getFullYear(), startsAt.getMonth(), startsAt.getDate()).getTime();
+  return Math.max(0, Math.ceil((midnightEvent - midnightNow) / 86400000));
+}
+
+function buildDailySeries(
+  orders: Array<{ paidAt: Date | null; totalInCents: number; payment: { amountInCents: number } | null }>,
+  days = 30
+) {
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+  const start = new Date(end);
+  start.setDate(end.getDate() - (days - 1));
+  start.setHours(0, 0, 0, 0);
+
+  const rows = Array.from({ length: days }, (_, index) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    const key = date.toISOString().slice(0, 10);
+    return {
+      key,
+      date,
+      label: new Intl.DateTimeFormat("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        timeZone: "America/Sao_Paulo"
+      }).format(date),
+      revenueInCents: 0,
+      salesCount: 0
+    };
+  });
+
+  const indexByKey = new Map(rows.map((row, index) => [row.key, index]));
+
+  for (const order of orders) {
+    const paidAt = order.paidAt ?? null;
+    if (!paidAt) continue;
+    const key = paidAt.toISOString().slice(0, 10);
+    const index = indexByKey.get(key);
+    if (index === undefined) continue;
+    rows[index].salesCount += 1;
+    rows[index].revenueInCents += order.payment?.amountInCents ?? order.totalInCents;
   }
 
-  return "NONE";
+  return rows;
+}
+
+function buildSeriesPath(values: number[], width: number, height: number) {
+  const paddingLeft = 18;
+  const paddingRight = 18;
+  const paddingTop = 16;
+  const paddingBottom = 24;
+  const usableWidth = width - paddingLeft - paddingRight;
+  const usableHeight = height - paddingTop - paddingBottom;
+  const maxValue = Math.max(...values, 1);
+
+  const points = values.map((value, index) => {
+    const x = paddingLeft + (usableWidth * index) / Math.max(1, values.length - 1);
+    const y = paddingTop + usableHeight - (value / maxValue) * usableHeight;
+    return { x, y };
+  });
+
+  const linePath = points
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`)
+    .join(" ");
+
+  const areaPath =
+    points.length > 0
+      ? `${linePath} L ${points[points.length - 1].x.toFixed(1)} ${(height - paddingBottom).toFixed(1)} L ${points[0].x.toFixed(1)} ${(height - paddingBottom).toFixed(1)} Z`
+      : "";
+
+  return { points, linePath, areaPath };
+}
+
+function summarizeLeadOrigins(
+  leads: Array<{ utmSource: string | null; utmMedium: string | null }>,
+  totalLeads: number
+) {
+  const buckets = new Map<string, number>();
+
+  for (const lead of leads) {
+    const label = getLeadOriginBucket(lead.utmSource, lead.utmMedium);
+    buckets.set(label, (buckets.get(label) ?? 0) + 1);
+  }
+
+  return Array.from(buckets.entries())
+    .map(([label, count]) => ({
+      label,
+      count,
+      rate: percentage(count, totalLeads)
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 4);
+}
+
+function DashboardIcon({
+  kind
+}: {
+  kind:
+    | "ticket"
+    | "money"
+    | "chart"
+    | "target"
+    | "users"
+    | "calendar"
+    | "signal"
+    | "flash"
+    | "megaphone"
+    | "check"
+    | "leads"
+    | "spark";
+}) {
+  const common = {
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "1.9",
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const
+  };
+
+  if (kind === "ticket") {
+    return (
+      <svg {...common}>
+        <path d="M4 9a2.5 2.5 0 0 0 0 6v3h16v-3a2.5 2.5 0 0 0 0-6V6H4z" />
+        <path d="M9 8v8" />
+      </svg>
+    );
+  }
+
+  if (kind === "money") {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 8v8" />
+        <path d="M15 10.5c0-1.2-1.34-2.18-3-2.18s-3 .98-3 2.18 1.34 2.18 3 2.18 3 .98 3 2.18-1.34 2.18-3 2.18-3-.98-3-2.18" />
+      </svg>
+    );
+  }
+
+  if (kind === "chart") {
+    return (
+      <svg {...common}>
+        <path d="M6 18V9" />
+        <path d="M12 18V6" />
+        <path d="M18 18v-4" />
+      </svg>
+    );
+  }
+
+  if (kind === "target") {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="7" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    );
+  }
+
+  if (kind === "users") {
+    return (
+      <svg {...common}>
+        <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
+        <circle cx="9.5" cy="7.5" r="3.5" />
+        <path d="M17 11a3 3 0 1 0 0-6" />
+      </svg>
+    );
+  }
+
+  if (kind === "calendar") {
+    return (
+      <svg {...common}>
+        <rect x="3" y="5" width="18" height="16" rx="3" />
+        <path d="M16 3v4M8 3v4M3 10h18" />
+      </svg>
+    );
+  }
+
+  if (kind === "signal") {
+    return (
+      <svg {...common}>
+        <path d="M5 18V9" />
+        <path d="M10 18V6" />
+        <path d="M15 18v-4" />
+        <path d="M20 18v-8" />
+      </svg>
+    );
+  }
+
+  if (kind === "flash") {
+    return (
+      <svg {...common}>
+        <path d="M13 2L4 14h6l-1 8 9-12h-6l1-8Z" />
+      </svg>
+    );
+  }
+
+  if (kind === "megaphone") {
+    return (
+      <svg {...common}>
+        <path d="M3 11v2a2 2 0 0 0 2 2h2l4 4V5L7 9H5a2 2 0 0 0-2 2Z" />
+        <path d="M15 9a4 4 0 0 1 0 6" />
+      </svg>
+    );
+  }
+
+  if (kind === "check") {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="8" />
+        <path d="m8.5 12.5 2.2 2.2 4.8-5.2" />
+      </svg>
+    );
+  }
+
+  if (kind === "leads") {
+    return (
+      <svg {...common}>
+        <path d="M12 4v16" />
+        <path d="M4 12h16" />
+        <path d="m7 7 10 10" />
+        <path d="M17 7 7 17" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg {...common}>
+      <path d="M6 18c2.5-1.5 4-4.5 4.5-8 1.5 2 3 3.5 5.5 4.5" />
+      <path d="M5 10c2.5-.5 4.5-1.5 6-3.5 1.5 2 3.5 3 6 3.5" />
+    </svg>
+  );
 }
 
 export default async function EventManagementPage({ params, searchParams }: EventManagementPageProps) {
@@ -75,637 +311,464 @@ export default async function EventManagementPage({ params, searchParams }: Even
 
   const capacity = getEventCapacity(event);
   const revenueInCents = getEventRevenueInCents(event);
-  const progress = capacity.total > 0 ? Math.round((capacity.sold / capacity.total) * 100) : 0;
+  const paidOrders = event.orders;
+  const leads = event.leads;
+  const totalLeads = event._count.leads;
+  const soldTickets = capacity.sold;
   const activeLots = event.lots.filter((lot) => lot.status === "ACTIVE").length;
   const availableTickets = Math.max(capacity.total - capacity.sold - capacity.reserved, 0);
-  const hasPublishedSalesReady = event.status === "PUBLISHED" && activeLots > 0 && availableTickets > 0;
-  const eventAlerts = [
-    ...(event.status !== "PUBLISHED"
-      ? ["Evento ainda não publicado."]
-      : []),
-    ...(activeLots === 0
-      ? ["Nenhum lote ativo para venda."]
-      : []),
-    ...(availableTickets <= 0
-      ? ["Sem ingressos disponíveis para venda."]
-      : []),
-    ...(capacity.reserved >= 5 && capacity.reserved > availableTickets
-      ? ["Reservas pendentes altas em relação aos disponíveis."]
-      : [])
+  const averageTicketInCents = paidOrders.length > 0 ? Math.round(revenueInCents / paidOrders.length) : 0;
+  const conversionRate = percentage(paidOrders.length, totalLeads);
+  const daysUntilEvent = getDaysUntil(event.startsAt);
+  const viewsToThankYou = leads.filter((lead) => lead.thankYouViewedAt).length;
+  const whatsappClicks = leads.reduce((sum, lead) => sum + lead.whatsappClickCount, 0);
+  const salesLast24h = paidOrders.filter((order) => {
+    const paidAt = order.paidAt ?? null;
+    return paidAt ? Date.now() - paidAt.getTime() <= 86400000 : false;
+  }).length;
+  const salesSeries = buildDailySeries(
+    paidOrders.map((order) => ({
+      paidAt: order.paidAt,
+      totalInCents: order.totalInCents,
+      payment: order.payment
+    })),
+    30
+  );
+  const revenuePath = buildSeriesPath(
+    salesSeries.map((item) => item.revenueInCents),
+    700,
+    300
+  );
+  const salesPath = buildSeriesPath(
+    salesSeries.map((item) => item.salesCount),
+    700,
+    300
+  );
+  const originBreakdown = summarizeLeadOrigins(leads, Math.max(totalLeads, 1));
+  const activeCoupons = event.coupons.filter((coupon) => coupon.status === "ACTIVE").slice(0, 5);
+  const recentOrders = paidOrders.slice(0, 5);
+  const progress = percentage(soldTickets, Math.max(capacity.total, 1));
+  const quickStats = [
+    {
+      label: "Vendidos / total",
+      value: `${soldTickets} / ${capacity.total}`,
+      note: `${progress.toFixed(2).replace(".", ",")}% vendido`,
+      icon: "ticket" as const
+    },
+    {
+      label: "Faturamento",
+      value: formatCurrency(revenueInCents),
+      note: `${paidOrders.length} venda(s) pagas`,
+      icon: "money" as const
+    },
+    {
+      label: "Ticket médio",
+      value: formatCurrency(averageTicketInCents),
+      note: "Média das compras aprovadas",
+      icon: "chart" as const
+    },
+    {
+      label: "Conversão",
+      value: formatPercentage(conversionRate),
+      note: "Pedidos pagos sobre leads",
+      icon: "target" as const
+    },
+    {
+      label: "Leads captados",
+      value: String(totalLeads),
+      note: `${whatsappClicks} clique(s) no grupo`,
+      icon: "users" as const
+    },
+    {
+      label: "Dias para o evento",
+      value: `${daysUntilEvent} dia${daysUntilEvent === 1 ? "" : "s"}`,
+      note: `${formatEventDate(event.startsAt)}, ${formatEventTime(event.startsAt)}`,
+      icon: "calendar" as const
+    }
   ];
-  const lotError = typeof query.lotError === "string" ? query.lotError : null;
-  const lotSaved = query.lotSaved === "1";
-  const couponError = typeof query.couponError === "string" ? query.couponError : null;
-  const couponSaved = query.couponSaved === "1";
-  const eventError = typeof query.eventError === "string" ? query.eventError : null;
-  const eventSaved = query.eventSaved === "1";
 
   return (
     <AdminShell
       title={event.title}
-      description="Gerencie publicação, leitura operacional e lotes deste evento."
+      description="Visão geral operacional, comercial e de captação deste evento."
+      headerVariant="minimal"
+      hideSidebarIntro
     >
-      {eventError ? <div className="errorBox spacedSection">{eventError}</div> : null}
-      {eventSaved ? <div className="successBox spacedSection">Evento atualizado com sucesso.</div> : null}
-      {lotError ? <div className="errorBox spacedSection">{lotError}</div> : null}
-      {lotSaved ? <div className="successBox spacedSection">Lote atualizado com sucesso.</div> : null}
-      {couponError ? <div className="errorBox spacedSection">{couponError}</div> : null}
-      {couponSaved ? <div className="successBox spacedSection">Cupom atualizado com sucesso.</div> : null}
+      {typeof query.eventError === "string" ? <div className="errorBox spacedSection">{query.eventError}</div> : null}
+      {query.eventSaved === "1" ? <div className="successBox spacedSection">Evento atualizado com sucesso.</div> : null}
 
-      <section className="grid dashboardGrid">
-        <div className="card metric">
-          <span className="muted">Status</span>
-          <strong>{statusLabels[event.status]}</strong>
+      <section className="eventOverviewShell">
+        <div className="eventOverviewBreadcrumbs">
+          <Link href="/admin/events">Congressos e eventos</Link>
+          <span>›</span>
+          <strong>{event.title}</strong>
         </div>
-        <div className="card metric">
-          <span className="muted">Vendidos / total</span>
-          <strong>
-            {capacity.sold} / {capacity.total}
-          </strong>
-        </div>
-        <div className="card metric">
-          <span className="muted">Faturamento pago</span>
-          <strong>{formatCurrency(revenueInCents)}</strong>
-        </div>
-        <div className="card metric">
-          <span className="muted">Data</span>
-          <strong>{formatDateTime(event.startsAt)}</strong>
-        </div>
-        <div className="card metric">
-          <span className="muted">Disponíveis</span>
-          <strong>{availableTickets}</strong>
-        </div>
-        <div className="card metric">
-          <span className="muted">Lotes ativos</span>
-          <strong>{activeLots}</strong>
-        </div>
-      </section>
 
-      <section className="card spacedSection">
-        <div className="sectionHeader inlineHeader">
-          <h2>Pronto para venda</h2>
-          <span className={`status ${hasPublishedSalesReady ? "published" : "draft"}`}>
-            {hasPublishedSalesReady ? "Pronto" : "Pendente"}
-          </span>
-        </div>
-        {eventAlerts.length === 0 ? (
-          <div className="successBox">Evento publicado, com lote ativo e ingressos disponíveis.</div>
-        ) : (
-          <div className="operationsAlertGrid">
-            {eventAlerts.map((alert) => (
-              <article className="operationAlert warning" key={alert}>
-                <div>
-                  <span>Atenção</span>
-                  <strong>{alert}</strong>
-                </div>
-                <small>Resolva antes de aumentar tráfego pago para este evento.</small>
-              </article>
-            ))}
-          </div>
-        )}
-          <div className="actionRow spacedSection">
-            <Link className="secondaryButton smallButton" href={`/admin/reports/lots?eventId=${event.id}`}>
-              Relatório do evento
-            </Link>
-            <Link className="secondaryButton smallButton" href={`/admin/orders?eventId=${event.id}`}>
-            Pedidos do evento
-          </Link>
-            <Link className="secondaryButton smallButton" href={`/admin/finance?eventId=${event.id}`}>
-              Financeiro do evento
-            </Link>
-            {event.leadCaptureEnabled ? (
-              <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}/leads`}>
-                Leads captados
-              </Link>
-            ) : null}
-          </div>
-      </section>
+        <section className="eventOverviewHeroCard">
+          <div className="eventOverviewHeroMain">
+            <div className="eventOverviewThumb">
+              {event.bannerUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img alt={event.title} src={event.bannerUrl} />
+              ) : (
+                <strong>{event.title.slice(0, 2).toUpperCase()}</strong>
+              )}
+            </div>
 
-      <section className="grid dashboardGrid spacedSection">
-        <article className="card metric">
-          <span className="muted">Pedidos</span>
-          <strong>{event.orders.length}</strong>
-        </article>
-        <article className="card metric">
-          <span className="muted">Ingressos vendidos</span>
-          <strong>{capacity.sold}</strong>
-        </article>
-        <article className="card metric">
-          <span className="muted">Cupons</span>
-          <strong>{event.coupons.length}</strong>
-        </article>
-        <article className="card metric">
-          <span className="muted">Leads captados</span>
-          <strong>{event._count.leads}</strong>
-        </article>
-      </section>
-
-      <section className="grid twoColumns spacedSection eventManagementOverviewGrid">
-        <div className="card eventManagementSummaryCard">
-          <div className="sectionHeader inlineHeader">
-          <h2>Operação do evento</h2>
-            <div className="actionRow">
-              <Link className="secondaryButton smallButton" href={getPublicEventUrl(event.slug)}>
-                Visualizar
-              </Link>
-              <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}/edit`}>
-                Editar
-              </Link>
-              <form action={duplicateEventAction}>
-                <input type="hidden" name="eventId" value={event.id} />
-                <button className="secondaryButton smallButton" type="submit">
-                  Duplicar
-                </button>
-              </form>
+            <div className="eventOverviewHeroCopy">
+              <span className={`status ${getStatusClass(event.status)}`}>{statusLabels[event.status]}</span>
+              <h1>{event.title}</h1>
+              <p>
+                {event.city}, {event.state} <span>•</span> {formatEventDate(event.startsAt)}, {formatEventTime(event.startsAt)}
+              </p>
             </div>
           </div>
-          <p className="muted">
-            {event.city}, {event.state} - {event.venueName}
-          </p>
-          <p>{event.description}</p>
-          <div className="progressCell eventProgress">
-            <div className="progressMeta">
-              <span>
-                {capacity.sold} vendidos de {capacity.total} disponíveis
+
+          <div className="eventOverviewHeroActions">
+            <Link className="secondaryButton" href={getPublicEventUrl(event.slug)} target="_blank">
+              Ver site do evento
+            </Link>
+            <details className="eventOverviewActionMenu">
+              <summary>Ações</summary>
+              <div>
+                <Link href={`/admin/events/${event.id}/edit`}>Editar evento</Link>
+                <form action={duplicateEventAction}>
+                  <input type="hidden" name="eventId" value={event.id} />
+                  <button type="submit">Duplicar evento</button>
+                </form>
+                {event.leadCaptureEnabled ? (
+                  <Link href={`/admin/events/${event.id}/leads`}>Abrir leads captados</Link>
+                ) : null}
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <nav className="eventOverviewTabs" aria-label="Seções do evento">
+          <span className="isActive">Visão geral</span>
+          <Link href={`/admin/events/${event.id}/edit`}>Ingressos e lotes</Link>
+          <Link href={event.leadCaptureEnabled ? `/admin/events/${event.id}/leads` : `/admin/events/${event.id}/edit`}>Captação</Link>
+          <Link href={`/admin/finance?eventId=${event.id}`}>Financeiro</Link>
+          <Link href={getPublicEventUrl(event.slug)} target="_blank">Divulgação</Link>
+          <Link href="/admin/check-in">Check-in</Link>
+          <Link href={`/admin/events/${event.id}/edit`}>Configurações</Link>
+        </nav>
+
+        <section className="eventOverviewKpiGrid">
+          {quickStats.map((item) => (
+            <article className="eventOverviewKpiCard" key={item.label}>
+              <span className="eventOverviewKpiIcon">
+                <DashboardIcon kind={item.icon} />
               </span>
-              <strong>{progress}%</strong>
+              <span className="eventOverviewKpiLabel">{item.label}</span>
+              <strong>{item.value}</strong>
+              <small>{item.note}</small>
+            </article>
+          ))}
+        </section>
+
+        <section className="eventOverviewSignalCard">
+          <div className="eventOverviewSignalLead">
+            <span className="eventOverviewSignalIcon">
+              <DashboardIcon kind="signal" />
+            </span>
+            <div>
+              <strong>{event.leadCaptureEnabled ? "Captação ativa" : "Captação desativada"}</strong>
+              <p>{event.leadCaptureEnabled ? "O evento está recebendo leads e vendas." : "Ative a landing para captar interesse."}</p>
             </div>
-            <div className="progressTrack" aria-label={`${progress}% vendido`}>
-              <span style={{ width: `${progress}%` }} />
+          </div>
+          <div className="eventOverviewSignalStats">
+            <div>
+              <span>Taxa de conversão</span>
+              <strong>{formatPercentage(conversionRate)}</strong>
+            </div>
+            <div>
+              <span>Vendas nas últimas 24h</span>
+              <strong>{salesLast24h}</strong>
+            </div>
+            <div>
+              <span>Lotes ativos</span>
+              <strong>{activeLots}</strong>
+            </div>
+            <div>
+              <span>Disponíveis agora</span>
+              <strong>{availableTickets}</strong>
+            </div>
+          </div>
+        </section>
+
+        <section className="eventOverviewChartsGrid">
+          <article className="eventOverviewPanel">
+            <div className="eventOverviewPanelHeader">
+              <div>
+                <h2>Vendas e faturamento</h2>
+                <p>Últimos 30 dias do evento</p>
+              </div>
+              <span className="eventOverviewPill">Últimos 30 dias</span>
+            </div>
+
+            <div className="eventOverviewChartLegend">
+              <span><i className="isSales" /> Vendas</span>
+              <span><i className="isRevenue" /> Faturamento (R$)</span>
+            </div>
+
+            <div className="eventOverviewChartWrap">
+              <svg viewBox="0 0 700 300" preserveAspectRatio="none">
+                {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+                  const y = 18 + (300 - 42) * ratio;
+                  return <line className="eventOverviewGridLine" key={ratio} x1="18" x2="682" y1={y} y2={y} />;
+                })}
+                <path className="eventOverviewAreaPath" d={revenuePath.areaPath} />
+                <path className="eventOverviewRevenuePath" d={revenuePath.linePath} />
+                <path className="eventOverviewSalesPath" d={salesPath.linePath} />
+                {revenuePath.points.map((point, index) => (
+                  <circle className="eventOverviewRevenuePoint" cx={point.x} cy={point.y} key={`revenue-${index}`} r="4.5" />
+                ))}
+              </svg>
+              <div
+                className="eventOverviewChartAxis"
+                style={{ gridTemplateColumns: `repeat(${Math.max(salesSeries.length, 1)}, minmax(0, 1fr))` }}
+              >
+                {salesSeries.map((item, index) => (
+                  <span key={`${item.key}-${index}`}>{index % 4 === 0 || index === salesSeries.length - 1 ? item.label : ""}</span>
+                ))}
+              </div>
+            </div>
+          </article>
+
+          <article className="eventOverviewPanel">
+            <div className="eventOverviewPanelHeader">
+              <div>
+                <h2>Funil de vendas</h2>
+                <p>Da captação até a compra</p>
+              </div>
+            </div>
+
+            <div className="eventOverviewFunnel">
+              <div className="eventOverviewFunnelStep isLight">
+                <span>Leads captados</span>
+                <strong>{totalLeads}</strong>
+              </div>
+              <div className="eventOverviewFunnelStep isMid">
+                <span>Obrigado visto</span>
+                <strong>{viewsToThankYou}</strong>
+              </div>
+              <div className="eventOverviewFunnelStep isDark">
+                <span>Compraram</span>
+                <strong>{paidOrders.length}</strong>
+              </div>
+            </div>
+
+            <div className="eventOverviewFunnelMeta">
+              <div>
+                <span>Conversão geral</span>
+                <strong>{formatPercentage(conversionRate)}</strong>
+              </div>
+              <div>
+                <span>Clique no grupo</span>
+                <strong>{whatsappClicks}</strong>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section className="eventOverviewPanel">
+          <div className="eventOverviewPanelHeader">
+            <div>
+              <h2>Ações rápidas</h2>
+              <p>Atalhos do dia a dia para tocar o evento.</p>
             </div>
           </div>
 
-          <div className="actionRow spacedSection">
-            <form action={updateEventStatusAction}>
+          <div className="eventOverviewQuickActions">
+            <form action={updateEventStatusAction} className="eventOverviewQuickAction">
               <input type="hidden" name="eventId" value={event.id} />
               <input type="hidden" name="eventSlug" value={event.slug} />
               <input type="hidden" name="status" value="PUBLISHED" />
-              <button className="button smallButton" type="submit">
-                Ativar venda pública
-              </button>
+              <span className="eventOverviewQuickIcon"><DashboardIcon kind="flash" /></span>
+              <div>
+                <strong>Ativar vendas públicas</strong>
+                <small>Deixar o evento visível</small>
+              </div>
+              <button className="button smallButton" type="submit">Ativar</button>
             </form>
-            <form action={updateEventStatusAction}>
+
+            <form action={updateEventStatusAction} className="eventOverviewQuickAction">
               <input type="hidden" name="eventId" value={event.id} />
               <input type="hidden" name="eventSlug" value={event.slug} />
               <input type="hidden" name="status" value="UNPUBLISHED" />
-              <button className="secondaryButton smallButton" type="submit">
-                Pausar venda pública
-              </button>
+              <span className="eventOverviewQuickIcon"><DashboardIcon kind="check" /></span>
+              <div>
+                <strong>Pausar vendas</strong>
+                <small>Ocultar compra por enquanto</small>
+              </div>
+              <button className="secondaryButton smallButton" type="submit">Pausar</button>
             </form>
-            <form action={updateEventStatusAction}>
-              <input type="hidden" name="eventId" value={event.id} />
-              <input type="hidden" name="eventSlug" value={event.slug} />
-              <input type="hidden" name="status" value="DRAFT" />
-              <button className="secondaryButton smallButton" type="submit">
-                Voltar para rascunho
-              </button>
-            </form>
-            {event.leadCaptureEnabled ? (
-              <Link className="secondaryButton smallButton" href={getPublicLeadCaptureUrl(event.slug)} target="_blank">
-                Abrir captação
+
+            <Link className="eventOverviewQuickAction" href={getPublicEventUrl(event.slug)} target="_blank">
+              <span className="eventOverviewQuickIcon"><DashboardIcon kind="ticket" /></span>
+              <div>
+                <strong>Abrir checkout</strong>
+                <small>Visualizar página de compra</small>
+              </div>
+              <span className="eventOverviewQuickLink">Abrir</span>
+            </Link>
+
+            <div className="eventOverviewQuickAction">
+              <span className="eventOverviewQuickIcon"><DashboardIcon kind="megaphone" /></span>
+              <div>
+                <strong>Copiar link do evento</strong>
+                <small>Compartilhar com a equipe</small>
+              </div>
+              <CopyButton className="secondaryButton smallButton" copiedLabel="Copiado" label="Copiar" value={getPublicEventUrl(event.slug)} />
+            </div>
+
+            <Link className="eventOverviewQuickAction" href={`/admin/finance?eventId=${event.id}`}>
+              <span className="eventOverviewQuickIcon"><DashboardIcon kind="chart" /></span>
+              <div>
+                <strong>Ver relatório completo</strong>
+                <small>Financeiro, pedidos e vendas</small>
+              </div>
+              <span className="eventOverviewQuickLink">Abrir</span>
+            </Link>
+          </div>
+        </section>
+
+        <section className="eventOverviewDualGrid">
+          <article className="eventOverviewPanel">
+            <div className="eventOverviewPanelHeader">
+              <div>
+                <h2>Cupons ativos</h2>
+                <p>Resumo dos cupons deste evento.</p>
+              </div>
+              <Link className="eventOverviewGhostLink" href={`/admin/events/${event.id}/edit`}>
+                Ver todos
               </Link>
-            ) : null}
-            {event.leadCaptureEnabled ? (
-              <Link className="secondaryButton smallButton" href={`${getPublicLeadCaptureUrl(event.slug)}/obrigado`} target="_blank">
-                Abrir obrigado
-              </Link>
-            ) : null}
-            {event.leadCaptureEnabled ? (
-              <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}/leads`}>
-                Ver leads ({event._count.leads})
-              </Link>
-            ) : null}
-          </div>
-          {event.leadCaptureEnabled ? (
-            <p className="muted">
-              Quando a venda pública fica oculta, a landing de captação em <strong>/lista/{event.slug}</strong> continua no ar.
-            </p>
-          ) : null}
-        </div>
+            </div>
 
-        <form action={createTicketLotAction} className="card form eventLotFormCard">
-          <h2>Novo lote</h2>
-          <input type="hidden" name="eventId" value={event.id} />
-          <label className="field">
-            <span>Nome do lote</span>
-            <input name="name" placeholder="Ex: Pista - Primeiro lote" required />
-          </label>
-          <label className="field">
-            <span>Descrição</span>
-            <input name="description" placeholder="Opcional" />
-          </label>
-          <div className="grid eventLotFieldGrid">
-            <label className="field">
-              <span>Preço</span>
-              <input name="price" type="number" min="0" step="0.01" required />
-            </label>
-            <label className="field">
-              <span>Quantidade</span>
-              <input name="totalQuantity" type="number" min="1" required />
-            </label>
-          </div>
-          <div className="grid eventLotFieldGrid">
-            <label className="field">
-              <span>Taxa sobre ingresso (%)</span>
-              <input name="serviceFeePercent" type="number" min="0" max="30" step="0.01" defaultValue="0" required />
-              <small>Ex: 17 para cobrar 17% sobre o valor do ingresso.</small>
-            </label>
-            <label className="field">
-              <span>Desconto no Pix</span>
-              <select name="pixDiscountType" defaultValue="NONE">
-                <option value="NONE">Sem desconto</option>
-                <option value="PERCENTAGE">Percentual</option>
-                <option value="FIXED">Valor fixo</option>
-              </select>
-              <small>Escolha se o desconto no Pix será em porcentagem ou em valor fixo.</small>
-            </label>
-          </div>
-          <div className="grid eventLotFieldGrid">
-            <label className="field">
-              <span>Desconto Pix (%)</span>
-              <input name="pixDiscountPercent" type="number" min="0" max="100" step="0.01" defaultValue="0" />
-              <small>Preencha apenas se o tipo acima for percentual.</small>
-            </label>
-            <label className="field">
-              <span>Desconto Pix (R$)</span>
-              <input name="pixDiscountFixed" type="number" min="0" step="0.01" defaultValue="0" />
-              <small>Preencha apenas se o tipo acima for valor fixo.</small>
-            </label>
-          </div>
-          <div className="grid eventLotFieldGrid">
-            <label className="field">
-              <span>Juros do cartão por parcela (%)</span>
-              <input
-                name="cardInterestPercentPerInstallment"
-                type="number"
-                min="0"
-                max="10"
-                step="0.01"
-                defaultValue="0"
-                required
-              />
-              <small>Ex: 3 para cobrar 3% por parcela no cartão.</small>
-            </label>
-          </div>
-          <label className="field">
-            <span>Cobrar juros a partir da parcela</span>
-            <select name="cardInterestStartsAtInstallment" defaultValue="2">
-              {Array.from({ length: 10 }, (_, index) => index + 1).map((installment) => (
-                <option value={installment} key={installment}>
-                  {installment}x
-                </option>
-              ))}
-            </select>
-            <small>Ex: escolha 4x para permitir ate 3x sem juros.</small>
-          </label>
-          <div className="grid twoColumns">
-            <label className="field">
-              <span>Minimo por pedido</span>
-              <input name="minPerOrder" type="number" min="1" defaultValue="1" required />
-            </label>
-            <label className="field">
-              <span>Maximo por pedido</span>
-              <input name="maxPerOrder" type="number" min="1" defaultValue="10" required />
-            </label>
-          </div>
-          <div className="grid twoColumns">
-            <label className="field">
-              <span>Início das vendas</span>
-              <input name="salesStartsAt" type="datetime-local" />
-            </label>
-            <label className="field">
-              <span>Fim das vendas</span>
-              <input name="salesEndsAt" type="datetime-local" />
-            </label>
-          </div>
-          <label className="field">
-            <span>Status inicial</span>
-            <select name="status" defaultValue="ACTIVE">
-              <option value="ACTIVE">Ativo</option>
-              <option value="DRAFT">Rascunho</option>
-            </select>
-          </label>
-          <button className="button" type="submit">
-            Salvar lote
-          </button>
-        </form>
-      </section>
-
-      <section className="card spacedSection">
-        <div className="sectionHeader inlineHeader">
-          <h2>Lotes do evento</h2>
-        </div>
-
-        {event.lots.length === 0 ? (
-          <div className="empty">Nenhum lote cadastrado ainda.</div>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Lote</th>
-                <th>Status</th>
-                <th>Preco</th>
-                <th>Taxas</th>
-                <th>Vendidos</th>
-                <th>Reservados</th>
-                <th>Total</th>
-                <th>Vendas</th>
-                <th>Acoes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {event.lots.map((lot) => {
-                const available = lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity;
-                const serviceFeePercent = (lot.serviceFeeBps / 100).toFixed(2);
-                const pixDiscountPercent = (lot.pixDiscountPercentBps / 100).toFixed(2);
-                const cardInterestPercent = (lot.cardInterestBpsPerInstallment / 100).toFixed(2);
-                const pixDiscountType = getPixDiscountType(lot);
-
-                return (
-                  <tr key={lot.id}>
-                    <td>
-                      <strong>{lot.name}</strong>
-                      {lot.description ? (
-                        <>
-                          <br />
-                          <span className="muted">{lot.description}</span>
-                        </>
-                      ) : null}
-                    </td>
-                    <td>
-                      <span className={`status ${lot.status === "ACTIVE" ? "published" : "draft"}`}>
-                        {lotStatusLabels[lot.status]}
-                      </span>
-                    </td>
-                    <td>{formatCurrency(lot.priceInCents)}</td>
-                    <td>
-                      <form action={updateTicketLotPricingAction} className="lotPricingForm">
-                        <input type="hidden" name="eventId" value={event.id} />
-                        <input type="hidden" name="eventSlug" value={event.slug} />
-                        <input type="hidden" name="lotId" value={lot.id} />
-                        <label>
-                          <span>Preco</span>
-                          <input
-                            aria-label={`Preco de ${lot.name}`}
-                            name="price"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            defaultValue={(lot.priceInCents / 100).toFixed(2)}
-                          />
-                        </label>
-                        <label>
-                          <span>Taxa %</span>
-                          <input
-                            aria-label={`Taxa de ${lot.name}`}
-                            name="serviceFeePercent"
-                            type="number"
-                            min="0"
-                            max="30"
-                            step="0.01"
-                            defaultValue={serviceFeePercent}
-                          />
-                        </label>
-                        <label>
-                          <span>Juros %</span>
-                          <input
-                            aria-label={`Juros de cartão de ${lot.name}`}
-                            name="cardInterestPercentPerInstallment"
-                            type="number"
-                            min="0"
-                            max="10"
-                            step="0.01"
-                            defaultValue={cardInterestPercent}
-                          />
-                        </label>
-                        <label>
-                          <span>Pix</span>
-                          <select
-                            aria-label={`Tipo de desconto no Pix de ${lot.name}`}
-                            name="pixDiscountType"
-                            defaultValue={pixDiscountType}
-                          >
-                            <option value="NONE">Sem desconto</option>
-                            <option value="PERCENTAGE">Percentual</option>
-                            <option value="FIXED">Valor fixo</option>
-                          </select>
-                        </label>
-                        <label>
-                          <span>Pix %</span>
-                          <input
-                            aria-label={`Desconto percentual no Pix de ${lot.name}`}
-                            name="pixDiscountPercent"
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                            defaultValue={pixDiscountPercent}
-                          />
-                        </label>
-                        <label>
-                          <span>Pix R$</span>
-                          <input
-                            aria-label={`Desconto fixo no Pix de ${lot.name}`}
-                            name="pixDiscountFixed"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            defaultValue={(lot.pixDiscountFixedInCents / 100).toFixed(2)}
-                          />
-                        </label>
-                        <label>
-                          <span>A partir</span>
-                          <select
-                            aria-label={`Início do juros de cartão de ${lot.name}`}
-                            name="cardInterestStartsAtInstallment"
-                            defaultValue={String(lot.cardInterestStartsAtInstallment)}
-                          >
-                            {Array.from({ length: 10 }, (_, index) => index + 1).map((installment) => (
-                              <option value={installment} key={installment}>
-                                {installment}x
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <button className="secondaryButton smallButton" type="submit">
-                          Salvar
-                        </button>
-                      </form>
-                      <p className="muted">
-                        Atual: {formatPercentageFromBps(lot.serviceFeeBps)} taxa /{" "}
-                        {lot.pixDiscountPercentBps > 0
-                          ? `${formatPercentageFromBps(lot.pixDiscountPercentBps)} desconto Pix`
-                          : lot.pixDiscountFixedInCents > 0
-                            ? `${formatCurrency(lot.pixDiscountFixedInCents)} desconto Pix`
-                            : "sem desconto Pix"}{" "}
-                        /{" "}
-                        {formatPercentageFromBps(lot.cardInterestBpsPerInstallment)} a partir de{" "}
-                        {lot.cardInterestStartsAtInstallment}x
-                      </p>
-                    </td>
-                    <td>{lot.soldQuantity}</td>
-                    <td>{lot.reservedQuantity}</td>
-                    <td>{lot.totalQuantity}</td>
-                    <td>{available} disponíveis</td>
-                    <td>
-                      <div className="actionRow">
-                        <Link
-                          className="secondaryButton smallButton"
-                          href={`/admin/events/${event.id}/lots/${lot.id}/edit`}
-                        >
-                          Editar
-                        </Link>
-                        <form action={updateTicketLotStatusAction}>
-                          <input type="hidden" name="eventId" value={event.id} />
-                          <input type="hidden" name="lotId" value={lot.id} />
-                          <input type="hidden" name="status" value="ACTIVE" />
-                          <button className="secondaryButton smallButton" type="submit">
-                            Ativar
-                          </button>
-                        </form>
-                        <form action={updateTicketLotStatusAction}>
-                          <input type="hidden" name="eventId" value={event.id} />
-                          <input type="hidden" name="lotId" value={lot.id} />
-                          <input type="hidden" name="status" value="PAUSED" />
-                          <button className="secondaryButton smallButton" type="submit">
-                            Pausar
-                          </button>
-                        </form>
-                        <form action={updateTicketLotStatusAction}>
-                          <input type="hidden" name="eventId" value={event.id} />
-                          <input type="hidden" name="lotId" value={lot.id} />
-                          <input type="hidden" name="status" value="CLOSED" />
-                          <button className="secondaryButton smallButton" type="submit">
-                            Encerrar
-                          </button>
-                        </form>
-                      </div>
-                    </td>
+            {activeCoupons.length === 0 ? (
+              <div className="empty">Nenhum cupom ativo neste momento.</div>
+            ) : (
+              <table className="table eventOverviewCompactTable">
+                <thead>
+                  <tr>
+                    <th>Cupom</th>
+                    <th>Tipo</th>
+                    <th>Desconto</th>
+                    <th>Usos</th>
+                    <th>Status</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </section>
+                </thead>
+                <tbody>
+                  {activeCoupons.map((coupon) => (
+                    <tr key={coupon.id}>
+                      <td>{coupon.code}</td>
+                      <td>{coupon.type === "PERCENTAGE" ? "Percentual" : "Valor fixo"}</td>
+                      <td>{coupon.type === "PERCENTAGE" ? `${coupon.percentage ?? 0}%` : formatCurrency(coupon.amountInCents ?? 0)}</td>
+                      <td>
+                        {coupon.redeemedCount}
+                        {coupon.maxRedemptions ? ` / ${coupon.maxRedemptions}` : ""}
+                      </td>
+                      <td>
+                        <span className={`status ${coupon.status === "ACTIVE" ? "published" : "draft"}`}>
+                          {coupon.status === "ACTIVE" ? "Ativo" : "Pausado"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </article>
 
-      <section className="grid twoColumns spacedSection">
-        <form action={createCouponAction} className="card form">
-          <h2>Novo cupom</h2>
-          <input type="hidden" name="eventId" value={event.id} />
-          <label className="field">
-            <span>Código</span>
-            <input name="code" placeholder="Ex: TCR10" required />
-          </label>
-          <div className="grid twoColumns">
-            <label className="field">
-              <span>Tipo</span>
-              <select name="type" defaultValue="PERCENTAGE">
-                <option value="PERCENTAGE">Percentual</option>
-                <option value="FIXED_AMOUNT">Valor fixo</option>
-              </select>
-            </label>
-            <label className="field">
-              <span>Status</span>
-              <select name="status" defaultValue="ACTIVE">
-                <option value="ACTIVE">Ativo</option>
-                <option value="PAUSED">Pausado</option>
-              </select>
-            </label>
-          </div>
-          <div className="grid twoColumns">
-            <label className="field">
-              <span>Desconto percentual (%)</span>
-              <input name="percentage" type="number" min="1" max="100" step="1" placeholder="10" />
-            </label>
-            <label className="field">
-              <span>Desconto fixo (R$)</span>
-              <input name="amount" type="number" min="0" step="0.01" placeholder="20.00" />
-            </label>
-          </div>
-          <label className="field">
-            <span>Limite de usos</span>
-            <input name="maxRedemptions" type="number" min="1" placeholder="Opcional" />
-          </label>
-          <div className="grid twoColumns">
-            <label className="field">
-              <span>Inicio</span>
-              <input name="startsAt" type="datetime-local" />
-            </label>
-            <label className="field">
-              <span>Fim</span>
-              <input name="endsAt" type="datetime-local" />
-            </label>
-          </div>
-          <button className="button" type="submit">
-            Salvar cupom
-          </button>
-        </form>
+          <article className="eventOverviewPanel">
+            <div className="eventOverviewPanelHeader">
+              <div>
+                <h2>Pedidos recentes</h2>
+                <p>Últimas compras aprovadas deste evento.</p>
+              </div>
+              <Link className="eventOverviewGhostLink" href={`/admin/orders?eventId=${event.id}`}>
+                Ver todos
+              </Link>
+            </div>
 
-        <section className="card">
-          <div className="sectionHeader inlineHeader">
-            <h2>Cupons do evento</h2>
-          </div>
-          {event.coupons.length === 0 ? (
-            <div className="empty">Nenhum cupom cadastrado ainda.</div>
-          ) : (
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Código</th>
-                  <th>Tipo</th>
-                  <th>Desconto</th>
-                  <th>Uso</th>
-                  <th>Status</th>
-                  <th>Acoes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {event.coupons.map((coupon) => (
-                  <tr key={coupon.id}>
-                    <td>
-                      <strong>{coupon.code}</strong>
-                    </td>
-                    <td>{couponTypeLabels[coupon.type]}</td>
-                    <td>
-                      {coupon.type === "PERCENTAGE"
-                        ? `${coupon.percentage ?? 0}%`
-                        : formatCurrency(coupon.amountInCents ?? 0)}
-                    </td>
-                    <td>
-                      {coupon.redeemedCount}
-                      {coupon.maxRedemptions ? ` / ${coupon.maxRedemptions}` : ""}
-                    </td>
-                    <td>
-                      <span className={`status ${coupon.status === "ACTIVE" ? "published" : "draft"}`}>
-                        {couponStatusLabels[coupon.status]}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="actionRow">
-                        <form action={updateCouponStatusAction}>
-                          <input type="hidden" name="eventId" value={event.id} />
-                          <input type="hidden" name="couponId" value={coupon.id} />
-                          <input type="hidden" name="status" value="ACTIVE" />
-                          <button className="secondaryButton smallButton" type="submit">
-                            Ativar
-                          </button>
-                        </form>
-                        <form action={updateCouponStatusAction}>
-                          <input type="hidden" name="eventId" value={event.id} />
-                          <input type="hidden" name="couponId" value={coupon.id} />
-                          <input type="hidden" name="status" value="PAUSED" />
-                          <button className="secondaryButton smallButton" type="submit">
-                            Pausar
-                          </button>
-                        </form>
-                      </div>
-                    </td>
+            {recentOrders.length === 0 ? (
+              <div className="empty">Nenhuma compra aprovada ainda.</div>
+            ) : (
+              <table className="table eventOverviewCompactTable">
+                <thead>
+                  <tr>
+                    <th>Pedido</th>
+                    <th>Nome</th>
+                    <th>Data</th>
+                    <th>Valor</th>
+                    <th>Pagamento</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody>
+                  {recentOrders.map((order) => (
+                    <tr key={order.code}>
+                      <td>{order.code}</td>
+                      <td>{order.customer.name}</td>
+                      <td>{formatEventDate(order.paidAt ?? order.createdAt)}</td>
+                      <td>{formatCurrency(order.payment?.amountInCents ?? order.totalInCents)}</td>
+                      <td>{order.payment?.provider === "ASAAS" ? "Pix/Asaas" : order.payment?.provider ?? "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </article>
+        </section>
+
+        <section className="eventOverviewMiniGrid">
+          <article className="eventOverviewMiniCard">
+            <span className="eventOverviewQuickIcon"><DashboardIcon kind="check" /></span>
+            <div>
+              <strong>Check-in</strong>
+              <p>
+                {event._count.checkIns} / {soldTickets}
+              </p>
+              <small>{formatPercentage(percentage(event._count.checkIns, Math.max(soldTickets, 1)))} realizado</small>
+            </div>
+          </article>
+
+          <article className="eventOverviewMiniCard">
+            <span className="eventOverviewQuickIcon"><DashboardIcon kind="leads" /></span>
+            <div>
+              <strong>Captação</strong>
+              <p>{totalLeads} leads</p>
+              <small>{formatPercentage(percentage(viewsToThankYou, Math.max(totalLeads, 1)))} chegaram ao obrigado</small>
+            </div>
+          </article>
+
+          <article className="eventOverviewMiniCard">
+            <span className="eventOverviewQuickIcon"><DashboardIcon kind="spark" /></span>
+            <div>
+              <strong>Engajamento</strong>
+              <p>{whatsappClicks} clique(s)</p>
+              <small>{formatPercentage(percentage(whatsappClicks, Math.max(totalLeads, 1)))} clicaram no grupo</small>
+            </div>
+          </article>
+
+          <article className="eventOverviewMiniCard">
+            <span className="eventOverviewQuickIcon"><DashboardIcon kind="megaphone" /></span>
+            <div>
+              <strong>Origem dos leads</strong>
+              <ul className="eventOverviewOriginList">
+                {originBreakdown.length === 0 ? (
+                  <li>Sem origem registrada</li>
+                ) : (
+                  originBreakdown.map((item) => (
+                    <li key={item.label}>
+                      <span>{item.label}</span>
+                      <strong>{item.rate.toFixed(0)}%</strong>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+          </article>
         </section>
       </section>
     </AdminShell>

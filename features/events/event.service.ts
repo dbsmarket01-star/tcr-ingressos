@@ -168,11 +168,23 @@ export async function getEventForManagement(
         orderBy: {
           createdAt: "desc"
         },
-        take: 5
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          municipality: true,
+          utmSource: true,
+          utmMedium: true,
+          thankYouViewedAt: true,
+          whatsappClickedAt: true,
+          whatsappClickCount: true,
+          createdAt: true
+        }
       },
       _count: {
         select: {
-          leads: true
+          leads: true,
+          checkIns: true
         }
       },
       orders: {
@@ -184,10 +196,35 @@ export async function getEventForManagement(
             }
           }
         },
+        orderBy: {
+          paidAt: "desc"
+        },
         select: {
+          code: true,
+          createdAt: true,
+          paidAt: true,
+          status: true,
           totalInCents: true,
+          customer: {
+            select: {
+              name: true,
+              email: true
+            }
+          },
+          items: {
+            select: {
+              quantity: true,
+              lot: {
+                select: {
+                  name: true
+                }
+              }
+            }
+          },
           payment: {
             select: {
+              status: true,
+              provider: true,
               amountInCents: true
             }
           }

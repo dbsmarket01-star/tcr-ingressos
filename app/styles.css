@@ -458,6 +458,27 @@ body.operationTheme .topbar {
   padding: 20px 22px;
 }
 
+.adminHeaderMinimal {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  margin-bottom: 8px;
+  min-height: 0;
+  padding: 0;
+}
+
+.adminHeaderMinimalCopy {
+  min-height: 1px;
+}
+
+.adminHeaderMinimalCopy span {
+  color: transparent;
+  display: inline-block;
+  font-size: 1px;
+  line-height: 1;
+  user-select: none;
+}
+
 .adminHeaderActions {
   align-items: center;
   display: flex;
@@ -2595,6 +2616,700 @@ body.operationTheme .topbar {
   display: grid;
   gap: 20px;
   max-width: 1480px;
+}
+
+.eventOverviewShell {
+  display: grid;
+  gap: 18px;
+  max-width: 1540px;
+}
+
+.eventOverviewBreadcrumbs {
+  align-items: center;
+  color: #64748b;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.eventOverviewBreadcrumbs a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.eventOverviewBreadcrumbs strong {
+  color: #1f2937;
+}
+
+.eventOverviewHeroCard,
+.eventOverviewPanel,
+.eventOverviewSignalCard,
+.eventOverviewMiniCard {
+  background:
+    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.06), transparent 22%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(247, 250, 248, 0.98));
+  border: 1px solid #dce9e4;
+  border-radius: 24px;
+  box-shadow: 0 18px 36px rgba(22, 32, 42, 0.045);
+}
+
+.eventOverviewHeroCard {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  padding: 22px 24px;
+}
+
+.eventOverviewHeroMain {
+  align-items: center;
+  display: inline-flex;
+  gap: 18px;
+  min-width: 0;
+}
+
+.eventOverviewThumb {
+  align-items: center;
+  background: #edf4f0;
+  border-radius: 18px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 94px;
+  justify-content: center;
+  overflow: hidden;
+  width: 94px;
+}
+
+.eventOverviewThumb img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.eventOverviewThumb strong {
+  color: var(--brand);
+  font-size: 24px;
+}
+
+.eventOverviewHeroCopy {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.eventOverviewHeroCopy h1,
+.eventOverviewHeroCopy p {
+  margin: 0;
+}
+
+.eventOverviewHeroCopy h1 {
+  color: #111827;
+  font-size: clamp(30px, 3vw, 44px);
+  line-height: 1.04;
+}
+
+.eventOverviewHeroCopy p {
+  color: #475569;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.eventOverviewHeroActions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.eventOverviewActionMenu {
+  position: relative;
+}
+
+.eventOverviewActionMenu summary {
+  align-items: center;
+  background: var(--brand);
+  border: 0;
+  border-radius: 14px;
+  color: white;
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 800;
+  justify-content: center;
+  list-style: none;
+  min-height: 46px;
+  min-width: 108px;
+  padding: 0 18px;
+}
+
+.eventOverviewActionMenu summary::-webkit-details-marker {
+  display: none;
+}
+
+.eventOverviewActionMenu[open] > div {
+  background: white;
+  border: 1px solid #dce9e4;
+  border-radius: 16px;
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.12);
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 220px;
+  z-index: 5;
+}
+
+.eventOverviewActionMenu a,
+.eventOverviewActionMenu button {
+  align-items: center;
+  background: #f8fbf9;
+  border: 1px solid #e3ece7;
+  border-radius: 12px;
+  color: #23303d;
+  display: inline-flex;
+  font: inherit;
+  font-weight: 700;
+  justify-content: flex-start;
+  min-height: 40px;
+  padding: 0 12px;
+  text-decoration: none;
+  width: 100%;
+}
+
+.eventOverviewActionMenu form {
+  margin: 0;
+}
+
+.eventOverviewTabs {
+  align-items: center;
+  border-bottom: 1px solid #e5eeea;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 0 8px 14px;
+}
+
+.eventOverviewTabs a,
+.eventOverviewTabs span {
+  color: #475569;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.eventOverviewTabs .isActive {
+  border-bottom: 3px solid var(--brand);
+  color: #0f172a;
+  padding-bottom: 12px;
+}
+
+.eventOverviewKpiGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.eventOverviewKpiCard {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid #dce9e4;
+  border-radius: 20px;
+  box-shadow: 0 18px 36px rgba(22, 32, 42, 0.045);
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 18px;
+}
+
+.eventOverviewKpiIcon,
+.eventOverviewQuickIcon {
+  align-items: center;
+  background:
+    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.24), transparent 35%),
+    linear-gradient(135deg, #f3fbf7, #e8f4ef);
+  border: 1px solid rgba(var(--brand-rgb), 0.12);
+  border-radius: 999px;
+  color: var(--brand);
+  display: inline-flex;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+
+.eventOverviewKpiIcon svg,
+.eventOverviewQuickIcon svg {
+  display: block;
+  height: 18px;
+  width: 18px;
+}
+
+.eventOverviewKpiLabel {
+  color: #516072;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.eventOverviewKpiCard strong {
+  color: #111827;
+  font-size: clamp(18px, 1.5vw, 32px);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.eventOverviewKpiCard small {
+  color: #5c6b7a;
+}
+
+.eventOverviewSignalCard {
+  align-items: center;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(240px, 1.1fr) repeat(4, minmax(0, 0.8fr));
+  padding: 18px 20px;
+}
+
+.eventOverviewSignalLead {
+  align-items: center;
+  display: inline-flex;
+  gap: 14px;
+}
+
+.eventOverviewSignalLead strong,
+.eventOverviewSignalLead p,
+.eventOverviewPanelHeader h2,
+.eventOverviewPanelHeader p {
+  margin: 0;
+}
+
+.eventOverviewSignalLead p {
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.eventOverviewSignalStats {
+  display: contents;
+}
+
+.eventOverviewSignalStats > div {
+  border-left: 1px solid #e5eeea;
+  display: grid;
+  gap: 6px;
+  min-height: 56px;
+  padding-left: 18px;
+}
+
+.eventOverviewSignalStats span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.eventOverviewSignalStats strong {
+  color: #111827;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.eventOverviewChartsGrid,
+.eventOverviewDualGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.82fr);
+}
+
+.eventOverviewPanel {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.eventOverviewPanelHeader {
+  align-items: start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.eventOverviewPanelHeader h2 {
+  color: #111827;
+  font-size: clamp(22px, 2vw, 30px);
+  line-height: 1.08;
+}
+
+.eventOverviewPanelHeader p {
+  color: #64748b;
+  margin-top: 6px;
+}
+
+.eventOverviewPill {
+  align-items: center;
+  background: #f7faf8;
+  border: 1px solid #dce9e4;
+  border-radius: 999px;
+  color: #374151;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 800;
+  min-height: 40px;
+  padding: 0 14px;
+  white-space: nowrap;
+}
+
+.eventOverviewChartLegend {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.eventOverviewChartLegend span {
+  align-items: center;
+  color: #475569;
+  display: inline-flex;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.eventOverviewChartLegend i {
+  border-radius: 999px;
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+}
+
+.eventOverviewChartLegend .isSales {
+  background: #0b7a63;
+}
+
+.eventOverviewChartLegend .isRevenue {
+  background: #8bd8b4;
+}
+
+.eventOverviewChartWrap {
+  display: grid;
+  gap: 12px;
+}
+
+.eventOverviewChartWrap svg {
+  height: 300px;
+  width: 100%;
+}
+
+.eventOverviewGridLine {
+  stroke: #e6eeea;
+  stroke-width: 1;
+}
+
+.eventOverviewAreaPath {
+  fill: rgba(var(--brand-rgb), 0.08);
+}
+
+.eventOverviewRevenuePath {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 3;
+}
+
+.eventOverviewSalesPath {
+  fill: none;
+  stroke: #8bd8b4;
+  stroke-width: 3;
+}
+
+.eventOverviewRevenuePoint {
+  fill: white;
+  stroke: var(--brand);
+  stroke-width: 2.5;
+}
+
+.eventOverviewChartAxis {
+  color: #64748b;
+  display: grid;
+  font-size: 11px;
+  gap: 8px;
+}
+
+.eventOverviewChartAxis span {
+  min-height: 14px;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventOverviewFunnel {
+  align-items: center;
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  padding-top: 8px;
+}
+
+.eventOverviewFunnelStep {
+  border-radius: 18px;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  min-height: 78px;
+  padding: 16px 18px;
+}
+
+.eventOverviewFunnelStep span {
+  font-size: 14px;
+}
+
+.eventOverviewFunnelStep strong {
+  font-size: clamp(28px, 2vw, 34px);
+  line-height: 1;
+}
+
+.eventOverviewFunnelStep.isLight {
+  background: linear-gradient(180deg, #e5f6ef, #d4eee3);
+  color: #165043;
+  width: 100%;
+}
+
+.eventOverviewFunnelStep.isMid {
+  background: linear-gradient(180deg, #0f8f72, #0a775f);
+  color: white;
+  width: 84%;
+}
+
+.eventOverviewFunnelStep.isDark {
+  background: linear-gradient(180deg, #066953, #055142);
+  color: white;
+  width: 68%;
+}
+
+.eventOverviewFunnelMeta {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.eventOverviewFunnelMeta > div {
+  border-top: 1px solid #e5eeea;
+  display: grid;
+  gap: 6px;
+  padding-top: 14px;
+}
+
+.eventOverviewFunnelMeta span {
+  color: #64748b;
+}
+
+.eventOverviewFunnelMeta strong {
+  color: #111827;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.eventOverviewQuickActions {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.eventOverviewQuickAction {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid #e5eeea;
+  border-radius: 18px;
+  color: inherit;
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  text-decoration: none;
+}
+
+.eventOverviewQuickAction .smallButton {
+  flex: 0 0 auto;
+}
+
+.eventOverviewQuickAction > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.eventOverviewQuickAction strong,
+.eventOverviewMiniCard strong {
+  color: #111827;
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.eventOverviewQuickAction small,
+.eventOverviewMiniCard small {
+  color: #64748b;
+  display: block;
+  margin-top: 4px;
+}
+
+.eventOverviewQuickAction form {
+  margin: 0;
+}
+
+.eventOverviewQuickLink {
+  color: var(--brand);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.eventOverviewGhostLink {
+  align-items: center;
+  border: 1px solid #dce9e4;
+  border-radius: 14px;
+  color: var(--brand);
+  display: inline-flex;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  text-decoration: none;
+}
+
+.eventOverviewCompactTable td,
+.eventOverviewCompactTable th {
+  white-space: nowrap;
+}
+
+.eventOverviewMiniGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.eventOverviewMiniCard {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.eventOverviewMiniCard p {
+  color: #111827;
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1.02;
+  margin: 6px 0 0;
+}
+
+.eventOverviewOriginList {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.eventOverviewOriginList li {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.eventOverviewOriginList span {
+  color: #475569;
+}
+
+@media (max-width: 1540px) {
+  .eventOverviewKpiGrid,
+  .eventOverviewQuickActions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .eventOverviewSignalCard,
+  .eventOverviewChartsGrid,
+  .eventOverviewDualGrid,
+  .eventOverviewMiniGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .eventOverviewSignalStats {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .eventOverviewSignalStats > div {
+    border-left: 0;
+    border-top: 1px solid #e5eeea;
+    padding-left: 0;
+    padding-top: 14px;
+  }
+}
+
+@media (max-width: 1120px) {
+  .eventOverviewHeroCard {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .eventOverviewHeroActions {
+    justify-content: flex-start;
+  }
+
+  .eventOverviewQuickActions,
+  .eventOverviewMiniGrid,
+  .eventOverviewKpiGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 780px) {
+  .eventOverviewHeroCard,
+  .eventOverviewPanel,
+  .eventOverviewSignalCard,
+  .eventOverviewMiniCard {
+    border-radius: 20px;
+    padding: 18px;
+  }
+
+  .eventOverviewHeroMain,
+  .eventOverviewTabs,
+  .eventOverviewQuickActions,
+  .eventOverviewMiniGrid,
+  .eventOverviewKpiGrid,
+  .eventOverviewFunnelMeta,
+  .eventOverviewSignalStats {
+    grid-template-columns: 1fr;
+  }
+
+  .eventOverviewHeroMain {
+    align-items: flex-start;
+    display: grid;
+  }
+
+  .eventOverviewThumb {
+    height: 82px;
+    width: 82px;
+  }
+
+  .eventOverviewHeroCopy h1 {
+    font-size: clamp(28px, 9vw, 36px);
+  }
+
+  .eventOverviewTabs .isActive {
+    padding-bottom: 8px;
+  }
+
+  .eventOverviewPanelHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .eventOverviewChartWrap svg {
+    height: 250px;
+  }
+
+  .eventOverviewCompactTable {
+    display: block;
+    overflow-x: auto;
+  }
 }
 
 .eventsIndexHeaderCard,

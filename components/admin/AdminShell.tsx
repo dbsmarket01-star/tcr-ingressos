@@ -9,9 +9,17 @@ type AdminShellProps = {
   title: string;
   description: string;
   children: React.ReactNode;
+  headerVariant?: "default" | "minimal";
+  hideSidebarIntro?: boolean;
 };
 
-export async function AdminShell({ title, description, children }: AdminShellProps) {
+export async function AdminShell({
+  title,
+  description,
+  children,
+  headerVariant = "default",
+  hideSidebarIntro = false
+}: AdminShellProps) {
   const admin = await getCurrentAdmin();
   const currentOrganizationContext = await getCurrentOrganizationContext();
   const navGroups = admin ? getAdminNavGroupsForRole(admin.role, { isPlatformHost: currentOrganizationContext.isPlatformHost }) : [];
@@ -49,19 +57,27 @@ export async function AdminShell({ title, description, children }: AdminShellPro
           )}
           {!currentOrganizationContext.brandLogoUrl ? <span>{brandName}</span> : null}
         </Link>
-        <div className="sidebarIntro">
-          <span className="eyebrow">{sidebarEyebrow}</span>
-          <p>{sidebarText}</p>
-        </div>
+        {!hideSidebarIntro ? (
+          <div className="sidebarIntro">
+            <span className="eyebrow">{sidebarEyebrow}</span>
+            <p>{sidebarText}</p>
+          </div>
+        ) : null}
         <AdminSideNav groups={navGroups} />
       </aside>
 
       <section className="adminMain">
-        <header className="adminHeader">
-          <div>
-            <h1>{title}</h1>
-            <p>{description}</p>
-          </div>
+        <header className={`adminHeader ${headerVariant === "minimal" ? "adminHeaderMinimal" : ""}`}>
+          {headerVariant === "default" ? (
+            <div>
+              <h1>{title}</h1>
+              <p>{description}</p>
+            </div>
+          ) : (
+            <div className="adminHeaderMinimalCopy">
+              <span>{title}</span>
+            </div>
+          )}
           <div className="adminHeaderActions">
             {admin ? (
               <div className="adminUserBadge">
@@ -69,10 +85,12 @@ export async function AdminShell({ title, description, children }: AdminShellPro
                 <span>{admin.role}</span>
               </div>
             ) : null}
-            <div className="adminHeaderPulse">
-              <strong>{pulseTitle}</strong>
-              <span>{pulseText}</span>
-            </div>
+            {headerVariant === "default" ? (
+              <div className="adminHeaderPulse">
+                <strong>{pulseTitle}</strong>
+                <span>{pulseText}</span>
+              </div>
+            ) : null}
             {headerActionHref && headerActionLabel ? (
               <Link className="secondaryButton" href={headerActionHref}>
                 {headerActionLabel}
