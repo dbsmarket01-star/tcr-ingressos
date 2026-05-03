@@ -9578,8 +9578,8 @@ body.operationTheme .topbar {
 
   .leadPremiumHero {
     align-items: end;
-    gap: 16px;
-    grid-template-columns: minmax(150px, 0.92fr) minmax(0, 1.08fr);
+    gap: 12px;
+    grid-template-columns: minmax(178px, 0.96fr) minmax(0, 1.04fr);
     padding: 0;
   }
 
@@ -9588,11 +9588,11 @@ body.operationTheme .topbar {
   }
 
   .leadPremiumHeroImageWrap img {
-    aspect-ratio: 0.78;
+    aspect-ratio: 0.92;
   }
 
   .leadPremiumHeroCopy {
-    gap: 10px;
+    gap: 8px;
     padding-bottom: 0;
   }
 
@@ -9603,14 +9603,14 @@ body.operationTheme .topbar {
   }
 
   .leadPremiumHeroCopy h1 {
-    font-size: 30px;
-    line-height: 0.96;
-    max-width: 6ch;
+    font-size: 24px;
+    line-height: 0.95;
+    max-width: 9ch;
   }
 
   .leadPremiumHeroSupport {
-    font-size: 14px;
-    line-height: 1.24;
+    font-size: 13px;
+    line-height: 1.18;
     max-width: none;
   }
 
@@ -9634,24 +9634,24 @@ body.operationTheme .topbar {
   }
 
   .leadPremiumMetaRow {
-    gap: 10px;
-    margin-top: 4px;
+    gap: 8px;
+    margin-top: 2px;
   }
 
   .leadPremiumMetaItem strong {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .leadPremiumMetaItem span {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .leadPremiumBenefits {
     border-radius: 18px;
     gap: 0;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin-top: 0;
-    padding: 14px 16px;
+    margin-top: -2px;
+    padding: 12px 14px;
   }
 
   .leadPremiumBenefit {
@@ -9666,19 +9666,19 @@ body.operationTheme .topbar {
   }
 
   .leadPremiumBenefit strong {
-    font-size: 11px;
+    font-size: 10px;
     line-height: 1.2;
   }
 
   .leadPremiumBenefit p {
-    font-size: 10px;
-    line-height: 1.35;
+    font-size: 9px;
+    line-height: 1.3;
   }
 
   .leadPremiumFormSection {
     border-radius: 22px;
-    margin-top: 4px;
-    padding: 16px 16px 14px;
+    margin-top: -6px;
+    padding: 14px 14px 12px;
   }
 
   .leadPremiumFormPane {
@@ -9692,13 +9692,13 @@ body.operationTheme .topbar {
   }
 
   .leadPremiumFormIntro h2 {
-    font-size: 22px;
+    font-size: 20px;
     line-height: 1.04;
-    max-width: 11ch;
+    max-width: 12ch;
   }
 
   .leadPremiumFormIntro > p {
-    font-size: 14px;
+    font-size: 13px;
     max-width: 100%;
   }
 
@@ -9708,7 +9708,7 @@ body.operationTheme .topbar {
   }
 
   .leadPremiumProof {
-    gap: 8px;
+    gap: 6px;
   }
 
   .leadPremiumAvatarRow span,
@@ -9718,21 +9718,21 @@ body.operationTheme .topbar {
   }
 
   .leadPremiumFormPane {
-    gap: 12px;
+    gap: 10px;
   }
 
   .leadPremiumFormTiming {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .leadPremiumCtaButton.button.fullButton {
-    font-size: 15px;
-    min-height: 54px;
+    font-size: 14px;
+    min-height: 50px;
   }
 
   .leadPremiumFooterStats {
-    gap: 10px;
-    padding: 2px 0 0;
+    gap: 8px;
+    padding: 0;
   }
 
   .leadPremiumFooterStat strong {
