@@ -385,10 +385,10 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
                 <ImageUploadField
                   name="leadCaptureHeroFile"
                   label="Imagem da captação"
-                  recommendedSize="Ideal: 1600 x 900 px"
-                  usageHint="Use uma arte bonita e informativa. O recorte guiado mostra como ela ficará no topo da landing."
+                  recommendedSize="Ideal: 1080 x 1350 px"
+                  usageHint="Use uma arte bonita e informativa. O recorte guiado mostra como ela ficará no quadro vertical do topo da landing."
                   help="JPG, PNG, WEBP ou GIF até 10MB."
-                  aspect="banner"
+                  aspect="lead"
                   cropFieldName="leadCaptureHeroCrop"
                 />
               </div>

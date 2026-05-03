@@ -7000,6 +7000,10 @@ body.operationTheme .topbar {
   aspect-ratio: 16 / 7;
 }
 
+.imageCropStagelead {
+  aspect-ratio: 4 / 5;
+}
+
 .imageCropStagemap {
   aspect-ratio: 4 / 3;
 }
@@ -7026,6 +7030,10 @@ body.operationTheme .topbar {
 
 .imageCropSafeAreabanner {
   inset: 14% 10%;
+}
+
+.imageCropSafeArealead {
+  inset: 8%;
 }
 
 .imageCropSafeAreamap {

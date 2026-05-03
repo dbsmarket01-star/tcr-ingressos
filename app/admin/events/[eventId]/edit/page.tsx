@@ -545,11 +545,11 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
                   label="Imagem da captação"
                   currentImageUrl={event.leadCaptureHeroImageUrl ?? undefined}
                   currentCropValue={event.leadCaptureHeroCrop}
-                  recommendedSize="Ideal: 1600 x 900 px"
-                  usageHint="Essa imagem aparece só na landing de captação. Use o recorte guiado para deixar a arte bem encaixada."
+                  recommendedSize="Ideal: 1080 x 1350 px"
+                  usageHint="Essa imagem aparece na landing de captação em um quadro mais vertical. Use o recorte guiado para deixar rosto e texto bem encaixados."
                   help="Use JPG, PNG, WEBP ou GIF até 10MB."
                   emptyText="Sem imagem da captação"
-                  aspect="banner"
+                  aspect="lead"
                   cropFieldName="leadCaptureHeroCrop"
                 />
               </div>

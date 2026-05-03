@@ -20,7 +20,7 @@ type ImageUploadFieldProps = {
   emptyText?: string;
   recommendedSize?: string;
   usageHint?: string;
-  aspect?: "banner" | "map" | "share";
+  aspect?: "banner" | "lead" | "map" | "share";
   cropFieldName?: string;
   currentCropValue?: string | null;
 };
@@ -33,6 +33,7 @@ type ImageMeta = {
 
 const recommendedRatios = {
   banner: 1920 / 840,
+  lead: 4 / 5,
   map: 4 / 3,
   share: 1.91
 } satisfies Record<NonNullable<ImageUploadFieldProps["aspect"]>, number>;
@@ -43,6 +44,13 @@ const cropPresets = {
     { label: "Topo", crop: { x: 50, y: 28 } },
     { label: "Centro", crop: { x: 50, y: 50 } },
     { label: "Base", crop: { x: 50, y: 72 } }
+  ],
+  lead: [
+    { label: "Auto", crop: { x: 50, y: 50 } },
+    { label: "Rosto alto", crop: { x: 50, y: 24 } },
+    { label: "Centro", crop: { x: 50, y: 50 } },
+    { label: "Esquerda", crop: { x: 34, y: 50 } },
+    { label: "Direita", crop: { x: 66, y: 50 } }
   ],
   map: [
     { label: "Auto", crop: { x: 50, y: 50 } },
@@ -87,8 +95,8 @@ function analyzeAspect(meta: ImageMeta | null, aspect: NonNullable<ImageUploadFi
       title: "A arte está mais alta que o ideal",
       text:
         aspect === "banner"
-          ? "No topo público podem sobrar faixas laterais e o banner parecer menor do que você imaginou."
-          : "A imagem está mais vertical do que o recomendado para este espaço."
+      ? "No topo público podem sobrar faixas laterais e o banner parecer menor do que você imaginou."
+      : "A imagem está mais vertical do que o recomendado para este espaço."
     };
   }
 
@@ -104,12 +112,12 @@ function analyzeAspect(meta: ImageMeta | null, aspect: NonNullable<ImageUploadFi
   }
 
   return {
-    tone: "success",
-    title: "A proporção está bem próxima do ideal",
-    text:
-      aspect === "banner"
-        ? "A prévia indica um encaixe bom no topo público, com menos chance de faixas ou sensação de aperto."
-        : "A prévia indica um encaixe equilibrado para este espaço."
+      tone: "success",
+      title: "A proporção está bem próxima do ideal",
+      text:
+        aspect === "banner"
+          ? "A prévia indica um encaixe bom no topo público, com menos chance de faixas ou sensação de aperto."
+          : "A prévia indica um encaixe equilibrado para este espaço."
   };
 }
 
