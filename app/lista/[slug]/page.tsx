@@ -276,13 +276,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
               ) : null}
 
               <div className="leadPremiumProof">
-                <div className="leadPremiumAvatarRow">
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                  <strong>+100K</strong>
-                </div>
                 <p>{proofText}</p>
               </div>
             </div>

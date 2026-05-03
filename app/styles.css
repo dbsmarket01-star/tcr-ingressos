@@ -9437,40 +9437,8 @@ body.operationTheme .topbar {
 
 .leadPremiumProof {
   display: grid;
-  gap: 12px;
-  margin-top: 6px;
-}
-
-.leadPremiumAvatarRow {
-  align-items: center;
-  display: flex;
-}
-
-.leadPremiumAvatarRow span,
-.leadPremiumAvatarRow strong {
-  border: 3px solid #fff;
-  border-radius: 999px;
-  display: inline-flex;
-  height: 46px;
-  margin-left: -10px;
-  width: 46px;
-}
-
-.leadPremiumAvatarRow span:first-child {
-  margin-left: 0;
-}
-
-.leadPremiumAvatarRow span {
-  background: linear-gradient(180deg, #d4e7dd, #8fb9a8);
-}
-
-.leadPremiumAvatarRow strong {
-  align-items: center;
-  background: #119652;
-  color: #fff;
-  font-size: 14px;
-  justify-content: center;
-  padding: 0;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .leadPremiumFormPane {
@@ -9716,12 +9684,6 @@ body.operationTheme .topbar {
 
   .leadPremiumProof {
     gap: 6px;
-  }
-
-  .leadPremiumAvatarRow span,
-  .leadPremiumAvatarRow strong {
-    height: 30px;
-    width: 30px;
   }
 
   .leadPremiumFormPane {
