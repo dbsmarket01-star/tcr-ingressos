@@ -2075,10 +2075,11 @@ body.operationTheme .topbar {
 
 .dashboardGeneralKpiCard strong {
   color: #121c2d;
-  font-size: clamp(22px, 1.6vw, 34px);
+  font-size: clamp(19px, 1.35vw, 30px);
   line-height: 1.02;
   min-width: 0;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .dashboardGeneralDelta {
