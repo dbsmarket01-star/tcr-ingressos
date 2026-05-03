@@ -1789,6 +1789,7 @@ body.operationTheme .topbar {
 .dashboardGeneralShell {
   display: grid;
   gap: 18px;
+  max-width: 1540px;
 }
 
 .dashboardGeneralTopbar,
@@ -2035,7 +2036,7 @@ body.operationTheme .topbar {
 }
 
 .dashboardGeneralKpiGrid {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(180px, 1fr));
 }
 
 .dashboardGeneralKpiCard {
@@ -2046,6 +2047,7 @@ body.operationTheme .topbar {
   display: grid;
   gap: 10px;
   min-height: 174px;
+  min-width: 0;
   padding: 20px;
 }
 
@@ -2067,17 +2069,24 @@ body.operationTheme .topbar {
   color: #354253;
   display: block;
   font-size: 14px;
+  line-height: 1.25;
+  min-width: 0;
 }
 
 .dashboardGeneralKpiCard strong {
   color: #121c2d;
-  font-size: clamp(24px, 2vw, 36px);
-  line-height: 1.05;
+  font-size: clamp(22px, 1.6vw, 34px);
+  line-height: 1.02;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .dashboardGeneralDelta {
   font-size: 13px;
   font-weight: 800;
+  line-height: 1.22;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .dashboardGeneralDelta.is-up {
@@ -2121,7 +2130,7 @@ body.operationTheme .topbar {
 }
 
 .dashboardGeneralPanelHeader h2 {
-  font-size: 30px;
+  font-size: clamp(26px, 2.2vw, 30px);
   line-height: 1.08;
 }
 
@@ -2197,13 +2206,17 @@ body.operationTheme .topbar {
 .dashboardGeneralXAxis {
   color: #6b7280;
   display: grid;
-  font-size: 12px;
-  gap: 12px;
+  font-size: 11px;
+  gap: 8px;
   grid-template-columns: repeat(7, minmax(0, 1fr));
 }
 
 .dashboardGeneralXAxis span {
+  min-height: 14px;
+  overflow: hidden;
   text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dashboardGeneralPaymentGrid {
@@ -2284,12 +2297,19 @@ body.operationTheme .topbar {
 .dashboardGeneralCustomerStats span,
 .dashboardGeneralActivityItem span {
   color: #374151;
+  min-width: 0;
 }
 
 .dashboardGeneralLegendRow small,
 .dashboardGeneralCustomerStats small,
 .dashboardGeneralActivityItem small {
   color: #6b7280;
+}
+
+.dashboardGeneralLegendRow strong,
+.dashboardGeneralTotalsFooter strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .dashboardGeneralTotalsFooter {
@@ -2342,6 +2362,7 @@ body.operationTheme .topbar {
 }
 
 .dashboardGeneralEventCell strong {
+  overflow-wrap: anywhere;
   min-width: 0;
 }
 
@@ -2405,7 +2426,7 @@ body.operationTheme .topbar {
 }
 
 .dashboardGeneralFunnelStep strong {
-  font-size: 34px;
+  font-size: clamp(28px, 2.4vw, 34px);
   line-height: 1;
 }
 
@@ -2438,7 +2459,7 @@ body.operationTheme .topbar {
 
 .dashboardGeneralFunnelRate strong {
   color: var(--brand);
-  font-size: 52px;
+  font-size: clamp(38px, 4vw, 52px);
   line-height: 1;
 }
 
@@ -2540,6 +2561,33 @@ body.operationTheme .topbar {
   color: #6b7280;
   font-size: 13px;
   font-weight: 700;
+}
+
+@media (max-width: 1540px) {
+  .dashboardGeneralKpiGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dashboardGeneralMainGrid,
+  .dashboardGeneralMidGrid,
+  .dashboardGeneralBottomGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardGeneralPaymentGrid {
+    grid-template-columns: 170px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1320px) {
+  .dashboardGeneralOpsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardGeneralEventTableHead,
+  .dashboardGeneralEventRow {
+    grid-template-columns: minmax(180px, 1fr) 64px 96px 72px;
+  }
 }
 
 .eventsIndexShell {
@@ -9280,6 +9328,15 @@ body.operationTheme .topbar {
 
   .dashboardGeneralXAxis {
     gap: 6px;
+  }
+
+  .dashboardGeneralLegendRow {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardGeneralLegendRow strong,
+  .dashboardGeneralLegendRow small {
+    justify-self: start;
   }
 
   .dashboardGeneralEventTableHead,

@@ -136,6 +136,22 @@ function buildSalesChart(series: Array<{ label: string; revenueInCents: number }
   return { width, height, paddingBottom, points, linePath, areaPath };
 }
 
+function buildXAxisDisplayLabels(series: Array<{ label: string }>) {
+  const total = series.length;
+  if (total <= 8) {
+    return series.map((item) => item.label);
+  }
+
+  const step = total <= 14 ? 2 : total <= 24 ? 3 : total <= 40 ? 4 : 5;
+
+  return series.map((item, index) => {
+    const isFirst = index === 0;
+    const isLast = index === total - 1;
+    const shouldShow = isFirst || isLast || index % step === 0;
+    return shouldShow ? item.label : "";
+  });
+}
+
 function DashboardIcon({
   kind
 }: {
@@ -513,6 +529,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const periodLabel = formatPeriodLabel(dashboard.period.startDate, dashboard.period.endDate);
   const dateRangeLabel = formatDateRangeLabel(dashboard.period.startDate, dashboard.period.endDate);
   const salesChart = buildSalesChart(dashboard.salesByDay, dashboard.maxDailyRevenueInCents);
+  const salesXAxisLabels = buildXAxisDisplayLabels(dashboard.salesByDay);
   const paymentMethodsChart = `conic-gradient(
     #0b7a63 0deg ${(dashboard.paymentMethods.pix.rate / 100) * 360}deg,
     #b8c4bf ${(dashboard.paymentMethods.pix.rate / 100) * 360}deg ${((dashboard.paymentMethods.pix.rate + dashboard.paymentMethods.card.rate) / 100) * 360}deg,
@@ -682,8 +699,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                   className="dashboardGeneralXAxis"
                   style={{ gridTemplateColumns: `repeat(${Math.max(dashboard.salesByDay.length, 1)}, minmax(0, 1fr))` }}
                 >
-                  {dashboard.salesByDay.map((item) => (
-                    <span key={item.date}>{item.label}</span>
+                  {dashboard.salesByDay.map((item, index) => (
+                    <span key={item.date}>{salesXAxisLabels[index]}</span>
                   ))}
                 </div>
               </div>
