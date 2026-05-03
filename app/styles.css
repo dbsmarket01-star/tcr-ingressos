@@ -9263,6 +9263,8 @@ body.operationTheme .topbar {
   display: grid;
   gap: 22px;
   padding-bottom: 18px;
+  justify-items: center;
+  text-align: center;
 }
 
 .leadPremiumBadge {
@@ -9285,6 +9287,7 @@ body.operationTheme .topbar {
   line-height: 0.92;
   margin: 0;
   max-width: 9ch;
+  text-align: center;
 }
 
 .leadPremiumHeroSupport {
@@ -9293,6 +9296,7 @@ body.operationTheme .topbar {
   line-height: 1.18;
   margin: 0;
   max-width: 15ch;
+  text-align: center;
 }
 
 .leadPremiumHeroCopy h1 strong,
