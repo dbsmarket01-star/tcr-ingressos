@@ -9211,40 +9211,48 @@ body.operationTheme .topbar {
 }
 
 .leadCapturePremiumShell {
+  background: #f4f8f6;
+}
+
+.leadPremiumStage {
   background:
-    radial-gradient(circle at top left, rgba(9, 84, 69, 0.2), transparent 32%),
-    linear-gradient(180deg, #021611 0%, #08261f 36%, #f4f8f6 36%, #f4f8f6 100%);
+    radial-gradient(circle at top left, rgba(14, 73, 60, 0.35), transparent 30%),
+    linear-gradient(180deg, #03140f 0%, #07231d 100%);
+  padding-bottom: 36px;
 }
 
 .leadCapturePremiumShell .topbar {
   background: transparent;
   box-shadow: none;
+  min-height: 74px;
+  padding: 0 24px;
 }
 
-.leadPremiumHero,
-.leadPremiumBenefits,
-.leadPremiumFormSection,
-.leadPremiumFooterStats {
+.leadPremiumCanvas {
+  display: grid;
+  gap: 22px;
   margin-inline: auto;
   max-width: 1240px;
+  padding: 10px 24px 0;
 }
 
 .leadPremiumHero {
   align-items: center;
   display: grid;
-  gap: 28px;
-  grid-template-columns: minmax(360px, 0.95fr) minmax(0, 1.05fr);
-  padding: 18px 24px 0;
+  gap: 48px;
+  grid-template-columns: minmax(420px, 0.92fr) minmax(0, 1.08fr);
+  padding: 16px 0 0;
 }
 
 .leadPremiumHeroImageWrap {
   border-radius: 34px;
   min-height: 0;
   overflow: hidden;
+  place-self: end start;
 }
 
 .leadPremiumHeroImageWrap img {
-  aspect-ratio: 0.86;
+  aspect-ratio: 0.8;
   display: block;
   object-fit: cover;
   width: 100%;
@@ -9273,18 +9281,18 @@ body.operationTheme .topbar {
 
 .leadPremiumHeroCopy h1 {
   color: #fff;
-  font-size: clamp(44px, 5vw, 78px);
-  line-height: 0.95;
+  font-size: clamp(56px, 6vw, 86px);
+  line-height: 0.92;
   margin: 0;
   max-width: 9ch;
 }
 
 .leadPremiumHeroSupport {
   color: rgba(255, 255, 255, 0.9);
-  font-size: clamp(22px, 2.3vw, 40px);
-  line-height: 1.16;
+  font-size: clamp(24px, 2.5vw, 42px);
+  line-height: 1.18;
   margin: 0;
-  max-width: 16ch;
+  max-width: 15ch;
 }
 
 .leadPremiumHeroCopy h1 strong,
@@ -9297,6 +9305,7 @@ body.operationTheme .topbar {
   display: grid;
   gap: 18px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 8px;
 }
 
 .leadPremiumMetaItem {
@@ -9314,7 +9323,7 @@ body.operationTheme .topbar {
 
 .leadPremiumMetaItem strong {
   color: #fff;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .leadPremiumMetaItem span {
@@ -9330,7 +9339,7 @@ body.operationTheme .topbar {
   display: grid;
   gap: 18px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: -18px;
+  margin-top: -8px;
   padding: 28px 32px;
   position: relative;
   z-index: 2;
@@ -9370,7 +9379,7 @@ body.operationTheme .topbar {
   display: grid;
   gap: 26px;
   grid-template-columns: minmax(280px, 0.92fr) minmax(320px, 1.08fr);
-  margin-top: 18px;
+  margin-top: 10px;
   padding: 34px;
 }
 
@@ -9490,7 +9499,7 @@ body.operationTheme .topbar {
   display: grid;
   gap: 18px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  padding: 28px 24px 12px;
+  padding: 10px 8px 4px;
 }
 
 .leadPremiumFooterStat {
@@ -9518,19 +9527,17 @@ body.operationTheme .topbar {
 }
 
 @media (max-width: 1100px) {
-  .leadPremiumHero,
-  .leadPremiumFormSection,
-  .leadPremiumBenefits,
-  .leadPremiumFooterStats {
+  .leadPremiumCanvas {
     max-width: 1000px;
   }
 
   .leadPremiumHero {
     grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
   }
 
   .leadPremiumHeroImageWrap img {
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 16 / 11;
   }
 
   .leadPremiumHeroCopy h1,
@@ -9551,14 +9558,27 @@ body.operationTheme .topbar {
 }
 
 @media (max-width: 720px) {
-  .leadCapturePremiumShell {
-    background:
-      linear-gradient(180deg, #03140f 0%, #08261f 28%, #f4f8f6 28%, #f4f8f6 100%);
+  .leadPremiumStage {
+    padding-bottom: 24px;
+  }
+
+  .leadCapturePremiumShell .topbar {
+    min-height: 58px;
+    padding: 0 16px;
+  }
+
+  .leadCapturePremiumShell .brandLogo {
+    max-height: 30px;
+  }
+
+  .leadPremiumCanvas {
+    gap: 16px;
+    padding: 8px 16px 0;
   }
 
   .leadPremiumHero {
-    gap: 18px;
-    padding: 8px 16px 0;
+    gap: 14px;
+    padding: 0;
   }
 
   .leadPremiumHeroImageWrap {
@@ -9566,12 +9586,12 @@ body.operationTheme .topbar {
   }
 
   .leadPremiumHeroImageWrap img {
-    aspect-ratio: 16 / 14;
+    aspect-ratio: 16 / 13;
   }
 
   .leadPremiumHeroCopy {
-    gap: 16px;
-    padding-bottom: 8px;
+    gap: 14px;
+    padding-bottom: 0;
   }
 
   .leadPremiumBadge {
@@ -9581,13 +9601,14 @@ body.operationTheme .topbar {
   }
 
   .leadPremiumHeroCopy h1 {
-    font-size: 44px;
+    font-size: 34px;
     max-width: 7ch;
   }
 
   .leadPremiumHeroSupport {
-    font-size: 18px;
-    max-width: 14ch;
+    font-size: 17px;
+    line-height: 1.26;
+    max-width: none;
   }
 
   .leadPremiumMetaRow,
@@ -9614,19 +9635,20 @@ body.operationTheme .topbar {
 
   .leadPremiumBenefits {
     border-radius: 24px;
-    margin-top: -6px;
-    padding: 20px;
+    margin-top: 0;
+    padding: 18px 20px;
   }
 
   .leadPremiumFormSection {
     border-radius: 26px;
-    margin-top: 16px;
-    padding: 22px 18px;
+    margin-top: 4px;
+    padding: 22px 18px 18px;
   }
 
   .leadPremiumFormIntro h2 {
-    font-size: 28px;
-    max-width: 11ch;
+    font-size: 30px;
+    line-height: 1.02;
+    max-width: 9ch;
   }
 
   .leadPremiumFormIntro > p {
@@ -9658,7 +9680,11 @@ body.operationTheme .topbar {
   }
 
   .leadPremiumFooterStats {
-    padding: 22px 16px 8px;
+    padding: 8px 0 0;
+  }
+
+  .leadCaptureBody {
+    padding: 0 16px 40px;
   }
 }
 

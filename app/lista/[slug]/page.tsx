@@ -168,7 +168,9 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
   const badgeText = event.leadCaptureBadgeText || "Vagas limitadas";
   const headline = event.leadCaptureHeadline || event.title;
   const heroSupportText =
-    event.leadCaptureHeroSupportText || event.leadCaptureDescription || "Uma noite que pode transformar a sua história para sempre.";
+    event.leadCaptureHeroSupportText ||
+    event.subtitle ||
+    "Uma noite que pode **transformar** o seu casamento **para sempre**.";
   const benefits = parsePipeBlocks(event.leadCaptureBenefitsText);
   const footerStats = parsePipeBlocks(event.leadCaptureFooterStatsText);
   const bonusBlock = parsePipeBlocks(event.leadCaptureBonusText)[0];
@@ -176,10 +178,12 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
   const formIntroTitle =
     event.leadCaptureFormIntroTitle || "Entre para a lista e garanta seu lugar com desconto exclusivo.";
   const formIntroDescription =
-    event.leadCaptureFormIntroDescription || "Preencha seus dados e receba o link do grupo oficial na próxima etapa.";
+    event.leadCaptureFormIntroDescription ||
+    event.leadCaptureOfferText ||
+    "Preencha seus dados e receba o link do grupo oficial na próxima etapa.";
   const formTimingText = event.leadCaptureFormTimingText || "Leva menos de 30 segundos";
   const proofText = event.leadCaptureProofText || event.conversionSocialProofText || "Mais de 100 mil pessoas impactadas";
-  const ctaText = event.leadCaptureCtaText || event.conversionCtaText || "Quero garantir meu desconto agora";
+  const ctaText = event.leadCaptureCtaText || event.conversionCtaText || "QUERO GARANTIR MEU DESCONTO AGORA";
   const urgencyText =
     event.conversionUrgencyText || "Se você sair desta página, pode perder o acesso ao grupo e ao desconto.";
   const formattedDate = formatDateTime(event.startsAt);
@@ -254,138 +258,142 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
         mode="view"
       />
 
-      <header className="topbar">
-        <Link className="brand" href="/">
-          {organizationContext.brandLogoUrl ? (
-            <img alt={organizationContext.brandName} className="brandLogo" src={organizationContext.brandLogoUrl} />
-          ) : (
-            <span className="brandMark">{organizationContext.brandMark}</span>
-          )}
-          {!organizationContext.brandLogoUrl ? <span>{organizationContext.brandName}</span> : null}
-        </Link>
-      </header>
+      <section className="leadPremiumStage">
+        <header className="topbar">
+          <Link className="brand" href="/">
+            {organizationContext.brandLogoUrl ? (
+              <img alt={organizationContext.brandName} className="brandLogo" src={organizationContext.brandLogoUrl} />
+            ) : (
+              <span className="brandMark">{organizationContext.brandMark}</span>
+            )}
+            {!organizationContext.brandLogoUrl ? <span>{organizationContext.brandName}</span> : null}
+          </Link>
+        </header>
 
-      <section className="leadPremiumHero">
-        <div className="leadPremiumHeroImageWrap">
-          <img
-            alt={headline}
-            className={leadHeroCrop ? "croppedImage" : ""}
-            decoding="async"
-            fetchPriority="high"
-            src={heroImage}
-            style={imageCropStyle(publicLeadHeroCrop)}
-          />
+        <div className="leadPremiumCanvas">
+          <section className="leadPremiumHero">
+            <div className="leadPremiumHeroImageWrap">
+              <img
+                alt={headline}
+                className={leadHeroCrop ? "croppedImage" : ""}
+                decoding="async"
+                fetchPriority="high"
+                src={heroImage}
+                style={imageCropStyle(publicLeadHeroCrop)}
+              />
+            </div>
+            <div className="leadPremiumHeroCopy">
+              <span className="leadPremiumBadge">{badgeText}</span>
+              <h1>{renderEditableText(headline, "premium-headline")}</h1>
+              <p className="leadPremiumHeroSupport">{renderEditableText(heroSupportText, "premium-support")}</p>
+              <div className="leadPremiumMetaRow">
+                <div className="leadPremiumMetaItem">
+                  <strong>{datePart}</strong>
+                  <span>{timePart}</span>
+                </div>
+                <div className="leadPremiumMetaItem">
+                  <strong>
+                    {event.city}, {event.state}
+                  </strong>
+                  <span>Cidade do evento</span>
+                </div>
+                <div className="leadPremiumMetaItem">
+                  <strong>{event.venueName}</strong>
+                  <span>Local do encontro</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="leadPremiumBenefits">
+            {defaultBenefits.slice(0, 3).map((item, index) => (
+              <article className="leadPremiumBenefit" key={`${item.title}-${index}`}>
+                <strong>{item.title}</strong>
+                <p>{item.description}</p>
+              </article>
+            ))}
+          </section>
+
+          <section className="leadPremiumFormSection" id="lead-capture-form">
+            <div className="leadPremiumFormIntro">
+              <span className="leadEyebrow">{formEyebrow}</span>
+              <h2>{renderEditableText(formIntroTitle, "premium-form-title")}</h2>
+              <p>{renderEditableText(formIntroDescription, "premium-form-description")}</p>
+
+              {bonusBlock ? (
+                <div className="leadPremiumBonusCard">
+                  <strong>{bonusBlock.title}</strong>
+                  <p>{bonusBlock.description}</p>
+                </div>
+              ) : null}
+
+              <div className="leadPremiumProof">
+                <div className="leadPremiumAvatarRow">
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                  <strong>+100K</strong>
+                </div>
+                <p>{proofText}</p>
+              </div>
+            </div>
+
+            <form action={createEventLeadAction} className="leadPremiumFormPane" id="lead-capture-premium-form">
+              <input type="hidden" name="eventId" value={event.id} />
+              <input type="hidden" name="eventSlug" value={event.slug} />
+              <MetaTrackingFields />
+              <input type="hidden" name="utmSource" value={tracking.utmSource || ""} />
+              <input type="hidden" name="utmMedium" value={tracking.utmMedium || ""} />
+              <input type="hidden" name="utmCampaign" value={tracking.utmCampaign || ""} />
+              <input type="hidden" name="utmContent" value={tracking.utmContent || ""} />
+              <input type="hidden" name="utmTerm" value={tracking.utmTerm || ""} />
+              <input type="hidden" name="referrer" value={tracking.referrer || ""} />
+              <input type="hidden" name="landingPage" value={tracking.landingPage || ""} />
+              <input
+                aria-hidden="true"
+                autoComplete="off"
+                className="leadHoneypotField"
+                name="company"
+                tabIndex={-1}
+                type="text"
+              />
+
+              <div className="leadPremiumFormTiming">{formTimingText}</div>
+              {error ? <div className="errorBox">{error}</div> : null}
+              <label className="field">
+                <span>Nome completo</span>
+                <input name="name" placeholder="Seu nome completo" required />
+              </label>
+              <label className="field">
+                <span>E-mail</span>
+                <input name="email" type="email" placeholder="Digite seu melhor e-mail" required />
+              </label>
+              <label className="field">
+                <span>Município</span>
+                <input name="municipality" placeholder="Ex: Santo André, São Caetano, São Bernardo" required />
+              </label>
+              <label className="field">
+                <span>Telefone com DDD</span>
+                <input name="phone" inputMode="tel" placeholder="Ex: (11) 99999-9999" required />
+              </label>
+              <TurnstileField siteKey={turnstileSiteKey} />
+              <SubmitButton className="button fullButton leadPremiumCtaButton" pendingText="Enviando cadastro...">
+                {ctaText}
+              </SubmitButton>
+              <small className="leadPremiumUrgency">{urgencyText}</small>
+            </form>
+          </section>
+
+          <section className="leadPremiumFooterStats">
+            {defaultFooterStats.slice(0, 3).map((item, index) => (
+              <article className="leadPremiumFooterStat" key={`${item.title}-${index}`}>
+                <strong>{item.title}</strong>
+                <span>{item.description}</span>
+              </article>
+            ))}
+          </section>
         </div>
-        <div className="leadPremiumHeroCopy">
-          <span className="leadPremiumBadge">{badgeText}</span>
-          <h1>{renderEditableText(headline, "premium-headline")}</h1>
-          <p className="leadPremiumHeroSupport">{renderEditableText(heroSupportText, "premium-support")}</p>
-          <div className="leadPremiumMetaRow">
-            <div className="leadPremiumMetaItem">
-              <strong>{datePart}</strong>
-              <span>{timePart}</span>
-            </div>
-            <div className="leadPremiumMetaItem">
-              <strong>
-                {event.city}, {event.state}
-              </strong>
-              <span>Cidade do evento</span>
-            </div>
-            <div className="leadPremiumMetaItem">
-              <strong>{event.venueName}</strong>
-              <span>Local do encontro</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="leadPremiumBenefits">
-        {defaultBenefits.slice(0, 3).map((item, index) => (
-          <article className="leadPremiumBenefit" key={`${item.title}-${index}`}>
-            <strong>{item.title}</strong>
-            <p>{item.description}</p>
-          </article>
-        ))}
-      </section>
-
-      <section className="leadPremiumFormSection" id="lead-capture-form">
-        <div className="leadPremiumFormIntro">
-          <span className="leadEyebrow">{formEyebrow}</span>
-          <h2>{renderEditableText(formIntroTitle, "premium-form-title")}</h2>
-          <p>{renderEditableText(formIntroDescription, "premium-form-description")}</p>
-
-          {bonusBlock ? (
-            <div className="leadPremiumBonusCard">
-              <strong>{bonusBlock.title}</strong>
-              <p>{bonusBlock.description}</p>
-            </div>
-          ) : null}
-
-          <div className="leadPremiumProof">
-            <div className="leadPremiumAvatarRow">
-              <span />
-              <span />
-              <span />
-              <span />
-              <strong>+100K</strong>
-            </div>
-            <p>{proofText}</p>
-          </div>
-        </div>
-
-        <form action={createEventLeadAction} className="leadPremiumFormPane" id="lead-capture-premium-form">
-          <input type="hidden" name="eventId" value={event.id} />
-          <input type="hidden" name="eventSlug" value={event.slug} />
-          <MetaTrackingFields />
-          <input type="hidden" name="utmSource" value={tracking.utmSource || ""} />
-          <input type="hidden" name="utmMedium" value={tracking.utmMedium || ""} />
-          <input type="hidden" name="utmCampaign" value={tracking.utmCampaign || ""} />
-          <input type="hidden" name="utmContent" value={tracking.utmContent || ""} />
-          <input type="hidden" name="utmTerm" value={tracking.utmTerm || ""} />
-          <input type="hidden" name="referrer" value={tracking.referrer || ""} />
-          <input type="hidden" name="landingPage" value={tracking.landingPage || ""} />
-          <input
-            aria-hidden="true"
-            autoComplete="off"
-            className="leadHoneypotField"
-            name="company"
-            tabIndex={-1}
-            type="text"
-          />
-
-          <div className="leadPremiumFormTiming">{formTimingText}</div>
-          {error ? <div className="errorBox">{error}</div> : null}
-          <label className="field">
-            <span>Nome completo</span>
-            <input name="name" placeholder="Seu nome completo" required />
-          </label>
-          <label className="field">
-            <span>E-mail</span>
-            <input name="email" type="email" placeholder="Digite seu melhor e-mail" required />
-          </label>
-          <label className="field">
-            <span>Município</span>
-            <input name="municipality" placeholder="Ex: Santo André, São Caetano, São Bernardo" required />
-          </label>
-          <label className="field">
-            <span>Telefone com DDD</span>
-            <input name="phone" inputMode="tel" placeholder="Ex: (11) 99999-9999" required />
-          </label>
-          <TurnstileField siteKey={turnstileSiteKey} />
-          <SubmitButton className="button fullButton leadPremiumCtaButton" pendingText="Enviando cadastro...">
-            {ctaText}
-          </SubmitButton>
-          <small className="leadPremiumUrgency">{urgencyText}</small>
-        </form>
-      </section>
-
-      <section className="leadPremiumFooterStats">
-        {defaultFooterStats.slice(0, 3).map((item, index) => (
-          <article className="leadPremiumFooterStat" key={`${item.title}-${index}`}>
-            <strong>{item.title}</strong>
-            <span>{item.description}</span>
-          </article>
-        ))}
       </section>
 
       <section className="leadCaptureBody">
