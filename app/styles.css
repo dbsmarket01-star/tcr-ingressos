@@ -6940,6 +6940,21 @@ body.operationTheme .topbar {
   flex-wrap: wrap;
 }
 
+.imageCropFineTuning {
+  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.imageCropNudgeGrid,
+.imageCropZoomButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .imageCropPresetRow {
   display: flex;
   flex-wrap: wrap;
@@ -6947,7 +6962,8 @@ body.operationTheme .topbar {
 }
 
 .imageCropPresetButton,
-.imageCropResetButton {
+.imageCropResetButton,
+.imageCropNudgeButton {
   appearance: none;
   background: white;
   border: 1px solid rgba(16, 43, 37, 0.12);
@@ -6962,7 +6978,8 @@ body.operationTheme .topbar {
 }
 
 .imageCropPresetButton:hover,
-.imageCropResetButton:hover {
+.imageCropResetButton:hover,
+.imageCropNudgeButton:hover {
   background: #eff7f3;
   border-color: rgba(16, 43, 37, 0.2);
   transform: translateY(-1px);
@@ -7056,6 +7073,18 @@ body.operationTheme .topbar {
   accent-color: var(--brand);
 }
 
+.imageCropNumberInput {
+  background: white;
+  border: 1px solid rgba(16, 43, 37, 0.12);
+  border-radius: 12px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  min-height: 40px;
+  padding: 0 12px;
+  width: 100%;
+}
+
 .imageCropControls .field small {
   color: var(--muted);
 }
@@ -7078,6 +7107,11 @@ body.operationTheme .topbar {
   }
 
   .imageCropActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .imageCropFineTuning {
     align-items: stretch;
     flex-direction: column;
   }

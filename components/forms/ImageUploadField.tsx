@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import {
+  MAX_IMAGE_CROP_ZOOM,
+  MIN_IMAGE_CROP_ZOOM,
   type ImageCrop,
   parseImageCrop,
   sanitizeImageCrop,
@@ -180,6 +182,24 @@ export function ImageUploadField({
   const defaultCrop = buildDefaultCrop(imageMeta, aspect);
   const presets = cropPresets[aspect];
 
+  function updateCrop(partial: Partial<ImageCrop>) {
+    setCrop((current) =>
+      sanitizeImageCrop({
+        ...current,
+        ...partial
+      })
+    );
+  }
+
+  function nudgeCrop(axis: "x" | "y" | "zoom", delta: number) {
+    setCrop((current) =>
+      sanitizeImageCrop({
+        ...current,
+        [axis]: Number((current[axis] + delta).toFixed(axis === "zoom" ? 2 : 1))
+      })
+    );
+  }
+
   return (
     <label className={`field fileDropField imageUploadField imageUpload${aspect}`}>
       <span>{label}</span>
@@ -218,14 +238,7 @@ export function ImageUploadField({
                   key={preset.label}
                   type="button"
                   className="imageCropPresetButton"
-                  onClick={() =>
-                    setCrop((current) =>
-                      sanitizeImageCrop({
-                        ...current,
-                        ...preset.crop
-                      })
-                    )
-                  }
+                  onClick={() => updateCrop(preset.crop)}
                 >
                   {preset.label}
                 </button>
@@ -238,6 +251,30 @@ export function ImageUploadField({
             >
               Restaurar ajuste automático
             </button>
+          </div>
+          <div className="imageCropFineTuning" aria-label="Ajuste fino do enquadramento">
+            <div className="imageCropNudgeGrid">
+              <button type="button" className="imageCropNudgeButton" onClick={() => nudgeCrop("y", -2)}>
+                Cima
+              </button>
+              <button type="button" className="imageCropNudgeButton" onClick={() => nudgeCrop("x", -2)}>
+                Esquerda
+              </button>
+              <button type="button" className="imageCropNudgeButton" onClick={() => nudgeCrop("x", 2)}>
+                Direita
+              </button>
+              <button type="button" className="imageCropNudgeButton" onClick={() => nudgeCrop("y", 2)}>
+                Baixo
+              </button>
+            </div>
+            <div className="imageCropZoomButtons">
+              <button type="button" className="imageCropNudgeButton" onClick={() => nudgeCrop("zoom", -0.1)}>
+                Afastar
+              </button>
+              <button type="button" className="imageCropNudgeButton" onClick={() => nudgeCrop("zoom", 0.1)}>
+                Aproximar
+              </button>
+            </div>
           </div>
           <div className={`imageCropStage imageCropStage${aspect}`}>
             <div className={`imageCropSafeArea imageCropSafeArea${aspect}`}>
@@ -258,20 +295,30 @@ export function ImageUploadField({
               <span>Zoom</span>
               <input
                 type="range"
-                min="0.45"
-                max="2.5"
-                step="0.05"
+                min={String(MIN_IMAGE_CROP_ZOOM)}
+                max={String(MAX_IMAGE_CROP_ZOOM)}
+                step="0.02"
                 value={crop.zoom}
                 onChange={(event) =>
-                  setCrop((current) =>
-                    sanitizeImageCrop({
-                      ...current,
-                      zoom: Number(event.target.value)
-                    })
-                  )
+                  updateCrop({
+                    zoom: Number(event.target.value)
+                  })
                 }
               />
               <small>{crop.zoom < 1 ? `${crop.zoom.toFixed(2)}x · afastado` : `${crop.zoom.toFixed(2)}x`}</small>
+              <input
+                className="imageCropNumberInput"
+                type="number"
+                min={MIN_IMAGE_CROP_ZOOM}
+                max={MAX_IMAGE_CROP_ZOOM}
+                step="0.01"
+                value={crop.zoom}
+                onChange={(event) =>
+                  updateCrop({
+                    zoom: Number(event.target.value)
+                  })
+                }
+              />
             </label>
             <label className="field">
               <span>Horizontal</span>
@@ -279,18 +326,28 @@ export function ImageUploadField({
                 type="range"
                 min="0"
                 max="100"
-                step="1"
+                step="0.5"
                 value={crop.x}
                 onChange={(event) =>
-                  setCrop((current) =>
-                    sanitizeImageCrop({
-                      ...current,
-                      x: Number(event.target.value)
-                    })
-                  )
+                  updateCrop({
+                    x: Number(event.target.value)
+                  })
                 }
               />
-              <small>{Math.round(crop.x)}%</small>
+              <small>{crop.x.toFixed(1)}%</small>
+              <input
+                className="imageCropNumberInput"
+                type="number"
+                min="0"
+                max="100"
+                step="0.5"
+                value={crop.x}
+                onChange={(event) =>
+                  updateCrop({
+                    x: Number(event.target.value)
+                  })
+                }
+              />
             </label>
             <label className="field">
               <span>Vertical</span>
@@ -298,18 +355,28 @@ export function ImageUploadField({
                 type="range"
                 min="0"
                 max="100"
-                step="1"
+                step="0.5"
                 value={crop.y}
                 onChange={(event) =>
-                  setCrop((current) =>
-                    sanitizeImageCrop({
-                      ...current,
-                      y: Number(event.target.value)
-                    })
-                  )
+                  updateCrop({
+                    y: Number(event.target.value)
+                  })
                 }
               />
-              <small>{Math.round(crop.y)}%</small>
+              <small>{crop.y.toFixed(1)}%</small>
+              <input
+                className="imageCropNumberInput"
+                type="number"
+                min="0"
+                max="100"
+                step="0.5"
+                value={crop.y}
+                onChange={(event) =>
+                  updateCrop({
+                    y: Number(event.target.value)
+                  })
+                }
+              />
             </label>
           </div>
           <input type="hidden" name={cropFieldName} value={cropValue} />

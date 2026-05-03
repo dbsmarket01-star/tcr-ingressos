@@ -10,8 +10,8 @@ const DEFAULT_IMAGE_CROP: ImageCrop = {
   zoom: 1
 };
 
-const MIN_IMAGE_CROP_ZOOM = 0.45;
-const MAX_IMAGE_CROP_ZOOM = 2.5;
+export const MIN_IMAGE_CROP_ZOOM = 0.2;
+export const MAX_IMAGE_CROP_ZOOM = 4;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
