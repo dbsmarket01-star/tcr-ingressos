@@ -108,7 +108,10 @@ function humanizePaymentMethod(method: "PIX" | "CREDIT_CARD" | "SIMULATED" | "OT
   return "Outros";
 }
 
-function buildSalesChart(series: Array<{ label: string; revenueInCents: number }>, maxRevenueInCents: number) {
+function buildSalesChart(
+  series: Array<{ label: string; revenueInCents: number; salesCount: number }>,
+  maxRevenueInCents: number
+) {
   const width = 640;
   const height = 280;
   const paddingLeft = 26;
@@ -695,6 +698,25 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     <circle className="dashboardGeneralLinePoint" cx={point.x} cy={point.y} key={`${point.label}-${index}`} r="5.5" />
                   ))}
                 </svg>
+                <div
+                  className="dashboardGeneralChartHotspots"
+                  style={{ gridTemplateColumns: `repeat(${Math.max(dashboard.salesByDay.length, 1)}, minmax(0, 1fr))` }}
+                >
+                  {dashboard.salesByDay.map((item, index) => (
+                    <button
+                      aria-label={`${item.label}: ${item.salesCount} venda(s), ${formatCurrency(item.revenueInCents)}`}
+                      className="dashboardGeneralChartHotspot"
+                      key={`${item.date}-${index}-hotspot`}
+                      type="button"
+                    >
+                      <span className="dashboardGeneralChartTooltip">
+                        <strong>{item.label}</strong>
+                        <small>{item.salesCount} venda(s) faturada(s)</small>
+                        <small>{formatCurrency(item.revenueInCents)}</small>
+                      </span>
+                    </button>
+                  ))}
+                </div>
                 <div
                   className="dashboardGeneralXAxis"
                   style={{ gridTemplateColumns: `repeat(${Math.max(dashboard.salesByDay.length, 1)}, minmax(0, 1fr))` }}

@@ -2197,11 +2197,79 @@ body.operationTheme .topbar {
 .dashboardGeneralLineChart {
   display: grid;
   gap: 12px;
+  position: relative;
 }
 
 .dashboardGeneralLineChart svg {
   height: 280px;
   width: 100%;
+}
+
+.dashboardGeneralChartHotspots {
+  inset: 0 0 26px;
+  display: grid;
+  pointer-events: none;
+  position: absolute;
+}
+
+.dashboardGeneralChartHotspot {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  min-width: 0;
+  padding: 0;
+  pointer-events: auto;
+  position: relative;
+}
+
+.dashboardGeneralChartHotspot::after {
+  content: "";
+  inset: 18px 0 8px;
+  position: absolute;
+}
+
+.dashboardGeneralChartTooltip {
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 14px;
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.22);
+  color: white;
+  display: grid;
+  gap: 4px;
+  left: 50%;
+  min-width: 160px;
+  opacity: 0;
+  padding: 12px 14px;
+  pointer-events: none;
+  position: absolute;
+  top: 16px;
+  transform: translate(-50%, -10px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  z-index: 2;
+}
+
+.dashboardGeneralChartTooltip strong,
+.dashboardGeneralChartTooltip small {
+  margin: 0;
+}
+
+.dashboardGeneralChartTooltip strong {
+  font-size: 13px;
+}
+
+.dashboardGeneralChartTooltip small {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.dashboardGeneralChartHotspot:hover .dashboardGeneralChartTooltip,
+.dashboardGeneralChartHotspot:focus-visible .dashboardGeneralChartTooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.dashboardGeneralChartHotspot:focus-visible {
+  outline: none;
 }
 
 .dashboardGeneralGridLine {

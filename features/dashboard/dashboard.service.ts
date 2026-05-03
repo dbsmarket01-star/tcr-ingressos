@@ -466,6 +466,7 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
   >();
 
   const dailySalesMap = new Map<string, number>();
+  const dailySalesCountMap = new Map<string, number>();
   const topCitiesMap = new Map<string, { label: string; count: number }>();
   const paymentMethodTotals = {
     pix: { revenueInCents: 0, count: 0 },
@@ -477,6 +478,7 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
     const paidAt = order.paidAt ?? order.createdAt;
     const dayKey = formatDayKey(paidAt);
     dailySalesMap.set(dayKey, (dailySalesMap.get(dayKey) ?? 0) + order.totalInCents);
+    dailySalesCountMap.set(dayKey, (dailySalesCountMap.get(dayKey) ?? 0) + 1);
 
     const eventPerformance = eventPerformanceMap.get(order.event.id) ?? {
       id: order.event.id,
@@ -550,7 +552,8 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
   const salesByDay = dateSeries.map((day) => ({
     date: day.key,
     label: day.label,
-    revenueInCents: dailySalesMap.get(day.key) ?? 0
+    revenueInCents: dailySalesMap.get(day.key) ?? 0,
+    salesCount: dailySalesCountMap.get(day.key) ?? 0
   }));
   const maxDailyRevenueInCents = Math.max(...salesByDay.map((item) => item.revenueInCents), 0);
 
