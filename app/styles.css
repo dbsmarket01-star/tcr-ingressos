@@ -9286,8 +9286,9 @@ body.operationTheme .topbar {
   font-size: clamp(56px, 6vw, 86px);
   line-height: 0.92;
   margin: 0;
-  max-width: 9ch;
+  max-width: 12ch;
   text-align: center;
+  text-wrap: balance;
 }
 
 .leadPremiumHeroSupport {
@@ -9611,8 +9612,8 @@ body.operationTheme .topbar {
 
   .leadPremiumHeroCopy h1 {
     font-size: 28px;
-    line-height: 0.92;
-    max-width: 9.5ch;
+    line-height: 0.95;
+    max-width: 12ch;
   }
 
   .leadPremiumHeroSupport {
