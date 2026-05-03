@@ -130,7 +130,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
     event.leadCaptureOfferText ||
     "Preencha seus dados e receba o link do grupo oficial na próxima etapa.";
   const formTimingText = event.leadCaptureFormTimingText || "Leva menos de 30 segundos";
-  const proofText = event.leadCaptureProofText || event.conversionSocialProofText || "Mais de 100 mil pessoas impactadas";
   const ctaText = event.leadCaptureCtaText || event.conversionCtaText || "QUERO GARANTIR MEU DESCONTO AGORA";
   const urgencyText =
     event.conversionUrgencyText || "Se você sair desta página, pode perder o acesso ao grupo e ao desconto.";
@@ -275,9 +274,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
                 </div>
               ) : null}
 
-              <div className="leadPremiumProof">
-                <p>{proofText}</p>
-              </div>
             </div>
 
             <form action={createEventLeadAction} className="leadPremiumFormPane" id="lead-capture-premium-form">

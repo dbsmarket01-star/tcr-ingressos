@@ -9230,7 +9230,7 @@ body.operationTheme .topbar {
 
 .leadPremiumCanvas {
   display: grid;
-  gap: 22px;
+  gap: 18px;
   margin-inline: auto;
   max-width: 1240px;
   padding: 10px 24px 0;
@@ -9239,9 +9239,9 @@ body.operationTheme .topbar {
 .leadPremiumHero {
   align-items: center;
   display: grid;
-  gap: 48px;
+  gap: 40px;
   grid-template-columns: minmax(420px, 0.92fr) minmax(0, 1.08fr);
-  padding: 16px 0 0;
+  padding: 12px 0 0;
 }
 
 .leadPremiumHeroImageWrap {
@@ -9261,8 +9261,8 @@ body.operationTheme .topbar {
 .leadPremiumHeroCopy {
   color: #fff;
   display: grid;
-  gap: 22px;
-  padding-bottom: 18px;
+  gap: 18px;
+  padding-bottom: 10px;
   justify-items: center;
   text-align: center;
   width: 100%;
@@ -9310,9 +9310,9 @@ body.operationTheme .topbar {
 
 .leadPremiumMetaRow {
   display: grid;
-  gap: 18px;
+  gap: 16px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .leadPremiumMetaItem {
@@ -9346,10 +9346,10 @@ body.operationTheme .topbar {
   border-radius: 30px;
   box-shadow: 0 24px 46px rgba(0, 0, 0, 0.2);
   display: grid;
-  gap: 18px;
+  gap: 14px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: -8px;
-  padding: 28px 32px;
+  margin-top: -4px;
+  padding: 24px 28px;
   position: relative;
   z-index: 2;
 }
@@ -9357,9 +9357,9 @@ body.operationTheme .topbar {
 .leadPremiumBenefit {
   border-left: 1px solid rgba(255, 255, 255, 0.12);
   display: grid;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
-  padding-left: 24px;
+  padding-left: 20px;
 }
 
 .leadPremiumBenefit:first-child {
@@ -9388,18 +9388,18 @@ body.operationTheme .topbar {
     0 28px 54px rgba(7, 29, 24, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
   display: grid;
-  gap: 26px;
+  gap: 22px;
   grid-template-columns: minmax(280px, 0.92fr) minmax(320px, 1.08fr);
-  margin-top: 10px;
-  padding: 34px;
+  margin-top: 6px;
+  padding: 30px;
 }
 
 .leadPremiumFormIntro {
   border-right: 1px solid rgba(13, 43, 36, 0.08);
   display: grid;
-  gap: 18px;
+  gap: 16px;
   min-width: 0;
-  padding-right: 28px;
+  padding-right: 24px;
 }
 
 .leadPremiumFormIntro h2 {
@@ -9426,8 +9426,8 @@ body.operationTheme .topbar {
   border-radius: 22px;
   display: grid;
   gap: 10px;
-  margin-top: 10px;
-  padding: 22px;
+  margin-top: 6px;
+  padding: 20px;
 }
 
 .leadPremiumBonusCard strong {
@@ -9518,7 +9518,7 @@ body.operationTheme .topbar {
 
   .leadPremiumHero {
     grid-template-columns: minmax(0, 1fr);
-    gap: 22px;
+    gap: 18px;
   }
 
   .leadPremiumHeroImageWrap img {
@@ -9557,13 +9557,13 @@ body.operationTheme .topbar {
   }
 
   .leadPremiumCanvas {
-    gap: 8px;
+    gap: 6px;
     padding: 6px 14px 0;
   }
 
   .leadPremiumHero {
     align-items: start;
-    gap: 12px;
+    gap: 10px;
     grid-template-columns: minmax(0, 1fr);
     padding: 0;
   }
@@ -9579,7 +9579,7 @@ body.operationTheme .topbar {
   }
 
   .leadPremiumHeroCopy {
-    gap: 6px;
+    gap: 5px;
     padding-top: 0;
     padding-bottom: 0;
   }
@@ -9603,9 +9603,9 @@ body.operationTheme .topbar {
   }
 
   .leadPremiumMetaRow {
-    gap: 10px;
+    gap: 8px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin-top: 4px;
+    margin-top: 2px;
   }
 
   .leadPremiumMetaItem {
@@ -9635,8 +9635,8 @@ body.operationTheme .topbar {
     border-radius: 16px;
     gap: 0;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin-top: -2px;
-    padding: 9px 10px;
+    margin-top: 0;
+    padding: 8px 9px;
   }
 
   .leadPremiumBenefit {
@@ -9662,10 +9662,10 @@ body.operationTheme .topbar {
 
   .leadPremiumFormSection {
     border-radius: 22px;
-    gap: 10px;
+    gap: 8px;
     grid-template-columns: minmax(0, 1fr);
-    margin-top: -14px;
-    padding: 14px 12px 10px;
+    margin-top: -10px;
+    padding: 12px 12px 10px;
   }
 
   .leadPremiumFormPane {
