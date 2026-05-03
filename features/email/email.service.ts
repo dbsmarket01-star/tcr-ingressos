@@ -86,6 +86,43 @@ type LeadBroadcastEmailInput = {
   supportEmail?: string | null;
 };
 
+function extractResendMessage(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return "Falha ao enviar e-mail pelo Resend.";
+  }
+
+  if ("message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+
+  if ("name" in error && typeof error.name === "string") {
+    return error.name;
+  }
+
+  return "Falha ao enviar e-mail pelo Resend.";
+}
+
+async function sendWithResend(
+  resend: Resend,
+  payload: {
+    from: string;
+    to: string;
+    subject: string;
+    html: string;
+    text: string;
+  }
+) {
+  const result = await resend.emails.send(payload);
+
+  const error = (result as { error?: unknown } | null)?.error;
+
+  if (error) {
+    throw new Error(extractResendMessage(error));
+  }
+
+  return result;
+}
+
 function formatDate(value: Date) {
   return formatLongDateTime(value);
 }
@@ -167,7 +204,7 @@ export async function sendTicketsEmail(input: TicketEmailInput) {
 
   const resend = new Resend(apiKey);
 
-  await resend.emails.send({
+  await sendWithResend(resend, {
     from,
     to: input.to,
     subject: `Seus ingressos - ${input.eventTitle}`,
@@ -228,7 +265,7 @@ export async function sendAdminPasswordResetEmail(input: PasswordResetEmailInput
 
   const resend = new Resend(apiKey);
 
-  await resend.emails.send({
+  await sendWithResend(resend, {
     from,
     to: input.to,
     subject: `Redefinir senha - ${input.brandName || "TCR Ingressos"}`,
@@ -299,7 +336,7 @@ export async function sendOrderPendingPaymentEmail(input: OrderPendingPaymentEma
 
   const resend = new Resend(apiKey);
 
-  await resend.emails.send({
+  await sendWithResend(resend, {
     from,
     to: input.to,
     subject: `Pedido recebido - ${input.eventTitle}`,
@@ -353,7 +390,7 @@ export async function sendOrderExpiredEmail(input: OrderExpiredEmailInput) {
 
   const resend = new Resend(apiKey);
 
-  await resend.emails.send({
+  await sendWithResend(resend, {
     from,
     to: input.to,
     subject: `Pedido expirado - ${input.eventTitle}`,
@@ -413,7 +450,7 @@ export async function sendUnlockApprovalEmail(input: UnlockApprovalEmailInput) {
 
   const resend = new Resend(apiKey);
 
-  await resend.emails.send({
+  await sendWithResend(resend, {
     from,
     to: input.to,
     subject: "Código de aprovação - Guerra à Pornografia",
@@ -481,7 +518,7 @@ export async function sendLeadCaptureConfirmationEmail(input: LeadCaptureConfirm
 
   const resend = new Resend(apiKey);
 
-  await resend.emails.send({
+  await sendWithResend(resend, {
     from,
     to: input.to,
     subject: `Entre no grupo para garantir seu desconto - ${input.eventTitle}`,
@@ -560,7 +597,7 @@ export async function sendLeadBroadcastEmail(input: LeadBroadcastEmailInput) {
 
   const resend = new Resend(apiKey);
 
-  await resend.emails.send({
+  await sendWithResend(resend, {
     from,
     to: input.to,
     subject: input.subject,
