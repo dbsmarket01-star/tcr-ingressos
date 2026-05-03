@@ -131,8 +131,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
     "Preencha seus dados e receba o link do grupo oficial na próxima etapa.";
   const formTimingText = event.leadCaptureFormTimingText || "Leva menos de 30 segundos";
   const ctaText = event.leadCaptureCtaText || event.conversionCtaText || "QUERO GARANTIR MEU DESCONTO AGORA";
-  const urgencyText =
-    event.conversionUrgencyText || "Se você sair desta página, pode perder o acesso ao grupo e ao desconto.";
   const formattedDate = formatDateTime(event.startsAt);
   const [datePart, timePartRaw] = formattedDate.split(", ");
   const timePart = timePartRaw || "";
@@ -318,7 +316,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
               <SubmitButton className="button fullButton leadPremiumCtaButton" pendingText="Enviando cadastro...">
                 {ctaText}
               </SubmitButton>
-              <small className="leadPremiumUrgency">{urgencyText}</small>
             </form>
           </section>
 
