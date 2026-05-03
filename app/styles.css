@@ -9210,6 +9210,458 @@ body.operationTheme .topbar {
   padding: 0 24px 56px;
 }
 
+.leadCapturePremiumShell {
+  background:
+    radial-gradient(circle at top left, rgba(9, 84, 69, 0.2), transparent 32%),
+    linear-gradient(180deg, #021611 0%, #08261f 36%, #f4f8f6 36%, #f4f8f6 100%);
+}
+
+.leadCapturePremiumShell .topbar {
+  background: transparent;
+  box-shadow: none;
+}
+
+.leadPremiumHero,
+.leadPremiumBenefits,
+.leadPremiumFormSection,
+.leadPremiumFooterStats {
+  margin-inline: auto;
+  max-width: 1240px;
+}
+
+.leadPremiumHero {
+  align-items: center;
+  display: grid;
+  gap: 28px;
+  grid-template-columns: minmax(360px, 0.95fr) minmax(0, 1.05fr);
+  padding: 18px 24px 0;
+}
+
+.leadPremiumHeroImageWrap {
+  border-radius: 34px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.leadPremiumHeroImageWrap img {
+  aspect-ratio: 0.86;
+  display: block;
+  object-fit: cover;
+  width: 100%;
+}
+
+.leadPremiumHeroCopy {
+  color: #fff;
+  display: grid;
+  gap: 22px;
+  padding-bottom: 18px;
+}
+
+.leadPremiumBadge {
+  align-items: center;
+  background: linear-gradient(180deg, #ffc94a, #f6b51a);
+  border-radius: 999px;
+  color: #101819;
+  display: inline-flex;
+  font-size: 15px;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 48px;
+  padding: 10px 22px;
+  width: fit-content;
+}
+
+.leadPremiumHeroCopy h1 {
+  color: #fff;
+  font-size: clamp(44px, 5vw, 78px);
+  line-height: 0.95;
+  margin: 0;
+  max-width: 9ch;
+}
+
+.leadPremiumHeroSupport {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(22px, 2.3vw, 40px);
+  line-height: 1.16;
+  margin: 0;
+  max-width: 16ch;
+}
+
+.leadPremiumHeroCopy h1 strong,
+.leadPremiumHeroSupport strong,
+.leadPremiumFormIntro h2 strong {
+  color: #12b15a;
+}
+
+.leadPremiumMetaRow {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.leadPremiumMetaItem {
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding-left: 18px;
+}
+
+.leadPremiumMetaItem:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.leadPremiumMetaItem strong {
+  color: #fff;
+  font-size: 18px;
+}
+
+.leadPremiumMetaItem span {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+}
+
+.leadPremiumBenefits {
+  background: linear-gradient(180deg, rgba(2, 46, 37, 0.96), rgba(1, 36, 28, 0.98));
+  border: 1px solid rgba(37, 184, 102, 0.25);
+  border-radius: 30px;
+  box-shadow: 0 24px 46px rgba(0, 0, 0, 0.2);
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: -18px;
+  padding: 28px 32px;
+  position: relative;
+  z-index: 2;
+}
+
+.leadPremiumBenefit {
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding-left: 24px;
+}
+
+.leadPremiumBenefit:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.leadPremiumBenefit strong {
+  color: #92df6a;
+  font-size: 16px;
+}
+
+.leadPremiumBenefit p {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.leadPremiumFormSection {
+  background: #fff;
+  border-radius: 34px;
+  box-shadow:
+    0 28px 54px rgba(7, 29, 24, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  display: grid;
+  gap: 26px;
+  grid-template-columns: minmax(280px, 0.92fr) minmax(320px, 1.08fr);
+  margin-top: 18px;
+  padding: 34px;
+}
+
+.leadPremiumFormIntro {
+  border-right: 1px solid rgba(13, 43, 36, 0.08);
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+  padding-right: 28px;
+}
+
+.leadPremiumFormIntro h2 {
+  color: var(--ink);
+  font-size: clamp(34px, 3.2vw, 56px);
+  line-height: 1.02;
+  margin: 0;
+  max-width: 10ch;
+}
+
+.leadPremiumFormIntro > p {
+  color: #28453e;
+  font-size: 17px;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 22ch;
+}
+
+.leadPremiumBonusCard {
+  background: linear-gradient(180deg, #eff8f2, #f7fbf8);
+  border: 1px solid rgba(13, 43, 36, 0.08);
+  border-radius: 22px;
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 22px;
+}
+
+.leadPremiumBonusCard strong {
+  color: #0d7c47;
+  font-size: 18px;
+}
+
+.leadPremiumBonusCard p,
+.leadPremiumProof p {
+  color: #28453e;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.leadPremiumProof {
+  display: grid;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.leadPremiumAvatarRow {
+  align-items: center;
+  display: flex;
+}
+
+.leadPremiumAvatarRow span,
+.leadPremiumAvatarRow strong {
+  border: 3px solid #fff;
+  border-radius: 999px;
+  display: inline-flex;
+  height: 46px;
+  margin-left: -10px;
+  width: 46px;
+}
+
+.leadPremiumAvatarRow span:first-child {
+  margin-left: 0;
+}
+
+.leadPremiumAvatarRow span {
+  background: linear-gradient(180deg, #d4e7dd, #8fb9a8);
+}
+
+.leadPremiumAvatarRow strong {
+  align-items: center;
+  background: #119652;
+  color: #fff;
+  font-size: 14px;
+  justify-content: center;
+  padding: 0;
+}
+
+.leadPremiumFormPane {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.leadPremiumFormTiming {
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.leadPremiumCtaButton.button.fullButton {
+  background: linear-gradient(180deg, #0f8e4e, #0b7b43);
+  border-radius: 16px;
+  box-shadow: 0 18px 34px rgba(15, 142, 78, 0.2);
+  font-size: 18px;
+  min-height: 62px;
+}
+
+.leadPremiumUrgency {
+  color: #17372f;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.leadPremiumFooterStats {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 28px 24px 12px;
+}
+
+.leadPremiumFooterStat {
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding-left: 20px;
+}
+
+.leadPremiumFooterStat:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.leadPremiumFooterStat strong {
+  color: #9ae46a;
+  font-size: 20px;
+}
+
+.leadPremiumFooterStat span {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+@media (max-width: 1100px) {
+  .leadPremiumHero,
+  .leadPremiumFormSection,
+  .leadPremiumBenefits,
+  .leadPremiumFooterStats {
+    max-width: 1000px;
+  }
+
+  .leadPremiumHero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .leadPremiumHeroImageWrap img {
+    aspect-ratio: 16 / 10;
+  }
+
+  .leadPremiumHeroCopy h1,
+  .leadPremiumHeroSupport {
+    max-width: none;
+  }
+
+  .leadPremiumFormSection {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .leadPremiumFormIntro {
+    border-right: 0;
+    border-bottom: 1px solid rgba(13, 43, 36, 0.08);
+    padding-bottom: 18px;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .leadCapturePremiumShell {
+    background:
+      linear-gradient(180deg, #03140f 0%, #08261f 28%, #f4f8f6 28%, #f4f8f6 100%);
+  }
+
+  .leadPremiumHero {
+    gap: 18px;
+    padding: 8px 16px 0;
+  }
+
+  .leadPremiumHeroImageWrap {
+    border-radius: 22px;
+  }
+
+  .leadPremiumHeroImageWrap img {
+    aspect-ratio: 16 / 14;
+  }
+
+  .leadPremiumHeroCopy {
+    gap: 16px;
+    padding-bottom: 8px;
+  }
+
+  .leadPremiumBadge {
+    font-size: 13px;
+    min-height: 40px;
+    padding: 8px 16px;
+  }
+
+  .leadPremiumHeroCopy h1 {
+    font-size: 44px;
+    max-width: 7ch;
+  }
+
+  .leadPremiumHeroSupport {
+    font-size: 18px;
+    max-width: 14ch;
+  }
+
+  .leadPremiumMetaRow,
+  .leadPremiumBenefits,
+  .leadPremiumFooterStats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .leadPremiumMetaItem,
+  .leadPremiumBenefit,
+  .leadPremiumFooterStat {
+    border-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding-left: 0;
+    padding-top: 14px;
+  }
+
+  .leadPremiumMetaItem:first-child,
+  .leadPremiumBenefit:first-child,
+  .leadPremiumFooterStat:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .leadPremiumBenefits {
+    border-radius: 24px;
+    margin-top: -6px;
+    padding: 20px;
+  }
+
+  .leadPremiumFormSection {
+    border-radius: 26px;
+    margin-top: 16px;
+    padding: 22px 18px;
+  }
+
+  .leadPremiumFormIntro h2 {
+    font-size: 28px;
+    max-width: 11ch;
+  }
+
+  .leadPremiumFormIntro > p {
+    font-size: 15px;
+  }
+
+  .leadPremiumBonusCard {
+    border-radius: 18px;
+    padding: 18px;
+  }
+
+  .leadPremiumProof {
+    gap: 10px;
+  }
+
+  .leadPremiumAvatarRow span,
+  .leadPremiumAvatarRow strong {
+    height: 40px;
+    width: 40px;
+  }
+
+  .leadPremiumFormPane {
+    gap: 14px;
+  }
+
+  .leadPremiumCtaButton.button.fullButton {
+    font-size: 16px;
+    min-height: 58px;
+  }
+
+  .leadPremiumFooterStats {
+    padding: 22px 16px 8px;
+  }
+}
+
 .leadCaptureInfoGrid {
   display: grid;
   gap: 22px;

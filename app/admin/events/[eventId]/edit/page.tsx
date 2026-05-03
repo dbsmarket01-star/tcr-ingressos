@@ -433,6 +433,102 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
                   <input name="leadCaptureCtaText" defaultValue={event.leadCaptureCtaText ?? ""} />
                 </label>
               </div>
+              <div className="grid twoColumns">
+                <label className="field">
+                  <span>Selo do topo</span>
+                  <input
+                    name="leadCaptureBadgeText"
+                    defaultValue={event.leadCaptureBadgeText ?? ""}
+                    placeholder="Ex: Vagas limitadas"
+                  />
+                </label>
+                <label className="field">
+                  <span>Texto de apoio do topo</span>
+                  <input
+                    name="leadCaptureHeroSupportText"
+                    defaultValue={event.leadCaptureHeroSupportText ?? ""}
+                    placeholder="Ex: Uma noite que pode transformar o seu casamento para sempre."
+                  />
+                </label>
+              </div>
+              <label className="field">
+                <span>Faixa de benefícios (uma linha por item)</span>
+                <textarea
+                  name="leadCaptureBenefitsText"
+                  rows={4}
+                  defaultValue={event.leadCaptureBenefitsText ?? ""}
+                  placeholder={"Acesso antecipado|Quem está na lista entra primeiro no grupo oficial.\nDesconto exclusivo|Ganhe até 30% de desconto no lançamento.\nVagas limitadas|Ingressos limitados para garantir a melhor experiência."}
+                />
+                <small>Use o formato Título|Descrição. Cada linha vira um benefício na faixa verde abaixo do banner.</small>
+              </label>
+              <div className="grid twoColumns">
+                <label className="field">
+                  <span>Eyebrow do formulário</span>
+                  <input
+                    name="leadCaptureFormIntroEyebrow"
+                    defaultValue={event.leadCaptureFormIntroEyebrow ?? ""}
+                    placeholder="Ex: Garanta seu acesso"
+                  />
+                </label>
+                <label className="field">
+                  <span>Tempo estimado do formulário</span>
+                  <input
+                    name="leadCaptureFormTimingText"
+                    defaultValue={event.leadCaptureFormTimingText ?? ""}
+                    placeholder="Ex: Leva menos de 30 segundos"
+                  />
+                </label>
+              </div>
+              <label className="field">
+                <span>Título lateral do formulário</span>
+                <textarea
+                  name="leadCaptureFormIntroTitle"
+                  rows={3}
+                  defaultValue={event.leadCaptureFormIntroTitle ?? ""}
+                  placeholder="Ex: Entre para a lista e garanta seu lugar com desconto exclusivo."
+                />
+              </label>
+              <label className="field">
+                <span>Descrição lateral do formulário</span>
+                <textarea
+                  name="leadCaptureFormIntroDescription"
+                  rows={3}
+                  defaultValue={event.leadCaptureFormIntroDescription ?? ""}
+                  placeholder="Ex: Preencha seus dados e receba o link do grupo oficial na próxima etapa."
+                />
+              </label>
+              <div className="grid twoColumns">
+                <label className="field">
+                  <span>Bloco de bônus</span>
+                  <textarea
+                    name="leadCaptureBonusText"
+                    rows={3}
+                    defaultValue={event.leadCaptureBonusText ?? ""}
+                    placeholder="Ex: Bônus exclusivo|Conteúdos e novidades que vão preparar você para essa experiência única."
+                  />
+                  <small>Use o formato Título|Descrição.</small>
+                </label>
+                <label className="field">
+                  <span>Prova social</span>
+                  <textarea
+                    name="leadCaptureProofText"
+                    rows={3}
+                    defaultValue={event.leadCaptureProofText ?? ""}
+                    placeholder="Ex: Mais de 100 mil pessoas impactadas"
+                  />
+                  <small>Use esse texto para a prova social abaixo do bônus.</small>
+                </label>
+              </div>
+              <label className="field">
+                <span>Blocos finais (uma linha por item)</span>
+                <textarea
+                  name="leadCaptureFooterStatsText"
+                  rows={4}
+                  defaultValue={event.leadCaptureFooterStatsText ?? ""}
+                  placeholder={"+ de 100 mil|pessoas impactadas\n10 anos|transformando famílias\nMilhares de casais|fortalecendo seus lares"}
+                />
+                <small>Use o formato Título|Descrição. Cada linha vira um bloco da faixa final.</small>
+              </label>
             </section>
 
             <section className="leadAdminBlock leadAdminBlockMedia">

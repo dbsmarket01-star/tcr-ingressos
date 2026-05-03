@@ -22,32 +22,49 @@ type LeadCapturePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export async function generateMetadata({ params }: Pick<LeadCapturePageProps, "params">): Promise<Metadata> {
-  const { slug } = await params;
-  const organizationContext = await getCurrentOrganizationContext();
-  const event = await getLeadCaptureEventBySlug(slug, organizationContext.organization.id);
+type LeadPairBlock = {
+  title: string;
+  description: string;
+};
 
-  if (!event) {
-    return {
-      title: `Lista de interesse indisponível | ${organizationContext.brandName}`,
-      robots: {
-        index: false,
-        follow: false
-      }
-    };
+function parsePipeBlocks(value?: string | null) {
+  if (!value) {
+    return [];
   }
 
-  return {
-    title: `${event.leadCaptureHeadline || event.title} | Lista de interesse`,
-    description:
-      event.leadCaptureOfferText ||
-      event.leadCaptureDescription ||
-      "Cadastre-se para receber informações e entrar no grupo oficial do evento.",
-    robots: {
-      index: false,
-      follow: false
-    }
-  };
+  return value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [title, ...rest] = line.split("|");
+      return {
+        title: title?.trim() || "",
+        description: rest.join("|").trim()
+      };
+    })
+    .filter((item) => item.title);
+}
+
+function renderEditableText(value: string, keyPrefix: string) {
+  const lines = value.split("\n");
+
+  return lines.map((line, lineIndex) => {
+    const parts = line.split(/(\*\*.*?\*\*)/g).filter(Boolean);
+
+    return (
+      <span key={`${keyPrefix}-${lineIndex}`}>
+        {parts.map((part, partIndex) =>
+          part.startsWith("**") && part.endsWith("**") ? (
+            <strong key={`${keyPrefix}-${lineIndex}-${partIndex}`}>{part.slice(2, -2)}</strong>
+          ) : (
+            <span key={`${keyPrefix}-${lineIndex}-${partIndex}`}>{part}</span>
+          )
+        )}
+        {lineIndex < lines.length - 1 ? <br /> : null}
+      </span>
+    );
+  });
 }
 
 function getYoutubeEmbedUrl(url?: string | null) {
@@ -92,23 +109,26 @@ function getVenueGalleryUrls(value?: string | null) {
     .filter((item) => item && (item.startsWith("http://") || item.startsWith("https://") || item.startsWith("/uploads/")));
 }
 
-function renderEditableText(value: string, keyPrefix: string) {
-  return value.split("\n").map((line, lineIndex) => {
-    const parts = line.split(/(\*\*.*?\*\*)/g).filter(Boolean);
+export async function generateMetadata({ params }: Pick<LeadCapturePageProps, "params">): Promise<Metadata> {
+  const { slug } = await params;
+  const organizationContext = await getCurrentOrganizationContext();
+  const event = await getLeadCaptureEventBySlug(slug, organizationContext.organization.id);
 
-    return (
-      <span key={`${keyPrefix}-${lineIndex}`}>
-        {parts.map((part, partIndex) =>
-          part.startsWith("**") && part.endsWith("**") ? (
-            <strong key={`${keyPrefix}-${lineIndex}-${partIndex}`}>{part.slice(2, -2)}</strong>
-          ) : (
-            <span key={`${keyPrefix}-${lineIndex}-${partIndex}`}>{part}</span>
-          )
-        )}
-        {lineIndex < value.split("\n").length - 1 ? <br /> : null}
-      </span>
-    );
-  });
+  if (!event) {
+    return {
+      title: `Lista de interesse indisponível | ${organizationContext.brandName}`,
+      robots: { index: false, follow: false }
+    };
+  }
+
+  return {
+    title: `${event.leadCaptureHeadline || event.title} | Lista de interesse`,
+    description:
+      event.leadCaptureHeroSupportText ||
+      event.leadCaptureDescription ||
+      "Cadastre-se para receber informações e entrar no grupo oficial do evento.",
+    robots: { index: false, follow: false }
+  };
 }
 
 export default async function LeadCapturePage({ params, searchParams }: LeadCapturePageProps) {
@@ -118,6 +138,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
     searchParams ? searchParams : Promise.resolve(emptySearchParams),
     getCurrentOrganizationContext()
   ]);
+
   const event = await getLeadCaptureEventBySlug(slug, organizationContext.organization.id);
 
   if (!event) {
@@ -132,17 +153,10 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
   const publicLeadHeroCrop = leadHeroCrop ? { ...leadHeroCrop, zoom: Math.max(1, leadHeroCrop.zoom) } : null;
   const rawError = typeof query.error === "string" ? query.error : null;
   const error = rawError === "NEXT_REDIRECT" ? null : rawError;
-  const headline = event.leadCaptureHeadline || event.title;
-  const description =
-    event.leadCaptureDescription ||
-    event.subtitle ||
-    "Cadastre-se para receber as informações do evento, prioridade de abertura e o link do grupo oficial.";
-  const offerText =
-    event.leadCaptureOfferText || "Entre na lista e receba o aviso de abertura, o desconto e o acesso ao grupo oficial.";
-  const ctaText = event.leadCaptureCtaText || "Quero entrar na lista";
-  const youtubeEmbedUrl = getYoutubeEmbedUrl(event.leadCaptureVideoUrl);
   const tracking = getTrackingParamsFromSearch(query, `/lista/${event.slug}`);
   const turnstileSiteKey = getTurnstileSiteKey();
+  const youtubeEmbedUrl = getYoutubeEmbedUrl(event.leadCaptureVideoUrl);
+  const venueGallery = getVenueGalleryUrls(event.leadCaptureVenueGallery);
   const publicSocialSettings = (event.organization?.companySettings?.[0] || null) as {
     instagramUrl?: string | null;
     facebookUrl?: string | null;
@@ -150,10 +164,48 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
     whatsappUrl?: string | null;
     supportEmail?: string | null;
   } | null;
-  const venueGallery = getVenueGalleryUrls(event.leadCaptureVenueGallery);
+
+  const badgeText = event.leadCaptureBadgeText || "Vagas limitadas";
+  const headline = event.leadCaptureHeadline || event.title;
+  const heroSupportText =
+    event.leadCaptureHeroSupportText || event.leadCaptureDescription || "Uma noite que pode transformar a sua história para sempre.";
+  const benefits = parsePipeBlocks(event.leadCaptureBenefitsText);
+  const footerStats = parsePipeBlocks(event.leadCaptureFooterStatsText);
+  const bonusBlock = parsePipeBlocks(event.leadCaptureBonusText)[0];
+  const formEyebrow = event.leadCaptureFormIntroEyebrow || "Garanta seu acesso";
+  const formIntroTitle =
+    event.leadCaptureFormIntroTitle || "Entre para a lista e garanta seu lugar com desconto exclusivo.";
+  const formIntroDescription =
+    event.leadCaptureFormIntroDescription || "Preencha seus dados e receba o link do grupo oficial na próxima etapa.";
+  const formTimingText = event.leadCaptureFormTimingText || "Leva menos de 30 segundos";
+  const proofText = event.leadCaptureProofText || event.conversionSocialProofText || "Mais de 100 mil pessoas impactadas";
+  const ctaText = event.leadCaptureCtaText || event.conversionCtaText || "Quero garantir meu desconto agora";
+  const urgencyText =
+    event.conversionUrgencyText || "Se você sair desta página, pode perder o acesso ao grupo e ao desconto.";
+  const formattedDate = formatDateTime(event.startsAt);
+  const [datePart, timePartRaw] = formattedDate.split(", ");
+  const timePart = timePartRaw || "";
+
+  const defaultBenefits: LeadPairBlock[] =
+    benefits.length > 0
+      ? benefits
+      : [
+          { title: "Acesso antecipado", description: "Quem está na lista entra primeiro no grupo oficial." },
+          { title: "Desconto exclusivo", description: "Ganhe até 30% de desconto no lançamento." },
+          { title: "Vagas limitadas", description: "Ingressos limitados para garantir a melhor experiência." }
+        ];
+
+  const defaultFooterStats: LeadPairBlock[] =
+    footerStats.length > 0
+      ? footerStats
+      : [
+          { title: "+ de 100 mil", description: "pessoas impactadas" },
+          { title: "10 anos", description: "transformando famílias" },
+          { title: "Milhares de casais", description: "fortalecendo seus lares" }
+        ];
 
   return (
-    <main className="shell leadCaptureShell">
+    <main className="shell leadCaptureShell leadCapturePremiumShell">
       {event.googleTagManagerId ? (
         <>
           <Script id="lead-capture-gtm-script" strategy="afterInteractive">
@@ -192,6 +244,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
           `}
         </Script>
       ) : null}
+
       <LeadCaptureTrackingRuntime
         eventTitle={event.title}
         eventSlug={event.slug}
@@ -200,6 +253,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
         tracking={tracking}
         mode="view"
       />
+
       <header className="topbar">
         <Link className="brand" href="/">
           {organizationContext.brandLogoUrl ? (
@@ -211,89 +265,127 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
         </Link>
       </header>
 
-      <section className="leadCaptureHero">
-        <div className={`leadCaptureHeroMedia ${leadHeroCrop ? "hasCrop" : ""}`}>
+      <section className="leadPremiumHero">
+        <div className="leadPremiumHeroImageWrap">
           <img
-            className={leadHeroCrop ? "croppedImage" : ""}
             alt={headline}
+            className={leadHeroCrop ? "croppedImage" : ""}
             decoding="async"
             fetchPriority="high"
             src={heroImage}
             style={imageCropStyle(publicLeadHeroCrop)}
           />
         </div>
-        <article className="leadCaptureHeroIntro">
-          <span className="leadEyebrow">Pré-lista oficial do evento</span>
-          <h1>{headline}</h1>
-          <div className="leadCaptureMeta leadCaptureMetaCentered">
-            <span>{formatDateTime(event.startsAt)}</span>
-            <span>
-              {event.city}, {event.state}
-            </span>
-            <span>{event.venueName}</span>
+        <div className="leadPremiumHeroCopy">
+          <span className="leadPremiumBadge">{badgeText}</span>
+          <h1>{renderEditableText(headline, "premium-headline")}</h1>
+          <p className="leadPremiumHeroSupport">{renderEditableText(heroSupportText, "premium-support")}</p>
+          <div className="leadPremiumMetaRow">
+            <div className="leadPremiumMetaItem">
+              <strong>{datePart}</strong>
+              <span>{timePart}</span>
+            </div>
+            <div className="leadPremiumMetaItem">
+              <strong>
+                {event.city}, {event.state}
+              </strong>
+              <span>Cidade do evento</span>
+            </div>
+            <div className="leadPremiumMetaItem">
+              <strong>{event.venueName}</strong>
+              <span>Local do encontro</span>
+            </div>
           </div>
-        </article>
-        <div className="leadCaptureHeroBottom">
-          <form action={createEventLeadAction} className="leadCaptureForm card" id="lead-capture-form">
-            <input type="hidden" name="eventId" value={event.id} />
-            <input type="hidden" name="eventSlug" value={event.slug} />
-            <MetaTrackingFields />
-            <input type="hidden" name="utmSource" value={tracking.utmSource || ""} />
-            <input type="hidden" name="utmMedium" value={tracking.utmMedium || ""} />
-            <input type="hidden" name="utmCampaign" value={tracking.utmCampaign || ""} />
-            <input type="hidden" name="utmContent" value={tracking.utmContent || ""} />
-            <input type="hidden" name="utmTerm" value={tracking.utmTerm || ""} />
-            <input type="hidden" name="referrer" value={tracking.referrer || ""} />
-            <input type="hidden" name="landingPage" value={tracking.landingPage || ""} />
-            <input
-              aria-hidden="true"
-              autoComplete="off"
-              className="leadHoneypotField"
-              name="company"
-              tabIndex={-1}
-              type="text"
-            />
-            <span className="leadFormEyebrow">Cadastre seu interesse</span>
-            <h2>Entre na lista e receba o link do grupo oficial</h2>
-            <p className="muted">
-              {renderEditableText(
-                "Preencha seus dados e siga para o grupo oficial na próxima etapa.",
-                "form-copy"
-              )}
-            </p>
-            {error ? <div className="errorBox">{error}</div> : null}
-            <label className="field">
-              <span>Nome completo</span>
-              <input name="name" placeholder="Seu nome completo" required />
-            </label>
-            <label className="field">
-              <span>E-mail</span>
-              <input name="email" type="email" placeholder="Digite seu melhor e-mail" required />
-            </label>
-            <label className="field">
-              <span>Município</span>
-              <input
-                name="municipality"
-                placeholder="Ex: Santo André, São Caetano, São Bernardo"
-                required
-              />
-            </label>
-            <label className="field">
-              <span>Telefone com DDI + DDD</span>
-              <input name="phone" inputMode="tel" placeholder="Ex: 55 11 99999-9999" required />
-            </label>
-            <TurnstileField siteKey={turnstileSiteKey} />
-            <SubmitButton className="button fullButton" pendingText="Enviando cadastro...">
-              {ctaText}
-            </SubmitButton>
-            <small className="leadCaptureFootnote">
-              Seus dados serão usados apenas para este lançamento, avisos oficiais e acesso ao grupo.
-            </small>
-            <small className="leadCaptureFootnote leadCaptureFootnoteSoft">
-              Sem pagamento agora. Você só entra na lista e segue para o grupo oficial.
-            </small>
-          </form>
         </div>
+      </section>
+
+      <section className="leadPremiumBenefits">
+        {defaultBenefits.slice(0, 3).map((item, index) => (
+          <article className="leadPremiumBenefit" key={`${item.title}-${index}`}>
+            <strong>{item.title}</strong>
+            <p>{item.description}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="leadPremiumFormSection" id="lead-capture-form">
+        <div className="leadPremiumFormIntro">
+          <span className="leadEyebrow">{formEyebrow}</span>
+          <h2>{renderEditableText(formIntroTitle, "premium-form-title")}</h2>
+          <p>{renderEditableText(formIntroDescription, "premium-form-description")}</p>
+
+          {bonusBlock ? (
+            <div className="leadPremiumBonusCard">
+              <strong>{bonusBlock.title}</strong>
+              <p>{bonusBlock.description}</p>
+            </div>
+          ) : null}
+
+          <div className="leadPremiumProof">
+            <div className="leadPremiumAvatarRow">
+              <span />
+              <span />
+              <span />
+              <span />
+              <strong>+100K</strong>
+            </div>
+            <p>{proofText}</p>
+          </div>
+        </div>
+
+        <form action={createEventLeadAction} className="leadPremiumFormPane" id="lead-capture-premium-form">
+          <input type="hidden" name="eventId" value={event.id} />
+          <input type="hidden" name="eventSlug" value={event.slug} />
+          <MetaTrackingFields />
+          <input type="hidden" name="utmSource" value={tracking.utmSource || ""} />
+          <input type="hidden" name="utmMedium" value={tracking.utmMedium || ""} />
+          <input type="hidden" name="utmCampaign" value={tracking.utmCampaign || ""} />
+          <input type="hidden" name="utmContent" value={tracking.utmContent || ""} />
+          <input type="hidden" name="utmTerm" value={tracking.utmTerm || ""} />
+          <input type="hidden" name="referrer" value={tracking.referrer || ""} />
+          <input type="hidden" name="landingPage" value={tracking.landingPage || ""} />
+          <input
+            aria-hidden="true"
+            autoComplete="off"
+            className="leadHoneypotField"
+            name="company"
+            tabIndex={-1}
+            type="text"
+          />
+
+          <div className="leadPremiumFormTiming">{formTimingText}</div>
+          {error ? <div className="errorBox">{error}</div> : null}
+          <label className="field">
+            <span>Nome completo</span>
+            <input name="name" placeholder="Seu nome completo" required />
+          </label>
+          <label className="field">
+            <span>E-mail</span>
+            <input name="email" type="email" placeholder="Digite seu melhor e-mail" required />
+          </label>
+          <label className="field">
+            <span>Município</span>
+            <input name="municipality" placeholder="Ex: Santo André, São Caetano, São Bernardo" required />
+          </label>
+          <label className="field">
+            <span>Telefone com DDD</span>
+            <input name="phone" inputMode="tel" placeholder="Ex: (11) 99999-9999" required />
+          </label>
+          <TurnstileField siteKey={turnstileSiteKey} />
+          <SubmitButton className="button fullButton leadPremiumCtaButton" pendingText="Enviando cadastro...">
+            {ctaText}
+          </SubmitButton>
+          <small className="leadPremiumUrgency">{urgencyText}</small>
+        </form>
+      </section>
+
+      <section className="leadPremiumFooterStats">
+        {defaultFooterStats.slice(0, 3).map((item, index) => (
+          <article className="leadPremiumFooterStat" key={`${item.title}-${index}`}>
+            <strong>{item.title}</strong>
+            <span>{item.description}</span>
+          </article>
+        ))}
       </section>
 
       <section className="leadCaptureBody">
@@ -338,8 +430,8 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             </div>
           </section>
         ) : null}
-
       </section>
+
       <PublicSiteFooter brandName={organizationContext.brandName} settings={publicSocialSettings || {}} />
     </main>
   );

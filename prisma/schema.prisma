@@ -365,6 +365,16 @@ model Event {
   leadCaptureDescription String?
   leadCaptureOfferText String?
   leadCaptureCtaText  String?
+  leadCaptureBadgeText String?
+  leadCaptureHeroSupportText String?
+  leadCaptureBenefitsText String?
+  leadCaptureFormIntroEyebrow String?
+  leadCaptureFormIntroTitle String?
+  leadCaptureFormIntroDescription String?
+  leadCaptureFormTimingText String?
+  leadCaptureBonusText String?
+  leadCaptureProofText String?
+  leadCaptureFooterStatsText String?
   leadCaptureHeroImageUrl String?
   leadCaptureHeroCrop String?
   leadCaptureVenueGallery String?

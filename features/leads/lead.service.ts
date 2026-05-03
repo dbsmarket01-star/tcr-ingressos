@@ -218,6 +218,16 @@ export async function getLeadCaptureEventBySlug(slug: string, organizationId?: s
           leadCaptureDescription: true,
           leadCaptureOfferText: true,
           leadCaptureCtaText: true,
+          leadCaptureBadgeText: true,
+          leadCaptureHeroSupportText: true,
+          leadCaptureBenefitsText: true,
+          leadCaptureFormIntroEyebrow: true,
+          leadCaptureFormIntroTitle: true,
+          leadCaptureFormIntroDescription: true,
+          leadCaptureFormTimingText: true,
+          leadCaptureBonusText: true,
+          leadCaptureProofText: true,
+          leadCaptureFooterStatsText: true,
           leadCaptureHeroImageUrl: true,
           leadCaptureHeroCrop: true,
           leadCaptureVenueGallery: true,
@@ -227,6 +237,9 @@ export async function getLeadCaptureEventBySlug(slug: string, organizationId?: s
           leadCaptureThankYouDescription: true,
           leadCaptureThankYouButtonText: true,
           autoLeadCaptureEmailEnabled: true,
+          conversionSocialProofText: true,
+          conversionUrgencyText: true,
+          conversionCtaText: true,
           organization: {
             select: {
               companySettings: {
