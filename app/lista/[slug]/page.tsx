@@ -2,7 +2,6 @@ import Link from "next/link";
 import Script from "next/script";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { TurnstileField } from "@/components/forms/TurnstileField";
 import { createEventLeadAction } from "@/features/leads/lead.actions";
@@ -67,48 +66,6 @@ function renderEditableText(value: string, keyPrefix: string) {
   });
 }
 
-function getYoutubeEmbedUrl(url?: string | null) {
-  if (!url) {
-    return null;
-  }
-
-  try {
-    const parsed = new URL(url);
-    const host = parsed.hostname.replace(/^www\./, "");
-
-    if (host === "youtu.be") {
-      const videoId = parsed.pathname.replace("/", "").trim();
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-    }
-
-    if (host === "youtube.com" || host === "m.youtube.com") {
-      const videoId = parsed.searchParams.get("v");
-      if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}`;
-      }
-
-      if (parsed.pathname.startsWith("/embed/")) {
-        return `https://www.youtube.com${parsed.pathname}`;
-      }
-    }
-  } catch {
-    return null;
-  }
-
-  return null;
-}
-
-function getVenueGalleryUrls(value?: string | null) {
-  if (!value) {
-    return [];
-  }
-
-  return value
-    .split("\n")
-    .map((item) => item.trim())
-    .filter((item) => item && (item.startsWith("http://") || item.startsWith("https://") || item.startsWith("/uploads/")));
-}
-
 export async function generateMetadata({ params }: Pick<LeadCapturePageProps, "params">): Promise<Metadata> {
   const { slug } = await params;
   const organizationContext = await getCurrentOrganizationContext();
@@ -155,15 +112,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
   const error = rawError === "NEXT_REDIRECT" ? null : rawError;
   const tracking = getTrackingParamsFromSearch(query, `/lista/${event.slug}`);
   const turnstileSiteKey = getTurnstileSiteKey();
-  const youtubeEmbedUrl = getYoutubeEmbedUrl(event.leadCaptureVideoUrl);
-  const venueGallery = getVenueGalleryUrls(event.leadCaptureVenueGallery);
-  const publicSocialSettings = (event.organization?.companySettings?.[0] || null) as {
-    instagramUrl?: string | null;
-    facebookUrl?: string | null;
-    youtubeUrl?: string | null;
-    whatsappUrl?: string | null;
-    supportEmail?: string | null;
-  } | null;
 
   const badgeText = event.leadCaptureBadgeText || "Vagas limitadas";
   const headline = event.leadCaptureHeadline || event.title;
@@ -395,52 +343,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
           </section>
         </div>
       </section>
-
-      <section className="leadCaptureBody">
-        {youtubeEmbedUrl ? (
-          <section className="leadCaptureSection card leadVideoSection leadCapturePrioritySection">
-            <span className="leadEyebrow">MAIS IFORMAÇÕES</span>
-            <div className="leadVideoFrame">
-              <iframe
-                src={youtubeEmbedUrl}
-                title={`Vídeo de apresentação de ${headline}`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
-              />
-            </div>
-          </section>
-        ) : null}
-
-        {venueGallery.length > 0 ? (
-          <section className="leadCaptureSection card leadCaptureVenueSection leadCaptureSectionTone leadToneVenue">
-            <div className="sectionHeader">
-              <div>
-                <span className="leadEyebrow">Conheça o local</span>
-                <h2>Veja o ambiente onde este encontro vai acontecer</h2>
-              </div>
-              <a className="secondaryButton" href="#lead-capture-form">
-                Entrar na lista
-              </a>
-            </div>
-            <div className="leadCaptureVenueInfo">
-              <strong>{event.venueName}</strong>
-              <p>
-                {event.venueAddress} · {event.city}, {event.state}
-              </p>
-            </div>
-            <div className="leadCaptureVenueGallery">
-              {venueGallery.map((imageUrl, index) => (
-                <figure className="leadCaptureVenueCard" key={`${imageUrl}-${index}`}>
-                  <img alt={`${event.venueName} ${index + 1}`} decoding="async" loading="lazy" src={imageUrl} />
-                </figure>
-              ))}
-            </div>
-          </section>
-        ) : null}
-      </section>
-
-      <PublicSiteFooter brandName={organizationContext.brandName} settings={publicSocialSettings || {}} />
     </main>
   );
 }
