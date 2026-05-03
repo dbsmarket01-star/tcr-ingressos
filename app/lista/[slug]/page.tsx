@@ -231,7 +231,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
             <div className="leadPremiumHeroCopy">
               <span className="leadPremiumBadge">{badgeText}</span>
               <h1>{renderEditableText(headline, "premium-headline")}</h1>
-              <p className="leadPremiumHeroSupport">{renderEditableText(heroSupportText, "premium-support")}</p>
               <div className="leadPremiumMetaRow">
                 <div className="leadPremiumMetaItem">
                   <strong>{datePart}</strong>
