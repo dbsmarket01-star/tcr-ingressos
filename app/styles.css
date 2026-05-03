@@ -9572,115 +9572,175 @@ body.operationTheme .topbar {
   }
 
   .leadPremiumCanvas {
-    gap: 16px;
+    gap: 12px;
     padding: 8px 16px 0;
   }
 
   .leadPremiumHero {
-    gap: 14px;
+    align-items: end;
+    gap: 16px;
+    grid-template-columns: minmax(150px, 0.92fr) minmax(0, 1.08fr);
     padding: 0;
   }
 
   .leadPremiumHeroImageWrap {
-    border-radius: 22px;
+    border-radius: 18px;
   }
 
   .leadPremiumHeroImageWrap img {
-    aspect-ratio: 16 / 13;
+    aspect-ratio: 0.78;
   }
 
   .leadPremiumHeroCopy {
-    gap: 14px;
+    gap: 10px;
     padding-bottom: 0;
   }
 
   .leadPremiumBadge {
-    font-size: 13px;
-    min-height: 40px;
-    padding: 8px 16px;
+    font-size: 12px;
+    min-height: 34px;
+    padding: 6px 14px;
   }
 
   .leadPremiumHeroCopy h1 {
-    font-size: 34px;
-    max-width: 7ch;
+    font-size: 30px;
+    line-height: 0.96;
+    max-width: 6ch;
   }
 
   .leadPremiumHeroSupport {
-    font-size: 17px;
-    line-height: 1.26;
+    font-size: 14px;
+    line-height: 1.24;
     max-width: none;
   }
 
   .leadPremiumMetaRow,
-  .leadPremiumBenefits,
   .leadPremiumFooterStats {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .leadPremiumMetaItem,
-  .leadPremiumBenefit,
   .leadPremiumFooterStat {
     border-left: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.12);
     padding-left: 0;
-    padding-top: 14px;
+    padding-top: 10px;
   }
 
   .leadPremiumMetaItem:first-child,
-  .leadPremiumBenefit:first-child,
   .leadPremiumFooterStat:first-child {
     border-top: 0;
     padding-top: 0;
   }
 
+  .leadPremiumMetaRow {
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .leadPremiumMetaItem strong {
+    font-size: 14px;
+  }
+
+  .leadPremiumMetaItem span {
+    font-size: 11px;
+  }
+
   .leadPremiumBenefits {
-    border-radius: 24px;
+    border-radius: 18px;
+    gap: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     margin-top: 0;
-    padding: 18px 20px;
+    padding: 14px 16px;
+  }
+
+  .leadPremiumBenefit {
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+    gap: 6px;
+    padding-left: 10px;
+  }
+
+  .leadPremiumBenefit:first-child {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .leadPremiumBenefit strong {
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  .leadPremiumBenefit p {
+    font-size: 10px;
+    line-height: 1.35;
   }
 
   .leadPremiumFormSection {
-    border-radius: 26px;
+    border-radius: 22px;
     margin-top: 4px;
-    padding: 22px 18px 18px;
+    padding: 16px 16px 14px;
+  }
+
+  .leadPremiumFormPane {
+    order: 1;
+  }
+
+  .leadPremiumFormIntro {
+    border-bottom: 0;
+    order: 2;
+    padding-bottom: 0;
   }
 
   .leadPremiumFormIntro h2 {
-    font-size: 30px;
-    line-height: 1.02;
-    max-width: 9ch;
+    font-size: 22px;
+    line-height: 1.04;
+    max-width: 11ch;
   }
 
   .leadPremiumFormIntro > p {
-    font-size: 15px;
+    font-size: 14px;
+    max-width: 100%;
   }
 
   .leadPremiumBonusCard {
-    border-radius: 18px;
-    padding: 18px;
+    border-radius: 14px;
+    padding: 14px;
   }
 
   .leadPremiumProof {
-    gap: 10px;
+    gap: 8px;
   }
 
   .leadPremiumAvatarRow span,
   .leadPremiumAvatarRow strong {
-    height: 40px;
-    width: 40px;
+    height: 34px;
+    width: 34px;
   }
 
   .leadPremiumFormPane {
-    gap: 14px;
+    gap: 12px;
+  }
+
+  .leadPremiumFormTiming {
+    font-size: 14px;
   }
 
   .leadPremiumCtaButton.button.fullButton {
-    font-size: 16px;
-    min-height: 58px;
+    font-size: 15px;
+    min-height: 54px;
   }
 
   .leadPremiumFooterStats {
-    padding: 8px 0 0;
+    gap: 10px;
+    padding: 2px 0 0;
+  }
+
+  .leadPremiumFooterStat strong {
+    font-size: 16px;
+  }
+
+  .leadPremiumFooterStat span {
+    font-size: 12px;
   }
 
   .leadCaptureBody {
