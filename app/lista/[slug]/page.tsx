@@ -312,47 +312,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
           </section>
         ) : null}
 
-        <div className="leadCaptureInfoGrid">
-          <article className="leadCaptureSection card leadCaptureSectionTone leadToneProcess">
-            <div className="sectionHeader">
-              <div>
-                <span className="leadEyebrow">Como funciona</span>
-                <h2>3 passos para receber o aviso e entrar no grupo</h2>
-              </div>
-            </div>
-            <div className="leadStepsGrid">
-              <article className="leadStepCard">
-                <strong>1. Cadastre seus dados</strong>
-                <p>Você deixa nome, e-mail e telefone para entrar na pré-lista oficial deste evento.</p>
-              </article>
-              <article className="leadStepCard">
-                <strong>2. Acesse o grupo no WhatsApp</strong>
-                <p>Na página seguinte, você entra no grupo onde vamos liberar avisos, bônus e o desconto da abertura.</p>
-              </article>
-              <article className="leadStepCard">
-                <strong>3. Receba prioridade na abertura</strong>
-                <p>Quem estiver no grupo acompanha primeiro a liberação e recebe a comunicação completa do lançamento.</p>
-              </article>
-            </div>
-          </article>
-
-          <article className="card leadCaptureHighlight leadCaptureSectionTone leadToneValue">
-            <span className="leadEyebrow">Por que entrar agora</span>
-            <h2>Receba a abertura no canal certo e chegue mais preparado ao lançamento.</h2>
-            <p>
-              {renderEditableText(
-                "A lista de interesse evita que você dependa de anúncio solto ou de link perdido. Você entra no funil oficial deste lançamento e recebe as próximas instruções no canal certo.",
-                "highlight-copy"
-              )}
-            </p>
-            <ul className="leadChecklist">
-              <li>cadastro confirmado em poucos segundos</li>
-              <li>grupo oficial para concentrar avisos e condições especiais</li>
-              <li>comunicação mais organizada antes da venda abrir</li>
-            </ul>
-          </article>
-        </div>
-
         {venueGallery.length > 0 ? (
           <section className="leadCaptureSection card leadCaptureVenueSection leadCaptureSectionTone leadToneVenue">
             <div className="sectionHeader">
