@@ -81,6 +81,7 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
         </Script>
       ) : null}
       <LeadCaptureTrackingRuntime
+        eventId={event.id}
         eventTitle={event.title}
         eventSlug={event.slug}
         metaPixelId={event.metaPixelId}

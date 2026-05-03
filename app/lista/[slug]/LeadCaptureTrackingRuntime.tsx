@@ -2,8 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import type { TrackingParams } from "@/features/tracking/tracking";
+import { sendPublicPageVisit } from "@/features/tracking/public-visit.client";
 
 type LeadCaptureTrackingRuntimeProps = {
+  eventId: string;
   eventTitle: string;
   eventSlug: string;
   metaPixelId?: string | null;
@@ -22,6 +24,7 @@ declare global {
 }
 
 export function LeadCaptureTrackingRuntime({
+  eventId,
   eventTitle,
   eventSlug,
   metaPixelId,
@@ -53,6 +56,13 @@ export function LeadCaptureTrackingRuntime({
       window.dataLayer.push({
         event: mode === "lead" ? "lead_capture_complete" : "view_lead_capture",
         ...payload
+      });
+    }
+
+    if (mode === "view") {
+      sendPublicPageVisit({
+        eventId,
+        pageType: "LEAD_CAPTURE"
       });
     }
 
@@ -98,7 +108,7 @@ export function LeadCaptureTrackingRuntime({
     };
 
     firePixelEvent();
-  }, [eventSlug, eventTitle, googleTagManagerId, leadEventId, metaPixelId, mode, tracking]);
+  }, [eventId, eventSlug, eventTitle, googleTagManagerId, leadEventId, metaPixelId, mode, tracking]);
 
   return null;
 }

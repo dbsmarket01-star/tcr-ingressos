@@ -167,6 +167,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         </Script>
       ) : null}
       <TrackingRuntime
+        eventId={event.id}
         eventTitle={event.title}
         eventSlug={event.slug}
         metaPixelId={event.metaPixelId}

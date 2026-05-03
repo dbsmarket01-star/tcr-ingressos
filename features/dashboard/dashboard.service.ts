@@ -1,4 +1,4 @@
-import { PaymentProvider } from "@prisma/client";
+import { EventPageVisitType, PaymentProvider } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 type DashboardFilters = {
@@ -92,6 +92,17 @@ function formatDayKey(value: Date) {
   return formatDateInput(value);
 }
 
+function formatBrazilDateKey(value: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(value);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 function formatDayLabel(value: Date) {
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
@@ -180,6 +191,8 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
   const periodMs = periodEnd.getTime() - periodStart.getTime() + 1;
   const previousPeriodEnd = new Date(periodStart.getTime() - 1);
   const previousPeriodStart = new Date(periodStart.getTime() - periodMs);
+  const currentPeriodStartKey = formatBrazilDateKey(periodStart);
+  const currentPeriodEndKey = formatBrazilDateKey(periodEnd);
 
   const paidPeriodWhere = {
     status: "PAID" as const,
@@ -228,7 +241,8 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
     eventTicketCounts,
     recentOrders,
     recentLeads,
-    recentCheckIns
+    recentCheckIns,
+    currentPublicEventVisits
   ] = await Promise.all([
     prisma.order.findMany({
       where: paidPeriodWhere,
@@ -424,6 +438,16 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
           }
         },
         event: true
+      }
+    }),
+    prisma.eventPageVisit.count({
+      where: {
+        pageType: EventPageVisitType.PUBLIC_EVENT,
+        visitedOn: {
+          gte: currentPeriodStartKey,
+          lte: currentPeriodEndKey
+        },
+        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {})
       }
     })
   ]);
@@ -656,10 +680,10 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
       .sort((left, right) => right.periodRevenueInCents - left.periodRevenueInCents)
       .slice(0, 5),
     funnel: {
-      visitors: currentOrdersCreated + recentLeads.length,
+      visitors: currentPublicEventVisits,
       startedCheckout: currentOrdersCreated,
       purchased: currentPaidOrders.length,
-      conversionRate: percentage(currentPaidOrders.length, currentOrdersCreated)
+      conversionRate: percentage(currentPaidOrders.length, currentPublicEventVisits)
     },
     operations: {
       ticketsIssued: ticketCounts.reduce((sum, item) => sum + item._count._all, 0),

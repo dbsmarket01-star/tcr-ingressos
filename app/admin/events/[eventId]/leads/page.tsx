@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { CopyButton } from "@/components/forms/CopyButton";
+import { countEventPageVisits } from "@/features/analytics/page-visit.service";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { getEventForManagement } from "@/features/events/event.service";
 import { sendLeadBroadcastAction } from "@/features/leads/lead.admin.actions";
@@ -31,7 +32,11 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
     notFound();
   }
 
-  const [leads, emailCampaigns] = await Promise.all([listEventLeads(event.id), listLeadEmailCampaignSummaries(event.id)]);
+  const [leads, emailCampaigns, leadCaptureVisits] = await Promise.all([
+    listEventLeads(event.id),
+    listLeadEmailCampaignSummaries(event.id),
+    countEventPageVisits(event.id, "LEAD_CAPTURE")
+  ]);
   const leadsWithPhone = leads.filter((lead) => Boolean(lead.phone)).length;
   const leadsWithEmail = leads.filter((lead) => Boolean(lead.email)).length;
   const leadsWithMunicipality = leads.filter((lead) => Boolean(lead.municipality)).length;
@@ -94,6 +99,10 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
           <div className="card metric">
             <span className="muted">Captação ativa</span>
             <strong>{event.leadCaptureEnabled ? "Sim" : "Não"}</strong>
+          </div>
+          <div className="card metric">
+            <span className="muted">Visitas à landing</span>
+            <strong>{leadCaptureVisits}</strong>
           </div>
           <div className="card metric">
             <span className="muted">Total de leads</span>

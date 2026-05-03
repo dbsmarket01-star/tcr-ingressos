@@ -2,8 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import type { TrackingParams } from "@/features/tracking/tracking";
+import { sendPublicPageVisit } from "@/features/tracking/public-visit.client";
 
 type TrackingRuntimeProps = {
+  eventId: string;
   eventTitle: string;
   eventSlug: string;
   metaPixelId?: string | null;
@@ -20,6 +22,7 @@ declare global {
 }
 
 export function TrackingRuntime({
+  eventId,
   eventTitle,
   eventSlug,
   metaPixelId,
@@ -52,6 +55,11 @@ export function TrackingRuntime({
       });
     }
 
+    sendPublicPageVisit({
+      eventId,
+      pageType: "PUBLIC_EVENT"
+    });
+
     if (metaPixelId && window.fbq) {
       window.fbq("track", "ViewContent", {
         content_name: eventTitle,
@@ -59,7 +67,7 @@ export function TrackingRuntime({
         ...payload
       });
     }
-  }, [eventSlug, eventTitle, googleTagManagerId, metaPixelId, tracking]);
+  }, [eventId, eventSlug, eventTitle, googleTagManagerId, metaPixelId, tracking]);
 
   return null;
 }

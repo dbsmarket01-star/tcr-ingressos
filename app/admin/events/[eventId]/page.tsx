@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { CopyButton } from "@/components/forms/CopyButton";
+import { countEventPageVisits } from "@/features/analytics/page-visit.service";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { duplicateEventAction, updateEventStatusAction } from "@/features/events/event.actions";
 import { getEventCapacity, getEventForManagement, getEventRevenueInCents } from "@/features/events/event.service";
@@ -303,7 +304,11 @@ export default async function EventManagementPage({ params, searchParams }: Even
   const { eventId } = await params;
   await requireEventAccess(eventId);
   const query = searchParams ? await searchParams : {};
-  const event = await getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin));
+  const [event, leadCaptureVisits, publicEventVisits] = await Promise.all([
+    getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin)),
+    countEventPageVisits(eventId, "LEAD_CAPTURE"),
+    countEventPageVisits(eventId, "PUBLIC_EVENT")
+  ]);
 
   if (!event) {
     notFound();
@@ -322,6 +327,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
   const daysUntilEvent = getDaysUntil(event.startsAt);
   const viewsToThankYou = leads.filter((lead) => lead.thankYouViewedAt).length;
   const whatsappClicks = leads.reduce((sum, lead) => sum + lead.whatsappClickCount, 0);
+  const leadCaptureConversionRate = percentage(totalLeads, leadCaptureVisits);
   const salesLast24h = paidOrders.filter((order) => {
     const paidAt = order.paidAt ?? null;
     return paidAt ? Date.now() - paidAt.getTime() <= 86400000 : false;
@@ -376,13 +382,13 @@ export default async function EventManagementPage({ params, searchParams }: Even
     {
       label: "Leads captados",
       value: String(totalLeads),
-      note: `${whatsappClicks} clique(s) no grupo`,
+      note: `${leadCaptureVisits} visita(s) na landing`,
       icon: "users" as const
     },
     {
-      label: "Dias para o evento",
-      value: `${daysUntilEvent} dia${daysUntilEvent === 1 ? "" : "s"}`,
-      note: `${formatEventDate(event.startsAt)}, ${formatEventTime(event.startsAt)}`,
+      label: "Visitas ao site",
+      value: String(event.leadCaptureEnabled ? leadCaptureVisits : publicEventVisits),
+      note: event.leadCaptureEnabled ? "Landing de captação" : "Página pública do evento",
       icon: "calendar" as const
     }
   ];
@@ -559,33 +565,33 @@ export default async function EventManagementPage({ params, searchParams }: Even
             <div className="eventOverviewPanelHeader">
               <div>
                 <h2>Funil de vendas</h2>
-                <p>Da captação até a compra</p>
+                <p>{event.leadCaptureEnabled ? "Da visita ao clique no grupo" : "Da visita até a compra"}</p>
               </div>
             </div>
 
             <div className="eventOverviewFunnel">
               <div className="eventOverviewFunnelStep isLight">
-                <span>Leads captados</span>
-                <strong>{totalLeads}</strong>
+                <span>{event.leadCaptureEnabled ? "Visitas ao site" : "Visitas ao site"}</span>
+                <strong>{event.leadCaptureEnabled ? leadCaptureVisits : publicEventVisits}</strong>
               </div>
               <div className="eventOverviewFunnelStep isMid">
-                <span>Obrigado visto</span>
-                <strong>{viewsToThankYou}</strong>
+                <span>{event.leadCaptureEnabled ? "Cadastros" : "Iniciaram compra"}</span>
+                <strong>{event.leadCaptureEnabled ? totalLeads : paidOrders.length}</strong>
               </div>
               <div className="eventOverviewFunnelStep isDark">
-                <span>Compraram</span>
-                <strong>{paidOrders.length}</strong>
+                <span>{event.leadCaptureEnabled ? "Clique no grupo" : "Compraram"}</span>
+                <strong>{event.leadCaptureEnabled ? whatsappClicks : paidOrders.length}</strong>
               </div>
             </div>
 
             <div className="eventOverviewFunnelMeta">
               <div>
-                <span>Conversão geral</span>
-                <strong>{formatPercentage(conversionRate)}</strong>
+                <span>{event.leadCaptureEnabled ? "Conversão visita -> cadastro" : "Conversão geral"}</span>
+                <strong>{formatPercentage(event.leadCaptureEnabled ? leadCaptureConversionRate : conversionRate)}</strong>
               </div>
               <div>
-                <span>Clique no grupo</span>
-                <strong>{whatsappClicks}</strong>
+                <span>{event.leadCaptureEnabled ? "Obrigado visto" : "Dias para o evento"}</span>
+                <strong>{event.leadCaptureEnabled ? viewsToThankYou : `${daysUntilEvent}`}</strong>
               </div>
             </div>
           </article>

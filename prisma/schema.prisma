@@ -84,6 +84,11 @@ enum CouponStatus {
   EXPIRED
 }
 
+enum EventPageVisitType {
+  LEAD_CAPTURE
+  PUBLIC_EVENT
+}
+
 enum SplitRuleType {
   PERCENTAGE
   FIXED_PER_ORDER
@@ -405,6 +410,7 @@ model Event {
   leads     EventLead[]
   leadCaptureAttempts LeadCaptureAttempt[]
   leadEmailCampaigns LeadEmailCampaign[]
+  pageVisits EventPageVisit[]
 
   @@index([organizationId])
   @@index([status, startsAt])
@@ -437,6 +443,22 @@ model EventLead {
   @@index([eventId, createdAt])
   @@index([email])
   @@unique([eventId, email])
+}
+
+model EventPageVisit {
+  id            String             @id @default(cuid())
+  eventId        String
+  pageType      EventPageVisitType
+  sessionKey    String
+  visitedOn     String
+  firstVisitedAt DateTime          @default(now())
+  lastVisitedAt DateTime           @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, pageType, sessionKey, visitedOn])
+  @@index([eventId, pageType, visitedOn])
+  @@index([pageType, visitedOn])
 }
 
 model LeadEmailCampaign {
