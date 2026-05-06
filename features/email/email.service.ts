@@ -81,6 +81,7 @@ type LeadBroadcastEmailInput = {
   body: string;
   imageUrl?: string | null;
   imageCrop?: string | null;
+  publicBaseUrl?: string | null;
   brandName?: string;
   eventTitle: string;
   ctaLabel?: string | null;
@@ -542,28 +543,58 @@ function renderBroadcastBodyAsHtml(body: string) {
     .join("");
 }
 
-function buildEmailImageCropStyle(rawCrop?: string | null) {
-  const crop = parseImageCrop(rawCrop);
-
-  if (!crop) {
-    return "";
+function resolveAbsoluteEmailImageUrl(imageUrl: string, publicBaseUrl?: string | null) {
+  if (/^https?:\/\//i.test(imageUrl)) {
+    return imageUrl;
   }
 
-  return `object-position: ${crop.x}% ${crop.y}%; transform: scale(${crop.zoom}); transform-origin: ${crop.x}% ${crop.y}%;`;
+  if (imageUrl.startsWith("/")) {
+    const baseUrl = (publicBaseUrl || getPublicBaseUrl()).replace(/\/$/, "");
+    return `${baseUrl}${imageUrl}`;
+  }
+
+  return null;
+}
+
+function buildLeadBroadcastImageUrl(input: LeadBroadcastEmailInput) {
+  if (!input.imageUrl) {
+    return null;
+  }
+
+  const sourceUrl = resolveAbsoluteEmailImageUrl(input.imageUrl, input.publicBaseUrl);
+
+  if (!sourceUrl) {
+    return null;
+  }
+
+  const baseUrl = (input.publicBaseUrl || getPublicBaseUrl()).replace(/\/$/, "");
+  const params = new URLSearchParams({
+    src: sourceUrl
+  });
+
+  if (input.imageCrop) {
+    const crop = parseImageCrop(input.imageCrop);
+
+    if (crop) {
+      params.set("crop", JSON.stringify(crop));
+    }
+  }
+
+  return `${baseUrl}/r/lead-email-image?${params.toString()}`;
 }
 
 function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
   const brandName = input.brandName || "TCR Ingressos";
-  const cropStyle = buildEmailImageCropStyle(input.imageCrop);
-  const imageBlock = input.imageUrl
+  const imageUrl = buildLeadBroadcastImageUrl(input);
+  const imageBlock = imageUrl
     ? `
       <div style="margin: 0 0 24px;">
         <div style="background: #e8eef5; border-radius: 18px; max-height: 220px; overflow: hidden;">
           <img
-            src="${input.imageUrl}"
+            src="${imageUrl}"
             alt="${input.eventTitle}"
             width="600"
-            style="display: block; width: 100%; max-width: 680px; min-height: 180px; max-height: 220px; object-fit: cover; object-position: center top; ${cropStyle}"
+            style="display: block; width: 100%; max-width: 680px; min-height: 180px; max-height: 220px; object-fit: cover;"
           />
         </div>
       </div>
