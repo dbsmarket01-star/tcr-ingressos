@@ -134,6 +134,10 @@ function formatCurrency(valueInCents: number) {
   }).format(valueInCents / 100);
 }
 
+function getDefaultEmailFrom(brandName?: string | null) {
+  return `${brandName || "TCR Ingressos"} <ingressos@tcringressos.app.br>`;
+}
+
 function buildTicketEmailHtml(input: TicketEmailInput) {
   const brandName = input.brandName || "TCR Ingressos";
   const ticketLinks = input.tickets
@@ -191,7 +195,7 @@ function buildTicketEmailText(input: TicketEmailInput) {
 
 export async function sendTicketsEmail(input: TicketEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.com.br>`;
+  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.app.br>`;
 
   if (!apiKey) {
     console.log("[email:dry-run] Ingressos gerados para envio", {
@@ -253,7 +257,7 @@ function buildPasswordResetText(input: PasswordResetEmailInput) {
 
 export async function sendAdminPasswordResetEmail(input: PasswordResetEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.com.br>`;
+  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.app.br>`;
 
   if (!apiKey) {
       console.log("[email:dry-run] Recuperação de senha administrativa", {
@@ -323,7 +327,7 @@ function buildOrderPendingPaymentText(input: OrderPendingPaymentEmailInput) {
 
 export async function sendOrderPendingPaymentEmail(input: OrderPendingPaymentEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.com.br>`;
+  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.app.br>`;
 
   if (!apiKey) {
     console.log("[email:dry-run] Pedido pendente para envio", {
@@ -377,7 +381,7 @@ function buildOrderExpiredText(input: OrderExpiredEmailInput) {
 
 export async function sendOrderExpiredEmail(input: OrderExpiredEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.com.br>`;
+  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.app.br>`;
 
   if (!apiKey) {
     console.log("[email:dry-run] Pedido expirado para envio", {
@@ -505,7 +509,7 @@ function buildLeadCaptureConfirmationText(input: LeadCaptureConfirmationEmailInp
 
 export async function sendLeadCaptureConfirmationEmail(input: LeadCaptureConfirmationEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.com.br>`;
+  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.app.br>`;
 
   if (!apiKey) {
     console.log("[email:dry-run] Confirmacao de lead", {
@@ -539,30 +543,47 @@ function renderBroadcastBodyAsHtml(body: string) {
 function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
   const brandName = input.brandName || "TCR Ingressos";
   const imageBlock = input.imageUrl
-    ? `<p style="margin: 0 0 18px;"><img src="${input.imageUrl}" alt="${input.eventTitle}" style="max-width: 100%; border-radius: 14px; display: block;" /></p>`
+    ? `
+      <div style="margin: 0 0 24px;">
+        <div style="background: #e8eef5; border-radius: 18px; max-height: 260px; overflow: hidden;">
+          <img
+            src="${input.imageUrl}"
+            alt="${input.eventTitle}"
+            width="600"
+            style="display: block; width: 100%; max-width: 600px; min-height: 220px; max-height: 260px; object-fit: cover; object-position: center top;"
+          />
+        </div>
+      </div>
+    `
     : "";
   const ctaButton = input.ctaUrl
     ? `
-      <p style="margin: 20px 0 0;">
-        <a href="${input.ctaUrl}" style="background: #14b866; border-radius: 10px; color: white; display: inline-block; font-weight: 700; padding: 14px 20px; text-decoration: none;">
+      <p style="margin: 24px 0 0;">
+        <a href="${input.ctaUrl}" style="background: #14924f; border-radius: 12px; color: white; display: inline-block; font-weight: 700; padding: 14px 22px; text-decoration: none;">
           ${input.ctaLabel || "Abrir link"}
         </a>
       </p>
     `
     : "";
   const supportLine = input.supportEmail
-    ? `<p style="margin: 20px 0 0; color: #607089;">Suporte: ${input.supportEmail}</p>`
+    ? `<p style="margin: 22px 0 0; color: #607089; font-size: 13px;">Suporte: ${input.supportEmail}</p>`
     : "";
 
   return `
-    <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.6;">
-      <p style="margin: 0 0 8px; color: #607089;">${brandName}</p>
-      <h1 style="margin: 0 0 16px;">${input.subject}</h1>
-      <p style="margin: 0 0 16px;">Olá, ${input.name}.</p>
-      ${imageBlock}
-      ${renderBroadcastBodyAsHtml(input.body)}
-      ${ctaButton}
-      ${supportLine}
+    <div style="background: #f3f6fb; margin: 0; padding: 32px 18px;">
+      <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.65; margin: 0 auto; max-width: 640px;">
+        <div style="background: #ffffff; border: 1px solid #e0e7f0; border-radius: 24px; box-shadow: 0 20px 60px rgba(10, 34, 26, 0.08); overflow: hidden; padding: 28px;">
+          <p style="margin: 0 0 8px; color: #607089; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">${brandName}</p>
+          <h1 style="color: #182233; font-size: 30px; line-height: 1.18; margin: 0 0 14px;">${input.subject}</h1>
+          <p style="color: #425066; font-size: 16px; margin: 0 0 20px;">Olá, ${input.name}.</p>
+          ${imageBlock}
+          <div style="color: #243042; font-size: 16px;">
+            ${renderBroadcastBodyAsHtml(input.body)}
+          </div>
+          ${ctaButton}
+          ${supportLine}
+        </div>
+      </div>
     </div>
   `;
 }
@@ -583,7 +604,7 @@ function buildLeadBroadcastText(input: LeadBroadcastEmailInput) {
 
 export async function sendLeadBroadcastEmail(input: LeadBroadcastEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.com.br>`;
+  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.app.br>`;
 
   if (!apiKey) {
     console.log("[email:dry-run] Disparo de leads", {

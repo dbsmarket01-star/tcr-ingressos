@@ -11,6 +11,7 @@ import { listEventLeads, listLeadEmailCampaignSummaries } from "@/features/leads
 import { formatDateTime } from "@/lib/format";
 import { getPublicLeadCaptureUrl } from "@/lib/public-url";
 import { getLeadOriginBucket, getSourceLabel } from "@/features/tracking/tracking";
+import { LeadBroadcastPreview } from "./LeadBroadcastPreview";
 import { LeadBroadcastTemplates } from "./LeadBroadcastTemplates";
 import { LeadBroadcastSubmitButton } from "./LeadBroadcastSubmitButton";
 
@@ -229,7 +230,14 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
           <label className="field">
             <span>Imagem opcional</span>
             <input accept="image/png,image/jpeg,image/webp,image/gif" name="imageFile" type="file" />
+            <small className="fieldHint">Para e-mail, prefira banner horizontal. Ex.: 1200 x 630 px ou 1200 x 675 px.</small>
           </label>
+          <LeadBroadcastPreview
+            brandName="TCR Ingressos"
+            defaultCtaLabel="Entrar no grupo agora"
+            defaultDestinationUrl={event.leadCaptureWhatsappGroupUrl ?? ""}
+            eventTitle={event.title}
+          />
           <div className="actionRow leadBroadcastActionRow">
             <LeadBroadcastSubmitButton />
             <small className="muted">O botão trava enquanto o disparo está em andamento para evitar envio duplicado.</small>
