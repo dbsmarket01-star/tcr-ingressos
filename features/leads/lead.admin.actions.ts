@@ -108,6 +108,7 @@ export async function sendLeadBroadcastAction(formData: FormData) {
   const body = String(formData.get("body") ?? "").trim();
   const ctaLabel = String(formData.get("ctaLabel") ?? "").trim();
   const destinationUrl = String(formData.get("destinationUrl") ?? "").trim();
+  const imageCrop = String(formData.get("imageCrop") ?? "").trim() || null;
   const dateFrom = String(formData.get("dateFrom") ?? "").trim();
   const dateTo = String(formData.get("dateTo") ?? "").trim();
   const municipalities = parseMunicipalityFilters(String(formData.get("municipalities") ?? ""));
@@ -184,6 +185,7 @@ export async function sendLeadBroadcastAction(formData: FormData) {
       subject,
       body,
       imageUrl,
+      imageCrop,
       brandName: organizationContext.brandName,
       eventTitle: event.title,
       ctaLabel: ctaLabel || "Abrir link",
@@ -256,6 +258,7 @@ export async function sendLeadBroadcastAction(formData: FormData) {
           subject,
           body,
           imageUrl,
+          imageCrop,
           brandName: organizationContext.brandName,
           eventTitle: event.title,
           ctaLabel: ctaLabel || "Abrir link",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { parseImageCrop } from "@/lib/image-crop";
 
 type LeadBroadcastPreviewProps = {
   brandName: string;
@@ -17,6 +18,7 @@ type PreviewState = {
   destinationUrl: string;
   imageUrl: string | null;
   imageName: string | null;
+  imageCrop: string | null;
 };
 
 function emptyPreviewState(props: LeadBroadcastPreviewProps): PreviewState {
@@ -26,7 +28,8 @@ function emptyPreviewState(props: LeadBroadcastPreviewProps): PreviewState {
     ctaLabel: props.defaultCtaLabel,
     destinationUrl: props.defaultDestinationUrl,
     imageUrl: null,
-    imageName: null
+    imageName: null,
+    imageCrop: null
   };
 }
 
@@ -47,6 +50,7 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
     const ctaLabelInput = form.querySelector<HTMLInputElement>('input[name="ctaLabel"]');
     const destinationInput = form.querySelector<HTMLInputElement>('input[name="destinationUrl"]');
     const imageInput = form.querySelector<HTMLInputElement>('input[name="imageFile"]');
+    const imageCropInput = form.querySelector<HTMLInputElement>('input[name="imageCrop"]');
 
     const updatePreview = () => {
       const nextImageFile = imageInput?.files?.[0] ?? null;
@@ -65,12 +69,13 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
         ctaLabel: ctaLabelInput?.value.trim() || props.defaultCtaLabel,
         destinationUrl: destinationInput?.value.trim() || props.defaultDestinationUrl,
         imageUrl: nextImageUrl,
-        imageName: nextImageFile?.name ?? null
+        imageName: nextImageFile?.name ?? null,
+        imageCrop: imageCropInput?.value.trim() || null
       });
     };
 
     const disposers: Array<() => void> = [];
-    const inputs = [subjectInput, bodyInput, ctaLabelInput, destinationInput, imageInput].filter(
+    const inputs = [subjectInput, bodyInput, ctaLabelInput, destinationInput, imageInput, imageCropInput].filter(
       (input): input is HTMLInputElement | HTMLTextAreaElement => Boolean(input)
     );
 
@@ -96,6 +101,7 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
+  const crop = parseImageCrop(preview.imageCrop);
 
   return (
     <div className="leadBroadcastPreviewCard" ref={containerRef}>
@@ -117,7 +123,20 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
 
           {preview.imageUrl ? (
             <div className="leadBroadcastPreviewImageWrap">
-              <img alt={props.eventTitle} className="leadBroadcastPreviewImage" src={preview.imageUrl} />
+              <img
+                alt={props.eventTitle}
+                className="leadBroadcastPreviewImage"
+                src={preview.imageUrl}
+                style={
+                  crop
+                    ? {
+                        objectPosition: `${crop.x}% ${crop.y}%`,
+                        transform: `scale(${crop.zoom})`,
+                        transformOrigin: `${crop.x}% ${crop.y}%`
+                      }
+                    : undefined
+                }
+              />
             </div>
           ) : (
             <div className="leadBroadcastPreviewImagePlaceholder">

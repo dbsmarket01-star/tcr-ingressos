@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { CopyButton } from "@/components/forms/CopyButton";
+import { ImageUploadField } from "@/components/forms/ImageUploadField";
 import { countEventPageVisits } from "@/features/analytics/page-visit.service";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { getEventForManagement } from "@/features/events/event.service";
@@ -249,11 +250,15 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                   <strong>Mídia do e-mail</strong>
                   <small>Imagem opcional. Para melhor resultado, use banner horizontal.</small>
                 </div>
-                <label className="field">
-                  <span>Imagem opcional</span>
-                  <input accept="image/png,image/jpeg,image/webp,image/gif" name="imageFile" type="file" />
-                  <small className="fieldHint">Para e-mail, prefira banner horizontal. Ex.: 1200 x 630 px ou 1200 x 675 px.</small>
-                </label>
+                <ImageUploadField
+                  aspect="share"
+                  cropFieldName="imageCrop"
+                  emptyText="Nenhuma imagem selecionada"
+                  label="Imagem opcional"
+                  name="imageFile"
+                  recommendedSize="1200 x 630 px"
+                  usageHint="Use um banner horizontal e ajuste o recorte com zoom, topo, base e laterais antes de enviar."
+                />
               </section>
             </div>
 

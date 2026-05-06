@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { getAdminBaseUrl, getPublicBaseUrl, getPublicOrderUrl, getPublicTicketUrl } from "@/lib/public-url";
 import { formatLongDateTime } from "@/lib/format";
+import { parseImageCrop } from "@/lib/image-crop";
 
 type EmailOrganization = {
   name?: string | null;
@@ -79,6 +80,7 @@ type LeadBroadcastEmailInput = {
   subject: string;
   body: string;
   imageUrl?: string | null;
+  imageCrop?: string | null;
   brandName?: string;
   eventTitle: string;
   ctaLabel?: string | null;
@@ -540,8 +542,19 @@ function renderBroadcastBodyAsHtml(body: string) {
     .join("");
 }
 
+function buildEmailImageCropStyle(rawCrop?: string | null) {
+  const crop = parseImageCrop(rawCrop);
+
+  if (!crop) {
+    return "";
+  }
+
+  return `object-position: ${crop.x}% ${crop.y}%; transform: scale(${crop.zoom}); transform-origin: ${crop.x}% ${crop.y}%;`;
+}
+
 function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
   const brandName = input.brandName || "TCR Ingressos";
+  const cropStyle = buildEmailImageCropStyle(input.imageCrop);
   const imageBlock = input.imageUrl
     ? `
       <div style="margin: 0 0 24px;">
@@ -550,7 +563,7 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
             src="${input.imageUrl}"
             alt="${input.eventTitle}"
             width="600"
-            style="display: block; width: 100%; max-width: 680px; min-height: 180px; max-height: 220px; object-fit: cover; object-position: center top;"
+            style="display: block; width: 100%; max-width: 680px; min-height: 180px; max-height: 220px; object-fit: cover; object-position: center top; ${cropStyle}"
           />
         </div>
       </div>
