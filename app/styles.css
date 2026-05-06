@@ -6471,6 +6471,51 @@ body.operationTheme .topbar {
   gap: 16px;
 }
 
+.leadBroadcastFormLayout {
+  gap: 20px;
+}
+
+.leadBroadcastComposerGrid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+}
+
+.leadBroadcastComposerColumn {
+  display: grid;
+  gap: 18px;
+}
+
+.leadBroadcastPreviewColumn {
+  align-self: start;
+  position: sticky;
+  top: 18px;
+}
+
+.leadBroadcastSectionCard {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(13, 43, 36, 0.08);
+  border-radius: 18px;
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.leadBroadcastSectionHeader {
+  display: grid;
+  gap: 4px;
+}
+
+.leadBroadcastSectionHeader strong {
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.leadBroadcastSectionHeader small {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
 .inlineFeedbackBox {
   margin-bottom: 14px;
 }
@@ -6486,6 +6531,13 @@ body.operationTheme .topbar {
 .leadBroadcastActionRow {
   align-items: center;
   justify-content: space-between;
+}
+
+.leadBroadcastFooterBar {
+  background: rgba(245, 249, 255, 0.82);
+  border: 1px solid rgba(13, 43, 36, 0.08);
+  border-radius: 18px;
+  padding: 14px 16px;
 }
 
 .leadBroadcastSubmitButton {
@@ -11224,6 +11276,14 @@ body.operationTheme .topbar {
 
   .leadBroadcastSubmitButton {
     width: 100%;
+  }
+
+  .leadBroadcastComposerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .leadBroadcastPreviewColumn {
+    position: static;
   }
 
   .leadBroadcastPreviewHeader {

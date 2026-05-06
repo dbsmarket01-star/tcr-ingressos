@@ -157,88 +157,116 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
           </div>
         ) : null}
         {sendError ? <div className="errorBox inlineFeedbackBox">{sendError}</div> : null}
-        <form action={sendLeadBroadcastAction} className="stackForm">
+        <form action={sendLeadBroadcastAction} className="stackForm leadBroadcastFormLayout">
           <input type="hidden" name="eventId" value={event.id} />
-          <LeadBroadcastTemplates />
-          <label className="field">
-            <span>Assunto do e-mail</span>
-            <input
-              name="subject"
-              placeholder="Ex.: Entre agora no grupo para garantir até 30% de desconto"
-              required
-            />
-          </label>
-          <label className="field">
-            <span>Mensagem</span>
-            <textarea
-              name="body"
-              placeholder={`Olá!\n\nEntrando no grupo agora você garante o desconto especial e recebe primeiro as próximas informações do evento.`}
-              rows={7}
-              required
-            />
-          </label>
-          <div className="grid twoColumnGrid">
-            <label className="field">
-              <span>Texto do botão</span>
-              <input
-                name="ctaLabel"
-                defaultValue="Entrar no grupo agora"
-                placeholder="Ex.: Entrar no grupo agora"
-              />
-            </label>
-            <label className="field">
-              <span>Link de destino</span>
-              <input
-                name="destinationUrl"
-                defaultValue={event.leadCaptureWhatsappGroupUrl ?? ""}
-                placeholder="https://chat.whatsapp.com/... ou outro link"
-              />
-            </label>
-          </div>
-          <div className="leadBroadcastFilterCard">
-            <div className="leadBroadcastFilterHeader">
-              <strong>Quem vai receber</strong>
-              <small>Sem filtro, o disparo vai para toda a lista. Para um dia só, repita a mesma data no início e no fim.</small>
+          <div className="leadBroadcastComposerGrid">
+            <div className="leadBroadcastComposerColumn">
+              <section className="leadBroadcastSectionCard">
+                <div className="leadBroadcastSectionHeader">
+                  <strong>Modelo da campanha</strong>
+                  <small>Use um ponto de partida e ajuste a copy antes de disparar.</small>
+                </div>
+                <LeadBroadcastTemplates />
+              </section>
+
+              <section className="leadBroadcastSectionCard">
+                <div className="leadBroadcastSectionHeader">
+                  <strong>Conteúdo do e-mail</strong>
+                  <small>Assunto, mensagem principal, botão e destino final.</small>
+                </div>
+                <label className="field">
+                  <span>Assunto do e-mail</span>
+                  <input
+                    name="subject"
+                    placeholder="Ex.: Entre agora no grupo para garantir até 30% de desconto"
+                    required
+                  />
+                </label>
+                <label className="field">
+                  <span>Mensagem</span>
+                  <textarea
+                    name="body"
+                    placeholder={`Olá!\n\nEntrando no grupo agora você garante o desconto especial e recebe primeiro as próximas informações do evento.`}
+                    rows={7}
+                    required
+                  />
+                </label>
+                <div className="grid twoColumnGrid">
+                  <label className="field">
+                    <span>Texto do botão</span>
+                    <input
+                      name="ctaLabel"
+                      defaultValue="Entrar no grupo agora"
+                      placeholder="Ex.: Entrar no grupo agora"
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Link de destino</span>
+                    <input
+                      name="destinationUrl"
+                      defaultValue={event.leadCaptureWhatsappGroupUrl ?? ""}
+                      placeholder="https://chat.whatsapp.com/... ou outro link"
+                    />
+                  </label>
+                </div>
+              </section>
+
+              <div className="leadBroadcastFilterCard">
+                <div className="leadBroadcastFilterHeader">
+                  <strong>Quem vai receber</strong>
+                  <small>Sem filtro, o disparo vai para toda a lista. Para um dia só, repita a mesma data no início e no fim.</small>
+                </div>
+                <div className="grid twoColumnGrid">
+                  <label className="field">
+                    <span>Data inicial</span>
+                    <input name="dateFrom" type="date" />
+                  </label>
+                  <label className="field">
+                    <span>Data final</span>
+                    <input name="dateTo" type="date" />
+                  </label>
+                </div>
+                <label className="field">
+                  <span>Municípios</span>
+                  <textarea
+                    name="municipalities"
+                    rows={3}
+                    placeholder={`Ex.: Santo André, São Bernardo\nVocê pode separar por vírgula ou uma cidade por linha.`}
+                  />
+                </label>
+                <label className="field">
+                  <span>E-mail de teste individual</span>
+                  <input
+                    name="testRecipientEmail"
+                    placeholder="Se preencher aqui, o sistema envia só para esse e-mail."
+                    type="email"
+                  />
+                </label>
+              </div>
+
+              <section className="leadBroadcastSectionCard">
+                <div className="leadBroadcastSectionHeader">
+                  <strong>Mídia do e-mail</strong>
+                  <small>Imagem opcional. Para melhor resultado, use banner horizontal.</small>
+                </div>
+                <label className="field">
+                  <span>Imagem opcional</span>
+                  <input accept="image/png,image/jpeg,image/webp,image/gif" name="imageFile" type="file" />
+                  <small className="fieldHint">Para e-mail, prefira banner horizontal. Ex.: 1200 x 630 px ou 1200 x 675 px.</small>
+                </label>
+              </section>
             </div>
-            <div className="grid twoColumnGrid">
-              <label className="field">
-                <span>Data inicial</span>
-                <input name="dateFrom" type="date" />
-              </label>
-              <label className="field">
-                <span>Data final</span>
-                <input name="dateTo" type="date" />
-              </label>
+
+            <div className="leadBroadcastComposerColumn leadBroadcastPreviewColumn">
+              <LeadBroadcastPreview
+                brandName="TCR Ingressos"
+                defaultCtaLabel="Entrar no grupo agora"
+                defaultDestinationUrl={event.leadCaptureWhatsappGroupUrl ?? ""}
+                eventTitle={event.title}
+              />
             </div>
-            <label className="field">
-              <span>Municípios</span>
-              <textarea
-                name="municipalities"
-                rows={3}
-                placeholder={`Ex.: Santo André, São Bernardo\nVocê pode separar por vírgula ou uma cidade por linha.`}
-              />
-            </label>
-            <label className="field">
-              <span>E-mail de teste individual</span>
-              <input
-                name="testRecipientEmail"
-                placeholder="Se preencher aqui, o sistema envia só para esse e-mail."
-                type="email"
-              />
-            </label>
           </div>
-          <label className="field">
-            <span>Imagem opcional</span>
-            <input accept="image/png,image/jpeg,image/webp,image/gif" name="imageFile" type="file" />
-            <small className="fieldHint">Para e-mail, prefira banner horizontal. Ex.: 1200 x 630 px ou 1200 x 675 px.</small>
-          </label>
-          <LeadBroadcastPreview
-            brandName="TCR Ingressos"
-            defaultCtaLabel="Entrar no grupo agora"
-            defaultDestinationUrl={event.leadCaptureWhatsappGroupUrl ?? ""}
-            eventTitle={event.title}
-          />
-          <div className="actionRow leadBroadcastActionRow">
+          <div className="actionRow leadBroadcastActionRow leadBroadcastFooterBar">
             <LeadBroadcastSubmitButton />
             <small className="muted">O botão trava enquanto o disparo está em andamento para evitar envio duplicado.</small>
           </div>
