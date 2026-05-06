@@ -536,7 +536,7 @@ function renderBroadcastBodyAsHtml(body: string) {
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean)
-    .map((line) => `<p style="margin: 0 0 14px;">${line}</p>`)
+    .map((line) => `<p style="margin: 0 0 10px;">${line}</p>`)
     .join("");
 }
 
@@ -545,12 +545,12 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
   const imageBlock = input.imageUrl
     ? `
       <div style="margin: 0 0 24px;">
-        <div style="background: #e8eef5; border-radius: 18px; max-height: 260px; overflow: hidden;">
+        <div style="background: #e8eef5; border-radius: 18px; max-height: 220px; overflow: hidden;">
           <img
             src="${input.imageUrl}"
             alt="${input.eventTitle}"
             width="600"
-            style="display: block; width: 100%; max-width: 600px; min-height: 220px; max-height: 260px; object-fit: cover; object-position: center top;"
+            style="display: block; width: 100%; max-width: 680px; min-height: 180px; max-height: 220px; object-fit: cover; object-position: center top;"
           />
         </div>
       </div>
@@ -558,7 +558,7 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
     : "";
   const ctaButton = input.ctaUrl
     ? `
-      <p style="margin: 24px 0 0;">
+      <p style="margin: 18px 0 0;">
         <a href="${input.ctaUrl}" style="background: #14924f; border-radius: 12px; color: white; display: inline-block; font-weight: 700; padding: 14px 22px; text-decoration: none;">
           ${input.ctaLabel || "Abrir link"}
         </a>
@@ -570,12 +570,12 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
     : "";
 
   return `
-    <div style="background: #f3f6fb; margin: 0; padding: 32px 18px;">
-      <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.65; margin: 0 auto; max-width: 640px;">
-        <div style="background: #ffffff; border: 1px solid #e0e7f0; border-radius: 24px; box-shadow: 0 20px 60px rgba(10, 34, 26, 0.08); overflow: hidden; padding: 28px;">
+    <div style="background: #f3f6fb; margin: 0; padding: 24px 16px;">
+      <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.55; margin: 0 auto; max-width: 720px;">
+        <div style="background: #ffffff; border: 1px solid #e0e7f0; border-radius: 24px; box-shadow: 0 20px 60px rgba(10, 34, 26, 0.08); overflow: hidden; padding: 22px;">
           <p style="margin: 0 0 8px; color: #607089; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">${brandName}</p>
-          <h1 style="color: #182233; font-size: 30px; line-height: 1.18; margin: 0 0 14px;">${input.subject}</h1>
-          <p style="color: #425066; font-size: 16px; margin: 0 0 20px;">Olá, ${input.name}.</p>
+          <h1 style="color: #182233; font-size: 28px; line-height: 1.16; margin: 0 0 12px;">${input.subject}</h1>
+          <p style="color: #425066; font-size: 16px; margin: 0 0 16px;">Olá, ${input.name}.</p>
           ${imageBlock}
           <div style="color: #243042; font-size: 16px;">
             ${renderBroadcastBodyAsHtml(input.body)}
