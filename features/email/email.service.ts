@@ -706,7 +706,6 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
             }
             <p style="margin: 0; color: #607089; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">${brandName}</p>
           </div>
-          <h1 style="color: #182233; font-size: 27px; line-height: 1.18; margin: 0 0 12px; text-align: left;">${input.subject}</h1>
           <p style="color: #425066; font-size: 16px; margin: 0 0 16px; text-align: left;">Olá, ${input.name}.</p>
           ${imageBlock}
           <div style="color: #243042; font-size: 16px;">

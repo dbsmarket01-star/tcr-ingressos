@@ -215,7 +215,6 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
             </div>
             <p className="leadBroadcastPreviewBrand">{props.brandName}</p>
           </div>
-          <h3>{preview.subject || "Seu assunto vai aparecer aqui"}</h3>
           <p className="leadBroadcastPreviewGreeting">Ola, Diego.</p>
 
           {previewImageUrl ? (
