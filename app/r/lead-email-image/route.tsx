@@ -47,7 +47,7 @@ export async function GET(request: Request) {
       <div
         style={{
           alignItems: "center",
-          background: "#e8eef5",
+          background: "linear-gradient(180deg, #071c17 0%, #0a2b22 100%)",
           display: "flex",
           height: "100%",
           justifyContent: "center",
