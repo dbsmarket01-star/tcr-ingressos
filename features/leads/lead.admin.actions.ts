@@ -215,6 +215,28 @@ export async function sendLeadBroadcastAction(formData: FormData) {
   }
 
   const hasScopedFilters = Boolean(dateFrom || dateTo || municipalities.length > 0);
+  const activeCampaign = await prisma.leadEmailCampaign.findFirst({
+    where: {
+      eventId: event.id,
+      status: {
+        in: ["QUEUED", "PROCESSING"]
+      }
+    },
+    orderBy: {
+      createdAt: "desc"
+    },
+    select: {
+      id: true
+    }
+  });
+
+  if (activeCampaign) {
+    redirect(
+      `/admin/events/${eventId}/leads?error=${encodeURIComponent(
+        "Já existe um disparo em processamento para este evento. Aguarde a conclusão antes de iniciar outro."
+      )}#lead-broadcast`
+    );
+  }
 
   if (!hasScopedFilters) {
     const recentDuplicateWindow = new Date(Date.now() - 3 * 60 * 1000);
@@ -249,53 +271,35 @@ export async function sendLeadBroadcastAction(formData: FormData) {
       subject,
       body: normalizeBodySignature(body),
       imageUrl,
+      imageCrop,
+      imageWidth,
+      imageHeight,
       ctaLabel: ctaLabel || null,
-      destinationUrl: normalizedDestinationUrl
+      destinationUrl: normalizedDestinationUrl,
+      instagramUrl,
+      totalCount: leads.length,
+      status: "QUEUED"
     }
   });
 
-  const batches = splitIntoBatches(leads, 20);
-  let sentCount = 0;
+  const recipientBatches = splitIntoBatches(
+    leads.map((lead) => ({
+      campaignId: campaign.id,
+      leadId: lead.id,
+      email: lead.email,
+      name: lead.name
+    })),
+    1000
+  );
 
-  for (const batch of batches) {
-    const results = await Promise.allSettled(
-      batch.map((lead) =>
-        sendLeadBroadcastEmail({
-          to: lead.email,
-          name: lead.name,
-          subject,
-          body,
-          imageUrl,
-          imageCrop,
-          imageWidth,
-          imageHeight,
-          publicBaseUrl,
-          brandLogoUrl: organizationContext.brandLogoUrl,
-          brandName: organizationContext.brandName,
-          eventTitle: event.title,
-          ctaLabel: ctaLabel || "Abrir link",
-          ctaUrl: `${publicBaseUrl}/r/lead-email/${campaign.id}/${lead.id}`,
-          openTrackingUrl: `${publicBaseUrl}/r/lead-email-open/${campaign.id}/${lead.id}`,
-          instagramUrl,
-          supportEmail: companySettings.supportEmail
-        })
-      )
-    );
-
-    sentCount += results.filter((result) => result.status === "fulfilled").length;
+  for (const batch of recipientBatches) {
+    await prisma.leadEmailCampaignRecipient.createMany({
+      data: batch
+    });
   }
 
-  await prisma.leadEmailCampaign.update({
-    where: {
-      id: campaign.id
-    },
-    data: {
-      sentCount
-    }
-  });
-
   redirect(
-    `/admin/events/${eventId}/leads?sent=${sentCount}&scope=${encodeURIComponent(scopeSummary)}#lead-broadcast`
+    `/admin/events/${eventId}/leads?queued=${campaign.id}&scope=${encodeURIComponent(scopeSummary)}#lead-broadcast`
   );
 }
 

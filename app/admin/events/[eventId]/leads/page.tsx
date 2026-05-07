@@ -12,12 +12,18 @@ import {
   sendLeadBroadcastAction
 } from "@/features/leads/lead.admin.actions";
 import { getMunicipalityRanking } from "@/features/leads/lead-normalization";
-import { listEventLeads, listLeadEmailCampaignSummaries, listLeadEmailTemplates } from "@/features/leads/lead.service";
+import {
+  getActiveLeadEmailCampaign,
+  listEventLeads,
+  listLeadEmailCampaignSummaries,
+  listLeadEmailTemplates
+} from "@/features/leads/lead.service";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { formatDateTime } from "@/lib/format";
 import { getPublicLeadCaptureUrl } from "@/lib/public-url";
 import { getLeadOriginBucket, getSourceLabel } from "@/features/tracking/tracking";
 import { LeadBroadcastPreview } from "./LeadBroadcastPreview";
+import { LeadBroadcastCampaignRunner } from "./LeadBroadcastCampaignRunner";
 import { LeadBroadcastDestinationHelper } from "./LeadBroadcastDestinationHelper";
 import { LeadBroadcastTemplates } from "./LeadBroadcastTemplates";
 import { LeadBroadcastSubmitButton } from "./LeadBroadcastSubmitButton";
@@ -40,12 +46,13 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
     notFound();
   }
 
-  const [leads, emailCampaigns, leadCaptureVisits, companySettings, savedTemplates] = await Promise.all([
+  const [leads, emailCampaigns, leadCaptureVisits, companySettings, savedTemplates, activeCampaign] = await Promise.all([
     listEventLeads(event.id),
     listLeadEmailCampaignSummaries(event.id),
     countEventPageVisits(event.id, "LEAD_CAPTURE"),
     getCompanySettingsByOrganizationId(admin.organizationId!),
-    listLeadEmailTemplates(event.id)
+    listLeadEmailTemplates(event.id),
+    getActiveLeadEmailCampaign(event.id)
   ]);
   const leadsWithPhone = leads.filter((lead) => Boolean(lead.phone)).length;
   const leadsWithEmail = leads.filter((lead) => Boolean(lead.email)).length;
@@ -55,6 +62,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
   const exportHref = `/admin/events/${event.id}/leads/export`;
   const publicLandingUrl = getPublicLeadCaptureUrl(event.slug);
   const sendResult = typeof query.sent === "string" ? query.sent : null;
+  const queuedCampaignId = typeof query.queued === "string" ? query.queued : null;
   const sendError = typeof query.error === "string" ? query.error : null;
   const sendMode = typeof query.mode === "string" ? query.mode : null;
   const sendScope = typeof query.scope === "string" ? query.scope : null;
@@ -165,6 +173,12 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
         <div className="infoBox inlineFeedbackBox">
           Para enviar para <strong>toda a lista</strong>, deixe <strong>Data inicial</strong>, <strong>Data final</strong>, <strong>Municípios</strong> e <strong>E-mail de teste individual</strong> em branco.
         </div>
+        {queuedCampaignId ? (
+          <div className="infoBox inlineFeedbackBox">
+            Campanha criada para a fila de envio.
+            {sendScope ? <small className="feedbackScopeText">{sendScope}</small> : null}
+          </div>
+        ) : null}
         {sendResult ? (
           <div className="successBox inlineFeedbackBox">
             {sendMode === "test" ? `Teste enviado com sucesso para ${sendResult} destinatário.` : `Disparo concluído para ${sendResult} lead(s).`}
@@ -175,6 +189,17 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
         {templateSaved ? <div className="successBox inlineFeedbackBox">Modelo salvo com sucesso.</div> : null}
         {templateDeleted ? <div className="successBox inlineFeedbackBox">Modelo apagado com sucesso.</div> : null}
         {templateError ? <div className="errorBox inlineFeedbackBox">{templateError}</div> : null}
+        {activeCampaign ? (
+          <LeadBroadcastCampaignRunner
+            initialCampaign={{
+              ...activeCampaign,
+              pendingCount: Math.max(activeCampaign.totalCount - activeCampaign.sentCount - activeCampaign.failedCount, 0),
+              createdAt: activeCampaign.createdAt.toISOString(),
+              processingStartedAt: activeCampaign.processingStartedAt?.toISOString() ?? null,
+              completedAt: activeCampaign.completedAt?.toISOString() ?? null
+            }}
+          />
+        ) : null}
         <form action={sendLeadBroadcastAction} className="stackForm leadBroadcastFormLayout">
           <input type="hidden" name="eventId" value={event.id} />
           <div className="leadBroadcastComposerGrid">
@@ -317,8 +342,12 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
             </div>
           </div>
           <div className="actionRow leadBroadcastActionRow leadBroadcastFooterBar">
-            <LeadBroadcastSubmitButton />
-            <small className="muted">O botão trava enquanto o disparo está em andamento para evitar envio duplicado.</small>
+            <LeadBroadcastSubmitButton disabledExternally={Boolean(activeCampaign)} />
+            <small className="muted">
+              {activeCampaign
+                ? "Há uma campanha em andamento. Aguarde a conclusão para iniciar outro disparo."
+                : "O botão trava enquanto o disparo está em andamento para evitar envio duplicado."}
+            </small>
           </div>
         </form>
       </section>
@@ -388,11 +417,13 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                   <div>
                     <strong>{campaign.subject}</strong>
                     <small>
-                      {formatDateTime(campaign.createdAt)} · {campaign.ctaLabel || "Abrir link"}
+                      {formatDateTime(campaign.createdAt)} · {campaign.ctaLabel || "Abrir link"} · {campaign.status}
                     </small>
                   </div>
                   <div className="campaignInsightStats">
+                    <span>{campaign.totalCount} na fila</span>
                     <span>{campaign.sentCount} enviados</span>
+                    <span>{campaign.failedCount} falhas</span>
                     <span>{opens} aberturas</span>
                     <span>{clicks} cliques</span>
                     <strong>{openRate}% open rate</strong>

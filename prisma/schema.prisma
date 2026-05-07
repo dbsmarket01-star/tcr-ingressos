@@ -89,6 +89,20 @@ enum EventPageVisitType {
   PUBLIC_EVENT
 }
 
+enum LeadEmailCampaignStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  COMPLETED_WITH_ERRORS
+  FAILED
+}
+
+enum LeadEmailCampaignRecipientStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
 enum SplitRuleType {
   PERCENTAGE
   FIXED_PER_ORDER
@@ -441,6 +455,7 @@ model EventLead {
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
   emailCampaignClicks LeadEmailCampaignClick[]
   emailCampaignOpens LeadEmailCampaignOpen[]
+  campaignRecipients LeadEmailCampaignRecipient[]
 
   @@index([eventId, createdAt])
   @@index([email])
@@ -469,17 +484,50 @@ model LeadEmailCampaign {
   subject        String
   body           String
   imageUrl       String?
+  imageCrop      String?
+  imageWidth     Int?
+  imageHeight    Int?
   ctaLabel       String?
   destinationUrl String
+  instagramUrl   String?
+  status         LeadEmailCampaignStatus @default(QUEUED)
+  totalCount     Int      @default(0)
   sentCount      Int      @default(0)
+  failedCount    Int      @default(0)
+  processingStartedAt DateTime?
+  completedAt    DateTime?
+  lastError      String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   event  Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
   clicks LeadEmailCampaignClick[]
   opens  LeadEmailCampaignOpen[]
+  recipients LeadEmailCampaignRecipient[]
 
   @@index([eventId, createdAt])
+  @@index([eventId, status, createdAt])
+}
+
+model LeadEmailCampaignRecipient {
+  id         String   @id @default(cuid())
+  campaignId String
+  leadId     String
+  email      String
+  name       String
+  status     LeadEmailCampaignRecipientStatus @default(PENDING)
+  errorMessage String?
+  providerMessageId String?
+  sentAt     DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  campaign LeadEmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  lead     EventLead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, leadId])
+  @@index([campaignId, status, createdAt])
+  @@index([leadId])
 }
 
 model LeadEmailTemplate {

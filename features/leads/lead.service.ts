@@ -319,7 +319,13 @@ export async function listLeadEmailCampaignSummaries(eventId: string) {
       subject: true,
       ctaLabel: true,
       destinationUrl: true,
+      status: true,
+      totalCount: true,
       sentCount: true,
+      failedCount: true,
+      processingStartedAt: true,
+      completedAt: true,
+      lastError: true,
       createdAt: true,
       _count: {
         select: {
@@ -327,6 +333,32 @@ export async function listLeadEmailCampaignSummaries(eventId: string) {
           opens: true
         }
       }
+    }
+  });
+}
+
+export async function getActiveLeadEmailCampaign(eventId: string) {
+  return prisma.leadEmailCampaign.findFirst({
+    where: {
+      eventId,
+      status: {
+        in: ["QUEUED", "PROCESSING"]
+      }
+    },
+    orderBy: {
+      createdAt: "desc"
+    },
+    select: {
+      id: true,
+      subject: true,
+      status: true,
+      totalCount: true,
+      sentCount: true,
+      failedCount: true,
+      createdAt: true,
+      processingStartedAt: true,
+      completedAt: true,
+      lastError: true
     }
   });
 }

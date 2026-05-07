@@ -94,6 +94,14 @@ type LeadBroadcastEmailInput = {
   supportEmail?: string | null;
 };
 
+type EmailPayload = {
+  from: string;
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+};
+
 function extractResendMessage(error: unknown) {
   if (!error || typeof error !== "object") {
     return "Falha ao enviar e-mail pelo Resend.";
@@ -112,13 +120,7 @@ function extractResendMessage(error: unknown) {
 
 async function sendWithResend(
   resend: Resend,
-  payload: {
-    from: string;
-    to: string;
-    subject: string;
-    html: string;
-    text: string;
-  }
+  payload: EmailPayload
 ) {
   const result = await resend.emails.send(payload);
 
@@ -129,6 +131,26 @@ async function sendWithResend(
   }
 
   return result;
+}
+
+async function sendBatchWithResend(
+  resend: Resend,
+  payloads: EmailPayload[]
+) {
+  const result = await resend.batch.send(payloads, {
+    batchValidation: "permissive"
+  });
+
+  const error = (result as { error?: unknown } | null)?.error;
+
+  if (error) {
+    throw new Error(extractResendMessage(error));
+  }
+
+  return {
+    data: result.data?.data ?? [],
+    errors: result.data?.errors ?? []
+  };
 }
 
 function formatDate(value: Date) {
@@ -742,7 +764,7 @@ function buildLeadBroadcastText(input: LeadBroadcastEmailInput) {
 
 export async function sendLeadBroadcastEmail(input: LeadBroadcastEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.app.br>`;
+  const payload = createLeadBroadcastEmailPayload(input);
 
   if (!apiKey) {
     console.log("[email:dry-run] Disparo de leads", {
@@ -756,11 +778,76 @@ export async function sendLeadBroadcastEmail(input: LeadBroadcastEmailInput) {
 
   const resend = new Resend(apiKey);
 
-  await sendWithResend(resend, {
+  await sendWithResend(resend, payload);
+}
+
+export function createLeadBroadcastEmailPayload(input: LeadBroadcastEmailInput): EmailPayload {
+  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.app.br>`;
+
+  return {
     from,
     to: input.to,
     subject: input.subject,
     html: buildLeadBroadcastHtml(input),
     text: buildLeadBroadcastText(input)
-  });
+  };
+}
+
+export async function sendLeadBroadcastEmailBatch(inputs: LeadBroadcastEmailInput[]) {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (inputs.length === 0) {
+    return {
+      sent: [] as Array<{ index: number; id: string }>,
+      failed: [] as Array<{ index: number; message: string }>
+    };
+  }
+
+  const payloads = inputs.map((input) => createLeadBroadcastEmailPayload(input));
+
+  if (!apiKey) {
+    console.log("[email:dry-run] Disparo de leads em lote", {
+      count: inputs.length,
+      recipients: inputs.map((input) => input.to)
+    });
+
+    return {
+      sent: payloads.map((_, index) => ({
+        index,
+        id: `dry-run-${index + 1}`
+      })),
+      failed: [] as Array<{ index: number; message: string }>
+    };
+  }
+
+  const resend = new Resend(apiKey);
+  const result = await sendBatchWithResend(resend, payloads);
+  const errors = result.errors ?? [];
+  const failedIndexes = new Set(errors.map((entry) => entry.index));
+  const sentIds = result.data ?? [];
+  let successCursor = 0;
+  const sent: Array<{ index: number; id: string }> = [];
+
+  for (let index = 0; index < payloads.length; index += 1) {
+    if (failedIndexes.has(index)) {
+      continue;
+    }
+
+    const response = sentIds[successCursor];
+
+    sent.push({
+      index,
+      id: response?.id || `batch-${index + 1}`
+    });
+
+    successCursor += 1;
+  }
+
+  return {
+    sent,
+    failed: errors.map((entry) => ({
+      index: entry.index,
+      message: entry.message
+    }))
+  };
 }
