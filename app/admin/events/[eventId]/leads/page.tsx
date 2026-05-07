@@ -253,6 +253,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                 <ImageUploadField
                   aspect="share"
                   cropFieldName="imageCrop"
+                  includeImageMetaFields
                   emptyText="Nenhuma imagem selecionada"
                   label="Imagem opcional"
                   name="imageFile"

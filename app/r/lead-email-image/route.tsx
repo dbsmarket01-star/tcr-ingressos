@@ -2,6 +2,8 @@ import { ImageResponse } from "next/og";
 import { parseImageCrop } from "@/lib/image-crop";
 
 export const runtime = "nodejs";
+const OUTPUT_WIDTH = 1200;
+const OUTPUT_HEIGHT = 630;
 
 function normalizeSourceUrl(raw: string | null) {
   if (!raw) {
@@ -12,17 +14,33 @@ function normalizeSourceUrl(raw: string | null) {
   return /^https?:\/\//i.test(trimmed) ? trimmed : null;
 }
 
+function parsePositiveNumber(raw: string | null) {
+  const value = Number(raw);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const source = normalizeSourceUrl(searchParams.get("src"));
   const crop = parseImageCrop(searchParams.get("crop"));
+  const sourceWidth = parsePositiveNumber(searchParams.get("w"));
+  const sourceHeight = parsePositiveNumber(searchParams.get("h"));
 
   if (!source) {
     return new Response("Missing image source.", { status: 400 });
   }
 
-  const scale = crop?.zoom ?? 1;
-  const objectPosition = crop ? `${crop.x}% ${crop.y}%` : "center top";
+  const zoom = crop?.zoom ?? 1;
+  const baseScale =
+    sourceWidth && sourceHeight
+      ? Math.max(OUTPUT_WIDTH / sourceWidth, OUTPUT_HEIGHT / sourceHeight)
+      : 1;
+  const fittedWidth = sourceWidth ? sourceWidth * baseScale * zoom : OUTPUT_WIDTH * zoom;
+  const fittedHeight = sourceHeight ? sourceHeight * baseScale * zoom : OUTPUT_HEIGHT * zoom;
+  const horizontal = crop ? crop.x / 100 : 0.5;
+  const vertical = crop ? crop.y / 100 : 0.5;
+  const left = (OUTPUT_WIDTH - fittedWidth) * horizontal;
+  const top = (OUTPUT_HEIGHT - fittedHeight) * vertical;
 
   return new ImageResponse(
     (
@@ -42,19 +60,19 @@ export async function GET(request: Request) {
           alt=""
           src={source}
           style={{
-            height: "100%",
-            objectFit: "cover",
-            objectPosition,
-            transform: `scale(${scale})`,
-            transformOrigin: objectPosition,
-            width: "100%"
+            height: fittedHeight,
+            left,
+            objectFit: "fill",
+            position: "absolute",
+            top,
+            width: fittedWidth
           }}
         />
       </div>
     ),
     {
-      width: 1200,
-      height: 630
+      width: OUTPUT_WIDTH,
+      height: OUTPUT_HEIGHT
     }
   );
 }

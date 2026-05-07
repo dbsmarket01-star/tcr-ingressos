@@ -23,6 +23,7 @@ type ImageUploadFieldProps = {
   aspect?: "banner" | "lead" | "map" | "share";
   cropFieldName?: string;
   currentCropValue?: string | null;
+  includeImageMetaFields?: boolean;
 };
 
 type ImageMeta = {
@@ -131,7 +132,8 @@ export function ImageUploadField({
   usageHint,
   aspect = "banner",
   cropFieldName,
-  currentCropValue
+  currentCropValue,
+  includeImageMetaFields = false
 }: ImageUploadFieldProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl ?? null);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
@@ -388,6 +390,12 @@ export function ImageUploadField({
             </label>
           </div>
           <input type="hidden" name={cropFieldName} value={cropValue} />
+          {includeImageMetaFields && imageMeta ? (
+            <>
+              <input type="hidden" name={`${name}Width`} value={String(imageMeta.width)} />
+              <input type="hidden" name={`${name}Height`} value={String(imageMeta.height)} />
+            </>
+          ) : null}
         </div>
       ) : null}
       <input

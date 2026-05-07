@@ -81,6 +81,8 @@ type LeadBroadcastEmailInput = {
   body: string;
   imageUrl?: string | null;
   imageCrop?: string | null;
+  imageWidth?: number | null;
+  imageHeight?: number | null;
   publicBaseUrl?: string | null;
   brandName?: string;
   eventTitle: string;
@@ -571,6 +573,11 @@ function buildLeadBroadcastImageUrl(input: LeadBroadcastEmailInput) {
   const params = new URLSearchParams({
     src: sourceUrl
   });
+
+  if (input.imageWidth && input.imageHeight) {
+    params.set("w", String(input.imageWidth));
+    params.set("h", String(input.imageHeight));
+  }
 
   if (input.imageCrop) {
     const crop = parseImageCrop(input.imageCrop);
