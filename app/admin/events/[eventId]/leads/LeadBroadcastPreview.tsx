@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { parseImageCrop } from "@/lib/image-crop";
+const EMAIL_IMAGE_WIDTH = 1200;
+const EMAIL_IMAGE_HEIGHT = 630;
 
 type LeadBroadcastPreviewProps = {
   brandName: string;
@@ -21,6 +23,11 @@ type PreviewState = {
   imageCrop: string | null;
 };
 
+type PreviewImageMeta = {
+  width: number;
+  height: number;
+};
+
 function emptyPreviewState(props: LeadBroadcastPreviewProps): PreviewState {
   return {
     subject: "",
@@ -37,6 +44,7 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const imageUrlRef = useRef<string | null>(null);
   const [preview, setPreview] = useState<PreviewState>(() => emptyPreviewState(props));
+  const [imageMeta, setImageMeta] = useState<PreviewImageMeta | null>(null);
 
   useEffect(() => {
     const form = containerRef.current?.closest("form");
@@ -97,11 +105,51 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
     };
   }, [props.defaultCtaLabel, props.defaultDestinationUrl]);
 
+  useEffect(() => {
+    if (!preview.imageUrl) {
+      setImageMeta(null);
+      return;
+    }
+
+    const image = new window.Image();
+    image.onload = () => {
+      if (!image.naturalWidth || !image.naturalHeight) {
+        setImageMeta(null);
+        return;
+      }
+
+      setImageMeta({
+        width: image.naturalWidth,
+        height: image.naturalHeight
+      });
+    };
+    image.onerror = () => setImageMeta(null);
+    image.src = preview.imageUrl;
+  }, [preview.imageUrl]);
+
   const paragraphs = preview.body
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
   const crop = parseImageCrop(preview.imageCrop);
+  const imageFrameStyle =
+    preview.imageUrl && imageMeta
+      ? (() => {
+          const zoom = crop?.zoom ?? 1;
+          const baseScale = Math.min(EMAIL_IMAGE_WIDTH / imageMeta.width, EMAIL_IMAGE_HEIGHT / imageMeta.height);
+          const fittedWidth = imageMeta.width * baseScale * zoom;
+          const fittedHeight = imageMeta.height * baseScale * zoom;
+          const horizontal = crop ? crop.x / 100 : 0.5;
+          const vertical = crop ? crop.y / 100 : 0.5;
+
+          return {
+            width: `${fittedWidth}px`,
+            height: `${fittedHeight}px`,
+            left: `calc((100% - ${fittedWidth}px) * ${horizontal})`,
+            top: `calc((100% - ${fittedHeight}px) * ${vertical})`
+          };
+        })()
+      : null;
 
   return (
     <div className="leadBroadcastPreviewCard" ref={containerRef}>
@@ -123,20 +171,14 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
 
           {preview.imageUrl ? (
             <div className="leadBroadcastPreviewImageWrap">
-              <img
-                alt={props.eventTitle}
-                className="leadBroadcastPreviewImage"
-                src={preview.imageUrl}
-                style={
-                  crop
-                    ? {
-                        objectPosition: `${crop.x}% ${crop.y}%`,
-                        transform: `scale(${crop.zoom})`,
-                        transformOrigin: `${crop.x}% ${crop.y}%`
-                      }
-                    : undefined
-                }
-              />
+              <div className="leadBroadcastPreviewImageStage">
+                <img
+                  alt={props.eventTitle}
+                  className="leadBroadcastPreviewImage"
+                  src={preview.imageUrl}
+                  style={imageFrameStyle ?? undefined}
+                />
+              </div>
             </div>
           ) : (
             <div className="leadBroadcastPreviewImagePlaceholder">

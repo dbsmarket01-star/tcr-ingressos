@@ -6664,12 +6664,25 @@ body.operationTheme .topbar {
   overflow: hidden;
 }
 
+.leadBroadcastPreviewImageWrap {
+  background: linear-gradient(180deg, #071c17 0%, #0a2b22 100%);
+  padding: 14px;
+}
+
+.leadBroadcastPreviewImageStage {
+  background: #e8eef5;
+  border-radius: 14px;
+  height: 0;
+  overflow: hidden;
+  padding-top: 52.5%;
+  position: relative;
+}
+
 .leadBroadcastPreviewImage {
   display: block;
-  height: 240px;
-  object-fit: cover;
-  object-position: center top;
-  width: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
 }
 
 .leadBroadcastPreviewImagePlaceholder {
