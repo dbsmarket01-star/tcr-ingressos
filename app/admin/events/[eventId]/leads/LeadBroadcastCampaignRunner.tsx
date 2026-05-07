@@ -47,17 +47,31 @@ export function LeadBroadcastCampaignRunner({ initialCampaign }: LeadBroadcastCa
     let cancelled = false;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
+    async function parseCampaignResponse(response: Response) {
+      const contentType = response.headers.get("content-type") || "";
+
+      if (!contentType.includes("application/json")) {
+        const text = await response.text();
+
+        return {
+          error: text || "O servidor retornou uma resposta inválida para a campanha."
+        } as { campaign?: CampaignState; error?: string };
+      }
+
+      return (await response.json()) as { campaign?: CampaignState; error?: string };
+    }
+
     async function tick(delayMs: number) {
       timeoutId = setTimeout(async () => {
         try {
           const response = await fetch(`/api/admin/lead-email-campaigns/${campaign.id}/process`, {
-            method: "GET",
+            method: "POST",
             headers: {
               "Content-Type": "application/json"
             },
             cache: "no-store"
           });
-          const payload = (await response.json()) as { campaign?: CampaignState; error?: string };
+          const payload = await parseCampaignResponse(response);
 
           if (cancelled) {
             return;
