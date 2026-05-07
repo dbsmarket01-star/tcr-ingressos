@@ -575,6 +575,11 @@ function buildLeadBroadcastLogoUrl(input: LeadBroadcastEmailInput) {
   return null;
 }
 
+function buildLeadBroadcastInstagramIconUrl(input: LeadBroadcastEmailInput) {
+  const baseUrl = (input.publicBaseUrl || getPublicBaseUrl()).replace(/\/$/, "");
+  return `${baseUrl}/brands/instagram-email-icon.png`;
+}
+
 function buildLeadBroadcastImageUrl(input: LeadBroadcastEmailInput) {
   if (!input.imageUrl) {
     return null;
@@ -644,6 +649,7 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
   const brandName = input.brandName || "TCR Ingressos";
   const imageUrl = buildLeadBroadcastImageUrl(input);
   const logoUrl = buildLeadBroadcastLogoUrl(input);
+  const instagramIconUrl = buildLeadBroadcastInstagramIconUrl(input);
   const instagramDisplay = normalizeInstagramHandle(input.instagramUrl);
   const instagramHref = normalizeInstagramHref(input.instagramUrl);
   const imageBlock = imageUrl
@@ -675,12 +681,8 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
       ? `
         <p style="margin: 18px 0 0; color: #607089; font-size: 13px;">
           <a href="${instagramHref}" style="align-items: center; color: #607089; display: inline-flex; gap: 8px; text-decoration: none;">
-            <span style="align-items: center; background: linear-gradient(135deg, #fdc468, #df4996 55%, #4f5bd5); border-radius: 999px; color: #ffffff; display: inline-flex; height: 20px; justify-content: center; width: 20px;">
-              <svg aria-hidden="true" viewBox="0 0 24 24" width="12" height="12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.8"/>
-                <circle cx="12" cy="12" r="4.25" stroke="currentColor" stroke-width="1.8"/>
-                <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor"/>
-              </svg>
+            <span style="display: inline-flex; flex: 0 0 auto; height: 22px; width: 22px;">
+              <img src="${instagramIconUrl}" alt="" width="22" height="22" style="display: block; height: 22px; width: 22px;" />
             </span>
             ${instagramDisplay}
           </a>

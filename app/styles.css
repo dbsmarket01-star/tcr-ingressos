@@ -6769,16 +6769,18 @@ body.operationTheme .topbar {
 
 .leadBroadcastPreviewInstagramIcon {
   align-items: center;
-  background: linear-gradient(135deg, #fdc468, #df4996 55%, #4f5bd5);
-  border-radius: 999px;
-  color: #ffffff;
   display: inline-flex;
-  font-size: 10px;
-  font-weight: 800;
-  height: 20px;
+  flex: 0 0 auto;
+  height: 22px;
   justify-content: center;
-  letter-spacing: 0.03em;
-  width: 20px;
+  width: 22px;
+}
+
+.leadBroadcastPreviewInstagramIcon img {
+  display: block;
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
 }
 
 .leadBroadcastPreviewInstagramIcon svg {
