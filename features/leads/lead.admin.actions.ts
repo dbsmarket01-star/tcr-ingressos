@@ -108,6 +108,7 @@ export async function sendLeadBroadcastAction(formData: FormData) {
   const body = String(formData.get("body") ?? "").trim();
   const ctaLabel = String(formData.get("ctaLabel") ?? "").trim();
   const destinationUrl = String(formData.get("destinationUrl") ?? "").trim();
+  const instagramUrl = String(formData.get("instagramUrl") ?? "").trim() || null;
   const imageCrop = String(formData.get("imageCrop") ?? "").trim() || null;
   const imageWidth = Number(formData.get("imageFileWidth") ?? 0) || null;
   const imageHeight = Number(formData.get("imageFileHeight") ?? 0) || null;
@@ -196,6 +197,7 @@ export async function sendLeadBroadcastAction(formData: FormData) {
       eventTitle: event.title,
       ctaLabel: ctaLabel || "Abrir link",
       ctaUrl: normalizedDestinationUrl,
+      instagramUrl,
       supportEmail: companySettings.supportEmail
     });
 
@@ -273,6 +275,7 @@ export async function sendLeadBroadcastAction(formData: FormData) {
           eventTitle: event.title,
           ctaLabel: ctaLabel || "Abrir link",
           ctaUrl: `${publicBaseUrl}/r/lead-email/${campaign.id}/${lead.id}`,
+          instagramUrl,
           supportEmail: companySettings.supportEmail
         })
       )

@@ -24,6 +24,7 @@ type ImageUploadFieldProps = {
   cropFieldName?: string;
   currentCropValue?: string | null;
   includeImageMetaFields?: boolean;
+  applyMode?: "live" | "manual";
 };
 
 type ImageMeta = {
@@ -133,13 +134,17 @@ export function ImageUploadField({
   aspect = "banner",
   cropFieldName,
   currentCropValue,
-  includeImageMetaFields = false
+  includeImageMetaFields = false,
+  applyMode = "live"
 }: ImageUploadFieldProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl ?? null);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [imageMeta, setImageMeta] = useState<ImageMeta | null>(null);
   const [crop, setCrop] = useState<ImageCrop>(() => sanitizeImageCrop(parseImageCrop(currentCropValue)));
+  const [appliedCropValue, setAppliedCropValue] = useState<string>(() => stringifyImageCrop(parseImageCrop(currentCropValue)));
+  const [appliedPreviewUrl, setAppliedPreviewUrl] = useState<string | null>(currentImageUrl ?? null);
+  const [appliedImageMeta, setAppliedImageMeta] = useState<ImageMeta | null>(null);
   const [shouldAutoFitCrop, setShouldAutoFitCrop] = useState<boolean>(() => !currentCropValue);
 
   useEffect(() => {
@@ -175,8 +180,10 @@ export function ImageUploadField({
 
   useEffect(() => {
     setCrop(sanitizeImageCrop(parseImageCrop(currentCropValue)));
+    setAppliedCropValue(stringifyImageCrop(parseImageCrop(currentCropValue)));
+    setAppliedPreviewUrl(currentImageUrl ?? null);
     setShouldAutoFitCrop(!currentCropValue);
-  }, [currentCropValue]);
+  }, [currentCropValue, currentImageUrl]);
 
   useEffect(() => {
     if (!shouldAutoFitCrop || !cropFieldName || !imageMeta) {
@@ -187,10 +194,39 @@ export function ImageUploadField({
     setShouldAutoFitCrop(false);
   }, [aspect, cropFieldName, imageMeta, shouldAutoFitCrop]);
 
+  useEffect(() => {
+    if (applyMode !== "manual" || !imageMeta) {
+      return;
+    }
+
+    if (appliedPreviewUrl && appliedPreviewUrl === previewUrl) {
+      setAppliedImageMeta(imageMeta);
+    }
+  }, [appliedPreviewUrl, applyMode, imageMeta, previewUrl]);
+
   const aspectAnalysis = analyzeAspect(imageMeta, aspect);
   const cropValue = stringifyImageCrop(crop);
   const defaultCrop = buildDefaultCrop(imageMeta, aspect);
   const presets = cropPresets[aspect];
+
+  function emitAppliedEvent() {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.dispatchEvent(new Event("lead-email-image-applied"));
+  }
+
+  function applyCrop() {
+    setAppliedCropValue(cropValue);
+    setAppliedPreviewUrl(previewUrl);
+    setAppliedImageMeta(imageMeta);
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        emitAppliedEvent();
+      });
+    }
+  }
 
   function updateCrop(partial: Partial<ImageCrop>) {
     setCrop((current) =>
@@ -261,6 +297,15 @@ export function ImageUploadField({
             >
               Restaurar ajuste automático
             </button>
+            {applyMode === "manual" ? (
+              <button
+                type="button"
+                className="imageCropApplyButton"
+                onClick={applyCrop}
+              >
+                Aplicar
+              </button>
+            ) : null}
           </div>
           <div className="imageCropFineTuning" aria-label="Ajuste fino do enquadramento">
             <div className="imageCropNudgeGrid">
@@ -389,11 +434,20 @@ export function ImageUploadField({
               />
             </label>
           </div>
-          <input type="hidden" name={cropFieldName} value={cropValue} />
-          {includeImageMetaFields && imageMeta ? (
+          <input type="hidden" name={cropFieldName} value={applyMode === "manual" ? appliedCropValue : cropValue} />
+          <input type="hidden" name={`${name}AppliedPreviewUrl`} value={applyMode === "manual" ? appliedPreviewUrl ?? "" : previewUrl ?? ""} />
+          {includeImageMetaFields && (applyMode === "manual" ? appliedImageMeta : imageMeta) ? (
             <>
-              <input type="hidden" name={`${name}Width`} value={String(imageMeta.width)} />
-              <input type="hidden" name={`${name}Height`} value={String(imageMeta.height)} />
+              <input
+                type="hidden"
+                name={`${name}Width`}
+                value={String((applyMode === "manual" ? appliedImageMeta : imageMeta)?.width ?? "")}
+              />
+              <input
+                type="hidden"
+                name={`${name}Height`}
+                value={String((applyMode === "manual" ? appliedImageMeta : imageMeta)?.height ?? "")}
+              />
             </>
           ) : null}
         </div>

@@ -89,6 +89,7 @@ type LeadBroadcastEmailInput = {
   eventTitle: string;
   ctaLabel?: string | null;
   ctaUrl?: string | null;
+  instagramUrl?: string | null;
   supportEmail?: string | null;
 };
 
@@ -606,21 +607,54 @@ function buildLeadBroadcastImageUrl(input: LeadBroadcastEmailInput) {
   return `${baseUrl}/r/lead-email-image?${params.toString()}`;
 }
 
+function normalizeInstagramHandle(value?: string | null) {
+  const text = (value || "").trim();
+
+  if (!text) {
+    return "";
+  }
+
+  if (text.startsWith("@")) {
+    return text;
+  }
+
+  const match = text.match(/instagram\.com\/([A-Za-z0-9._]+)/i);
+  if (match?.[1]) {
+    return `@${match[1]}`;
+  }
+
+  return `@${text.replace(/^@+/, "")}`;
+}
+
+function normalizeInstagramHref(value?: string | null) {
+  const text = (value || "").trim();
+
+  if (!text) {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(text)) {
+    return text;
+  }
+
+  return `https://instagram.com/${text.replace(/^@+/, "")}`;
+}
+
 function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
   const brandName = input.brandName || "TCR Ingressos";
   const imageUrl = buildLeadBroadcastImageUrl(input);
   const logoUrl = buildLeadBroadcastLogoUrl(input);
+  const instagramDisplay = normalizeInstagramHandle(input.instagramUrl);
+  const instagramHref = normalizeInstagramHref(input.instagramUrl);
   const imageBlock = imageUrl
     ? `
       <div style="margin: 0 0 24px;">
-        <div style="background: linear-gradient(180deg, #071c17 0%, #0a2b22 100%); border-radius: 18px; overflow: hidden; padding: 14px;">
-          <img
-            src="${imageUrl}"
-            alt="${input.eventTitle}"
-            width="676"
-            style="border: 0; border-radius: 14px; display: block; height: auto; line-height: 100%; outline: none; text-decoration: none; width: 100%;"
-          />
-        </div>
+        <img
+          src="${imageUrl}"
+          alt="${input.eventTitle}"
+          width="676"
+          style="border: 0; border-radius: 18px; display: block; height: auto; line-height: 100%; outline: none; text-decoration: none; width: 100%;"
+        />
       </div>
     `
     : "";
@@ -636,6 +670,17 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
   const supportLine = input.supportEmail
     ? `<p style="margin: 22px 0 0; color: #607089; font-size: 13px;">Suporte: ${input.supportEmail}</p>`
     : "";
+  const instagramLine =
+    instagramDisplay && instagramHref
+      ? `
+        <p style="margin: 18px 0 0; color: #607089; font-size: 13px;">
+          <a href="${instagramHref}" style="align-items: center; color: #607089; display: inline-flex; gap: 8px; text-decoration: none;">
+            <span style="align-items: center; background: linear-gradient(135deg, #fdc468, #df4996 55%, #4f5bd5); border-radius: 999px; color: #ffffff; display: inline-flex; font-size: 10px; font-weight: 800; height: 20px; justify-content: center; letter-spacing: 0.03em; width: 20px;">IG</span>
+            ${instagramDisplay}
+          </a>
+        </p>
+      `
+      : "";
 
   return `
     <div style="background: #f3f6fb; margin: 0; padding: 24px 16px;">
@@ -644,13 +689,14 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
           <div style="margin: 0 0 18px; text-align: center;">
             ${
               logoUrl
-                ? `<div style="background: #08251d; border-radius: 16px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 12px 28px rgba(6, 26, 20, 0.26); display: inline-block; margin: 0 auto 12px; padding: 12px 16px;">
-                    <img src="${logoUrl}" alt="${brandName}" width="118" style="display: block; height: auto; margin: 0 auto; max-width: 118px;" />
+                ? `<div style="display: inline-block; margin: 0 auto 12px;">
+                    <div style="background: #08251d; border-radius: 14px; box-shadow: 0 10px 24px rgba(6, 26, 20, 0.16); display: inline-block; padding: 10px 14px;">
+                      <img src="${logoUrl}" alt="${brandName}" width="104" style="display: block; height: auto; margin: 0 auto; max-width: 104px;" />
+                    </div>
                   </div>`
                 : ""
             }
-            <p style="margin: 0 0 4px; color: #607089; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">${brandName}</p>
-            <p style="margin: 0; color: #7c889d; font-size: 13px;">Mensagem oficial do evento</p>
+            <p style="margin: 0; color: #607089; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">${brandName}</p>
           </div>
           <h1 style="color: #182233; font-size: 27px; line-height: 1.18; margin: 0 0 12px; text-align: left;">${input.subject}</h1>
           <p style="color: #425066; font-size: 16px; margin: 0 0 16px; text-align: left;">Olá, ${input.name}.</p>
@@ -659,6 +705,7 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
             ${renderBroadcastBodyAsHtml(input.body)}
           </div>
           ${ctaButton}
+          ${instagramLine}
           ${supportLine}
         </div>
       </div>
@@ -674,6 +721,7 @@ function buildLeadBroadcastText(input: LeadBroadcastEmailInput) {
     "",
     input.body,
     input.ctaUrl ? `${input.ctaLabel || "Abrir link"}: ${input.ctaUrl}` : null,
+    input.instagramUrl ? `Instagram: ${normalizeInstagramHandle(input.instagramUrl)}` : null,
     input.supportEmail ? `Suporte: ${input.supportEmail}` : null
   ]
     .filter(Boolean)

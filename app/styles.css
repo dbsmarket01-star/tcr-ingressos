@@ -6634,12 +6634,36 @@ body.operationTheme .topbar {
   padding: 28px;
 }
 
+.leadBroadcastPreviewLogoWrap {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  margin: 0 0 18px;
+}
+
+.leadBroadcastPreviewLogoBadge {
+  background: #08251d;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(6, 26, 20, 0.16);
+  display: inline-flex;
+  padding: 10px 14px;
+}
+
+.leadBroadcastPreviewLogo {
+  display: block;
+  height: auto;
+  max-width: 104px;
+  width: 104px;
+}
+
 .leadBroadcastPreviewBrand {
   color: #607089;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  margin: 0 0 10px;
+  margin: 0;
+  text-align: center;
   text-transform: uppercase;
 }
 
@@ -6658,31 +6682,19 @@ body.operationTheme .topbar {
 
 .leadBroadcastPreviewImageWrap,
 .leadBroadcastPreviewImagePlaceholder {
-  background: #e8eef5;
   border-radius: 18px;
   margin: 0 0 24px;
   overflow: hidden;
 }
 
 .leadBroadcastPreviewImageWrap {
-  background: linear-gradient(180deg, #071c17 0%, #0a2b22 100%);
-  padding: 14px;
-}
-
-.leadBroadcastPreviewImageStage {
-  background: #e8eef5;
-  border-radius: 14px;
-  height: 0;
-  overflow: hidden;
-  padding-top: 52.5%;
-  position: relative;
+  background: transparent;
 }
 
 .leadBroadcastPreviewImage {
   display: block;
-  left: 0;
-  position: absolute;
-  top: 0;
+  height: auto;
+  width: 100%;
 }
 
 .leadBroadcastPreviewImagePlaceholder {
@@ -6731,6 +6743,26 @@ body.operationTheme .topbar {
 .leadBroadcastPreviewFooter small {
   color: #607089;
   margin: 0;
+}
+
+.leadBroadcastPreviewInstagram {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.leadBroadcastPreviewInstagramIcon {
+  align-items: center;
+  background: linear-gradient(135deg, #fdc468, #df4996 55%, #4f5bd5);
+  border-radius: 999px;
+  color: #ffffff;
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 800;
+  height: 20px;
+  justify-content: center;
+  letter-spacing: 0.03em;
+  width: 20px;
 }
 
 .communicationAdminGrid {
@@ -7179,6 +7211,7 @@ body.operationTheme .topbar {
 }
 
 .imageCropPresetButton,
+.imageCropApplyButton,
 .imageCropResetButton,
 .imageCropNudgeButton {
   appearance: none;
@@ -7195,6 +7228,7 @@ body.operationTheme .topbar {
 }
 
 .imageCropPresetButton:hover,
+.imageCropApplyButton:hover,
 .imageCropResetButton:hover,
 .imageCropNudgeButton:hover {
   background: #eff7f3;
@@ -7204,6 +7238,12 @@ body.operationTheme .topbar {
 
 .imageCropResetButton {
   background: rgba(16, 43, 37, 0.04);
+}
+
+.imageCropApplyButton {
+  background: linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--brand) 78%, white 22%));
+  border-color: rgba(var(--brand-rgb), 0.22);
+  color: #ffffff;
 }
 
 .imageCropStage {
@@ -11311,6 +11351,15 @@ body.operationTheme .topbar {
   .leadBroadcastPreviewMail {
     border-radius: 18px;
     padding: 20px;
+  }
+
+  .leadBroadcastPreviewLogoBadge {
+    padding: 9px 12px;
+  }
+
+  .leadBroadcastPreviewLogo {
+    max-width: 96px;
+    width: 96px;
   }
 
   .leadBroadcastPreviewMail h3 {

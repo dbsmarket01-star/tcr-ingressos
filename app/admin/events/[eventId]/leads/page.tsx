@@ -9,6 +9,7 @@ import { getEventForManagement } from "@/features/events/event.service";
 import { sendLeadBroadcastAction } from "@/features/leads/lead.admin.actions";
 import { getMunicipalityRanking } from "@/features/leads/lead-normalization";
 import { listEventLeads, listLeadEmailCampaignSummaries } from "@/features/leads/lead.service";
+import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { formatDateTime } from "@/lib/format";
 import { getPublicLeadCaptureUrl } from "@/lib/public-url";
 import { getLeadOriginBucket, getSourceLabel } from "@/features/tracking/tracking";
@@ -34,10 +35,11 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
     notFound();
   }
 
-  const [leads, emailCampaigns, leadCaptureVisits] = await Promise.all([
+  const [leads, emailCampaigns, leadCaptureVisits, companySettings] = await Promise.all([
     listEventLeads(event.id),
     listLeadEmailCampaignSummaries(event.id),
-    countEventPageVisits(event.id, "LEAD_CAPTURE")
+    countEventPageVisits(event.id, "LEAD_CAPTURE"),
+    getCompanySettingsByOrganizationId(admin.organizationId!)
   ]);
   const leadsWithPhone = leads.filter((lead) => Boolean(lead.phone)).length;
   const leadsWithEmail = leads.filter((lead) => Boolean(lead.email)).length;
@@ -210,6 +212,14 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                     />
                   </label>
                 </div>
+                <label className="field">
+                  <span>Instagram no rodapé</span>
+                  <input
+                    name="instagramUrl"
+                    defaultValue={companySettings?.instagramUrl ?? ""}
+                    placeholder="https://instagram.com/tcringressos ou @tcringressos"
+                  />
+                </label>
               </section>
 
               <div className="leadBroadcastFilterCard">
@@ -252,6 +262,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                 </div>
                 <ImageUploadField
                   aspect="share"
+                  applyMode="manual"
                   cropFieldName="imageCrop"
                   includeImageMetaFields
                   emptyText="Nenhuma imagem selecionada"
@@ -269,6 +280,8 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                 defaultCtaLabel="Entrar no grupo agora"
                 defaultDestinationUrl={event.leadCaptureWhatsappGroupUrl ?? ""}
                 eventTitle={event.title}
+                defaultInstagramUrl={companySettings?.instagramUrl ?? ""}
+                supportEmail={companySettings?.supportEmail ?? null}
               />
             </div>
           </div>
