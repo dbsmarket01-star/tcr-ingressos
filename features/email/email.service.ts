@@ -89,6 +89,7 @@ type LeadBroadcastEmailInput = {
   eventTitle: string;
   ctaLabel?: string | null;
   ctaUrl?: string | null;
+  openTrackingUrl?: string | null;
   instagramUrl?: string | null;
   supportEmail?: string | null;
 };
@@ -676,6 +677,9 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
   const supportLine = input.supportEmail
     ? `<p style="margin: 22px 0 0; color: #607089; font-size: 13px;">Suporte: ${input.supportEmail}</p>`
     : "";
+  const trackingPixel = input.openTrackingUrl
+    ? `<img src="${input.openTrackingUrl}" alt="" width="1" height="1" style="border: 0; display: block; height: 1px; opacity: 0; width: 1px;" />`
+    : "";
   const instagramLine =
     instagramDisplay && instagramHref
       ? `
@@ -714,6 +718,7 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
           ${ctaButton}
           ${instagramLine}
           ${supportLine}
+          ${trackingPixel}
         </div>
       </div>
     </div>

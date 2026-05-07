@@ -275,6 +275,7 @@ export async function sendLeadBroadcastAction(formData: FormData) {
           eventTitle: event.title,
           ctaLabel: ctaLabel || "Abrir link",
           ctaUrl: `${publicBaseUrl}/r/lead-email/${campaign.id}/${lead.id}`,
+          openTrackingUrl: `${publicBaseUrl}/r/lead-email-open/${campaign.id}/${lead.id}`,
           instagramUrl,
           supportEmail: companySettings.supportEmail
         })

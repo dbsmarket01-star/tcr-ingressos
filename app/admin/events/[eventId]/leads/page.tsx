@@ -161,6 +161,9 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
             <p className="muted">Dispare para toda a base, filtre por período/município ou envie um teste para uma pessoa só.</p>
           </div>
         </div>
+        <div className="infoBox inlineFeedbackBox">
+          Para enviar para <strong>toda a lista</strong>, deixe <strong>Data inicial</strong>, <strong>Data final</strong>, <strong>Municípios</strong> e <strong>E-mail de teste individual</strong> em branco.
+        </div>
         {sendResult ? (
           <div className="successBox inlineFeedbackBox">
             {sendMode === "test" ? `Teste enviado com sucesso para ${sendResult} destinatário.` : `Disparo concluído para ${sendResult} lead(s).`}
@@ -368,6 +371,8 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
           <div className="leadInsightList campaignInsightList">
             {emailCampaigns.slice(0, 8).map((campaign) => {
               const clicks = campaign._count.clicks;
+              const opens = campaign._count.opens;
+              const openRate = campaign.sentCount > 0 ? Math.round((opens / campaign.sentCount) * 100) : 0;
               const ctr = campaign.sentCount > 0 ? Math.round((clicks / campaign.sentCount) * 100) : 0;
 
               return (
@@ -380,7 +385,9 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                   </div>
                   <div className="campaignInsightStats">
                     <span>{campaign.sentCount} enviados</span>
+                    <span>{opens} aberturas</span>
                     <span>{clicks} cliques</span>
+                    <strong>{openRate}% open rate</strong>
                     <strong>{ctr}% CTR</strong>
                   </div>
                 </div>

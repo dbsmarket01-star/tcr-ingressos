@@ -323,7 +323,8 @@ export async function listLeadEmailCampaignSummaries(eventId: string) {
       createdAt: true,
       _count: {
         select: {
-          clicks: true
+          clicks: true,
+          opens: true
         }
       }
     }

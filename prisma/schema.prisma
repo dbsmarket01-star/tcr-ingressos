@@ -440,6 +440,7 @@ model EventLead {
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
   emailCampaignClicks LeadEmailCampaignClick[]
+  emailCampaignOpens LeadEmailCampaignOpen[]
 
   @@index([eventId, createdAt])
   @@index([email])
@@ -476,6 +477,7 @@ model LeadEmailCampaign {
 
   event  Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
   clicks LeadEmailCampaignClick[]
+  opens  LeadEmailCampaignOpen[]
 
   @@index([eventId, createdAt])
 }
@@ -494,6 +496,20 @@ model LeadEmailTemplate {
 }
 
 model LeadEmailCampaignClick {
+  id         String   @id @default(cuid())
+  campaignId String
+  leadId     String
+  createdAt  DateTime @default(now())
+
+  campaign LeadEmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  lead     EventLead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, leadId])
+  @@index([campaignId, createdAt])
+  @@index([leadId])
+}
+
+model LeadEmailCampaignOpen {
   id         String   @id @default(cuid())
   campaignId String
   leadId     String
