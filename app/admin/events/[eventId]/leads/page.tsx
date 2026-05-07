@@ -18,6 +18,7 @@ import { formatDateTime } from "@/lib/format";
 import { getPublicLeadCaptureUrl } from "@/lib/public-url";
 import { getLeadOriginBucket, getSourceLabel } from "@/features/tracking/tracking";
 import { LeadBroadcastPreview } from "./LeadBroadcastPreview";
+import { LeadBroadcastDestinationHelper } from "./LeadBroadcastDestinationHelper";
 import { LeadBroadcastTemplates } from "./LeadBroadcastTemplates";
 import { LeadBroadcastSubmitButton } from "./LeadBroadcastSubmitButton";
 
@@ -235,6 +236,13 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                     />
                   </label>
                 </div>
+                {event.leadCaptureWhatsappGroupUrl ? (
+                  <LeadBroadcastDestinationHelper eventGroupUrl={event.leadCaptureWhatsappGroupUrl} />
+                ) : (
+                  <small className="muted">
+                    O link digitado em <strong>Link de destino</strong> é o que vai no e-mail. Se esse campo ficar vazio, não há grupo padrão configurado no evento.
+                  </small>
+                )}
                 <label className="field">
                   <span>Instagram no rodapé</span>
                   <input

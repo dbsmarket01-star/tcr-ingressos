@@ -6807,6 +6807,17 @@ body.operationTheme .topbar {
   margin-top: 12px;
 }
 
+.destinationHelperRow {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.destinationHelperRow small {
+  flex: 1 1 260px;
+}
+
 .leadBroadcastPreviewInstagram {
   align-items: center;
   display: inline-flex;
