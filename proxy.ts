@@ -39,7 +39,14 @@ function withInternalHeaders(response: NextResponse) {
 }
 
 function isInternalPath(pathname: string) {
-  return pathname === "/admin" || pathname.startsWith("/admin/") || pathname === "/login" || pathname.startsWith("/login/");
+  return (
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/") ||
+    pathname === "/login" ||
+    pathname.startsWith("/login/") ||
+    pathname === "/api/admin" ||
+    pathname.startsWith("/api/admin/")
+  );
 }
 
 function isAllowedAdminHostAsset(pathname: string) {
