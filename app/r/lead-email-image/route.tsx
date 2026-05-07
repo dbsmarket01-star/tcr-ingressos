@@ -33,7 +33,7 @@ export async function GET(request: Request) {
   const zoom = crop?.zoom ?? 1;
   const baseScale =
     sourceWidth && sourceHeight
-      ? Math.max(OUTPUT_WIDTH / sourceWidth, OUTPUT_HEIGHT / sourceHeight)
+      ? Math.min(OUTPUT_WIDTH / sourceWidth, OUTPUT_HEIGHT / sourceHeight)
       : 1;
   const fittedWidth = sourceWidth ? sourceWidth * baseScale * zoom : OUTPUT_WIDTH * zoom;
   const fittedHeight = sourceHeight ? sourceHeight * baseScale * zoom : OUTPUT_HEIGHT * zoom;

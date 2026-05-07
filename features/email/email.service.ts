@@ -84,6 +84,7 @@ type LeadBroadcastEmailInput = {
   imageWidth?: number | null;
   imageHeight?: number | null;
   publicBaseUrl?: string | null;
+  brandLogoUrl?: string | null;
   brandName?: string;
   eventTitle: string;
   ctaLabel?: string | null;
@@ -558,6 +559,21 @@ function resolveAbsoluteEmailImageUrl(imageUrl: string, publicBaseUrl?: string |
   return null;
 }
 
+function buildLeadBroadcastLogoUrl(input: LeadBroadcastEmailInput) {
+  if (input.brandLogoUrl) {
+    return resolveAbsoluteEmailImageUrl(input.brandLogoUrl, input.publicBaseUrl);
+  }
+
+  const brandName = (input.brandName || "").toLowerCase();
+
+  if (brandName.includes("tcr")) {
+    const baseUrl = (input.publicBaseUrl || getPublicBaseUrl()).replace(/\/$/, "");
+    return `${baseUrl}/brands/tcr-logomarca.png`;
+  }
+
+  return null;
+}
+
 function buildLeadBroadcastImageUrl(input: LeadBroadcastEmailInput) {
   if (!input.imageUrl) {
     return null;
@@ -593,15 +609,16 @@ function buildLeadBroadcastImageUrl(input: LeadBroadcastEmailInput) {
 function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
   const brandName = input.brandName || "TCR Ingressos";
   const imageUrl = buildLeadBroadcastImageUrl(input);
+  const logoUrl = buildLeadBroadcastLogoUrl(input);
   const imageBlock = imageUrl
     ? `
       <div style="margin: 0 0 24px;">
-        <div style="background: #e8eef5; border-radius: 18px; max-height: 220px; overflow: hidden;">
+        <div style="background: linear-gradient(180deg, #071c17 0%, #0a2b22 100%); border-radius: 18px; overflow: hidden; padding: 14px;">
           <img
             src="${imageUrl}"
             alt="${input.eventTitle}"
-            width="600"
-            style="display: block; width: 100%; max-width: 680px; min-height: 180px; max-height: 220px; object-fit: cover;"
+            width="676"
+            style="display: block; width: 100%; height: auto; border-radius: 14px;"
           />
         </div>
       </div>
@@ -624,7 +641,19 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
     <div style="background: #f3f6fb; margin: 0; padding: 24px 16px;">
       <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.55; margin: 0 auto; max-width: 720px;">
         <div style="background: #ffffff; border: 1px solid #e0e7f0; border-radius: 24px; box-shadow: 0 20px 60px rgba(10, 34, 26, 0.08); overflow: hidden; padding: 22px;">
-          <p style="margin: 0 0 8px; color: #607089; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">${brandName}</p>
+          <div style="align-items: center; display: flex; gap: 12px; margin: 0 0 16px;">
+            ${
+              logoUrl
+                ? `<div style="background: #08251d; border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 10px 24px rgba(6, 26, 20, 0.22); padding: 10px 14px;">
+                    <img src="${logoUrl}" alt="${brandName}" width="116" style="display: block; height: auto; max-width: 116px;" />
+                  </div>`
+                : ""
+            }
+            <div>
+              <p style="margin: 0 0 4px; color: #607089; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">${brandName}</p>
+              <p style="margin: 0; color: #7c889d; font-size: 13px;">Mensagem oficial do evento</p>
+            </div>
+          </div>
           <h1 style="color: #182233; font-size: 28px; line-height: 1.16; margin: 0 0 12px;">${input.subject}</h1>
           <p style="color: #425066; font-size: 16px; margin: 0 0 16px;">Olá, ${input.name}.</p>
           ${imageBlock}
