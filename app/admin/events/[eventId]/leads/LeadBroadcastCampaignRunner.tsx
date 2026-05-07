@@ -51,10 +51,11 @@ export function LeadBroadcastCampaignRunner({ initialCampaign }: LeadBroadcastCa
       timeoutId = setTimeout(async () => {
         try {
           const response = await fetch(`/api/admin/lead-email-campaigns/${campaign.id}/process`, {
-            method: "POST",
+            method: "GET",
             headers: {
               "Content-Type": "application/json"
-            }
+            },
+            cache: "no-store"
           });
           const payload = (await response.json()) as { campaign?: CampaignState; error?: string };
 
@@ -82,8 +83,27 @@ export function LeadBroadcastCampaignRunner({ initialCampaign }: LeadBroadcastCa
       }, delayMs);
     }
 
-    if (ACTIVE_STATUSES.has(initialCampaign.status)) {
-      tick(100);
+    if (initialCampaign.status === "QUEUED") {
+      fetch(`/api/admin/lead-email-campaigns/${campaign.id}/process`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+        .catch((error) => {
+          if (!cancelled) {
+            setRequestError(
+              error instanceof Error ? error.message : "Falha ao iniciar o processamento da campanha."
+            );
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            tick(400);
+          }
+        });
+    } else if (ACTIVE_STATUSES.has(initialCampaign.status)) {
+      tick(400);
     }
 
     return () => {
@@ -152,7 +172,7 @@ export function LeadBroadcastCampaignRunner({ initialCampaign }: LeadBroadcastCa
         </div>
       ) : (
         <small className="muted">
-          Mantenha esta tela aberta enquanto o sistema processa a fila. O disparo está indo em lotes seguros para escalar melhor.
+          O servidor está processando essa campanha em segundo plano, em lotes seguros. Você pode acompanhar o progresso por aqui sem depender da aba ficar aberta.
         </small>
       )}
     </section>

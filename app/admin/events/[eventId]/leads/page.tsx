@@ -154,12 +154,6 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
             <strong>{whatsappClicks}</strong>
           </div>
         </div>
-        {sendResult ? (
-          <div className="successBox">
-            {sendMode === "test" ? `Teste enviado com sucesso para ${sendResult} destinatário.` : `Disparo concluído para ${sendResult} lead(s).`}
-            {sendScope ? <small className="feedbackScopeText">{sendScope}</small> : null}
-          </div>
-        ) : null}
         {sendError ? <div className="errorBox">{sendError}</div> : null}
       </section>
 

@@ -235,6 +235,21 @@ export async function getOrganizationContextByHost(host?: string | null) {
   return buildOrganizationContext(fallback, host || null, false);
 }
 
+export async function getOrganizationContextById(organizationId: string) {
+  const organization = await getOrganizationBrandingById(organizationId);
+
+  if (!organization) {
+    const fallback = await ensureDefaultOrganization({
+      publicDomain: normalizeHost(process.env.NEXT_PUBLIC_APP_DOMAIN || process.env.APP_DOMAIN) ?? undefined,
+      adminDomain: normalizeHost(process.env.ADMIN_HOST) ?? undefined
+    });
+
+    return buildOrganizationContext(fallback, null, false);
+  }
+
+  return buildOrganizationContext(organization, organization.publicDomain, true);
+}
+
 export async function getCurrentOrganizationContext() {
   const host = await getRequestHost();
   return getOrganizationContextByHost(host);

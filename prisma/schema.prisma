@@ -99,6 +99,7 @@ enum LeadEmailCampaignStatus {
 
 enum LeadEmailCampaignRecipientStatus {
   PENDING
+  PROCESSING
   SENT
   FAILED
 }

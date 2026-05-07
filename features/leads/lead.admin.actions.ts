@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getPublicBaseUrl } from "@/lib/public-url";
 import { redirect } from "next/navigation";
@@ -8,6 +9,7 @@ import { sendLeadBroadcastEmail } from "@/features/email/email.service";
 import { getEventForManagement } from "@/features/events/event.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
+import { processLeadEmailCampaignInBackground } from "@/features/leads/lead-email-campaign-processor.service";
 import { savePublicImageUpload } from "@/features/uploads/local-upload.service";
 import { listEventLeadsForBroadcast } from "@/features/leads/lead.service";
 
@@ -297,6 +299,10 @@ export async function sendLeadBroadcastAction(formData: FormData) {
       data: batch
     });
   }
+
+  after(async () => {
+    await processLeadEmailCampaignInBackground(campaign.id);
+  });
 
   redirect(
     `/admin/events/${eventId}/leads?queued=${campaign.id}&scope=${encodeURIComponent(scopeSummary)}#lead-broadcast`
