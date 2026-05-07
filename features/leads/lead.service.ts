@@ -307,6 +307,8 @@ export async function listEventLeadsForBroadcast(eventId: string, filters: LeadB
 }
 
 export async function listLeadEmailCampaignSummaries(eventId: string) {
+  await reconcileInvalidLeadEmailCampaigns(eventId);
+
   return prisma.leadEmailCampaign.findMany({
     where: {
       eventId
@@ -337,7 +339,26 @@ export async function listLeadEmailCampaignSummaries(eventId: string) {
   });
 }
 
+export async function reconcileInvalidLeadEmailCampaigns(eventId: string) {
+  await prisma.leadEmailCampaign.updateMany({
+    where: {
+      eventId,
+      status: {
+        in: ["QUEUED", "PROCESSING"]
+      },
+      totalCount: 0
+    },
+    data: {
+      status: "COMPLETED_WITH_ERRORS",
+      completedAt: new Date(),
+      lastError: "Campanha invalidada automaticamente porque não havia destinatários válidos na fila."
+    }
+  });
+}
+
 export async function getActiveLeadEmailCampaign(eventId: string) {
+  await reconcileInvalidLeadEmailCampaigns(eventId);
+
   return prisma.leadEmailCampaign.findFirst({
     where: {
       eventId,

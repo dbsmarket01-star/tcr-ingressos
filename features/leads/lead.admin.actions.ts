@@ -11,7 +11,7 @@ import { getCurrentOrganizationContext } from "@/features/organizations/organiza
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { processLeadEmailCampaignInBackground } from "@/features/leads/lead-email-campaign-processor.service";
 import { savePublicImageUpload } from "@/features/uploads/local-upload.service";
-import { listEventLeadsForBroadcast } from "@/features/leads/lead.service";
+import { listEventLeadsForBroadcast, reconcileInvalidLeadEmailCampaigns } from "@/features/leads/lead.service";
 
 function splitIntoBatches<T>(items: T[], size: number) {
   const batches: T[][] = [];
@@ -217,6 +217,7 @@ export async function sendLeadBroadcastAction(formData: FormData) {
   }
 
   const hasScopedFilters = Boolean(dateFrom || dateTo || municipalities.length > 0);
+  await reconcileInvalidLeadEmailCampaigns(event.id);
   const activeCampaign = await prisma.leadEmailCampaign.findFirst({
     where: {
       eventId: event.id,
