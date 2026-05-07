@@ -675,7 +675,13 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
       ? `
         <p style="margin: 18px 0 0; color: #607089; font-size: 13px;">
           <a href="${instagramHref}" style="align-items: center; color: #607089; display: inline-flex; gap: 8px; text-decoration: none;">
-            <span style="align-items: center; background: linear-gradient(135deg, #fdc468, #df4996 55%, #4f5bd5); border-radius: 999px; color: #ffffff; display: inline-flex; font-size: 10px; font-weight: 800; height: 20px; justify-content: center; letter-spacing: 0.03em; width: 20px;">IG</span>
+            <span style="align-items: center; background: linear-gradient(135deg, #fdc468, #df4996 55%, #4f5bd5); border-radius: 999px; color: #ffffff; display: inline-flex; height: 20px; justify-content: center; width: 20px;">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="12" height="12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.8"/>
+                <circle cx="12" cy="12" r="4.25" stroke="currentColor" stroke-width="1.8"/>
+                <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor"/>
+              </svg>
+            </span>
             ${instagramDisplay}
           </a>
         </p>

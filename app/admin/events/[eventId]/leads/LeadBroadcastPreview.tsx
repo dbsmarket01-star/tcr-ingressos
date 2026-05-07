@@ -59,6 +59,16 @@ function normalizeInstagramDisplay(value: string) {
   return `@${text.replace(/^@+/, "")}`;
 }
 
+function InstagramIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="4.25" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const imageUrlRef = useRef<string | null>(null);
@@ -146,10 +156,15 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
+  const crop = parseImageCrop(preview.imageCrop);
   const instagramDisplay = normalizeInstagramDisplay(preview.instagramUrl);
   const previewImageUrl = useMemo(() => {
     if (!preview.imageUrl) {
       return null;
+    }
+
+    if (preview.imageUrl.startsWith("blob:")) {
+      return preview.imageUrl;
     }
 
     const params = new URLSearchParams({
@@ -168,6 +183,27 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
 
     return `/r/lead-email-image?${params.toString()}`;
   }, [preview.imageCrop, preview.imageHeight, preview.imageUrl, preview.imageWidth]);
+  const localImageFrameStyle =
+    preview.imageUrl &&
+    preview.imageUrl.startsWith("blob:") &&
+    preview.imageWidth &&
+    preview.imageHeight
+      ? (() => {
+          const zoom = crop?.zoom ?? 1;
+          const baseScale = Math.min(1200 / preview.imageWidth, 630 / preview.imageHeight);
+          const fittedWidth = preview.imageWidth * baseScale * zoom;
+          const fittedHeight = preview.imageHeight * baseScale * zoom;
+          const horizontal = crop ? crop.x / 100 : 0.5;
+          const vertical = crop ? crop.y / 100 : 0.5;
+
+          return {
+            width: `${fittedWidth}px`,
+            height: `${fittedHeight}px`,
+            left: `calc((100% - ${fittedWidth}px) * ${horizontal})`,
+            top: `calc((100% - ${fittedHeight}px) * ${vertical})`
+          };
+        })()
+      : null;
 
   return (
     <div className="leadBroadcastPreviewCard" ref={containerRef}>
@@ -194,7 +230,18 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
 
           {previewImageUrl ? (
             <div className="leadBroadcastPreviewImageWrap">
-              <img alt={props.eventTitle} className="leadBroadcastPreviewImage" src={previewImageUrl} />
+              {localImageFrameStyle ? (
+                <div className="leadBroadcastPreviewImageStage">
+                  <img
+                    alt={props.eventTitle}
+                    className="leadBroadcastPreviewImage leadBroadcastPreviewImagePositioned"
+                    src={previewImageUrl}
+                    style={localImageFrameStyle}
+                  />
+                </div>
+              ) : (
+                <img alt={props.eventTitle} className="leadBroadcastPreviewImage" src={previewImageUrl} />
+              )}
             </div>
           ) : (
             <div className="leadBroadcastPreviewImagePlaceholder">
@@ -218,7 +265,7 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
             {instagramDisplay ? (
               <p className="leadBroadcastPreviewInstagram">
                 <span className="leadBroadcastPreviewInstagramIcon" aria-hidden="true">
-                  IG
+                  <InstagramIcon />
                 </span>
                 {instagramDisplay}
               </p>

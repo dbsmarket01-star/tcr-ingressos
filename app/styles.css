@@ -6691,10 +6691,26 @@ body.operationTheme .topbar {
   background: transparent;
 }
 
+.leadBroadcastPreviewImageStage {
+  background: #071c17;
+  border-radius: 18px;
+  height: 0;
+  overflow: hidden;
+  padding-top: 52.5%;
+  position: relative;
+}
+
 .leadBroadcastPreviewImage {
   display: block;
   height: auto;
   width: 100%;
+}
+
+.leadBroadcastPreviewImagePositioned {
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: auto;
 }
 
 .leadBroadcastPreviewImagePlaceholder {
@@ -6763,6 +6779,12 @@ body.operationTheme .topbar {
   justify-content: center;
   letter-spacing: 0.03em;
   width: 20px;
+}
+
+.leadBroadcastPreviewInstagramIcon svg {
+  display: block;
+  height: 12px;
+  width: 12px;
 }
 
 .communicationAdminGrid {
