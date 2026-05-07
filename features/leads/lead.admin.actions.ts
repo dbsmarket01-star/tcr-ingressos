@@ -297,3 +297,99 @@ export async function sendLeadBroadcastAction(formData: FormData) {
     `/admin/events/${eventId}/leads?sent=${sentCount}&scope=${encodeURIComponent(scopeSummary)}#lead-broadcast`
   );
 }
+
+export async function saveLeadBroadcastTemplateAction(formData: FormData) {
+  const admin = await requirePermission("EVENTS");
+  const eventId = String(formData.get("eventId") ?? "").trim();
+  const subject = String(formData.get("subject") ?? "").trim();
+  const body = String(formData.get("body") ?? "").trim();
+
+  if (!eventId) {
+    redirect("/admin/events?error=Evento%20nao%20informado.");
+  }
+
+  await requireEventAccess(eventId);
+  const event = await getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin));
+
+  if (!event) {
+    redirect(`/admin/events/${eventId}/leads?error=${encodeURIComponent("Evento não encontrado.")}#lead-broadcast`);
+  }
+
+  if (subject.length < 4 || body.length < 12) {
+    redirect(
+      `/admin/events/${eventId}/leads?templateError=${encodeURIComponent(
+        "Preencha assunto e mensagem antes de salvar o modelo."
+      )}#lead-broadcast`
+    );
+  }
+
+  const existingMatch = await prisma.leadEmailTemplate.findFirst({
+    where: {
+      eventId: event.id,
+      subject
+    }
+  });
+
+  if (existingMatch) {
+    await prisma.leadEmailTemplate.update({
+      where: {
+        id: existingMatch.id
+      },
+      data: {
+        body
+      }
+    });
+
+    redirect(`/admin/events/${eventId}/leads?templateSaved=1#lead-broadcast`);
+  }
+
+  const count = await prisma.leadEmailTemplate.count({
+    where: {
+      eventId: event.id
+    }
+  });
+
+  if (count >= 3) {
+    redirect(
+      `/admin/events/${eventId}/leads?templateError=${encodeURIComponent(
+        "Você já salvou 3 modelos. Apague um antes de criar outro."
+      )}#lead-broadcast`
+    );
+  }
+
+  await prisma.leadEmailTemplate.create({
+    data: {
+      eventId: event.id,
+      subject,
+      body
+    }
+  });
+
+  redirect(`/admin/events/${eventId}/leads?templateSaved=1#lead-broadcast`);
+}
+
+export async function deleteLeadBroadcastTemplateAction(formData: FormData) {
+  const admin = await requirePermission("EVENTS");
+  const eventId = String(formData.get("eventId") ?? "").trim();
+  const templateId = String(formData.get("templateId") ?? "").trim();
+
+  if (!eventId || !templateId) {
+    redirect("/admin/events?error=Modelo%20nao%20informado.");
+  }
+
+  await requireEventAccess(eventId);
+  const event = await getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin));
+
+  if (!event) {
+    redirect(`/admin/events/${eventId}/leads?error=${encodeURIComponent("Evento não encontrado.")}#lead-broadcast`);
+  }
+
+  await prisma.leadEmailTemplate.deleteMany({
+    where: {
+      id: templateId,
+      eventId: event.id
+    }
+  });
+
+  redirect(`/admin/events/${eventId}/leads?templateDeleted=1#lead-broadcast`);
+}

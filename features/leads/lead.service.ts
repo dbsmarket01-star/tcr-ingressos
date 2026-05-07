@@ -329,3 +329,17 @@ export async function listLeadEmailCampaignSummaries(eventId: string) {
     }
   });
 }
+
+export async function listLeadEmailTemplates(eventId: string) {
+  return prisma.leadEmailTemplate.findMany({
+    where: {
+      eventId
+    },
+    orderBy: [
+      {
+        updatedAt: "desc"
+      }
+    ],
+    take: 3
+  });
+}

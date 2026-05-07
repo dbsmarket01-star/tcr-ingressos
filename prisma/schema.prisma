@@ -410,6 +410,7 @@ model Event {
   leads     EventLead[]
   leadCaptureAttempts LeadCaptureAttempt[]
   leadEmailCampaigns LeadEmailCampaign[]
+  leadEmailTemplates LeadEmailTemplate[]
   pageVisits EventPageVisit[]
 
   @@index([organizationId])
@@ -477,6 +478,19 @@ model LeadEmailCampaign {
   clicks LeadEmailCampaignClick[]
 
   @@index([eventId, createdAt])
+}
+
+model LeadEmailTemplate {
+  id        String   @id @default(cuid())
+  eventId   String
+  subject   String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, updatedAt])
 }
 
 model LeadEmailCampaignClick {

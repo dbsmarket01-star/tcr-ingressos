@@ -6,9 +6,13 @@ import { ImageUploadField } from "@/components/forms/ImageUploadField";
 import { countEventPageVisits } from "@/features/analytics/page-visit.service";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { getEventForManagement } from "@/features/events/event.service";
-import { sendLeadBroadcastAction } from "@/features/leads/lead.admin.actions";
+import {
+  deleteLeadBroadcastTemplateAction,
+  saveLeadBroadcastTemplateAction,
+  sendLeadBroadcastAction
+} from "@/features/leads/lead.admin.actions";
 import { getMunicipalityRanking } from "@/features/leads/lead-normalization";
-import { listEventLeads, listLeadEmailCampaignSummaries } from "@/features/leads/lead.service";
+import { listEventLeads, listLeadEmailCampaignSummaries, listLeadEmailTemplates } from "@/features/leads/lead.service";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { formatDateTime } from "@/lib/format";
 import { getPublicLeadCaptureUrl } from "@/lib/public-url";
@@ -35,11 +39,12 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
     notFound();
   }
 
-  const [leads, emailCampaigns, leadCaptureVisits, companySettings] = await Promise.all([
+  const [leads, emailCampaigns, leadCaptureVisits, companySettings, savedTemplates] = await Promise.all([
     listEventLeads(event.id),
     listLeadEmailCampaignSummaries(event.id),
     countEventPageVisits(event.id, "LEAD_CAPTURE"),
-    getCompanySettingsByOrganizationId(admin.organizationId!)
+    getCompanySettingsByOrganizationId(admin.organizationId!),
+    listLeadEmailTemplates(event.id)
   ]);
   const leadsWithPhone = leads.filter((lead) => Boolean(lead.phone)).length;
   const leadsWithEmail = leads.filter((lead) => Boolean(lead.email)).length;
@@ -52,6 +57,9 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
   const sendError = typeof query.error === "string" ? query.error : null;
   const sendMode = typeof query.mode === "string" ? query.mode : null;
   const sendScope = typeof query.scope === "string" ? query.scope : null;
+  const templateSaved = typeof query.templateSaved === "string" ? query.templateSaved : null;
+  const templateDeleted = typeof query.templateDeleted === "string" ? query.templateDeleted : null;
+  const templateError = typeof query.templateError === "string" ? query.templateError : null;
   const municipalityRanking = getMunicipalityRanking(leads.map((lead) => lead.municipality));
   const originRanking = Array.from(
     leads.reduce((acc, lead) => {
@@ -160,6 +168,9 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
           </div>
         ) : null}
         {sendError ? <div className="errorBox inlineFeedbackBox">{sendError}</div> : null}
+        {templateSaved ? <div className="successBox inlineFeedbackBox">Modelo salvo com sucesso.</div> : null}
+        {templateDeleted ? <div className="successBox inlineFeedbackBox">Modelo apagado com sucesso.</div> : null}
+        {templateError ? <div className="errorBox inlineFeedbackBox">{templateError}</div> : null}
         <form action={sendLeadBroadcastAction} className="stackForm leadBroadcastFormLayout">
           <input type="hidden" name="eventId" value={event.id} />
           <div className="leadBroadcastComposerGrid">
@@ -167,9 +178,18 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
               <section className="leadBroadcastSectionCard">
                 <div className="leadBroadcastSectionHeader">
                   <strong>Modelo da campanha</strong>
-                  <small>Use um ponto de partida e ajuste a copy antes de disparar.</small>
+                  <small>Use um ponto de partida, salve até 3 modelos seus e reaplique quando quiser.</small>
                 </div>
-                <LeadBroadcastTemplates />
+                <LeadBroadcastTemplates
+                  savedTemplates={savedTemplates}
+                  deleteAction={deleteLeadBroadcastTemplateAction}
+                />
+                <div className="leadTemplateFooter">
+                  <button className="secondaryButton smallButton" formAction={saveLeadBroadcastTemplateAction} type="submit">
+                    Salvar este e-mail
+                  </button>
+                  <small className="muted">Salva assunto e mensagem atual. A imagem não entra no modelo.</small>
+                </div>
               </section>
 
               <section className="leadBroadcastSectionCard">
