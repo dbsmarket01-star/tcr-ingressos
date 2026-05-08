@@ -192,7 +192,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
       <section className="sectionHeader">
         <div>
           <h2>Marca da operação</h2>
-          <p className="muted">Use a logo oficial da TCR para substituir o selo textual no topo do sistema.</p>
+          <p className="muted">Use a logo oficial da operação para substituir o selo textual no topo do sistema.</p>
         </div>
       </section>
 
@@ -216,7 +216,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               name="organizationLogoFile"
               label="Logo da operação"
               currentImageUrl={organizationContext.brandLogoUrl}
-              emptyText="Envie a logo oficial da TCR"
+              emptyText={`Envie a logo oficial da ${organizationContext.brandName}`}
               recommendedSize="PNG ou WEBP com fundo transparente"
               usageHint="Ela aparece no topo do admin e nas páginas públicas da operação."
               aspect="share"
@@ -250,7 +250,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         <div className="splitRulesHeader">
           <div>
             <strong>Regras de repasse</strong>
-            <span className="muted">O valor restante fica na conta principal da TCR que criou a cobrança.</span>
+            <span className="muted">O valor restante fica na conta principal da operação que criou a cobrança.</span>
           </div>
           <span className={`status ${health.asaas.splitEnabled ? "published" : "draft"}`}>
             {health.asaas.splitEnabled ? "Split ligado" : "Split desligado no ambiente"}
@@ -343,7 +343,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               <strong>{formatCurrency(splitPreview.totalInCents)}</strong>
             </div>
             <div>
-              <span>Restante TCR</span>
+              <span>Restante da operação</span>
               <strong>{formatCurrency(splitPreview.remainingInCents)}</strong>
             </div>
           </div>

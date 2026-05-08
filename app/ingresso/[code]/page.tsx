@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CopyButton } from "@/components/forms/CopyButton";
 import { PrintButton } from "@/components/forms/PrintButton";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { createTicketQrCodeSvg } from "@/features/tickets/ticket-qrcode";
 import { getTicketByCode } from "@/features/tickets/ticket.service";
 import { formatDateTime } from "@/lib/format";
@@ -45,7 +46,7 @@ const ticketStatusMessages = {
 
 export default async function TicketPage({ params }: TicketPageProps) {
   const { code } = await params;
-  const ticket = await getTicketByCode(code);
+  const [ticket, organizationContext] = await Promise.all([getTicketByCode(code), getCurrentOrganizationContext()]);
 
   if (!ticket) {
     notFound();
@@ -55,13 +56,24 @@ export default async function TicketPage({ params }: TicketPageProps) {
   const lastCheckIn = ticket.checkIns[0];
   const canEnter = ticket.status === "ACTIVE";
   const eventLocation = `${ticket.event.venueName} - ${ticket.event.city}, ${ticket.event.state}`;
+  const brandName = organizationContext.brandName;
+  const brandMark = brandName.trim().charAt(0).toUpperCase() || "I";
+  const publicHomeHref = organizationContext.publicBaseUrl || "/";
 
   return (
     <main className="shell">
       <header className="topbar">
-        <Link className="brand" href="/">
-          <span className="brandMark">T</span>
-          <span>TCR Ingressos</span>
+        <Link className="brand" href={publicHomeHref}>
+          {organizationContext.brandLogoUrl ? (
+            <img
+              alt={brandName}
+              className="brandLogo"
+              src={organizationContext.brandLogoUrl}
+            />
+          ) : (
+            <span className="brandMark">{brandMark}</span>
+          )}
+          {!organizationContext.brandLogoUrl ? <span>{brandName}</span> : null}
         </Link>
         <nav className="nav" aria-label="Navegação">
           <Link href={`/pedido/${ticket.order.code}`}>Pedido</Link>

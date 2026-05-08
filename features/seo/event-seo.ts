@@ -39,7 +39,7 @@ function formatEventDate(value: Date) {
 export function buildEventSeo(event: EventSeoInput) {
   const date = formatEventDate(event.startsAt);
   const location = `${event.venueName}, ${event.city}-${event.state}`;
-  const automaticTitle = compactText(`${event.title} | Ingressos TCR Ingressos`, 58);
+  const automaticTitle = compactText(`${event.title} | Ingressos oficiais`, 58);
   const automaticDescription = compactText(
     `${event.subtitle ? `${event.subtitle}. ` : ""}Compre ingressos para ${event.title} em ${date}, no ${location}. ${event.description}`,
     155
@@ -52,7 +52,7 @@ export function buildEventSeo(event: EventSeoInput) {
     : [
         event.title,
         "ingressos",
-        "TCR Ingressos",
+        "ingressos oficiais",
         event.city,
         event.state,
         event.venueName

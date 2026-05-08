@@ -16,13 +16,13 @@ export default function ErrorPage({
       <section className="loginPanel">
         <Link className="brand" href="/">
           <span className="brandMark">T</span>
-          <span>TCR Ingressos</span>
+          <span>Bilheteria</span>
         </Link>
         <div>
-          <p className="publicBadge">Instabilidade temporaria</p>
-          <h1>Algo nao saiu como esperado</h1>
+          <p className="publicBadge">Instabilidade temporária</p>
+          <h1>Algo não saiu como esperado</h1>
           <p className="muted">
-            Tente novamente. Se o problema persistir, procure o suporte da operacao com o horario da tentativa.
+            Tente novamente. Se o problema persistir, procure o suporte da operação com o horário da tentativa.
           </p>
         </div>
         <div className="formActions">
@@ -30,7 +30,7 @@ export default function ErrorPage({
             Tentar novamente
           </button>
           <Link className="secondaryButton" href="/">
-            Voltar ao inicio
+            Voltar ao início
           </Link>
         </div>
       </section>

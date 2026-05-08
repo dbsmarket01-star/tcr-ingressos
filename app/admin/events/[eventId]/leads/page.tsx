@@ -78,6 +78,10 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
     }, new Map<string, number>())
   ).sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], "pt-BR"));
   const totalLeads = leads.length || 1;
+  const operationBrandName =
+    companySettings?.tradeName?.trim() ||
+    companySettings?.companyName?.trim() ||
+    "Bilheteria";
 
   function getWhatsappUrl(phone?: string | null) {
     const digits = (phone ?? "").replace(/\D/g, "");
@@ -267,7 +271,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                   <input
                     name="instagramUrl"
                     defaultValue={companySettings?.instagramUrl ?? ""}
-                    placeholder="https://instagram.com/tcringressos ou @tcringressos"
+                    placeholder="https://instagram.com/suamarca ou @suamarca"
                   />
                 </label>
               </section>
@@ -326,7 +330,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
 
             <div className="leadBroadcastComposerColumn leadBroadcastPreviewColumn">
               <LeadBroadcastPreview
-                brandName="TCR Ingressos"
+                brandName={operationBrandName}
                 defaultCtaLabel="Entrar no grupo agora"
                 defaultDestinationUrl={event.leadCaptureWhatsappGroupUrl ?? ""}
                 eventTitle={event.title}
@@ -396,9 +400,36 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
           <div className="sectionHeader">
             <div>
               <h2>Termômetro dos e-mails</h2>
-              <p className="muted">Acompanhe quantas pessoas receberam e clicaram em cada disparo.</p>
+              <p className="muted">Veja com clareza quantos envios foram feitos, quantas aberturas tivemos e quantos cliques aconteceram no botão.</p>
             </div>
           </div>
+          {(() => {
+            const totalSent = emailCampaigns.reduce((sum, campaign) => sum + campaign.sentCount, 0);
+            const totalOpens = emailCampaigns.reduce((sum, campaign) => sum + campaign._count.opens, 0);
+            const totalClicks = emailCampaigns.reduce((sum, campaign) => sum + campaign._count.clicks, 0);
+            const totalOpenRate = totalSent > 0 ? Math.round((totalOpens / totalSent) * 100) : 0;
+            const totalCtr = totalSent > 0 ? Math.round((totalClicks / totalSent) * 100) : 0;
+
+            return (
+              <div className="campaignSummaryGrid">
+                <article className="campaignSummaryCard">
+                  <span>Envios realizados</span>
+                  <strong>{totalSent}</strong>
+                  <small>Total de e-mails aceitos pelo provedor.</small>
+                </article>
+                <article className="campaignSummaryCard">
+                  <span>Aberturas</span>
+                  <strong>{totalOpens}</strong>
+                  <small>{totalOpenRate}% de open rate no consolidado.</small>
+                </article>
+                <article className="campaignSummaryCard">
+                  <span>Cliques no botão</span>
+                  <strong>{totalClicks}</strong>
+                  <small>{totalCtr}% de CTR no consolidado.</small>
+                </article>
+              </div>
+            );
+          })()}
           <div className="leadInsightList campaignInsightList">
             {emailCampaigns.slice(0, 8).map((campaign) => {
               const clicks = campaign._count.clicks;
@@ -408,18 +439,29 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
 
               return (
                 <div key={campaign.id} className="campaignInsightRow">
-                  <div>
+                  <div className="campaignInsightCopy">
                     <strong>{campaign.subject}</strong>
                     <small>
                       {formatDateTime(campaign.createdAt)} · {campaign.ctaLabel || "Abrir link"} · {campaign.status}
                     </small>
                   </div>
+                  <div className="campaignInsightMetrics">
+                    <div className="campaignInsightMetricCard">
+                      <span>Envios feitos</span>
+                      <strong>{campaign.sentCount}</strong>
+                    </div>
+                    <div className="campaignInsightMetricCard">
+                      <span>Aberturas</span>
+                      <strong>{opens}</strong>
+                    </div>
+                    <div className="campaignInsightMetricCard">
+                      <span>Cliques no botão</span>
+                      <strong>{clicks}</strong>
+                    </div>
+                  </div>
                   <div className="campaignInsightStats">
                     <span>{campaign.totalCount} na fila</span>
-                    <span>{campaign.sentCount} enviados</span>
                     <span>{campaign.failedCount} falhas</span>
-                    <span>{opens} aberturas</span>
-                    <span>{clicks} cliques</span>
                     <strong>{openRate}% open rate</strong>
                     <strong>{ctr}% CTR</strong>
                   </div>

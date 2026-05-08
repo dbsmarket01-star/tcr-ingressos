@@ -104,7 +104,7 @@ export const adminNavItems: AdminNavItem[] = [
   {
     href: "/admin/settings",
     label: "Configurações",
-    description: "Dados da TCR e integrações",
+    description: "Dados da operação e integrações",
     area: "SETTINGS"
   },
   {

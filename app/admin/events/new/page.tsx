@@ -46,7 +46,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           <div className="grid twoColumns">
             <label className="field">
               <span>Nome do evento</span>
-              <input name="title" placeholder="Ex: TCR Festival 2026" required />
+              <input name="title" placeholder="Ex: Conferencia de Lideranca 2026" required />
             </label>
             <label className="field">
               <span>Slug público</span>
@@ -652,7 +652,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           </div>
           <div className="seoPreviewBox">
             <span>/evento/slug-do-evento</span>
-            <strong>Nome do evento | Ingressos TCR Ingressos</strong>
+            <strong>Nome do evento | Ingressos da operação</strong>
             <p>
               Compre ingressos para o evento com data, local, cidade e descricao organizados para
               aparecer bem no Google Search.

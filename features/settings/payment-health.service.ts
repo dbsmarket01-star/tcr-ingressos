@@ -121,7 +121,7 @@ export async function getPaymentHealth() {
     },
     email: {
       resendConfigured: hasValue(process.env.RESEND_API_KEY),
-      from: process.env.EMAIL_FROM || "TCR Ingressos <ingressos@tcringressos.com.br>"
+      from: process.env.EMAIL_FROM || "Bilheteria <ingressos@tcringressos.app.br>"
     },
     security: {
       authSecretConfigured: hasValue(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET),
