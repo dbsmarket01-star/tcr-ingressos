@@ -148,18 +148,29 @@ export async function getOrganizationByHost(host?: string | null) {
     return null;
   }
 
+  const hostCandidates = Array.from(
+    new Set(
+      [normalizedHost, normalizedHost.startsWith("www.") ? normalizedHost.slice(4) : null].filter(
+        (value): value is string => Boolean(value)
+      )
+    )
+  );
+
   return unstable_cache(
-    async (lookupHost: string) =>
+    async (...lookupHosts: string[]) =>
       prisma.organization.findFirst({
         where: {
           isActive: true,
-          OR: [{ publicDomain: lookupHost }, { adminDomain: lookupHost }]
+          OR: [
+            { publicDomain: { in: lookupHosts } },
+            { adminDomain: { in: lookupHosts } }
+          ]
         },
         select: organizationBrandingSelect
       }),
     ["organization-by-host"],
     { revalidate: 60 }
-  )(normalizedHost);
+  )(...hostCandidates);
 }
 
 export async function getDefaultOrganizationId() {
