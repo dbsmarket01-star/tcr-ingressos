@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 
 type PublicSiteFooterProps = {
   brandName: string;
+  brandLogoUrl?: string | null;
+  supportPhone?: string | null;
   settings: {
     instagramUrl?: string | null;
     facebookUrl?: string | null;
@@ -10,6 +12,20 @@ type PublicSiteFooterProps = {
     supportEmail?: string | null;
   };
 };
+
+function normalizeWhatsappHref(rawPhone?: string | null) {
+  if (!rawPhone) {
+    return null;
+  }
+
+  const digits = rawPhone.replace(/\D/g, "");
+
+  if (!digits) {
+    return null;
+  }
+
+  return `https://wa.me/${digits}`;
+}
 
 function InstagramIcon() {
   return (
@@ -61,35 +77,68 @@ function WhatsappIcon() {
   );
 }
 
-export function PublicSiteFooter({ brandName, settings }: PublicSiteFooterProps) {
+export function PublicSiteFooter({ brandName, brandLogoUrl, supportPhone, settings }: PublicSiteFooterProps) {
+  const whatsappHref = settings.whatsappUrl || normalizeWhatsappHref(supportPhone);
   const socialLinks = [
     settings.instagramUrl ? { label: "Instagram", href: settings.instagramUrl, icon: <InstagramIcon /> } : null,
     settings.facebookUrl ? { label: "Facebook", href: settings.facebookUrl, icon: <FacebookIcon /> } : null,
     settings.youtubeUrl ? { label: "YouTube", href: settings.youtubeUrl, icon: <YoutubeIcon /> } : null,
-    settings.whatsappUrl ? { label: "WhatsApp", href: settings.whatsappUrl, icon: <WhatsappIcon /> } : null
+    whatsappHref ? { label: "WhatsApp", href: whatsappHref, icon: <WhatsappIcon /> } : null
   ].filter(Boolean) as Array<{ label: string; href: string; icon: ReactNode }>;
-
-  if (socialLinks.length === 0 && !settings.supportEmail) {
-    return null;
-  }
 
   return (
     <footer className="publicSiteFooter">
       <div className="container publicSiteFooterInner">
         <div className="publicSiteFooterBrand">
-          <strong>{brandName}</strong>
-          <span>{settings.supportEmail || "Siga nossas redes oficiais para avisos e novidades."}</span>
+          {brandLogoUrl ? <img alt={brandName} className="publicSiteFooterLogo" src={brandLogoUrl} /> : <strong>{brandName}</strong>}
+          <span>A bilheteria oficial dos melhores eventos da região.</span>
+          {socialLinks.length > 0 ? (
+            <div className="publicSiteFooterSocials" aria-label="Redes sociais oficiais">
+              {socialLinks.map((item) => (
+                <a key={item.label} href={item.href} target="_blank" rel="noreferrer noopener" aria-label={item.label}>
+                  {item.icon}
+                </a>
+              ))}
+            </div>
+          ) : null}
         </div>
-        {socialLinks.length > 0 ? (
-          <div className="publicSiteFooterSocials" aria-label="Redes sociais oficiais">
-            {socialLinks.map((item) => (
-              <a key={item.label} href={item.href} target="_blank" rel="noreferrer noopener" aria-label={item.label}>
-                {item.icon}
-              </a>
-            ))}
+        <div className="publicSiteFooterLinks">
+          <div>
+            <strong>TCR Ingressos</strong>
+            <span>A plataforma oficial para viver grandes experiências.</span>
           </div>
-        ) : null}
+          <div>
+            <strong>Institucional</strong>
+            <a href="#topo">Sobre nós</a>
+            <a href="#como-funciona">Como funciona</a>
+            <a href="#ajuda">Termos de uso</a>
+            <a href="#ajuda">Privacidade</a>
+          </div>
+          <div id="ajuda">
+            <strong>Ajuda</strong>
+            <a href="#ajuda">Central de ajuda</a>
+            <a href="/meus-ingressos">Encontrar meus ingressos</a>
+            <a href="#como-funciona">Dúvidas frequentes</a>
+            {settings.supportEmail ? <a href={`mailto:${settings.supportEmail}`}>Fale conosco</a> : <a href="/login">Entrar</a>}
+          </div>
+          <div>
+            <strong>Para produtores</strong>
+            <a href="/login">Quero vender</a>
+            <a href="/login">Painel do produtor</a>
+            <a href="/login">Recursos</a>
+          </div>
+          <div>
+            <strong>Formas de pagamento</strong>
+            <div className="publicSiteFooterPayments">
+              <span>Pix</span>
+              <span>VISA</span>
+              <span>Mastercard</span>
+            </div>
+            <small>Ambiente 100% seguro</small>
+          </div>
+        </div>
       </div>
+      <div className="publicSiteFooterBottom">© 2026 {brandName}. Todos os direitos reservados.</div>
     </footer>
   );
 }

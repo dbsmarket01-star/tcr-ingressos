@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createPlatformLeadAction } from "@/features/platform-leads/platform-lead.actions";
 import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
+import { HomeEventCarousel } from "@/components/public/HomeEventCarousel";
 import { listCachedPublishedEventShowcase } from "@/features/events/event.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
@@ -15,23 +16,123 @@ type HomePageProps = {
   }>;
 };
 
-function formatEventCardDate(date: Date) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit"
-  }).format(date);
+function EnvelopeIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M4 7.5C4 6.67 4.67 6 5.5 6H18.5C19.33 6 20 6.67 20 7.5V16.5C20 17.33 19.33 18 18.5 18H5.5C4.67 18 4 17.33 4 16.5V7.5Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path d="M5 8L12 13L19 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
 }
 
-const trustHighlights = ["Pix e cartão", "QR Code automático", "Check-in seguro"];
+function SearchIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <circle cx="11" cy="11" r="6.7" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M16 16L20 20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
 
-const operationalHighlights = [
-  "Página pública com foco em conversão",
-  "Pedidos, pagamentos e ingressos no mesmo fluxo",
-  "Painel administrativo para operação diária"
-];
+function UserIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M5.8 19.2C6.6 16.6 8.9 15 12 15C15.1 15 17.4 16.6 18.2 19.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function MenuIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <path d="M4 7H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M4 12H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M4 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PinIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <path d="M12 20C12 20 18 14.6 18 10.2C18 6.78 15.31 4 12 4C8.69 4 6 6.78 6 10.2C6 14.6 12 20 12 20Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <circle cx="12" cy="10.2" r="2.35" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function LightningIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <path d="M13.2 3.8L7.8 12H11.5L10.8 20.2L16.2 12H12.5L13.2 3.8Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M12 3L18 5.4V10.2C18 14.2 15.7 17.86 12 19.5C8.3 17.86 6 14.2 6 10.2V5.4L12 3Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function CardIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="5.5" width="18" height="13" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M3.5 10H20.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M7.2 15H10.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 7.7V12L15.1 13.9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function TicketIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M7 5.5H17C17 6.88 18.12 8 19.5 8V16C18.12 16 17 17.12 17 18.5H7C7 17.12 5.88 16 4.5 16V8C5.88 8 7 6.88 7 5.5Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M12 8.6V10.4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M12 13.6V15.4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function StarIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M12 4.8L14.17 9.2L19 9.9L15.5 13.3L16.33 18.1L12 15.82L7.67 18.1L8.5 13.3L5 9.9L9.83 9.2L12 4.8Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 const leadAnnualRevenueBands = [
   "Até R$ 300 mil por ano",
@@ -396,133 +497,155 @@ export default async function Home({ searchParams }: HomePageProps) {
     youtubeUrl?: string | null;
     whatsappUrl?: string | null;
   };
-  const featuredEvent = events[0] ?? null;
 
   return (
-    <main className="shell homePage">
-      <section className="homeHero">
-        <div className="homeHeroInner">
-          <div className="homeHeroContent">
-            <div className="brand homeBrand" aria-label={organizationContext.brandName}>
-              {organizationContext.brandLogoUrl ? (
-                <img alt={organizationContext.brandName} className="brandLogo" src={organizationContext.brandLogoUrl} />
-              ) : (
+    <main className="shell homePage" id="topo">
+      <section className="tcrPremiumHero">
+        <header className="tcrPremiumHeader">
+          <Link className="tcrPremiumLogo" href="/">
+            {organizationContext.brandLogoUrl ? (
+              <img alt={organizationContext.brandName} className="brandLogo" src={organizationContext.brandLogoUrl} />
+            ) : (
+              <>
                 <span className="brandMark">{organizationContext.brandMark}</span>
-              )}
-              {!organizationContext.brandLogoUrl ? <span>{organizationContext.brandName}</span> : null}
+                <span>{organizationContext.brandName}</span>
+              </>
+            )}
+          </Link>
+
+          <nav className="tcrPremiumNav" aria-label="Navegação principal">
+            <a href="#eventos">Eventos</a>
+            <a href="#como-funciona">Como funciona</a>
+            <a href="#ajuda">Ajuda</a>
+          </nav>
+
+          <form action="#eventos" className="tcrPremiumHeaderSearch" role="search">
+            <SearchIcon />
+            <input aria-label="Buscar eventos, artistas ou locais" name="q" placeholder="Buscar eventos, artistas ou locais" type="search" />
+          </form>
+
+          <div className="tcrPremiumActions">
+            <Link className="tcrPremiumGhostAction" href="/meus-ingressos">
+              <TicketIcon />
+              <span>Meus ingressos</span>
+            </Link>
+            <Link className="tcrPremiumTextLink" href="/login">
+              <UserIcon />
+              <span>Entrar</span>
+            </Link>
+            <Link className="button" href="/login">
+              Criar conta
+            </Link>
+          </div>
+
+          <details className="tcrPremiumMobileMenu">
+            <summary aria-label="Abrir menu">
+              <MenuIcon />
+            </summary>
+            <div className="tcrPremiumMobilePanel">
+              <a href="#eventos">Eventos</a>
+              <a href="#como-funciona">Como funciona</a>
+              <a href="#ajuda">Ajuda</a>
             </div>
-            <span className="homeEyebrow">Bilheteria oficial</span>
-            <h1>Eventos em cartaz com compra segura, operação rápida e experiência profissional.</h1>
+          </details>
+        </header>
+
+        <div className="tcrPremiumHeroInner">
+          <div className="tcrPremiumHeroCopy">
+            <span className="tcrPremiumEyebrow">Bilheteria oficial</span>
+            <h1>
+              A forma mais simples
+              <br />
+              de viver <span>grandes</span>
+              <br />
+              <span>experiências.</span>
+            </h1>
             <p>
-              Encontre os próximos eventos da {organizationContext.brandName}, escolha seu ingresso em poucos passos e
-              receba o QR Code automaticamente após a confirmação do pagamento.
+              Compra rápida, ambiente seguro e acesso fácil aos seus ingressos.
             </p>
-            <div className="homeTrustStrip" aria-label="Diferenciais da bilheteria">
-              {trustHighlights.map((item) => (
-                <span key={item}>{item}</span>
-              ))}
-            </div>
-            <div className="homeHeroStats" aria-label="Indicadores da bilheteria">
-              <div>
-                <span>Eventos</span>
-                <strong>{events.length}</strong>
-              </div>
-              <div>
-                <span>Fluxo</span>
-                <strong>Compra e check-in</strong>
-              </div>
-              <div>
-                <span>Pagamento</span>
-                <strong>Pix e cartão</strong>
-              </div>
+
+            <form action="#eventos" className="tcrPremiumMobileSearch" role="search">
+              <label>
+                <SearchIcon />
+                <input aria-label="Buscar eventos, artistas ou locais" name="q" placeholder="Buscar eventos, artistas ou locais" type="search" />
+              </label>
+              <label>
+                <PinIcon />
+                <select aria-label="Cidade">
+                  <option>Todas as cidades</option>
+                  <option>São Paulo, SP</option>
+                  <option>Porto Alegre, RS</option>
+                  <option>Santa Maria, RS</option>
+                </select>
+              </label>
+              <button className="button" type="submit">
+                Buscar eventos
+              </button>
+            </form>
+
+            <div className="tcrPremiumTrustRow">
+              <span>
+                <ShieldIcon />
+                <strong>Compra 100% segura</strong>
+                <small>Seus dados protegidos</small>
+              </span>
+              <span>
+                <CardIcon />
+                <strong>Pagamento facilitado</strong>
+                <small>Pix, cartão e mais</small>
+              </span>
+              <span>
+                <LightningIcon />
+                <strong>Ingresso na hora</strong>
+                <small>Entrega após confirmação</small>
+              </span>
             </div>
           </div>
 
-          <aside className="homeFeaturePanel" aria-label="Evento em destaque">
-            {featuredEvent ? (
-              <article className="homeFeaturedEventCard">
-                <div
-                  className="homeFeaturedEventMedia"
-                  style={{
-                    backgroundImage: `linear-gradient(180deg, rgba(8, 20, 29, 0.08), rgba(8, 20, 29, 0.28)), url("${featuredEvent.bannerUrl || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1200&q=80"}")`
-                  }}
-                />
-                <div className="homeFeaturedEventBody">
-                  <span className="eyebrow">Em destaque</span>
-                  <h2>{featuredEvent.title}</h2>
-                  <p>
-                    {formatEventCardDate(featuredEvent.startsAt)} • {featuredEvent.city}, {featuredEvent.state}
-                  </p>
-                  <strong>{featuredEvent.venueName}</strong>
-                  <Link className="button fullButton" href={`/evento/${featuredEvent.slug}`}>
-                    Comprar agora
-                  </Link>
-                </div>
-              </article>
-            ) : (
-              <article className="card homeEmptyState">
-                <h3>Nenhum evento em destaque</h3>
-                <p className="muted">Assim que a agenda for publicada, os próximos eventos aparecem aqui.</p>
-              </article>
-            )}
+          <aside className="tcrPremiumHeroCard">
+            <div className="tcrPremiumHeroCardIcon">
+              <TicketIcon />
+            </div>
+            <h2>Já tem ingresso?</h2>
+            <p>Acesse sua conta e encontre seus pedidos e ingressos.</p>
+            <Link className="tcrPremiumHeroCardButton" href="/meus-ingressos">
+              Entrar na minha conta
+            </Link>
           </aside>
         </div>
       </section>
 
-      <section className="container homeSection">
-        <div className="sectionHeader homeSectionHeader">
+      <section className="container tcrEventsSection" id="eventos">
+        <div className="tcrSectionHeader">
           <div>
-            <span className="eyebrow">Agenda aberta</span>
-            <h2>Confira os próximos eventos disponíveis</h2>
+            <span className="eyebrow">Em destaque</span>
+            <h2>Próximos eventos</h2>
           </div>
+          <Link className="tcrSectionLink" href="#eventos">
+            Ver todos os eventos
+          </Link>
         </div>
-
-        <div className="homeShowcaseGrid">
-          {events.length === 0 ? (
-            <article className="card homeEmptyState">
-              <h3>Nenhum evento publicado ainda</h3>
-              <p className="muted">Assim que um evento for publicado no painel, ele aparecerá automaticamente aqui.</p>
-            </article>
-          ) : (
-            events.map((event) => (
-              <article className="card linkCard eventShowcaseCard" key={event.id}>
-                <div
-                  className="eventShowcaseImage"
-                  style={{
-                    backgroundImage: `linear-gradient(180deg, rgba(8, 20, 29, 0.06), rgba(8, 20, 29, 0.28)), url("${event.bannerUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1400&q=80"}")`
-                  }}
-                />
-                <div className="eventShowcaseBody">
-                  <span className="eyebrow">
-                    {event.city}, {event.state}
-                  </span>
-                  <h3>{event.title}</h3>
-                  <p className="muted">{formatEventCardDate(event.startsAt)}</p>
-                  <strong>{event.venueName}</strong>
-                  <Link className="button smallButton" href={`/evento/${event.slug}`}>
-                    Comprar agora
-                  </Link>
-                </div>
-              </article>
-            ))
-          )}
-        </div>
-
-        <aside className="homeSupportPanel">
-          <span className="eyebrow">Compra assistida</span>
-          <h3>Do pedido ao QR Code, tudo em um só lugar.</h3>
-          <p>
-            A vitrine pública mostra os eventos em cartaz, enquanto o painel interno mantém a operação organizada para
-            vendas, ingressos e check-in.
-          </p>
-          <div className="homeSupportList">
-            {operationalHighlights.map((item) => (
-              <span key={item}>{item}</span>
-            ))}
-          </div>
-        </aside>
+        <HomeEventCarousel events={events} />
       </section>
-      <PublicSiteFooter brandName={organizationContext.brandName} settings={publicSocialSettings} />
+
+      <section className="container" id="como-funciona">
+        <article className="tcrPremiumValueBand">
+          <div className="tcrPremiumValueIcon">
+            <ShieldIcon />
+          </div>
+          <div>
+            <h3>Sua experiência é nossa prioridade.</h3>
+            <p>Tecnologia, segurança e atendimento para você curtir o que realmente importa.</p>
+          </div>
+        </article>
+      </section>
+
+      <PublicSiteFooter
+        brandLogoUrl={organizationContext.brandLogoUrl}
+        brandName={organizationContext.brandName}
+        supportPhone={organizationContext.organization.supportPhone}
+        settings={publicSocialSettings}
+      />
     </main>
   );
 }

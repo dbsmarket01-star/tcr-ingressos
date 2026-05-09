@@ -1,6 +1,6 @@
 import { EventStatus, Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
-import { ensureDefaultOrganizationBackfill } from "@/features/organizations/organization.service";
+import { getDefaultOrganizationId } from "@/features/organizations/organization.service";
 import { prisma } from "@/lib/prisma";
 import type { EventDraftInput } from "./event.schema";
 
@@ -70,7 +70,19 @@ export async function listPublishedEventShowcase(organizationId: string, limit =
       venueName: true,
       city: true,
       state: true,
-      bannerUrl: true
+      bannerUrl: true,
+      lots: {
+        where: {
+          status: "ACTIVE"
+        },
+        orderBy: {
+          priceInCents: "asc"
+        },
+        take: 1,
+        select: {
+          priceInCents: true
+        }
+      }
     }
   });
 }
@@ -80,7 +92,7 @@ const listCachedPublishedEventShowcaseRaw = unstable_cache(listPublishedEventSho
 });
 
 export async function listCachedPublishedEventShowcase(limit = 6, organizationId?: string | null) {
-  const resolvedOrganizationId = organizationId || (await ensureDefaultOrganizationBackfill());
+  const resolvedOrganizationId = organizationId || (await getDefaultOrganizationId());
   const events = await listCachedPublishedEventShowcaseRaw(resolvedOrganizationId, limit);
   return events.map((event) => normalizeCachedEventDates(event));
 }
@@ -310,7 +322,7 @@ const getCachedEventSeoBySlugRaw = unstable_cache(getEventSeoBySlug, ["public-ev
 });
 
 export async function getCachedPublicEventBySlug(slug: string) {
-  const organizationId = await ensureDefaultOrganizationBackfill();
+  const organizationId = await getDefaultOrganizationId();
   return normalizeCachedEventDates(await getCachedPublicEventBySlugRaw(slug, organizationId));
 }
 
@@ -319,7 +331,7 @@ export async function getCachedPublicEventBySlugInOrganization(slug: string, org
 }
 
 export async function getCachedEventSeoBySlug(slug: string) {
-  const organizationId = await ensureDefaultOrganizationBackfill();
+  const organizationId = await getDefaultOrganizationId();
   return normalizeCachedEventDates(await getCachedEventSeoBySlugRaw(slug, organizationId));
 }
 
