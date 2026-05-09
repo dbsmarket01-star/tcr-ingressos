@@ -7506,74 +7506,6 @@ body.operationTheme .topbar {
   line-height: 1.2;
 }
 
-.purchaseHeader {
-  align-items: flex-start;
-  display: flex;
-  gap: 12px;
-  justify-content: space-between;
-}
-
-.purchaseHeader div {
-  display: grid;
-  gap: 4px;
-}
-
-.purchaseHeader strong {
-  font-size: 20px;
-  line-height: 1.2;
-}
-
-.purchaseHeader small {
-  color: var(--brand-dark);
-  font-size: 13px;
-  font-weight: 900;
-}
-
-.miniAnchorButton {
-  background: #eef8f4;
-  border: 1px solid #c8eadf;
-  border-radius: 999px;
-  color: var(--brand-dark);
-  font-size: 12px;
-  font-weight: 900;
-  padding: 7px 10px;
-  text-decoration: none;
-}
-
-.purchaseAlerts {
-  background: #fff8e6;
-  border: 1px solid #f1d790;
-  border-radius: 8px;
-  color: #6b4b00;
-  display: grid;
-  gap: 4px;
-  padding: 12px;
-}
-
-.purchaseAlerts span {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.checkoutTrustRow {
-  display: grid;
-  gap: 8px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.checkoutTrustRow span {
-  background: #f1f6f4;
-  border: 1px solid #d7e5df;
-  border-radius: 8px;
-  color: var(--brand-dark);
-  font-size: 10px;
-  font-weight: 900;
-  min-height: 34px;
-  padding: 7px;
-  text-align: center;
-  text-transform: uppercase;
-}
-
 .mobileCheckoutBar {
   display: none;
 }
@@ -13827,10 +13759,6 @@ body.operationTheme .topbar {
     top: auto;
   }
 
-  .purchaseHeader {
-    display: grid;
-  }
-
   .lotOption {
     grid-template-columns: 1fr;
   }
@@ -13842,7 +13770,6 @@ body.operationTheme .topbar {
   }
 
   .checkoutEstimator,
-  .checkoutTrustRow,
   .cardSecurityNote,
   .paymentSteps,
   .checkInOpsBar,
@@ -14352,10 +14279,6 @@ body.operationTheme .topbar {
     padding: 11px;
   }
 
-  .purchaseHeader strong {
-    font-size: 18px;
-  }
-
   .paymentChoiceDisclosure summary {
     grid-template-columns: 1fr;
   }
@@ -14365,7 +14288,6 @@ body.operationTheme .topbar {
     justify-self: start;
   }
 
-  .checkoutTrustRow span,
   .cardSecurityNote span {
     min-height: 34px;
   }
