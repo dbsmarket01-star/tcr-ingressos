@@ -65,20 +65,6 @@ function formatPrice(valueInCents?: number) {
   }).format(valueInCents / 100)}`;
 }
 
-function getEventTag(title: string) {
-  const normalized = title.toLowerCase();
-
-  if (normalized.includes("festival")) {
-    return "Festival";
-  }
-
-  if (normalized.includes("open") || normalized.includes("party") || normalized.includes("festa")) {
-    return "Festa";
-  }
-
-  return "Show";
-}
-
 export function HomeEventCarousel({ events }: HomeEventCarouselProps) {
   const railRef = useRef<HTMLDivElement | null>(null);
 
@@ -116,9 +102,7 @@ export function HomeEventCarousel({ events }: HomeEventCarouselProps) {
               style={{
                 backgroundImage: `linear-gradient(180deg, rgba(6, 20, 24, 0.02), rgba(6, 20, 24, 0.24)), url("${event.bannerUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1200&q=80"}")`
               }}
-            >
-              <span className="tcrEventTag">{getEventTag(event.title)}</span>
-            </div>
+            />
             <div className="tcrEventCardBody">
               <small>{formatEventDate(event.startsAt)}</small>
               <h3>{event.title}</h3>

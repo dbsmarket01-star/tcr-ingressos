@@ -630,9 +630,6 @@ export default async function Home({ searchParams }: HomePageProps) {
             <span className="eyebrow">Em destaque</span>
             <h2>Próximos eventos</h2>
           </div>
-          <Link className="tcrSectionLink" href="#eventos">
-            Ver todos os eventos
-          </Link>
         </div>
         <HomeEventCarousel events={events} />
       </section>

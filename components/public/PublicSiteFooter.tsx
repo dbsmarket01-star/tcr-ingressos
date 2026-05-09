@@ -92,15 +92,6 @@ export function PublicSiteFooter({ brandName, supportPhone, settings }: PublicSi
         <div className="publicSiteFooterBrand publicFooterReferenceBrand">
           <strong className="publicFooterReferenceBrandTitle">{brandName}</strong>
           <span>A plataforma oficial para viver grandes experiências.</span>
-          {socialLinks.length > 0 ? (
-            <div className="publicSiteFooterSocials publicFooterReferenceSocials" aria-label="Redes sociais oficiais">
-              {socialLinks.map((item) => (
-                <a key={item.label} href={item.href} target="_blank" rel="noreferrer noopener" aria-label={item.label}>
-                  {item.icon}
-                </a>
-              ))}
-            </div>
-          ) : null}
         </div>
         <div className="publicSiteFooterLinks publicFooterReferenceLinks">
           <div>
@@ -116,16 +107,19 @@ export function PublicSiteFooter({ brandName, supportPhone, settings }: PublicSi
             <a href="#como-funciona">Dúvidas frequentes</a>
             {settings.supportEmail ? <a href={`mailto:${settings.supportEmail}`}>Contato</a> : <a href="/login">Contato</a>}
           </div>
-          <div>
-            <strong>Para produtores</strong>
-            <a href="/login">Quero vender</a>
-            <a href="/login">Painel do produtor</a>
-            <a href="/login">Recursos</a>
-          </div>
         </div>
       </div>
       <div className="container publicSiteFooterBottom publicFooterReferenceBottom">
         <span>© 2026 {brandName}. Todos os direitos reservados.</span>
+        {socialLinks.length > 0 ? (
+          <div className="publicSiteFooterSocials publicFooterReferenceSocials publicFooterReferenceBottomSocials" aria-label="Redes sociais oficiais">
+            {socialLinks.map((item) => (
+              <a key={item.label} href={item.href} target="_blank" rel="noreferrer noopener" aria-label={item.label}>
+                {item.icon}
+              </a>
+            ))}
+          </div>
+        ) : null}
         <div className="publicSiteFooterBottomPayments publicFooterReferenceBottomPayments" aria-label="Formas de pagamento">
           <small>Formas de pagamento</small>
           <div className="publicSiteFooterPayments publicFooterReferencePayments">
