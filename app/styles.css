@@ -7838,6 +7838,12 @@ body.operationTheme .topbar {
   text-decoration: underline;
 }
 
+.addToCartButton:disabled {
+  background: #9aa7a1;
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
 @media (max-width: 520px) {
   .ticketPickerCard {
     gap: 9px;
@@ -10237,6 +10243,183 @@ body.operationTheme .topbar {
 
 .checkoutBuyer h2 {
   margin: 0;
+}
+
+.checkoutBuyerNoTopBorder {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.checkoutFlowPage {
+  display: grid;
+  gap: 18px;
+  padding-bottom: 64px;
+  padding-top: 32px;
+}
+
+.checkoutBackLink {
+  color: var(--brand-dark);
+  font-size: 14px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.checkoutBackLink::before {
+  content: "< ";
+}
+
+.checkoutFlowGrid {
+  align-items: start;
+  display: grid;
+  gap: 22px;
+  grid-template-columns: minmax(280px, 410px) minmax(0, 1fr);
+}
+
+.checkoutCartPanel,
+.checkoutRegistrationPanel {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+}
+
+.checkoutCartPanel {
+  position: sticky;
+  top: 92px;
+}
+
+.checkoutCartPanel h1,
+.checkoutRegistrationPanel h2 {
+  color: var(--ink);
+  font-size: 28px;
+  letter-spacing: 0;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.checkoutCartPanel p,
+.checkoutRegistrationPanel p {
+  color: var(--muted);
+  font-weight: 700;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.checkoutCartItems {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.checkoutCartItem {
+  align-items: start;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.checkoutCartItem div {
+  display: grid;
+  gap: 4px;
+}
+
+.checkoutCartItem strong {
+  color: var(--ink);
+}
+
+.checkoutCartItem span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.checkoutCartTotal {
+  background: #f7fbfa;
+  border: 1px solid #d7e5df;
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.checkoutCartTotal div {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.checkoutCartTotal span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.checkoutCartTotal strong {
+  color: var(--ink);
+}
+
+.checkoutCartTotal div:last-child {
+  border-top: 1px solid #d7e5df;
+  padding-top: 8px;
+}
+
+.checkoutCartTotal div:last-child strong {
+  color: var(--brand-dark);
+  font-size: 22px;
+}
+
+.checkoutStepEyebrow {
+  color: var(--brand-dark);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.checkoutRegistrationForm {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+@media (max-width: 900px) {
+  .checkoutFlowGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .checkoutCartPanel {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .checkoutFlowPage {
+    gap: 12px;
+    padding: 20px 14px 44px;
+  }
+
+  .checkoutCartPanel,
+  .checkoutRegistrationPanel {
+    border-radius: 8px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+    padding: 16px;
+  }
+
+  .checkoutCartPanel h1,
+  .checkoutRegistrationPanel h2 {
+    font-size: 24px;
+  }
+
+  .checkoutCartItem {
+    gap: 8px;
+  }
+
+  .checkoutCartItem > strong {
+    font-size: 14px;
+  }
 }
 
 .orderGrid {

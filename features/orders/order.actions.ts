@@ -34,6 +34,54 @@ function checkoutValidationMessage(error: unknown) {
   return "Verifique comprador e ingressos selecionados.";
 }
 
+function checkoutValidationField(error: unknown) {
+  if (error && typeof error === "object" && "issues" in error) {
+    const issues = error.issues as Array<{ path?: Array<string | number>; message?: string }>;
+    return issues[0]?.path?.join(".");
+  }
+
+  return undefined;
+}
+
+function hasSelectedTickets(formData: FormData, lotIds: string[]) {
+  return lotIds.some((lotId) => Number(formData.get(`quantity_${lotId}`) ?? 0) > 0);
+}
+
+function addQueryParam(params: URLSearchParams, key: string, value: FormDataEntryValue | null) {
+  const text = String(value ?? "").trim();
+
+  if (text) {
+    params.set(key, text);
+  }
+}
+
+function buildCheckoutReturnUrl(formData: FormData, eventSlug: string, message: string) {
+  const params = new URLSearchParams();
+  const lotIds = formData.getAll("lotId").map(String);
+
+  params.set("checkoutError", message);
+  addQueryParam(params, "utm_source", formData.get("utmSource"));
+  addQueryParam(params, "utm_medium", formData.get("utmMedium"));
+  addQueryParam(params, "utm_campaign", formData.get("utmCampaign"));
+  addQueryParam(params, "utm_content", formData.get("utmContent"));
+  addQueryParam(params, "utm_term", formData.get("utmTerm"));
+  addQueryParam(params, "ref", formData.get("referrer"));
+  addQueryParam(params, "landingPage", formData.get("landingPage"));
+
+  lotIds.forEach((lotId) => {
+    const quantity = String(formData.get(`quantity_${lotId}`) ?? "0").trim();
+
+    params.append("lotId", lotId);
+    params.set(`quantity_${lotId}`, quantity || "0");
+  });
+
+  return `/evento/${eventSlug}/checkout?${params.toString()}#cadastro`;
+}
+
+function buildEventReturnUrl(eventSlug: string, message: string) {
+  return `/evento/${eventSlug || ""}?checkoutError=${encodeURIComponent(message)}#ingressos`;
+}
+
 export async function createCheckoutOrderAction(formData: FormData) {
   const lotIds = formData.getAll("lotId").map(String);
   const eventSlug = String(formData.get("eventSlug") ?? "").trim();
@@ -45,7 +93,11 @@ export async function createCheckoutOrderAction(formData: FormData) {
     assertRateLimit(`checkout:${ip}`, { limit: 15, windowMs: 60_000 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Aguarde alguns instantes e tente novamente.";
-    redirect(`/evento/${eventSlug || ""}?checkoutError=${encodeURIComponent(message)}#ingressos`);
+    redirect(
+      eventSlug && hasSelectedTickets(formData, lotIds)
+        ? buildCheckoutReturnUrl(formData, eventSlug, message)
+        : buildEventReturnUrl(eventSlug, message)
+    );
   }
 
   const parsed = checkoutOrderSchema.safeParse({
@@ -74,7 +126,14 @@ export async function createCheckoutOrderAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect(`/evento/${eventSlug || ""}?checkoutError=${encodeURIComponent(checkoutValidationMessage(parsed.error))}#ingressos`);
+    const message = checkoutValidationMessage(parsed.error);
+    const field = checkoutValidationField(parsed.error);
+
+    redirect(
+      eventSlug && field !== "items" && hasSelectedTickets(formData, lotIds)
+        ? buildCheckoutReturnUrl(formData, eventSlug, message)
+        : buildEventReturnUrl(eventSlug, message)
+    );
   }
 
   let order: Awaited<ReturnType<typeof createCheckoutOrder>>;
@@ -84,7 +143,7 @@ export async function createCheckoutOrderAction(formData: FormData) {
     order = await createCheckoutOrder(parsed.data, organizationContext.organization.id);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível criar o pedido. Tente novamente.";
-    redirect(`/evento/${eventSlug || parsed.data.eventSlug}?checkoutError=${encodeURIComponent(message)}#ingressos`);
+    redirect(buildCheckoutReturnUrl(formData, eventSlug || parsed.data.eventSlug, message));
   }
 
   if (order.event.autoPendingPaymentEmailEnabled !== false) {
@@ -93,10 +152,10 @@ export async function createCheckoutOrderAction(formData: FormData) {
         to: order.customer.email,
         buyerName: order.customer.name,
         orderCode: order.code,
-        brandName: order.event.organization?.name || "TCR Ingressos",
-      eventTitle: order.event.title,
-      eventDate: order.event.startsAt,
-      venueName: order.event.venueName,
+        brandName: order.event.organization?.name || "Ingresaas",
+        eventTitle: order.event.title,
+        eventDate: order.event.startsAt,
+        venueName: order.event.venueName,
       totalInCents: order.totalInCents,
       expiresAt: order.expiresAt,
       orderUrl: createPublicOrderUrl(order.code, order.event.organization)

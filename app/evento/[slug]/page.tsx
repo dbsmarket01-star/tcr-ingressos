@@ -4,21 +4,18 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
 import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
-import { SubmitButton } from "@/components/forms/SubmitButton";
-import { getBuyerProfile } from "@/features/customer-auth/google-buyer.service";
 import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrganization } from "@/features/events/event.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
-import { createCheckoutOrderAction } from "@/features/orders/order.actions";
 import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import { buildEventSeo } from "@/features/seo/event-seo";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { imageCropFromBannerPosition, imageCropStyle, parseImageCrop } from "@/lib/image-crop";
-import { MetaTrackingFields } from "./MetaTrackingFields";
 import { TrackingRuntime } from "./TrackingRuntime";
 import { CheckoutEstimator } from "./CheckoutEstimator";
 import { TicketQuantityStepper } from "./TicketQuantityStepper";
+import { AddToCartButton } from "./AddToCartButton";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
@@ -82,10 +79,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const { slug } = await params;
   const query = searchParams ? await searchParams : {};
   const organizationContext = await getCurrentOrganizationContext();
-  const [event, buyerProfile] = await Promise.all([
-    getCachedPublicEventBySlugInOrganization(slug, organizationContext.organization.id),
-    getBuyerProfile()
-  ]);
+  const event = await getCachedPublicEventBySlugInOrganization(slug, organizationContext.organization.id);
 
   if (!event) {
     notFound();
@@ -285,18 +279,16 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           {activeLots.length === 0 ? (
             <div className="empty">Nenhum ingresso disponível no momento.</div>
           ) : (
-            <form action={createCheckoutOrderAction} className="form">
+            <form action={`/evento/${event.slug}/checkout`} className="form" method="get">
               {checkoutError ? <div className="errorBox">{checkoutError}</div> : null}
-              <input type="hidden" name="eventId" value={event.id} />
-              <input type="hidden" name="eventSlug" value={event.slug} />
-              <input type="hidden" name="utmSource" value={tracking.utmSource ?? ""} />
-              <input type="hidden" name="utmMedium" value={tracking.utmMedium ?? ""} />
-              <input type="hidden" name="utmCampaign" value={tracking.utmCampaign ?? ""} />
-              <input type="hidden" name="utmContent" value={tracking.utmContent ?? ""} />
-              <input type="hidden" name="utmTerm" value={tracking.utmTerm ?? ""} />
-              <input type="hidden" name="referrer" value={tracking.referrer ?? ""} />
+              <input type="hidden" name="utm_source" value={tracking.utmSource ?? ""} />
+              <input type="hidden" name="utm_medium" value={tracking.utmMedium ?? ""} />
+              <input type="hidden" name="utm_campaign" value={tracking.utmCampaign ?? ""} />
+              <input type="hidden" name="utm_content" value={tracking.utmContent ?? ""} />
+              <input type="hidden" name="utm_term" value={tracking.utmTerm ?? ""} />
+              <input type="hidden" name="ref" value={tracking.referrer ?? ""} />
               <input type="hidden" name="landingPage" value={tracking.landingPage ?? ""} />
-              <MetaTrackingFields />
+              {typeof query.fbclid === "string" ? <input type="hidden" name="fbclid" value={query.fbclid} /> : null}
               <div className="ticketPickerList">
                 {activeLots.map((lot) => {
                   const available = lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity;
@@ -341,81 +333,9 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
               <CheckoutEstimator lots={checkoutEstimatorLots} />
 
-              <div className="checkoutBuyer">
-                <h2>Comprador</h2>
-                <Link
-                  className="googleButton"
-                  href={`/api/auth/google/start?returnTo=${encodeURIComponent(`/evento/${event.slug}#ingressos`)}`}
-                >
-                  <span>G</span>
-                  Continuar com Google
-                </Link>
-                {buyerProfile ? (
-                  <p className="success">
-                    Nome e e-mail preenchidos com sua conta Google: {buyerProfile.email}
-                  </p>
-                ) : null}
-                <label className="field">
-                  <span>Nome completo</span>
-                  <input
-                    name="buyerName"
-                    autoComplete="name"
-                    required
-                    defaultValue={buyerProfile?.name || ""}
-                  />
-                </label>
-                <label className="field">
-                  <span>Email para receber os ingressos</span>
-                  <input
-                    name="buyerEmail"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    defaultValue={buyerProfile?.email || ""}
-                  />
-                  <small>O pedido, o comprovante e os QR Codes serão enviados para este e-mail.</small>
-                </label>
-                <label className="field">
-                  <span>CPF</span>
-                  <input
-                    name="buyerDocument"
-                    autoComplete="off"
-                    inputMode="numeric"
-                    required
-                  />
-                </label>
-                <label className="field">
-                  <span>Telefone</span>
-                  <input
-                    name="buyerPhone"
-                    type="tel"
-                    autoComplete="tel"
-                    inputMode="tel"
-                    defaultValue={buyerProfile?.phone || ""}
-                  />
-                  <small>Usado apenas para suporte do pedido, caso seja necessário.</small>
-                </label>
-              </div>
-
-              <details className="checkoutCouponDisclosure">
-                <summary>Inserir cupom de desconto</summary>
-                <label className="field">
-                  <span>Cupom de desconto</span>
-                  <input name="coupon" placeholder="Digite seu cupom" />
-                </label>
-              </details>
-
-              {event.supportWhatsappUrl ? (
-                <p className="checkoutSupportHint">
-                  Precisa de ajuda antes de pagar? Use o ícone do WhatsApp para falar com o suporte deste evento.
-                </p>
-              ) : null}
-
-              <SubmitButton className="button fullButton" pendingText="Criando pedido...">
-                Selecione um Ingresso
-              </SubmitButton>
+              <AddToCartButton />
               <p className="checkoutFootnote">
-                Pagamento processado com confirmação automática. O ingresso com QR Code é liberado após a aprovação.
+                Você informará seus dados e concluirá o pedido na próxima etapa.
               </p>
               <p className="checkoutFeeHint">ⓘ Entenda nossa taxa</p>
             </form>
@@ -428,7 +348,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             {activeLots.length} opções
             {lowestTotalInCents > 0 ? ` • desde ${formatCurrency(lowestTotalInCents)}` : ""}
           </span>
-          <strong>{ctaText}</strong>
+          <strong>Escolher ingressos</strong>
         </a>
       ) : null}
       <PublicSiteFooter brandName={organizationContext.brandName} settings={publicSocialSettings} />
