@@ -16212,3 +16212,65 @@ body.operationTheme .topbar {
     display: none !important;
   }
 }
+
+/* Final mobile menu QA: avoid overlaying hero text */
+@media (max-width: 640px) {
+  .homePage .tcrPremiumHeader {
+    grid-template-areas:
+      "logo actions"
+      "menu menu" !important;
+    overflow: visible !important;
+    z-index: 30 !important;
+  }
+
+  .homePage .tcrPremiumMobileMenu {
+    display: block !important;
+    grid-area: menu !important;
+    justify-self: stretch !important;
+    margin-top: 0 !important;
+    position: relative !important;
+    text-align: right !important;
+    width: 100% !important;
+    z-index: 40 !important;
+  }
+
+  .homePage .tcrPremiumMobileMenu summary {
+    display: inline-flex !important;
+    margin-left: 0 !important;
+  }
+
+  .homePage .tcrPremiumMobilePanel {
+    background: rgba(3, 17, 13, 0.96) !important;
+    border: 1px solid rgba(27, 214, 127, 0.28) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28) !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0 !important;
+    margin: 6px 0 4px !important;
+    max-width: none !important;
+    padding: 6px !important;
+    position: static !important;
+    right: auto !important;
+    top: auto !important;
+    width: 100% !important;
+  }
+
+  .homePage .tcrPremiumMobilePanel a {
+    align-items: center !important;
+    border-bottom: 0 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #f7fbfa !important;
+    display: flex !important;
+    font-size: 13px !important;
+    font-weight: 750 !important;
+    justify-content: center !important;
+    min-height: 38px !important;
+    padding: 0 8px !important;
+    text-align: center !important;
+  }
+
+  .homePage .tcrPremiumMobilePanel a:last-child {
+    border-right: 0 !important;
+  }
+}
