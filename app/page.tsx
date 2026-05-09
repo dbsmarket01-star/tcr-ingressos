@@ -551,7 +551,7 @@ export default async function Home({ searchParams }: HomePageProps) {
         </header>
 
         <div className="tcrPremiumHeroInner">
-          <div className="tcrPremiumHeroCopy">
+          <div className="tcrPremiumHeroLead">
             <span className="tcrPremiumEyebrow">Bilheteria oficial</span>
             <h1>
               A forma mais simples
@@ -563,55 +563,51 @@ export default async function Home({ searchParams }: HomePageProps) {
             <p>
               Compra rápida, ambiente seguro e acesso fácil aos seus ingressos.
             </p>
-
-            <form action="#eventos" className="tcrPremiumMobileSearch" role="search">
-              <label>
-                <SearchIcon />
-                <input aria-label="Buscar eventos, artistas ou locais" name="q" placeholder="Buscar eventos, artistas ou locais" type="search" />
-              </label>
-              <label>
-                <PinIcon />
-                <select aria-label="Cidade">
-                  <option>Todas as cidades</option>
-                  <option>São Paulo, SP</option>
-                  <option>Porto Alegre, RS</option>
-                  <option>Santa Maria, RS</option>
-                </select>
-              </label>
-              <button className="button" type="submit">
-                Buscar eventos
-              </button>
-            </form>
-
-            <div className="tcrPremiumTrustRow">
-              <span>
-                <ShieldIcon />
-                <strong>Compra 100% segura</strong>
-                <small>Seus dados protegidos</small>
-              </span>
-              <span>
-                <CardIcon />
-                <strong>Pagamento facilitado</strong>
-                <small>Pix, cartão e mais</small>
-              </span>
-              <span>
-                <LightningIcon />
-                <strong>Ingresso na hora</strong>
-                <small>Entrega após confirmação</small>
-              </span>
-            </div>
           </div>
 
-          <aside className="tcrPremiumHeroCard">
-            <div className="tcrPremiumHeroCardIcon">
-              <TicketIcon />
-            </div>
-            <h2>Já tem ingresso?</h2>
-            <p>Acesse sua conta e encontre seus pedidos e ingressos.</p>
-            <Link className="tcrPremiumHeroCardButton" href="/meus-ingressos">
-              Entrar na minha conta
-            </Link>
-          </aside>
+          <form action="#eventos" className="tcrPremiumMobileSearch" role="search">
+            <label>
+              <SearchIcon />
+              <input aria-label="Buscar eventos, artistas ou locais" name="q" placeholder="Buscar eventos, artistas ou locais" type="search" />
+            </label>
+            <label>
+              <PinIcon />
+              <select aria-label="Cidade">
+                <option>Todas as cidades</option>
+                <option>São Paulo, SP</option>
+                <option>Porto Alegre, RS</option>
+                <option>Santa Maria, RS</option>
+              </select>
+            </label>
+            <button className="button" type="submit">
+              Buscar eventos
+            </button>
+          </form>
+
+          <div className="tcrPremiumTrustRow">
+            <span>
+              <ShieldIcon />
+              <strong>Compra 100% segura</strong>
+              <small>Seus dados protegidos</small>
+            </span>
+            <span>
+              <CardIcon />
+              <strong>Pagamento facilitado</strong>
+              <small>Pix, cartão e mais</small>
+            </span>
+            <span>
+              <LightningIcon />
+              <strong>Ingresso na hora</strong>
+              <small>Entrega após confirmação</small>
+            </span>
+          </div>
+
+          <div className="tcrPremiumTrustInline" aria-label="Benefícios rápidos">
+            <span>Compra 100% segura</span>
+            <span>Pagamento facilitado</span>
+            <span>Ingresso na hora</span>
+          </div>
+
         </div>
       </section>
 

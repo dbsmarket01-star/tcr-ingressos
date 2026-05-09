@@ -234,12 +234,18 @@
   align-items: start;
   display: grid;
   gap: 48px;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "lead"
+    "search"
+    "trust";
   padding-bottom: 62px;
   padding-top: 32px;
 }
 
+.tcrPremiumHeroLead,
 .tcrPremiumHeroCopy {
+  grid-area: lead;
   max-width: 720px;
   padding: 36px 0 0;
 }
@@ -279,12 +285,14 @@
 }
 
 .tcrPremiumMobileSearch {
+  grid-area: search;
   display: none;
 }
 
 .tcrPremiumTrustRow {
   display: grid;
   gap: 18px;
+  grid-area: trust;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 40px;
   max-width: 760px;
@@ -314,14 +322,8 @@
   line-height: 1.45;
 }
 
-.tcrPremiumHeroCard {
-  align-self: center;
-  backdrop-filter: blur(8px);
-  background: linear-gradient(180deg, rgba(7, 22, 18, 0.88), rgba(8, 22, 18, 0.74));
-  border: 1px solid rgba(30, 208, 124, 0.36);
-  border-radius: 28px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 24px 60px rgba(0, 0, 0, 0.24);
-  padding: 34px 30px;
+.tcrPremiumTrustInline {
+  display: none;
 }
 
 .tcrPremiumHeroCardIcon,
@@ -333,37 +335,6 @@
   height: 78px;
   justify-content: center;
   width: 78px;
-}
-
-.tcrPremiumHeroCard h2 {
-  color: #ffffff;
-  font-size: 28px;
-  line-height: 1.15;
-  margin: 26px 0 14px;
-}
-
-.tcrPremiumHeroCard p {
-  color: rgba(247, 251, 250, 0.84);
-  font-size: 18px;
-  line-height: 1.6;
-  margin: 0 0 28px;
-}
-
-.tcrPremiumHeroCardButton {
-  align-items: center;
-  border: 1px solid rgba(28, 214, 127, 0.36);
-  border-radius: 16px;
-  color: #15ca73;
-  display: inline-flex;
-  font-size: 20px;
-  font-weight: 700;
-  justify-content: center;
-  min-height: 66px;
-  width: 100%;
-}
-
-.tcrPremiumHeroCardButton:hover {
-  background: rgba(21, 202, 115, 0.06);
 }
 
 .tcrEventsSection {
@@ -934,10 +905,15 @@
   .tcrPremiumHeroInner {
     align-items: start;
     gap: 24px;
-    grid-template-columns: minmax(0, 1.12fr) 240px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "lead"
+      "search"
+      "trust";
     padding-top: 10px;
   }
 
+  .tcrPremiumHeroLead,
   .tcrPremiumHeroCopy {
     padding-top: 8px;
   }
@@ -951,12 +927,6 @@
     gap: 12px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     max-width: none;
-  }
-
-  .tcrPremiumHeroCard {
-    margin-top: 76px;
-    max-width: none;
-    padding: 26px 22px;
   }
 
   .publicSiteFooterInner {
@@ -977,40 +947,61 @@
   }
 
   .tcrPremiumHeader {
+    align-items: start;
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      "logo actions actions"
-      ". . menu";
+      "logo actions"
+      "logo menu";
     min-height: auto;
     padding-top: 12px;
+    row-gap: 6px;
   }
 
   .tcrPremiumLogo .brandLogo {
-    height: 50px;
-    max-width: 124px;
+    height: 42px;
+    max-width: 110px;
   }
 
   .tcrPremiumActions {
-    flex-wrap: wrap;
-    gap: 5px 8px;
+    flex-wrap: nowrap;
+    gap: 10px;
     justify-content: flex-end;
+    justify-self: end;
   }
 
   .tcrPremiumGhostAction {
-    gap: 5px;
+    border-right: 0;
+    gap: 4px;
+    min-height: 32px;
+    min-width: 0;
+    padding-right: 0;
   }
 
   .tcrPremiumGhostAction span,
   .tcrPremiumTextLink span {
-    font-size: 13px;
+    font-size: 11px;
+    line-height: 1;
   }
 
   .tcrPremiumTextLink {
-    gap: 5px;
+    gap: 4px;
+    min-height: 32px;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .tcrPremiumGhostAction svg,
+  .tcrPremiumTextLink svg {
+    height: 15px;
+    width: 15px;
   }
 
   .tcrPremiumActions .button {
+    border-radius: 12px;
+    font-size: 12px;
     min-height: 34px;
-    padding: 0 10px;
+    padding: 0 12px;
+    white-space: nowrap;
   }
 
   .tcrPremiumMobileMenu summary {
@@ -1027,7 +1018,11 @@
 
   .tcrPremiumHeroInner {
     gap: 8px;
-    grid-template-columns: minmax(0, 1fr) 138px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "lead"
+      "search"
+      "trust";
     padding-bottom: 4px;
     padding-top: 0;
   }
@@ -1063,51 +1058,35 @@
   }
 
   .tcrPremiumTrustRow {
-    gap: 6px;
-    margin-top: 7px;
+    display: none;
   }
 
-  .tcrPremiumTrustRow span {
-    gap: 3px;
-    grid-template-columns: 16px minmax(0, 1fr);
-  }
-
-  .tcrPremiumTrustRow strong {
-    font-size: 11px;
-  }
-
-  .tcrPremiumTrustRow small {
-    font-size: 9px;
-    line-height: 1.1;
-  }
-
-  .tcrPremiumHeroCard {
-    align-self: start;
-    border-radius: 18px;
-    margin-top: 22px;
-    padding: 10px 9px;
-  }
-
-  .tcrPremiumHeroCardIcon {
-    height: 34px;
-    width: 34px;
-  }
-
-  .tcrPremiumHeroCard h2 {
-    font-size: 14px;
-    margin: 8px 0 5px;
-  }
-
-  .tcrPremiumHeroCard p {
-    font-size: 10px;
-    line-height: 1.18;
-    margin-bottom: 8px;
-  }
-
-  .tcrPremiumHeroCardButton {
-    border-radius: 12px;
+  .tcrPremiumTrustInline {
+    color: rgba(247, 251, 250, 0.92);
+    display: flex;
+    flex-wrap: wrap;
     font-size: 12px;
-    min-height: 34px;
+    font-weight: 700;
+    gap: 0;
+    grid-area: trust;
+    line-height: 1.35;
+    margin-top: 10px;
+  }
+
+  .tcrPremiumTrustInline span {
+    display: inline-flex;
+    white-space: nowrap;
+  }
+
+  .tcrPremiumTrustInline span::after {
+    color: rgba(247, 251, 250, 0.58);
+    content: "/";
+    margin: 0 8px;
+  }
+
+  .tcrPremiumTrustInline span:last-child::after {
+    content: none;
+    margin: 0;
   }
 
   .tcrSectionHeader {
@@ -1189,32 +1168,40 @@
   }
 
   .tcrPremiumActions {
-    gap: 4px 6px;
+    gap: 8px;
   }
 
   .tcrPremiumGhostAction,
   .tcrPremiumTextLink {
-    font-size: 13px;
+    font-size: 11px;
+  }
+
+  .tcrPremiumGhostAction span,
+  .tcrPremiumTextLink span {
+    font-size: 10px;
+  }
+
+  .tcrPremiumActions .button {
+    font-size: 11px;
+    padding: 0 11px;
   }
 
   .tcrPremiumHeroInner {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    padding-bottom: 4px;
+    align-items: start;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "lead"
+      "search"
+      "trust";
+    gap: 10px;
+    padding-bottom: 6px;
   }
 
   .tcrPremiumHeroCopy p,
   .tcrPremiumMobileSearch,
-  .tcrPremiumMobileSearch .button,
-  .tcrPremiumHeroCard {
+  .tcrPremiumMobileSearch .button {
     max-width: none;
     width: 100%;
-  }
-
-  .tcrPremiumHeroCard {
-    margin-top: 0;
-    padding: 10px 9px;
-    width: min(100%, 220px);
   }
 
   .tcrPremiumEyebrow {
@@ -1226,13 +1213,13 @@
   .tcrPremiumHeroCopy h1 {
     font-size: clamp(24px, 8.8vw, 32px);
     margin: 10px 0 7px;
-    max-width: 210px;
+    max-width: 188px;
   }
 
   .tcrPremiumHeroCopy p {
     font-size: 10px;
     line-height: 1.2;
-    max-width: 180px;
+    max-width: 162px;
   }
 
   .tcrPremiumHero::after {
@@ -1252,8 +1239,13 @@
     min-height: 36px;
   }
 
-  .tcrPremiumTrustRow {
-    grid-template-columns: 1fr;
+  .tcrPremiumTrustInline {
+    font-size: 10px;
+    margin-top: 8px;
+  }
+
+  .tcrPremiumTrustInline span::after {
+    margin: 0 6px;
   }
 
   .homePage .tcrCarouselRail {
@@ -1262,6 +1254,40 @@
 
   .publicSiteFooterInner {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 375px) {
+  .tcrPremiumHeroInner {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "lead"
+      "search"
+      "trust";
+    gap: 8px;
+    padding-bottom: 4px;
+  }
+
+  .tcrPremiumTrustInline {
+    font-size: 9px;
+  }
+
+  .tcrPremiumTrustInline span::after {
+    margin: 0 5px;
+  }
+
+  .tcrPremiumActions {
+    gap: 6px;
+  }
+
+  .tcrPremiumGhostAction span,
+  .tcrPremiumTextLink span {
+    font-size: 10px;
+  }
+
+  .tcrPremiumActions .button {
+    min-height: 32px;
+    padding: 0 10px;
   }
 }
 
