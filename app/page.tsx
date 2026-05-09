@@ -134,6 +134,17 @@ function StarIcon() {
   );
 }
 
+function HeadsetIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <path d="M5 12C5 8.13 8.13 5 12 5C15.87 5 19 8.13 19 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M6.5 11.8H7.8C8.46 11.8 9 12.34 9 13V17C9 17.66 8.46 18.2 7.8 18.2H6.5C5.67 18.2 5 17.53 5 16.7V13.3C5 12.47 5.67 11.8 6.5 11.8Z" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M16.2 11.8H17.5C18.33 11.8 19 12.47 19 13.3V16.7C19 17.53 18.33 18.2 17.5 18.2H16.2C15.54 18.2 15 17.66 15 17V13C15 12.34 15.54 11.8 16.2 11.8Z" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M15.2 19.2C14.5 19.73 13.46 20 12.1 20H11.4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 const leadAnnualRevenueBands = [
   "Até R$ 300 mil por ano",
   "De R$ 300 mil a R$ 1 milhão por ano",
@@ -611,6 +622,8 @@ export default async function Home({ searchParams }: HomePageProps) {
         </div>
       </section>
 
+      <div className="tcrHeroToEventsBridge" aria-hidden="true" />
+
       <section className="container tcrEventsSection" id="eventos">
         <div className="tcrSectionHeader">
           <div>
@@ -632,6 +645,9 @@ export default async function Home({ searchParams }: HomePageProps) {
           <div>
             <h3>Sua experiência é nossa prioridade.</h3>
             <p>Tecnologia, segurança e atendimento para você curtir o que realmente importa.</p>
+          </div>
+          <div className="tcrPremiumValueSupportIcon" aria-hidden="true">
+            <HeadsetIcon />
           </div>
         </article>
       </section>

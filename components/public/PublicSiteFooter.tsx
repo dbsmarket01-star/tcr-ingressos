@@ -77,7 +77,7 @@ function WhatsappIcon() {
   );
 }
 
-export function PublicSiteFooter({ brandName, brandLogoUrl, supportPhone, settings }: PublicSiteFooterProps) {
+export function PublicSiteFooter({ brandName, supportPhone, settings }: PublicSiteFooterProps) {
   const whatsappHref = settings.whatsappUrl || normalizeWhatsappHref(supportPhone);
   const socialLinks = [
     settings.instagramUrl ? { label: "Instagram", href: settings.instagramUrl, icon: <InstagramIcon /> } : null,
@@ -87,13 +87,13 @@ export function PublicSiteFooter({ brandName, brandLogoUrl, supportPhone, settin
   ].filter(Boolean) as Array<{ label: string; href: string; icon: ReactNode }>;
 
   return (
-    <footer className="publicSiteFooter">
-      <div className="container publicSiteFooterInner">
-        <div className="publicSiteFooterBrand">
-          {brandLogoUrl ? <img alt={brandName} className="publicSiteFooterLogo" src={brandLogoUrl} /> : <strong>{brandName}</strong>}
-          <span>A bilheteria oficial dos melhores eventos da região.</span>
+    <footer className="publicSiteFooter publicFooterReference">
+      <div className="container publicSiteFooterInner publicFooterReferenceInner">
+        <div className="publicSiteFooterBrand publicFooterReferenceBrand">
+          <strong className="publicFooterReferenceBrandTitle">{brandName}</strong>
+          <span>A plataforma oficial para viver grandes experiências.</span>
           {socialLinks.length > 0 ? (
-            <div className="publicSiteFooterSocials" aria-label="Redes sociais oficiais">
+            <div className="publicSiteFooterSocials publicFooterReferenceSocials" aria-label="Redes sociais oficiais">
               {socialLinks.map((item) => (
                 <a key={item.label} href={item.href} target="_blank" rel="noreferrer noopener" aria-label={item.label}>
                   {item.icon}
@@ -102,11 +102,7 @@ export function PublicSiteFooter({ brandName, brandLogoUrl, supportPhone, settin
             </div>
           ) : null}
         </div>
-        <div className="publicSiteFooterLinks">
-          <div>
-            <strong>TCR Ingressos</strong>
-            <span>A plataforma oficial para viver grandes experiências.</span>
-          </div>
+        <div className="publicSiteFooterLinks publicFooterReferenceLinks">
           <div>
             <strong>Institucional</strong>
             <a href="#topo">Sobre nós</a>
@@ -117,9 +113,8 @@ export function PublicSiteFooter({ brandName, brandLogoUrl, supportPhone, settin
           <div id="ajuda">
             <strong>Ajuda</strong>
             <a href="#ajuda">Central de ajuda</a>
-            <a href="/meus-ingressos">Encontrar meus ingressos</a>
             <a href="#como-funciona">Dúvidas frequentes</a>
-            {settings.supportEmail ? <a href={`mailto:${settings.supportEmail}`}>Fale conosco</a> : <a href="/login">Entrar</a>}
+            {settings.supportEmail ? <a href={`mailto:${settings.supportEmail}`}>Contato</a> : <a href="/login">Contato</a>}
           </div>
           <div>
             <strong>Para produtores</strong>
@@ -127,18 +122,22 @@ export function PublicSiteFooter({ brandName, brandLogoUrl, supportPhone, settin
             <a href="/login">Painel do produtor</a>
             <a href="/login">Recursos</a>
           </div>
-          <div>
-            <strong>Formas de pagamento</strong>
-            <div className="publicSiteFooterPayments">
-              <span>Pix</span>
-              <span>VISA</span>
-              <span>Mastercard</span>
-            </div>
-            <small>Ambiente 100% seguro</small>
+        </div>
+      </div>
+      <div className="container publicSiteFooterBottom publicFooterReferenceBottom">
+        <span>© 2026 {brandName}. Todos os direitos reservados.</span>
+        <div className="publicSiteFooterBottomPayments publicFooterReferenceBottomPayments" aria-label="Formas de pagamento">
+          <small>Formas de pagamento</small>
+          <div className="publicSiteFooterPayments publicFooterReferencePayments">
+            <span className="paymentMark paymentMarkPix">pix</span>
+            <span className="paymentMark paymentMarkVisa">VISA</span>
+            <span className="paymentMark paymentMarkMastercard" aria-label="Mastercard">
+              <i aria-hidden="true" />
+              <i aria-hidden="true" />
+            </span>
           </div>
         </div>
       </div>
-      <div className="publicSiteFooterBottom">© 2026 {brandName}. Todos os direitos reservados.</div>
     </footer>
   );
 }

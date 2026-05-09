@@ -497,14 +497,14 @@
 
 .tcrPremiumValueBand {
   align-items: center;
-  background: linear-gradient(180deg, #fbfcfd, #f6faf9);
+  background: linear-gradient(180deg, #fbfcfd, #f7faf9);
   border: 1px solid rgba(17, 33, 53, 0.08);
-  border-radius: 28px;
-  box-shadow: 0 18px 36px rgba(16, 34, 57, 0.06);
+  border-radius: 26px;
+  box-shadow: 0 14px 30px rgba(16, 34, 57, 0.06);
   display: grid;
-  gap: 24px;
-  grid-template-columns: 88px minmax(0, 1fr);
-  padding: 30px 34px;
+  gap: 20px;
+  grid-template-columns: 88px minmax(0, 1fr) 56px;
+  padding: 28px 30px;
 }
 
 .tcrPremiumValueBand h3 {
@@ -521,83 +521,149 @@
   margin: 0;
 }
 
+.tcrPremiumValueSupportIcon {
+  color: #0b7a63;
+  display: inline-flex;
+  justify-content: flex-end;
+}
+
+.tcrPremiumValueSupportIcon svg {
+  height: 42px;
+  width: 42px;
+}
+
 .publicSiteFooter {
   background: #ffffff;
-  margin-top: 28px;
-  padding-top: 18px;
+  margin-top: 18px;
+  padding-top: 0;
 }
 
 .publicSiteFooterInner {
   display: grid;
-  gap: 28px;
-  grid-template-columns: minmax(200px, 1.2fr) repeat(4, minmax(140px, 1fr));
-  padding-bottom: 18px;
+  gap: 28px 34px;
+  grid-template-columns: minmax(180px, 1.1fr) minmax(0, 3fr);
+  padding-bottom: 22px;
   padding-top: 0;
 }
 
 .publicSiteFooterBrand {
-  gap: 18px;
+  display: grid;
+  gap: 16px;
 }
 
 .publicSiteFooterLogo {
-  height: 54px;
+  height: 48px;
   object-fit: contain;
   object-position: left center;
 }
 
 .publicSiteFooterBrand span {
-  color: #4d5d70;
-  font-size: 17px;
+  color: #445266;
+  font-size: 15px;
   line-height: 1.6;
 }
 
+.publicSiteFooterSocials {
+  display: flex;
+  gap: 14px;
+}
+
+.publicSiteFooterSocials a {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #0b7a63;
+  display: inline-flex;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+
+.publicSiteFooterSocials a:hover {
+  color: #07644b;
+}
+
+.publicSiteFooterSocials svg {
+  height: 26px;
+  width: 26px;
+}
+
 .publicSiteFooterLinks {
-  display: contents;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .publicSiteFooterLinks div {
   display: grid;
-  gap: 12px;
+  gap: 10px;
+  align-content: start;
 }
 
 .publicSiteFooterLinks strong {
-  color: #10885a;
+  color: #0b7a63;
   font-size: 15px;
   font-weight: 800;
+  letter-spacing: 0;
+  margin-bottom: 2px;
   text-transform: uppercase;
 }
 
 .publicSiteFooterLinks a,
 .publicSiteFooterLinks small,
 .publicSiteFooterLinks span {
-  color: #243144;
-  font-size: 16px;
-  line-height: 1.5;
+  color: #223248;
+  font-size: 15px;
+  line-height: 1.55;
 }
 
-.publicSiteFooterPayments {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.publicSiteFooterPayments span {
-  align-items: center;
-  border: 1px solid rgba(17, 33, 53, 0.1);
-  border-radius: 999px;
-  display: inline-flex;
-  font-size: 14px;
-  font-weight: 700;
-  min-height: 34px;
-  padding: 0 12px;
+.publicSiteFooterLinks a:hover {
+  color: #0b7a63;
 }
 
 .publicSiteFooterBottom {
-  border-top: 1px solid rgba(17, 33, 53, 0.08);
+  align-items: center;
+  border-top: 1px solid rgba(17, 33, 53, 0.1);
+  color: #57687b;
+  display: flex;
+  font-size: 14px;
+  gap: 20px;
+  justify-content: space-between;
+  padding: 16px 0 8px;
+}
+
+.publicSiteFooterBottomPayments {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+}
+
+.publicSiteFooterBottomPayments small {
   color: #57687b;
   font-size: 14px;
-  padding: 20px 20px 28px;
-  text-align: center;
+}
+
+.publicSiteFooterPayments {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.publicSiteFooterPayments span {
+  color: #0b7a63;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.publicSiteFooterPayments span:nth-child(2) {
+  color: #0d47a1;
+}
+
+.publicSiteFooterPayments span:nth-child(3) {
+  color: #f59e0b;
 }
 
 @media (max-width: 1180px) {
@@ -615,7 +681,7 @@
   }
 
   .publicSiteFooterInner {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 }
 
@@ -711,7 +777,7 @@
     right: 10px;
   }
 
-  .publicSiteFooterInner {
+  .publicSiteFooterLinks {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -804,26 +870,57 @@
   }
 
   .tcrPremiumValueBand {
-    gap: 18px;
-    grid-template-columns: 1fr;
-    padding: 24px 20px;
+    gap: 14px;
+    grid-template-columns: 72px minmax(0, 1fr) 44px;
+    padding: 22px 18px;
   }
 
   .tcrPremiumValueBand h3 {
-    font-size: 22px;
+    font-size: 18px;
   }
 
   .tcrPremiumValueBand p {
-    font-size: 16px;
+    font-size: 15px;
+  }
+
+  .tcrPremiumValueIcon {
+    height: 64px;
+    width: 64px;
+  }
+
+  .tcrPremiumValueSupportIcon svg {
+    height: 34px;
+    width: 34px;
   }
 
   .publicSiteFooterInner {
-    grid-template-columns: 1fr;
     gap: 22px;
   }
 
+  .publicSiteFooterLinks {
+    gap: 20px 18px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .publicSiteFooterBottom {
-    padding-bottom: 22px;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 14px;
+  }
+
+  .publicSiteFooterBottomPayments {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .publicSiteFooterPayments {
+    gap: 14px;
+  }
+
+  .publicSiteFooterPayments span {
+    font-size: 18px;
   }
 }
 
@@ -3285,19 +3382,19 @@ body.operationTheme .topbar {
     linear-gradient(180deg, #06261f 0%, #041b16 100%);
   color: #ffffff;
   margin-top: 28px;
-  padding: 38px 0 0;
+  padding: 28px 0 0;
 }
 
 .publicSiteFooterInner {
   align-items: start;
   display: grid;
-  gap: 32px;
+  gap: 22px;
   grid-template-columns: minmax(220px, 280px) 1fr;
 }
 
 .publicSiteFooterBrand {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .publicSiteFooterLogo {
@@ -3315,9 +3412,9 @@ body.operationTheme .topbar {
 }
 
 .publicSiteFooterBrand span {
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 15px;
-  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 16px;
+  line-height: 1.65;
 }
 
 .publicSiteFooterSocials a {
@@ -3333,53 +3430,67 @@ body.operationTheme .topbar {
 
 .publicSiteFooterLinks {
   display: grid;
-  gap: 26px;
+  gap: 18px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .publicSiteFooterLinks div {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .publicSiteFooterLinks strong {
   color: #ffffff;
-  font-size: 17px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0;
+  margin-bottom: 2px;
+  text-transform: uppercase;
 }
 
 .publicSiteFooterLinks a,
-.publicSiteFooterLinks small {
-  color: rgba(255, 255, 255, 0.74);
+.publicSiteFooterLinks small,
+.publicSiteFooterLinks span {
+  color: rgba(255, 255, 255, 0.84);
   font-size: 15px;
-  line-height: 1.5;
+  line-height: 1.55;
+}
+
+.publicSiteFooterLinks a {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.publicSiteFooterLinks a:hover {
+  color: #ffffff;
 }
 
 .publicSiteFooterPayments {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
 }
 
 .publicSiteFooterPayments span {
   align-items: center;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 999px;
+  color: #ffffff;
   display: inline-flex;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 900;
   justify-content: center;
   min-height: 42px;
-  min-width: 88px;
-  padding: 0 14px;
+  min-width: 96px;
+  padding: 0 16px;
 }
 
 .publicSiteFooterBottom {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.74);
   font-size: 14px;
-  margin-top: 30px;
-  padding: 18px 20px 24px;
+  margin-top: 12px;
+  padding: 10px 20px 12px;
   text-align: center;
 }
 
@@ -15477,5 +15588,500 @@ body.operationTheme .topbar {
 
   .ticketLookupHints {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Final homepage footer/value band reference alignment */
+.homePage .tcrPremiumValueBand {
+  align-items: center !important;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdfc 100%) !important;
+  border: 1px solid rgba(9, 63, 48, 0.1) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 12px 30px rgba(10, 35, 25, 0.06) !important;
+  display: grid !important;
+  gap: 22px !important;
+  grid-template-columns: 74px minmax(0, 1fr) 52px !important;
+  margin: 34px auto 22px !important;
+  max-width: 1040px !important;
+  padding: 22px 28px !important;
+}
+
+.homePage .tcrPremiumValueIcon {
+  align-items: center !important;
+  background: #e9f7f1 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  color: #08785b !important;
+  display: inline-flex !important;
+  height: 74px !important;
+  justify-content: center !important;
+  width: 74px !important;
+}
+
+.homePage .tcrPremiumValueIcon svg {
+  height: 38px !important;
+  width: 38px !important;
+}
+
+.homePage .tcrPremiumValueSupportIcon {
+  align-items: center !important;
+  color: #08785b !important;
+  display: inline-flex !important;
+  justify-content: flex-end !important;
+}
+
+.homePage .tcrPremiumValueSupportIcon svg {
+  height: 40px !important;
+  width: 40px !important;
+}
+
+.homePage .tcrPremiumValueBand h3 {
+  color: #172033 !important;
+  font-size: clamp(18px, 2vw, 24px) !important;
+  font-weight: 850 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.18 !important;
+  margin: 0 0 6px !important;
+}
+
+.homePage .tcrPremiumValueBand p {
+  color: #425068 !important;
+  font-size: 16px !important;
+  line-height: 1.45 !important;
+  margin: 0 !important;
+  max-width: 620px !important;
+}
+
+.homePage .publicFooterReference {
+  background: #ffffff !important;
+  border: 0 !important;
+  color: #172033 !important;
+  margin-top: 0 !important;
+  overflow: visible !important;
+  padding: 0 0 16px !important;
+}
+
+.homePage .publicFooterReferenceInner {
+  align-items: start !important;
+  display: grid !important;
+  gap: 28px 54px !important;
+  grid-template-columns: 1.16fr 1fr 0.9fr 1fr !important;
+  max-width: 1040px !important;
+  padding: 28px 0 24px !important;
+}
+
+.homePage .publicFooterReferenceBrand {
+  align-content: start !important;
+  display: grid !important;
+  gap: 14px !important;
+  grid-column: auto !important;
+  justify-items: center !important;
+  text-align: center !important;
+}
+
+.homePage .publicFooterReferenceBrandTitle {
+  color: #08785b !important;
+  display: block !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.1 !important;
+  text-transform: uppercase !important;
+}
+
+.homePage .publicFooterReferenceBrand span {
+  color: #1f2b3d !important;
+  display: block !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  max-width: 190px !important;
+  text-align: center !important;
+}
+
+.homePage .publicFooterReferenceSocials {
+  display: flex !important;
+  gap: 14px !important;
+  justify-content: center !important;
+  margin-top: 4px !important;
+}
+
+.homePage .publicFooterReferenceSocials a {
+  align-items: center !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: #08785b !important;
+  display: inline-flex !important;
+  height: 26px !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  width: 26px !important;
+}
+
+.homePage .publicFooterReferenceSocials a:hover {
+  color: #055d47 !important;
+  transform: none !important;
+}
+
+.homePage .publicFooterReferenceSocials svg {
+  height: 24px !important;
+  width: 24px !important;
+}
+
+.homePage .publicFooterReferenceLinks {
+  display: contents !important;
+}
+
+.homePage .publicFooterReferenceLinks div {
+  align-content: start !important;
+  display: grid !important;
+  gap: 10px !important;
+  justify-items: center !important;
+  min-width: 0 !important;
+  text-align: center !important;
+}
+
+.homePage .publicFooterReferenceLinks strong {
+  color: #08785b !important;
+  display: block !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.1 !important;
+  margin: 0 0 2px !important;
+  text-transform: uppercase !important;
+}
+
+.homePage .publicFooterReferenceLinks a,
+.homePage .publicFooterReferenceLinks span {
+  background: transparent !important;
+  border: 0 !important;
+  color: #1f2b3d !important;
+  display: inline !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  text-align: center !important;
+  text-decoration: none !important;
+}
+
+.homePage .publicFooterReferenceLinks a:hover {
+  color: #08785b !important;
+}
+
+.homePage .publicFooterReferenceBottom {
+  align-items: center !important;
+  border-top: 1px solid rgba(23, 32, 51, 0.1) !important;
+  color: #5c6677 !important;
+  display: flex !important;
+  gap: 18px !important;
+  justify-content: space-between !important;
+  max-width: 1040px !important;
+  padding: 16px 0 0 !important;
+}
+
+.homePage .publicFooterReferenceBottom > span,
+.homePage .publicFooterReferenceBottom small {
+  color: #5c6677 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.3 !important;
+}
+
+.homePage .publicFooterReferenceBottomPayments {
+  align-items: center !important;
+  display: flex !important;
+  gap: 14px !important;
+  justify-content: flex-end !important;
+}
+
+.homePage .publicFooterReferencePayments {
+  align-items: center !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 16px !important;
+}
+
+.homePage .publicFooterReferencePayments .paymentMark {
+  align-items: center !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  display: inline-flex !important;
+  justify-content: center !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+}
+
+.homePage .publicFooterReferencePayments .paymentMarkPix {
+  color: #56a88c !important;
+  font-size: 22px !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+  text-transform: lowercase !important;
+}
+
+.homePage .publicFooterReferencePayments .paymentMarkVisa {
+  color: #12479c !important;
+  font-size: 20px !important;
+  font-style: italic !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+}
+
+.homePage .publicFooterReferencePayments .paymentMarkMastercard {
+  height: 22px !important;
+  position: relative !important;
+  width: 42px !important;
+}
+
+.homePage .publicFooterReferencePayments .paymentMarkMastercard i {
+  border-radius: 999px !important;
+  display: block !important;
+  height: 22px !important;
+  position: absolute !important;
+  top: 0 !important;
+  width: 22px !important;
+}
+
+.homePage .publicFooterReferencePayments .paymentMarkMastercard i:first-child {
+  background: #eb001b !important;
+  left: 6px !important;
+}
+
+.homePage .publicFooterReferencePayments .paymentMarkMastercard i:last-child {
+  background: #f79e1b !important;
+  left: 20px !important;
+  mix-blend-mode: multiply !important;
+}
+
+@media (max-width: 820px) {
+  .homePage .publicFooterReferenceInner {
+    gap: 24px 30px !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .homePage .tcrPremiumValueBand {
+    gap: 16px !important;
+    grid-template-columns: 58px minmax(0, 1fr) 34px !important;
+    margin: 26px auto 18px !important;
+    padding: 16px !important;
+  }
+
+  .homePage .tcrPremiumValueIcon {
+    height: 58px !important;
+    width: 58px !important;
+  }
+
+  .homePage .tcrPremiumValueIcon svg {
+    height: 30px !important;
+    width: 30px !important;
+  }
+
+  .homePage .tcrPremiumValueSupportIcon svg {
+    height: 30px !important;
+    width: 30px !important;
+  }
+
+  .homePage .tcrPremiumValueBand h3 {
+    font-size: 17px !important;
+    line-height: 1.18 !important;
+  }
+
+  .homePage .tcrPremiumValueBand p {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+  }
+
+  .homePage .publicFooterReference {
+    padding-bottom: 10px !important;
+  }
+
+  .homePage .publicFooterReferenceInner {
+    gap: 22px 16px !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    padding: 24px 0 20px !important;
+  }
+
+  .homePage .publicFooterReferenceBrand {
+    gap: 10px !important;
+  }
+
+  .homePage .publicFooterReferenceBrandTitle,
+  .homePage .publicFooterReferenceLinks strong {
+    font-size: 11px !important;
+  }
+
+  .homePage .publicFooterReferenceBrand span,
+  .homePage .publicFooterReferenceLinks a,
+  .homePage .publicFooterReferenceLinks span {
+    font-size: 10.5px !important;
+    line-height: 1.38 !important;
+  }
+
+  .homePage .publicFooterReferenceSocials {
+    gap: 9px !important;
+  }
+
+  .homePage .publicFooterReferenceSocials a {
+    height: 22px !important;
+    width: 22px !important;
+  }
+
+  .homePage .publicFooterReferenceSocials svg {
+    height: 21px !important;
+    width: 21px !important;
+  }
+
+  .homePage .publicFooterReferenceBottom {
+    gap: 12px !important;
+    padding-top: 14px !important;
+  }
+
+  .homePage .publicFooterReferenceBottom > span,
+  .homePage .publicFooterReferenceBottom small {
+    font-size: 10px !important;
+  }
+
+  .homePage .publicFooterReferenceBottomPayments {
+    gap: 10px !important;
+  }
+
+  .homePage .publicFooterReferencePayments {
+    gap: 10px !important;
+  }
+
+  .homePage .publicFooterReferencePayments .paymentMarkPix {
+    font-size: 17px !important;
+  }
+
+  .homePage .publicFooterReferencePayments .paymentMarkVisa {
+    font-size: 16px !important;
+  }
+
+  .homePage .publicFooterReferencePayments .paymentMarkMastercard {
+    transform: scale(0.82) !important;
+    transform-origin: center !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .homePage .tcrPremiumValueBand {
+    border-radius: 14px !important;
+    gap: 12px !important;
+    grid-template-columns: 48px minmax(0, 1fr) 30px !important;
+    padding: 14px !important;
+  }
+
+  .homePage .tcrPremiumValueIcon {
+    height: 48px !important;
+    width: 48px !important;
+  }
+
+  .homePage .tcrPremiumValueIcon svg {
+    height: 26px !important;
+    width: 26px !important;
+  }
+
+  .homePage .tcrPremiumValueBand h3 {
+    font-size: 15px !important;
+  }
+
+  .homePage .tcrPremiumValueBand p {
+    font-size: 12px !important;
+  }
+
+  .homePage .publicFooterReferenceInner {
+    gap: 20px 10px !important;
+  }
+
+  .homePage .publicFooterReferenceLinks div {
+    gap: 8px !important;
+  }
+
+  .homePage .publicFooterReferenceBottom {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .homePage .publicFooterReferenceInner {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Final premium transition between hero and events */
+.homePage .tcrPremiumHero {
+  z-index: 1 !important;
+}
+
+.homePage .tcrHeroToEventsBridge {
+  background:
+    linear-gradient(180deg, rgba(3, 17, 13, 0.98) 0%, rgba(3, 17, 13, 0.82) 18%, rgba(246, 248, 251, 0.98) 100%) !important;
+  height: 46px !important;
+  margin-top: -1px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.homePage .tcrHeroToEventsBridge::before {
+  background: #ffffff !important;
+  border-radius: 36px 36px 0 0 !important;
+  bottom: -1px !important;
+  box-shadow: 0 -20px 50px rgba(1, 20, 13, 0.18) !important;
+  content: "" !important;
+  height: 34px !important;
+  left: 0 !important;
+  position: absolute !important;
+  right: 0 !important;
+}
+
+.homePage .tcrHeroToEventsBridge::after {
+  background: linear-gradient(90deg, transparent, rgba(27, 214, 127, 0.34), transparent) !important;
+  border-radius: 999px !important;
+  content: "" !important;
+  height: 1px !important;
+  left: 50% !important;
+  position: absolute !important;
+  top: 18px !important;
+  transform: translateX(-50%) !important;
+  width: min(520px, 74vw) !important;
+}
+
+.homePage .tcrEventsSection {
+  background: #ffffff !important;
+  margin-top: 0 !important;
+  padding-top: 30px !important;
+  position: relative !important;
+  z-index: 3 !important;
+}
+
+@media (max-width: 640px) {
+  .homePage .tcrHeroToEventsBridge {
+    height: 34px !important;
+  }
+
+  .homePage .tcrHeroToEventsBridge::before {
+    border-radius: 24px 24px 0 0 !important;
+    height: 26px !important;
+  }
+
+  .homePage .tcrHeroToEventsBridge::after {
+    top: 12px !important;
+    width: 68vw !important;
+  }
+
+  .homePage .tcrEventsSection {
+    padding-top: 24px !important;
   }
 }
