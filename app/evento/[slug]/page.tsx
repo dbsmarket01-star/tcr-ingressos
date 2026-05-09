@@ -10,7 +10,7 @@ import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrga
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { createCheckoutOrderAction } from "@/features/orders/order.actions";
-import { calculatePixDiscountInCents, calculateServiceFeeInCents } from "@/features/pricing/pricing";
+import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import { buildEventSeo } from "@/features/seo/event-seo";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -18,9 +18,11 @@ import { imageCropFromBannerPosition, imageCropStyle, parseImageCrop } from "@/l
 import { MetaTrackingFields } from "./MetaTrackingFields";
 import { TrackingRuntime } from "./TrackingRuntime";
 import { CheckoutEstimator } from "./CheckoutEstimator";
+import { TicketQuantityStepper } from "./TicketQuantityStepper";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
+const MAX_CARD_INSTALLMENTS = 10;
 
 type EventPageProps = {
   params: Promise<{
@@ -28,6 +30,18 @@ type EventPageProps = {
   }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
+
+function formatSaleLimit(date?: Date | null) {
+  if (!date) {
+    return null;
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  }).format(date);
+}
 
 export async function generateMetadata({ params }: Pick<EventPageProps, "params">): Promise<Metadata> {
   const { slug } = await params;
@@ -85,14 +99,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     return startsOk && endsOk && hasStock;
   });
 
-  const totalAvailable = event.lots.reduce(
-    (sum, lot) => sum + Math.max(lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity, 0),
-    0
-  );
-  const nextLotTurn = activeLots
-    .map((lot) => lot.salesEndsAt)
-    .filter((date): date is Date => Boolean(date))
-    .sort((left, right) => left.getTime() - right.getTime())[0];
   const checkoutError = typeof query.checkoutError === "string" ? query.checkoutError : null;
   const tracking = getTrackingParamsFromSearch(query, `/evento/${event.slug}`);
   const heroImage =
@@ -102,9 +108,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const publicBannerCrop = bannerCrop ? { ...bannerCrop, zoom: Math.max(1, bannerCrop.zoom) } : null;
   const mapCrop = parseImageCrop(event.eventMapCrop);
   const socialProofText = event.conversionSocialProofText?.trim() || "Vendas abertas";
-  const urgencyText =
-    event.conversionUrgencyText ||
-    (totalAvailable <= 50 ? "Últimas unidades disponíveis para este evento." : "Compra segura com confirmação automática.");
   const ctaText = event.conversionCtaText || "Garantir minha vaga";
   const highlightedLotId = event.highlightedLotId || activeLots[0]?.id;
   const eventLead = event.subtitle?.trim() || "";
@@ -275,25 +278,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
         <aside className="purchasePanel" id="ingressos">
           <div className="purchaseStickyLabel">
-            <span>Compra segura</span>
+            <span>Ingressos disponíveis</span>
             <strong>Selecione seus ingressos</strong>
-          </div>
-          <div className="purchaseHeader">
-            <div>
-              <span className="muted">Lotes disponíveis</span>
-              <strong>{activeLots.length} opção{activeLots.length > 1 ? "ões" : ""} para compra</strong>
-              {lowestTotalInCents > 0 ? <small>A partir de {formatCurrency(lowestTotalInCents)}</small> : null}
-            </div>
-            <a className="miniAnchorButton" href="#ingressos">Escolher</a>
-          </div>
-          <div className="checkoutTrustRow" aria-label="Garantias da compra">
-            <span>Pix e cartão</span>
-            <span>QR Code automático</span>
-            <span>Compra segura</span>
-          </div>
-          <div className="purchaseAlerts">
-            <strong>{urgencyText}</strong>
-            {nextLotTurn ? <span>Lote atual encerra em {formatDateTime(nextLotTurn)}</span> : null}
           </div>
 
           {activeLots.length === 0 ? (
@@ -311,75 +297,47 @@ export default async function EventPage({ params, searchParams }: EventPageProps
               <input type="hidden" name="referrer" value={tracking.referrer ?? ""} />
               <input type="hidden" name="landingPage" value={tracking.landingPage ?? ""} />
               <MetaTrackingFields />
-              {activeLots.map((lot, index) => {
-                const available = lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity;
-                const isLowStock = available <= 25;
-                const soldPercent = lot.totalQuantity > 0 ? Math.round((lot.soldQuantity / lot.totalQuantity) * 100) : 0;
-                const serviceFeeInCents = calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps);
-                const totalWithFeeInCents = lot.priceInCents + serviceFeeInCents;
-                const pixDiscountInCents = calculatePixDiscountInCents(
-                  totalWithFeeInCents,
-                  1,
-                  lot.pixDiscountPercentBps,
-                  lot.pixDiscountFixedInCents
-                );
-                const pixTotalInCents = Math.max(totalWithFeeInCents - pixDiscountInCents, 0);
-                const lotEndsSoon = lot.salesEndsAt ? lot.salesEndsAt.getTime() - Date.now() <= 24 * 60 * 60 * 1000 : false;
-                const isHighlighted = lot.id === highlightedLotId;
+              <div className="ticketPickerList">
+                {activeLots.map((lot) => {
+                  const available = lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity;
+                  const isLowStock = available <= 25;
+                  const serviceFeeInCents = calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps);
+                  const lotEndsSoon = lot.salesEndsAt
+                    ? lot.salesEndsAt.getTime() - Date.now() <= 24 * 60 * 60 * 1000
+                    : false;
+                  const isHighlighted = lot.id === highlightedLotId;
+                  const maxQuantity = Math.max(0, Math.min(lot.maxPerOrder, available));
+                  const saleLimit = formatSaleLimit(lot.salesEndsAt);
 
-                return (
-                  <label className={`lotOption ${isHighlighted ? "recommendedLot" : ""}`} key={lot.id}>
-                    <div className="lotOptionBody">
-                      <div className="lotTitleRow">
-                        <strong>{lot.name}</strong>
-                        {isHighlighted ? <span>Mais escolhido</span> : null}
-                      </div>
-                      {lot.description ? <p className="muted">{lot.description}</p> : null}
-                      <div className="lotPriceBox">
-                        <div>
-                          <span>Ingresso</span>
-                          <strong>{formatCurrency(lot.priceInCents)}</strong>
-                        </div>
-                        <div>
-                          <span>Taxas e impostos</span>
-                          <strong>+ {formatCurrency(serviceFeeInCents)}</strong>
-                        </div>
-                        <div>
-                          <span>Total unitário</span>
-                          <strong>{formatCurrency(totalWithFeeInCents)}</strong>
-                        </div>
-                      </div>
-                      {pixDiscountInCents > 0 ? (
-                        <p className="muted">
-                          No Pix: <strong>{formatCurrency(pixTotalInCents)}</strong>
-                        </p>
-                      ) : null}
-                      <div className="lotAvailability">
-                        <div className="progressTrack" aria-label={`${soldPercent}% vendido`}>
-                          <span style={{ width: `${Math.min(soldPercent, 100)}%` }} />
-                        </div>
-                        <span className={isLowStock || lotEndsSoon ? "urgencyText" : "muted"}>
-                          {isLowStock ? `Últimos ${available} ingressos` : `${available} disponíveis`}
-                          {lotEndsSoon ? " - lote vira em breve" : ""}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="lotQuantityBox">
-                      <span>Qtd.</span>
+                  return (
+                    <article className={`ticketPickerCard ${isHighlighted ? "recommendedLot" : ""}`} key={lot.id}>
                       <input type="hidden" name="lotId" value={lot.id} />
-                      <input
-                        aria-label={`Quantidade para ${lot.name}`}
-                        max={Math.max(0, Math.min(lot.maxPerOrder, available))}
-                        min="0"
+                      <div className="ticketPickerInfo">
+                        <strong className="ticketPickerTitle">{lot.name}</strong>
+                        <p className="ticketPickerPrice">
+                          {formatCurrency(lot.priceInCents)}
+                          <span> (+{formatCurrency(serviceFeeInCents)} taxa)</span>
+                        </p>
+                        <div className="ticketPickerMeta">
+                          <span>em até {MAX_CARD_INSTALLMENTS}x</span>
+                          {saleLimit ? <em>Vendas até {saleLimit}</em> : null}
+                        </div>
+                        {lot.description ? <small>{lot.description}</small> : null}
+                        {isLowStock || lotEndsSoon ? (
+                          <small className="ticketPickerUrgency">
+                            {isLowStock ? `Últimos ${available} ingressos` : "Lote vira em breve"}
+                          </small>
+                        ) : null}
+                      </div>
+                      <TicketQuantityStepper
+                        label={lot.name}
+                        max={maxQuantity}
                         name={`quantity_${lot.id}`}
-                        step="1"
-                        type="number"
-                        defaultValue="0"
                       />
-                    </div>
-                  </label>
-                );
-              })}
+                    </article>
+                  );
+                })}
+              </div>
 
               <CheckoutEstimator lots={checkoutEstimatorLots} />
 
@@ -439,10 +397,13 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                 </label>
               </div>
 
-              <label className="field">
-                <span>Cupom de desconto</span>
-                <input name="coupon" placeholder="Digite seu cupom" />
-              </label>
+              <details className="checkoutCouponDisclosure">
+                <summary>Inserir cupom de desconto</summary>
+                <label className="field">
+                  <span>Cupom de desconto</span>
+                  <input name="coupon" placeholder="Digite seu cupom" />
+                </label>
+              </details>
 
               {event.supportWhatsappUrl ? (
                 <p className="checkoutSupportHint">
@@ -451,11 +412,12 @@ export default async function EventPage({ params, searchParams }: EventPageProps
               ) : null}
 
               <SubmitButton className="button fullButton" pendingText="Criando pedido...">
-                Garantir minha vaga agora
+                Selecione um Ingresso
               </SubmitButton>
               <p className="checkoutFootnote">
                 Pagamento processado com confirmação automática. O ingresso com QR Code é liberado após a aprovação.
               </p>
+              <p className="checkoutFeeHint">ⓘ Entenda nossa taxa</p>
             </form>
           )}
         </aside>

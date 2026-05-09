@@ -40,10 +40,16 @@ export function CheckoutEstimator({ lots }: CheckoutEstimatorProps) {
     }
 
     readQuantities();
-    inputs.forEach((input) => input.addEventListener("input", readQuantities));
+    inputs.forEach((input) => {
+      input.addEventListener("input", readQuantities);
+      input.addEventListener("change", readQuantities);
+    });
 
     return () => {
-      inputs.forEach((input) => input.removeEventListener("input", readQuantities));
+      inputs.forEach((input) => {
+        input.removeEventListener("input", readQuantities);
+        input.removeEventListener("change", readQuantities);
+      });
     };
   }, [lots]);
 
@@ -59,6 +65,10 @@ export function CheckoutEstimator({ lots }: CheckoutEstimatorProps) {
       return lot ? `${quantity}x ${lot.name}` : null;
     })
     .filter(Boolean);
+
+  if (selectedQuantity === 0) {
+    return null;
+  }
 
   return (
     <div className="checkoutEstimator" aria-live="polite">
