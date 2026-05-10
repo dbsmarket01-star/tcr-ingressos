@@ -8,7 +8,7 @@ import type { CheckoutOrderInput } from "./order.schema";
 
 const FALLBACK_ORDER_RESERVATION_MINUTES = 120;
 
-function createOrderCode() {
+export function createOrderCode() {
   const random = Math.random().toString(36).slice(2, 8).toUpperCase();
   return `ING-${Date.now().toString(36).toUpperCase()}-${random}`;
 }

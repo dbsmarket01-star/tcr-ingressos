@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 
-const COOKIE_NAME = "tcr_admin_session";
+const COOKIE_NAME = "ingresaas_admin_session";
+const LEGACY_COOKIE_NAMES = ["tcr_admin_session"];
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 
 type SessionPayload = {
@@ -158,16 +159,21 @@ export async function createAdminSession(admin: CurrentAdmin) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production"
   });
+
+  LEGACY_COOKIE_NAMES.forEach((cookieName) => cookieStore.delete(cookieName));
 }
 
 export async function clearAdminSession() {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
+  LEGACY_COOKIE_NAMES.forEach((cookieName) => cookieStore.delete(cookieName));
 }
 
 export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
   const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
+  const token =
+    cookieStore.get(COOKIE_NAME)?.value ||
+    LEGACY_COOKIE_NAMES.map((cookieName) => cookieStore.get(cookieName)?.value).find(Boolean);
 
   if (!token) {
     return null;

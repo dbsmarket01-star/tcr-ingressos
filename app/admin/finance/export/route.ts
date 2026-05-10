@@ -37,7 +37,7 @@ export async function GET(request: Request) {
     ["Liquido aproximado", formatMoney(report.totals.netRevenueInCents)],
     ["Taxas identificadas", formatMoney(report.totals.estimatedFeesInCents)],
     ["Split enviado", formatMoney(report.totals.splitTotalInCents)],
-    ["Plataforma apos split", formatMoney(report.totals.tcrAfterSplitInCents)],
+    ["Plataforma apos split", formatMoney(report.totals.platformAfterSplitInCents)],
     ["Pedidos com split", report.totals.splitPaymentsCount],
     ["Cobertura split (%)", report.totals.splitCoverage],
     ["Pedidos pagos", report.totals.paidOrders],

@@ -426,7 +426,7 @@ export async function getFinanceReport(filters: FinanceReportFilters, allowedEve
       splitTotalInCents,
       splitPaymentsCount,
       splitCoverage: paidOrders.length > 0 ? Math.round((splitPaymentsCount / paidOrders.length) * 100) : 0,
-      tcrAfterSplitInCents: Math.max(netRevenueInCents - splitTotalInCents, 0)
+      platformAfterSplitInCents: Math.max(netRevenueInCents - splitTotalInCents, 0)
     },
     byEvent: Array.from(byEvent.values()).sort((a, b) => b.grossInCents - a.grossInCents),
     byMethod: Array.from(byMethod.values()).sort((a, b) => b.grossInCents - a.grossInCents),

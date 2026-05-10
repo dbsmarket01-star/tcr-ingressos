@@ -1,9 +1,12 @@
 import { cookies } from "next/headers";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
-const BUYER_COOKIE_NAME = "tcr_buyer_profile";
-const GOOGLE_STATE_COOKIE_NAME = "tcr_google_oauth_state";
-const GOOGLE_RETURN_COOKIE_NAME = "tcr_google_oauth_return";
+const BUYER_COOKIE_NAME = "ingresaas_buyer_profile";
+const GOOGLE_STATE_COOKIE_NAME = "ingresaas_google_oauth_state";
+const GOOGLE_RETURN_COOKIE_NAME = "ingresaas_google_oauth_return";
+const LEGACY_BUYER_COOKIE_NAME = "tcr_buyer_profile";
+const LEGACY_GOOGLE_STATE_COOKIE_NAME = "tcr_google_oauth_state";
+const LEGACY_GOOGLE_RETURN_COOKIE_NAME = "tcr_google_oauth_return";
 const BUYER_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 14;
 const STATE_COOKIE_MAX_AGE_SECONDS = 60 * 10;
 
@@ -86,17 +89,26 @@ export async function createGoogleOAuthState(returnTo: string) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production"
   });
+  cookieStore.delete(LEGACY_GOOGLE_STATE_COOKIE_NAME);
+  cookieStore.delete(LEGACY_GOOGLE_RETURN_COOKIE_NAME);
 
   return state;
 }
 
 export async function consumeGoogleOAuthState(receivedState: string) {
   const cookieStore = await cookies();
-  const savedState = cookieStore.get(GOOGLE_STATE_COOKIE_NAME)?.value;
-  const returnTo = cookieStore.get(GOOGLE_RETURN_COOKIE_NAME)?.value || "/";
+  const savedState =
+    cookieStore.get(GOOGLE_STATE_COOKIE_NAME)?.value ||
+    cookieStore.get(LEGACY_GOOGLE_STATE_COOKIE_NAME)?.value;
+  const returnTo =
+    cookieStore.get(GOOGLE_RETURN_COOKIE_NAME)?.value ||
+    cookieStore.get(LEGACY_GOOGLE_RETURN_COOKIE_NAME)?.value ||
+    "/";
 
   cookieStore.delete(GOOGLE_STATE_COOKIE_NAME);
   cookieStore.delete(GOOGLE_RETURN_COOKIE_NAME);
+  cookieStore.delete(LEGACY_GOOGLE_STATE_COOKIE_NAME);
+  cookieStore.delete(LEGACY_GOOGLE_RETURN_COOKIE_NAME);
 
   if (!savedState || savedState !== receivedState) {
     return {
@@ -121,9 +133,12 @@ export async function setBuyerProfile(profile: BuyerProfile) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production"
   });
+  cookieStore.delete(LEGACY_BUYER_COOKIE_NAME);
 }
 
 export async function getBuyerProfile() {
   const cookieStore = await cookies();
-  return decodeSignedPayload<BuyerProfile>(cookieStore.get(BUYER_COOKIE_NAME)?.value);
+  return decodeSignedPayload<BuyerProfile>(
+    cookieStore.get(BUYER_COOKIE_NAME)?.value || cookieStore.get(LEGACY_BUYER_COOKIE_NAME)?.value
+  );
 }
