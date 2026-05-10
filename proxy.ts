@@ -3,11 +3,24 @@ import { NextResponse, type NextRequest } from "next/server";
 const DEFAULT_PLATFORM_DOMAIN = "ingresaas.app.br";
 const LEGACY_PLATFORM_DOMAINS = ["ingressas.app.br"];
 
-function normalizedHost(host: string | null) {
-  return (host || "").split(":")[0].toLowerCase();
+export function normalizedHost(host: string | null) {
+  const trimmed = (host || "")
+    .split(",")
+    .map((part) => part.trim())
+    .find(Boolean)
+    ?.toLowerCase();
+
+  if (!trimmed) {
+    return "";
+  }
+
+  const withoutProtocol = trimmed.replace(/^https?:\/\//, "");
+  const [hostname] = withoutProtocol.split("/");
+
+  return hostname?.split(":")[0] || "";
 }
 
-function platformHosts() {
+export function platformHosts() {
   const configured = normalizedHost(process.env.PLATFORM_DOMAIN || "");
   const hosts = new Set<string>([DEFAULT_PLATFORM_DOMAIN, ...LEGACY_PLATFORM_DOMAINS]);
 
@@ -22,7 +35,7 @@ function platformHosts() {
   return hosts;
 }
 
-function allowedAdminHosts() {
+export function allowedAdminHosts() {
   return (process.env.ADMIN_HOST || "")
     .split(",")
     .map((host) => host.trim().toLowerCase())
@@ -38,7 +51,7 @@ function withInternalHeaders(response: NextResponse) {
   return response;
 }
 
-function isInternalPath(pathname: string) {
+export function isInternalPath(pathname: string) {
   return (
     pathname === "/admin" ||
     pathname.startsWith("/admin/") ||
@@ -49,7 +62,7 @@ function isInternalPath(pathname: string) {
   );
 }
 
-function isAllowedAdminHostAsset(pathname: string) {
+export function isAllowedAdminHostAsset(pathname: string) {
   return (
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/uploads/") ||
@@ -71,7 +84,12 @@ function notFound() {
 
 export function proxy(request: NextRequest) {
   const hosts = allowedAdminHosts();
-  const currentHost = normalizedHost(request.nextUrl.hostname || request.headers.get("host"));
+  const currentHost = normalizedHost(
+    request.headers.get("x-forwarded-host") ||
+      request.headers.get("x-original-host") ||
+      request.headers.get("host") ||
+      request.nextUrl.hostname
+  );
   const isPlatformMasterHost = platformHosts().has(currentHost);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-resolved-host", currentHost);

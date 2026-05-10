@@ -27,8 +27,8 @@ export async function getRequestHost() {
 
   return normalizeHost(
     headerStore.get("x-resolved-host") ||
+      headerStore.get("x-forwarded-host") ||
       headerStore.get("x-original-host") ||
-      headerStore.get("host") ||
-      headerStore.get("x-forwarded-host")
+      headerStore.get("host")
   );
 }
