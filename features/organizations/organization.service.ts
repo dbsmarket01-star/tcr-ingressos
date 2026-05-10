@@ -5,6 +5,7 @@ import { unstable_cache } from "next/cache";
 
 export const DEFAULT_ORGANIZATION_SLUG = "tcr-ingressos";
 export const DEFAULT_ORGANIZATION_NAME = "TCR Ingressos";
+const UNMATCHED_HOST_ORGANIZATION_ID = "__unmatched_host__";
 
 type OrganizationSeedInput = {
   name?: string;
@@ -80,6 +81,28 @@ function buildHttpsUrl(host: string | null) {
   return `https://${normalized}`;
 }
 
+function isLocalDevelopmentHost(host?: string | null) {
+  const normalizedHost = normalizeHost(host);
+
+  return !normalizedHost || normalizedHost === "localhost" || normalizedHost.startsWith("127.");
+}
+
+function buildUnmatchedHostOrganization(): OrganizationBranding {
+  return {
+    id: UNMATCHED_HOST_ORGANIZATION_ID,
+    slug: "ingresaas-unmatched-host",
+    name: getPlatformName(),
+    publicDomain: getPlatformHost(),
+    adminDomain: null,
+    logoUrl: null,
+    primaryColor: "#1f5fbf",
+    secondaryColor: "#ffffff",
+    supportEmail: null,
+    supportPhone: null,
+    isActive: false
+  };
+}
+
 function buildOrganizationContext(
   organization: OrganizationBranding,
   requestHost: string | null,
@@ -90,7 +113,7 @@ function buildOrganizationContext(
   const publicBaseUrl = buildHttpsUrl(organization.publicDomain) || getFallbackPublicBaseUrl();
   const platformHost = getPlatformHost();
   const platformName = getPlatformName();
-  const platformMode = isPlatformHost(normalizedRequestHost);
+  const platformMode = isPlatformHost(normalizedRequestHost) || organization.id === UNMATCHED_HOST_ORGANIZATION_ID;
   const displayName = platformMode ? platformName : organization.name;
 
   return {
@@ -182,6 +205,10 @@ export async function getOrganizationContextByHost(host?: string | null) {
 
   if (matchedOrganization) {
     return buildOrganizationContext(matchedOrganization, host || null, true);
+  }
+
+  if (isPlatformHost(host) || !isLocalDevelopmentHost(host)) {
+    return buildOrganizationContext(buildUnmatchedHostOrganization(), host || null, false);
   }
 
   const fallback = await ensureDefaultOrganization();

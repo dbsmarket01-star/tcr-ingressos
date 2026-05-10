@@ -89,7 +89,23 @@ describe("organization context by host", () => {
     expect(context.adminBaseUrl).toBe("https://produtor.a2imergidos.com.br");
   });
 
-  it("falls back to the default organization when the host does not belong to a child tenant", async () => {
+  it("uses a neutral platform fallback when an external host is not mapped to a tenant", async () => {
+    prismaMock.organization.findFirst.mockResolvedValue(null);
+
+    const { getOrganizationContextByHost } = await import("@/features/organizations/organization.service");
+
+    const context = await getOrganizationContextByHost("host-desconhecido.com.br");
+
+    expect(context.organization.slug).toBe("ingresaas-unmatched-host");
+    expect(context.organization.id).toBe("__unmatched_host__");
+    expect(context.brandName).toBe("Ingresaas");
+    expect(context.isMatchedByHost).toBe(false);
+    expect(context.isPlatformHost).toBe(true);
+    expect(context.requestHost).toBe("host-desconhecido.com.br");
+    expect(prismaMock.organization.upsert).not.toHaveBeenCalled();
+  });
+
+  it("keeps the default organization fallback for local development", async () => {
     prismaMock.organization.findFirst.mockResolvedValue(null);
     prismaMock.organization.upsert.mockResolvedValue({
       id: "org_tcr",
@@ -107,11 +123,11 @@ describe("organization context by host", () => {
 
     const { getOrganizationContextByHost } = await import("@/features/organizations/organization.service");
 
-    const context = await getOrganizationContextByHost("host-desconhecido.com.br");
+    const context = await getOrganizationContextByHost("localhost:3000");
 
     expect(context.organization.slug).toBe("tcr-ingressos");
     expect(context.isMatchedByHost).toBe(false);
-    expect(context.requestHost).toBe("host-desconhecido.com.br");
+    expect(context.requestHost).toBe("localhost");
   });
 
   it("throws when an explicit organization context is requested for an unknown tenant", async () => {
