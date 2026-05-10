@@ -182,12 +182,12 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
           <div className="grid twoColumns">
             <label className="field">
               <span>Nome da operação</span>
-              <input name="name" placeholder="Ex.: A2 Imergidos" required />
+              <input name="name" placeholder="Ex.: Bilheteria Cliente" required />
             </label>
 
             <label className="field">
               <span>Slug interno</span>
-              <input name="slug" placeholder="Ex.: a2-imergidos" />
+              <input name="slug" placeholder="Ex.: bilheteria-cliente" />
             </label>
           </div>
 
