@@ -9750,6 +9750,68 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   color: #ffffff;
 }
 
+.imageCropWorkspace {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.35fr);
+}
+
+.imageCropPanel {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.imageCropPanelHeader {
+  display: grid;
+  gap: 3px;
+}
+
+.imageCropPanelHeader strong {
+  color: var(--brand-dark);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.imageCropPanelHeader small {
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.imageCropOriginalStage {
+  align-items: center;
+  background: linear-gradient(135deg, #f8fbfa, #eaf2f0);
+  border: 1px solid rgba(16, 43, 37, 0.12);
+  border-radius: 16px;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.imageCropOriginalStagebanner {
+  aspect-ratio: 16 / 7;
+}
+
+.imageCropOriginalStagelead {
+  aspect-ratio: 4 / 5;
+}
+
+.imageCropOriginalStagemap {
+  aspect-ratio: 4 / 3;
+}
+
+.imageCropOriginalStageshare {
+  aspect-ratio: 1.91 / 1;
+}
+
+.imageCropOriginalStage img {
+  display: block;
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
 .imageCropStage {
   background: #13212d;
   border-radius: 16px;
@@ -9886,6 +9948,10 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   }
 
   .imageCropControls {
+    grid-template-columns: 1fr;
+  }
+
+  .imageCropWorkspace {
     grid-template-columns: 1fr;
   }
 }

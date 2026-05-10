@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
 import {
   MAX_IMAGE_CROP_ZOOM,
   MIN_IMAGE_CROP_ZOOM,
@@ -123,6 +123,17 @@ function analyzeAspect(meta: ImageMeta | null, aspect: NonNullable<ImageUploadFi
   };
 }
 
+function cropPreviewStyle(crop: ImageCrop): CSSProperties {
+  const isFullFrame = crop.zoom < 1;
+
+  return {
+    objectFit: isFullFrame ? "contain" : "cover",
+    objectPosition: `${crop.x}% ${crop.y}%`,
+    transform: isFullFrame ? "none" : `scale(${crop.zoom})`,
+    transformOrigin: `${crop.x}% ${crop.y}%`
+  };
+}
+
 export function ImageUploadField({
   name,
   label,
@@ -208,6 +219,7 @@ export function ImageUploadField({
   const cropValue = stringifyImageCrop(crop);
   const defaultCrop = buildDefaultCrop(imageMeta, aspect);
   const presets = cropPresets[aspect];
+  const publicPreviewStyle = cropPreviewStyle(crop);
 
   function emitAppliedEvent() {
     if (typeof window === "undefined") {
@@ -272,8 +284,8 @@ export function ImageUploadField({
         <div className="imageCropTool">
           <div className="imageCropToolHeader">
             <div>
-              <strong>Prévia editável do espaço público</strong>
-              <small>É esse enquadramento que usamos para o cliente final. A imagem entra inteira por padrão e você ajusta só se quiser.</small>
+              <strong>Imagem completa e recorte público</strong>
+              <small>Confira a arte inteira sem corte e ajuste ao lado o enquadramento que vai aparecer para o cliente.</small>
             </div>
             {imageMeta ? <span className="imageCropMeta">{imageMeta.width} x {imageMeta.height} px</span> : null}
           </div>
@@ -331,19 +343,28 @@ export function ImageUploadField({
               </button>
             </div>
           </div>
-          <div className={`imageCropStage imageCropStage${aspect}`}>
-            <div className={`imageCropSafeArea imageCropSafeArea${aspect}`}>
-              <span>Área segura</span>
+          <div className="imageCropWorkspace">
+            <div className="imageCropPanel">
+              <div className="imageCropPanelHeader">
+                <strong>Arte completa</strong>
+                <small>Visualização sem corte para conferir tudo que existe na imagem.</small>
+              </div>
+              <div className={`imageCropOriginalStage imageCropOriginalStage${aspect}`}>
+                <img src={previewUrl} alt="" />
+              </div>
             </div>
-            <img
-              src={previewUrl}
-              alt=""
-              style={{
-                objectPosition: `${crop.x}% ${crop.y}%`,
-                transform: `scale(${crop.zoom})`,
-                transformOrigin: `${crop.x}% ${crop.y}%`
-              }}
-            />
+            <div className="imageCropPanel">
+              <div className="imageCropPanelHeader">
+                <strong>Recorte público</strong>
+                <small>É assim que o cliente verá essa imagem no espaço final.</small>
+              </div>
+              <div className={`imageCropStage imageCropStage${aspect}`}>
+                <div className={`imageCropSafeArea imageCropSafeArea${aspect}`}>
+                  <span>Área segura</span>
+                </div>
+                <img src={previewUrl} alt="" style={publicPreviewStyle} />
+              </div>
+            </div>
           </div>
           <div className="imageCropControls">
             <label className="field">

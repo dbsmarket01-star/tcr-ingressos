@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 export type ImageCrop = {
   x: number;
   y: number;
@@ -42,14 +44,17 @@ export function stringifyImageCrop(crop?: Partial<ImageCrop> | null) {
   return JSON.stringify(sanitizeImageCrop(crop));
 }
 
-export function imageCropStyle(crop?: ImageCrop | null) {
+export function imageCropStyle(crop?: ImageCrop | null): CSSProperties | undefined {
   if (!crop) {
     return undefined;
   }
 
+  const isFullFrame = crop.zoom < 1;
+
   return {
+    objectFit: isFullFrame ? "contain" : "cover",
     objectPosition: `${crop.x}% ${crop.y}%`,
-    transform: `scale(${crop.zoom})`,
+    transform: isFullFrame ? "none" : `scale(${crop.zoom})`,
     transformOrigin: `${crop.x}% ${crop.y}%`
   };
 }
