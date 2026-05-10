@@ -16893,3 +16893,364 @@ img.brandLogo[src*="a2-imergidos-logo"] {
     max-width: 100% !important;
   }
 }
+
+/* Global text flow guardrails */
+p,
+li,
+dd,
+small,
+.muted,
+.formHint,
+.field small,
+.checkoutFootnote,
+.summarySupportText {
+  overflow-wrap: break-word;
+  text-wrap: pretty;
+  word-break: normal;
+}
+
+:where(
+  .card,
+  .dashboardPanel,
+  .dashboardGeneralPanel,
+  .dashboardGeneralKpiCard,
+  .eventOverviewPanel,
+  .eventOverviewKpiCard,
+  .eventOverviewMiniCard,
+  .eventsIndexHeaderCard,
+  .eventsIndexRowCard,
+  .operationCommandStrip,
+  .dashboardFilterPanel,
+  .platformOperationsHero,
+  .platformOperationCommandBar,
+  .platformOperationLaunchpadCard,
+  .platformMarketingBand,
+  .platformClosingCta,
+  .paymentBox,
+  .paymentChoiceDisclosure,
+  .orderSummaryBox,
+  .orderActionNote,
+  .pixBox,
+  .cardForm,
+  .supportOrderCard,
+  .ticketLookupCard,
+  .leadCaptureForm,
+  .leadPremiumFormSection
+) {
+  min-width: 0;
+}
+
+:where(
+  .sectionHeader,
+  .filterPanelHeader,
+  .adminHeader,
+  .formSectionHeader,
+  .dashboardGeneralPanelHeader,
+  .operationsAdminCardHeader,
+  .platformMemberCard,
+  .paymentBoxHeader,
+  .paymentChoiceHeader,
+  .cardFormHeader
+) {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+:where(
+  .sectionHeader > div,
+  .filterPanelHeader > div,
+  .adminHeader > div,
+  .formSectionHeader > div,
+  .dashboardGeneralPanelHeader > div,
+  .operationsAdminCardHeader > div,
+  .paymentBoxHeader > div,
+  .paymentChoiceHeader > div,
+  .cardFormHeader > div
+) {
+  flex: 1 1 min(100%, 280px);
+  min-width: min(100%, 240px);
+}
+
+:where(
+  .sectionHeader p,
+  .filterPanelHeader p,
+  .adminHeader p,
+  .formSectionHeader p,
+  .dashboardFilterPanel p,
+  .dashboardGeneralHeader p,
+  .dashboardGeneralPanelHeader p,
+  .operationCommandCard p,
+  .platformOperationCommandCopy p,
+  .platformOperationFocusCard p,
+  .platformOperationLaunchpadCard p,
+  .platformOperationsHero p,
+  .platformClosingCta p,
+  .platformMarketingBand p,
+  .paymentBoxHeader span,
+  .paymentChoiceHeader span,
+  .cardFormHeader span,
+  .paymentChoiceDisclosure summary small,
+  .orderActionNote p,
+  .publicHero p,
+  .publicContent p,
+  .ticketLookupCard p,
+  .leadCaptureHeroCopy p,
+  .leadPremiumFormIntro > p
+) {
+  max-width: min(72ch, 100%) !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+}
+
+:where(
+  .homeHero h1,
+  .platformHeroContent h1,
+  .platformClosingCta h2,
+  .platformOverviewHero h2,
+  .platformExecutiveCard h2,
+  .platformSecurityCard h2,
+  .platformMasterSectionCard h2,
+  .platformAccessWorkflowCard h2,
+  .platformOperationsHero h2,
+  .platformOperationCreateCard h2,
+  .platformOperationsFilterCard h2,
+  .platformOperationsGuideCard h2,
+  .platformOperationCommandCopy h3,
+  .platformOperationFocusCard h2,
+  .platformOperationLaunchpadCard h3,
+  .platformMarketingBand h2,
+  .platformTheme .loginIntro h1,
+  .platformTheme .loginFormArea h2,
+  .leadCaptureHeroIntro h1,
+  .leadCaptureForm h2,
+  .leadPremiumHeroCopy h1,
+  .leadPremiumHeroSupport,
+  .leadPremiumFormIntro h2,
+  .publicHero h1,
+  .orderGrid h1
+) {
+  max-width: min(100%, 32ch) !important;
+  overflow-wrap: break-word !important;
+  text-wrap: balance;
+  word-break: normal !important;
+}
+
+.platformTheme .loginIntro h1,
+.loginIntro h1 {
+  font-size: clamp(34px, 3.4vw, 52px) !important;
+  line-height: 1.04 !important;
+}
+
+.platformTheme .loginFormArea h2,
+.loginFormArea h2 {
+  font-size: clamp(28px, 2.8vw, 40px) !important;
+  line-height: 1.06 !important;
+  max-width: min(100%, 28ch) !important;
+}
+
+:where(
+  .dashboardGeneralKpiCard strong,
+  .dashboardGeneralDelta,
+  .conversionStrip strong,
+  .orderItemLine strong,
+  .presaleEvidenceGrid strong,
+  .eventOverviewKpiCard strong,
+  .eventOverviewMiniCard strong,
+  .eventsIndexEventCopy strong,
+  .eventsIndexLocationCell strong,
+  .eventsIndexSalesCell strong
+) {
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+}
+
+:where(
+  .orderCodeLine,
+  .ticketCode,
+  .checkInTicketCode,
+  .summarySupportText strong,
+  .supportOrderReference,
+  code,
+  pre
+) {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+@media (max-width: 1020px) {
+  :where(
+    .operationCommandStrip,
+    .dashboardFilterPanel,
+    .dashboardGeneralHeader,
+    .platformOperationsHero,
+    .platformOperationCommandBar,
+    .platformMarketingBand,
+    .platformClosingCta
+  ) {
+    grid-template-columns: 1fr !important;
+  }
+
+  :where(
+    .operationCommandActions,
+    .dashboardDateForm,
+    .platformOperationsHeroBadges,
+    .platformOperationCommandActions,
+    .platformSectionActions,
+    .platformMasterActionBar
+  ) {
+    justify-content: flex-start !important;
+  }
+}
+
+@media (max-width: 640px) {
+  :where(
+    .paymentBoxHeader,
+    .paymentChoiceHeader,
+    .cardFormHeader,
+    .dashboardGeneralPanelHeader,
+    .operationsAdminCardHeader,
+    .platformMemberCard
+  ) {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  :where(
+    .paymentBoxHeader > strong,
+    .paymentChoiceHeader strong,
+    .cardFormHeader strong,
+    .platformMemberMeta
+  ) {
+    align-self: flex-start !important;
+    justify-items: start !important;
+    text-align: left !important;
+  }
+
+  .platformMemberCard {
+    grid-template-columns: 1fr !important;
+  }
+
+  .paymentChoiceDisclosure summary {
+    grid-template-columns: 1fr !important;
+  }
+
+  .paymentChoiceDisclosure summary span,
+  .paymentChoiceDisclosure summary small,
+  .paymentChoiceDisclosure summary strong,
+  .paymentChoiceDisclosure summary::after,
+  .paymentChoiceDisclosure[open] summary::after {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    justify-self: start !important;
+  }
+}
+
+/* Mobile overflow cleanup for public and internal shells */
+.homePage,
+.loginShell {
+  overflow-x: hidden;
+}
+
+@media (max-width: 640px) {
+  .homePage .tcrPremiumHero,
+  .homePage .tcrPremiumHeader,
+  .homePage .tcrPremiumHeroInner,
+  .homePage .tcrPremiumHeroLead,
+  .homePage .tcrPremiumHeroCopy,
+  .homePage .tcrPremiumMobileSearch,
+  .loginShell,
+  .adminLoginPanel,
+  .loginIntro,
+  .loginFormArea {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .homePage .tcrPremiumHeroLead h1 {
+    font-size: clamp(30px, 8vw, 32px) !important;
+    line-height: 1.1 !important;
+    max-width: 100% !important;
+    text-wrap: pretty;
+  }
+
+  .homePage .tcrPremiumHeroLead p {
+    font-size: 16px !important;
+    line-height: 1.45 !important;
+    max-width: 100% !important;
+  }
+
+  .homePage .tcrPremiumMobileSearch label,
+  .homePage .tcrPremiumMobileSearch input,
+  .homePage .tcrPremiumMobileSearch select {
+    min-width: 0 !important;
+  }
+
+  .homePage .tcrPremiumTrustInline {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    font-size: 12px !important;
+    gap: 6px 12px !important;
+    line-height: 1.3 !important;
+    white-space: normal !important;
+  }
+
+  .homePage .tcrPremiumTrustInline span::after {
+    display: none !important;
+  }
+
+  .homePage .tcrPremiumActions {
+    max-width: calc(100vw - 150px) !important;
+    overflow: hidden !important;
+  }
+
+  .homePage .tcrPremiumActions .button {
+    display: none !important;
+  }
+
+  .loginShell {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    place-items: start stretch !important;
+    width: 100vw !important;
+  }
+
+  .adminLoginPanel {
+    border-radius: 22px !important;
+    justify-self: center !important;
+    max-width: calc(100vw - 24px) !important;
+    width: calc(100vw - 24px) !important;
+  }
+
+  .loginIntro,
+  .loginFormArea {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  .platformTheme .loginIntro h1,
+  .loginIntro h1 {
+    font-size: clamp(28px, 7.4vw, 34px) !important;
+    line-height: 1.08 !important;
+    max-width: 100% !important;
+  }
+
+  .loginShowcasePill {
+    max-width: 100% !important;
+    text-align: center !important;
+    white-space: normal !important;
+  }
+
+  .platformTheme .loginIntro p,
+  .loginIntro p,
+  .loginFeatureCard span {
+    max-width: 100% !important;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+  }
+
+  .loginFeatureCard {
+    min-width: 0 !important;
+    padding: 16px 16px 16px 62px !important;
+  }
+}
