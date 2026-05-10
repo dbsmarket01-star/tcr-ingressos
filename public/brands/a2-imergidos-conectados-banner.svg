@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">A2 Imergidos + Conectados</title>
+  <desc id="desc">Banner azul provisório para o evento A2 Imergidos + Conectados.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#031424"/>
+      <stop offset="55%" stop-color="#0d3f83"/>
+      <stop offset="100%" stop-color="#2c7be5"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="45%" r="48%">
+      <stop offset="0%" stop-color="#6db4ff" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#6db4ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect width="1600" height="900" fill="url(#glow)"/>
+  <g fill="none" opacity="0.18" stroke="#9ed0ff" stroke-width="3">
+    <path d="M80 170C300 110 490 100 680 170C930 260 1110 260 1520 130"/>
+    <path d="M30 340C240 290 430 300 610 360C860 440 1070 460 1530 320"/>
+    <path d="M110 540C310 470 510 470 710 530C980 620 1180 630 1500 520"/>
+    <path d="M40 720C250 660 470 650 690 720C930 790 1170 800 1560 690"/>
+  </g>
+  <g fill="#eef6ff" font-family="Arial, Helvetica, sans-serif">
+    <text x="114" y="280" font-size="190" font-weight="800" letter-spacing="-6">A2</text>
+    <text x="118" y="430" font-size="112" font-weight="800" letter-spacing="2">IMERGIDOS</text>
+    <rect x="118" y="495" width="760" height="126" rx="24" fill="rgba(4, 23, 48, 0.44)"/>
+    <text x="158" y="578" font-size="88" font-weight="800">+ Conectados</text>
+    <text x="120" y="690" font-size="44" font-weight="600" opacity="0.84">Santana do Livramento, RS</text>
+    <text x="120" y="758" font-size="36" opacity="0.72">Uma experiência de conexão, fé e encontro.</text>
+  </g>
+</svg>
