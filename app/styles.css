@@ -108,6 +108,11 @@
   object-fit: contain;
 }
 
+.tcrPremiumLogo img.brandLogo[src="/brands/a2-imergidos-logo.svg"] {
+  height: 50px;
+  max-width: 116px;
+}
+
 .tcrPremiumNav {
   display: inline-flex;
   gap: 28px;
@@ -788,6 +793,11 @@
     height: 62px;
   }
 
+  .tcrPremiumLogo img.brandLogo[src="/brands/a2-imergidos-logo.svg"] {
+    height: 48px;
+    max-width: 98px;
+  }
+
   .tcrPremiumActions {
     align-items: center;
     gap: 10px;
@@ -1052,6 +1062,11 @@
   .tcrPremiumLogo .brandLogo {
     height: 42px;
     max-width: 110px;
+  }
+
+  .tcrPremiumLogo img.brandLogo[src="/brands/a2-imergidos-logo.svg"] {
+    height: 38px;
+    max-width: 82px;
   }
 
   .tcrPremiumActions {
@@ -1482,6 +1497,11 @@ body.operationTheme .topbar {
   object-fit: contain;
   object-position: left center;
   width: auto;
+}
+
+img.brandLogo[src="/brands/a2-imergidos-logo.svg"] {
+  height: 42px;
+  max-width: 104px;
 }
 
 .nav {
