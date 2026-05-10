@@ -15,7 +15,9 @@ function createOrderCode() {
 
 export async function createCheckoutOrder(input: CheckoutOrderInput, organizationId?: string | null) {
   const selectedItems = input.items.filter((item) => item.quantity > 0);
-  const reservationMinutes = await getOrderReservationMinutes().catch(() => FALLBACK_ORDER_RESERVATION_MINUTES);
+  const reservationMinutes = await getOrderReservationMinutes(organizationId || undefined).catch(
+    () => FALLBACK_ORDER_RESERVATION_MINUTES
+  );
 
   return prisma.$transaction(
     async (tx) => {

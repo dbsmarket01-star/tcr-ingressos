@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 82" role="img" aria-labelledby="title desc">
+  <title id="title">A2 Imergidos</title>
+  <desc id="desc">Logotipo da bilheteria A2 Imergidos.</desc>
+  <rect width="260" height="82" rx="18" fill="#ffffff"/>
+  <g fill="none" stroke="#1f5fbf" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M28 58 46 20l18 38" stroke-width="7"/>
+    <path d="M35 45h22" stroke-width="6"/>
+    <path d="M75 28c5-7 13-10 22-8 10 3 15 11 12 20-2 8-10 13-20 18l-12 7h36" stroke-width="7"/>
+  </g>
+  <text x="127" y="38" fill="#123c7c" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800" letter-spacing=".02em">A2</text>
+  <text x="127" y="61" fill="#1f5fbf" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="900" letter-spacing=".01em">IMERGIDOS</text>
+</svg>
