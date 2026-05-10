@@ -540,11 +540,11 @@ export default async function Home({ searchParams }: HomePageProps) {
               <TicketIcon />
               <span>Meus ingressos</span>
             </Link>
-            <Link className="tcrPremiumTextLink" href="/login">
+            <Link className="tcrPremiumTextLink" href="/meus-ingressos">
               <UserIcon />
               <span>Entrar</span>
             </Link>
-            <Link className="button" href="/login">
+            <Link className="button" href="/meus-ingressos">
               Criar conta
             </Link>
           </div>
