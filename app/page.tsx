@@ -564,13 +564,7 @@ export default async function Home({ searchParams }: HomePageProps) {
         <div className="tcrPremiumHeroInner">
           <div className="tcrPremiumHeroLead">
             <span className="tcrPremiumEyebrow">Bilheteria oficial</span>
-            <h1>
-              A forma mais simples
-              <br />
-              de viver <span>grandes</span>
-              <br />
-              <span>experiências.</span>
-            </h1>
+            <h1>A forma mais simples de viver <span>grandes experiências.</span></h1>
             <p>
               Compra rápida, ambiente seguro e acesso fácil aos seus ingressos.
             </p>
