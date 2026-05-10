@@ -19,7 +19,6 @@ import { AddToCartButton } from "./AddToCartButton";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
-const MAX_CARD_INSTALLMENTS = 10;
 
 type EventPageProps = {
   params: Promise<{
@@ -198,7 +197,20 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         </div>
         <div className="publicHeroInner">
           <h1>{event.title}</h1>
-          {eventLead ? <p>{eventLead}</p> : null}
+          {eventLead ? <p className="eventLead">{eventLead}</p> : null}
+          <div className="publicMobileFacts" aria-label="Informações principais do evento">
+            <div>
+              <span>Data e horário</span>
+              <strong>{formatDateTime(event.startsAt)}</strong>
+            </div>
+            <div>
+              <span>Localização</span>
+              <strong>{event.venueName}</strong>
+              <small>
+                {event.city}, {event.state}
+              </small>
+            </div>
+          </div>
           <div className="publicMeta">
             <span>{formatDateTime(event.startsAt)}</span>
           </div>
@@ -214,14 +226,14 @@ export default async function EventPage({ params, searchParams }: EventPageProps
       <section className="container publicGrid">
         <article className="publicContent">
           {event.description?.trim() ? (
-          <section className="editorialBlock">
+          <section className="editorialBlock eventDescriptionBlock">
             <span className="eyebrow">Experiência do evento</span>
             <h2>Descrição do evento</h2>
             <p>{event.description}</p>
           </section>
         ) : null}
 
-          <section className="contentBlock">
+          <section className="contentBlock eventDateLocalBlock">
             <h2>Data e local</h2>
             <div className="detailGrid">
               <div>
@@ -246,14 +258,14 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           </section>
 
           {event.importantInfo ? (
-            <section className="contentBlock">
+            <section className="contentBlock eventImportantInfoBlock">
               <h2>Informações importantes</h2>
               <p>{event.importantInfo}</p>
             </section>
           ) : null}
 
           {event.eventMapImageUrl ? (
-            <section className="contentBlock">
+            <section className="contentBlock eventMapBlock">
               <h2>Mapa do evento</h2>
               <div className={`eventMapImageFrame ${mapCrop ? "hasCrop" : ""}`}>
                 <img
@@ -310,10 +322,11 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                           {formatCurrency(lot.priceInCents)}
                           <span> (+{formatCurrency(serviceFeeInCents)} taxa)</span>
                         </p>
-                        <div className="ticketPickerMeta">
-                          <span>em até {MAX_CARD_INSTALLMENTS}x</span>
-                          {saleLimit ? <em>Vendas até {saleLimit}</em> : null}
-                        </div>
+                        {saleLimit ? (
+                          <div className="ticketPickerMeta">
+                            <em>Vendas até {saleLimit}</em>
+                          </div>
+                        ) : null}
                         {lot.description ? <small>{lot.description}</small> : null}
                         {isLowStock || lotEndsSoon ? (
                           <small className="ticketPickerUrgency">
