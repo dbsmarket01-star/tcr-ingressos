@@ -19,6 +19,7 @@ import {
   listLeadEmailTemplates
 } from "@/features/leads/lead.service";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { formatDateTime } from "@/lib/format";
 import { getPublicLeadCaptureUrl } from "@/lib/public-url";
 import { getLeadOriginBucket, getSourceLabel } from "@/features/tracking/tracking";
@@ -54,6 +55,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
     listLeadEmailTemplates(event.id),
     getActiveLeadEmailCampaign(event.id)
   ]);
+  const organizationContext = await getCurrentOrganizationContext();
   const leadsWithPhone = leads.filter((lead) => Boolean(lead.phone)).length;
   const leadsWithEmail = leads.filter((lead) => Boolean(lead.email)).length;
   const leadsWithMunicipality = leads.filter((lead) => Boolean(lead.municipality)).length;
@@ -331,6 +333,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
             <div className="leadBroadcastComposerColumn leadBroadcastPreviewColumn">
               <LeadBroadcastPreview
                 brandName={operationBrandName}
+                brandLogoUrl={organizationContext.brandLogoUrl}
                 defaultCtaLabel="Entrar no grupo agora"
                 defaultDestinationUrl={event.leadCaptureWhatsappGroupUrl ?? ""}
                 eventTitle={event.title}

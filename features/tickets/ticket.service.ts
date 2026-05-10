@@ -1,8 +1,11 @@
 import { prisma } from "@/lib/prisma";
 
-export async function getTicketByCode(code: string) {
-  return prisma.ticket.findUnique({
-    where: { code },
+export async function getTicketByCode(code: string, organizationId?: string | null) {
+  return prisma.ticket.findFirst({
+    where: {
+      code,
+      ...(organizationId ? { event: { organizationId } } : {})
+    },
     include: {
       event: true,
       lot: true,

@@ -5,6 +5,7 @@ import { parseImageCrop } from "@/lib/image-crop";
 
 type LeadBroadcastPreviewProps = {
   brandName: string;
+  brandLogoUrl?: string | null;
   eventTitle: string;
   supportEmail?: string | null;
   defaultCtaLabel: string;
@@ -57,6 +58,45 @@ function normalizeInstagramDisplay(value: string) {
   }
 
   return `@${text.replace(/^@+/, "")}`;
+}
+
+function normalizeSubjectText(value: string) {
+  return value
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[.:!?-]+$/g, "")
+    .toLowerCase();
+}
+
+function stripDuplicatedSubject(body: string, subject: string) {
+  const normalizedSubject = normalizeSubjectText(subject);
+
+  if (!normalizedSubject) {
+    return body;
+  }
+
+  const lines = body.split("\n");
+  const firstMeaningfulIndex = lines.findIndex((line) => line.trim().length > 0);
+
+  if (firstMeaningfulIndex === -1) {
+    return body;
+  }
+
+  if (normalizeSubjectText(lines[firstMeaningfulIndex] ?? "") !== normalizedSubject) {
+    return body;
+  }
+
+  const cleanedLines = [...lines];
+  cleanedLines.splice(firstMeaningfulIndex, 1);
+
+  while (
+    cleanedLines[firstMeaningfulIndex] !== undefined &&
+    cleanedLines[firstMeaningfulIndex]?.trim().length === 0
+  ) {
+    cleanedLines.splice(firstMeaningfulIndex, 1);
+  }
+
+  return cleanedLines.join("\n").trim();
 }
 
 export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
@@ -142,7 +182,7 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
     };
   }, [props.defaultCtaLabel, props.defaultDestinationUrl, props.defaultInstagramUrl]);
 
-  const paragraphs = preview.body
+  const paragraphs = stripDuplicatedSubject(preview.body, preview.subject)
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
@@ -210,9 +250,11 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
       <div className="leadBroadcastPreviewFrame">
         <div className="leadBroadcastPreviewMail">
           <div className="leadBroadcastPreviewLogoWrap">
-            <div className="leadBroadcastPreviewLogoBadge">
-              <img alt={props.brandName} className="leadBroadcastPreviewLogo" src="/brands/tcr-logomarca.png" />
-            </div>
+            {props.brandLogoUrl ? (
+              <div className="leadBroadcastPreviewLogoBadge">
+                <img alt={props.brandName} className="leadBroadcastPreviewLogo" src={props.brandLogoUrl} />
+              </div>
+            ) : null}
             <p className="leadBroadcastPreviewBrand">{props.brandName}</p>
           </div>
           <p className="leadBroadcastPreviewGreeting">Ola, Diego.</p>

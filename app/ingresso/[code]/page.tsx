@@ -46,7 +46,8 @@ const ticketStatusMessages = {
 
 export default async function TicketPage({ params }: TicketPageProps) {
   const { code } = await params;
-  const [ticket, organizationContext] = await Promise.all([getTicketByCode(code), getCurrentOrganizationContext()]);
+  const organizationContext = await getCurrentOrganizationContext();
+  const ticket = await getTicketByCode(code, organizationContext.organization.id);
 
   if (!ticket) {
     notFound();

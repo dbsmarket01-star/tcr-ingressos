@@ -534,12 +534,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const salesChart = buildSalesChart(dashboard.salesByDay, dashboard.maxDailyRevenueInCents);
   const salesXAxisLabels = buildXAxisDisplayLabels(dashboard.salesByDay);
   const paymentMethodsChart = `conic-gradient(
-    #0b7a63 0deg ${(dashboard.paymentMethods.pix.rate / 100) * 360}deg,
+    var(--admin-primary, #0b7a63) 0deg ${(dashboard.paymentMethods.pix.rate / 100) * 360}deg,
     #b8c4bf ${(dashboard.paymentMethods.pix.rate / 100) * 360}deg ${((dashboard.paymentMethods.pix.rate + dashboard.paymentMethods.card.rate) / 100) * 360}deg,
     #dfe6e2 ${((dashboard.paymentMethods.pix.rate + dashboard.paymentMethods.card.rate) / 100) * 360}deg 360deg
   )`;
   const customerMixChart = `conic-gradient(
-    #0b7a63 0deg ${(dashboard.customers.newCustomerRate / 100) * 360}deg,
+    var(--admin-primary, #0b7a63) 0deg ${(dashboard.customers.newCustomerRate / 100) * 360}deg,
     #d4dad7 ${(dashboard.customers.newCustomerRate / 100) * 360}deg 360deg
   )`;
   const kpis = [

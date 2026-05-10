@@ -42,7 +42,10 @@ export default async function TicketLookupPage({ searchParams }: TicketLookupPag
   const lookupEmail = String(query.email ?? "").trim().toLowerCase();
 
   if (lookupCode) {
-    const [order, ticket] = await Promise.all([getOrderByCode(lookupCode), getTicketByCode(lookupCode)]);
+    const [order, ticket] = await Promise.all([
+      getOrderByCode(lookupCode, organizationContext.organization.id),
+      getTicketByCode(lookupCode, organizationContext.organization.id)
+    ]);
 
     if (order) {
       redirect(`/pedido/${order.code}`);

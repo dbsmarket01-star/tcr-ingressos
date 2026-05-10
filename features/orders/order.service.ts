@@ -10,7 +10,7 @@ const FALLBACK_ORDER_RESERVATION_MINUTES = 120;
 
 function createOrderCode() {
   const random = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `TCR-${Date.now().toString(36).toUpperCase()}-${random}`;
+  return `ING-${Date.now().toString(36).toUpperCase()}-${random}`;
 }
 
 export async function createCheckoutOrder(input: CheckoutOrderInput, organizationId?: string | null) {
@@ -29,7 +29,8 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           status: "PUBLISHED"
         },
         select: {
-          id: true
+          id: true,
+          couponsEnabled: true
         }
       });
 
@@ -129,7 +130,12 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
       const subtotalInCents = orderItems.reduce((sum, item) => sum + item.totalInCents, 0);
       const serviceFeeInCents = orderItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
       const amountBeforeDiscountInCents = subtotalInCents + serviceFeeInCents;
-      const coupon = await getValidCouponForEvent(tx, event.id, input.couponCode);
+      if (input.couponCode && !event.couponsEnabled) {
+        throw new Error("Este evento não aceita cupom de desconto.");
+      }
+      const coupon = event.couponsEnabled
+        ? await getValidCouponForEvent(tx, event.id, input.couponCode)
+        : null;
       const discountInCents = coupon
         ? calculateCouponDiscountInCents(coupon, amountBeforeDiscountInCents)
         : 0;
@@ -336,9 +342,12 @@ export async function expirePendingOrders(options?: { limit?: number; now?: Date
   };
 }
 
-export async function expirePendingOrderByCode(code: string) {
-  const order = await prisma.order.findUnique({
-    where: { code },
+export async function expirePendingOrderByCode(code: string, organizationId?: string | null) {
+  const order = await prisma.order.findFirst({
+    where: {
+      code,
+      ...(organizationId ? { event: { organizationId } } : {})
+    },
     include: {
       items: true,
       payment: true,
@@ -676,7 +685,7 @@ async function notifyOrderExpired(order: {
       to: order.customer.email,
       buyerName: order.customer.name,
       orderCode: order.code,
-      brandName: order.event.organization?.name || "TCR Ingressos",
+      brandName: order.event.organization?.name || "Ingresaas",
       eventTitle: order.event.title,
       orderUrl: createPublicOrderUrl(order.code, order.event.organization)
     });
@@ -694,11 +703,14 @@ async function notifyOrderExpired(order: {
   }
 }
 
-export async function getOrderByCode(code: string) {
-  await expirePendingOrderByCode(code);
+export async function getOrderByCode(code: string, organizationId?: string | null) {
+  await expirePendingOrderByCode(code, organizationId);
 
-  return prisma.order.findUnique({
-    where: { code },
+  return prisma.order.findFirst({
+    where: {
+      code,
+      ...(organizationId ? { event: { organizationId } } : {})
+    },
     include: {
       customer: true,
       event: {
