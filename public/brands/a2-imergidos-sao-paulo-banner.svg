@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">A2 Imergidos em Sao Paulo</title>
+  <desc id="desc">Banner azul para evento teste A2 Imergidos em Sao Paulo.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#031733"/>
+      <stop offset=".48" stop-color="#0b57d0"/>
+      <stop offset="1" stop-color="#021024"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="70%" cy="42%" r="48%">
+      <stop offset="0" stop-color="#72b7ff" stop-opacity=".95"/>
+      <stop offset=".34" stop-color="#1f5fbf" stop-opacity=".34"/>
+      <stop offset="1" stop-color="#020817" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <rect width="1600" height="900" fill="url(#glow)"/>
+  <g opacity=".28" stroke="#b8dcff" stroke-width="2">
+    <path d="M110 665c228-190 446-256 653-198s432 28 675-91" fill="none"/>
+    <path d="M70 716c252-211 484-286 697-225s447 31 701-92" fill="none"/>
+    <path d="M160 586c206-154 405-206 598-156s405 25 635-76" fill="none"/>
+  </g>
+  <g opacity=".36" fill="#ffffff">
+    <circle cx="214" cy="188" r="4"/>
+    <circle cx="388" cy="722" r="5"/>
+    <circle cx="514" cy="282" r="3"/>
+    <circle cx="760" cy="182" r="5"/>
+    <circle cx="916" cy="628" r="4"/>
+    <circle cx="1178" cy="220" r="5"/>
+    <circle cx="1328" cy="694" r="4"/>
+    <circle cx="1460" cy="346" r="3"/>
+  </g>
+  <g transform="translate(92 96)">
+    <rect width="348" height="96" rx="26" fill="#ffffff" opacity=".08"/>
+    <text x="32" y="62" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="36" font-weight="800">A2 IMERGIDOS</text>
+  </g>
+  <g transform="translate(92 322)">
+    <text fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="88" font-weight="900">
+      <tspan x="0" y="0">A2 Imergidos</tspan>
+      <tspan x="0" y="102">em Sao Paulo</tspan>
+    </text>
+    <text x="0" y="174" fill="#d8eaff" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">
+      Evento teste para validar a experiencia de compra
+    </text>
+    <text x="0" y="242" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="800" letter-spacing=".12em">
+      SAO PAULO • 2026
+    </text>
+  </g>
+  <g transform="translate(1160 194)" opacity=".86">
+    <circle cx="140" cy="140" r="118" fill="#ffffff" opacity=".08"/>
+    <path d="M58 184 126 82h27l68 102h-34l-14-24h-68l-14 24H58Zm64-48h34l-17-29-17 29Z" fill="#ffffff"/>
+    <path d="M230 184v-23l62-43c14-10 20-17 20-28 0-13-10-21-27-21-18 0-31 9-43 25l-23-14c17-27 40-40 69-40 35 0 59 20 59 49 0 22-11 38-36 55l-28 19h68v21H230Z" fill="#ffffff"/>
+  </g>
+  <rect x="0" y="0" width="1600" height="900" fill="none" stroke="#ffffff" stroke-opacity=".08" stroke-width="24"/>
+</svg>

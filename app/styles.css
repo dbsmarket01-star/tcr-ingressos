@@ -11,9 +11,9 @@
   --brand-muted: color-mix(in srgb, var(--brand) 58%, #647184 42%);
   --brand-soft: rgba(var(--brand-rgb), 0.12);
   --brand-soft-strong: rgba(var(--brand-rgb), 0.22);
-  --public-hero-dark: color-mix(in srgb, var(--brand-dark) 26%, #020b09 74%);
-  --public-hero-mid: color-mix(in srgb, var(--brand-dark) 36%, #061712 64%);
-  --public-hero-panel: color-mix(in srgb, var(--brand-dark) 30%, #061410 70%);
+  --public-hero-dark: color-mix(in srgb, var(--brand-dark) 30%, #020817 70%);
+  --public-hero-mid: color-mix(in srgb, var(--brand-dark) 42%, #06101f 58%);
+  --public-hero-panel: color-mix(in srgb, var(--brand-dark) 34%, #071426 66%);
   --accent: #bf3f55;
   --admin-ink: #16202a;
   --admin-panel: #202c37;
@@ -43,8 +43,8 @@
   background:
     radial-gradient(circle at 78% 36%, rgba(var(--brand-rgb), 0.3), transparent 18%),
     radial-gradient(circle at 84% 56%, rgba(34, 211, 238, 0.14), transparent 20%),
-    linear-gradient(180deg, rgba(8, 26, 20, 0.52), rgba(4, 14, 11, 0.8)),
-    linear-gradient(125deg, var(--public-hero-dark) 0%, var(--public-hero-mid) 46%, color-mix(in srgb, var(--brand-dark) 34%, #082119 66%) 100%);
+    linear-gradient(180deg, rgba(5, 15, 31, 0.52), rgba(2, 8, 23, 0.82)),
+    linear-gradient(125deg, var(--public-hero-dark) 0%, var(--public-hero-mid) 46%, color-mix(in srgb, var(--brand-dark) 38%, #06122a 62%) 100%);
   color: #f7fbfa;
   overflow: hidden;
   position: relative;
@@ -105,6 +105,7 @@
 .tcrPremiumLogo .brandLogo {
   height: 56px;
   max-width: 188px;
+  object-fit: contain;
 }
 
 .tcrPremiumNav {
@@ -7496,7 +7497,12 @@ body.operationTheme .topbar {
 }
 
 .purchaseStickyLabel {
-  background: linear-gradient(135deg, #0d2b24, #124b3d);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand-dark) 86%, #020817 14%),
+      color-mix(in srgb, var(--brand) 74%, var(--brand-dark) 26%)
+    );
   border-radius: 8px;
   color: white;
   display: grid;
