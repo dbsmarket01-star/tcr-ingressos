@@ -1,4 +1,4 @@
-import { TicketStatus, Prisma } from "@prisma/client";
+import { EventStatus, TicketStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export type AdminTicketFilters = {
@@ -17,16 +17,27 @@ function parseStatus(value?: string) {
   return value as TicketStatus;
 }
 
-function buildTicketWhere(filters: AdminTicketFilters, allowedEventIds?: EventScope): Prisma.TicketWhereInput {
+function buildTicketEventWhere(organizationId: string, allowedEventIds?: EventScope): Prisma.EventWhereInput {
+  return {
+    organizationId,
+    status: {
+      not: EventStatus.DRAFT
+    },
+    ...(allowedEventIds ? { id: { in: allowedEventIds } } : {})
+  };
+}
+
+function buildTicketWhere(
+  filters: AdminTicketFilters,
+  organizationId: string,
+  allowedEventIds?: EventScope
+): Prisma.TicketWhereInput {
   const search = filters.search?.trim();
   const status = parseStatus(filters.status);
 
   return {
-    ...(filters.eventId
-      ? { eventId: filters.eventId }
-      : allowedEventIds
-        ? { eventId: { in: allowedEventIds } }
-        : {}),
+    event: buildTicketEventWhere(organizationId, allowedEventIds),
+    ...(filters.eventId ? { eventId: filters.eventId } : {}),
     ...(status ? { status } : {}),
     ...(search
       ? {
@@ -43,9 +54,9 @@ function buildTicketWhere(filters: AdminTicketFilters, allowedEventIds?: EventSc
   };
 }
 
-export async function listTicketFilterEvents(allowedEventIds?: EventScope) {
+export async function listTicketFilterEvents(organizationId: string, allowedEventIds?: EventScope) {
   return prisma.event.findMany({
-    where: allowedEventIds ? { id: { in: allowedEventIds } } : undefined,
+    where: buildTicketEventWhere(organizationId, allowedEventIds),
     orderBy: [{ startsAt: "desc" }, { title: "asc" }],
     select: {
       id: true,
@@ -54,8 +65,12 @@ export async function listTicketFilterEvents(allowedEventIds?: EventScope) {
   });
 }
 
-export async function listAdminTickets(filters: AdminTicketFilters = {}, allowedEventIds?: EventScope) {
-  const where = buildTicketWhere(filters, allowedEventIds);
+export async function listAdminTickets(
+  filters: AdminTicketFilters = {},
+  organizationId: string,
+  allowedEventIds?: EventScope
+) {
+  const where = buildTicketWhere(filters, organizationId, allowedEventIds);
 
   const [tickets, totalCount, groupedStatusCounts] = await Promise.all([
     prisma.ticket.findMany({
@@ -110,9 +125,13 @@ export async function listAdminTickets(filters: AdminTicketFilters = {}, allowed
   return { tickets, totalCount, statusCounts };
 }
 
-export async function listTicketsForCsvExport(filters: AdminTicketFilters = {}, allowedEventIds?: EventScope) {
+export async function listTicketsForCsvExport(
+  filters: AdminTicketFilters = {},
+  organizationId: string,
+  allowedEventIds?: EventScope
+) {
   return prisma.ticket.findMany({
-    where: buildTicketWhere(filters, allowedEventIds),
+    where: buildTicketWhere(filters, organizationId, allowedEventIds),
     orderBy: {
       issuedAt: "desc"
     },

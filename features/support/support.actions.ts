@@ -16,7 +16,7 @@ export async function resendTicketsEmailAction(formData: FormData) {
   }
 
   try {
-    const result = await resendTicketsEmailByOrderCode(orderCode, getAdminAllowedEventIds(admin));
+    const result = await resendTicketsEmailByOrderCode(orderCode, admin.organizationId, getAdminAllowedEventIds(admin));
     params.set("sent", result.email);
     params.set("order", result.orderCode);
   } catch (error) {
@@ -38,7 +38,11 @@ export async function resendPendingPaymentEmailAction(formData: FormData) {
   }
 
   try {
-    const result = await resendPendingPaymentEmailByOrderCode(orderCode, getAdminAllowedEventIds(admin));
+    const result = await resendPendingPaymentEmailByOrderCode(
+      orderCode,
+      admin.organizationId,
+      getAdminAllowedEventIds(admin)
+    );
     params.set("paymentSent", result.email);
     params.set("order", result.orderCode);
   } catch (error) {

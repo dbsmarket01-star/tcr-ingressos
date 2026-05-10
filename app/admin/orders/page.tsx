@@ -3,7 +3,11 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { cancelPendingOrderAction, expirePendingOrdersAction } from "@/features/orders/order.admin.actions";
-import { getOrdersSummary, listAdminOrders, listOrderFilterEventsScoped } from "@/features/orders/order.admin.service";
+import {
+  getOrdersSummary,
+  listAdminOrders,
+  listOrderFilterEventsForOrganization
+} from "@/features/orders/order.admin.service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -37,9 +41,9 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const params = searchParams ? await searchParams : {};
   const allowedEventIds = getAdminAllowedEventIds(admin);
   const [{ orders, totalCount }, events, summary] = await Promise.all([
-    listAdminOrders(params, allowedEventIds),
-    listOrderFilterEventsScoped(allowedEventIds),
-    getOrdersSummary(params, allowedEventIds)
+    listAdminOrders(params, admin.organizationId, allowedEventIds),
+    listOrderFilterEventsForOrganization(admin.organizationId, allowedEventIds),
+    getOrdersSummary(params, admin.organizationId, allowedEventIds)
   ]);
   const exportHref = `/admin/orders/export?${new URLSearchParams({
     ...(params.eventId ? { eventId: params.eventId } : {}),

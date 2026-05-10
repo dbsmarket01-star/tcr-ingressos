@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { listTicketsForCsvExport } from "@/features/tickets/ticket.admin.service";
 import { formatDateTime } from "@/lib/format";
 
@@ -13,13 +13,17 @@ function formatDate(value?: Date | null) {
 }
 
 export async function GET(request: Request) {
-  await requirePermission("TICKETS");
+  const admin = await requirePermission("TICKETS");
   const url = new URL(request.url);
-  const tickets = await listTicketsForCsvExport({
-    eventId: url.searchParams.get("eventId") || undefined,
-    status: url.searchParams.get("status") || undefined,
-    search: url.searchParams.get("search") || undefined
-  });
+  const tickets = await listTicketsForCsvExport(
+    {
+      eventId: url.searchParams.get("eventId") || undefined,
+      status: url.searchParams.get("status") || undefined,
+      search: url.searchParams.get("search") || undefined
+    },
+    admin.organizationId,
+    getAdminAllowedEventIds(admin)
+  );
 
   const headers = [
     "Ingresso",

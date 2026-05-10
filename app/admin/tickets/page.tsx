@@ -29,8 +29,8 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   const params = searchParams ? await searchParams : {};
   const allowedEventIds = getAdminAllowedEventIds(admin);
   const [{ tickets, totalCount, statusCounts }, events] = await Promise.all([
-    listAdminTickets(params, allowedEventIds),
-    listTicketFilterEvents(allowedEventIds)
+    listAdminTickets(params, admin.organizationId, allowedEventIds),
+    listTicketFilterEvents(admin.organizationId, allowedEventIds)
   ]);
   const exportHref = `/admin/tickets/export?${new URLSearchParams({
     ...(params.eventId ? { eventId: params.eventId } : {}),

@@ -8,7 +8,11 @@ import { cancelPendingOrderByCode, expirePendingOrders, refundPaidOrderByCode } 
 
 export async function expirePendingOrdersAction() {
   const admin = await requirePermission("ORDERS");
-  const result = await expirePendingOrders({ limit: 200, allowedEventIds: getAdminAllowedEventIds(admin) });
+  const result = await expirePendingOrders({
+    limit: 200,
+    organizationId: admin.organizationId,
+    allowedEventIds: getAdminAllowedEventIds(admin)
+  });
   const params = new URLSearchParams({
     expired: String(result.expiredCount),
     released: String(result.releasedQuantity)
@@ -31,7 +35,7 @@ export async function cancelPendingOrderAction(formData: FormData) {
   }
 
   try {
-    const result = await cancelPendingOrderByCode(orderCode, undefined, allowedEventIds);
+    const result = await cancelPendingOrderByCode(orderCode, undefined, allowedEventIds, admin.organizationId);
 
     await createAuditLog({
       adminUserId: admin.id,
@@ -67,7 +71,7 @@ export async function refundPaidOrderAction(formData: FormData) {
   }
 
   try {
-    const result = await refundPaidOrderByCode(orderCode, refundReason, allowedEventIds);
+    const result = await refundPaidOrderByCode(orderCode, refundReason, allowedEventIds, admin.organizationId);
 
     await createAuditLog({
       adminUserId: admin.id,

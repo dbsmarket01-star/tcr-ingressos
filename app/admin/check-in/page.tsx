@@ -42,8 +42,8 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
   const result = await searchParams;
   const allowedEventIds = getAdminAllowedEventIds(admin);
   const [recentCheckIns, stats] = await Promise.all([
-    listRecentCheckIns(allowedEventIds),
-    getCheckInStats(allowedEventIds)
+    listRecentCheckIns(admin.organizationId, allowedEventIds),
+    getCheckInStats(admin.organizationId, allowedEventIds)
   ]);
   const status = result.status as keyof typeof statusLabels | undefined;
 

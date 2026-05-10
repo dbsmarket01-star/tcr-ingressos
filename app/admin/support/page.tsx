@@ -41,7 +41,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
   const organizationContext = await getCurrentOrganizationContext();
   const params = await searchParams;
   const query = params.q?.trim() ?? "";
-  const orders = await searchSupportOrders(query, getAdminAllowedEventIds(admin));
+  const orders = await searchSupportOrders(query, admin.organizationId, getAdminAllowedEventIds(admin));
   const toWhatsappHref = (phone?: string | null) => {
     if (!phone) return null;
     const digits = phone.replace(/\D/g, "");

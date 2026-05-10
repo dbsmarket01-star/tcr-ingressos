@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { listOrdersForCsvExport } from "@/features/orders/order.admin.service";
 import { formatDateTime } from "@/lib/format";
 
@@ -17,15 +17,19 @@ function formatDate(value?: Date | null) {
 }
 
 export async function GET(request: Request) {
-  await requirePermission("ORDERS");
+  const admin = await requirePermission("ORDERS");
   const url = new URL(request.url);
-  const orders = await listOrdersForCsvExport({
-    eventId: url.searchParams.get("eventId") || undefined,
-    status: url.searchParams.get("status") || undefined,
-    search: url.searchParams.get("search") || undefined,
-    startDate: url.searchParams.get("startDate") || undefined,
-    endDate: url.searchParams.get("endDate") || undefined
-  });
+  const orders = await listOrdersForCsvExport(
+    {
+      eventId: url.searchParams.get("eventId") || undefined,
+      status: url.searchParams.get("status") || undefined,
+      search: url.searchParams.get("search") || undefined,
+      startDate: url.searchParams.get("startDate") || undefined,
+      endDate: url.searchParams.get("endDate") || undefined
+    },
+    admin.organizationId,
+    getAdminAllowedEventIds(admin)
+  );
 
   const headers = [
     "Pedido",

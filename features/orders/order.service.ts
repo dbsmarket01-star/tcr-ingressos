@@ -1,4 +1,4 @@
-import { OrderStatus, PaymentProvider, PaymentStatus, Prisma } from "@prisma/client";
+import { EventStatus, OrderStatus, PaymentProvider, PaymentStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { calculateCouponDiscountInCents, getValidCouponForEvent } from "@/features/coupons/coupon.service";
 import { createPublicOrderUrl, sendOrderExpiredEmail } from "@/features/email/email.service";
@@ -234,14 +234,30 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
   );
 }
 
-export async function expirePendingOrders(options?: { limit?: number; now?: Date; allowedEventIds?: string[] | null }) {
+export async function expirePendingOrders(options?: {
+  limit?: number;
+  now?: Date;
+  organizationId?: string | null;
+  allowedEventIds?: string[] | null;
+}) {
   const now = options?.now ?? new Date();
   const limit = options?.limit ?? 100;
   const allowedEventIds = options?.allowedEventIds;
+  const organizationId = options?.organizationId;
 
   const orders = await prisma.order.findMany({
     where: {
       status: OrderStatus.PENDING_PAYMENT,
+      ...(organizationId
+        ? {
+            event: {
+              organizationId,
+              status: {
+                not: EventStatus.DRAFT
+              }
+            }
+          }
+        : {}),
       ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
       expiresAt: {
         lt: now
@@ -348,7 +364,16 @@ export async function expirePendingOrderByCode(code: string, organizationId?: st
   const order = await prisma.order.findFirst({
     where: {
       code,
-      ...(organizationId ? { event: { organizationId } } : {})
+      ...(organizationId
+        ? {
+            event: {
+              organizationId,
+              status: {
+                not: EventStatus.DRAFT
+              }
+            }
+          }
+        : {})
     },
     include: {
       items: true,
@@ -451,11 +476,22 @@ export async function expirePendingOrderByCode(code: string, organizationId?: st
 export async function cancelPendingOrderByCode(
   code: string,
   reason = "Cancelado manualmente pela operacao.",
-  allowedEventIds?: string[] | null
+  allowedEventIds?: string[] | null,
+  organizationId?: string | null
 ) {
   const order = await prisma.order.findFirst({
     where: {
       code,
+      ...(organizationId
+        ? {
+            event: {
+              organizationId,
+              status: {
+                not: EventStatus.DRAFT
+              }
+            }
+          }
+        : {}),
       ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {})
     },
     include: {
@@ -539,11 +575,22 @@ export async function cancelPendingOrderByCode(
 export async function refundPaidOrderByCode(
   code: string,
   reason = "Reembolso registrado manualmente pela operacao.",
-  allowedEventIds?: string[] | null
+  allowedEventIds?: string[] | null,
+  organizationId?: string | null
 ) {
   const order = await prisma.order.findFirst({
     where: {
       code,
+      ...(organizationId
+        ? {
+            event: {
+              organizationId,
+              status: {
+                not: EventStatus.DRAFT
+              }
+            }
+          }
+        : {}),
       ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {})
     },
     include: {
@@ -714,7 +761,16 @@ export async function getOrderByCode(code: string, organizationId?: string | nul
   return prisma.order.findFirst({
     where: {
       code,
-      ...(organizationId ? { event: { organizationId } } : {})
+      ...(organizationId
+        ? {
+            event: {
+              organizationId,
+              status: {
+                not: EventStatus.DRAFT
+              }
+            }
+          }
+        : {})
     },
     include: {
       customer: true,

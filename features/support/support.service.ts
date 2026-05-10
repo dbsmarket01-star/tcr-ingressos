@@ -1,3 +1,4 @@
+import { EventStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   createPublicOrderUrl,
@@ -8,11 +9,18 @@ import {
 
 type EventScope = string[] | null | undefined;
 
-function buildSupportWhere(query?: string, allowedEventIds?: EventScope) {
+function buildSupportWhere(query: string | undefined, organizationId: string, allowedEventIds?: EventScope) {
   const term = query?.trim();
   const digits = term?.replace(/\D/g, "");
 
   return {
+    event: {
+      organizationId,
+      status: {
+        not: EventStatus.DRAFT
+      },
+      ...(allowedEventIds ? { id: { in: allowedEventIds } } : {})
+    },
     ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
     ...(term
       ? {
@@ -37,9 +45,9 @@ function buildSupportWhere(query?: string, allowedEventIds?: EventScope) {
   };
 }
 
-export async function searchSupportOrders(query?: string, allowedEventIds?: EventScope) {
+export async function searchSupportOrders(query: string | undefined, organizationId: string, allowedEventIds?: EventScope) {
   return prisma.order.findMany({
-    where: buildSupportWhere(query, allowedEventIds),
+    where: buildSupportWhere(query, organizationId, allowedEventIds),
     orderBy: {
       createdAt: "desc"
     },
@@ -76,10 +84,20 @@ export async function searchSupportOrders(query?: string, allowedEventIds?: Even
   });
 }
 
-export async function resendTicketsEmailByOrderCode(orderCode: string, allowedEventIds?: EventScope) {
+export async function resendTicketsEmailByOrderCode(
+  orderCode: string,
+  organizationId: string,
+  allowedEventIds?: EventScope
+) {
   const order = await prisma.order.findFirst({
     where: {
       code: orderCode,
+      event: {
+        organizationId,
+        status: {
+          not: EventStatus.DRAFT
+        }
+      },
       ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {})
     },
     include: {
@@ -143,10 +161,20 @@ export async function resendTicketsEmailByOrderCode(orderCode: string, allowedEv
   };
 }
 
-export async function resendPendingPaymentEmailByOrderCode(orderCode: string, allowedEventIds?: EventScope) {
+export async function resendPendingPaymentEmailByOrderCode(
+  orderCode: string,
+  organizationId: string,
+  allowedEventIds?: EventScope
+) {
   const order = await prisma.order.findFirst({
     where: {
       code: orderCode,
+      event: {
+        organizationId,
+        status: {
+          not: EventStatus.DRAFT
+        }
+      },
       ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {})
     },
     include: {
@@ -207,7 +235,10 @@ export async function findPublicOrdersByCustomerEmail(email: string, organizatio
   return prisma.order.findMany({
     where: {
       event: {
-        organizationId
+        organizationId,
+        status: {
+          not: EventStatus.DRAFT
+        }
       },
       customer: {
         email: {

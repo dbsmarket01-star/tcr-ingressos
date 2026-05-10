@@ -1,4 +1,4 @@
-import { OrderStatus, Prisma } from "@prisma/client";
+import { EventStatus, OrderStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { expirePendingOrders } from "./order.service";
 
@@ -36,18 +36,29 @@ function parseStatus(value?: string) {
   return value as OrderStatus;
 }
 
-function buildOrderWhere(filters: AdminOrderFilters, allowedEventIds?: EventScope): Prisma.OrderWhereInput {
+function buildOrderEventWhere(organizationId: string, allowedEventIds?: EventScope): Prisma.EventWhereInput {
+  return {
+    organizationId,
+    status: {
+      not: EventStatus.DRAFT
+    },
+    ...(allowedEventIds ? { id: { in: allowedEventIds } } : {})
+  };
+}
+
+function buildOrderWhere(
+  filters: AdminOrderFilters,
+  organizationId: string,
+  allowedEventIds?: EventScope
+): Prisma.OrderWhereInput {
   const startDate = parseStartDate(filters.startDate);
   const endDate = parseEndDate(filters.endDate);
   const status = parseStatus(filters.status);
   const search = filters.search?.trim();
 
   return {
-    ...(filters.eventId
-      ? { eventId: filters.eventId }
-      : allowedEventIds
-        ? { eventId: { in: allowedEventIds } }
-        : {}),
+    event: buildOrderEventWhere(organizationId, allowedEventIds),
+    ...(filters.eventId ? { eventId: filters.eventId } : {}),
     ...(status
       ? { status }
       : {
@@ -106,10 +117,25 @@ export async function listOrderFilterEventsScoped(allowedEventIds?: EventScope) 
   });
 }
 
-export async function listAdminOrders(filters: AdminOrderFilters = {}, allowedEventIds?: EventScope) {
-  await expirePendingOrders({ limit: 100 });
+export async function listOrderFilterEventsForOrganization(organizationId: string, allowedEventIds?: EventScope) {
+  return prisma.event.findMany({
+    where: buildOrderEventWhere(organizationId, allowedEventIds),
+    orderBy: [{ startsAt: "desc" }, { title: "asc" }],
+    select: {
+      id: true,
+      title: true
+    }
+  });
+}
 
-  const where = buildOrderWhere(filters, allowedEventIds);
+export async function listAdminOrders(
+  filters: AdminOrderFilters = {},
+  organizationId: string,
+  allowedEventIds?: EventScope
+) {
+  await expirePendingOrders({ limit: 100, organizationId, allowedEventIds });
+
+  const where = buildOrderWhere(filters, organizationId, allowedEventIds);
 
   const [orders, totalCount] = await Promise.all([
     prisma.order.findMany({
@@ -135,10 +161,14 @@ export async function listAdminOrders(filters: AdminOrderFilters = {}, allowedEv
   return { orders, totalCount };
 }
 
-export async function getOrdersSummary(filters: AdminOrderFilters = {}, allowedEventIds?: EventScope) {
-  await expirePendingOrders({ limit: 100 });
+export async function getOrdersSummary(
+  filters: AdminOrderFilters = {},
+  organizationId: string,
+  allowedEventIds?: EventScope
+) {
+  await expirePendingOrders({ limit: 100, organizationId, allowedEventIds });
 
-  const where = buildOrderWhere(filters, allowedEventIds);
+  const where = buildOrderWhere(filters, organizationId, allowedEventIds);
 
   const [statusGroups, totals] = await Promise.all([
     prisma.order.groupBy({
@@ -178,11 +208,15 @@ export async function getOrdersSummary(filters: AdminOrderFilters = {}, allowedE
   };
 }
 
-export async function listOrdersForCsvExport(filters: AdminOrderFilters = {}, allowedEventIds?: EventScope) {
-  await expirePendingOrders({ limit: 500 });
+export async function listOrdersForCsvExport(
+  filters: AdminOrderFilters = {},
+  organizationId: string,
+  allowedEventIds?: EventScope
+) {
+  await expirePendingOrders({ limit: 500, organizationId, allowedEventIds });
 
   return prisma.order.findMany({
-    where: buildOrderWhere(filters, allowedEventIds),
+    where: buildOrderWhere(filters, organizationId, allowedEventIds),
     orderBy: {
       createdAt: "desc"
     },

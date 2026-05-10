@@ -1,12 +1,19 @@
+import { EventStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { summarizeAsaasSplit } from "@/features/payments/split-report.service";
 
 type EventScope = string[] | null | undefined;
 
-export async function getAdminOrderDetail(code: string, allowedEventIds?: EventScope) {
+export async function getAdminOrderDetail(code: string, organizationId: string, allowedEventIds?: EventScope) {
   const order = await prisma.order.findFirst({
     where: {
       code,
+      event: {
+        organizationId,
+        status: {
+          not: EventStatus.DRAFT
+        }
+      },
       ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {})
     },
     include: {

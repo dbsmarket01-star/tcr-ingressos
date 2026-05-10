@@ -54,7 +54,10 @@ describe("public order and ticket tenant isolation", () => {
         where: {
           code: "ING-123",
           event: {
-            organizationId: "org_a2"
+            organizationId: "org_a2",
+            status: {
+              not: "DRAFT"
+            }
           }
         }
       })
@@ -65,7 +68,10 @@ describe("public order and ticket tenant isolation", () => {
         where: {
           code: "ING-123",
           event: {
-            organizationId: "org_a2"
+            organizationId: "org_a2",
+            status: {
+              not: "DRAFT"
+            }
           }
         }
       })
@@ -86,7 +92,10 @@ describe("public order and ticket tenant isolation", () => {
         where: {
           code: "TK-123",
           event: {
-            organizationId: "org_a2"
+            organizationId: "org_a2",
+            status: {
+              not: "DRAFT"
+            }
           }
         }
       })

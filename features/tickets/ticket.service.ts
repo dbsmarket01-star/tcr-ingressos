@@ -1,10 +1,20 @@
+import { EventStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export async function getTicketByCode(code: string, organizationId?: string | null) {
   return prisma.ticket.findFirst({
     where: {
       code,
-      ...(organizationId ? { event: { organizationId } } : {})
+      ...(organizationId
+        ? {
+            event: {
+              organizationId,
+              status: {
+                not: EventStatus.DRAFT
+              }
+            }
+          }
+        : {})
     },
     include: {
       event: true,

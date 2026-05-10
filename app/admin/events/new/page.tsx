@@ -267,7 +267,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
               </div>
               <label className="field">
                 <span>Título da captação</span>
-                <input name="leadCaptureHeadline" placeholder="Ex: Cláudio Duarte em Santo André" />
+                <input name="leadCaptureHeadline" placeholder="Ex: Conferência em São Paulo" />
               </label>
               <label className="field">
                 <span>Descrição da captação</span>
@@ -623,7 +623,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           </summary>
           <label className="field">
             <span>Título SEO</span>
-            <input name="seoTitle" maxLength={70} placeholder="Ex: Fernandinho em Salvador | Ingressos oficiais" />
+            <input name="seoTitle" maxLength={70} placeholder="Ex: Nome do evento | Ingressos oficiais" />
             <small>Recomendado: até 60 caracteres. Máximo permitido: 70.</small>
           </label>
           <label className="field">

@@ -1,4 +1,4 @@
-import { CheckInStatus, Prisma } from "@prisma/client";
+import { CheckInStatus, EventStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getPublicTicketUrl } from "@/lib/public-url";
 import type { CurrentAdmin } from "@/features/auth/auth.service";
@@ -32,7 +32,17 @@ export async function validateTicketForCheckIn(inputCode: string, deviceName?: s
     async (tx) => {
       const ticket = await tx.ticket.findFirst({
         where: {
-          OR: [{ code }, { qrCodeToken: code }]
+          OR: [{ code }, { qrCodeToken: code }],
+          ...(admin
+            ? {
+                event: {
+                  organizationId: admin.organizationId,
+                  status: {
+                    not: EventStatus.DRAFT
+                  }
+                }
+              }
+            : {})
         },
         include: {
           event: {
@@ -168,9 +178,22 @@ export async function validateTicketForCheckIn(inputCode: string, deviceName?: s
   );
 }
 
-export async function listRecentCheckIns(allowedEventIds?: string[] | null) {
+function buildCheckInEventWhere(organizationId: string, allowedEventIds?: string[] | null): Prisma.EventWhereInput {
+  return {
+    organizationId,
+    status: {
+      not: EventStatus.DRAFT
+    },
+    ...(allowedEventIds ? { id: { in: allowedEventIds } } : {})
+  };
+}
+
+export async function listRecentCheckIns(organizationId: string, allowedEventIds?: string[] | null) {
   return prisma.checkIn.findMany({
-    where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
+    where: {
+      event: buildCheckInEventWhere(organizationId, allowedEventIds),
+      ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {})
+    },
     orderBy: {
       checkedAt: "desc"
     },
@@ -191,13 +214,15 @@ export async function listRecentCheckIns(allowedEventIds?: string[] | null) {
   });
 }
 
-export async function getCheckInStats(allowedEventIds?: string[] | null) {
+export async function getCheckInStats(organizationId: string, allowedEventIds?: string[] | null) {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
+  const eventScope = buildCheckInEventWhere(organizationId, allowedEventIds);
 
   const [approvedToday, blockedToday, totalToday] = await Promise.all([
     prisma.checkIn.count({
       where: {
+        event: eventScope,
         status: CheckInStatus.APPROVED,
         ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
         checkedAt: {
@@ -207,6 +232,7 @@ export async function getCheckInStats(allowedEventIds?: string[] | null) {
     }),
     prisma.checkIn.count({
       where: {
+        event: eventScope,
         status: {
           in: [CheckInStatus.ALREADY_USED, CheckInStatus.INVALID, CheckInStatus.CANCELED]
         },
@@ -218,6 +244,7 @@ export async function getCheckInStats(allowedEventIds?: string[] | null) {
     }),
     prisma.checkIn.count({
       where: {
+        event: eventScope,
         ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
         checkedAt: {
           gte: startOfDay

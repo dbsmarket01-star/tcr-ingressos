@@ -50,7 +50,7 @@ export default async function AdminOrderDetailPage({ params, searchParams }: Adm
   const admin = await requirePermission("ORDERS");
   const { code } = await params;
   const query = searchParams ? await searchParams : {};
-  const order = await getAdminOrderDetail(code, getAdminAllowedEventIds(admin));
+  const order = await getAdminOrderDetail(code, admin.organizationId, getAdminAllowedEventIds(admin));
 
   if (!order) {
     notFound();
