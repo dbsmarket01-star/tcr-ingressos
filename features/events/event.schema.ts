@@ -90,6 +90,7 @@ export const eventDraftSchema = z.object({
   seoKeywords: z.string().max(300).optional(),
   seoImageUrl: imageUrlSchema,
   supportWhatsappUrl: supportWhatsappUrlSchema,
+  couponsEnabled: z.boolean().default(false),
   leadCaptureEnabled: z.boolean().default(false),
   leadCaptureHeadline: z.string().max(120).optional(),
   leadCaptureDescription: z.string().max(600).optional(),

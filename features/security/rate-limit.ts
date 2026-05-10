@@ -23,3 +23,14 @@ export function assertRateLimit(key: string, options: { limit: number; windowMs:
 
   existing.count += 1;
 }
+
+export function getRequestIp(request: Request) {
+  const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const realIp = request.headers.get("x-real-ip")?.trim();
+
+  return forwardedFor || realIp || "local";
+}
+
+export function resetRateLimitBuckets() {
+  buckets.clear();
+}

@@ -263,6 +263,13 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
             />
             <small>Opcional. Esse link aparece como botão flutuante na página do evento e no pedido pendente.</small>
           </label>
+          <div className="adminToggleNote">
+            <label className="field checkboxField">
+              <input name="couponsEnabled" type="checkbox" defaultChecked={event.couponsEnabled} />
+              <span>Permitir cupom de desconto neste evento</span>
+            </label>
+            <small>Quando estiver desligado, o campo de cupom não aparece no checkout e códigos não serão aceitos.</small>
+          </div>
           <label className="field">
             <span>Status</span>
             <select
@@ -459,7 +466,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
                   defaultValue={event.leadCaptureBenefitsText ?? ""}
                   placeholder={"Acesso antecipado|Quem está na lista entra primeiro no grupo oficial.\nDesconto exclusivo|Ganhe até 30% de desconto no lançamento.\nVagas limitadas|Ingressos limitados para garantir a melhor experiência."}
                 />
-                <small>Use o formato Título|Descrição. Cada linha vira um benefício na faixa verde abaixo do banner.</small>
+                <small>Use o formato Título|Descrição. Cada linha vira um benefício na faixa de destaque abaixo do banner.</small>
               </label>
               <div className="grid twoColumns">
                 <label className="field">

@@ -143,7 +143,7 @@ export default async function OperationDetailPage({ params, searchParams }: Oper
         <section className="platformOperationLaunchpad spacedSection" aria-label="Atalhos internos da operação">
           <article className="platformOperationLaunchpadCard">
             <span className="eyebrow">Entrar na rotina da filha</span>
-            <h3>Abra a TCR já no ponto certo do trabalho.</h3>
+            <h3>Abra {operation.name} já no ponto certo do trabalho.</h3>
             <p>Esses atalhos levam você direto para as áreas que mais costumam precisar de revisão diária.</p>
             <div className="platformOperationLaunchpadGrid">
               <a className="secondaryButton smallButton" href={`https://${operation.adminDomain}/admin`} target="_blank" rel="noreferrer">
@@ -216,7 +216,7 @@ export default async function OperationDetailPage({ params, searchParams }: Oper
           <div className="sectionHeader inlineHeader">
             <div>
               <h2>Acesso inicial da filha</h2>
-              <p>É aqui que a A2 deixa de ser só operação cadastrada e passa a ter dono entrando no próprio admin.</p>
+              <p>É aqui que a operação deixa de ser só cadastro e passa a ter dono entrando no próprio admin.</p>
             </div>
           </div>
           {operation.adminUsers.length > 0 ? (
@@ -244,7 +244,7 @@ export default async function OperationDetailPage({ params, searchParams }: Oper
                 </div>
                 <div>
                   <strong>2. E-mail de acesso</strong>
-                  <span>Login exclusivo da operação A2</span>
+                  <span>Login exclusivo da operação {operation.name}</span>
                 </div>
                 <div>
                   <strong>3. Senha inicial</strong>
@@ -254,11 +254,11 @@ export default async function OperationDetailPage({ params, searchParams }: Oper
               <div className="grid twoColumns">
                 <label className="field">
                   <span>Nome do usuário inicial</span>
-                  <input name="ownerName" placeholder="Ex.: Ministério A2" required />
+                  <input name="ownerName" placeholder="Ex.: Responsável da operação" required />
                 </label>
                 <label className="field">
                   <span>E-mail do usuário inicial</span>
-                  <input name="ownerEmail" type="email" placeholder="Ex.: contato@a2imergidos.com.br" required />
+                  <input name="ownerEmail" type="email" placeholder="Ex.: responsavel@suaoperacao.com.br" required />
                 </label>
               </div>
               <label className="field">
@@ -266,7 +266,7 @@ export default async function OperationDetailPage({ params, searchParams }: Oper
                 <input name="ownerPassword" type="password" placeholder="No mínimo 8 caracteres" required />
               </label>
               <button className="button" type="submit">
-                Liberar acesso inicial da A2
+                Liberar acesso inicial da operação
               </button>
             </form>
           )}
@@ -302,7 +302,7 @@ export default async function OperationDetailPage({ params, searchParams }: Oper
             </div>
             <div>
               <span>Próximo passo</span>
-              <strong>{operation._count.events > 0 ? "Revisar agenda da A2" : "Cadastrar o primeiro evento"}</strong>
+              <strong>{operation._count.events > 0 ? `Revisar agenda da ${operation.name}` : "Cadastrar o primeiro evento"}</strong>
             </div>
           </div>
           <div className="platformOperationFocusActions">
@@ -448,11 +448,11 @@ export default async function OperationDetailPage({ params, searchParams }: Oper
 
           <div className="operationsAdminSwatches">
             <span>
-              <i style={{ background: operation.primaryColor || "#0b7a63" }} />
+              <i style={{ background: operation.primaryColor || "#1f5fbf" }} />
               Principal
             </span>
             <span>
-              <i style={{ background: operation.secondaryColor || "#dff3ec" }} />
+              <i style={{ background: operation.secondaryColor || "#dce9ff" }} />
               Secundária
             </span>
           </div>

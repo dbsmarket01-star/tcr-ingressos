@@ -127,7 +127,7 @@ export async function updateCompanySettingsAction(formData: FormData) {
     redirect(`/admin/settings?error=${encodeURIComponent(settingsValidationMessage())}`);
   }
 
-  const settings = await updateCompanySettings(parsed.data);
+  const settings = await updateCompanySettings(parsed.data, admin.organizationId);
 
   await createAuditLog({
     adminUserId: admin.id,
@@ -165,7 +165,7 @@ export async function updatePaymentSplitRulesAction(formData: FormData) {
     return parsed.data;
   }).filter((rule): rule is NonNullable<typeof rule> => Boolean(rule));
 
-  const savedRules = await replacePaymentSplitRules(rules);
+  const savedRules = await replacePaymentSplitRules(rules, admin.organizationId);
 
   await createAuditLog({
     adminUserId: admin.id,

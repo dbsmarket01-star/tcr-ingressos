@@ -1,5 +1,5 @@
 import type { SplitRuleType } from "@prisma/client";
-import { ensureDefaultOrganizationBackfill } from "@/features/organizations/organization.service";
+import { getDefaultOrganizationId } from "@/features/organizations/organization.service";
 import { prisma } from "@/lib/prisma";
 import type { AsaasSplit } from "./payment-provider";
 
@@ -36,7 +36,7 @@ export async function buildAsaasSplitsForOrder(
   organizationId?: string | null
 ): Promise<AsaasSplit[] | undefined> {
   const ticketQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-  const resolvedOrganizationId = organizationId || (await ensureDefaultOrganizationBackfill());
+  const resolvedOrganizationId = organizationId || (await getDefaultOrganizationId());
   const rules = await prisma.paymentSplitRule.findMany({
     where: {
       organizationId: resolvedOrganizationId,

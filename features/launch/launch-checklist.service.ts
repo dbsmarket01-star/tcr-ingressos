@@ -63,9 +63,12 @@ function sortNextActions(items: LaunchItem[]) {
     .slice(0, 6);
 }
 
-export async function listLaunchEvents(allowedEventIds?: EventScope) {
+export async function listLaunchEvents(allowedEventIds?: EventScope, organizationId?: string) {
   return prisma.event.findMany({
-    where: allowedEventIds ? { id: { in: allowedEventIds } } : undefined,
+    where: {
+      ...(organizationId ? { organizationId } : {}),
+      ...(allowedEventIds ? { id: { in: allowedEventIds } } : {})
+    },
     orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],
     select: {
       id: true,
@@ -76,15 +79,19 @@ export async function listLaunchEvents(allowedEventIds?: EventScope) {
   });
 }
 
-export async function getLaunchChecklist(eventId?: string, allowedEventIds?: EventScope) {
-  const events = await listLaunchEvents(allowedEventIds);
+export async function getLaunchChecklist(eventId?: string, allowedEventIds?: EventScope, organizationId?: string) {
+  const events = await listLaunchEvents(allowedEventIds, organizationId);
   const selectedEventId = eventId || events[0]?.id || "";
   const [health, event] = await Promise.all([
-    getPaymentHealth(),
+    getPaymentHealth(organizationId),
     selectedEventId
       ? prisma.event.findFirst({
           where: {
-            AND: [{ id: selectedEventId }, ...(allowedEventIds ? [{ id: { in: allowedEventIds } }] : [])]
+            AND: [
+              { id: selectedEventId },
+              ...(organizationId ? [{ organizationId }] : []),
+              ...(allowedEventIds ? [{ id: { in: allowedEventIds } }] : [])
+            ]
           },
           include: {
             lots: {

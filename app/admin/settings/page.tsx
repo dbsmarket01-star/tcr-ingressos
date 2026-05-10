@@ -41,15 +41,15 @@ function splitValueForRule(rule?: Awaited<ReturnType<typeof listPaymentSplitRule
 }
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
-  await requirePermission("SETTINGS");
+  const admin = await requirePermission("SETTINGS");
   const organizationContext = await getCurrentOrganizationContext();
   const params = searchParams ? await searchParams : {};
   const error = typeof params.error === "string" ? params.error : null;
   const saved = params.saved === "1";
   const [health, companySettings, splitRules] = await Promise.all([
-    getPaymentHealth(),
-    getCompanySettings(),
-    listPaymentSplitRules()
+    getPaymentHealth(admin.organizationId),
+    getCompanySettings(admin.organizationId),
+    listPaymentSplitRules(admin.organizationId)
   ]);
   const companyIdentity = companySettings as typeof companySettings & {
     instagramUrl?: string | null;

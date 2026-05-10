@@ -664,7 +664,11 @@ export default async function EventManagementPage({ params, searchParams }: Even
             <div className="eventOverviewPanelHeader">
               <div>
                 <h2>Cupons ativos</h2>
-                <p>Resumo dos cupons deste evento.</p>
+                <p>
+                  {event.couponsEnabled
+                    ? "Campo de cupom habilitado no checkout deste evento."
+                    : "Campo de cupom oculto no checkout. Ative na edição do evento quando quiser usar."}
+                </p>
               </div>
               <Link className="eventOverviewGhostLink" href={`/admin/events/${event.id}/edit`}>
                 Ver todos

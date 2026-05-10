@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { sendLeadBroadcastEmailBatch } from "@/features/email/email.service";
-import { getDefaultOrganizationId, getOrganizationContextById } from "@/features/organizations/organization.service";
+import { getOrganizationContextById } from "@/features/organizations/organization.service";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { prisma } from "@/lib/prisma";
 
@@ -191,7 +191,23 @@ export async function processLeadEmailCampaignInBackground(campaignId: string) {
     return getLeadEmailCampaignSnapshot(campaign.id);
   }
 
-  const organizationId = campaign.event.organizationId || (await getDefaultOrganizationId());
+  const organizationId = campaign.event.organizationId;
+
+  if (!organizationId) {
+    await prisma.leadEmailCampaign.update({
+      where: {
+        id: campaign.id
+      },
+      data: {
+        status: "FAILED",
+        completedAt: new Date(),
+        lastError: "Campanha sem organização associada."
+      }
+    });
+
+    return getLeadEmailCampaignSnapshot(campaign.id);
+  }
+
   const organizationContext = await getOrganizationContextById(organizationId);
   const companySettings = await getCompanySettingsByOrganizationId(organizationId);
 
@@ -220,6 +236,7 @@ export async function processLeadEmailCampaignInBackground(campaignId: string) {
           ctaLabel: campaign.ctaLabel || "Abrir link",
           ctaUrl: `${organizationContext.publicBaseUrl}/r/lead-email/${campaign.id}/${recipient.leadId}`,
           openTrackingUrl: `${organizationContext.publicBaseUrl}/r/lead-email-open/${campaign.id}/${recipient.leadId}`,
+          unsubscribeUrl: `${organizationContext.publicBaseUrl}/r/lead-email-unsubscribe/${campaign.id}/${recipient.leadId}`,
           instagramUrl: campaign.instagramUrl,
           supportEmail: companySettings.supportEmail
         }))

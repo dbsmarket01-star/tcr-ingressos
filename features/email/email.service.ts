@@ -90,6 +90,7 @@ type LeadBroadcastEmailInput = {
   ctaLabel?: string | null;
   ctaUrl?: string | null;
   openTrackingUrl?: string | null;
+  unsubscribeUrl?: string | null;
   instagramUrl?: string | null;
   supportEmail?: string | null;
 };
@@ -100,6 +101,7 @@ type EmailPayload = {
   subject: string;
   html: string;
   text: string;
+  headers?: Record<string, string>;
 };
 
 function extractResendMessage(error: unknown) {
@@ -164,12 +166,18 @@ function formatCurrency(valueInCents: number) {
   }).format(valueInCents / 100);
 }
 
+function getDefaultBrandName(brandName?: string | null) {
+  return brandName?.trim() || process.env.DEFAULT_EMAIL_BRAND || "Ingresaas";
+}
+
 function getDefaultEmailFrom(brandName?: string | null) {
-  return `${brandName || "TCR Ingressos"} <ingressos@tcringressos.app.br>`;
+  const resolvedBrandName = getDefaultBrandName(brandName);
+  const fallbackAddress = process.env.DEFAULT_EMAIL_FROM_ADDRESS || "ingressos@ingresaas.app.br";
+  return `${resolvedBrandName} <${fallbackAddress}>`;
 }
 
 function buildTicketEmailHtml(input: TicketEmailInput) {
-  const brandName = input.brandName || "TCR Ingressos";
+  const brandName = getDefaultBrandName(input.brandName);
   const ticketLinks = input.tickets
     .map(
       (ticket) => `
@@ -202,7 +210,7 @@ function buildTicketEmailHtml(input: TicketEmailInput) {
 }
 
 function buildTicketEmailText(input: TicketEmailInput) {
-  const brandName = input.brandName || "TCR Ingressos";
+  const brandName = getDefaultBrandName(input.brandName);
   const tickets = input.tickets
     .map((ticket) => `- ${ticket.lotName} | ${ticket.code} | ${ticket.url}`)
     .join("\n");
@@ -225,7 +233,7 @@ function buildTicketEmailText(input: TicketEmailInput) {
 
 export async function sendTicketsEmail(input: TicketEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.app.br>`;
+  const from = process.env.EMAIL_FROM || getDefaultEmailFrom(input.brandName);
 
   if (!apiKey) {
     console.log("[email:dry-run] Ingressos gerados para envio", {
@@ -256,7 +264,7 @@ export function createPublicOrderUrl(orderCode: string, organization?: EmailOrga
 }
 
 function buildPasswordResetHtml(input: PasswordResetEmailInput) {
-  const brandName = input.brandName || "TCR Ingressos";
+  const brandName = getDefaultBrandName(input.brandName);
   return `
     <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.5;">
       <h1 style="margin: 0 0 12px;">Redefinir senha - ${brandName}</h1>
@@ -273,7 +281,7 @@ function buildPasswordResetHtml(input: PasswordResetEmailInput) {
 }
 
 function buildPasswordResetText(input: PasswordResetEmailInput) {
-  const brandName = input.brandName || "TCR Ingressos";
+  const brandName = getDefaultBrandName(input.brandName);
   return [
     `Olá, ${input.name}.`,
     "",
@@ -287,7 +295,7 @@ function buildPasswordResetText(input: PasswordResetEmailInput) {
 
 export async function sendAdminPasswordResetEmail(input: PasswordResetEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.app.br>`;
+  const from = process.env.EMAIL_FROM || getDefaultEmailFrom(input.brandName);
 
   if (!apiKey) {
       console.log("[email:dry-run] Recuperação de senha administrativa", {
@@ -302,7 +310,7 @@ export async function sendAdminPasswordResetEmail(input: PasswordResetEmailInput
   await sendWithResend(resend, {
     from,
     to: input.to,
-    subject: `Redefinir senha - ${input.brandName || "TCR Ingressos"}`,
+    subject: `Redefinir senha - ${getDefaultBrandName(input.brandName)}`,
     html: buildPasswordResetHtml(input),
     text: buildPasswordResetText(input)
   });
@@ -313,7 +321,7 @@ export function createAdminPasswordResetUrl(token: string, organization?: EmailO
 }
 
 function buildOrderPendingPaymentHtml(input: OrderPendingPaymentEmailInput) {
-  const brandName = input.brandName || "TCR Ingressos";
+  const brandName = getDefaultBrandName(input.brandName);
   return `
     <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.5;">
       <h1 style="margin: 0 0 12px;">Pedido recebido - ${brandName}</h1>
@@ -336,7 +344,7 @@ function buildOrderPendingPaymentHtml(input: OrderPendingPaymentEmailInput) {
 }
 
 function buildOrderPendingPaymentText(input: OrderPendingPaymentEmailInput) {
-  const brandName = input.brandName || "TCR Ingressos";
+  const brandName = getDefaultBrandName(input.brandName);
   return [
     `Olá, ${input.buyerName}.`,
     "",
@@ -357,7 +365,7 @@ function buildOrderPendingPaymentText(input: OrderPendingPaymentEmailInput) {
 
 export async function sendOrderPendingPaymentEmail(input: OrderPendingPaymentEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.app.br>`;
+  const from = process.env.EMAIL_FROM || getDefaultEmailFrom(input.brandName);
 
   if (!apiKey) {
     console.log("[email:dry-run] Pedido pendente para envio", {
@@ -380,7 +388,7 @@ export async function sendOrderPendingPaymentEmail(input: OrderPendingPaymentEma
 }
 
 function buildOrderExpiredHtml(input: OrderExpiredEmailInput) {
-  const brandName = input.brandName || "TCR Ingressos";
+  const brandName = getDefaultBrandName(input.brandName);
   return `
     <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.5;">
       <h1 style="margin: 0 0 12px;">Pedido expirado - ${brandName}</h1>
@@ -397,7 +405,7 @@ function buildOrderExpiredHtml(input: OrderExpiredEmailInput) {
 }
 
 function buildOrderExpiredText(input: OrderExpiredEmailInput) {
-  const brandName = input.brandName || "TCR Ingressos";
+  const brandName = getDefaultBrandName(input.brandName);
   return [
     `Olá, ${input.buyerName}.`,
     "",
@@ -411,7 +419,7 @@ function buildOrderExpiredText(input: OrderExpiredEmailInput) {
 
 export async function sendOrderExpiredEmail(input: OrderExpiredEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.app.br>`;
+  const from = process.env.EMAIL_FROM || getDefaultEmailFrom(input.brandName);
 
   if (!apiKey) {
     console.log("[email:dry-run] Pedido expirado para envio", {
@@ -494,7 +502,7 @@ export async function sendUnlockApprovalEmail(input: UnlockApprovalEmailInput) {
 }
 
 function buildLeadCaptureConfirmationHtml(input: LeadCaptureConfirmationEmailInput) {
-  const brandName = input.brandName || "TCR Ingressos";
+  const brandName = getDefaultBrandName(input.brandName);
   const whatsappButton = input.whatsappGroupUrl
     ? `
       <p>
@@ -539,7 +547,7 @@ function buildLeadCaptureConfirmationText(input: LeadCaptureConfirmationEmailInp
 
 export async function sendLeadCaptureConfirmationEmail(input: LeadCaptureConfirmationEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.app.br>`;
+  const from = process.env.EMAIL_FROM || getDefaultEmailFrom(input.brandName);
 
   if (!apiKey) {
     console.log("[email:dry-run] Confirmacao de lead", {
@@ -568,6 +576,47 @@ function renderBroadcastBodyAsHtml(body: string) {
     .filter(Boolean)
     .map((line) => `<p style="margin: 0 0 10px;">${line}</p>`)
     .join("");
+}
+
+function normalizeEmailSubjectText(value: string) {
+  return value
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[.:!?-]+$/g, "")
+    .toLowerCase();
+}
+
+function stripDuplicatedLeadBroadcastSubject(body: string, subject: string) {
+  const normalizedSubject = normalizeEmailSubjectText(subject);
+
+  if (!normalizedSubject) {
+    return body;
+  }
+
+  const lines = body.split("\n");
+  const firstMeaningfulIndex = lines.findIndex((line) => line.trim().length > 0);
+
+  if (firstMeaningfulIndex === -1) {
+    return body;
+  }
+
+  const firstMeaningfulLine = lines[firstMeaningfulIndex] ?? "";
+
+  if (normalizeEmailSubjectText(firstMeaningfulLine) !== normalizedSubject) {
+    return body;
+  }
+
+  const cleanedLines = [...lines];
+  cleanedLines.splice(firstMeaningfulIndex, 1);
+
+  while (
+    cleanedLines[firstMeaningfulIndex] !== undefined &&
+    cleanedLines[firstMeaningfulIndex]?.trim().length === 0
+  ) {
+    cleanedLines.splice(firstMeaningfulIndex, 1);
+  }
+
+  return cleanedLines.join("\n").trim();
 }
 
 function resolveAbsoluteEmailImageUrl(imageUrl: string, publicBaseUrl?: string | null) {
@@ -669,7 +718,8 @@ function normalizeInstagramHref(value?: string | null) {
 }
 
 function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
-  const brandName = input.brandName || "TCR Ingressos";
+  const brandName = getDefaultBrandName(input.brandName);
+  const sanitizedBody = stripDuplicatedLeadBroadcastSubject(input.body, input.subject);
   const imageUrl = buildLeadBroadcastImageUrl(input);
   const logoUrl = buildLeadBroadcastLogoUrl(input);
   const instagramIconUrl = buildLeadBroadcastInstagramIconUrl(input);
@@ -681,8 +731,8 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
         <img
           src="${imageUrl}"
           alt="${input.eventTitle}"
-          width="676"
-          style="border: 0; border-radius: 18px; display: block; height: auto; line-height: 100%; outline: none; text-decoration: none; width: 100%;"
+          width="640"
+          style="border: 0; border-radius: 18px; display: block; height: auto; line-height: 100%; margin: 0 auto; max-width: 640px; outline: none; text-decoration: none; width: 100%;"
         />
       </div>
     `
@@ -698,6 +748,9 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
     : "";
   const supportLine = input.supportEmail
     ? `<p style="margin: 22px 0 0; color: #607089; font-size: 13px;">Suporte: ${input.supportEmail}</p>`
+    : "";
+  const unsubscribeLine = input.unsubscribeUrl
+    ? `<p style="margin: 18px 0 0; color: #7a8798; font-size: 12px; text-align: center;">Não quer mais receber este tipo de e-mail? <a href="${input.unsubscribeUrl}" style="color: #607089;">Descadastrar</a></p>`
     : "";
   const trackingPixel = input.openTrackingUrl
     ? `<img src="${input.openTrackingUrl}" alt="" width="1" height="1" style="border: 0; display: block; height: 1px; opacity: 0; width: 1px;" />`
@@ -735,11 +788,12 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
           <p style="color: #425066; font-size: 16px; margin: 0 0 16px; text-align: left;">Olá, ${input.name}.</p>
           ${imageBlock}
           <div style="color: #243042; font-size: 16px;">
-            ${renderBroadcastBodyAsHtml(input.body)}
+            ${renderBroadcastBodyAsHtml(sanitizedBody)}
           </div>
           ${ctaButton}
           ${instagramLine}
           ${supportLine}
+          ${unsubscribeLine}
           ${trackingPixel}
         </div>
       </div>
@@ -748,15 +802,16 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
 }
 
 function buildLeadBroadcastText(input: LeadBroadcastEmailInput) {
+  const sanitizedBody = stripDuplicatedLeadBroadcastSubject(input.body, input.subject);
+
   return [
     `Olá, ${input.name}.`,
     "",
-    input.subject,
-    "",
-    input.body,
+    sanitizedBody,
     input.ctaUrl ? `${input.ctaLabel || "Abrir link"}: ${input.ctaUrl}` : null,
     input.instagramUrl ? `Instagram: ${normalizeInstagramHandle(input.instagramUrl)}` : null,
-    input.supportEmail ? `Suporte: ${input.supportEmail}` : null
+    input.supportEmail ? `Suporte: ${input.supportEmail}` : null,
+    input.unsubscribeUrl ? `Descadastrar: ${input.unsubscribeUrl}` : null
   ]
     .filter(Boolean)
     .join("\n");
@@ -782,14 +837,21 @@ export async function sendLeadBroadcastEmail(input: LeadBroadcastEmailInput) {
 }
 
 export function createLeadBroadcastEmailPayload(input: LeadBroadcastEmailInput): EmailPayload {
-  const from = process.env.EMAIL_FROM || `${input.brandName || "TCR Ingressos"} <ingressos@tcringressos.app.br>`;
+  const from = process.env.EMAIL_FROM || getDefaultEmailFrom(input.brandName);
+  const headers = input.unsubscribeUrl
+    ? {
+        "List-Unsubscribe": `<${input.unsubscribeUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+      }
+    : undefined;
 
   return {
     from,
     to: input.to,
     subject: input.subject,
     html: buildLeadBroadcastHtml(input),
-    text: buildLeadBroadcastText(input)
+    text: buildLeadBroadcastText(input),
+    headers
   };
 }
 

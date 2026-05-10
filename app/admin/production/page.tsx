@@ -51,8 +51,8 @@ function ChecklistSection({
 }
 
 export default async function ProductionPage() {
-  await requirePermission("PRODUCTION");
-  const readiness = await getProductionReadiness();
+  const admin = await requirePermission("PRODUCTION");
+  const readiness = await getProductionReadiness(admin.organizationId);
 
   return (
     <AdminShell
@@ -129,7 +129,7 @@ export default async function ProductionPage() {
           <span className="eyebrow">Recomendação atual</span>
           <h2>Infraestrutura recomendada</h2>
           <p className="muted">
-            Para a primeira operação real da TCR, use Vercel Pro para a aplicação, Supabase Pro para banco/storage,
+            Para a primeira operação real, use Vercel Pro para a aplicação, Supabase Pro para banco/storage,
             domínio definitivo com HTTPS, Asaas em produção, Resend autenticado e rotina externa de expiração a cada
             5 minutos. AWS fica como etapa futura quando houver necessidade de containers, Redis, filas e controle fino
             de infraestrutura.

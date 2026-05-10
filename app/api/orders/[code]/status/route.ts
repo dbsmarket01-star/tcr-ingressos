@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { assertRateLimit, getRequestIp } from "@/features/security/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -9,8 +10,20 @@ type RouteContext = {
   }>;
 };
 
-export async function GET(_: Request, { params }: RouteContext) {
+export async function GET(request: Request, { params }: RouteContext) {
   const { code } = await params;
+  const clientIp = getRequestIp(request);
+
+  try {
+    assertRateLimit(`order-status:${clientIp}:${code}`, { limit: 40, windowMs: 60_000 });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Muitas consultas em pouco tempo."
+      },
+      { status: 429 }
+    );
+  }
 
   const order = await prisma.order.findUnique({
     where: { code },

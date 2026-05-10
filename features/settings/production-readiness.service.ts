@@ -46,8 +46,9 @@ function isRecommendedDatabasePlan(health: Awaited<ReturnType<typeof getPaymentH
   return plan.includes("PRO") || plan.includes("PAID") || plan.includes("TEAM") || plan.includes("DEDICATED");
 }
 
-export async function getProductionReadiness() {
-  const health = await getPaymentHealth();
+export async function getProductionReadiness(organizationId?: string) {
+  const health = await getPaymentHealth(organizationId);
+  const organizationFilter = organizationId ? { organizationId } : undefined;
   const [
     publishedEvents,
     activeLots,
@@ -59,16 +60,27 @@ export async function getProductionReadiness() {
     admins,
     localUploadedMedia
   ] = await Promise.all([
-    prisma.event.count({ where: { status: "PUBLISHED" } }),
-    prisma.ticketLot.count({ where: { status: "ACTIVE", event: { status: "PUBLISHED" } } }),
-    prisma.order.count({ where: { status: "PAID" } }),
-    prisma.order.count({ where: { status: "PENDING_PAYMENT" } }),
-    prisma.payment.count(),
-    prisma.ticket.count(),
-    prisma.checkIn.count(),
-    prisma.adminUser.count({ where: { isActive: true } }),
+    prisma.event.count({ where: { status: "PUBLISHED", ...organizationFilter } }),
+    prisma.ticketLot.count({
+      where: {
+        status: "ACTIVE",
+        event: {
+          status: "PUBLISHED",
+          ...(organizationId ? { organizationId } : {})
+        }
+      }
+    }),
+    prisma.order.count({ where: { status: "PAID", ...(organizationId ? { event: { organizationId } } : {}) } }),
+    prisma.order.count({
+      where: { status: "PENDING_PAYMENT", ...(organizationId ? { event: { organizationId } } : {}) }
+    }),
+    prisma.payment.count({ where: organizationId ? { order: { event: { organizationId } } } : undefined }),
+    prisma.ticket.count({ where: organizationId ? { event: { organizationId } } : undefined }),
+    prisma.checkIn.count({ where: organizationId ? { event: { organizationId } } : undefined }),
+    prisma.adminUser.count({ where: { isActive: true, ...(organizationId ? { organizationId } : {}) } }),
     prisma.event.count({
       where: {
+        ...(organizationFilter || {}),
         OR: [
           { bannerUrl: { startsWith: "/uploads/" } },
           { eventMapImageUrl: { startsWith: "/uploads/" } },
@@ -118,7 +130,7 @@ export async function getProductionReadiness() {
       action:
         isLocalUrl(health.appUrl) || health.security.adminHostConfigured
           ? undefined
-          : "Configurar ADMIN_HOST=produtor.tcringressos.app.br na Vercel para ocultar o painel no domínio público."
+          : "Configurar ADMIN_HOST com o subdomínio interno da operação para ocultar o painel no domínio público."
     },
     {
       label: "Rotina de expiração",

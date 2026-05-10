@@ -57,6 +57,7 @@ function validationMessage(error: unknown) {
         seoDescription: "Descrição SEO",
         seoImageUrl: "Imagem SEO",
         supportWhatsappUrl: "Link do WhatsApp",
+        couponsEnabled: "Cupom de desconto",
         leadCaptureHeadline: "Título da captação",
         leadCaptureDescription: "Descrição da captação",
         leadCaptureOfferText: "Oferta da captação",
@@ -151,6 +152,7 @@ export async function createEventAction(formData: FormData) {
     seoKeywords: String(formData.get("seoKeywords") ?? "").trim() || undefined,
     seoImageUrl: seoUploadUrl || String(formData.get("seoImageUrl") ?? "").trim(),
     supportWhatsappUrl: String(formData.get("supportWhatsappUrl") ?? "").trim() || undefined,
+    couponsEnabled: String(formData.get("couponsEnabled") ?? "") === "on",
     leadCaptureEnabled: String(formData.get("leadCaptureEnabled") ?? "") === "on",
     leadCaptureHeadline: String(formData.get("leadCaptureHeadline") ?? "").trim() || undefined,
     leadCaptureDescription: String(formData.get("leadCaptureDescription") ?? "").trim() || undefined,
@@ -200,6 +202,7 @@ export async function createEventAction(formData: FormData) {
   revalidatePath("/admin/events");
   revalidatePath("/");
   revalidatePath(`/evento/${parsed.data.slug}`);
+  revalidatePath(`/evento/${parsed.data.slug}/checkout`);
   revalidatePath(`/lista/${parsed.data.slug}`);
   revalidatePath(`/lista/${parsed.data.slug}/obrigado`);
   redirect("/admin/events");
@@ -269,6 +272,7 @@ export async function updateEventAction(formData: FormData) {
     seoKeywords: String(formData.get("seoKeywords") ?? "").trim() || undefined,
     seoImageUrl: seoUploadUrl || String(formData.get("seoImageUrl") ?? "").trim(),
     supportWhatsappUrl: String(formData.get("supportWhatsappUrl") ?? "").trim() || undefined,
+    couponsEnabled: String(formData.get("couponsEnabled") ?? "") === "on",
     leadCaptureEnabled: String(formData.get("leadCaptureEnabled") ?? "") === "on",
     leadCaptureHeadline: String(formData.get("leadCaptureHeadline") ?? "").trim() || undefined,
     leadCaptureDescription: String(formData.get("leadCaptureDescription") ?? "").trim() || undefined,
@@ -323,6 +327,7 @@ export async function updateEventAction(formData: FormData) {
   revalidatePath(`/admin/events/${eventId}/leads`);
   revalidatePath("/");
   revalidatePath(`/evento/${parsed.data.slug}`);
+  revalidatePath(`/evento/${parsed.data.slug}/checkout`);
   revalidatePath(`/lista/${parsed.data.slug}`);
   revalidatePath(`/lista/${parsed.data.slug}/obrigado`);
   redirect(`/admin/events/${eventId}`);

@@ -1,7 +1,7 @@
 import crypto from "crypto";
 
 export function createTicketCode() {
-  return `TCR-${crypto.randomBytes(8).toString("hex").toUpperCase()}`;
+  return `ING-${crypto.randomBytes(8).toString("hex").toUpperCase()}`;
 }
 
 export function createQrCodeToken() {

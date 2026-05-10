@@ -71,7 +71,7 @@ export async function GET(request: Request) {
   return new NextResponse(`\uFEFF${csv}`, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="tcr-lotes-${new Date().toISOString().slice(0, 10)}.csv"`
+      "Content-Disposition": `attachment; filename="lotes-${new Date().toISOString().slice(0, 10)}.csv"`
     }
   });
 }

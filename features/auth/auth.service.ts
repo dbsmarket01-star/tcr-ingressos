@@ -2,7 +2,6 @@ import { AdminRole } from "@prisma/client";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { ensureDefaultOrganizationBackfill } from "@/features/organizations/organization.service";
 import { prisma } from "@/lib/prisma";
 
 const COOKIE_NAME = "tcr_admin_session";
@@ -17,7 +16,7 @@ type SessionPayload = {
 
 export type CurrentAdmin = {
   id: string;
-  organizationId: string | null;
+  organizationId: string;
   name: string;
   email: string;
   role: AdminRole;
@@ -167,7 +166,6 @@ export async function clearAdminSession() {
 }
 
 export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
-  const defaultOrganizationId = await ensureDefaultOrganizationBackfill();
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
 
@@ -202,23 +200,11 @@ export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
     return null;
   }
 
-  if (admin.organizationId) {
-    return admin;
+  if (!admin.organizationId) {
+    return null;
   }
 
-  await prisma.adminUser.update({
-    where: {
-      id: admin.id
-    },
-    data: {
-      organizationId: defaultOrganizationId
-    }
-  });
-
-  return {
-    ...admin,
-    organizationId: defaultOrganizationId
-  };
+  return admin as CurrentAdmin;
 }
 
 export async function requireAdmin() {
@@ -279,7 +265,6 @@ export async function requirePermission(area: AdminArea) {
 }
 
 export async function findActiveAdminByEmail(email: string) {
-  const defaultOrganizationId = await ensureDefaultOrganizationBackfill();
   const admin = await prisma.adminUser.findFirst({
     where: {
       email,
@@ -301,21 +286,9 @@ export async function findActiveAdminByEmail(email: string) {
     return null;
   }
 
-  if (admin.organizationId) {
-    return admin;
+  if (!admin.organizationId) {
+    return null;
   }
 
-  await prisma.adminUser.update({
-    where: {
-      id: admin.id
-    },
-    data: {
-      organizationId: defaultOrganizationId
-    }
-  });
-
-  return {
-    ...admin,
-    organizationId: defaultOrganizationId
-  };
+  return admin as AuthenticatedAdmin;
 }

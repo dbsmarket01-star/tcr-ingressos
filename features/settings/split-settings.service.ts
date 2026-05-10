@@ -1,27 +1,27 @@
 import { SplitRuleType } from "@prisma/client";
-import { ensureDefaultOrganizationBackfill } from "@/features/organizations/organization.service";
+import { getDefaultOrganizationId } from "@/features/organizations/organization.service";
 import { prisma } from "@/lib/prisma";
 import type { SplitRuleFormInput } from "./split-settings.schema";
 
 const PREVIEW_ORDER_AMOUNT_IN_CENTS = 50000;
 const PREVIEW_TICKET_QUANTITY = 5;
 
-export async function listPaymentSplitRules() {
-  const organizationId = await ensureDefaultOrganizationBackfill();
+export async function listPaymentSplitRules(organizationId?: string) {
+  const resolvedOrganizationId = organizationId || (await getDefaultOrganizationId());
   return prisma.paymentSplitRule.findMany({
     where: {
-      organizationId
+      organizationId: resolvedOrganizationId
     },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
   });
 }
 
-export async function replacePaymentSplitRules(rules: SplitRuleFormInput[]) {
-  const organizationId = await ensureDefaultOrganizationBackfill();
+export async function replacePaymentSplitRules(rules: SplitRuleFormInput[], organizationId?: string) {
+  const resolvedOrganizationId = organizationId || (await getDefaultOrganizationId());
   const cleanRules = rules
     .filter((rule) => rule.walletId && rule.value > 0)
     .map((rule, index) => ({
-      organizationId,
+      organizationId: resolvedOrganizationId,
       name: rule.name || `Socio ${index + 1}`,
       walletId: rule.walletId || "",
       type: rule.type as SplitRuleType,
@@ -34,7 +34,7 @@ export async function replacePaymentSplitRules(rules: SplitRuleFormInput[]) {
   return prisma.$transaction(async (tx) => {
     await tx.paymentSplitRule.deleteMany({
       where: {
-        organizationId
+        organizationId: resolvedOrganizationId
       }
     });
 

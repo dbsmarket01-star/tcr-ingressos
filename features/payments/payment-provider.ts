@@ -183,7 +183,7 @@ export class MercadoPagoCheckoutProProvider implements PaymentProvider {
           failure: `${this.appUrl}/pedido/${input.orderCode}`
         },
         auto_return: "approved",
-        statement_descriptor: "TCR INGRESSOS",
+        statement_descriptor: process.env.MERCADO_PAGO_STATEMENT_DESCRIPTOR || "INGRESAAS",
         metadata: {
           order_id: input.orderId,
           order_code: input.orderCode,

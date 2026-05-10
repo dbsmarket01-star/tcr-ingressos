@@ -53,9 +53,16 @@ function summarize(items: FinalCheckItem[]) {
   };
 }
 
-export async function getFinalPresaleChecklist(eventId?: string, allowedEventIds?: EventScope) {
+export async function getFinalPresaleChecklist(
+  eventId?: string,
+  allowedEventIds?: EventScope,
+  organizationId?: string
+) {
   const events = await prisma.event.findMany({
-    where: allowedEventIds ? { id: { in: allowedEventIds } } : undefined,
+    where: {
+      ...(organizationId ? { organizationId } : {}),
+      ...(allowedEventIds ? { id: { in: allowedEventIds } } : {})
+    },
     orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],
     select: {
       id: true,
@@ -66,11 +73,15 @@ export async function getFinalPresaleChecklist(eventId?: string, allowedEventIds
   });
   const selectedEventId = eventId || events[0]?.id || "";
   const [health, event] = await Promise.all([
-    getPaymentHealth(),
+    getPaymentHealth(organizationId),
     selectedEventId
       ? prisma.event.findFirst({
           where: {
-            AND: [{ id: selectedEventId }, ...(allowedEventIds ? [{ id: { in: allowedEventIds } }] : [])]
+            AND: [
+              { id: selectedEventId },
+              ...(organizationId ? [{ organizationId }] : []),
+              ...(allowedEventIds ? [{ id: { in: allowedEventIds } }] : [])
+            ]
           },
           include: {
             organization: {

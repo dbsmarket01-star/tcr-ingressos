@@ -5,7 +5,6 @@ import { unstable_cache } from "next/cache";
 
 export const DEFAULT_ORGANIZATION_SLUG = "tcr-ingressos";
 export const DEFAULT_ORGANIZATION_NAME = "TCR Ingressos";
-const DEFAULT_COMPANY_SETTINGS_ID = "tcr-company-settings";
 
 type OrganizationSeedInput = {
   name?: string;
@@ -178,59 +177,6 @@ export async function getDefaultOrganizationId() {
   return organization.id;
 }
 
-let defaultOrganizationBackfillPromise: Promise<string> | null = null;
-
-export async function ensureDefaultOrganizationBackfill() {
-  if (!defaultOrganizationBackfillPromise) {
-    defaultOrganizationBackfillPromise = (async () => {
-      const organization = await ensureDefaultOrganization();
-
-      await prisma.$transaction([
-        prisma.adminUser.updateMany({
-          where: {
-            organizationId: null
-          },
-          data: {
-            organizationId: organization.id
-          }
-        }),
-        prisma.event.updateMany({
-          where: {
-            organizationId: null
-          },
-          data: {
-            organizationId: organization.id
-          }
-        }),
-        prisma.companySettings.updateMany({
-          where: {
-            id: DEFAULT_COMPANY_SETTINGS_ID,
-            organizationId: null
-          },
-          data: {
-            organizationId: organization.id
-          }
-        }),
-        prisma.paymentSplitRule.updateMany({
-          where: {
-            organizationId: null
-          },
-          data: {
-            organizationId: organization.id
-          }
-        })
-      ]);
-
-      return organization.id;
-    })().catch((error) => {
-      defaultOrganizationBackfillPromise = null;
-      throw error;
-    });
-  }
-
-  return defaultOrganizationBackfillPromise;
-}
-
 export async function getOrganizationContextByHost(host?: string | null) {
   const matchedOrganization = await getOrganizationByHost(host);
 
@@ -247,9 +193,7 @@ export async function getOrganizationContextById(organizationId: string) {
   const organization = await getOrganizationBrandingById(organizationId);
 
   if (!organization) {
-    const fallback = await ensureDefaultOrganization();
-
-    return buildOrganizationContext(fallback, null, false);
+    throw new Error("Organização não encontrada para o contexto solicitado.");
   }
 
   return buildOrganizationContext(organization, organization.publicDomain, true);

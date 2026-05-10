@@ -23,15 +23,15 @@ function creditCardValidationMessage(error: unknown) {
     const field = issues[0]?.path?.join(".");
 
     const messages: Record<string, string> = {
-      holderName: "Informe o nome do titular como aparece no cartao.",
-      number: "Informe um numero de cartao valido.",
-      expiryMonth: "Informe o mes de validade do cartao.",
-      expiryYear: "Informe o ano de validade do cartao.",
-      ccv: "Informe o CVV do cartao.",
+      holderName: "Informe o nome do titular como aparece no cartão.",
+      number: "Informe um número de cartão válido.",
+      expiryMonth: "Informe o mês de validade do cartão.",
+      expiryYear: "Informe o ano de validade do cartão.",
+      ccv: "Informe o CVV do cartão.",
       holderCpfCnpj: "Informe o CPF/CNPJ do titular.",
       holderPostalCode: "Informe o CEP do titular.",
-      holderAddressNumber: "Informe o numero do endereco do titular.",
-      installments: "Escolha uma quantidade de parcelas valida."
+      holderAddressNumber: "Informe o número do endereço do titular.",
+      installments: "Escolha uma quantidade de parcelas válida."
     };
 
     if (field && messages[field]) {
@@ -39,7 +39,7 @@ function creditCardValidationMessage(error: unknown) {
     }
   }
 
-  return "Preencha os dados do cartao corretamente.";
+  return "Preencha os dados do cartão corretamente.";
 }
 
 async function getActionIp() {
@@ -54,7 +54,7 @@ export async function startPaymentAction(formData: FormData) {
   const orderCode = String(formData.get("orderCode") ?? "").trim();
 
   if (!orderCode) {
-    throw new Error("Pedido nao informado.");
+    throw new Error("Pedido não informado.");
   }
 
   let checkoutUrl: string | null | undefined = null;
@@ -66,7 +66,7 @@ export async function startPaymentAction(formData: FormData) {
     checkoutUrl = payment.checkoutUrl;
     revalidatePath(`/pedido/${orderCode}`);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Nao foi possivel iniciar o pagamento.";
+    const message = error instanceof Error ? error.message : "Não foi possível iniciar o pagamento.";
     redirect(`/pedido/${orderCode}?paymentError=${encodeURIComponent(message)}`);
   }
 
@@ -81,7 +81,7 @@ export async function approveSimulatedPaymentAction(formData: FormData) {
   const orderCode = String(formData.get("orderCode") ?? "").trim();
 
   if (!orderCode) {
-    throw new Error("Pedido nao informado.");
+    throw new Error("Pedido não informado.");
   }
 
   await approvePaymentByOrderCode(orderCode);
@@ -93,7 +93,7 @@ export async function failSimulatedPaymentAction(formData: FormData) {
   const orderCode = String(formData.get("orderCode") ?? "").trim();
 
   if (!orderCode) {
-    throw new Error("Pedido nao informado.");
+    throw new Error("Pedido não informado.");
   }
 
   await failPaymentByOrderCode(orderCode);
@@ -105,7 +105,7 @@ export async function syncAsaasPaymentAction(formData: FormData) {
   const orderCode = String(formData.get("orderCode") ?? "").trim();
 
   if (!orderCode) {
-    throw new Error("Pedido nao informado.");
+    throw new Error("Pedido não informado.");
   }
 
   try {
@@ -115,7 +115,7 @@ export async function syncAsaasPaymentAction(formData: FormData) {
     revalidatePath("/admin/orders");
     revalidatePath("/admin/tickets");
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Nao foi possivel verificar o pagamento.";
+    const message = error instanceof Error ? error.message : "Não foi possível verificar o pagamento.";
     redirect(`/pedido/${orderCode}?paymentError=${encodeURIComponent(message)}`);
   }
 
@@ -156,7 +156,7 @@ export async function payWithCreditCardAction(formData: FormData) {
     revalidatePath("/admin/orders");
     revalidatePath("/admin/tickets");
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Nao foi possivel pagar com cartao.";
+    const message = error instanceof Error ? error.message : "Não foi possível pagar com cartão.";
     redirect(`/pedido/${parsed.data.orderCode}?paymentError=${encodeURIComponent(message)}`);
   }
 

@@ -37,7 +37,7 @@ export async function GET(request: Request) {
     ["Liquido aproximado", formatMoney(report.totals.netRevenueInCents)],
     ["Taxas identificadas", formatMoney(report.totals.estimatedFeesInCents)],
     ["Split enviado", formatMoney(report.totals.splitTotalInCents)],
-    ["TCR apos split", formatMoney(report.totals.tcrAfterSplitInCents)],
+    ["Plataforma apos split", formatMoney(report.totals.tcrAfterSplitInCents)],
     ["Pedidos com split", report.totals.splitPaymentsCount],
     ["Cobertura split (%)", report.totals.splitCoverage],
     ["Pedidos pagos", report.totals.paidOrders],
@@ -113,7 +113,7 @@ export async function GET(request: Request) {
   return new NextResponse(`\uFEFF${csv}`, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="tcr-financeiro-${new Date().toISOString().slice(0, 10)}.csv"`
+      "Content-Disposition": `attachment; filename="financeiro-${new Date().toISOString().slice(0, 10)}.csv"`
     }
   });
 }

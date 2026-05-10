@@ -185,7 +185,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           {isPlatformHost ? (
             <div className="platformLoginFootnote">
               <strong>Fluxo recomendado</strong>
-              <span>Entre no painel master, abra Operações e gerencie a TCR como primeira bilheteria filha.</span>
+              <span>Entre no painel master, abra Operações e gerencie cada bilheteria filha pelo domínio e painel próprios.</span>
             </div>
           ) : null}
         </div>

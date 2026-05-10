@@ -79,7 +79,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
             <span>Buscar por pedido, ingresso, nome, e-mail, telefone ou evento</span>
             <input
               name="q"
-              placeholder="Ex: TCR-..., nome do cliente, e-mail ou código do ingresso"
+              placeholder="Ex: ING-..., nome do cliente, e-mail ou código do ingresso"
               defaultValue={query}
             />
           </label>
@@ -93,7 +93,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
           ) : null}
         </form>
         <div className="supportSearchHints" aria-label="Exemplos de busca">
-          <span>Pedido TCR-...</span>
+          <span>Pedido ING-...</span>
           <span>E-mail do cliente</span>
           <span>CPF ou telefone</span>
           <span>Código do ingresso</span>

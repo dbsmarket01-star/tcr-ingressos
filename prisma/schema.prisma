@@ -231,8 +231,8 @@ model Organization {
   id             String   @id @default(cuid())
   slug           String   @unique
   name           String
-  publicDomain   String?
-  adminDomain    String?
+  publicDomain   String?  @unique
+  adminDomain    String?  @unique
   logoUrl        String?
   primaryColor   String?
   secondaryColor String?
@@ -252,7 +252,7 @@ model Organization {
 
 model AdminUser {
   id           String    @id @default(cuid())
-  organizationId String?
+  organizationId String
   name         String
   email        String    @unique
   passwordHash String
@@ -263,7 +263,7 @@ model AdminUser {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id])
   createdEvents Event[]
   checkIns      CheckIn[]
   passwordResetTokens AdminPasswordResetToken[]
@@ -305,7 +305,7 @@ model AdminPasswordResetToken {
 
 model CompanySettings {
   id              String   @id @default(cuid())
-  organizationId  String?
+  organizationId  String
   companyName     String
   tradeName       String
   document        String
@@ -322,7 +322,7 @@ model CompanySettings {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId])
   @@unique([organizationId])
@@ -330,7 +330,7 @@ model CompanySettings {
 
 model PaymentSplitRule {
   id           String        @id @default(cuid())
-  organizationId String?
+  organizationId String
   name         String
   walletId     String
   type         SplitRuleType
@@ -341,7 +341,7 @@ model PaymentSplitRule {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId])
   @@index([isActive, sortOrder])
@@ -349,7 +349,7 @@ model PaymentSplitRule {
 
 model Event {
   id                  String      @id @default(cuid())
-  organizationId      String?
+  organizationId      String
   slug                String      @unique
   title               String
   subtitle            String?
@@ -380,6 +380,7 @@ model Event {
   seoKeywords         String?
   seoImageUrl         String?
   supportWhatsappUrl  String?
+  couponsEnabled      Boolean     @default(false)
   leadCaptureEnabled  Boolean     @default(false)
   leadCaptureHeadline String?
   leadCaptureDescription String?
@@ -414,7 +415,7 @@ model Event {
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id])
   createdBy AdminUser? @relation(fields: [createdById], references: [id], onDelete: SetNull)
   lots      TicketLot[]
   orders    Order[]
@@ -440,6 +441,7 @@ model EventLead {
   email      String
   phone      String?
   municipality String?
+  emailOptOutAt DateTime?
   thankYouViewedAt DateTime?
   whatsappClickedAt DateTime?
   whatsappClickCount Int @default(0)

@@ -2,8 +2,8 @@ import { ImageResponse } from "next/og";
 import { parseImageCrop } from "@/lib/image-crop";
 
 export const runtime = "nodejs";
-const OUTPUT_WIDTH = 1200;
-const OUTPUT_HEIGHT = 630;
+const OUTPUT_WIDTH = 960;
+const OUTPUT_HEIGHT = 504;
 
 function normalizeSourceUrl(raw: string | null) {
   if (!raw) {
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
   const zoom = crop?.zoom ?? 1;
   const baseScale =
     sourceWidth && sourceHeight
-      ? Math.min(OUTPUT_WIDTH / sourceWidth, OUTPUT_HEIGHT / sourceHeight)
+      ? Math.min(1, Math.min(OUTPUT_WIDTH / sourceWidth, OUTPUT_HEIGHT / sourceHeight))
       : 1;
   const fittedWidth = sourceWidth ? sourceWidth * baseScale * zoom : OUTPUT_WIDTH * zoom;
   const fittedHeight = sourceHeight ? sourceHeight * baseScale * zoom : OUTPUT_HEIGHT * zoom;
@@ -72,7 +72,12 @@ export async function GET(request: Request) {
     ),
     {
       width: OUTPUT_WIDTH,
-      height: OUTPUT_HEIGHT
+      height: OUTPUT_HEIGHT,
+      headers: {
+        "Cache-Control": "public, max-age=31536000, immutable",
+        "CDN-Cache-Control": "public, max-age=31536000, immutable",
+        "Vercel-CDN-Cache-Control": "public, max-age=31536000, immutable"
+      }
     }
   );
 }

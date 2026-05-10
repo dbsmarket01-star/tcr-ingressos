@@ -71,7 +71,7 @@ export async function requestAdminPasswordReset(email: string) {
   await sendAdminPasswordResetEmail({
     to: admin.email,
     name: admin.name,
-    brandName: admin.organization?.name || "TCR Ingressos",
+    brandName: admin.organization?.name || "Ingresaas",
     resetUrl: createAdminPasswordResetUrl(token, {
       adminDomain: admin.organization?.adminDomain
     }),

@@ -286,6 +286,7 @@ export async function listEventLeadsForBroadcast(eventId: string, filters: LeadB
   const leads = await prisma.eventLead.findMany({
     where: {
       eventId,
+      emailOptOutAt: null,
       createdAt:
         filters.dateFrom || filters.dateTo
           ? {
@@ -304,6 +305,37 @@ export async function listEventLeadsForBroadcast(eventId: string, filters: LeadB
   }
 
   return leads.filter((lead) => municipalityKeys.includes(normalizeMunicipalityKey(lead.municipality)));
+}
+
+export async function unsubscribeEventLeadFromCampaignEmails(campaignId: string, leadId: string) {
+  const recipient = await prisma.leadEmailCampaignRecipient.findFirst({
+    where: {
+      campaignId,
+      leadId
+    },
+    select: {
+      leadId: true
+    }
+  });
+
+  if (!recipient) {
+    return { found: false as const, changed: false as const };
+  }
+
+  const updated = await prisma.eventLead.updateMany({
+    where: {
+      id: recipient.leadId,
+      emailOptOutAt: null
+    },
+    data: {
+      emailOptOutAt: new Date()
+    }
+  });
+
+  return {
+    found: true as const,
+    changed: updated.count === 1
+  };
 }
 
 export async function listLeadEmailCampaignSummaries(eventId: string) {

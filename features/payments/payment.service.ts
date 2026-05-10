@@ -468,14 +468,17 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
               customer: true,
               items: true,
               event: {
-                include: {
+                select: {
+                  title: true,
+                  startsAt: true,
+                  venueName: true,
+                  autoPurchaseApprovedEmailEnabled: true,
                   organization: {
                     select: {
                       name: true,
                       publicDomain: true
                     }
-                  },
-                  autoPurchaseApprovedEmailEnabled: true
+                  }
                 }
               },
               tickets: {
@@ -498,31 +501,58 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         throw new Error("Pagamento nao encontrado para o webhook.");
       }
 
+      const buildApprovedTicketsEmail = (
+        tickets: Array<{ code: string; lotName: string }>
+      ) => {
+        if (
+          payment.order.event.autoPurchaseApprovedEmailEnabled === false ||
+          tickets.length === 0 ||
+          payment.order.ticketsEmailSentAt
+        ) {
+          return null;
+        }
+
+        return {
+          to: payment.order.customer.email,
+          buyerName: payment.order.customer.name,
+          orderCode: payment.order.code,
+          brandName: payment.order.event.organization?.name || "Ingresaas",
+          eventTitle: payment.order.event.title,
+          eventDate: payment.order.event.startsAt,
+          venueName: payment.order.event.venueName,
+          tickets: tickets.map((ticket) => ({
+            ...ticket,
+            url: createPublicTicketUrl(ticket.code, payment.order.event.organization)
+          }))
+        };
+      };
+
       if (
         (payment.status === PaymentStatus.APPROVED || payment.order.status === OrderStatus.PAID) &&
         payload.status !== "REFUNDED"
       ) {
-        const approvedTicketsEmail =
-          payment.order.event.autoPurchaseApprovedEmailEnabled !== false &&
-          payment.order.tickets.length > 0 &&
-          !payment.order.ticketsEmailSentAt
-            ? {
-                to: payment.order.customer.email,
-                buyerName: payment.order.customer.name,
-                orderCode: payment.order.code,
-                brandName: payment.order.event.organization?.name || "TCR Ingressos",
-                eventTitle: payment.order.event.title,
-                eventDate: payment.order.event.startsAt,
-                venueName: payment.order.event.venueName,
-                tickets: payment.order.tickets.map((ticket) => ({
-                  code: ticket.code,
-                  lotName: ticket.lot.name,
-                  url: createPublicTicketUrl(ticket.code, payment.order.event.organization)
-                }))
-              }
-            : null;
+        const approvedTicketsEmail = buildApprovedTicketsEmail(
+          payment.order.tickets.map((ticket) => ({
+            code: ticket.code,
+            lotName: ticket.lot.name
+          }))
+        );
 
         return { payment, orderId: payment.orderId, email: approvedTicketsEmail };
+      }
+
+      if (
+        payload.status === "REFUNDED" &&
+        (payment.status === PaymentStatus.REFUNDED || payment.order.status === OrderStatus.REFUNDED)
+      ) {
+        return { payment, orderId: payment.orderId, email: null };
+      }
+
+      if (
+        (payload.status === "FAILED" && payment.status === PaymentStatus.FAILED) ||
+        (payload.status === "CANCELED" && payment.status === PaymentStatus.CANCELED)
+      ) {
+        return { payment, orderId: payment.orderId, email: null };
       }
 
       if (payload.status === "PENDING") {
@@ -541,8 +571,54 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
       if (payload.status === "APPROVED") {
         const capturedAmountInCents = resolveCapturedAmountInCents(payment, payload.rawPayload);
 
+        if (payment.order.status !== OrderStatus.PENDING_PAYMENT) {
+          const currentPayment = await tx.payment.update({
+            where: { id: payment.id },
+            data: {
+              externalId: payload.externalId || payment.externalId,
+              rawPayload: (payload.rawPayload || payload) as Prisma.InputJsonValue
+            }
+          });
+
+          return {
+            payment: currentPayment,
+            orderId: payment.orderId,
+            email: null
+          };
+        }
+
+        const claimedPayment = await tx.payment.updateMany({
+          where: {
+            id: payment.id,
+            status: {
+              in: [PaymentStatus.CREATED, PaymentStatus.PENDING]
+            }
+          },
+          data: {
+            status: PaymentStatus.APPROVED,
+            externalId: payload.externalId || payment.externalId,
+            amountInCents: capturedAmountInCents,
+            paidAt: new Date(),
+            failedAt: null,
+            failureReason: null,
+            rawPayload: (payload.rawPayload || payload) as Prisma.InputJsonValue
+          }
+        });
+
+        if (claimedPayment.count !== 1) {
+          const currentPayment = await tx.payment.findUniqueOrThrow({
+            where: { id: payment.id }
+          });
+
+          return {
+            payment: currentPayment,
+            orderId: payment.orderId,
+            email: null
+          };
+        }
+
         for (const item of payment.order.items) {
-          let updatedRows = await tx.$executeRaw`
+          const updatedRows = await tx.$executeRaw`
             UPDATE "TicketLot"
             SET
               "reservedQuantity" = "reservedQuantity" - ${item.quantity},
@@ -550,15 +626,6 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
             WHERE "id" = ${item.lotId}
               AND "reservedQuantity" >= ${item.quantity}
           `;
-
-          if (updatedRows !== 1) {
-            updatedRows = await tx.$executeRaw`
-              UPDATE "TicketLot"
-              SET "soldQuantity" = "soldQuantity" + ${item.quantity}
-              WHERE "id" = ${item.lotId}
-                AND ("totalQuantity" - "soldQuantity" - "reservedQuantity") >= ${item.quantity}
-            `;
-          }
 
           if (updatedRows !== 1) {
             throw new Error("Nao foi possivel confirmar o estoque reservado.");
@@ -601,8 +668,11 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           }));
         }
 
-        await tx.order.update({
-          where: { id: payment.orderId },
+        const claimedOrder = await tx.order.updateMany({
+          where: {
+            id: payment.orderId,
+            status: OrderStatus.PENDING_PAYMENT
+          },
           data: {
             status: OrderStatus.PAID,
             totalInCents: capturedAmountInCents,
@@ -610,6 +680,10 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
             canceledAt: null
           }
         });
+
+        if (claimedOrder.count !== 1) {
+          throw new Error("Nao foi possivel confirmar o pedido pago.");
+        }
 
         if (payment.order.couponId) {
           await tx.coupon.update({
@@ -624,44 +698,40 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           });
         }
 
-        const updatedPayment = await tx.payment.update({
-          where: { id: payment.id },
-          data: {
-            status: PaymentStatus.APPROVED,
-            externalId: payload.externalId || payment.externalId,
-            amountInCents: capturedAmountInCents,
-            paidAt: new Date(),
-            failedAt: null,
-            failureReason: null,
-            rawPayload: (payload.rawPayload || payload) as Prisma.InputJsonValue
-          }
+        const updatedPayment = await tx.payment.findUniqueOrThrow({
+          where: { id: payment.id }
         });
 
         return {
           payment: updatedPayment,
           orderId: payment.orderId,
-          email:
-            payment.order.event.autoPurchaseApprovedEmailEnabled !== false &&
-            generatedTickets.length > 0 &&
-            !payment.order.ticketsEmailSentAt
-              ? {
-                  to: payment.order.customer.email,
-                  buyerName: payment.order.customer.name,
-                  orderCode: payment.order.code,
-                  brandName: payment.order.event.organization?.name || "TCR Ingressos",
-                  eventTitle: payment.order.event.title,
-                  eventDate: payment.order.event.startsAt,
-                  venueName: payment.order.event.venueName,
-                  tickets: generatedTickets.map((ticket) => ({
-                    ...ticket,
-                    url: createPublicTicketUrl(ticket.code, payment.order.event.organization)
-                  }))
-                }
-              : null
+          email: buildApprovedTicketsEmail(generatedTickets)
         };
       }
 
       if (payload.status === "REFUNDED") {
+        const claimedRefund = await tx.payment.updateMany({
+          where: {
+            id: payment.id,
+            status: PaymentStatus.APPROVED
+          },
+          data: {
+            status: PaymentStatus.REFUNDED,
+            externalId: payload.externalId || payment.externalId,
+            failedAt: null,
+            failureReason: payload.reason || null,
+            rawPayload: (payload.rawPayload || payload) as Prisma.InputJsonValue
+          }
+        });
+
+        if (claimedRefund.count !== 1) {
+          const currentPayment = await tx.payment.findUniqueOrThrow({
+            where: { id: payment.id }
+          });
+
+          return { payment: currentPayment, orderId: payment.orderId, email: null };
+        }
+
         if (payment.order.status === OrderStatus.PAID) {
           for (const item of payment.order.items) {
             await tx.$executeRaw`
@@ -687,29 +757,58 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           }
         }
 
-        await tx.order.update({
-          where: { id: payment.orderId },
+        await tx.order.updateMany({
+          where: {
+            id: payment.orderId,
+            status: {
+              in: [OrderStatus.PAID, OrderStatus.PENDING_PAYMENT, OrderStatus.EXPIRED, OrderStatus.CANCELED]
+            }
+          },
           data: {
             status: OrderStatus.REFUNDED,
             canceledAt: new Date()
           }
         });
 
-        const updatedPayment = await tx.payment.update({
-          where: { id: payment.id },
-          data: {
-            status: PaymentStatus.REFUNDED,
-            externalId: payload.externalId || payment.externalId,
-            failedAt: null,
-            failureReason: payload.reason || null,
-            rawPayload: (payload.rawPayload || payload) as Prisma.InputJsonValue
-          }
+        const updatedPayment = await tx.payment.findUniqueOrThrow({
+          where: { id: payment.id }
         });
 
         return { payment: updatedPayment, orderId: payment.orderId, email: null };
       }
 
       if (payload.status === "FAILED" || payload.status === "CANCELED") {
+        if (payment.status === PaymentStatus.APPROVED || payment.order.status === OrderStatus.PAID) {
+          return { payment, orderId: payment.orderId, email: null };
+        }
+
+        const nextPaymentStatus =
+          payload.status === "FAILED" ? PaymentStatus.FAILED : PaymentStatus.CANCELED;
+
+        const claimedFailure = await tx.payment.updateMany({
+          where: {
+            id: payment.id,
+            status: {
+              in: [PaymentStatus.CREATED, PaymentStatus.PENDING]
+            }
+          },
+          data: {
+            status: nextPaymentStatus,
+            externalId: payload.externalId || payment.externalId,
+            failedAt: payload.status === "FAILED" ? new Date() : null,
+            failureReason: payload.reason || null,
+            rawPayload: (payload.rawPayload || payload) as Prisma.InputJsonValue
+          }
+        });
+
+        if (claimedFailure.count !== 1) {
+          const currentPayment = await tx.payment.findUniqueOrThrow({
+            where: { id: payment.id }
+          });
+
+          return { payment: currentPayment, orderId: payment.orderId, email: null };
+        }
+
         if (payment.order.status === OrderStatus.PENDING_PAYMENT || payment.order.status === OrderStatus.EXPIRED) {
           for (const item of payment.order.items) {
             if (payment.order.status === OrderStatus.PENDING_PAYMENT) {
@@ -721,8 +820,13 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
             }
           }
 
-          await tx.order.update({
-            where: { id: payment.orderId },
+          await tx.order.updateMany({
+            where: {
+              id: payment.orderId,
+              status: {
+                in: [OrderStatus.PENDING_PAYMENT, OrderStatus.EXPIRED]
+              }
+            },
             data: {
               status: OrderStatus.CANCELED,
               canceledAt: new Date()
@@ -730,15 +834,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           });
         }
 
-        const updatedPayment = await tx.payment.update({
-          where: { id: payment.id },
-          data: {
-            status: payload.status === "FAILED" ? PaymentStatus.FAILED : PaymentStatus.CANCELED,
-            externalId: payload.externalId || payment.externalId,
-            failedAt: payload.status === "FAILED" ? new Date() : null,
-            failureReason: payload.reason || null,
-            rawPayload: (payload.rawPayload || payload) as Prisma.InputJsonValue
-          }
+        const updatedPayment = await tx.payment.findUniqueOrThrow({
+          where: { id: payment.id }
         });
 
         return { payment: updatedPayment, orderId: payment.orderId, email: null };

@@ -63,7 +63,11 @@ function PresaleSection({
 export default async function FinalPresalePage({ searchParams }: FinalPresalePageProps) {
   const admin = await requirePermission("PRODUCTION");
   const params = searchParams ? await searchParams : {};
-  const checklist = await getFinalPresaleChecklist(params.eventId, getAdminAllowedEventIds(admin));
+  const checklist = await getFinalPresaleChecklist(
+    params.eventId,
+    getAdminAllowedEventIds(admin),
+    admin.organizationId
+  );
   const canStartControlledPresale = checklist.summary.blocked === 0 && checklist.summary.warning <= 2;
 
   return (
@@ -247,7 +251,7 @@ export default async function FinalPresalePage({ searchParams }: FinalPresalePag
                     <span>Observação</span>
                     <input
                       name="note"
-                      placeholder="Ex.: testado por Lucas no iPhone, pedido TCR..."
+                      placeholder="Ex.: testado por Lucas no iPhone, pedido confirmado..."
                       defaultValue={item.note || ""}
                     />
                   </label>

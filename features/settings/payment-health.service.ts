@@ -1,4 +1,4 @@
-import { ensureDefaultOrganizationBackfill } from "@/features/organizations/organization.service";
+import { getDefaultOrganizationId } from "@/features/organizations/organization.service";
 import { prisma } from "@/lib/prisma";
 
 function hasValue(value?: string) {
@@ -46,8 +46,8 @@ function isLocalUrl(value: string) {
   return value.includes("localhost") || value.includes("127.0.0.1");
 }
 
-export async function getPaymentHealth() {
-  const organizationId = await ensureDefaultOrganizationBackfill();
+export async function getPaymentHealth(organizationId?: string) {
+  const resolvedOrganizationId = organizationId || (await getDefaultOrganizationId());
   const appUrl = getAppUrl();
   const provider = process.env.PAYMENT_PROVIDER || "SIMULATED";
   const asaasApiUrl = process.env.ASAAS_API_URL || "https://api-sandbox.asaas.com/v3";
@@ -60,7 +60,7 @@ export async function getPaymentHealth() {
     }),
     prisma.paymentSplitRule.findMany({
       where: {
-        organizationId,
+        organizationId: resolvedOrganizationId,
         isActive: true
       }
     })
@@ -121,7 +121,9 @@ export async function getPaymentHealth() {
     },
     email: {
       resendConfigured: hasValue(process.env.RESEND_API_KEY),
-      from: process.env.EMAIL_FROM || "Bilheteria <ingressos@tcringressos.app.br>"
+      from:
+        process.env.EMAIL_FROM ||
+        `${process.env.DEFAULT_EMAIL_BRAND || "Ingresaas"} <${process.env.DEFAULT_EMAIL_FROM_ADDRESS || "ingressos@ingresaas.app.br"}>`
     },
     security: {
       authSecretConfigured: hasValue(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET),

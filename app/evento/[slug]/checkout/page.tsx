@@ -206,6 +206,24 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                 <strong>{formatCurrency(orderTotalInCents)}</strong>
               </div>
             </div>
+            {event.couponsEnabled ? (
+              <div className="checkoutCartCoupon">
+                <div>
+                  <span className="checkoutCartCouponLabel">Cupom de desconto</span>
+                  <p>Digite o código e o desconto será validado ao continuar.</p>
+                </div>
+                <label className="checkoutCartCouponField">
+                  <span>Código do cupom</span>
+                  <input
+                    form="checkoutRegistrationForm"
+                    name="coupon"
+                    placeholder="Ex: PROMO10"
+                    autoCapitalize="characters"
+                    autoComplete="off"
+                  />
+                </label>
+              </div>
+            ) : null}
             <Link className="secondaryButton fullButton" href={`/evento/${event.slug}#ingressos`}>
               Alterar ingressos
             </Link>
@@ -219,7 +237,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
               revisar o pedido antes do pagamento.
             </p>
 
-            <form action={createCheckoutOrderAction} className="form checkoutRegistrationForm">
+            <form id="checkoutRegistrationForm" action={createCheckoutOrderAction} className="form checkoutRegistrationForm">
               {checkoutError ? <div className="errorBox">{checkoutError}</div> : null}
               <input type="hidden" name="eventId" value={event.id} />
               <input type="hidden" name="eventSlug" value={event.slug} />
@@ -292,20 +310,6 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                   <small>Usado apenas para suporte do pedido, caso seja necessário.</small>
                 </label>
               </div>
-
-              <details className="checkoutCouponDisclosure">
-                <summary>Inserir cupom de desconto</summary>
-                <label className="field">
-                  <span>Cupom de desconto</span>
-                  <input name="coupon" placeholder="Digite seu cupom" />
-                </label>
-              </details>
-
-              {event.supportWhatsappUrl ? (
-                <p className="checkoutSupportHint">
-                  Precisa de ajuda antes de pagar? Use o ícone do WhatsApp para falar com o suporte deste evento.
-                </p>
-              ) : null}
 
               <SubmitButton className="button fullButton" pendingText="Criando pedido...">
                 Continuar para pagamento

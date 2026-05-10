@@ -61,7 +61,7 @@ function ChecklistCard({
 export default async function LaunchPage({ searchParams }: LaunchPageProps) {
   const admin = await requirePermission("PRODUCTION");
   const params = searchParams ? await searchParams : {};
-  const checklist = await getLaunchChecklist(params.eventId, getAdminAllowedEventIds(admin));
+  const checklist = await getLaunchChecklist(params.eventId, getAdminAllowedEventIds(admin), admin.organizationId);
   const launchReady = checklist.summary.blocked === 0 && checklist.summary.warning <= 2;
 
   return (
