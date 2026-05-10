@@ -84,7 +84,7 @@ function getAuthSecret() {
     throw new Error("AUTH_SECRET precisa ser configurado em producao.");
   }
 
-  return "tcr-ingressos-local-development-secret";
+  return "ingresaas-local-development-secret";
 }
 
 function base64UrlEncode(value: string) {

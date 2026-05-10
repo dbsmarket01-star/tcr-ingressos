@@ -1,4 +1,4 @@
--- Indices operacionais para a TCR Ingressos em producao.
+-- Indices operacionais para a bilheteria em producao.
 -- Rode no banco de producao quando quiser aplicar sem usar Prisma Migrate.
 
 CREATE INDEX IF NOT EXISTS "Order_status_expiresAt_idx"

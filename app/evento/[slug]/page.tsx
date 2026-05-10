@@ -126,7 +126,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     <main className="shell">
       {event.googleTagManagerId ? (
         <>
-          <Script id="tcr-gtm-script" strategy="afterInteractive">
+          <Script id="public-gtm-script" strategy="afterInteractive">
             {`
               (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
               new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -147,7 +147,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         </>
       ) : null}
       {event.metaPixelId ? (
-        <Script id="tcr-meta-pixel" strategy="afterInteractive">
+        <Script id="public-meta-pixel" strategy="afterInteractive">
           {`
             !function(f,b,e,v,n,t,s)
             {if(f.fbq)return;n=f.fbq=function(){n.callMethod?

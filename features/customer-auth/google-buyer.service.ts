@@ -26,7 +26,7 @@ function getSecret() {
     throw new Error("AUTH_SECRET precisa ser configurado em producao.");
   }
 
-  return "tcr-ingressos-local-development-secret";
+  return "ingresaas-local-development-secret";
 }
 
 function sign(value: string) {

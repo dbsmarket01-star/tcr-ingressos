@@ -32,7 +32,7 @@ export function CheckInScanner({ action }: CheckInScannerProps) {
   >("idle");
 
   useEffect(() => {
-    const savedDeviceName = window.localStorage.getItem("tcr-checkin-device");
+    const savedDeviceName = window.localStorage.getItem("ingresaas-checkin-device");
 
     if (savedDeviceName && deviceInputRef.current) {
       deviceInputRef.current.value = savedDeviceName;
@@ -192,7 +192,7 @@ export function CheckInScanner({ action }: CheckInScannerProps) {
           placeholder="Ex: Portaria principal"
           ref={deviceInputRef}
           onBlur={(event) => {
-            window.localStorage.setItem("tcr-checkin-device", event.target.value.trim());
+            window.localStorage.setItem("ingresaas-checkin-device", event.target.value.trim());
           }}
         />
       </label>

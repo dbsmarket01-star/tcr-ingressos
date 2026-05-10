@@ -116,7 +116,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
       />
       {order.event.googleTagManagerId ? (
         <>
-          <Script id="tcr-order-gtm-script" strategy="afterInteractive">
+          <Script id="public-order-gtm-script" strategy="afterInteractive">
             {`
               (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
               new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -125,7 +125,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
               })(window,document,'script','dataLayer',${JSON.stringify(order.event.googleTagManagerId)});
             `}
           </Script>
-          <Script id="tcr-order-gtm-event" strategy="afterInteractive">
+          <Script id="public-order-gtm-event" strategy="afterInteractive">
             {`
               window.dataLayer = window.dataLayer || [];
               window.dataLayer.push({
@@ -145,7 +145,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
         </>
       ) : null}
       {order.event.metaPixelId ? (
-        <Script id="tcr-order-meta-pixel" strategy="afterInteractive">
+        <Script id="public-order-meta-pixel" strategy="afterInteractive">
           {`
             !function(f,b,e,v,n,t,s)
             {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
