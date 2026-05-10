@@ -5,6 +5,9 @@ import { unstable_cache } from "next/cache";
 
 export const DEFAULT_ORGANIZATION_SLUG = "tcr-ingressos";
 export const DEFAULT_ORGANIZATION_NAME = "TCR Ingressos";
+export const A2_IMERGIDOS_ORGANIZATION_SLUG = "a2-imergidos";
+export const A2_IMERGIDOS_PRIMARY_COLOR = "#005f8f";
+export const A2_IMERGIDOS_SECONDARY_COLOR = "#ffffff";
 const UNMATCHED_HOST_ORGANIZATION_ID = "__unmatched_host__";
 
 type OrganizationSeedInput = {
@@ -103,21 +106,34 @@ function buildUnmatchedHostOrganization(): OrganizationBranding {
   };
 }
 
+function resolveOrganizationBranding(organization: OrganizationBranding): OrganizationBranding {
+  if (organization.slug !== A2_IMERGIDOS_ORGANIZATION_SLUG) {
+    return organization;
+  }
+
+  return {
+    ...organization,
+    primaryColor: A2_IMERGIDOS_PRIMARY_COLOR,
+    secondaryColor: A2_IMERGIDOS_SECONDARY_COLOR
+  };
+}
+
 function buildOrganizationContext(
   organization: OrganizationBranding,
   requestHost: string | null,
   isMatchedByHost: boolean
 ): OrganizationContext {
+  const resolvedOrganization = resolveOrganizationBranding(organization);
   const normalizedRequestHost = normalizeHost(requestHost);
-  const normalizedAdminHost = normalizeHost(organization.adminDomain);
-  const publicBaseUrl = buildHttpsUrl(organization.publicDomain) || getFallbackPublicBaseUrl();
+  const normalizedAdminHost = normalizeHost(resolvedOrganization.adminDomain);
+  const publicBaseUrl = buildHttpsUrl(resolvedOrganization.publicDomain) || getFallbackPublicBaseUrl();
   const platformHost = getPlatformHost();
   const platformName = getPlatformName();
-  const platformMode = isPlatformHost(normalizedRequestHost) || organization.id === UNMATCHED_HOST_ORGANIZATION_ID;
-  const displayName = platformMode ? platformName : organization.name;
+  const platformMode = isPlatformHost(normalizedRequestHost) || resolvedOrganization.id === UNMATCHED_HOST_ORGANIZATION_ID;
+  const displayName = platformMode ? platformName : resolvedOrganization.name;
 
   return {
-    organization,
+    organization: resolvedOrganization,
     requestHost: normalizedRequestHost,
     isMatchedByHost,
     isAdminHost: Boolean(normalizedRequestHost && normalizedAdminHost && normalizedRequestHost === normalizedAdminHost),
@@ -126,10 +142,10 @@ function buildOrganizationContext(
     platformHost,
     platformAppUrl: getPlatformAppUrl(),
     publicBaseUrl,
-    adminBaseUrl: buildHttpsUrl(organization.adminDomain),
+    adminBaseUrl: buildHttpsUrl(resolvedOrganization.adminDomain),
     brandName: displayName,
     brandMark: displayName.trim().charAt(0).toUpperCase() || "I",
-    brandLogoUrl: platformMode ? null : organization.logoUrl
+    brandLogoUrl: platformMode ? null : resolvedOrganization.logoUrl
   };
 }
 
@@ -157,10 +173,12 @@ export async function ensureDefaultOrganization(seed?: OrganizationSeedInput) {
 }
 
 export async function getOrganizationBrandingById(id: string) {
-  return prisma.organization.findUnique({
+  const organization = await prisma.organization.findUnique({
     where: { id },
     select: organizationBrandingSelect
   });
+
+  return organization ? resolveOrganizationBranding(organization) : null;
 }
 
 export async function getOrganizationByHost(host?: string | null) {
