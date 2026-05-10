@@ -4669,18 +4669,33 @@ body.operationTheme .topbar {
 }
 
 .dashboardGeneralFunnelStep.is-light {
-  background: linear-gradient(180deg, #e5f6ef, #d4eee3);
-  color: #165043;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(var(--brand-rgb), 0.14),
+      rgba(var(--brand-rgb), 0.22)
+    );
+  color: color-mix(in srgb, var(--brand-dark) 84%, #111827 16%);
   width: 100%;
 }
 
 .dashboardGeneralFunnelStep.is-mid {
-  background: linear-gradient(180deg, #0f8f72, #0a775f);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--brand) 90%, white 10%),
+      color-mix(in srgb, var(--brand) 84%, var(--brand-dark) 16%)
+    );
   width: 84%;
 }
 
 .dashboardGeneralFunnelStep.is-dark {
-  background: linear-gradient(180deg, #066953, #055142);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--brand-dark) 88%, var(--brand) 12%),
+      color-mix(in srgb, var(--brand-dark) 84%, #020817 16%)
+    );
   width: 68%;
 }
 

@@ -1,4 +1,4 @@
-import { EventPageVisitType, PaymentProvider } from "@prisma/client";
+import { EventPageVisitType, EventStatus, PaymentProvider, type Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 type DashboardFilters = {
@@ -8,6 +8,16 @@ type DashboardFilters = {
 
 type EventScope = string[] | null | undefined;
 type PaymentMethod = "PIX" | "CREDIT_CARD" | "SIMULATED" | "OTHER";
+
+function buildDashboardEventWhere(organizationId: string, allowedEventIds?: EventScope): Prisma.EventWhereInput {
+  return {
+    organizationId,
+    status: {
+      not: EventStatus.DRAFT
+    },
+    ...(allowedEventIds ? { id: { in: allowedEventIds } } : {})
+  };
+}
 
 function parseStartDate(value?: string) {
   if (!value) {
@@ -185,7 +195,11 @@ function computeCustomerBreakdown(orders: PaidOrderLite[], previousCustomerIds: 
   };
 }
 
-export async function getDashboardMetrics(filters: DashboardFilters = {}, allowedEventIds?: EventScope) {
+export async function getDashboardMetrics(
+  filters: DashboardFilters = {},
+  organizationId: string,
+  allowedEventIds?: EventScope
+) {
   const periodStart = parseStartDate(filters.startDate);
   const periodEnd = parseEndDate(filters.endDate);
   const periodMs = periodEnd.getTime() - periodStart.getTime() + 1;
@@ -193,10 +207,11 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
   const previousPeriodStart = new Date(periodStart.getTime() - periodMs);
   const currentPeriodStartKey = formatBrazilDateKey(periodStart);
   const currentPeriodEndKey = formatBrazilDateKey(periodEnd);
+  const dashboardEventWhere = buildDashboardEventWhere(organizationId, allowedEventIds);
 
   const paidPeriodWhere = {
     status: "PAID" as const,
-    ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+    event: dashboardEventWhere,
     paidAt: {
       gte: periodStart,
       lte: periodEnd
@@ -205,7 +220,7 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
 
   const previousPaidPeriodWhere = {
     status: "PAID" as const,
-    ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+    event: dashboardEventWhere,
     paidAt: {
       gte: previousPeriodStart,
       lte: previousPeriodEnd
@@ -213,7 +228,7 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
   };
 
   const createdPeriodWhere = {
-    ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+    event: dashboardEventWhere,
     createdAt: {
       gte: periodStart,
       lte: periodEnd
@@ -221,7 +236,7 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
   };
 
   const previousCreatedPeriodWhere = {
-    ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+    event: dashboardEventWhere,
     createdAt: {
       gte: previousPeriodStart,
       lte: previousPeriodEnd
@@ -327,7 +342,7 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
     prisma.order.findMany({
       where: {
         status: "PAID",
-        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+        event: dashboardEventWhere,
         paidAt: {
           lt: periodStart
         }
@@ -340,7 +355,7 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
     prisma.order.findMany({
       where: {
         status: "PAID",
-        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+        event: dashboardEventWhere,
         paidAt: {
           lt: previousPeriodStart
         }
@@ -351,21 +366,25 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
       }
     }),
     prisma.ticket.groupBy({
-      where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
+      where: {
+        event: dashboardEventWhere
+      },
       by: ["status"],
       _count: {
         _all: true
       }
     }),
     prisma.checkIn.groupBy({
-      where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
+      where: {
+        event: dashboardEventWhere
+      },
       by: ["status"],
       _count: {
         _all: true
       }
     }),
     prisma.event.findMany({
-      where: allowedEventIds ? { id: { in: allowedEventIds } } : undefined,
+      where: dashboardEventWhere,
       orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],
       include: {
         lots: true,
@@ -378,14 +397,18 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
       }
     }),
     prisma.ticket.groupBy({
-      where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
+      where: {
+        event: dashboardEventWhere
+      },
       by: ["eventId", "status"],
       _count: {
         _all: true
       }
     }),
     prisma.order.findMany({
-      where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
+      where: {
+        event: dashboardEventWhere
+      },
       orderBy: {
         createdAt: "desc"
       },
@@ -403,7 +426,7 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
     }),
     prisma.eventLead.findMany({
       where: {
-        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+        event: dashboardEventWhere,
         createdAt: {
           gte: periodStart,
           lte: periodEnd
@@ -422,7 +445,9 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
       }
     }),
     prisma.checkIn.findMany({
-      where: allowedEventIds ? { eventId: { in: allowedEventIds } } : undefined,
+      where: {
+        event: dashboardEventWhere
+      },
       orderBy: {
         checkedAt: "desc"
       },
@@ -447,7 +472,7 @@ export async function getDashboardMetrics(filters: DashboardFilters = {}, allowe
           gte: currentPeriodStartKey,
           lte: currentPeriodEndKey
         },
-        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {})
+        event: dashboardEventWhere
       }
     })
   ]);

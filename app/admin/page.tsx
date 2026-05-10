@@ -528,7 +528,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     );
   }
 
-  const dashboard = await getDashboardMetrics(params, getAdminAllowedEventIds(admin));
+  const dashboard = await getDashboardMetrics(params, admin.organizationId, getAdminAllowedEventIds(admin));
   const periodLabel = formatPeriodLabel(dashboard.period.startDate, dashboard.period.endDate);
   const dateRangeLabel = formatDateRangeLabel(dashboard.period.startDate, dashboard.period.endDate);
   const salesChart = buildSalesChart(dashboard.salesByDay, dashboard.maxDailyRevenueInCents);
@@ -973,35 +973,43 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {dashboard.recentOrders.map((order) => (
-                    <tr key={order.id}>
-                      <td>
-                        <Link href={`/admin/orders/${order.code}`}>
-                          <strong>{order.code}</strong>
-                        </Link>
+                  {dashboard.recentOrders.length === 0 ? (
+                    <tr>
+                      <td colSpan={7}>
+                        <div className="empty">Nenhum pedido desta operação ainda.</div>
                       </td>
-                      <td>{order.customer.name}</td>
-                      <td>{order.event.title}</td>
-                      <td>
-                        <span className={`status ${order.status === "PAID" ? "published" : order.status === "REFUNDED" ? "pending" : "draft"}`}>
-                          {humanizeOrderStatus(order.status)}
-                        </span>
-                      </td>
-                      <td>
-                        {humanizePaymentMethod(
-                          order.payment?.provider === "ASAAS" && order.payment?.pixQrCodePayload
-                            ? "PIX"
-                            : order.payment?.provider === "MERCADO_PAGO" || order.payment?.provider === "PAGARME"
-                              ? "CREDIT_CARD"
-                              : order.payment?.provider === "SIMULATED"
-                                ? "SIMULATED"
-                                : "OTHER"
-                        )}
-                      </td>
-                      <td>{formatCurrency(order.totalInCents)}</td>
-                      <td>{formatCompactDateTime(order.paidAt ?? order.createdAt)}</td>
                     </tr>
-                  ))}
+                  ) : (
+                    dashboard.recentOrders.map((order) => (
+                      <tr key={order.id}>
+                        <td>
+                          <Link href={`/admin/orders/${order.code}`}>
+                            <strong>{order.code}</strong>
+                          </Link>
+                        </td>
+                        <td>{order.customer.name}</td>
+                        <td>{order.event.title}</td>
+                        <td>
+                          <span className={`status ${order.status === "PAID" ? "published" : order.status === "REFUNDED" ? "pending" : "draft"}`}>
+                            {humanizeOrderStatus(order.status)}
+                          </span>
+                        </td>
+                        <td>
+                          {humanizePaymentMethod(
+                            order.payment?.provider === "ASAAS" && order.payment?.pixQrCodePayload
+                              ? "PIX"
+                              : order.payment?.provider === "MERCADO_PAGO" || order.payment?.provider === "PAGARME"
+                                ? "CREDIT_CARD"
+                                : order.payment?.provider === "SIMULATED"
+                                  ? "SIMULATED"
+                                  : "OTHER"
+                          )}
+                        </td>
+                        <td>{formatCurrency(order.totalInCents)}</td>
+                        <td>{formatCompactDateTime(order.paidAt ?? order.createdAt)}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1016,29 +1024,33 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             </div>
 
             <div className="dashboardGeneralActivityList">
-              {dashboard.recentActivities.map((activity) => (
-                <article className="dashboardGeneralActivityItem" key={activity.id}>
-                  <i>
-                    <DashboardIcon
-                      kind={
-                        activity.title.includes("Venda")
-                          ? "money"
-                          : activity.title.includes("Check-in")
-                            ? "qr"
-                            : activity.title.includes("Reembolso")
-                              ? "alert"
-                              : "users"
-                      }
-                    />
-                  </i>
-                  <div>
-                    <strong>{activity.title}</strong>
-                    <span>{activity.subtitle}</span>
-                    <small>{activity.meta}</small>
-                  </div>
-                  <time>{formatRelativeTime(activity.happenedAt)}</time>
-                </article>
-              ))}
+              {dashboard.recentActivities.length === 0 ? (
+                <div className="empty">Nenhuma atividade desta operação ainda.</div>
+              ) : (
+                dashboard.recentActivities.map((activity) => (
+                  <article className="dashboardGeneralActivityItem" key={activity.id}>
+                    <i>
+                      <DashboardIcon
+                        kind={
+                          activity.title.includes("Venda")
+                            ? "money"
+                            : activity.title.includes("Check-in")
+                              ? "qr"
+                              : activity.title.includes("Reembolso")
+                                ? "alert"
+                                : "users"
+                        }
+                      />
+                    </i>
+                    <div>
+                      <strong>{activity.title}</strong>
+                      <span>{activity.subtitle}</span>
+                      <small>{activity.meta}</small>
+                    </div>
+                    <time>{formatRelativeTime(activity.happenedAt)}</time>
+                  </article>
+                ))
+              )}
             </div>
           </article>
         </section>
