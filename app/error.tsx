@@ -15,8 +15,8 @@ export default function ErrorPage({
     <main className="loginShell">
       <section className="loginPanel">
         <Link className="brand" href="/">
-          <span className="brandMark">T</span>
-          <span>Bilheteria</span>
+          <span className="brandMark">I</span>
+          <span>Ingresaas</span>
         </Link>
         <div>
           <p className="publicBadge">Instabilidade temporária</p>

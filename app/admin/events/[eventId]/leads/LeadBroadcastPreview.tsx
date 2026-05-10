@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { parseImageCrop } from "@/lib/image-crop";
 
 type LeadBroadcastPreviewProps = {
@@ -99,10 +99,36 @@ function stripDuplicatedSubject(body: string, subject: string) {
   return cleanedLines.join("\n").trim();
 }
 
+function resolvePreviewAccentColor(brandName: string) {
+  return brandName.toLowerCase().includes("tcr") ? "#0e7c66" : "#1f5fbf";
+}
+
+function resolvePreviewAccentDarkColor(brandName: string) {
+  return brandName.toLowerCase().includes("tcr") ? "#08251d" : "#123c7c";
+}
+
 export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const imageUrlRef = useRef<string | null>(null);
   const [preview, setPreview] = useState<PreviewState>(() => emptyPreviewState(props));
+  const accentColor = resolvePreviewAccentColor(props.brandName);
+  const accentDarkColor = resolvePreviewAccentDarkColor(props.brandName);
+  const previewStyle = {
+    "--lead-preview-accent": accentColor,
+    "--lead-preview-accent-dark": accentDarkColor,
+    "--lead-preview-accent-soft": props.brandName.toLowerCase().includes("tcr")
+      ? "rgba(20, 146, 79, 0.12)"
+      : "rgba(31, 95, 191, 0.12)",
+    "--lead-preview-accent-border": props.brandName.toLowerCase().includes("tcr")
+      ? "rgba(20, 146, 79, 0.18)"
+      : "rgba(31, 95, 191, 0.18)",
+    "--lead-preview-accent-shadow": props.brandName.toLowerCase().includes("tcr")
+      ? "rgba(6, 26, 20, 0.16)"
+      : "rgba(31, 95, 191, 0.16)",
+    "--lead-preview-card-shadow": props.brandName.toLowerCase().includes("tcr")
+      ? "rgba(10, 34, 26, 0.08)"
+      : "rgba(31, 95, 191, 0.08)"
+  } as CSSProperties;
 
   useEffect(() => {
     const form = containerRef.current?.closest("form");
@@ -211,8 +237,10 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
       params.set("crop", JSON.stringify(crop));
     }
 
+    params.set("accent", accentColor);
+
     return `/r/lead-email-image?${params.toString()}`;
-  }, [preview.imageCrop, preview.imageHeight, preview.imageUrl, preview.imageWidth]);
+  }, [accentColor, preview.imageCrop, preview.imageHeight, preview.imageUrl, preview.imageWidth]);
   const localImageFrameStyle =
     preview.imageUrl &&
     preview.imageUrl.startsWith("blob:") &&
@@ -236,7 +264,7 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
       : null;
 
   return (
-    <div className="leadBroadcastPreviewCard" ref={containerRef}>
+    <div className="leadBroadcastPreviewCard" ref={containerRef} style={previewStyle}>
       <div className="leadBroadcastPreviewHeader">
         <div>
           <strong>Previa do e-mail</strong>

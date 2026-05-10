@@ -8984,10 +8984,10 @@ body.operationTheme .topbar {
 }
 
 .leadBroadcastPreviewTag {
-  background: rgba(20, 146, 79, 0.12);
-  border: 1px solid rgba(20, 146, 79, 0.18);
+  background: var(--lead-preview-accent-soft, rgba(20, 146, 79, 0.12));
+  border: 1px solid var(--lead-preview-accent-border, rgba(20, 146, 79, 0.18));
   border-radius: 999px;
-  color: #0e7c66;
+  color: var(--lead-preview-accent, #0e7c66);
   font-size: 12px;
   font-weight: 700;
   padding: 8px 12px;
@@ -9004,7 +9004,7 @@ body.operationTheme .topbar {
   background: #ffffff;
   border: 1px solid #dfe7f0;
   border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(10, 34, 26, 0.08);
+  box-shadow: 0 20px 60px var(--lead-preview-card-shadow, rgba(10, 34, 26, 0.08));
   margin: 0 auto;
   max-width: 680px;
   overflow: hidden;
@@ -9020,9 +9020,9 @@ body.operationTheme .topbar {
 }
 
 .leadBroadcastPreviewLogoBadge {
-  background: #08251d;
+  background: var(--lead-preview-accent-dark, #08251d);
   border-radius: 14px;
-  box-shadow: 0 10px 24px rgba(6, 26, 20, 0.16);
+  box-shadow: 0 10px 24px var(--lead-preview-accent-shadow, rgba(6, 26, 20, 0.16));
   display: inline-flex;
   padding: 10px 14px;
 }
@@ -9069,7 +9069,7 @@ body.operationTheme .topbar {
 }
 
 .leadBroadcastPreviewImageStage {
-  background: #071c17;
+  background: var(--lead-preview-accent-dark, #071c17);
   border-radius: 18px;
   height: 0;
   overflow: hidden;
@@ -9122,7 +9122,7 @@ body.operationTheme .topbar {
 }
 
 .leadBroadcastPreviewButton {
-  background: #14924f;
+  background: var(--lead-preview-accent, #14924f);
   border-radius: 12px;
   color: #ffffff;
   display: inline-flex;

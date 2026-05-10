@@ -4,6 +4,7 @@ import { parseImageCrop } from "@/lib/image-crop";
 export const runtime = "nodejs";
 const OUTPUT_WIDTH = 960;
 const OUTPUT_HEIGHT = 504;
+const DEFAULT_ACCENT_COLOR = "#1f5fbf";
 
 function normalizeSourceUrl(raw: string | null) {
   if (!raw) {
@@ -19,12 +20,36 @@ function parsePositiveNumber(raw: string | null) {
   return Number.isFinite(value) && value > 0 ? value : null;
 }
 
+function normalizeHexColor(raw: string | null) {
+  const value = raw?.trim();
+
+  if (!value) {
+    return DEFAULT_ACCENT_COLOR;
+  }
+
+  const normalized = value.startsWith("#") ? value : `#${value}`;
+  return /^#[0-9a-f]{6}$/i.test(normalized) ? normalized : DEFAULT_ACCENT_COLOR;
+}
+
+function shiftHexColor(hex: string, offset: number) {
+  const value = hex.replace("#", "");
+  const channels = [0, 2, 4].map((index) => {
+    const channel = parseInt(value.slice(index, index + 2), 16);
+    return Math.max(0, Math.min(255, channel + offset)).toString(16).padStart(2, "0");
+  });
+
+  return `#${channels.join("")}`;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const source = normalizeSourceUrl(searchParams.get("src"));
   const crop = parseImageCrop(searchParams.get("crop"));
   const sourceWidth = parsePositiveNumber(searchParams.get("w"));
   const sourceHeight = parsePositiveNumber(searchParams.get("h"));
+  const accentColor = normalizeHexColor(searchParams.get("accent"));
+  const backgroundStart = shiftHexColor(accentColor, -95);
+  const backgroundEnd = shiftHexColor(accentColor, -55);
 
   if (!source) {
     return new Response("Missing image source.", { status: 400 });
@@ -47,7 +72,7 @@ export async function GET(request: Request) {
       <div
         style={{
           alignItems: "center",
-          background: "linear-gradient(180deg, #071c17 0%, #0a2b22 100%)",
+          background: `linear-gradient(180deg, ${backgroundStart} 0%, ${backgroundEnd} 100%)`,
           display: "flex",
           height: "100%",
           justifyContent: "center",

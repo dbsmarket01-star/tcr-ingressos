@@ -176,15 +176,56 @@ function getDefaultEmailFrom(brandName?: string | null) {
   return `${resolvedBrandName} <${fallbackAddress}>`;
 }
 
+function getEmailAccentColor(brandName?: string | null) {
+  const normalizedBrand = (brandName || "").toLowerCase();
+
+  if (normalizedBrand.includes("tcr")) {
+    return "#0e7c66";
+  }
+
+  return "#1f5fbf";
+}
+
+function getEmailAccentDarkColor(brandName?: string | null) {
+  const normalizedBrand = (brandName || "").toLowerCase();
+
+  if (normalizedBrand.includes("tcr")) {
+    return "#08251d";
+  }
+
+  return "#123c7c";
+}
+
+function getEmailAccentShadowColor(brandName?: string | null) {
+  const normalizedBrand = (brandName || "").toLowerCase();
+
+  if (normalizedBrand.includes("tcr")) {
+    return "rgba(6, 26, 20, 0.16)";
+  }
+
+  return "rgba(31, 95, 191, 0.16)";
+}
+
+function getEmailCardShadowColor(brandName?: string | null) {
+  const normalizedBrand = (brandName || "").toLowerCase();
+
+  if (normalizedBrand.includes("tcr")) {
+    return "rgba(10, 34, 26, 0.08)";
+  }
+
+  return "rgba(31, 95, 191, 0.08)";
+}
+
 function buildTicketEmailHtml(input: TicketEmailInput) {
   const brandName = getDefaultBrandName(input.brandName);
+  const accentColor = getEmailAccentColor(input.brandName);
   const ticketLinks = input.tickets
     .map(
       (ticket) => `
         <li style="margin: 14px 0; padding: 14px; border: 1px solid #dfe4ea; border-radius: 8px;">
           <strong>${ticket.lotName}</strong><br />
           Código: ${ticket.code}<br />
-          <a href="${ticket.url}" style="color: #0e7c66; font-weight: 700;">Abrir ingresso</a>
+          <a href="${ticket.url}" style="color: ${accentColor}; font-weight: 700;">Abrir ingresso</a>
         </li>
       `
     )
@@ -265,13 +306,14 @@ export function createPublicOrderUrl(orderCode: string, organization?: EmailOrga
 
 function buildPasswordResetHtml(input: PasswordResetEmailInput) {
   const brandName = getDefaultBrandName(input.brandName);
+  const accentColor = getEmailAccentColor(input.brandName);
   return `
     <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.5;">
       <h1 style="margin: 0 0 12px;">Redefinir senha - ${brandName}</h1>
       <p>Olá, ${input.name}.</p>
       <p>Recebemos uma solicitação para redefinir a senha do seu acesso interno.</p>
       <p>
-        <a href="${input.resetUrl}" style="background: #0e7c66; border-radius: 8px; color: white; display: inline-block; font-weight: 700; padding: 12px 18px; text-decoration: none;">
+        <a href="${input.resetUrl}" style="background: ${accentColor}; border-radius: 8px; color: white; display: inline-block; font-weight: 700; padding: 12px 18px; text-decoration: none;">
           Redefinir senha
         </a>
       </p>
@@ -322,6 +364,7 @@ export function createAdminPasswordResetUrl(token: string, organization?: EmailO
 
 function buildOrderPendingPaymentHtml(input: OrderPendingPaymentEmailInput) {
   const brandName = getDefaultBrandName(input.brandName);
+  const accentColor = getEmailAccentColor(input.brandName);
   return `
     <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.5;">
       <h1 style="margin: 0 0 12px;">Pedido recebido - ${brandName}</h1>
@@ -334,7 +377,7 @@ function buildOrderPendingPaymentHtml(input: OrderPendingPaymentEmailInput) {
         <strong>Total:</strong> ${formatCurrency(input.totalInCents)}
       </p>
       <p>
-        <a href="${input.orderUrl}" style="background: #0e7c66; border-radius: 8px; color: white; display: inline-block; font-weight: 700; padding: 12px 18px; text-decoration: none;">
+        <a href="${input.orderUrl}" style="background: ${accentColor}; border-radius: 8px; color: white; display: inline-block; font-weight: 700; padding: 12px 18px; text-decoration: none;">
           Finalizar pagamento
         </a>
       </p>
@@ -389,6 +432,7 @@ export async function sendOrderPendingPaymentEmail(input: OrderPendingPaymentEma
 
 function buildOrderExpiredHtml(input: OrderExpiredEmailInput) {
   const brandName = getDefaultBrandName(input.brandName);
+  const accentColor = getEmailAccentColor(input.brandName);
   return `
     <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.5;">
       <h1 style="margin: 0 0 12px;">Pedido expirado - ${brandName}</h1>
@@ -396,7 +440,7 @@ function buildOrderExpiredHtml(input: OrderExpiredEmailInput) {
       <p>O pedido <strong>${input.orderCode}</strong> para <strong>${input.eventTitle}</strong> expirou porque o pagamento não foi concluído dentro do prazo.</p>
       <p>Nenhuma cobrança aprovada foi registrada para esse pedido.</p>
       <p>
-        <a href="${input.orderUrl}" style="background: #0e7c66; border-radius: 8px; color: white; display: inline-block; font-weight: 700; padding: 12px 18px; text-decoration: none;">
+        <a href="${input.orderUrl}" style="background: ${accentColor}; border-radius: 8px; color: white; display: inline-block; font-weight: 700; padding: 12px 18px; text-decoration: none;">
           Ver pedido
         </a>
       </p>
@@ -503,10 +547,11 @@ export async function sendUnlockApprovalEmail(input: UnlockApprovalEmailInput) {
 
 function buildLeadCaptureConfirmationHtml(input: LeadCaptureConfirmationEmailInput) {
   const brandName = getDefaultBrandName(input.brandName);
+  const accentColor = getEmailAccentColor(input.brandName);
   const whatsappButton = input.whatsappGroupUrl
     ? `
       <p>
-        <a href="${input.whatsappGroupUrl}" style="background: #14b866; border-radius: 10px; color: white; display: inline-block; font-weight: 700; padding: 14px 20px; text-decoration: none;">
+        <a href="${input.whatsappGroupUrl}" style="background: ${accentColor}; border-radius: 10px; color: white; display: inline-block; font-weight: 700; padding: 14px 20px; text-decoration: none;">
           Entrar no grupo do WhatsApp
         </a>
       </p>
@@ -644,6 +689,11 @@ function buildLeadBroadcastLogoUrl(input: LeadBroadcastEmailInput) {
     return `${baseUrl}/brands/tcr-logomarca.png`;
   }
 
+  if (brandName.includes("a2") || brandName.includes("imergidos")) {
+    const baseUrl = (input.publicBaseUrl || getPublicBaseUrl()).replace(/\/$/, "");
+    return `${baseUrl}/brands/a2-imergidos-logo.svg`;
+  }
+
   return null;
 }
 
@@ -680,6 +730,8 @@ function buildLeadBroadcastImageUrl(input: LeadBroadcastEmailInput) {
       params.set("crop", JSON.stringify(crop));
     }
   }
+
+  params.set("accent", getEmailAccentColor(input.brandName));
 
   return `${baseUrl}/r/lead-email-image?${params.toString()}`;
 }
@@ -719,6 +771,10 @@ function normalizeInstagramHref(value?: string | null) {
 
 function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
   const brandName = getDefaultBrandName(input.brandName);
+  const accentColor = getEmailAccentColor(input.brandName);
+  const accentDarkColor = getEmailAccentDarkColor(input.brandName);
+  const accentShadowColor = getEmailAccentShadowColor(input.brandName);
+  const cardShadowColor = getEmailCardShadowColor(input.brandName);
   const sanitizedBody = stripDuplicatedLeadBroadcastSubject(input.body, input.subject);
   const imageUrl = buildLeadBroadcastImageUrl(input);
   const logoUrl = buildLeadBroadcastLogoUrl(input);
@@ -740,7 +796,7 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
   const ctaButton = input.ctaUrl
     ? `
       <p style="margin: 18px 0 0;">
-        <a href="${input.ctaUrl}" style="background: #14924f; border-radius: 12px; color: white; display: inline-block; font-weight: 700; padding: 14px 22px; text-decoration: none;">
+        <a href="${input.ctaUrl}" style="background: ${accentColor}; border-radius: 12px; color: white; display: inline-block; font-weight: 700; padding: 14px 22px; text-decoration: none;">
           ${input.ctaLabel || "Abrir link"}
         </a>
       </p>
@@ -772,12 +828,12 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
   return `
     <div style="background: #f3f6fb; margin: 0; padding: 24px 16px;">
       <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.55; margin: 0 auto; max-width: 720px;">
-        <div style="background: #ffffff; border: 1px solid #e0e7f0; border-radius: 24px; box-shadow: 0 20px 60px rgba(10, 34, 26, 0.08); overflow: hidden; padding: 22px;">
+        <div style="background: #ffffff; border: 1px solid #e0e7f0; border-radius: 24px; box-shadow: 0 20px 60px ${cardShadowColor}; overflow: hidden; padding: 22px;">
           <div style="margin: 0 0 18px; text-align: center;">
             ${
               logoUrl
                 ? `<div style="display: inline-block; margin: 0 auto 12px;">
-                    <div style="background: #08251d; border-radius: 14px; box-shadow: 0 10px 24px rgba(6, 26, 20, 0.16); display: inline-block; padding: 10px 14px;">
+                    <div style="background: ${accentDarkColor}; border-radius: 14px; box-shadow: 0 10px 24px ${accentShadowColor}; display: inline-block; padding: 10px 14px;">
                       <img src="${logoUrl}" alt="${brandName}" width="104" style="display: block; height: auto; margin: 0 auto; max-width: 104px;" />
                     </div>
                   </div>`
