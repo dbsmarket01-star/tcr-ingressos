@@ -16,6 +16,7 @@ import {
 } from "@/features/payments/payment.actions";
 import { calculateCardInterestInCents } from "@/features/pricing/pricing";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { getCreditCardInstallmentLimitForEvent } from "@/lib/payment-installments";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
@@ -69,7 +70,8 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
     process.env.PAYMENT_PROVIDER === "ASAAS" || order.payment?.provider === "ASAAS";
   const baseTotalInCents = order.subtotalInCents + order.serviceFeeInCents - order.discountInCents;
   const pixTotalInCents = Math.max(baseTotalInCents - order.pixDiscountInCents, 0);
-  const installmentOptions = Array.from({ length: 10 }, (_, index) => index + 1).map((installment) => {
+  const maxCreditCardInstallments = getCreditCardInstallmentLimitForEvent(order.event);
+  const installmentOptions = Array.from({ length: maxCreditCardInstallments }, (_, index) => index + 1).map((installment) => {
     const interestInCents = order.items.reduce(
       (sum, item) =>
         sum +
@@ -388,8 +390,8 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                   <details className="paymentChoiceDisclosure">
                     <summary data-open-label="Abrir cartão">
                       <span>Cartão de crédito</span>
-                      <strong>Até 10x</strong>
-                      <small>Escolha as parcelas e confira os juros antes de confirmar</small>
+                      <strong>Selecionar</strong>
+                      <small>Escolha a quantidade de parcelas antes de confirmar</small>
                     </summary>
                     <form action={payWithCreditCardAction} className="cardForm">
                       <input type="hidden" name="orderCode" value={order.code} />

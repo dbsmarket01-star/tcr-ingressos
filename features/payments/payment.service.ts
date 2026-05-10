@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { createPublicTicketUrl, sendTicketsEmail } from "@/features/email/email.service";
 import { expirePendingOrderByCode } from "@/features/orders/order.service";
 import { calculateCardInterestInCents } from "@/features/pricing/pricing";
+import { getCreditCardInstallmentLimitForEvent } from "@/lib/payment-installments";
 import { trackMetaPurchaseForPaidOrder } from "@/features/tracking/meta-conversions.service";
 import { createQrCodeToken, createTicketCode } from "@/features/tickets/ticket-code";
 import { buildAsaasSplitsForOrder } from "./asaas-split.service";
@@ -372,6 +373,12 @@ export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & {
 
   if (order.status !== "PENDING_PAYMENT") {
     return order.payment;
+  }
+
+  const maxInstallments = getCreditCardInstallmentLimitForEvent(order.event);
+
+  if (input.installments > maxInstallments) {
+    throw new Error(`Este evento permite parcelamento em até ${maxInstallments}x.`);
   }
 
   const baseTotalInCents = order.subtotalInCents + order.serviceFeeInCents - order.discountInCents;
