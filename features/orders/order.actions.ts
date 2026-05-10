@@ -153,14 +153,15 @@ export async function createCheckoutOrderAction(formData: FormData) {
         buyerName: order.customer.name,
         orderCode: order.code,
         brandName: order.event.organization?.name || "Ingresaas",
+        brandPrimaryColor: order.event.organization?.primaryColor,
         eventTitle: order.event.title,
         eventDate: order.event.startsAt,
         venueName: order.event.venueName,
-      totalInCents: order.totalInCents,
-      expiresAt: order.expiresAt,
-      orderUrl: createPublicOrderUrl(order.code, order.event.organization)
-    });
-  } catch (error) {
+        totalInCents: order.totalInCents,
+        expiresAt: order.expiresAt,
+        orderUrl: createPublicOrderUrl(order.code, order.event.organization)
+      });
+    } catch (error) {
       console.error("[email] Falha ao enviar pedido pendente", error);
     }
   }

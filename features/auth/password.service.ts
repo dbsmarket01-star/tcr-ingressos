@@ -44,7 +44,8 @@ export async function requestAdminPasswordReset(email: string) {
       organization: {
         select: {
           name: true,
-          adminDomain: true
+          adminDomain: true,
+          primaryColor: true
         }
       },
       name: true,
@@ -72,6 +73,7 @@ export async function requestAdminPasswordReset(email: string) {
     to: admin.email,
     name: admin.name,
     brandName: admin.organization?.name || "Ingresaas",
+    brandPrimaryColor: admin.organization?.primaryColor,
     resetUrl: createAdminPasswordResetUrl(token, {
       adminDomain: admin.organization?.adminDomain
     }),

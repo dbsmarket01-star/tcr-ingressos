@@ -232,6 +232,7 @@ export async function processLeadEmailCampaignInBackground(campaignId: string) {
           publicBaseUrl: organizationContext.publicBaseUrl,
           brandLogoUrl: organizationContext.brandLogoUrl,
           brandName: organizationContext.brandName,
+          brandPrimaryColor: organizationContext.organization.primaryColor,
           eventTitle: campaign.event.title,
           ctaLabel: campaign.ctaLabel || "Abrir link",
           ctaUrl: `${organizationContext.publicBaseUrl}/r/lead-email/${campaign.id}/${recipient.leadId}`,

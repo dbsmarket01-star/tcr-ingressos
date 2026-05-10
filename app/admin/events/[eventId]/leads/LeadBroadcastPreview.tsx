@@ -6,6 +6,7 @@ import { parseImageCrop } from "@/lib/image-crop";
 type LeadBroadcastPreviewProps = {
   brandName: string;
   brandLogoUrl?: string | null;
+  brandPrimaryColor?: string | null;
   eventTitle: string;
   supportEmail?: string | null;
   defaultCtaLabel: string;
@@ -99,35 +100,44 @@ function stripDuplicatedSubject(body: string, subject: string) {
   return cleanedLines.join("\n").trim();
 }
 
-function resolvePreviewAccentColor(brandName: string) {
-  return brandName.toLowerCase().includes("tcr") ? "#0e7c66" : "#1f5fbf";
+function normalizePreviewAccentColor(color?: string | null) {
+  const value = color?.trim();
+  return value && /^#[0-9a-f]{6}$/i.test(value) ? value : "#1f5fbf";
 }
 
-function resolvePreviewAccentDarkColor(brandName: string) {
-  return brandName.toLowerCase().includes("tcr") ? "#08251d" : "#123c7c";
+function previewAccentRgb(color?: string | null) {
+  const hex = normalizePreviewAccentColor(color).slice(1);
+  return {
+    r: Number.parseInt(hex.slice(0, 2), 16),
+    g: Number.parseInt(hex.slice(2, 4), 16),
+    b: Number.parseInt(hex.slice(4, 6), 16)
+  };
+}
+
+function resolvePreviewAccentDarkColor(color?: string | null) {
+  const { r, g, b } = previewAccentRgb(color);
+  const toHex = (value: number) => Math.max(0, Math.round(value * 0.58)).toString(16).padStart(2, "0");
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+function resolvePreviewAccentShadowColor(color?: string | null, alpha = 0.16) {
+  const { r, g, b } = previewAccentRgb(color);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const imageUrlRef = useRef<string | null>(null);
   const [preview, setPreview] = useState<PreviewState>(() => emptyPreviewState(props));
-  const accentColor = resolvePreviewAccentColor(props.brandName);
-  const accentDarkColor = resolvePreviewAccentDarkColor(props.brandName);
+  const accentColor = normalizePreviewAccentColor(props.brandPrimaryColor);
+  const accentDarkColor = resolvePreviewAccentDarkColor(props.brandPrimaryColor);
   const previewStyle = {
     "--lead-preview-accent": accentColor,
     "--lead-preview-accent-dark": accentDarkColor,
-    "--lead-preview-accent-soft": props.brandName.toLowerCase().includes("tcr")
-      ? "rgba(20, 146, 79, 0.12)"
-      : "rgba(31, 95, 191, 0.12)",
-    "--lead-preview-accent-border": props.brandName.toLowerCase().includes("tcr")
-      ? "rgba(20, 146, 79, 0.18)"
-      : "rgba(31, 95, 191, 0.18)",
-    "--lead-preview-accent-shadow": props.brandName.toLowerCase().includes("tcr")
-      ? "rgba(6, 26, 20, 0.16)"
-      : "rgba(31, 95, 191, 0.16)",
-    "--lead-preview-card-shadow": props.brandName.toLowerCase().includes("tcr")
-      ? "rgba(10, 34, 26, 0.08)"
-      : "rgba(31, 95, 191, 0.08)"
+    "--lead-preview-accent-soft": resolvePreviewAccentShadowColor(props.brandPrimaryColor, 0.12),
+    "--lead-preview-accent-border": resolvePreviewAccentShadowColor(props.brandPrimaryColor, 0.18),
+    "--lead-preview-accent-shadow": resolvePreviewAccentShadowColor(props.brandPrimaryColor, 0.16),
+    "--lead-preview-card-shadow": resolvePreviewAccentShadowColor(props.brandPrimaryColor, 0.08)
   } as CSSProperties;
 
   useEffect(() => {

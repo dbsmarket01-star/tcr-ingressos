@@ -196,6 +196,7 @@ export async function sendLeadBroadcastAction(formData: FormData) {
       publicBaseUrl,
       brandLogoUrl: organizationContext.brandLogoUrl,
       brandName: organizationContext.brandName,
+      brandPrimaryColor: organizationContext.organization.primaryColor,
       eventTitle: event.title,
       ctaLabel: ctaLabel || "Abrir link",
       ctaUrl: normalizedDestinationUrl,

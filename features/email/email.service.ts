@@ -14,6 +14,7 @@ type TicketEmailInput = {
   buyerName: string;
   orderCode: string;
   brandName?: string;
+  brandPrimaryColor?: string | null;
   eventTitle: string;
   eventDate: Date;
   venueName: string;
@@ -28,6 +29,7 @@ type PasswordResetEmailInput = {
   to: string;
   name: string;
   brandName?: string;
+  brandPrimaryColor?: string | null;
   resetUrl: string;
   expiresInMinutes: number;
 };
@@ -37,6 +39,7 @@ type OrderPendingPaymentEmailInput = {
   buyerName: string;
   orderCode: string;
   brandName?: string;
+  brandPrimaryColor?: string | null;
   eventTitle: string;
   eventDate: Date;
   venueName: string;
@@ -50,6 +53,7 @@ type OrderExpiredEmailInput = {
   buyerName: string;
   orderCode: string;
   brandName?: string;
+  brandPrimaryColor?: string | null;
   eventTitle: string;
   orderUrl: string;
 };
@@ -71,6 +75,7 @@ type LeadCaptureConfirmationEmailInput = {
   eventTitle: string;
   whatsappGroupUrl?: string | null;
   brandName?: string;
+  brandPrimaryColor?: string | null;
   supportEmail?: string | null;
 };
 
@@ -86,6 +91,7 @@ type LeadBroadcastEmailInput = {
   publicBaseUrl?: string | null;
   brandLogoUrl?: string | null;
   brandName?: string;
+  brandPrimaryColor?: string | null;
   eventTitle: string;
   ctaLabel?: string | null;
   ctaUrl?: string | null;
@@ -176,49 +182,42 @@ function getDefaultEmailFrom(brandName?: string | null) {
   return `${resolvedBrandName} <${fallbackAddress}>`;
 }
 
-function getEmailAccentColor(brandName?: string | null) {
-  const normalizedBrand = (brandName || "").toLowerCase();
-
-  if (normalizedBrand.includes("tcr")) {
-    return "#0e7c66";
-  }
-
-  return "#1f5fbf";
+function normalizeEmailAccentColor(color?: string | null) {
+  const value = color?.trim();
+  return value && /^#[0-9a-f]{6}$/i.test(value) ? value : "#1f5fbf";
 }
 
-function getEmailAccentDarkColor(brandName?: string | null) {
-  const normalizedBrand = (brandName || "").toLowerCase();
-
-  if (normalizedBrand.includes("tcr")) {
-    return "#08251d";
-  }
-
-  return "#123c7c";
+function hexToRgb(color?: string | null) {
+  const hex = normalizeEmailAccentColor(color).slice(1);
+  return {
+    r: Number.parseInt(hex.slice(0, 2), 16),
+    g: Number.parseInt(hex.slice(2, 4), 16),
+    b: Number.parseInt(hex.slice(4, 6), 16)
+  };
 }
 
-function getEmailAccentShadowColor(brandName?: string | null) {
-  const normalizedBrand = (brandName || "").toLowerCase();
-
-  if (normalizedBrand.includes("tcr")) {
-    return "rgba(6, 26, 20, 0.16)";
-  }
-
-  return "rgba(31, 95, 191, 0.16)";
+function darkenEmailAccentColor(color?: string | null) {
+  const { r, g, b } = hexToRgb(color);
+  const toHex = (value: number) => Math.max(0, Math.round(value * 0.58)).toString(16).padStart(2, "0");
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-function getEmailCardShadowColor(brandName?: string | null) {
-  const normalizedBrand = (brandName || "").toLowerCase();
+function getEmailAccentColor(brandPrimaryColor?: string | null) {
+  return normalizeEmailAccentColor(brandPrimaryColor);
+}
 
-  if (normalizedBrand.includes("tcr")) {
-    return "rgba(10, 34, 26, 0.08)";
-  }
+function getEmailAccentDarkColor(brandPrimaryColor?: string | null) {
+  return darkenEmailAccentColor(brandPrimaryColor);
+}
 
-  return "rgba(31, 95, 191, 0.08)";
+function getEmailAccentShadowColor(brandPrimaryColor?: string | null, alpha = 0.16) {
+  const { r, g, b } = hexToRgb(brandPrimaryColor);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 function buildTicketEmailHtml(input: TicketEmailInput) {
   const brandName = getDefaultBrandName(input.brandName);
-  const accentColor = getEmailAccentColor(input.brandName);
+  const accentColor = getEmailAccentColor(input.brandPrimaryColor);
   const ticketLinks = input.tickets
     .map(
       (ticket) => `
@@ -306,7 +305,7 @@ export function createPublicOrderUrl(orderCode: string, organization?: EmailOrga
 
 function buildPasswordResetHtml(input: PasswordResetEmailInput) {
   const brandName = getDefaultBrandName(input.brandName);
-  const accentColor = getEmailAccentColor(input.brandName);
+  const accentColor = getEmailAccentColor(input.brandPrimaryColor);
   return `
     <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.5;">
       <h1 style="margin: 0 0 12px;">Redefinir senha - ${brandName}</h1>
@@ -364,7 +363,7 @@ export function createAdminPasswordResetUrl(token: string, organization?: EmailO
 
 function buildOrderPendingPaymentHtml(input: OrderPendingPaymentEmailInput) {
   const brandName = getDefaultBrandName(input.brandName);
-  const accentColor = getEmailAccentColor(input.brandName);
+  const accentColor = getEmailAccentColor(input.brandPrimaryColor);
   return `
     <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.5;">
       <h1 style="margin: 0 0 12px;">Pedido recebido - ${brandName}</h1>
@@ -432,7 +431,7 @@ export async function sendOrderPendingPaymentEmail(input: OrderPendingPaymentEma
 
 function buildOrderExpiredHtml(input: OrderExpiredEmailInput) {
   const brandName = getDefaultBrandName(input.brandName);
-  const accentColor = getEmailAccentColor(input.brandName);
+  const accentColor = getEmailAccentColor(input.brandPrimaryColor);
   return `
     <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.5;">
       <h1 style="margin: 0 0 12px;">Pedido expirado - ${brandName}</h1>
@@ -547,7 +546,7 @@ export async function sendUnlockApprovalEmail(input: UnlockApprovalEmailInput) {
 
 function buildLeadCaptureConfirmationHtml(input: LeadCaptureConfirmationEmailInput) {
   const brandName = getDefaultBrandName(input.brandName);
-  const accentColor = getEmailAccentColor(input.brandName);
+  const accentColor = getEmailAccentColor(input.brandPrimaryColor);
   const whatsappButton = input.whatsappGroupUrl
     ? `
       <p>
@@ -682,18 +681,6 @@ function buildLeadBroadcastLogoUrl(input: LeadBroadcastEmailInput) {
     return resolveAbsoluteEmailImageUrl(input.brandLogoUrl, input.publicBaseUrl);
   }
 
-  const brandName = (input.brandName || "").toLowerCase();
-
-  if (brandName.includes("tcr")) {
-    const baseUrl = (input.publicBaseUrl || getPublicBaseUrl()).replace(/\/$/, "");
-    return `${baseUrl}/brands/tcr-logomarca.png`;
-  }
-
-  if (brandName.includes("a2") || brandName.includes("imergidos")) {
-    const baseUrl = (input.publicBaseUrl || getPublicBaseUrl()).replace(/\/$/, "");
-    return `${baseUrl}/brands/a2-imergidos-logo.svg`;
-  }
-
   return null;
 }
 
@@ -731,7 +718,7 @@ function buildLeadBroadcastImageUrl(input: LeadBroadcastEmailInput) {
     }
   }
 
-  params.set("accent", getEmailAccentColor(input.brandName));
+  params.set("accent", getEmailAccentColor(input.brandPrimaryColor));
 
   return `${baseUrl}/r/lead-email-image?${params.toString()}`;
 }
@@ -771,10 +758,10 @@ function normalizeInstagramHref(value?: string | null) {
 
 function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
   const brandName = getDefaultBrandName(input.brandName);
-  const accentColor = getEmailAccentColor(input.brandName);
-  const accentDarkColor = getEmailAccentDarkColor(input.brandName);
-  const accentShadowColor = getEmailAccentShadowColor(input.brandName);
-  const cardShadowColor = getEmailCardShadowColor(input.brandName);
+  const accentColor = getEmailAccentColor(input.brandPrimaryColor);
+  const accentDarkColor = getEmailAccentDarkColor(input.brandPrimaryColor);
+  const accentShadowColor = getEmailAccentShadowColor(input.brandPrimaryColor);
+  const cardShadowColor = getEmailAccentShadowColor(input.brandPrimaryColor, 0.08);
   const sanitizedBody = stripDuplicatedLeadBroadcastSubject(input.body, input.subject);
   const imageUrl = buildLeadBroadcastImageUrl(input);
   const logoUrl = buildLeadBroadcastLogoUrl(input);

@@ -476,7 +476,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
                   organization: {
                     select: {
                       name: true,
-                      publicDomain: true
+                      publicDomain: true,
+                      primaryColor: true
                     }
                   }
                 }
@@ -517,6 +518,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           buyerName: payment.order.customer.name,
           orderCode: payment.order.code,
           brandName: payment.order.event.organization?.name || "Ingresaas",
+          brandPrimaryColor: payment.order.event.organization?.primaryColor,
           eventTitle: payment.order.event.title,
           eventDate: payment.order.event.startsAt,
           venueName: payment.order.event.venueName,

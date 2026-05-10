@@ -334,6 +334,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
               <LeadBroadcastPreview
                 brandName={operationBrandName}
                 brandLogoUrl={organizationContext.brandLogoUrl}
+                brandPrimaryColor={organizationContext.organization.primaryColor}
                 defaultCtaLabel="Entrar no grupo agora"
                 defaultDestinationUrl={event.leadCaptureWhatsappGroupUrl ?? ""}
                 eventTitle={event.title}

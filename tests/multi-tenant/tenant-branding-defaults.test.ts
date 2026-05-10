@@ -34,6 +34,8 @@ describe("tenant branding defaults", () => {
       subject: "A2 no ar",
       body: "Confira as novidades do evento.",
       brandName: "A2 Imergidos",
+      brandPrimaryColor: "#1f5fbf",
+      brandLogoUrl: "/brands/a2-imergidos-logo.svg",
       publicBaseUrl: "https://a2imergidos.com.br",
       imageUrl: "https://cdn.example.com/banner.jpg",
       imageWidth: 1200,
@@ -44,7 +46,7 @@ describe("tenant branding defaults", () => {
     });
 
     expect(payload.html).toContain("#1f5fbf");
-    expect(payload.html).toContain("#123c7c");
+    expect(payload.html).toContain("#12376f");
     expect(payload.html).toContain("accent=%231f5fbf");
     expect(payload.html).toContain("/brands/a2-imergidos-logo.svg");
     expect(payload.html).not.toContain("#08251d");

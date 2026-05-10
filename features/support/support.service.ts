@@ -52,7 +52,8 @@ export async function searchSupportOrders(query?: string, allowedEventIds?: Even
             select: {
               name: true,
               publicDomain: true,
-              adminDomain: true
+              adminDomain: true,
+              primaryColor: true
             }
           }
         }
@@ -88,7 +89,8 @@ export async function resendTicketsEmailByOrderCode(orderCode: string, allowedEv
           organization: {
             select: {
               name: true,
-              publicDomain: true
+              publicDomain: true,
+              primaryColor: true
             }
           }
         }
@@ -117,6 +119,7 @@ export async function resendTicketsEmailByOrderCode(orderCode: string, allowedEv
     buyerName: order.customer.name,
     orderCode: order.code,
     brandName: order.event.organization?.name || "Ingresaas",
+    brandPrimaryColor: order.event.organization?.primaryColor,
     eventTitle: order.event.title,
     eventDate: order.event.startsAt,
     venueName: order.event.venueName,
@@ -153,7 +156,8 @@ export async function resendPendingPaymentEmailByOrderCode(orderCode: string, al
           organization: {
             select: {
               name: true,
-              publicDomain: true
+              publicDomain: true,
+              primaryColor: true
             }
           }
         }
@@ -174,6 +178,7 @@ export async function resendPendingPaymentEmailByOrderCode(orderCode: string, al
     buyerName: order.customer.name,
     orderCode: order.code,
     brandName: order.event.organization?.name || "Ingresaas",
+    brandPrimaryColor: order.event.organization?.primaryColor,
     eventTitle: order.event.title,
     eventDate: order.event.startsAt,
     venueName: order.event.venueName,
@@ -225,7 +230,8 @@ export async function findPublicOrdersByCustomerEmail(email: string, organizatio
           organization: {
             select: {
               name: true,
-              publicDomain: true
+              publicDomain: true,
+              primaryColor: true
             }
           }
         }
@@ -259,6 +265,7 @@ export async function resendPublicAccessEmailsByCustomerEmail(email: string, org
         buyerName: order.customer.name,
         orderCode: order.code,
         brandName: order.event.organization?.name || "Ingresaas",
+        brandPrimaryColor: order.event.organization?.primaryColor,
         eventTitle: order.event.title,
         eventDate: order.event.startsAt,
         venueName: order.event.venueName,
@@ -286,6 +293,7 @@ export async function resendPublicAccessEmailsByCustomerEmail(email: string, org
         buyerName: order.customer.name,
         orderCode: order.code,
         brandName: order.event.organization?.name || "Ingresaas",
+        brandPrimaryColor: order.event.organization?.primaryColor,
         eventTitle: order.event.title,
         eventDate: order.event.startsAt,
         venueName: order.event.venueName,

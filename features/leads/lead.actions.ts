@@ -127,6 +127,7 @@ export async function createEventLeadAction(formData: FormData) {
           eventTitle: result.lead.event.title,
           whatsappGroupUrl: eventForEmail?.leadCaptureWhatsappGroupUrl || null,
           brandName: organizationContext.brandName,
+          brandPrimaryColor: organizationContext.organization.primaryColor,
           supportEmail
         });
       }

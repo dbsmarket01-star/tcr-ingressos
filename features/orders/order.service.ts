@@ -211,7 +211,8 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
               organization: {
                 select: {
                   name: true,
-                  publicDomain: true
+                  publicDomain: true,
+                  primaryColor: true
                 }
               },
               autoPendingPaymentEmailEnabled: true,
@@ -265,7 +266,8 @@ export async function expirePendingOrders(options?: { limit?: number; now?: Date
           organization: {
             select: {
               name: true,
-              publicDomain: true
+              publicDomain: true,
+              primaryColor: true
             }
           }
         }
@@ -363,7 +365,8 @@ export async function expirePendingOrderByCode(code: string, organizationId?: st
           organization: {
             select: {
               name: true,
-              publicDomain: true
+              publicDomain: true,
+              primaryColor: true
             }
           }
         }
@@ -673,6 +676,7 @@ async function notifyOrderExpired(order: {
     organization: {
       name: string;
       publicDomain: string | null;
+      primaryColor: string | null;
     } | null;
   };
 }) {
@@ -686,6 +690,7 @@ async function notifyOrderExpired(order: {
       buyerName: order.customer.name,
       orderCode: order.code,
       brandName: order.event.organization?.name || "Ingresaas",
+      brandPrimaryColor: order.event.organization?.primaryColor,
       eventTitle: order.event.title,
       orderUrl: createPublicOrderUrl(order.code, order.event.organization)
     });
@@ -718,7 +723,8 @@ export async function getOrderByCode(code: string, organizationId?: string | nul
           organization: {
             select: {
               name: true,
-              publicDomain: true
+              publicDomain: true,
+              primaryColor: true
             }
           }
         }
