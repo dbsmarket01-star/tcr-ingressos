@@ -8179,11 +8179,75 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 }
 
 .checkoutFeeHint {
+  appearance: none;
+  background: transparent;
+  border: 0;
   color: #5b6472;
+  cursor: pointer;
   font-size: 12px;
+  justify-self: center;
   margin: 0;
+  padding: 0;
   text-align: center;
   text-decoration: underline;
+}
+
+.checkoutFeeHint:hover {
+  color: var(--brand);
+}
+
+.feeExplanationBackdrop {
+  align-items: center;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 20px;
+  position: fixed;
+  z-index: 80;
+}
+
+.feeExplanationDialog {
+  background: #ffffff;
+  border: 1px solid rgba(216, 222, 229, 0.9);
+  border-radius: 8px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+  color: #1b2430;
+  max-width: 420px;
+  padding: 24px;
+  position: relative;
+  width: min(100%, 420px);
+}
+
+.feeExplanationDialog h3 {
+  font-size: 22px;
+  line-height: 1.2;
+  margin: 0 32px 12px 0;
+}
+
+.feeExplanationDialog p {
+  color: #4b5563;
+  font-size: 15px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.feeExplanationClose {
+  align-items: center;
+  background: #eef2f6;
+  border: 0;
+  border-radius: 8px;
+  color: #1f2937;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 22px;
+  height: 34px;
+  justify-content: center;
+  line-height: 1;
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  width: 34px;
 }
 
 .addToCartButton:disabled {

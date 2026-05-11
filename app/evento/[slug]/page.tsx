@@ -16,6 +16,7 @@ import { TrackingRuntime } from "./TrackingRuntime";
 import { CheckoutEstimator } from "./CheckoutEstimator";
 import { TicketQuantityStepper } from "./TicketQuantityStepper";
 import { AddToCartButton } from "./AddToCartButton";
+import { FeeExplanationButton } from "./FeeExplanationButton";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
@@ -26,18 +27,6 @@ type EventPageProps = {
   }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
-
-function formatSaleLimit(date?: Date | null) {
-  if (!date) {
-    return null;
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric"
-  }).format(date);
-}
 
 export async function generateMetadata({ params }: Pick<EventPageProps, "params">): Promise<Metadata> {
   const { slug } = await params;
@@ -109,6 +98,9 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     const total = lot.priceInCents + serviceFeeInCents;
     return lowest === 0 || total < lowest ? total : lowest;
   }, 0);
+  const hasServiceFees = activeLots.some(
+    (lot) => calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps) > 0
+  );
   const checkoutEstimatorLots = activeLots.map((lot) => ({
     id: lot.id,
     name: lot.name,
@@ -311,7 +303,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                     : false;
                   const isHighlighted = lot.id === highlightedLotId;
                   const maxQuantity = Math.max(0, Math.min(lot.maxPerOrder, available));
-                  const saleLimit = formatSaleLimit(lot.salesEndsAt);
 
                   return (
                     <article className={`ticketPickerCard ${isHighlighted ? "recommendedLot" : ""}`} key={lot.id}>
@@ -320,13 +311,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                         <strong className="ticketPickerTitle">{lot.name}</strong>
                         <p className="ticketPickerPrice">
                           {formatCurrency(lot.priceInCents)}
-                          <span> (+{formatCurrency(serviceFeeInCents)} taxa)</span>
+                          {serviceFeeInCents > 0 ? <span> (+{formatCurrency(serviceFeeInCents)} taxa)</span> : null}
                         </p>
-                        {saleLimit ? (
-                          <div className="ticketPickerMeta">
-                            <em>Vendas até {saleLimit}</em>
-                          </div>
-                        ) : null}
                         {lot.description ? <small>{lot.description}</small> : null}
                         {isLowStock || lotEndsSoon ? (
                           <small className="ticketPickerUrgency">
@@ -350,7 +336,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
               <p className="checkoutFootnote">
                 Você informará seus dados e concluirá o pedido na próxima etapa.
               </p>
-              <p className="checkoutFeeHint">ⓘ Entenda nossa taxa</p>
+              {hasServiceFees ? <FeeExplanationButton /> : null}
             </form>
           )}
         </aside>
