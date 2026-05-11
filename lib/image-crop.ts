@@ -12,7 +12,7 @@ const DEFAULT_IMAGE_CROP: ImageCrop = {
   zoom: 1
 };
 
-export const MIN_IMAGE_CROP_ZOOM = 0.2;
+export const MIN_IMAGE_CROP_ZOOM = 0.1;
 export const MAX_IMAGE_CROP_ZOOM = 4;
 
 function clamp(value: number, min: number, max: number) {
@@ -49,12 +49,10 @@ export function imageCropStyle(crop?: ImageCrop | null): CSSProperties | undefin
     return undefined;
   }
 
-  const isFullFrame = crop.zoom < 1;
-
   return {
-    objectFit: isFullFrame ? "contain" : "cover",
+    objectFit: "cover",
     objectPosition: `${crop.x}% ${crop.y}%`,
-    transform: isFullFrame ? "none" : `scale(${crop.zoom})`,
+    transform: `scale(${crop.zoom})`,
     transformOrigin: `${crop.x}% ${crop.y}%`
   };
 }

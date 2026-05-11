@@ -74,13 +74,26 @@ function buildDefaultCrop(meta: ImageMeta | null, aspect: NonNullable<ImageUploa
   }
 
   const recommendedRatio = recommendedRatios[aspect];
-  const fitZoom = Math.min(1, Math.min(meta.ratio / recommendedRatio, recommendedRatio / meta.ratio));
+  const rawFitZoom = Math.min(meta.ratio / recommendedRatio, recommendedRatio / meta.ratio);
+  const fitZoom = Math.min(1, rawFitZoom);
+  const safeFitZoom = fitZoom < 1 ? fitZoom * 0.98 : 1;
+  const paddedFitZoom = fitZoom < 1 ? Math.floor(safeFitZoom * 100) / 100 : 1;
 
   return sanitizeImageCrop({
     x: 50,
     y: 50,
-    zoom: Number(fitZoom.toFixed(2))
+    zoom: Number(paddedFitZoom.toFixed(2))
   });
+}
+
+function shouldUseAutoFit(rawCrop?: string | null) {
+  const parsedCrop = parseImageCrop(rawCrop);
+
+  if (!parsedCrop) {
+    return true;
+  }
+
+  return Math.abs(parsedCrop.x - 50) < 0.01 && Math.abs(parsedCrop.y - 50) < 0.01 && Math.abs(parsedCrop.zoom - 1) < 0.01;
 }
 
 function analyzeAspect(meta: ImageMeta | null, aspect: NonNullable<ImageUploadFieldProps["aspect"]>) {
@@ -124,12 +137,10 @@ function analyzeAspect(meta: ImageMeta | null, aspect: NonNullable<ImageUploadFi
 }
 
 function cropPreviewStyle(crop: ImageCrop): CSSProperties {
-  const isFullFrame = crop.zoom < 1;
-
   return {
-    objectFit: isFullFrame ? "contain" : "cover",
+    objectFit: "cover",
     objectPosition: `${crop.x}% ${crop.y}%`,
-    transform: isFullFrame ? "none" : `scale(${crop.zoom})`,
+    transform: `scale(${crop.zoom})`,
     transformOrigin: `${crop.x}% ${crop.y}%`
   };
 }
@@ -156,7 +167,7 @@ export function ImageUploadField({
   const [appliedCropValue, setAppliedCropValue] = useState<string>(() => stringifyImageCrop(parseImageCrop(currentCropValue)));
   const [appliedPreviewUrl, setAppliedPreviewUrl] = useState<string | null>(currentImageUrl ?? null);
   const [appliedImageMeta, setAppliedImageMeta] = useState<ImageMeta | null>(null);
-  const [shouldAutoFitCrop, setShouldAutoFitCrop] = useState<boolean>(() => !currentCropValue);
+  const [shouldAutoFitCrop, setShouldAutoFitCrop] = useState<boolean>(() => shouldUseAutoFit(currentCropValue));
 
   useEffect(() => {
     if (!previewUrl) {
@@ -193,7 +204,7 @@ export function ImageUploadField({
     setCrop(sanitizeImageCrop(parseImageCrop(currentCropValue)));
     setAppliedCropValue(stringifyImageCrop(parseImageCrop(currentCropValue)));
     setAppliedPreviewUrl(currentImageUrl ?? null);
-    setShouldAutoFitCrop(!currentCropValue);
+    setShouldAutoFitCrop(shouldUseAutoFit(currentCropValue));
   }, [currentCropValue, currentImageUrl]);
 
   useEffect(() => {
