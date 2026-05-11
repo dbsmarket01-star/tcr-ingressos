@@ -3980,14 +3980,14 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   margin: 84px auto 0;
   max-width: 1180px;
   overflow: hidden;
-  padding: 16px;
+  padding: 0;
   width: 100%;
 }
 
 .publicHeroImage {
   display: block;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   width: 100%;
 }
 
@@ -10038,6 +10038,12 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   transform: translateY(-1px);
 }
 
+.imageCropNudgeButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  transform: none;
+}
+
 .imageCropResetButton {
   background: rgba(16, 43, 37, 0.04);
 }
@@ -10136,7 +10142,7 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 .imageCropStage img {
   display: block;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   width: 100%;
 }
 

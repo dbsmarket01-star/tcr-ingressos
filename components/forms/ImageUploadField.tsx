@@ -90,6 +90,24 @@ function shouldUseAutoFit(rawCrop?: string | null) {
   return Math.abs(parsedCrop.x - 50) < 0.01 && Math.abs(parsedCrop.y - 50) < 0.01 && parsedCrop.zoom <= 1;
 }
 
+function minimumZoomForAspect(aspect: NonNullable<ImageUploadFieldProps["aspect"]>) {
+  return aspect === "banner" ? 1 : MIN_IMAGE_CROP_ZOOM;
+}
+
+function normalizeCropForAspect(input: Partial<ImageCrop> | null | undefined, aspect: NonNullable<ImageUploadFieldProps["aspect"]>) {
+  const nextCrop = sanitizeImageCrop(input);
+  const minZoom = minimumZoomForAspect(aspect);
+
+  if (nextCrop.zoom < minZoom) {
+    return {
+      ...nextCrop,
+      zoom: minZoom
+    };
+  }
+
+  return nextCrop;
+}
+
 function analyzeAspect(meta: ImageMeta | null, aspect: NonNullable<ImageUploadFieldProps["aspect"]>) {
   if (!meta) {
     return null;
@@ -130,11 +148,13 @@ function analyzeAspect(meta: ImageMeta | null, aspect: NonNullable<ImageUploadFi
   };
 }
 
-function cropPreviewStyle(crop: ImageCrop): CSSProperties {
+function cropPreviewStyle(crop: ImageCrop, aspect: NonNullable<ImageUploadFieldProps["aspect"]>): CSSProperties {
+  const previewZoom = Math.max(minimumZoomForAspect(aspect), crop.zoom);
+
   return {
-    objectFit: "contain",
+    objectFit: "cover",
     objectPosition: `${crop.x}% ${crop.y}%`,
-    transform: `scale(${crop.zoom})`,
+    transform: `scale(${previewZoom})`,
     transformOrigin: `${crop.x}% ${crop.y}%`
   };
 }
@@ -157,8 +177,8 @@ export function ImageUploadField({
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [imageMeta, setImageMeta] = useState<ImageMeta | null>(null);
-  const [crop, setCrop] = useState<ImageCrop>(() => sanitizeImageCrop(parseImageCrop(currentCropValue)));
-  const [appliedCropValue, setAppliedCropValue] = useState<string>(() => stringifyImageCrop(parseImageCrop(currentCropValue)));
+  const [crop, setCrop] = useState<ImageCrop>(() => normalizeCropForAspect(parseImageCrop(currentCropValue), aspect));
+  const [appliedCropValue, setAppliedCropValue] = useState<string>(() => stringifyImageCrop(normalizeCropForAspect(parseImageCrop(currentCropValue), aspect)));
   const [appliedPreviewUrl, setAppliedPreviewUrl] = useState<string | null>(currentImageUrl ?? null);
   const [appliedImageMeta, setAppliedImageMeta] = useState<ImageMeta | null>(null);
   const [shouldAutoFitCrop, setShouldAutoFitCrop] = useState<boolean>(() => shouldUseAutoFit(currentCropValue));
@@ -195,18 +215,19 @@ export function ImageUploadField({
   }, [objectUrl]);
 
   useEffect(() => {
-    setCrop(sanitizeImageCrop(parseImageCrop(currentCropValue)));
-    setAppliedCropValue(stringifyImageCrop(parseImageCrop(currentCropValue)));
+    const nextCrop = normalizeCropForAspect(parseImageCrop(currentCropValue), aspect);
+    setCrop(nextCrop);
+    setAppliedCropValue(stringifyImageCrop(nextCrop));
     setAppliedPreviewUrl(currentImageUrl ?? null);
     setShouldAutoFitCrop(shouldUseAutoFit(currentCropValue));
-  }, [currentCropValue, currentImageUrl]);
+  }, [aspect, currentCropValue, currentImageUrl]);
 
   useEffect(() => {
     if (!shouldAutoFitCrop || !cropFieldName || !imageMeta) {
       return;
     }
 
-    setCrop(buildDefaultCrop(imageMeta, aspect));
+    setCrop(normalizeCropForAspect(buildDefaultCrop(imageMeta, aspect), aspect));
     setShouldAutoFitCrop(false);
   }, [aspect, cropFieldName, imageMeta, shouldAutoFitCrop]);
 
@@ -221,10 +242,11 @@ export function ImageUploadField({
   }, [appliedPreviewUrl, applyMode, imageMeta, previewUrl]);
 
   const aspectAnalysis = analyzeAspect(imageMeta, aspect);
-  const cropValue = stringifyImageCrop(crop);
-  const defaultCrop = buildDefaultCrop(imageMeta, aspect);
+  const minZoom = minimumZoomForAspect(aspect);
+  const cropValue = stringifyImageCrop(normalizeCropForAspect(crop, aspect));
+  const defaultCrop = normalizeCropForAspect(buildDefaultCrop(imageMeta, aspect), aspect);
   const presets = cropPresets[aspect];
-  const publicPreviewStyle = cropPreviewStyle(crop);
+  const publicPreviewStyle = cropPreviewStyle(crop, aspect);
 
   function emitAppliedEvent() {
     if (typeof window === "undefined") {
@@ -247,19 +269,19 @@ export function ImageUploadField({
 
   function updateCrop(partial: Partial<ImageCrop>) {
     setCrop((current) =>
-      sanitizeImageCrop({
+      normalizeCropForAspect({
         ...current,
         ...partial
-      })
+      }, aspect)
     );
   }
 
   function nudgeCrop(axis: "x" | "y" | "zoom", delta: number) {
     setCrop((current) =>
-      sanitizeImageCrop({
+      normalizeCropForAspect({
         ...current,
         [axis]: Number((current[axis] + delta).toFixed(axis === "zoom" ? 2 : 1))
-      })
+      }, aspect)
     );
   }
 
@@ -290,7 +312,7 @@ export function ImageUploadField({
           <div className="imageCropToolHeader">
             <div>
               <strong>Imagem completa e prévia pública</strong>
-              <small>A arte entra inteira por padrão. Use o zoom e a posição só quando quiser aproximar ou ajustar o enquadramento.</small>
+              <small>A arte completa fica à esquerda. A prévia pública à direita mostra o mesmo enquadramento usado no site.</small>
             </div>
             {imageMeta ? <span className="imageCropMeta">{imageMeta.width} x {imageMeta.height} px</span> : null}
           </div>
@@ -340,7 +362,7 @@ export function ImageUploadField({
               </button>
             </div>
             <div className="imageCropZoomButtons">
-              <button type="button" className="imageCropNudgeButton" onClick={() => nudgeCrop("zoom", -0.1)}>
+              <button type="button" className="imageCropNudgeButton" disabled={crop.zoom <= minZoom} onClick={() => nudgeCrop("zoom", -0.1)}>
                 Afastar
               </button>
               <button type="button" className="imageCropNudgeButton" onClick={() => nudgeCrop("zoom", 0.1)}>
@@ -376,7 +398,7 @@ export function ImageUploadField({
               <span>Zoom</span>
               <input
                 type="range"
-                min={String(MIN_IMAGE_CROP_ZOOM)}
+                min={String(minZoom)}
                 max={String(MAX_IMAGE_CROP_ZOOM)}
                 step="0.02"
                 value={crop.zoom}
@@ -386,11 +408,11 @@ export function ImageUploadField({
                   })
                 }
               />
-              <small>{crop.zoom < 1 ? `${crop.zoom.toFixed(2)}x · afastado` : `${crop.zoom.toFixed(2)}x`}</small>
+              <small>{crop.zoom < 1 && aspect !== "banner" ? `${crop.zoom.toFixed(2)}x · afastado` : `${crop.zoom.toFixed(2)}x`}</small>
               <input
                 className="imageCropNumberInput"
                 type="number"
-                min={MIN_IMAGE_CROP_ZOOM}
+                min={minZoom}
                 max={MAX_IMAGE_CROP_ZOOM}
                 step="0.01"
                 value={crop.zoom}
@@ -507,7 +529,7 @@ export function ImageUploadField({
           setObjectUrl(nextObjectUrl);
           setPreviewUrl(nextObjectUrl);
           setShouldAutoFitCrop(true);
-          setCrop(sanitizeImageCrop(null));
+          setCrop(normalizeCropForAspect(null, aspect));
           setLocalError(null);
         }}
       />
