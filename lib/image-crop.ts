@@ -49,10 +49,11 @@ export function imageCropStyle(crop?: ImageCrop | null): CSSProperties | undefin
     return undefined;
   }
 
+  const publicZoom = Math.max(1, crop.zoom);
+
   return {
-    objectFit: "contain",
     objectPosition: `${crop.x}% ${crop.y}%`,
-    transform: `scale(${crop.zoom})`,
+    transform: `scale(${publicZoom})`,
     transformOrigin: `${crop.x}% ${crop.y}%`
   };
 }
