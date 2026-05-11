@@ -13,6 +13,23 @@ function optionalDate(value: FormDataEntryValue | null) {
   return text ? text : undefined;
 }
 
+function optionalInt(value: FormDataEntryValue | null) {
+  const text = String(value ?? "").trim();
+  return text ? Number(text) : undefined;
+}
+
+function parseHotelFields(formData: FormData) {
+  return {
+    hasHotel: String(formData.get("hasHotel") ?? "false") === "true",
+    hotelId: String(formData.get("hotelId") ?? "").trim() || undefined,
+    newHotelName: String(formData.get("newHotelName") ?? "").trim() || undefined,
+    newHotelCity: String(formData.get("newHotelCity") ?? "").trim() || undefined,
+    newHotelState: String(formData.get("newHotelState") ?? "").trim().toUpperCase() || undefined,
+    newHotelInternalNotes: String(formData.get("newHotelInternalNotes") ?? "").trim() || undefined,
+    newHotelAvailableRooms: optionalInt(formData.get("newHotelAvailableRooms"))
+  };
+}
+
 function lotErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
@@ -50,6 +67,7 @@ export async function createTicketLotAction(formData: FormData) {
     eventId,
     name: String(formData.get("name") ?? "").trim(),
     description: String(formData.get("description") ?? "").trim() || undefined,
+    ...parseHotelFields(formData),
     priceInCents: Math.round(price * 100),
     serviceFeeBps: parsePercentageToBps(formData.get("serviceFeePercent")),
     ...parsePixDiscount(formData),
@@ -163,6 +181,7 @@ export async function updateTicketLotAction(formData: FormData) {
     eventId,
     name: String(formData.get("name") ?? "").trim(),
     description: String(formData.get("description") ?? "").trim() || undefined,
+    ...parseHotelFields(formData),
     priceInCents: Math.round(price * 100),
     serviceFeeBps: parsePercentageToBps(formData.get("serviceFeePercent")),
     ...parsePixDiscount(formData),

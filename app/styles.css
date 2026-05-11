@@ -34,6 +34,257 @@
   --warning: #f7b731;
 }
 
+.segmentedField {
+  border: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+}
+
+.segmentedField legend {
+  color: var(--muted);
+  flex-basis: 100%;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.segmentedField label {
+  align-items: center;
+  background: #f8fbfa;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+}
+
+.segmentedField input {
+  accent-color: var(--brand);
+}
+
+.compactSegmentedField {
+  margin-top: 4px;
+}
+
+.hotelLotSection,
+.hotelLotFields,
+.hotelCreateGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.hotelCreateGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.hotelNotesField {
+  grid-column: 1 / -1;
+}
+
+.checkoutSectionHeader,
+.hotelGuestLotBlock,
+.hotelGuestCard {
+  display: grid;
+  gap: 12px;
+}
+
+.checkoutSectionHeader h3,
+.checkoutSectionHeader p,
+.hotelGuestCard h4,
+.hotelGuestCard h3 {
+  margin: 0;
+}
+
+.hotelGuestCheckoutSection {
+  gap: 18px;
+}
+
+.hotelGuestLotBlock {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.hotelGuestLotHeader {
+  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  justify-content: space-between;
+}
+
+.hotelGuestLotHeader span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.hotelGuestCard {
+  background: #f8fbfa;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.hotelGuestColumns {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.hotelGuestColumns > div {
+  display: grid;
+  gap: 12px;
+}
+
+.homeListToolbar {
+  display: grid;
+  gap: 18px;
+}
+
+.homeListFilters {
+  align-items: end;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(160px, 1fr)) auto;
+}
+
+.homeListFilterActions,
+.homeListExportActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.homeListExportActions {
+  justify-content: flex-end;
+}
+
+.homeListSummaryGrid,
+.homeListMetaGrid,
+.homeListGuestGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.homeListSummaryGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 18px;
+}
+
+.homeListEntries {
+  display: grid;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.homeListEntryCard {
+  display: grid;
+  gap: 18px;
+}
+
+.homeListEntryHeader {
+  align-items: start;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 380px);
+}
+
+.homeListEntryHeader h2,
+.homeListEntryHeader p,
+.homeListGuestGrid h3 {
+  margin: 0;
+}
+
+.homeListEntryHeader p {
+  color: var(--muted);
+  line-height: 1.45;
+  margin-top: 6px;
+}
+
+.homeListEntryControls,
+.homeListGuestGrid section {
+  display: grid;
+  gap: 12px;
+}
+
+.homeListEntryControls {
+  grid-template-columns: minmax(0, 1fr) minmax(110px, 0.8fr);
+}
+
+.homeListMetaGrid {
+  background: #f8fbfa;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 14px;
+}
+
+.homeListMetaGrid div {
+  display: grid;
+  gap: 4px;
+}
+
+.homeListMetaGrid span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.homeListGuestGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.statusOk {
+  background: #e7f7ef;
+  color: #075c40;
+}
+
+.statusWarning {
+  background: #fff6df;
+  color: #7a4b00;
+}
+
+.statusDanger {
+  background: #fff0f2;
+  color: #8f1830;
+}
+
+@media (max-width: 900px) {
+  .hotelCreateGrid,
+  .hotelGuestColumns,
+  .homeListFilters,
+  .homeListSummaryGrid,
+  .homeListEntryHeader,
+  .homeListEntryControls,
+  .homeListMetaGrid,
+  .homeListGuestGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .homeListToolbar,
+  .homeListEntryCard .formActions,
+  .homeListEntryControls,
+  .adminSidebar,
+  .adminTopbar {
+    display: none !important;
+  }
+
+  .homeListEntryCard {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+}
+
 /* Premium public landing v2 */
 .homePage {
   background: linear-gradient(180deg, var(--public-hero-dark) 0, var(--public-hero-mid) 520px, #f6f8fb 520px, #f6f8fb 100%);

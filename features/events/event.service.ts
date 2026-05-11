@@ -185,7 +185,17 @@ export async function getEventForManagement(
     },
     include: {
       lots: {
-        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        include: {
+          hotel: {
+            select: {
+              id: true,
+              name: true,
+              city: true,
+              state: true
+            }
+          }
+        }
       },
       leads: {
         orderBy: {
@@ -274,7 +284,17 @@ export async function getPublicEventBySlug(slug: string, organizationId: string)
         where: {
           status: "ACTIVE"
         },
-        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        include: {
+          hotel: {
+            select: {
+              id: true,
+              name: true,
+              city: true,
+              state: true
+            }
+          }
+        }
       }
     }
   });
@@ -507,10 +527,14 @@ export async function duplicateEvent(eventId: string) {
       const duplicatedLot = await tx.ticketLot.create({
         data: {
           eventId: duplicatedEvent.id,
+          hotelId: lot.hotelId,
           name: lot.name,
           description: lot.description,
+          hasHotel: lot.hasHotel,
           priceInCents: lot.priceInCents,
           serviceFeeBps: lot.serviceFeeBps,
+          pixDiscountPercentBps: lot.pixDiscountPercentBps,
+          pixDiscountFixedInCents: lot.pixDiscountFixedInCents,
           cardInterestBpsPerInstallment: lot.cardInterestBpsPerInstallment,
           cardInterestStartsAtInstallment: lot.cardInterestStartsAtInstallment,
           totalQuantity: lot.totalQuantity,

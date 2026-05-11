@@ -29,6 +29,10 @@ function checkoutValidationMessage(error: unknown) {
     if (field === "items") {
       return "Selecione pelo menos 1 ingresso.";
     }
+
+    if (field?.startsWith("hotelGuests")) {
+      return "Preencha os dados obrigatórios dos hóspedes.";
+    }
   }
 
   return "Verifique comprador e ingressos selecionados.";
@@ -41,6 +45,49 @@ function checkoutValidationField(error: unknown) {
   }
 
   return undefined;
+}
+
+function parseHotelGuests(formData: FormData, lotIds: string[]) {
+  const hotelGuests: Array<{
+    lotId: string;
+    guestIndex: number;
+    guest1Name?: string;
+    guest1Document?: string;
+    guest1BirthDate?: string;
+    guest1Email?: string;
+    guest1Phone?: string;
+    guest2Name?: string;
+    guest2Document?: string;
+    guest2BirthDate?: string;
+  }> = [];
+
+  lotIds.forEach((lotId) => {
+    const quantity = Number(formData.get(`quantity_${lotId}`) ?? 0);
+
+    for (let index = 1; index <= quantity; index += 1) {
+      if (String(formData.get(`hotelGuest_${lotId}_${index}_enabled`) ?? "") !== "1") {
+        continue;
+      }
+
+      const fieldName = (name: string) => `hotelGuest_${lotId}_${index}_${name}`;
+      const text = (name: string) => String(formData.get(fieldName(name)) ?? "").trim() || undefined;
+
+      hotelGuests.push({
+        lotId,
+        guestIndex: index,
+        guest1Name: text("guest1Name"),
+        guest1Document: text("guest1Document"),
+        guest1BirthDate: text("guest1BirthDate"),
+        guest1Email: text("guest1Email"),
+        guest1Phone: text("guest1Phone"),
+        guest2Name: text("guest2Name"),
+        guest2Document: text("guest2Document"),
+        guest2BirthDate: text("guest2BirthDate")
+      });
+    }
+  });
+
+  return hotelGuests;
 }
 
 function hasSelectedTickets(formData: FormData, lotIds: string[]) {
@@ -119,6 +166,7 @@ export async function createCheckoutOrderAction(formData: FormData) {
     metaFbc: String(formData.get("metaFbc") ?? "").trim() || undefined,
     clientIpAddress: ip,
     clientUserAgent: userAgent,
+    hotelGuests: parseHotelGuests(formData, lotIds),
     items: lotIds.map((lotId) => ({
       lotId,
       quantity: Number(formData.get(`quantity_${lotId}`) ?? 0)

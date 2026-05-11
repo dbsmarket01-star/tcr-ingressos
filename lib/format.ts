@@ -32,3 +32,13 @@ export function formatDateTimeInput(value?: string | Date | null) {
   const offsetInMs = date.getTimezoneOffset() * 60 * 1000;
   return new Date(date.getTime() - offsetInMs).toISOString().slice(0, 16);
 }
+
+export function formatDateInput(value?: string | Date | null) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  const offsetInMs = date.getTimezoneOffset() * 60 * 1000;
+  return new Date(date.getTime() - offsetInMs).toISOString().slice(0, 10);
+}

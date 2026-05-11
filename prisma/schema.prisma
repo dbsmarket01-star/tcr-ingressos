@@ -59,6 +59,12 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum HomeListStatus {
+  PENDING
+  CONFIRMED
+  CANCELED
+}
+
 enum TicketStatus {
   ACTIVE
   USED
@@ -245,6 +251,8 @@ model Organization {
   adminUsers        AdminUser[]
   companySettings   CompanySettings[]
   events            Event[]
+  hotels            Hotel[]
+  homeListEntries   HomeListEntry[]
   paymentSplitRules PaymentSplitRule[]
 
   @@index([isActive])
@@ -422,6 +430,7 @@ model Event {
   tickets   Ticket[]
   checkIns  CheckIn[]
   coupons   Coupon[]
+  homeListEntries HomeListEntry[]
   presaleChecks EventPresaleCheck[]
   leads     EventLead[]
   leadCaptureAttempts LeadCaptureAttempt[]
@@ -623,8 +632,10 @@ model EventPresaleCheck {
 model TicketLot {
   id               String    @id @default(cuid())
   eventId          String
+  hotelId          String?
   name             String
   description      String?
+  hasHotel         Boolean   @default(false)
   priceInCents     Int
   serviceFeeBps    Int       @default(0)
   pixDiscountPercentBps Int  @default(0)
@@ -644,10 +655,33 @@ model TicketLot {
   updatedAt        DateTime  @updatedAt
 
   event      Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  hotel      Hotel?      @relation(fields: [hotelId], references: [id], onDelete: SetNull)
   orderItems OrderItem[]
+  orderHotelGuests OrderHotelGuest[]
+  homeListEntries HomeListEntry[]
   tickets    Ticket[]
 
   @@index([eventId, status, sortOrder])
+  @@index([hotelId])
+}
+
+model Hotel {
+  id              String   @id @default(cuid())
+  organizationId  String
+  name            String
+  city            String
+  state           String
+  internalNotes   String?
+  availableRooms  Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  ticketLots TicketLot[]
+  orderHotelGuests OrderHotelGuest[]
+  homeListEntries HomeListEntry[]
+
+  @@index([organizationId, name])
 }
 
 model Customer {
@@ -724,6 +758,8 @@ model Order {
   items    OrderItem[]
   payment  Payment?
   tickets  Ticket[]
+  orderHotelGuests OrderHotelGuest[]
+  homeListEntries HomeListEntry[]
 
   @@index([eventId, status, createdAt])
   @@index([status, expiresAt])
@@ -748,9 +784,79 @@ model OrderItem {
   order   Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
   lot     TicketLot  @relation(fields: [lotId], references: [id], onDelete: Restrict)
   tickets Ticket[]
+  hotelGuests OrderHotelGuest[]
+  homeListEntries HomeListEntry[]
 
   @@index([orderId])
   @@index([lotId])
+}
+
+model OrderHotelGuest {
+  id             String   @id @default(cuid())
+  orderId        String
+  orderItemId    String
+  lotId          String
+  hotelId        String
+  guestIndex     Int      @default(1)
+  guest1Name     String
+  guest1Document String
+  guest1BirthDate DateTime
+  guest1Email    String
+  guest1Phone    String
+  guest2Name     String
+  guest2Document String
+  guest2BirthDate DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  lot TicketLot @relation(fields: [lotId], references: [id], onDelete: Restrict)
+  hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  homeListEntry HomeListEntry?
+
+  @@unique([orderItemId, guestIndex])
+  @@index([orderId])
+  @@index([hotelId])
+}
+
+model HomeListEntry {
+  id              String         @id @default(cuid())
+  organizationId  String
+  eventId         String
+  hotelId         String
+  orderId         String
+  orderItemId     String
+  lotId           String
+  orderHotelGuestId String      @unique
+  status          HomeListStatus @default(CONFIRMED)
+  roomNumber      String?
+  purchaseDate    DateTime
+  confirmedAt     DateTime?
+  canceledAt      DateTime?
+  guest1Name      String
+  guest1Document  String
+  guest1BirthDate DateTime
+  guest1Email     String
+  guest1Phone     String
+  guest2Name      String
+  guest2Document  String
+  guest2BirthDate DateTime
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  lot TicketLot @relation(fields: [lotId], references: [id], onDelete: Restrict)
+  orderHotelGuest OrderHotelGuest @relation(fields: [orderHotelGuestId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, eventId])
+  @@index([organizationId, hotelId])
+  @@index([organizationId, status])
+  @@index([orderId])
 }
 
 model Payment {

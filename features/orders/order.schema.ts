@@ -28,7 +28,21 @@ export const checkoutOrderSchema = z.object({
     )
     .refine((items) => items.some((item) => item.quantity > 0), {
       message: "Selecione pelo menos um ingresso."
+    }),
+  hotelGuests: z.array(
+    z.object({
+      lotId: z.string().min(1),
+      guestIndex: z.number().int().min(1),
+      guest1Name: z.string().optional(),
+      guest1Document: z.string().optional(),
+      guest1BirthDate: z.string().optional(),
+      guest1Email: z.string().optional(),
+      guest1Phone: z.string().optional(),
+      guest2Name: z.string().optional(),
+      guest2Document: z.string().optional(),
+      guest2BirthDate: z.string().optional()
     })
+  ).optional()
 });
 
 export type CheckoutOrderInput = z.infer<typeof checkoutOrderSchema>;

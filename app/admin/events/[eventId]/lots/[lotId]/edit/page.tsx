@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { HotelLotFields } from "@/components/forms/HotelLotFields";
 import { requirePermission } from "@/features/auth/auth.service";
+import { listHotelsForOrganization } from "@/features/hospitality/hotel.service";
 import { updateTicketLotAction } from "@/features/lots/lot.actions";
 import { getTicketLotForEdit } from "@/features/lots/lot.service";
 import { formatDateTimeInput } from "@/lib/format";
@@ -17,10 +19,13 @@ type EditLotPageProps = {
 };
 
 export default async function EditLotPage({ params, searchParams }: EditLotPageProps) {
-  await requirePermission("EVENTS");
+  const admin = await requirePermission("EVENTS");
   const { eventId, lotId } = await params;
   const query = searchParams ? await searchParams : {};
-  const lot = await getTicketLotForEdit(eventId, lotId);
+  const [lot, hotels] = await Promise.all([
+    getTicketLotForEdit(eventId, lotId),
+    listHotelsForOrganization(admin.organizationId)
+  ]);
 
   if (!lot) {
     notFound();
@@ -69,6 +74,13 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
             </label>
           </div>
         </div>
+
+        <HotelLotFields
+          hotels={hotels}
+          defaultHasHotel={lot.hasHotel}
+          defaultHotelId={lot.hotelId}
+          defaultHotel={lot.hotel}
+        />
 
         <div className="formSection">
           <h2>Taxas e parcelamento</h2>

@@ -1,16 +1,43 @@
-import { EventStatus, OrderStatus, PaymentProvider, PaymentStatus, Prisma } from "@prisma/client";
+import { EventStatus, HomeListStatus, OrderStatus, PaymentProvider, PaymentStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { calculateCouponDiscountInCents, getValidCouponForEvent } from "@/features/coupons/coupon.service";
 import { createPublicOrderUrl, sendOrderExpiredEmail } from "@/features/email/email.service";
+import { updateHomeListStatusForOrder } from "@/features/hospitality/home-list.service";
 import { calculatePixDiscountInCents, calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import { getOrderReservationMinutes } from "@/features/settings/company-settings.service";
 import type { CheckoutOrderInput } from "./order.schema";
 
 const FALLBACK_ORDER_RESERVATION_MINUTES = 120;
+type CheckoutHotelGuestInput = NonNullable<CheckoutOrderInput["hotelGuests"]>[number];
 
 export function createOrderCode() {
   const random = Math.random().toString(36).slice(2, 8).toUpperCase();
   return `ING-${Date.now().toString(36).toUpperCase()}-${random}`;
+}
+
+function compactText(value?: string | null) {
+  return String(value ?? "").trim();
+}
+
+function requiredHotelField(value: string | undefined, message: string) {
+  const text = compactText(value);
+
+  if (!text) {
+    throw new Error(message);
+  }
+
+  return text;
+}
+
+function parseHotelBirthDate(value: string | undefined, message: string) {
+  const text = requiredHotelField(value, message);
+  const date = new Date(`${text}T00:00:00.000Z`);
+
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(message);
+  }
+
+  return date;
 }
 
 export async function createCheckoutOrder(input: CheckoutOrderInput, organizationId?: string | null) {
@@ -66,6 +93,28 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
         cardInterestStartsAtInstallment: number;
         totalInCents: number;
       }> = [];
+      const hotelGuestsToCreate: Array<{
+        lotId: string;
+        hotelId: string;
+        guestIndex: number;
+        guest1Name: string;
+        guest1Document: string;
+        guest1BirthDate: Date;
+        guest1Email: string;
+        guest1Phone: string;
+        guest2Name: string;
+        guest2Document: string;
+        guest2BirthDate: Date;
+      }> = [];
+      const hotelGuestsByLot = new Map<string, Map<number, CheckoutHotelGuestInput>>();
+
+      for (const guest of input.hotelGuests ?? []) {
+        if (!hotelGuestsByLot.has(guest.lotId)) {
+          hotelGuestsByLot.set(guest.lotId, new Map());
+        }
+
+        hotelGuestsByLot.get(guest.lotId)!.set(guest.guestIndex, guest);
+      }
 
       for (const item of selectedItems) {
         const lot = await tx.ticketLot.findFirst({
@@ -73,6 +122,14 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
             id: item.lotId,
             eventId: event.id,
             status: "ACTIVE"
+          },
+          include: {
+            hotel: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
           }
         });
 
@@ -125,6 +182,33 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           cardInterestStartsAtInstallment: lot.cardInterestStartsAtInstallment,
           totalInCents: lot.priceInCents * item.quantity
         });
+
+        if (lot.hasHotel) {
+          if (!lot.hotelId || !lot.hotel) {
+            throw new Error(`O ingresso ${lot.name} está marcado com hotel, mas nenhum hotel foi vinculado.`);
+          }
+
+          const guestsForLot = hotelGuestsByLot.get(lot.id);
+
+          for (let guestIndex = 1; guestIndex <= item.quantity; guestIndex += 1) {
+            const guest = guestsForLot?.get(guestIndex);
+            const context = `${lot.name} - hospedagem ${guestIndex}`;
+
+            hotelGuestsToCreate.push({
+              lotId: lot.id,
+              hotelId: lot.hotelId,
+              guestIndex,
+              guest1Name: requiredHotelField(guest?.guest1Name || input.buyerName, `Informe o nome do hóspede principal em ${context}.`),
+              guest1Document: requiredHotelField(guest?.guest1Document || input.buyerDocument, `Informe o CPF do hóspede principal em ${context}.`),
+              guest1BirthDate: parseHotelBirthDate(guest?.guest1BirthDate, `Informe a data de nascimento do hóspede principal em ${context}.`),
+              guest1Email: requiredHotelField(guest?.guest1Email || input.buyerEmail, `Informe o e-mail do hóspede principal em ${context}.`),
+              guest1Phone: requiredHotelField(guest?.guest1Phone || input.buyerPhone, `Informe o telefone do hóspede principal em ${context}.`),
+              guest2Name: requiredHotelField(guest?.guest2Name, `Informe o nome do acompanhante em ${context}.`),
+              guest2Document: requiredHotelField(guest?.guest2Document, `Informe o CPF do acompanhante em ${context}.`),
+              guest2BirthDate: parseHotelBirthDate(guest?.guest2BirthDate, `Informe a data de nascimento do acompanhante em ${context}.`)
+            });
+          }
+        }
       }
 
       const subtotalInCents = orderItems.reduce((sum, item) => sum + item.totalInCents, 0);
@@ -200,6 +284,12 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           }
         },
         include: {
+          items: {
+            select: {
+              id: true,
+              lotId: true
+            }
+          },
           customer: {
             select: {
               name: true,
@@ -223,6 +313,36 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           }
         }
       });
+
+      if (hotelGuestsToCreate.length > 0) {
+        const orderItemsByLotId = new Map(order.items.map((item) => [item.lotId, item.id]));
+
+        await tx.orderHotelGuest.createMany({
+          data: hotelGuestsToCreate.map((guest) => {
+            const orderItemId = orderItemsByLotId.get(guest.lotId);
+
+            if (!orderItemId) {
+              throw new Error("Não foi possível vincular os hóspedes ao item do pedido.");
+            }
+
+            return {
+              orderId: order.id,
+              orderItemId,
+              lotId: guest.lotId,
+              hotelId: guest.hotelId,
+              guestIndex: guest.guestIndex,
+              guest1Name: guest.guest1Name,
+              guest1Document: guest.guest1Document,
+              guest1BirthDate: guest.guest1BirthDate,
+              guest1Email: guest.guest1Email,
+              guest1Phone: guest.guest1Phone,
+              guest2Name: guest.guest2Name,
+              guest2Document: guest.guest2Document,
+              guest2BirthDate: guest.guest2BirthDate
+            };
+          })
+        });
+      }
 
       return order;
     },
@@ -337,6 +457,8 @@ export async function expirePendingOrders(options?: {
             }
           });
         }
+
+        await updateHomeListStatusForOrder(tx, order.id, HomeListStatus.CANCELED);
 
         return { expired: true, released };
       },
@@ -454,6 +576,8 @@ export async function expirePendingOrderByCode(code: string, organizationId?: st
         });
       }
 
+      await updateHomeListStatusForOrder(tx, order.id, HomeListStatus.CANCELED);
+
       return {
         expiredCount: 1,
         releasedQuantity
@@ -558,6 +682,8 @@ export async function cancelPendingOrderByCode(
           }
         });
       }
+
+      await updateHomeListStatusForOrder(tx, order.id, HomeListStatus.CANCELED);
 
       return {
         canceled: true,
@@ -694,6 +820,8 @@ export async function refundPaidOrderByCode(
           failureReason: reason
         }
       });
+
+      await updateHomeListStatusForOrder(tx, order.id, HomeListStatus.CANCELED);
 
       return {
         refunded: true,

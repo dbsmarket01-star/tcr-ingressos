@@ -12,6 +12,7 @@ import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import { buildEventSeo } from "@/features/seo/event-seo";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
+import { getPublicEventBranding } from "@/lib/event-branding";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { MetaTrackingFields } from "../MetaTrackingFields";
 
@@ -135,6 +136,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
   const checkoutError = typeof query.checkoutError === "string" ? query.checkoutError : null;
   const tracking = getTrackingParamsFromSearch(query, `/evento/${event.slug}`);
   const totalQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
+  const hotelItems = selectedItems.filter((item) => item.lot.hasHotel);
   const ticketsTotalInCents = selectedItems.reduce((sum, item) => sum + item.subtotalInCents, 0);
   const serviceFeeTotalInCents = selectedItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
   const orderTotalInCents = selectedItems.reduce((sum, item) => sum + item.totalInCents, 0);
@@ -147,17 +149,18 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
     youtubeUrl?: string | null;
     whatsappUrl?: string | null;
   };
+  const eventBranding = getPublicEventBranding(organizationContext, event);
 
   return (
     <main className="shell">
       <header className="topbar">
-        <Link className="brand" href="/">
-          {organizationContext.brandLogoUrl ? (
-            <img alt={organizationContext.brandName} className="brandLogo" src={organizationContext.brandLogoUrl} />
+        <Link className="brand" href={eventBranding.homeHref}>
+          {eventBranding.brandLogoUrl ? (
+            <img alt={eventBranding.brandName} className="brandLogo" src={eventBranding.brandLogoUrl} />
           ) : (
-            <span className="brandMark">{organizationContext.brandMark}</span>
+            <span className="brandMark">{eventBranding.brandMark}</span>
           )}
-          {!organizationContext.brandLogoUrl ? <span>{organizationContext.brandName}</span> : null}
+          {!eventBranding.brandLogoUrl ? <span>{eventBranding.brandName}</span> : null}
         </Link>
         <nav className="nav" aria-label="Navegação">
           <Link href={`/evento/${event.slug}#ingressos`}>Ingressos</Link>
@@ -310,6 +313,92 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                   <small>Usado apenas para suporte do pedido, caso seja necessário.</small>
                 </label>
               </div>
+
+              {hotelItems.length > 0 ? (
+                <div className="checkoutBuyer hotelGuestCheckoutSection">
+                  <div className="checkoutSectionHeader">
+                    <span className="checkoutStepEyebrow">HOME LIST / hotelaria</span>
+                    <h3>Dados dos hóspedes</h3>
+                    <p>
+                      Os ingressos com hotel precisam desses dados para liberar a reserva após a aprovação do pagamento.
+                    </p>
+                  </div>
+                  {hotelItems.map((item) => (
+                    <div className="hotelGuestLotBlock" key={`hotel-${item.lot.id}`}>
+                      <div className="hotelGuestLotHeader">
+                        <strong>{item.lot.name}</strong>
+                        {item.lot.hotel ? (
+                          <span>
+                            {item.lot.hotel.name} - {item.lot.hotel.city}/{item.lot.hotel.state}
+                          </span>
+                        ) : null}
+                      </div>
+                      {Array.from({ length: item.quantity }, (_, index) => {
+                        const guestIndex = index + 1;
+                        const prefix = `hotelGuest_${item.lot.id}_${guestIndex}`;
+
+                        return (
+                          <section className="hotelGuestCard" key={prefix}>
+                            <input type="hidden" name={`${prefix}_enabled`} value="1" />
+                            <h4>Hospedagem {guestIndex}</h4>
+                            <div className="hotelGuestColumns">
+                              <div>
+                                <strong>Hóspede principal</strong>
+                                <label className="field">
+                                  <span>Nome completo</span>
+                                  <input name={`${prefix}_guest1Name`} defaultValue={buyerProfile?.name || ""} required />
+                                </label>
+                                <label className="field">
+                                  <span>CPF</span>
+                                  <input name={`${prefix}_guest1Document`} inputMode="numeric" required />
+                                </label>
+                                <label className="field">
+                                  <span>Data de nascimento</span>
+                                  <input name={`${prefix}_guest1BirthDate`} type="date" required />
+                                </label>
+                                <label className="field">
+                                  <span>E-mail</span>
+                                  <input
+                                    name={`${prefix}_guest1Email`}
+                                    type="email"
+                                    defaultValue={buyerProfile?.email || ""}
+                                    required
+                                  />
+                                </label>
+                                <label className="field">
+                                  <span>Telefone</span>
+                                  <input
+                                    name={`${prefix}_guest1Phone`}
+                                    type="tel"
+                                    inputMode="tel"
+                                    defaultValue={buyerProfile?.phone || ""}
+                                    required
+                                  />
+                                </label>
+                              </div>
+                              <div>
+                                <strong>Acompanhante / cônjuge</strong>
+                                <label className="field">
+                                  <span>Nome completo</span>
+                                  <input name={`${prefix}_guest2Name`} required />
+                                </label>
+                                <label className="field">
+                                  <span>CPF</span>
+                                  <input name={`${prefix}_guest2Document`} inputMode="numeric" required />
+                                </label>
+                                <label className="field">
+                                  <span>Data de nascimento</span>
+                                  <input name={`${prefix}_guest2BirthDate`} type="date" required />
+                                </label>
+                              </div>
+                            </div>
+                          </section>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
 
               <SubmitButton className="button fullButton" pendingText="Criando pedido...">
                 Continuar para pagamento

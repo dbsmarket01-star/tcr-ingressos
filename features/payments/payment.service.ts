@@ -1,6 +1,7 @@
-import { OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
+import { HomeListStatus, OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createPublicTicketUrl, sendTicketsEmail } from "@/features/email/email.service";
+import { createHomeListEntriesForApprovedOrder, updateHomeListStatusForOrder } from "@/features/hospitality/home-list.service";
 import { expirePendingOrderByCode } from "@/features/orders/order.service";
 import { calculateCardInterestInCents } from "@/features/pricing/pricing";
 import { getCreditCardInstallmentLimitForEvent } from "@/lib/payment-installments";
@@ -619,6 +620,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         (payment.status === PaymentStatus.APPROVED || payment.order.status === OrderStatus.PAID) &&
         payload.status !== "REFUNDED"
       ) {
+        await createHomeListEntriesForApprovedOrder(tx, payment.orderId, new Date());
+
         const approvedTicketsEmail = buildApprovedTicketsEmail(
           payment.order.tickets.map((ticket) => ({
             code: ticket.code,
@@ -658,6 +661,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
 
       if (payload.status === "APPROVED") {
         const capturedAmountInCents = resolveCapturedAmountInCents(payment, payload.rawPayload);
+        const paidAt = new Date();
 
         if (payment.order.status !== OrderStatus.PENDING_PAYMENT) {
           const currentPayment = await tx.payment.update({
@@ -686,7 +690,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
             status: PaymentStatus.APPROVED,
             externalId: payload.externalId || payment.externalId,
             amountInCents: capturedAmountInCents,
-            paidAt: new Date(),
+            paidAt,
             failedAt: null,
             failureReason: null,
             rawPayload: (payload.rawPayload || payload) as Prisma.InputJsonValue
@@ -764,7 +768,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           data: {
             status: OrderStatus.PAID,
             totalInCents: capturedAmountInCents,
-            paidAt: new Date(),
+            paidAt,
             canceledAt: null
           }
         });
@@ -785,6 +789,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
             }
           });
         }
+
+        await createHomeListEntriesForApprovedOrder(tx, payment.orderId, paidAt);
 
         const updatedPayment = await tx.payment.findUniqueOrThrow({
           where: { id: payment.id }
@@ -858,6 +864,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           }
         });
 
+        await updateHomeListStatusForOrder(tx, payment.orderId, HomeListStatus.CANCELED);
+
         const updatedPayment = await tx.payment.findUniqueOrThrow({
           where: { id: payment.id }
         });
@@ -921,6 +929,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
             }
           });
         }
+
+        await updateHomeListStatusForOrder(tx, payment.orderId, HomeListStatus.CANCELED);
 
         const updatedPayment = await tx.payment.findUniqueOrThrow({
           where: { id: payment.id }
