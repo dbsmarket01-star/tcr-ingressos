@@ -50,7 +50,7 @@ export function imageCropStyle(crop?: ImageCrop | null): CSSProperties | undefin
   }
 
   return {
-    objectFit: "cover",
+    objectFit: "contain",
     objectPosition: `${crop.x}% ${crop.y}%`,
     transform: `scale(${crop.zoom})`,
     transformOrigin: `${crop.x}% ${crop.y}%`

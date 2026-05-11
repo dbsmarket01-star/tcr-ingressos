@@ -73,16 +73,10 @@ function buildDefaultCrop(meta: ImageMeta | null, aspect: NonNullable<ImageUploa
     return sanitizeImageCrop(null);
   }
 
-  const recommendedRatio = recommendedRatios[aspect];
-  const rawFitZoom = Math.min(meta.ratio / recommendedRatio, recommendedRatio / meta.ratio);
-  const fitZoom = Math.min(1, rawFitZoom);
-  const safeFitZoom = fitZoom < 1 ? fitZoom * 0.98 : 1;
-  const paddedFitZoom = fitZoom < 1 ? Math.floor(safeFitZoom * 100) / 100 : 1;
-
   return sanitizeImageCrop({
     x: 50,
     y: 50,
-    zoom: Number(paddedFitZoom.toFixed(2))
+    zoom: 1
   });
 }
 
@@ -138,7 +132,7 @@ function analyzeAspect(meta: ImageMeta | null, aspect: NonNullable<ImageUploadFi
 
 function cropPreviewStyle(crop: ImageCrop): CSSProperties {
   return {
-    objectFit: "cover",
+    objectFit: "contain",
     objectPosition: `${crop.x}% ${crop.y}%`,
     transform: `scale(${crop.zoom})`,
     transformOrigin: `${crop.x}% ${crop.y}%`
@@ -295,8 +289,8 @@ export function ImageUploadField({
         <div className="imageCropTool">
           <div className="imageCropToolHeader">
             <div>
-              <strong>Imagem completa e recorte público</strong>
-              <small>Confira a arte inteira sem corte e ajuste ao lado o enquadramento que vai aparecer para o cliente.</small>
+              <strong>Imagem completa e prévia pública</strong>
+              <small>A arte entra inteira por padrão. Use o zoom e a posição só quando quiser aproximar ou ajustar o enquadramento.</small>
             </div>
             {imageMeta ? <span className="imageCropMeta">{imageMeta.width} x {imageMeta.height} px</span> : null}
           </div>
@@ -366,7 +360,7 @@ export function ImageUploadField({
             </div>
             <div className="imageCropPanel">
               <div className="imageCropPanelHeader">
-                <strong>Recorte público</strong>
+                <strong>Prévia pública</strong>
                 <small>É assim que o cliente verá essa imagem no espaço final.</small>
               </div>
               <div className={`imageCropStage imageCropStage${aspect}`}>
