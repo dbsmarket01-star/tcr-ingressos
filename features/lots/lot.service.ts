@@ -60,39 +60,28 @@ async function resolveHotelIdForLot(
   return hotel.id;
 }
 
-async function getEventSalesLimit(tx: Prisma.TransactionClient, eventId: string) {
+async function getTicketSalesWindow(tx: Prisma.TransactionClient, eventId: string) {
   const event = await tx.event.findUnique({
     where: { id: eventId },
     select: {
-      startsAt: true
+      startsAt: true,
+      endsAt: true
     }
   });
 
   if (!event) {
-    throw new Error("Evento nao encontrado para validar as vendas.");
+    throw new Error("Evento nao encontrado para definir as vendas do ingresso.");
   }
 
-  return event.startsAt;
-}
-
-function validateLotSalesWindow(input: TicketLotInput, eventStartsAt: Date) {
-  if (input.salesStartsAt && input.salesStartsAt > eventStartsAt) {
-    throw new Error("O início das vendas do ingresso não pode ser depois da data do evento. Deixe em branco para vender imediatamente.");
-  }
-
-  if (input.salesEndsAt && input.salesEndsAt > eventStartsAt) {
-    throw new Error("O fim das vendas do ingresso não pode ser depois da data do evento.");
-  }
-
-  if (input.salesStartsAt && input.salesEndsAt && input.salesStartsAt > input.salesEndsAt) {
-    throw new Error("O início das vendas não pode ser depois do fim das vendas.");
-  }
+  return {
+    salesStartsAt: null,
+    salesEndsAt: event.endsAt || event.startsAt
+  };
 }
 
 export async function createTicketLot(input: TicketLotInput & { status: LotStatus }) {
   return prisma.$transaction(async (tx) => {
-    const eventStartsAt = await getEventSalesLimit(tx, input.eventId);
-    validateLotSalesWindow(input, eventStartsAt);
+    const salesWindow = await getTicketSalesWindow(tx, input.eventId);
     const hotelId = await resolveHotelIdForLot(tx, input);
 
     return tx.ticketLot.create({
@@ -111,8 +100,7 @@ export async function createTicketLot(input: TicketLotInput & { status: LotStatu
         totalQuantity: input.totalQuantity,
         minPerOrder: input.minPerOrder,
         maxPerOrder: input.maxPerOrder,
-        salesStartsAt: input.salesStartsAt || null,
-        salesEndsAt: input.salesEndsAt || null,
+        ...salesWindow,
         status: input.status
       }
     });
@@ -139,6 +127,7 @@ export async function getTicketLotForEdit(eventId: string, lotId: string) {
           title: true,
           slug: true,
           startsAt: true,
+          endsAt: true,
           organizationId: true
         }
       },
@@ -149,8 +138,7 @@ export async function getTicketLotForEdit(eventId: string, lotId: string) {
 
 export async function updateTicketLot(lotId: string, input: TicketLotInput & { status: LotStatus }) {
   return prisma.$transaction(async (tx) => {
-    const eventStartsAt = await getEventSalesLimit(tx, input.eventId);
-    validateLotSalesWindow(input, eventStartsAt);
+    const salesWindow = await getTicketSalesWindow(tx, input.eventId);
 
     const lot = await tx.ticketLot.findUnique({
       where: {
@@ -192,8 +180,7 @@ export async function updateTicketLot(lotId: string, input: TicketLotInput & { s
         totalQuantity: input.totalQuantity,
         minPerOrder: input.minPerOrder,
         maxPerOrder: input.maxPerOrder,
-        salesStartsAt: input.salesStartsAt || null,
-        salesEndsAt: input.salesEndsAt || null,
+        ...salesWindow,
         status: input.status
       }
     });

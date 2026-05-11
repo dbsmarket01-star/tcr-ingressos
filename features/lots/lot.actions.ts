@@ -8,11 +8,6 @@ import { parseInstallmentStart, parseMoneyToCents, parsePercentageToBps } from "
 import { createTicketLot, updateTicketLot, updateTicketLotPricing, updateTicketLotStatus } from "./lot.service";
 import { ticketLotPricingSchema, ticketLotSchema } from "./lot.schema";
 
-function optionalDate(value: FormDataEntryValue | null) {
-  const text = String(value ?? "").trim();
-  return text ? text : undefined;
-}
-
 function optionalInt(value: FormDataEntryValue | null) {
   const text = String(value ?? "").trim();
   return text ? Number(text) : undefined;
@@ -75,9 +70,7 @@ export async function createTicketLotAction(formData: FormData) {
     cardInterestStartsAtInstallment: parseInstallmentStart(formData.get("cardInterestStartsAtInstallment")),
     totalQuantity: Number(formData.get("totalQuantity") ?? 0),
     minPerOrder: Number(formData.get("minPerOrder") ?? 1),
-    maxPerOrder: Number(formData.get("maxPerOrder") ?? 10),
-    salesStartsAt: optionalDate(formData.get("salesStartsAt")),
-    salesEndsAt: optionalDate(formData.get("salesEndsAt"))
+    maxPerOrder: Number(formData.get("maxPerOrder") ?? 10)
   });
 
   if (!parsed.success) {
@@ -189,9 +182,7 @@ export async function updateTicketLotAction(formData: FormData) {
     cardInterestStartsAtInstallment: parseInstallmentStart(formData.get("cardInterestStartsAtInstallment")),
     totalQuantity: Number(formData.get("totalQuantity") ?? 0),
     minPerOrder: Number(formData.get("minPerOrder") ?? 1),
-    maxPerOrder: Number(formData.get("maxPerOrder") ?? 10),
-    salesStartsAt: optionalDate(formData.get("salesStartsAt")),
-    salesEndsAt: optionalDate(formData.get("salesEndsAt"))
+    maxPerOrder: Number(formData.get("maxPerOrder") ?? 10)
   });
 
   if (!parsed.success) {
