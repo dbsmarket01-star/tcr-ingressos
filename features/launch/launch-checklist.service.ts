@@ -265,7 +265,10 @@ export async function getLaunchChecklist(eventId?: string, allowedEventIds?: Eve
       label: "Asaas ativo",
       description: "Pix e cartao transparentes dependem do provedor Asaas.",
       status: getStatus(health.asaas.enabled && health.asaas.apiKeyConfigured),
-      action: health.asaas.enabled && health.asaas.apiKeyConfigured ? undefined : "Configurar PAYMENT_PROVIDER=ASAAS e ASAAS_API_KEY.",
+      action:
+        health.asaas.enabled && health.asaas.apiKeyConfigured
+          ? undefined
+          : `Configurar PAYMENT_PROVIDER=ASAAS e ${health.asaas.apiKeyEnvName}.`,
       href: "/admin/settings"
     },
     {

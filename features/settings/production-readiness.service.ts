@@ -223,13 +223,13 @@ export async function getProductionReadiness(organizationId?: string) {
     },
     {
       label: "Chave Asaas",
-      description: "ASAAS_API_KEY precisa estar configurada.",
+      description: `${health.asaas.apiKeyEnvName} precisa estar configurada para esta bilheteria.`,
       status: statusFrom(health.asaas.apiKeyConfigured),
-      action: health.asaas.apiKeyConfigured ? undefined : "Configurar ASAAS_API_KEY."
+      action: health.asaas.apiKeyConfigured ? undefined : `Configurar ${health.asaas.apiKeyEnvName}.`
     },
     {
       label: "Webhook Asaas",
-      description: "ASAAS_WEBHOOK_TOKEN precisa bater com o token configurado no painel Asaas.",
+      description: `${health.asaas.webhookTokenEnvName} precisa bater com o token configurado no painel Asaas.`,
       status: statusFrom(health.asaas.webhookTokenConfigured && !health.security.appUrlIsLocal),
       action:
         health.asaas.webhookTokenConfigured && !health.security.appUrlIsLocal
@@ -240,7 +240,10 @@ export async function getProductionReadiness(organizationId?: string) {
       label: "Ambiente Asaas",
       description: "Confirme se está em Produção antes de vender ao público.",
       status: health.asaas.environment === "Producao" ? "READY" : "WARNING",
-      action: health.asaas.environment === "Producao" ? undefined : "Trocar ASAAS_API_URL e API_KEY para produção quando for vender."
+      action:
+        health.asaas.environment === "Producao"
+          ? undefined
+          : `Trocar ${health.asaas.apiUrlEnvName} e ${health.asaas.apiKeyEnvName} para produção quando for vender.`
     },
     {
       label: "Split Asaas",
@@ -352,7 +355,7 @@ export async function getProductionReadiness(organizationId?: string) {
     operation,
     goLive,
     links: {
-      asaasWebhook: `${health.asaas.webhookUrl}?token=ASAAS_WEBHOOK_TOKEN`,
+      asaasWebhook: `${health.asaas.webhookUrl}?token=${health.asaas.webhookTokenEnvName}`,
       cron: `${health.appUrl}/api/maintenance/expire-orders?token=CRON_SECRET`,
       cronBearer: `${health.appUrl}/api/maintenance/expire-orders`,
       appUrl: health.appUrl,

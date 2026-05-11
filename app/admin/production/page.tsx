@@ -108,7 +108,7 @@ export default async function ProductionPage() {
           </div>
         </div>
         <p className="formHint">
-          Troque os textos ASAAS_WEBHOOK_TOKEN e CRON_SECRET pelos valores cadastrados nas variáveis de ambiente.
+          Troque o texto do token Asaas e CRON_SECRET pelos valores cadastrados nas variáveis de ambiente.
           Não envie esses tokens em conversas ou prints públicos.
         </p>
       </section>

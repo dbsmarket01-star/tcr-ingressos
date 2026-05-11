@@ -1,4 +1,10 @@
 import { PaymentProvider as PrismaPaymentProvider } from "@prisma/client";
+import {
+  getAsaasConfigForOrganization,
+  getPaymentProviderNameForOrganization,
+  type AsaasOrganizationConfig,
+  type PaymentOrganizationContext
+} from "./payment-organization-config";
 
 export type PaymentIntentInput = {
   orderId: string;
@@ -234,17 +240,15 @@ export class AsaasPaymentProvider implements PaymentProvider {
   private readonly apiUrl: string;
   private readonly accessToken: string;
   private readonly billingType: string;
+  private readonly allowGlobalAsaasSplit: boolean;
 
-  constructor() {
-    const accessToken = process.env.ASAAS_API_KEY;
+  constructor(config?: AsaasOrganizationConfig) {
+    const resolvedConfig = config || getAsaasConfigForOrganization();
 
-    if (!accessToken) {
-      throw new Error("ASAAS_API_KEY nao configurado.");
-    }
-
-    this.accessToken = accessToken;
-    this.apiUrl = (process.env.ASAAS_API_URL || "https://api-sandbox.asaas.com/v3").replace(/\/$/, "");
-    this.billingType = process.env.ASAAS_BILLING_TYPE || "UNDEFINED";
+    this.accessToken = resolvedConfig.accessToken;
+    this.apiUrl = resolvedConfig.apiUrl;
+    this.billingType = resolvedConfig.billingType;
+    this.allowGlobalAsaasSplit = resolvedConfig.allowGlobalAsaasSplit;
   }
 
   private async request<T>(path: string, init: RequestInit) {
@@ -304,7 +308,7 @@ export class AsaasPaymentProvider implements PaymentProvider {
         dueDate: dueDate.toISOString().slice(0, 10),
         description: `Pedido ${input.orderCode} - ${input.eventTitle}`,
         externalReference: input.orderCode,
-        split: input.split ?? getAsaasSplits()
+        split: input.split ?? (this.allowGlobalAsaasSplit ? getAsaasSplits() : undefined)
       })
     });
 
@@ -379,7 +383,7 @@ export class AsaasPaymentProvider implements PaymentProvider {
               installmentValue: Number((paymentValue / installmentCount).toFixed(2))
             }
           : {}),
-        split: input.split ?? getAsaasSplits(),
+        split: input.split ?? (this.allowGlobalAsaasSplit ? getAsaasSplits() : undefined),
         creditCard: {
           holderName: input.holderName,
           number: sanitizedCardNumber,
@@ -420,15 +424,15 @@ export class AsaasPaymentProvider implements PaymentProvider {
   }
 }
 
-export function getPaymentProvider() {
-  const provider = process.env.PAYMENT_PROVIDER || "SIMULATED";
+export function getPaymentProvider(organization?: PaymentOrganizationContext | null) {
+  const provider = getPaymentProviderNameForOrganization(organization);
 
   if (provider === "MERCADO_PAGO") {
     return new MercadoPagoCheckoutProProvider();
   }
 
   if (provider === "ASAAS") {
-    return new AsaasPaymentProvider();
+    return new AsaasPaymentProvider(getAsaasConfigForOrganization(organization));
   }
 
   return new SimulatedPaymentProvider();
@@ -438,6 +442,6 @@ export function getMercadoPagoProvider() {
   return new MercadoPagoCheckoutProProvider();
 }
 
-export function getAsaasProvider() {
-  return new AsaasPaymentProvider();
+export function getAsaasProvider(organization?: PaymentOrganizationContext | null) {
+  return new AsaasPaymentProvider(getAsaasConfigForOrganization(organization));
 }

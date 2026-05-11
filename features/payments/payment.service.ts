@@ -8,6 +8,7 @@ import { trackMetaPurchaseForPaidOrder } from "@/features/tracking/meta-conversi
 import { createQrCodeToken, createTicketCode } from "@/features/tickets/ticket-code";
 import { buildAsaasSplitsForOrder } from "./asaas-split.service";
 import { getAsaasProvider, getPaymentProvider } from "./payment-provider";
+import type { PaymentOrganizationContext } from "./payment-organization-config";
 import type { CreditCardPaymentInput as CreditCardFormInput } from "./credit-card.schema";
 
 type WebhookPayload = {
@@ -31,6 +32,12 @@ type TicketEmailPayload = {
     url: string;
   }>;
 };
+
+const paymentOrganizationSelect = {
+  id: true,
+  slug: true,
+  name: true
+} as const;
 
 export type AsaasExternalPaymentSyncResult =
   | {
@@ -115,7 +122,13 @@ export async function startPaymentForOrder(orderCode: string) {
     where: { code: orderCode },
     include: {
       customer: true,
-      event: true,
+      event: {
+        include: {
+          organization: {
+            select: paymentOrganizationSelect
+          }
+        }
+      },
       payment: true,
       items: true
     }
@@ -142,7 +155,13 @@ export async function startPaymentForOrder(orderCode: string) {
       },
       include: {
         customer: true,
-        event: true,
+        event: {
+          include: {
+            organization: {
+              select: paymentOrganizationSelect
+            }
+          }
+        },
         payment: true,
         items: true
       }
@@ -179,7 +198,7 @@ export async function startPaymentForOrder(orderCode: string) {
     };
   }
 
-  const provider = getPaymentProvider();
+  const provider = getPaymentProvider(order.event.organization);
   const split = await buildAsaasSplitsForOrder(order.items, order.event.organizationId);
   const intent = await provider.createPaymentIntent({
     orderId: order.id,
@@ -281,10 +300,57 @@ export async function failPaymentByOrderCode(orderCode: string) {
   });
 }
 
+export async function findAsaasWebhookOrganization(input: {
+  orderCode?: string;
+  externalId?: string;
+}): Promise<PaymentOrganizationContext | null> {
+  const payment = await prisma.payment.findFirst({
+    where: input.orderCode
+      ? {
+          order: {
+            code: input.orderCode
+          },
+          provider: "ASAAS"
+        }
+      : input.externalId
+        ? {
+            externalId: input.externalId,
+            provider: "ASAAS"
+          }
+        : {
+            id: "__missing__"
+          },
+    select: {
+      order: {
+        select: {
+          event: {
+            select: {
+              organization: {
+                select: paymentOrganizationSelect
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  return payment?.order.event.organization ?? null;
+}
+
 export async function syncAsaasPaymentByOrderCode(orderCode: string) {
   const order = await prisma.order.findUnique({
     where: { code: orderCode },
-    include: { payment: true }
+    include: {
+      payment: true,
+      event: {
+        include: {
+          organization: {
+            select: paymentOrganizationSelect
+          }
+        }
+      }
+    }
   });
 
   if (!order?.payment?.externalId) {
@@ -295,7 +361,7 @@ export async function syncAsaasPaymentByOrderCode(orderCode: string) {
     throw new Error("Este pedido nao usa Asaas.");
   }
 
-  const asaas = getAsaasProvider();
+  const asaas = getAsaasProvider(order.event.organization);
   const payment = await asaas.getPayment(order.payment.externalId);
 
   return handlePaymentWebhook({
@@ -316,7 +382,14 @@ export async function syncAsaasPaymentByExternalId(externalId: string) {
     include: {
       order: {
         select: {
-          code: true
+          code: true,
+          event: {
+            select: {
+              organization: {
+                select: paymentOrganizationSelect
+              }
+            }
+          }
         }
       }
     }
@@ -333,7 +406,7 @@ export async function syncAsaasPaymentByExternalId(externalId: string) {
     } satisfies AsaasExternalPaymentSyncResult;
   }
 
-  const asaas = getAsaasProvider();
+  const asaas = getAsaasProvider(localPayment.order.event.organization);
   const payment = await asaas.getPayment(externalId);
 
   const result = await handlePaymentWebhook({
@@ -357,7 +430,13 @@ export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & {
     where: { code: input.orderCode },
     include: {
       customer: true,
-      event: true,
+      event: {
+        include: {
+          organization: {
+            select: paymentOrganizationSelect
+          }
+        }
+      },
       payment: true,
       items: true
     }
@@ -395,7 +474,7 @@ export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & {
   );
   const cardTotalInCents = baseTotalInCents + cardInterestInCents;
 
-  const asaas = getAsaasProvider();
+  const asaas = getAsaasProvider(order.event.organization);
   const split = await buildAsaasSplitsForOrder(order.items, order.event.organizationId);
   const intent = await asaas.createCreditCardPayment({
     orderId: order.id,

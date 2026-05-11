@@ -78,6 +78,22 @@ ASAAS_WEBHOOK_TOKEN="token-configurado-no-webhook"
 NEXT_PUBLIC_APP_URL="https://seudominio.com.br"
 ```
 
+Em operações com mais de uma bilheteria, prefira variáveis por `slug` da organização para manter as contas isoladas.
+O sufixo é o `slug` em maiúsculas, sem acentos, com hífens convertidos para `_`.
+
+Exemplo para a bilheteria A2 Imergidos (`a2-imergidos`):
+
+```env
+PAYMENT_PROVIDER_A2_IMERGIDOS="ASAAS"
+ASAAS_API_KEY_A2_IMERGIDOS="$aact_..."
+ASAAS_API_URL_A2_IMERGIDOS="https://api.asaas.com/v3"
+ASAAS_BILLING_TYPE_A2_IMERGIDOS="PIX"
+ASAAS_WEBHOOK_TOKEN_A2_IMERGIDOS="token-configurado-no-webhook-da-a2"
+```
+
+Para bilheterias filhas, o sistema não reaproveita `ASAAS_API_KEY` global. Se a chave específica não existir, a
+cobrança da operação falha em vez de misturar dinheiro com outra bilheteria.
+
 Em producao, altere `ASAAS_API_URL` para:
 
 ```env
@@ -103,7 +119,8 @@ Configure o webhook no painel do Asaas apontando para:
 https://seudominio.com.br/api/webhooks/payments/asaas
 ```
 
-Para mais seguranca, configure um token no webhook do Asaas e repita o mesmo valor em `ASAAS_WEBHOOK_TOKEN`.
+Para mais seguranca, configure um token no webhook do Asaas e repita o mesmo valor em `ASAAS_WEBHOOK_TOKEN` ou na
+variável específica da bilheteria, como `ASAAS_WEBHOOK_TOKEN_A2_IMERGIDOS`.
 
 ### Split Asaas pelo painel
 

@@ -239,7 +239,7 @@ export async function getFinalPresaleChecklist(
       description: "Gateway configurado para Pix e cartao.",
       status: status(health.asaas.enabled && health.asaas.apiKeyConfigured, true),
       evidence: `${health.provider} / ${health.asaas.environment}.`,
-      action: "Configurar Asaas e chave API.",
+      action: `Configurar Asaas e ${health.asaas.apiKeyEnvName}.`,
       href: "/admin/settings"
     },
     {
@@ -247,7 +247,7 @@ export async function getFinalPresaleChecklist(
       description: "Confirmacao automatica de pagamento ativa.",
       status: status(health.asaas.webhookTokenConfigured, true),
       evidence: health.asaas.webhookTokenConfigured ? "Token configurado." : "Token ausente.",
-      action: "Configurar webhook definitivo.",
+      action: `Configurar webhook definitivo e ${health.asaas.webhookTokenEnvName}.`,
       href: "/admin/settings"
     },
     {

@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { handlePaymentWebhook, syncAsaasPaymentByExternalId } from "@/features/payments/payment.service";
+import {
+  findAsaasWebhookOrganization,
+  handlePaymentWebhook,
+  syncAsaasPaymentByExternalId
+} from "@/features/payments/payment.service";
+import { getAsaasWebhookTokenForOrganization } from "@/features/payments/payment-organization-config";
+import type { PaymentOrganizationContext } from "@/features/payments/payment-organization-config";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
@@ -46,8 +52,13 @@ function cleanToken(value?: string | null) {
   return value?.replace(/^Bearer\s+/i, "").trim();
 }
 
-function isValidAsaasWebhook(request: Request, body: AsaasWebhookPayload | null, url: URL) {
-  const expectedToken = process.env.ASAAS_WEBHOOK_TOKEN;
+function isValidAsaasWebhook(
+  request: Request,
+  body: AsaasWebhookPayload | null,
+  url: URL,
+  organization?: PaymentOrganizationContext | null
+) {
+  const expectedToken = getAsaasWebhookTokenForOrganization(organization).value;
 
   if (!expectedToken) {
     return true;
@@ -83,10 +94,6 @@ export async function POST(request: Request) {
   const url = new URL(request.url);
   const body = (await request.json().catch(() => null)) as AsaasWebhookPayload | null;
 
-  if (!isValidAsaasWebhook(request, body, url)) {
-    return webhookResponse({ error: "Token invalido." }, { status: 401 });
-  }
-
   const paymentId = body?.payment?.id;
   const orderCode = body?.payment?.externalReference;
 
@@ -95,6 +102,15 @@ export async function POST(request: Request) {
   }
 
   try {
+    const organization = await findAsaasWebhookOrganization({
+      orderCode,
+      externalId: paymentId
+    });
+
+    if (!isValidAsaasWebhook(request, body, url, organization)) {
+      return webhookResponse({ error: "Token invalido." }, { status: 401 });
+    }
+
     if (!orderCode) {
       const syncResult = await syncAsaasPaymentByExternalId(paymentId);
 

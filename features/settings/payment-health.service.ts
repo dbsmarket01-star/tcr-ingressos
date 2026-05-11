@@ -1,20 +1,26 @@
-import { getDefaultOrganizationId } from "@/features/organizations/organization.service";
+import {
+  getDefaultOrganizationId,
+  getOrganizationBrandingById
+} from "@/features/organizations/organization.service";
+import {
+  canUseGlobalPaymentEnv,
+  getAsaasHealthConfigForOrganization,
+  getPaymentProviderNameForOrganization
+} from "@/features/payments/payment-organization-config";
 import { prisma } from "@/lib/prisma";
 
 function hasValue(value?: string) {
   return Boolean(value && value.trim().length > 0);
 }
 
-function maskToken(value?: string) {
-  if (!value) {
-    return null;
+function getAppUrl(organization?: { publicDomain?: string | null } | null) {
+  if (organization?.publicDomain) {
+    const publicDomain = organization.publicDomain.replace(/^https?:\/\//, "").replace(/\/$/, "");
+    const protocol = publicDomain.includes("localhost") || publicDomain.startsWith("127.0.0.1") ? "http" : "https";
+
+    return `${protocol}://${publicDomain}`;
   }
 
-  const visibleEnd = value.slice(-4);
-  return `Configurada com final ${visibleEnd}`;
-}
-
-function getAppUrl() {
   return (process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || "http://localhost:3000").replace(/\/$/, "");
 }
 
@@ -48,12 +54,22 @@ function isLocalUrl(value: string) {
 
 export async function getPaymentHealth(organizationId?: string) {
   const resolvedOrganizationId = organizationId || (await getDefaultOrganizationId());
-  const appUrl = getAppUrl();
-  const provider = process.env.PAYMENT_PROVIDER || "SIMULATED";
-  const asaasApiUrl = process.env.ASAAS_API_URL || "https://api-sandbox.asaas.com/v3";
+  const organization = await getOrganizationBrandingById(resolvedOrganizationId);
+  const appUrl = getAppUrl(organization);
+  const provider = getPaymentProviderNameForOrganization(organization);
+  const asaas = getAsaasHealthConfigForOrganization(organization);
+  const asaasApiUrl = asaas.apiUrl;
+  const includeGlobalSplitEnv = canUseGlobalPaymentEnv(organization);
   const [recentPayments, dbSplitRules] = await Promise.all([
     prisma.payment.groupBy({
       by: ["provider", "status"],
+      where: {
+        order: {
+          event: {
+            organizationId: resolvedOrganizationId
+          }
+        }
+      },
       _count: {
         _all: true
       }
@@ -65,27 +81,44 @@ export async function getPaymentHealth(organizationId?: string) {
       }
     })
   ]);
-  const envSplitWalletsConfigured = Array.from({ length: 10 }).filter((_, index) =>
-    hasValue(process.env[`ASAAS_SPLIT_WALLET_ID_${index + 1}`])
-  ).length;
-  const envSplitRulesConfigured = Array.from({ length: 10 }).filter((_, index) =>
-    hasValue(process.env[`ASAAS_SPLIT_PERCENTUAL_VALUE_${index + 1}`]) ||
-    hasValue(process.env[`ASAAS_SPLIT_FIXED_VALUE_${index + 1}`])
-  ).length;
+  const envSplitWalletsConfigured = includeGlobalSplitEnv
+    ? Array.from({ length: 10 }).filter((_, index) =>
+        hasValue(process.env[`ASAAS_SPLIT_WALLET_ID_${index + 1}`])
+      ).length
+    : 0;
+  const envSplitRulesConfigured = includeGlobalSplitEnv
+    ? Array.from({ length: 10 }).filter((_, index) =>
+        hasValue(process.env[`ASAAS_SPLIT_PERCENTUAL_VALUE_${index + 1}`]) ||
+        hasValue(process.env[`ASAAS_SPLIT_FIXED_VALUE_${index + 1}`])
+      ).length
+    : 0;
 
   return {
     provider,
     appUrl,
+    organization: organization
+      ? {
+          id: organization.id,
+          slug: organization.slug,
+          name: organization.name,
+          publicDomain: organization.publicDomain
+        }
+      : null,
     asaas: {
       enabled: provider === "ASAAS",
-      apiKeyConfigured: hasValue(process.env.ASAAS_API_KEY),
-      apiKeyMasked: maskToken(process.env.ASAAS_API_KEY),
+      organizationEnvSuffix: asaas.organizationEnvSuffix,
+      apiKeyConfigured: asaas.apiKeyConfigured,
+      apiKeyMasked: asaas.apiKeyMasked,
+      apiKeyEnvName: asaas.apiKeyEnvName,
       apiUrl: asaasApiUrl,
+      apiUrlEnvName: asaas.apiUrlEnvName,
       environment: getAsaasEnvironment(asaasApiUrl),
-      billingType: process.env.ASAAS_BILLING_TYPE || "PIX",
-      webhookTokenConfigured: hasValue(process.env.ASAAS_WEBHOOK_TOKEN),
+      billingType: asaas.billingType,
+      billingTypeEnvName: asaas.billingTypeEnvName,
+      webhookTokenConfigured: asaas.webhookTokenConfigured,
+      webhookTokenEnvName: asaas.webhookTokenEnvName,
       webhookUrl: `${appUrl}/api/webhooks/payments/asaas`,
-      splitEnabled: process.env.ASAAS_SPLIT_ENABLED === "true" || dbSplitRules.length > 0,
+      splitEnabled: (includeGlobalSplitEnv && process.env.ASAAS_SPLIT_ENABLED === "true") || dbSplitRules.length > 0,
       splitWalletsConfigured: dbSplitRules.length || envSplitWalletsConfigured,
       splitRulesConfigured: dbSplitRules.length || envSplitRulesConfigured
     },

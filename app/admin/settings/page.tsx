@@ -377,6 +377,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <strong>{health.asaas.environment}</strong>
           </div>
           <div>
+            <span>Escopo de pagamento</span>
+            <strong>{health.asaas.organizationEnvSuffix ?? "global"}</strong>
+          </div>
+          <div>
             <span>Split Asaas</span>
             <strong>
               {health.asaas.splitEnabled
@@ -431,11 +435,15 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           <div className="settingsStatusItem">
             <span className={`status ${health.asaas.enabled ? "published" : "draft"}`}>Asaas</span>
             <p>
-              Chave API: {health.asaas.apiKeyConfigured ? health.asaas.apiKeyMasked : "não configurada"}
+              Chave API ({health.asaas.apiKeyEnvName}):{" "}
+              {health.asaas.apiKeyConfigured ? health.asaas.apiKeyMasked : "não configurada"}
               <br />
-              Tipo padrão: {health.asaas.billingType}
+              API URL ({health.asaas.apiUrlEnvName}): {health.asaas.apiUrl}
               <br />
-              Webhook token: {health.asaas.webhookTokenConfigured ? "configurado" : "não configurado"}
+              Tipo padrão ({health.asaas.billingTypeEnvName}): {health.asaas.billingType}
+              <br />
+              Webhook token ({health.asaas.webhookTokenEnvName}):{" "}
+              {health.asaas.webhookTokenConfigured ? "configurado" : "não configurado"}
               <br />
               Split:{" "}
               {health.asaas.splitEnabled
@@ -461,7 +469,8 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           <h3>Webhook Asaas esperado</h3>
           <p className="breakText">{health.asaas.webhookUrl}</p>
           <p className="muted">
-            Token por query/header: {health.asaas.webhookTokenConfigured ? "configurado" : "não configurado"}
+            Token por query/header: {health.asaas.webhookTokenConfigured ? "configurado" : "não configurado"} em{" "}
+            {health.asaas.webhookTokenEnvName}
           </p>
           <CopyButton className="secondaryButton smallButton" label="Copiar webhook" copiedLabel="Copiado" value={health.asaas.webhookUrl} />
         </div>
