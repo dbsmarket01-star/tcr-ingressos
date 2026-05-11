@@ -452,7 +452,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
 
         <nav className="eventOverviewTabs" aria-label="Seções do evento">
           <span className="isActive">Visão geral</span>
-          <Link href={`/admin/events/${event.id}/edit`}>Ingressos e lotes</Link>
+          <Link href={`/admin/events/${event.id}/edit#criar-ingresso`}>Ingressos e lotes</Link>
           <Link href={event.leadCaptureEnabled ? `/admin/events/${event.id}/leads` : `/admin/events/${event.id}/edit`}>Captação</Link>
           <Link href={`/admin/finance?eventId=${event.id}`}>Financeiro</Link>
           <Link href={getPublicEventUrl(event.slug, event.organization)} target="_blank">Divulgação</Link>

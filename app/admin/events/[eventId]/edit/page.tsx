@@ -933,7 +933,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           <p className="muted">Nenhum ingresso cadastrado ainda.</p>
         )}
 
-        <form action={createTicketLotAction} className="formSection lotCreateForm">
+        <form action={createTicketLotAction} className="formSection lotCreateForm" id="criar-ingresso">
           <div className="formSectionHeader">
             <div>
               <span className="sectionEyebrow">Novo ingresso</span>

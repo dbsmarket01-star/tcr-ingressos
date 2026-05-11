@@ -5338,6 +5338,10 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   margin: 0;
 }
 
+.lotCreateForm {
+  scroll-margin-top: 28px;
+}
+
 .eventOverviewTabs {
   align-items: center;
   border-bottom: 1px solid #e5eeea;
