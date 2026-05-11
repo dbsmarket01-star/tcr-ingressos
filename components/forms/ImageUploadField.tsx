@@ -93,7 +93,7 @@ function shouldUseAutoFit(rawCrop?: string | null) {
     return true;
   }
 
-  return Math.abs(parsedCrop.x - 50) < 0.01 && Math.abs(parsedCrop.y - 50) < 0.01 && Math.abs(parsedCrop.zoom - 1) < 0.01;
+  return Math.abs(parsedCrop.x - 50) < 0.01 && Math.abs(parsedCrop.y - 50) < 0.01 && parsedCrop.zoom <= 1;
 }
 
 function analyzeAspect(meta: ImageMeta | null, aspect: NonNullable<ImageUploadFieldProps["aspect"]>) {
