@@ -126,8 +126,11 @@ export function PublicSiteFooter({ brandName, supportPhone, settings }: PublicSi
             <span className="paymentMark paymentMarkPix">pix</span>
             <span className="paymentMark paymentMarkVisa">VISA</span>
             <span className="paymentMark paymentMarkMastercard" aria-label="Mastercard">
-              <i aria-hidden="true" />
-              <i aria-hidden="true" />
+              <span className="paymentMarkMastercardIcon" aria-hidden="true">
+                <i />
+                <i />
+              </span>
+              <span className="paymentMarkMastercardText">MC</span>
             </span>
           </div>
         </div>
