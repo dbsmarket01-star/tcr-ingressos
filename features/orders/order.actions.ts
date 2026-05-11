@@ -202,6 +202,7 @@ export async function createCheckoutOrderAction(formData: FormData) {
         orderCode: order.code,
         brandName: order.event.organization?.name || "Ingresaas",
         brandPrimaryColor: order.event.organization?.primaryColor,
+        organization: order.event.organization,
         eventTitle: order.event.title,
         eventDate: order.event.startsAt,
         venueName: order.event.venueName,

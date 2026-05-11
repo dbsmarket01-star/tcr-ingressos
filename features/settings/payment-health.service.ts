@@ -7,6 +7,7 @@ import {
   getAsaasHealthConfigForOrganization,
   getPaymentProviderNameForOrganization
 } from "@/features/payments/payment-organization-config";
+import { resolveEmailFrom } from "@/features/email/email.service";
 import { prisma } from "@/lib/prisma";
 
 function hasValue(value?: string) {
@@ -154,9 +155,10 @@ export async function getPaymentHealth(organizationId?: string) {
     },
     email: {
       resendConfigured: hasValue(process.env.RESEND_API_KEY),
-      from:
-        process.env.EMAIL_FROM ||
-        `${process.env.DEFAULT_EMAIL_BRAND || "Ingresaas"} <${process.env.DEFAULT_EMAIL_FROM_ADDRESS || "ingressos@ingresaas.app.br"}>`
+      from: resolveEmailFrom({
+        brandName: organization?.name,
+        organization
+      })
     },
     security: {
       authSecretConfigured: hasValue(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET),

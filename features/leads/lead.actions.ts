@@ -128,6 +128,7 @@ export async function createEventLeadAction(formData: FormData) {
           whatsappGroupUrl: eventForEmail?.leadCaptureWhatsappGroupUrl || null,
           brandName: organizationContext.brandName,
           brandPrimaryColor: organizationContext.organization.primaryColor,
+          organization: organizationContext.organization,
           supportEmail
         });
       }

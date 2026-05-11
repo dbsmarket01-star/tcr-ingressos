@@ -13,8 +13,9 @@ type TicketEmailInput = {
   to: string;
   buyerName: string;
   orderCode: string;
-  brandName?: string;
+  brandName?: string | null;
   brandPrimaryColor?: string | null;
+  organization?: EmailOrganization | null;
   eventTitle: string;
   eventDate: Date;
   venueName: string;
@@ -28,8 +29,9 @@ type TicketEmailInput = {
 type PasswordResetEmailInput = {
   to: string;
   name: string;
-  brandName?: string;
+  brandName?: string | null;
   brandPrimaryColor?: string | null;
+  organization?: EmailOrganization | null;
   resetUrl: string;
   expiresInMinutes: number;
 };
@@ -38,8 +40,9 @@ type OrderPendingPaymentEmailInput = {
   to: string;
   buyerName: string;
   orderCode: string;
-  brandName?: string;
+  brandName?: string | null;
   brandPrimaryColor?: string | null;
+  organization?: EmailOrganization | null;
   eventTitle: string;
   eventDate: Date;
   venueName: string;
@@ -52,8 +55,9 @@ type OrderExpiredEmailInput = {
   to: string;
   buyerName: string;
   orderCode: string;
-  brandName?: string;
+  brandName?: string | null;
   brandPrimaryColor?: string | null;
+  organization?: EmailOrganization | null;
   eventTitle: string;
   orderUrl: string;
 };
@@ -74,8 +78,9 @@ type LeadCaptureConfirmationEmailInput = {
   name: string;
   eventTitle: string;
   whatsappGroupUrl?: string | null;
-  brandName?: string;
+  brandName?: string | null;
   brandPrimaryColor?: string | null;
+  organization?: EmailOrganization | null;
   supportEmail?: string | null;
 };
 
@@ -90,8 +95,9 @@ type LeadBroadcastEmailInput = {
   imageHeight?: number | null;
   publicBaseUrl?: string | null;
   brandLogoUrl?: string | null;
-  brandName?: string;
+  brandName?: string | null;
   brandPrimaryColor?: string | null;
+  organization?: EmailOrganization | null;
   eventTitle: string;
   ctaLabel?: string | null;
   ctaUrl?: string | null;
@@ -179,7 +185,90 @@ function getDefaultBrandName(brandName?: string | null) {
 function getDefaultEmailFrom(brandName?: string | null) {
   const resolvedBrandName = getDefaultBrandName(brandName);
   const fallbackAddress = process.env.DEFAULT_EMAIL_FROM_ADDRESS || "ingressos@ingresaas.app.br";
-  return `${resolvedBrandName} <${fallbackAddress}>`;
+  return formatEmailFrom(resolvedBrandName, fallbackAddress);
+}
+
+function normalizeSenderEnvKey(value?: string | null) {
+  const normalized = value
+    ?.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/gi, "_")
+    .replace(/^_+|_+$/g, "")
+    .toUpperCase();
+
+  return normalized || null;
+}
+
+function normalizeSenderDomain(domain?: string | null) {
+  const normalized = domain
+    ?.trim()
+    .replace(/^https?:\/\//i, "")
+    .replace(/\/.*$/, "")
+    .replace(/:\d+$/, "")
+    .replace(/^www\./i, "")
+    .toLowerCase();
+
+  if (!normalized || normalized.includes("localhost") || normalized.startsWith("127.0.0.1")) {
+    return null;
+  }
+
+  return normalized;
+}
+
+function formatEmailFrom(brandName: string, address: string) {
+  const cleanBrandName = getDefaultBrandName(brandName).replace(/[<>\r\n]/g, "").trim();
+  return `${cleanBrandName} <${address}>`;
+}
+
+function getTenantEmailFromEnv(organization?: EmailOrganization | null, brandName?: string | null) {
+  const candidates = [
+    normalizeSenderEnvKey(organization?.name),
+    normalizeSenderEnvKey(brandName)
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    const value = process.env[`EMAIL_FROM_${candidate}`];
+
+    if (value?.trim()) {
+      return value.trim();
+    }
+  }
+
+  return null;
+}
+
+function getOrganizationEmailAddress(organization?: EmailOrganization | null) {
+  const senderDomain =
+    normalizeSenderDomain(organization?.publicDomain) ||
+    normalizeSenderDomain(organization?.adminDomain);
+
+  return senderDomain ? `ingressos@${senderDomain}` : null;
+}
+
+export function resolveEmailFrom(input: {
+  brandName?: string | null;
+  organization?: EmailOrganization | null;
+}) {
+  const brandName = getDefaultBrandName(input.brandName || input.organization?.name);
+  const tenantFrom = getTenantEmailFromEnv(input.organization, brandName);
+
+  if (tenantFrom) {
+    return tenantFrom;
+  }
+
+  const organizationAddress = getOrganizationEmailAddress(input.organization);
+
+  if (organizationAddress) {
+    return formatEmailFrom(brandName, organizationAddress);
+  }
+
+  const globalFrom = process.env.EMAIL_FROM?.trim();
+
+  if (globalFrom) {
+    return globalFrom;
+  }
+
+  return getDefaultEmailFrom(brandName);
 }
 
 function normalizeEmailAccentColor(color?: string | null) {
@@ -273,7 +362,7 @@ function buildTicketEmailText(input: TicketEmailInput) {
 
 export async function sendTicketsEmail(input: TicketEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || getDefaultEmailFrom(input.brandName);
+  const from = resolveEmailFrom(input);
 
   if (!apiKey) {
     console.log("[email:dry-run] Ingressos gerados para envio", {
@@ -336,7 +425,7 @@ function buildPasswordResetText(input: PasswordResetEmailInput) {
 
 export async function sendAdminPasswordResetEmail(input: PasswordResetEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || getDefaultEmailFrom(input.brandName);
+  const from = resolveEmailFrom(input);
 
   if (!apiKey) {
       console.log("[email:dry-run] Recuperação de senha administrativa", {
@@ -407,7 +496,7 @@ function buildOrderPendingPaymentText(input: OrderPendingPaymentEmailInput) {
 
 export async function sendOrderPendingPaymentEmail(input: OrderPendingPaymentEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || getDefaultEmailFrom(input.brandName);
+  const from = resolveEmailFrom(input);
 
   if (!apiKey) {
     console.log("[email:dry-run] Pedido pendente para envio", {
@@ -462,7 +551,7 @@ function buildOrderExpiredText(input: OrderExpiredEmailInput) {
 
 export async function sendOrderExpiredEmail(input: OrderExpiredEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || getDefaultEmailFrom(input.brandName);
+  const from = resolveEmailFrom(input);
 
   if (!apiKey) {
     console.log("[email:dry-run] Pedido expirado para envio", {
@@ -591,7 +680,7 @@ function buildLeadCaptureConfirmationText(input: LeadCaptureConfirmationEmailInp
 
 export async function sendLeadCaptureConfirmationEmail(input: LeadCaptureConfirmationEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || getDefaultEmailFrom(input.brandName);
+  const from = resolveEmailFrom(input);
 
   if (!apiKey) {
     console.log("[email:dry-run] Confirmacao de lead", {
@@ -880,7 +969,7 @@ export async function sendLeadBroadcastEmail(input: LeadBroadcastEmailInput) {
 }
 
 export function createLeadBroadcastEmailPayload(input: LeadBroadcastEmailInput): EmailPayload {
-  const from = process.env.EMAIL_FROM || getDefaultEmailFrom(input.brandName);
+  const from = resolveEmailFrom(input);
   const headers = input.unsubscribeUrl
     ? {
         "List-Unsubscribe": `<${input.unsubscribeUrl}>`,

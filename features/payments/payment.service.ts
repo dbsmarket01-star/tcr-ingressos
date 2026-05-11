@@ -24,6 +24,13 @@ type TicketEmailPayload = {
   to: string;
   buyerName: string;
   orderCode: string;
+  brandName?: string | null;
+  brandPrimaryColor?: string | null;
+  organization?: {
+    name?: string | null;
+    publicDomain?: string | null;
+    adminDomain?: string | null;
+  } | null;
   eventTitle: string;
   eventDate: Date;
   venueName: string;
@@ -564,6 +571,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
                     select: {
                       name: true,
                       publicDomain: true,
+                      adminDomain: true,
                       primaryColor: true
                     }
                   }
@@ -606,6 +614,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           orderCode: payment.order.code,
           brandName: payment.order.event.organization?.name || "Ingresaas",
           brandPrimaryColor: payment.order.event.organization?.primaryColor,
+          organization: payment.order.event.organization,
           eventTitle: payment.order.event.title,
           eventDate: payment.order.event.startsAt,
           venueName: payment.order.event.venueName,
