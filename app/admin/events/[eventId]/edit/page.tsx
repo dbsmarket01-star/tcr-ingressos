@@ -145,7 +145,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               label="Trocar banner"
               currentImageUrl={event.bannerUrl}
               currentCropValue={event.bannerCrop}
-              recommendedSize="Ideal: 1920 x 840 px"
+              recommendedSize="Ideal: 1900 x 828 px"
               usageHint="Envie a arte final e use o recorte guiado para pré-visualizar o enquadramento no topo público."
               help="JPG, PNG, WEBP ou GIF ate 10MB para substituir o banner atual."
               emptyText="Sem banner atual"
@@ -156,7 +156,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           <div className="mediaSizingGuide">
             <div>
               <span>Banner topo</span>
-              <strong>1920 x 840 px</strong>
+              <strong>1900 x 828 px</strong>
               <p>Use arte horizontal. O recorte guiado te mostra antes de salvar o que vai aparecer no desktop e no mobile.</p>
             </div>
             <div>

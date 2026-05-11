@@ -69,7 +69,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             <ImageUploadField
               name="bannerFile"
               label="Banner do evento"
-              recommendedSize="Ideal: 1920 x 840 px"
+              recommendedSize="Ideal: 1900 x 828 px"
               usageHint="Envie a arte final do evento e use o recorte guiado para simular como ela ficará no topo público."
               help="JPG, PNG, WEBP ou GIF ate 10MB."
               aspect="banner"
@@ -79,7 +79,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           <div className="mediaSizingGuide">
             <div>
               <span>Banner topo</span>
-              <strong>1920 x 840 px</strong>
+              <strong>1900 x 828 px</strong>
               <p>Use arte horizontal e ajuste o enquadramento na própria prévia guiada antes de salvar.</p>
             </div>
             <div>

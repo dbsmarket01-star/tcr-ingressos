@@ -32,6 +32,7 @@
   --surface: #ffffff;
   --surface-soft: #f8fbfa;
   --warning: #f7b731;
+  --event-banner-ratio: 1900 / 828;
 }
 
 .segmentedField {
@@ -696,7 +697,7 @@
 }
 
 .tcrEventCardMedia {
-  aspect-ratio: 2.15 / 1;
+  aspect-ratio: var(--event-banner-ratio);
   background-position: center;
   background-size: cover;
   padding: 14px;
@@ -1191,7 +1192,7 @@
 }
 
 .homePage .tcrEventCardMedia {
-  aspect-ratio: 2.3 / 1 !important;
+  aspect-ratio: var(--event-banner-ratio) !important;
   padding: 12px !important;
 }
 
@@ -2848,7 +2849,7 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 }
 
 .homeFeaturedEventMedia {
-  aspect-ratio: 16 / 9;
+  aspect-ratio: var(--event-banner-ratio);
   background-position: center;
   background-size: cover;
 }
@@ -3990,7 +3991,7 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 
 .publicHeroMedia {
   align-items: center;
-  aspect-ratio: 16 / 7;
+  aspect-ratio: var(--event-banner-ratio);
   background: linear-gradient(180deg, rgba(9, 20, 28, 0.98), rgba(20, 33, 43, 0.94));
   border: 1px solid rgba(197, 211, 220, 0.24);
   border-bottom: 0;
@@ -8409,14 +8410,14 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 }
 
 .eventShowcaseCard img {
-  aspect-ratio: 16 / 8;
+  aspect-ratio: var(--event-banner-ratio);
   display: block;
   object-fit: cover;
   width: 100%;
 }
 
 .eventShowcaseImage {
-  aspect-ratio: 16 / 8;
+  aspect-ratio: var(--event-banner-ratio);
   background-position: center;
   background-size: cover;
 }
@@ -9911,7 +9912,7 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 
 .imageUploadbanner .imageUploadPreview,
 .imageUploadbanner .imageUploadPlaceholder {
-  aspect-ratio: 16 / 7;
+  aspect-ratio: var(--event-banner-ratio);
   min-height: 220px;
 }
 
@@ -10118,7 +10119,7 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 }
 
 .imageCropOriginalStagebanner {
-  aspect-ratio: 16 / 7;
+  aspect-ratio: var(--event-banner-ratio);
 }
 
 .imageCropOriginalStagelead {
@@ -10148,7 +10149,7 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 }
 
 .imageCropStagebanner {
-  aspect-ratio: 16 / 7;
+  aspect-ratio: var(--event-banner-ratio);
 }
 
 .imageCropStagelead {
@@ -14357,7 +14358,7 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   }
 
   .publicHeroMedia {
-    aspect-ratio: 16 / 9;
+    aspect-ratio: var(--event-banner-ratio);
     border: 0;
     border-radius: 0;
     margin-top: 0;
@@ -14516,7 +14517,7 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 
   .homeFeaturedEventMedia,
   .eventShowcaseImage {
-    aspect-ratio: 16 / 10;
+    aspect-ratio: var(--event-banner-ratio);
   }
 
   .purchasePanel {

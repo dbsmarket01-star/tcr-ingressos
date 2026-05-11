@@ -34,7 +34,7 @@ type ImageMeta = {
 };
 
 const recommendedRatios = {
-  banner: 1920 / 840,
+  banner: 1900 / 828,
   lead: 4 / 5,
   map: 4 / 3,
   share: 1.91
