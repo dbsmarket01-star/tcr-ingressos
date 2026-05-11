@@ -3639,10 +3639,15 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 
 .publicSiteFooter {
   background:
-    linear-gradient(180deg, #06261f 0%, #041b16 100%);
+    radial-gradient(circle at 88% 0%, rgba(var(--brand-rgb), 0.26), transparent 30%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--brand-dark) 82%, #06101f 18%) 0%,
+      color-mix(in srgb, var(--brand-dark) 50%, #020817 50%) 100%
+    );
   color: #ffffff;
   margin-top: 28px;
-  padding: 28px 0 0;
+  padding: 34px 0 0;
 }
 
 .publicSiteFooterInner {
@@ -3725,24 +3730,66 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 }
 
 .publicSiteFooterPayments {
+  align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
 }
 
-.publicSiteFooterPayments span {
+.publicSiteFooterPayments .paymentMark {
   align-items: center;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
   color: #ffffff;
   display: inline-flex;
   font-size: 14px;
   font-weight: 900;
   justify-content: center;
-  min-height: 42px;
-  min-width: 96px;
-  padding: 0 16px;
+  min-height: 36px;
+  min-width: 72px;
+  padding: 0 14px;
+}
+
+.publicSiteFooterPayments .paymentMarkPix {
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  text-transform: lowercase;
+}
+
+.publicSiteFooterPayments .paymentMarkVisa {
+  color: #ffffff;
+  font-size: 17px;
+  font-style: italic;
+  letter-spacing: 0.04em;
+}
+
+.publicSiteFooterPayments .paymentMarkMastercard {
+  min-width: 58px;
+  padding: 0;
+  position: relative;
+}
+
+.publicSiteFooterPayments .paymentMarkMastercard i {
+  border-radius: 999px;
+  display: block;
+  height: 20px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+}
+
+.publicSiteFooterPayments .paymentMarkMastercard i:first-child {
+  background: #eb001b;
+  left: 17px;
+}
+
+.publicSiteFooterPayments .paymentMarkMastercard i:last-child {
+  background: #f79e1b;
+  left: 29px;
+  mix-blend-mode: screen;
 }
 
 .publicSiteFooterBottom {
