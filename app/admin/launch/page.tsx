@@ -87,7 +87,7 @@ export default async function LaunchPage({ searchParams }: LaunchPageProps) {
           </button>
           {checklist.event ? (
             <>
-              <Link className="secondaryButton" href={getPublicEventUrl(checklist.event.slug)}>
+              <Link className="secondaryButton" href={getPublicEventUrl(checklist.event.slug, checklist.event.organization)}>
                 Página pública
               </Link>
               <Link className="secondaryButton" href={`/admin/events/${checklist.event.id}`}>

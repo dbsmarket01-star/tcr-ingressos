@@ -93,7 +93,7 @@ export default async function FinalPresalePage({ searchParams }: FinalPresalePag
           </button>
           {checklist.event ? (
             <>
-              <Link className="secondaryButton" href={getPublicEventUrl(checklist.event.slug)}>
+              <Link className="secondaryButton" href={getPublicEventUrl(checklist.event.slug, checklist.event.organization)}>
                 Página pública
               </Link>
               <Link className="secondaryButton" href={`/admin/launch?eventId=${checklist.event.id}`}>

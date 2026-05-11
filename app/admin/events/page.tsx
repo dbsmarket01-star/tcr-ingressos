@@ -310,7 +310,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                       </div>
 
                       <div className="eventsIndexActionsCell">
-                        <Link className="secondaryButton smallButton" href={getPublicEventUrl(event.slug)} target="_blank">
+                        <Link className="secondaryButton smallButton" href={getPublicEventUrl(event.slug, event.organization)} target="_blank">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" />
                             <circle cx="12" cy="12" r="3" />

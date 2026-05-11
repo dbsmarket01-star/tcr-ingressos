@@ -94,6 +94,12 @@ export async function getLaunchChecklist(eventId?: string, allowedEventIds?: Eve
             ]
           },
           include: {
+            organization: {
+              select: {
+                publicDomain: true,
+                adminDomain: true
+              }
+            },
             lots: {
               orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
             },
@@ -296,14 +302,14 @@ export async function getLaunchChecklist(eventId?: string, allowedEventIds?: Eve
       description: "Confirma QR Code, webhook e emissao de ingresso por Pix.",
       status: pixPayments.length > 0 ? "READY" : "WARNING",
       action: pixPayments.length > 0 ? undefined : "Fazer uma compra teste via Pix neste evento.",
-      href: getPublicEventUrl(event.slug)
+      href: getPublicEventUrl(event.slug, event.organization)
     },
     {
       label: "Compra cartao testada",
       description: "Confirma checkout transparente, aprovacao e emissao de ingresso no cartao.",
       status: cardPayments.length > 0 ? "READY" : "WARNING",
       action: cardPayments.length > 0 ? undefined : "Fazer uma compra teste via cartao neste evento.",
-      href: getPublicEventUrl(event.slug)
+      href: getPublicEventUrl(event.slug, event.organization)
     }
   ];
 
@@ -342,6 +348,7 @@ export async function getLaunchChecklist(eventId?: string, allowedEventIds?: Eve
       id: event.id,
       slug: event.slug,
       title: event.title,
+      organization: event.organization,
       status: event.status,
       startsAt: event.startsAt,
       totalCapacity,

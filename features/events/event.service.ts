@@ -22,6 +22,12 @@ export async function listEvents(organizationId: string, allowedEventIds?: strin
           reservedQuantity: true
         }
       },
+      organization: {
+        select: {
+          publicDomain: true,
+          adminDomain: true
+        }
+      },
       orders: {
         where: {
           status: "PAID",
@@ -195,6 +201,12 @@ export async function getEventForManagement(
               state: true
             }
           }
+        }
+      },
+      organization: {
+        select: {
+          publicDomain: true,
+          adminDomain: true
         }
       },
       leads: {

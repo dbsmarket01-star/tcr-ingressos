@@ -210,7 +210,7 @@ export async function getFinalPresaleChecklist(
       status: status(event.status === "PUBLISHED" && activeLots.length > 0 && availableQuantity > 0, true),
       evidence: `${activeLots.length} lote(s) ativo(s), ${availableQuantity} ingresso(s) disponiveis.`,
       action: "Publicar evento e conferir lotes ativos.",
-      href: getPublicEventUrl(event.slug)
+      href: getPublicEventUrl(event.slug, event.organization)
     },
     {
       label: "Banner e comunicacao visual",
@@ -256,7 +256,7 @@ export async function getFinalPresaleChecklist(
       status: status(pixOrders.length > 0),
       evidence: `${pixOrders.length} pagamento(s) Pix aprovado(s).`,
       action: "Fazer compra teste via Pix.",
-      href: getPublicEventUrl(event.slug)
+      href: getPublicEventUrl(event.slug, event.organization)
     },
     {
       label: "Compra cartao real",
@@ -264,7 +264,7 @@ export async function getFinalPresaleChecklist(
       status: status(cardOrders.length > 0),
       evidence: `${cardOrders.length} pagamento(s) cartao aprovado(s).`,
       action: "Fazer compra teste via cartao.",
-      href: getPublicEventUrl(event.slug)
+      href: getPublicEventUrl(event.slug, event.organization)
     },
     {
       label: "Split Asaas conferido",
@@ -358,6 +358,7 @@ export async function getFinalPresaleChecklist(
       id: event.id,
       title: event.title,
       slug: event.slug,
+      organization: event.organization,
       startsAt: event.startsAt,
       status: event.status,
       availableQuantity,

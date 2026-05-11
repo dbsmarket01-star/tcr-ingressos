@@ -431,7 +431,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
           </div>
 
           <div className="eventOverviewHeroActions">
-            <Link className="secondaryButton" href={getPublicEventUrl(event.slug)} target="_blank">
+            <Link className="secondaryButton" href={getPublicEventUrl(event.slug, event.organization)} target="_blank">
               Ver site do evento
             </Link>
             <details className="eventOverviewActionMenu">
@@ -455,7 +455,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
           <Link href={`/admin/events/${event.id}/edit`}>Ingressos e lotes</Link>
           <Link href={event.leadCaptureEnabled ? `/admin/events/${event.id}/leads` : `/admin/events/${event.id}/edit`}>Captação</Link>
           <Link href={`/admin/finance?eventId=${event.id}`}>Financeiro</Link>
-          <Link href={getPublicEventUrl(event.slug)} target="_blank">Divulgação</Link>
+          <Link href={getPublicEventUrl(event.slug, event.organization)} target="_blank">Divulgação</Link>
           <Link href="/admin/check-in">Check-in</Link>
           <Link href={`/admin/events/${event.id}/edit`}>Configurações</Link>
         </nav>
@@ -630,7 +630,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
               <button className="secondaryButton smallButton" type="submit">Pausar</button>
             </form>
 
-            <Link className="eventOverviewQuickAction" href={getPublicEventUrl(event.slug)} target="_blank">
+            <Link className="eventOverviewQuickAction" href={getPublicEventUrl(event.slug, event.organization)} target="_blank">
               <span className="eventOverviewQuickIcon"><DashboardIcon kind="ticket" /></span>
               <div>
                 <strong>Abrir checkout</strong>
@@ -645,7 +645,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
                 <strong>Copiar link do evento</strong>
                 <small>Compartilhar com a equipe</small>
               </div>
-              <CopyButton className="secondaryButton smallButton" copiedLabel="Copiado" label="Copiar" value={getPublicEventUrl(event.slug)} />
+              <CopyButton className="secondaryButton smallButton" copiedLabel="Copiado" label="Copiar" value={getPublicEventUrl(event.slug, event.organization)} />
             </div>
 
             <Link className="eventOverviewQuickAction" href={`/admin/finance?eventId=${event.id}`}>
