@@ -60,8 +60,39 @@ async function resolveHotelIdForLot(
   return hotel.id;
 }
 
+async function getEventSalesLimit(tx: Prisma.TransactionClient, eventId: string) {
+  const event = await tx.event.findUnique({
+    where: { id: eventId },
+    select: {
+      startsAt: true
+    }
+  });
+
+  if (!event) {
+    throw new Error("Evento nao encontrado para validar as vendas.");
+  }
+
+  return event.startsAt;
+}
+
+function validateLotSalesWindow(input: TicketLotInput, eventStartsAt: Date) {
+  if (input.salesStartsAt && input.salesStartsAt > eventStartsAt) {
+    throw new Error("O início das vendas do ingresso não pode ser depois da data do evento. Deixe em branco para vender imediatamente.");
+  }
+
+  if (input.salesEndsAt && input.salesEndsAt > eventStartsAt) {
+    throw new Error("O fim das vendas do ingresso não pode ser depois da data do evento.");
+  }
+
+  if (input.salesStartsAt && input.salesEndsAt && input.salesStartsAt > input.salesEndsAt) {
+    throw new Error("O início das vendas não pode ser depois do fim das vendas.");
+  }
+}
+
 export async function createTicketLot(input: TicketLotInput & { status: LotStatus }) {
   return prisma.$transaction(async (tx) => {
+    const eventStartsAt = await getEventSalesLimit(tx, input.eventId);
+    validateLotSalesWindow(input, eventStartsAt);
     const hotelId = await resolveHotelIdForLot(tx, input);
 
     return tx.ticketLot.create({
@@ -107,6 +138,7 @@ export async function getTicketLotForEdit(eventId: string, lotId: string) {
           id: true,
           title: true,
           slug: true,
+          startsAt: true,
           organizationId: true
         }
       },
@@ -117,6 +149,9 @@ export async function getTicketLotForEdit(eventId: string, lotId: string) {
 
 export async function updateTicketLot(lotId: string, input: TicketLotInput & { status: LotStatus }) {
   return prisma.$transaction(async (tx) => {
+    const eventStartsAt = await getEventSalesLimit(tx, input.eventId);
+    validateLotSalesWindow(input, eventStartsAt);
+
     const lot = await tx.ticketLot.findUnique({
       where: {
         id: lotId

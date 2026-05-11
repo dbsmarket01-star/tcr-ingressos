@@ -1023,11 +1023,13 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           <div className="grid twoColumns">
             <label className="field">
               <span>Início das vendas</span>
-              <input name="salesStartsAt" type="datetime-local" />
+              <input name="salesStartsAt" type="datetime-local" max={formatDateTimeInput(event.startsAt)} />
+              <small>Deixe em branco para vender imediatamente. Não pode passar da data do evento.</small>
             </label>
             <label className="field">
               <span>Fim das vendas</span>
-              <input name="salesEndsAt" type="datetime-local" />
+              <input name="salesEndsAt" type="datetime-local" max={formatDateTimeInput(event.startsAt)} />
+              <small>Normalmente é a data e hora de início do evento.</small>
             </label>
           </div>
           <div className="formActions">

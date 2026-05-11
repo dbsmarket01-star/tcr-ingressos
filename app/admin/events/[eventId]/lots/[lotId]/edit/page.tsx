@@ -175,11 +175,23 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
           <div className="grid twoColumns">
             <label className="field">
               <span>Início das vendas</span>
-              <input name="salesStartsAt" type="datetime-local" defaultValue={formatDateTimeInput(lot.salesStartsAt)} />
+              <input
+                name="salesStartsAt"
+                type="datetime-local"
+                defaultValue={formatDateTimeInput(lot.salesStartsAt)}
+                max={formatDateTimeInput(lot.event.startsAt)}
+              />
+              <small>Deixe em branco para vender imediatamente. Não pode passar da data do evento.</small>
             </label>
             <label className="field">
               <span>Fim das vendas</span>
-              <input name="salesEndsAt" type="datetime-local" defaultValue={formatDateTimeInput(lot.salesEndsAt)} />
+              <input
+                name="salesEndsAt"
+                type="datetime-local"
+                defaultValue={formatDateTimeInput(lot.salesEndsAt)}
+                max={formatDateTimeInput(lot.event.startsAt)}
+              />
+              <small>Normalmente é a data e hora de início do evento.</small>
             </label>
           </div>
           <label className="field">
