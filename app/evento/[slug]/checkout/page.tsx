@@ -173,12 +173,16 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
         </Link>
         <div className="checkoutFlowGrid">
           <aside className="checkoutCartPanel" aria-label="Resumo do carrinho">
-            <span className="eyebrow">Seu carrinho</span>
-            <h1>{event.title}</h1>
-            <p>{formatDateTime(event.startsAt)}</p>
-            <p>
-              {event.venueName} - {event.city}, {event.state}
-            </p>
+            <div className="checkoutCartHeader">
+              <span className="eyebrow">Seu carrinho</span>
+              <h1>{event.title}</h1>
+              <div className="checkoutCartMeta" aria-label="Data e local do evento">
+                <span>{formatDateTime(event.startsAt)}</span>
+                <span>
+                  {event.venueName} - {event.city}, {event.state}
+                </span>
+              </div>
+            </div>
             <div className="checkoutCartItems">
               {selectedItems.map((item) => (
                 <div className="checkoutCartItem" key={item.lot.id}>
@@ -233,12 +237,14 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
           </aside>
 
           <section className="checkoutRegistrationPanel" id="cadastro">
-            <span className="checkoutStepEyebrow">Etapa 2 de 2</span>
-            <h2>Dados do comprador</h2>
-            <p>
-              Informe os dados de quem receberá {totalQuantity > 1 ? "os ingressos" : "o ingresso"}. Você poderá
-              revisar o pedido antes do pagamento.
-            </p>
+            <div className="checkoutPanelHeader">
+              <span className="checkoutStepEyebrow">Etapa 2 de 2</span>
+              <h2>Dados do comprador</h2>
+              <p>
+                Informe os dados de quem receberá {totalQuantity > 1 ? "os ingressos" : "o ingresso"}. Você poderá
+                revisar o pedido antes do pagamento.
+              </p>
+            </div>
 
             <form id="checkoutRegistrationForm" action={createCheckoutOrderAction} className="form checkoutRegistrationForm">
               {checkoutError ? <div className="errorBox">{checkoutError}</div> : null}
@@ -342,7 +348,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                             <input type="hidden" name={`${prefix}_enabled`} value="1" />
                             <h4>Hospedagem {guestIndex}</h4>
                             <div className="hotelGuestColumns">
-                              <div>
+                              <div className="hotelGuestPerson hotelGuestPersonPrimary">
                                 <strong>Hóspede principal</strong>
                                 <label className="field">
                                   <span>Nome completo</span>
@@ -376,7 +382,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                                   />
                                 </label>
                               </div>
-                              <div>
+                              <div className="hotelGuestPerson hotelGuestPersonCompanion">
                                 <strong>Acompanhante / cônjuge</strong>
                                 <label className="field">
                                   <span>Nome completo</span>
