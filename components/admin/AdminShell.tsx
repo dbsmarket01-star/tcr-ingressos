@@ -44,6 +44,29 @@ export async function AdminShell({
 
   return (
     <main className="adminShell">
+      <details className="adminMobileMenu">
+        <summary>
+          <span className="adminMobileBrand">
+            {currentOrganizationContext.brandLogoUrl ? (
+              <img alt={brandName} className="brandLogo" src={currentOrganizationContext.brandLogoUrl} />
+            ) : (
+              <span className="brandMark">{brandMark}</span>
+            )}
+            {!currentOrganizationContext.brandLogoUrl ? <strong>{brandName}</strong> : null}
+          </span>
+          <span className="adminMobileMenuButton">Menu</span>
+        </summary>
+        <div className="adminMobileMenuPanel">
+          {!hideSidebarIntro ? (
+            <div className="adminMobileIntro">
+              <span>{sidebarEyebrow}</span>
+              <p>{sidebarText}</p>
+            </div>
+          ) : null}
+          <AdminSideNav groups={navGroups} />
+        </div>
+      </details>
+
       <aside className="sidebar">
         <Link className="brand sidebarBrand" href="/admin">
           {currentOrganizationContext.brandLogoUrl ? (
