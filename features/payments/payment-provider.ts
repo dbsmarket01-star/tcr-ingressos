@@ -5,6 +5,11 @@ import {
   type AsaasOrganizationConfig,
   type PaymentOrganizationContext
 } from "./payment-organization-config";
+import {
+  MIN_CARD_INSTALLMENT_AMOUNT_IN_CENTS,
+  MIN_CARD_PAYMENT_AMOUNT_IN_CENTS,
+  MIN_PIX_PAYMENT_AMOUNT_IN_CENTS
+} from "@/features/pricing/pricing";
 
 export type PaymentIntentInput = {
   orderId: string;
@@ -288,8 +293,8 @@ export class AsaasPaymentProvider implements PaymentProvider {
   }
 
   async createPaymentIntent(input: PaymentIntentInput): Promise<PaymentIntentResult> {
-    if (input.amountInCents <= 0) {
-      throw new Error("O valor do Pix precisa ser maior que zero.");
+    if (input.amountInCents < MIN_PIX_PAYMENT_AMOUNT_IN_CENTS) {
+      throw new Error("O valor do Pix precisa ser de pelo menos R$ 10,00.");
     }
 
     const customer = await this.createCustomer(input);
@@ -341,8 +346,12 @@ export class AsaasPaymentProvider implements PaymentProvider {
   }
 
   async createCreditCardPayment(input: CreditCardPaymentInput): Promise<PaymentIntentResult> {
-    if (input.amountInCents <= 0) {
-      throw new Error("O valor do cartão precisa ser maior que zero.");
+    if (input.amountInCents < MIN_CARD_PAYMENT_AMOUNT_IN_CENTS) {
+      throw new Error("O valor do cartão precisa ser de pelo menos R$ 5,00.");
+    }
+
+    if (Math.ceil(input.amountInCents / input.installments) < MIN_CARD_INSTALLMENT_AMOUNT_IN_CENTS) {
+      throw new Error("Cada parcela no cartão precisa ser de pelo menos R$ 5,00.");
     }
 
     const customer = await this.createCustomer(input);

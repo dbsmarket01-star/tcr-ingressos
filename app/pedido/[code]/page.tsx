@@ -14,7 +14,11 @@ import {
   payWithCreditCardAction,
   startPaymentAction
 } from "@/features/payments/payment.actions";
-import { calculateCardInterestInCents, capDiscountToPayableAmount } from "@/features/pricing/pricing";
+import {
+  MIN_CARD_INSTALLMENT_AMOUNT_IN_CENTS,
+  calculateCardInterestInCents,
+  capDiscountToPayableAmount
+} from "@/features/pricing/pricing";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { getCreditCardInstallmentLimitForEvent } from "@/lib/payment-installments";
 
@@ -76,27 +80,29 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
   const hasPixPayload = Boolean(order.payment?.pixQrCodePayload);
   const shouldOpenCreditCard = Boolean(paymentError && paymentErrorMethod === "card");
   const shouldOpenPix = Boolean(hasPixPayload || paymentErrorMethod === "pix" || !paymentError);
-  const installmentOptions = Array.from({ length: maxCreditCardInstallments }, (_, index) => index + 1).map((installment) => {
-    const interestInCents = order.items.reduce(
-      (sum, item) =>
-        sum +
-        calculateCardInterestInCents(
-          item.totalInCents + item.serviceFeeInCents,
-          installment,
-          item.cardInterestBpsPerInstallment,
-          item.cardInterestStartsAtInstallment
-        ),
-      0
-    );
-    const totalWithInterestInCents = baseTotalInCents + interestInCents;
+  const installmentOptions = Array.from({ length: maxCreditCardInstallments }, (_, index) => index + 1)
+    .map((installment) => {
+      const interestInCents = order.items.reduce(
+        (sum, item) =>
+          sum +
+          calculateCardInterestInCents(
+            item.totalInCents + item.serviceFeeInCents,
+            installment,
+            item.cardInterestBpsPerInstallment,
+            item.cardInterestStartsAtInstallment
+          ),
+        0
+      );
+      const totalWithInterestInCents = baseTotalInCents + interestInCents;
 
-    return {
-      installment,
-      interestInCents,
-      totalWithInterestInCents,
-      installmentValueInCents: Math.ceil(totalWithInterestInCents / installment)
-    };
-  });
+      return {
+        installment,
+        interestInCents,
+        totalWithInterestInCents,
+        installmentValueInCents: Math.ceil(totalWithInterestInCents / installment)
+      };
+    })
+    .filter((option) => option.installmentValueInCents >= MIN_CARD_INSTALLMENT_AMOUNT_IN_CENTS);
   const eventHeroDate = formatDateTime(order.event.startsAt);
   const ticketEmailStatusText = order.ticketsEmailSentAt
     ? `Ingressos enviados por e-mail em ${formatDateTime(order.ticketsEmailSentAt)}.`

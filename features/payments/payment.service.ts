@@ -3,7 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { createPublicTicketUrl, sendTicketsEmail } from "@/features/email/email.service";
 import { createHomeListEntriesForApprovedOrder, updateHomeListStatusForOrder } from "@/features/hospitality/home-list.service";
 import { expirePendingOrderByCode } from "@/features/orders/order.service";
-import { calculateCardInterestInCents, capDiscountToPayableAmount } from "@/features/pricing/pricing";
+import {
+  MIN_CARD_INSTALLMENT_AMOUNT_IN_CENTS,
+  MIN_CARD_PAYMENT_AMOUNT_IN_CENTS,
+  MIN_PIX_PAYMENT_AMOUNT_IN_CENTS,
+  calculateCardInterestInCents,
+  capDiscountToPayableAmount
+} from "@/features/pricing/pricing";
 import { getCreditCardInstallmentLimitForEvent } from "@/lib/payment-installments";
 import { trackMetaPurchaseForPaidOrder } from "@/features/tracking/meta-conversions.service";
 import { createQrCodeToken, createTicketCode } from "@/features/tickets/ticket-code";
@@ -150,8 +156,8 @@ export async function startPaymentForOrder(orderCode: string) {
   const pixDiscountInCents = capDiscountToPayableAmount(baseTotalInCents, order.pixDiscountInCents);
   const pixTotalInCents = Math.max(baseTotalInCents - pixDiscountInCents, 0);
 
-  if (pixTotalInCents <= 0) {
-    throw new Error("Não foi possível gerar Pix para pedido com valor zerado. Revise o desconto Pix do ingresso.");
+  if (pixTotalInCents < MIN_PIX_PAYMENT_AMOUNT_IN_CENTS) {
+    throw new Error("Não foi possível gerar Pix: o valor mínimo aceito é R$ 10,00. Revise o preço ou desconto Pix do ingresso.");
   }
 
   if (order.cardInterestInCents > 0 || order.totalInCents !== pixTotalInCents || order.pixDiscountInCents !== pixDiscountInCents) {
@@ -488,8 +494,12 @@ export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & {
   );
   const cardTotalInCents = baseTotalInCents + cardInterestInCents;
 
-  if (cardTotalInCents <= 0) {
-    throw new Error("Não foi possível cobrar cartão para pedido com valor zerado. Revise o valor do ingresso.");
+  if (cardTotalInCents < MIN_CARD_PAYMENT_AMOUNT_IN_CENTS) {
+    throw new Error("Não foi possível cobrar cartão: o valor mínimo aceito é R$ 5,00. Revise o valor do ingresso.");
+  }
+
+  if (Math.ceil(cardTotalInCents / input.installments) < MIN_CARD_INSTALLMENT_AMOUNT_IN_CENTS) {
+    throw new Error("Não foi possível cobrar cartão: cada parcela precisa ser de pelo menos R$ 5,00.");
   }
 
   const asaas = getAsaasProvider(order.event.organization);

@@ -58,11 +58,12 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
               <input
                 name="price"
                 type="number"
-                min="0"
+                min="10"
                 step="0.01"
                 defaultValue={(lot.priceInCents / 100).toFixed(2)}
                 required
               />
+              <small>Valor mínimo aceito pelo Asaas: R$ 10,00.</small>
             </label>
             <label className="field">
               <span>Quantidade total</span>

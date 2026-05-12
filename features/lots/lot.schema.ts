@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { MIN_PAYABLE_AMOUNT_IN_CENTS } from "@/features/pricing/pricing";
 
+const minimumTicketPriceMessage = "O preço do ingresso precisa ser de pelo menos R$ 10,00 para ser aceito pelo Asaas.";
+
 function validatePixDiscount(
   data: { priceInCents?: number; serviceFeeBps?: number; pixDiscountPercentBps: number; pixDiscountFixedInCents: number },
   ctx: z.RefinementCtx
@@ -28,14 +30,14 @@ function validatePixDiscount(
   if (data.pixDiscountFixedInCents > 0 && data.pixDiscountFixedInCents > minimumPayableAmount - MIN_PAYABLE_AMOUNT_IN_CENTS) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "O desconto Pix precisa deixar pelo menos R$ 1,00 para pagamento.",
+      message: "O desconto Pix precisa deixar pelo menos R$ 10,00 para pagamento.",
       path: ["pixDiscountFixedInCents"]
     });
   }
 }
 
 export const ticketLotPricingSchema = z.object({
-  priceInCents: z.number().int().min(0),
+  priceInCents: z.number().int().min(MIN_PAYABLE_AMOUNT_IN_CENTS, minimumTicketPriceMessage),
   serviceFeeBps: z.number().int().min(0).max(3000).default(0),
   pixDiscountPercentBps: z.number().int().min(0).max(10000).default(0),
   pixDiscountFixedInCents: z.number().int().min(0).default(0),
@@ -54,7 +56,7 @@ export const ticketLotSchema = z.object({
   newHotelState: z.string().optional(),
   newHotelInternalNotes: z.string().optional(),
   newHotelAvailableRooms: z.number().int().min(0).optional(),
-  priceInCents: z.number().int().min(0),
+  priceInCents: z.number().int().min(MIN_PAYABLE_AMOUNT_IN_CENTS, minimumTicketPriceMessage),
   serviceFeeBps: z.number().int().min(0).max(3000).default(0),
   pixDiscountPercentBps: z.number().int().min(0).max(10000).default(0),
   pixDiscountFixedInCents: z.number().int().min(0).default(0),

@@ -94,27 +94,43 @@ describe("Asaas payment provider", () => {
     });
   });
 
-  it("does not create an Asaas customer when Pix value is zero", async () => {
+  it("does not create an Asaas customer when Pix value is below the Asaas minimum", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
     const provider = new AsaasPaymentProvider(config);
 
-    await expect(provider.createPaymentIntent({ ...basePixInput, amountInCents: 0 })).rejects.toThrow(
-      "O valor do Pix precisa ser maior que zero."
+    await expect(provider.createPaymentIntent({ ...basePixInput, amountInCents: 999 })).rejects.toThrow(
+      "O valor do Pix precisa ser de pelo menos R$ 10,00."
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("does not create an Asaas customer when credit card value is zero", async () => {
+  it("does not create an Asaas customer when credit card value is below the Asaas minimum", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
     const provider = new AsaasPaymentProvider(config);
 
-    await expect(provider.createCreditCardPayment({ ...baseCardInput, amountInCents: 0 })).rejects.toThrow(
-      "O valor do cartão precisa ser maior que zero."
+    await expect(provider.createCreditCardPayment({ ...baseCardInput, amountInCents: 499 })).rejects.toThrow(
+      "O valor do cartão precisa ser de pelo menos R$ 5,00."
     );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("does not create an Asaas customer when a credit card installment is below the Asaas minimum", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const provider = new AsaasPaymentProvider(config);
+
+    await expect(
+      provider.createCreditCardPayment({
+        ...baseCardInput,
+        amountInCents: 1000,
+        installments: 3
+      })
+    ).rejects.toThrow("Cada parcela no cartão precisa ser de pelo menos R$ 5,00.");
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

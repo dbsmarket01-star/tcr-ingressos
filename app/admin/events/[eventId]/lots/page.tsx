@@ -235,7 +235,8 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
             <div className="grid twoColumns">
               <label className="field">
                 <span>Preço</span>
-                <input name="price" type="number" min="0" step="0.01" required />
+                <input name="price" type="number" min="10" step="0.01" required />
+                <small>Valor mínimo aceito pelo Asaas: R$ 10,00.</small>
               </label>
               <label className="field">
                 <span>Quantidade total</span>

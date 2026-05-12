@@ -29,6 +29,13 @@ function lotErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
+function validationErrorMessage(
+  result: { error?: { issues?: Array<{ message?: string }> } },
+  fallback: string
+) {
+  return result.error?.issues?.[0]?.message || fallback;
+}
+
 function parsePixDiscount(formData: FormData) {
   const type = String(formData.get("pixDiscountType") ?? "NONE").trim();
 
@@ -74,7 +81,11 @@ export async function createTicketLotAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect(`/admin/events/${eventId}/lots?lotError=${encodeURIComponent("Verifique os campos obrigatórios do lote.")}`);
+    redirect(
+      `/admin/events/${eventId}/lots?lotError=${encodeURIComponent(
+        validationErrorMessage(parsed, "Verifique os campos obrigatórios do lote.")
+      )}`
+    );
   }
 
   await requireEventAccess(eventId);
@@ -151,7 +162,11 @@ export async function updateTicketLotPricingAction(formData: FormData) {
     });
 
   if (!parsed.success) {
-    redirect(`/admin/events/${eventId}/lots?lotError=${encodeURIComponent("Verifique preço, taxa e juros do lote.")}`);
+    redirect(
+      `/admin/events/${eventId}/lots?lotError=${encodeURIComponent(
+        validationErrorMessage(parsed, "Verifique preço, taxa e juros do lote.")
+      )}`
+    );
   }
 
   try {
@@ -197,7 +212,11 @@ export async function updateTicketLotAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect(`/admin/events/${eventId}/lots/${lotId}/edit?error=${encodeURIComponent("Verifique os campos obrigatórios do lote.")}`);
+    redirect(
+      `/admin/events/${eventId}/lots/${lotId}/edit?error=${encodeURIComponent(
+        validationErrorMessage(parsed, "Verifique os campos obrigatórios do lote.")
+      )}`
+    );
   }
 
   if (
