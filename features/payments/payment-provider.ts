@@ -239,7 +239,6 @@ export class MercadoPagoCheckoutProProvider implements PaymentProvider {
 export class AsaasPaymentProvider implements PaymentProvider {
   private readonly apiUrl: string;
   private readonly accessToken: string;
-  private readonly billingType: string;
   private readonly allowGlobalAsaasSplit: boolean;
 
   constructor(config?: AsaasOrganizationConfig) {
@@ -247,7 +246,6 @@ export class AsaasPaymentProvider implements PaymentProvider {
 
     this.accessToken = resolvedConfig.accessToken;
     this.apiUrl = resolvedConfig.apiUrl;
-    this.billingType = resolvedConfig.billingType;
     this.allowGlobalAsaasSplit = resolvedConfig.allowGlobalAsaasSplit;
   }
 
@@ -296,6 +294,10 @@ export class AsaasPaymentProvider implements PaymentProvider {
       throw new Error("Asaas nao retornou o cliente da cobranca.");
     }
 
+    if (input.amountInCents <= 0) {
+      throw new Error("O valor do Pix precisa ser maior que zero.");
+    }
+
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 1);
 
@@ -303,7 +305,7 @@ export class AsaasPaymentProvider implements PaymentProvider {
       method: "POST",
       body: JSON.stringify({
         customer: customer.id,
-        billingType: this.billingType,
+        billingType: "PIX",
         value: input.amountInCents / 100,
         dueDate: dueDate.toISOString().slice(0, 10),
         description: `Pedido ${input.orderCode} - ${input.eventTitle}`,
@@ -316,41 +318,25 @@ export class AsaasPaymentProvider implements PaymentProvider {
       throw new Error("Asaas nao retornou o pagamento criado.");
     }
 
-    if (this.billingType === "PIX") {
-      const pixQrCode = await this.request<AsaasPixQrCodeResponse>(`/payments/${payment.id}/pixQrCode`, {
-        method: "GET"
-      });
+    const pixQrCode = await this.request<AsaasPixQrCodeResponse>(`/payments/${payment.id}/pixQrCode`, {
+      method: "GET"
+    });
 
-      if (!pixQrCode.encodedImage || !pixQrCode.payload) {
-        throw new Error("Asaas nao retornou o QR Code Pix.");
-      }
-
-      return {
-        provider: PrismaPaymentProvider.ASAAS,
-        externalId: payment.id,
-        pixQrCodeImage: pixQrCode.encodedImage,
-        pixQrCodePayload: pixQrCode.payload,
-        pixExpiresAt: pixQrCode.expirationDate ? new Date(pixQrCode.expirationDate) : undefined,
-        status: "PENDING",
-        rawPayload: {
-          payment,
-          pixQrCode
-        }
-      };
-    }
-
-    const checkoutUrl = payment.invoiceUrl || payment.bankSlipUrl;
-
-    if (!checkoutUrl) {
-      throw new Error("Asaas nao retornou uma URL de pagamento.");
+    if (!pixQrCode.encodedImage || !pixQrCode.payload) {
+      throw new Error("Asaas nao retornou o QR Code Pix.");
     }
 
     return {
       provider: PrismaPaymentProvider.ASAAS,
       externalId: payment.id,
-      checkoutUrl,
+      pixQrCodeImage: pixQrCode.encodedImage,
+      pixQrCodePayload: pixQrCode.payload,
+      pixExpiresAt: pixQrCode.expirationDate ? new Date(pixQrCode.expirationDate) : undefined,
       status: "PENDING",
-      rawPayload: payment
+      rawPayload: {
+        payment,
+        pixQrCode
+      }
     };
   }
 
@@ -367,6 +353,10 @@ export class AsaasPaymentProvider implements PaymentProvider {
     const sanitizedPhone = input.customerPhone?.replace(/\D/g, "");
     const paymentValue = input.amountInCents / 100;
     const installmentCount = input.installments > 1 ? input.installments : undefined;
+
+    if (input.amountInCents <= 0) {
+      throw new Error("O valor do cartão precisa ser maior que zero.");
+    }
 
     const payment = await this.request<AsaasPaymentResponse>("/payments", {
       method: "POST",

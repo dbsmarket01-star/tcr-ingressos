@@ -14,7 +14,7 @@ import {
   payWithCreditCardAction,
   startPaymentAction
 } from "@/features/payments/payment.actions";
-import { calculateCardInterestInCents } from "@/features/pricing/pricing";
+import { calculateCardInterestInCents, capDiscountToPayableAmount } from "@/features/pricing/pricing";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { getCreditCardInstallmentLimitForEvent } from "@/lib/payment-installments";
 
@@ -64,15 +64,18 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
   }
 
   const paymentError = typeof query.paymentError === "string" ? query.paymentError : null;
+  const paymentErrorMethod = query.paymentMethod === "pix" ? "pix" : "card";
   const showPaymentSimulator =
     process.env.NODE_ENV !== "production" && process.env.SHOW_PAYMENT_SIMULATOR === "true";
   const isAsaasCheckout =
     process.env.PAYMENT_PROVIDER === "ASAAS" || order.payment?.provider === "ASAAS";
   const baseTotalInCents = order.subtotalInCents + order.serviceFeeInCents - order.discountInCents;
-  const pixTotalInCents = Math.max(baseTotalInCents - order.pixDiscountInCents, 0);
+  const pixDiscountInCents = capDiscountToPayableAmount(baseTotalInCents, order.pixDiscountInCents);
+  const pixTotalInCents = Math.max(baseTotalInCents - pixDiscountInCents, 0);
   const maxCreditCardInstallments = getCreditCardInstallmentLimitForEvent(order.event);
-  const shouldOpenCreditCard = Boolean(paymentError || !order.payment?.pixQrCodePayload);
-  const shouldOpenPix = Boolean(order.payment?.pixQrCodePayload && !paymentError);
+  const hasPixPayload = Boolean(order.payment?.pixQrCodePayload);
+  const shouldOpenCreditCard = Boolean(paymentError && paymentErrorMethod === "card");
+  const shouldOpenPix = Boolean(hasPixPayload || paymentErrorMethod === "pix" || !paymentError);
   const installmentOptions = Array.from({ length: maxCreditCardInstallments }, (_, index) => index + 1).map((installment) => {
     const interestInCents = order.items.reduce(
       (sum, item) =>
@@ -191,16 +194,22 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
               !
             </div>
             <div className="paymentErrorCopy">
-              <span>Pagamento não aprovado</span>
-              <h2>Seu cartão não autorizou esta compra.</h2>
-              <p>
-                Nenhuma cobrança foi concluída. Confira os dados do cartão, limite disponível ou autorização no app do banco.
-                Você também pode tentar outro cartão ou pagar via Pix.
-              </p>
+              <span>{paymentErrorMethod === "pix" ? "Pix não gerado" : "Pagamento não aprovado"}</span>
+              <h2>{paymentErrorMethod === "pix" ? "Não conseguimos gerar o Pix desta compra." : "Seu cartão não autorizou esta compra."}</h2>
+              {paymentErrorMethod === "pix" ? (
+                <p>
+                  Nenhuma cobrança foi criada. Revise o valor do pedido e tente gerar o Pix novamente. Se o problema persistir, fale com o suporte do evento.
+                </p>
+              ) : (
+                <p>
+                  Nenhuma cobrança foi concluída. Confira os dados do cartão, limite disponível ou autorização no app do banco.
+                  Você também pode tentar outro cartão ou pagar via Pix.
+                </p>
+              )}
               <small>Retorno do banco: {paymentError}</small>
             </div>
-            <a className="secondaryButton paymentErrorAction" href="#cartao-de-credito">
-              Tentar novamente
+            <a className="secondaryButton paymentErrorAction" href={paymentErrorMethod === "pix" ? "#pix" : "#cartao-de-credito"}>
+              {paymentErrorMethod === "pix" ? "Gerar Pix novamente" : "Tentar novamente"}
             </a>
           </section>
         ) : null}
@@ -328,13 +337,13 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
           {order.status === "PENDING_PAYMENT" ? (
             <div className="paymentMethodStack">
               <div className="paymentChoiceList">
-                <details className="paymentChoiceDisclosure" open={shouldOpenPix}>
+                <details className="paymentChoiceDisclosure" id="pix" open={shouldOpenPix}>
                   <summary data-open-label="Abrir Pix">
                     <span>Pix</span>
                     <strong>{formatCurrency(pixTotalInCents)}</strong>
                     <small>
                       QR Code ou copia e cola.
-                      {order.pixDiscountInCents > 0 ? ` Economize ${formatCurrency(order.pixDiscountInCents)}.` : ""}
+                      {pixDiscountInCents > 0 ? ` Economize ${formatCurrency(pixDiscountInCents)}.` : ""}
                     </small>
                   </summary>
                   <div className="pixBox">
@@ -345,7 +354,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                       </div>
                       <strong>{formatCurrency(pixTotalInCents)}</strong>
                     </div>
-                    {order.pixDiscountInCents > 0 ? (
+                    {pixDiscountInCents > 0 ? (
                       <div className="paymentStatusGrid compactPaymentStatus">
                         <div>
                           <span>Total sem desconto</span>
@@ -353,7 +362,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                         </div>
                         <div>
                           <span>Desconto no Pix</span>
-                          <strong>- {formatCurrency(order.pixDiscountInCents)}</strong>
+                          <strong>- {formatCurrency(pixDiscountInCents)}</strong>
                         </div>
                         <div>
                           <span>Total no Pix</span>

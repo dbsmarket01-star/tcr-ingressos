@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { createPublicTicketUrl, sendTicketsEmail } from "@/features/email/email.service";
 import { createHomeListEntriesForApprovedOrder, updateHomeListStatusForOrder } from "@/features/hospitality/home-list.service";
 import { expirePendingOrderByCode } from "@/features/orders/order.service";
-import { calculateCardInterestInCents } from "@/features/pricing/pricing";
+import { calculateCardInterestInCents, capDiscountToPayableAmount } from "@/features/pricing/pricing";
 import { getCreditCardInstallmentLimitForEvent } from "@/lib/payment-installments";
 import { trackMetaPurchaseForPaidOrder } from "@/features/tracking/meta-conversions.service";
 import { createQrCodeToken, createTicketCode } from "@/features/tickets/ticket-code";
@@ -147,13 +147,19 @@ export async function startPaymentForOrder(orderCode: string) {
   }
 
   const baseTotalInCents = order.subtotalInCents + order.serviceFeeInCents - order.discountInCents;
-  const pixTotalInCents = Math.max(baseTotalInCents - order.pixDiscountInCents, 0);
+  const pixDiscountInCents = capDiscountToPayableAmount(baseTotalInCents, order.pixDiscountInCents);
+  const pixTotalInCents = Math.max(baseTotalInCents - pixDiscountInCents, 0);
 
-  if (order.cardInterestInCents > 0 || order.totalInCents !== pixTotalInCents) {
+  if (pixTotalInCents <= 0) {
+    throw new Error("Não foi possível gerar Pix para pedido com valor zerado. Revise o desconto Pix do ingresso.");
+  }
+
+  if (order.cardInterestInCents > 0 || order.totalInCents !== pixTotalInCents || order.pixDiscountInCents !== pixDiscountInCents) {
     order = await prisma.order.update({
       where: { id: order.id },
       data: {
         cardInterestInCents: 0,
+        pixDiscountInCents,
         totalInCents: pixTotalInCents,
         payment: {
           update: {
@@ -481,6 +487,10 @@ export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & {
     0
   );
   const cardTotalInCents = baseTotalInCents + cardInterestInCents;
+
+  if (cardTotalInCents <= 0) {
+    throw new Error("Não foi possível cobrar cartão para pedido com valor zerado. Revise o valor do ingresso.");
+  }
 
   const asaas = getAsaasProvider(order.event.organization);
   const split = await buildAsaasSplitsForOrder(order.items, order.event.organizationId);

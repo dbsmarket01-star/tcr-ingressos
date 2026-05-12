@@ -1,5 +1,15 @@
+export const MIN_PAYABLE_AMOUNT_IN_CENTS = 100;
+
 export function calculateServiceFeeInCents(priceInCents: number, quantity: number, serviceFeeBps: number) {
   return Math.round(priceInCents * quantity * (serviceFeeBps / 10000));
+}
+
+export function capDiscountToPayableAmount(amountInCents: number, discountInCents: number) {
+  if (amountInCents <= MIN_PAYABLE_AMOUNT_IN_CENTS) {
+    return 0;
+  }
+
+  return Math.min(Math.max(discountInCents, 0), amountInCents - MIN_PAYABLE_AMOUNT_IN_CENTS);
 }
 
 export function calculatePixDiscountInCents(
@@ -12,7 +22,7 @@ export function calculatePixDiscountInCents(
     pixDiscountPercentBps > 0 ? Math.round(amountInCents * (pixDiscountPercentBps / 10000)) : 0;
   const fixedDiscount = pixDiscountFixedInCents > 0 ? pixDiscountFixedInCents * quantity : 0;
 
-  return Math.min(Math.max(percentageDiscount + fixedDiscount, 0), amountInCents);
+  return capDiscountToPayableAmount(amountInCents, percentageDiscount + fixedDiscount);
 }
 
 export function calculateCardInterestInCents(

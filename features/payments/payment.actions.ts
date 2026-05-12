@@ -42,8 +42,8 @@ function creditCardValidationMessage(error: unknown) {
   return "Preencha os dados do cartão corretamente.";
 }
 
-function paymentErrorRedirectPath(orderCode: string, message: string) {
-  return `/pedido/${orderCode}?paymentError=${encodeURIComponent(message)}#aviso-pagamento`;
+function paymentErrorRedirectPath(orderCode: string, message: string, method: "pix" | "card" = "card") {
+  return `/pedido/${orderCode}?paymentError=${encodeURIComponent(message)}&paymentMethod=${method}#aviso-pagamento`;
 }
 
 async function getActionIp() {
@@ -71,7 +71,7 @@ export async function startPaymentAction(formData: FormData) {
     revalidatePath(`/pedido/${orderCode}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível iniciar o pagamento.";
-    redirect(paymentErrorRedirectPath(orderCode, message));
+    redirect(paymentErrorRedirectPath(orderCode, message, "pix"));
   }
 
   if (checkoutUrl) {
@@ -120,7 +120,7 @@ export async function syncAsaasPaymentAction(formData: FormData) {
     revalidatePath("/admin/tickets");
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível verificar o pagamento.";
-    redirect(paymentErrorRedirectPath(orderCode, message));
+    redirect(paymentErrorRedirectPath(orderCode, message, "pix"));
   }
 
   redirect(`/pedido/${orderCode}`);
@@ -144,7 +144,7 @@ export async function payWithCreditCardAction(formData: FormData) {
   const orderCode = String(formData.get("orderCode") ?? "").trim();
 
   if (!parsed.success) {
-    redirect(paymentErrorRedirectPath(orderCode, creditCardValidationMessage(parsed.error)));
+    redirect(paymentErrorRedirectPath(orderCode, creditCardValidationMessage(parsed.error), "card"));
   }
 
   const remoteIp = await getActionIp();
@@ -161,7 +161,7 @@ export async function payWithCreditCardAction(formData: FormData) {
     revalidatePath("/admin/tickets");
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível pagar com cartão.";
-    redirect(paymentErrorRedirectPath(parsed.data.orderCode, message));
+    redirect(paymentErrorRedirectPath(parsed.data.orderCode, message, "card"));
   }
 
   redirect(`/pedido/${parsed.data.orderCode}`);

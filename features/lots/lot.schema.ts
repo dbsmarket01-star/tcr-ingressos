@@ -1,7 +1,8 @@
 import { z } from "zod";
+import { MIN_PAYABLE_AMOUNT_IN_CENTS } from "@/features/pricing/pricing";
 
 function validatePixDiscount(
-  data: { pixDiscountPercentBps: number; pixDiscountFixedInCents: number },
+  data: { priceInCents?: number; serviceFeeBps?: number; pixDiscountPercentBps: number; pixDiscountFixedInCents: number },
   ctx: z.RefinementCtx
 ) {
   if (data.pixDiscountPercentBps > 0 && data.pixDiscountFixedInCents > 0) {
@@ -9,6 +10,26 @@ function validatePixDiscount(
       code: z.ZodIssueCode.custom,
       message: "Escolha apenas um tipo de desconto no Pix: percentual ou valor fixo.",
       path: ["pixDiscountPercentBps"]
+    });
+  }
+
+  if (data.pixDiscountPercentBps >= 10000) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "O desconto Pix não pode zerar o pagamento. Use no máximo 99%.",
+      path: ["pixDiscountPercentBps"]
+    });
+  }
+
+  const priceInCents = data.priceInCents ?? 0;
+  const serviceFeeBps = data.serviceFeeBps ?? 0;
+  const minimumPayableAmount = priceInCents + Math.round(priceInCents * (serviceFeeBps / 10000));
+
+  if (data.pixDiscountFixedInCents > 0 && data.pixDiscountFixedInCents > minimumPayableAmount - MIN_PAYABLE_AMOUNT_IN_CENTS) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "O desconto Pix precisa deixar pelo menos R$ 1,00 para pagamento.",
+      path: ["pixDiscountFixedInCents"]
     });
   }
 }
