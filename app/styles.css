@@ -4064,7 +4064,7 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 }
 
 .publicMeta {
-  display: flex;
+  display: none;
   flex-wrap: wrap;
   gap: 10px;
 }
@@ -4080,7 +4080,42 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 }
 
 .publicMobileFacts {
-  display: none;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 2px;
+  max-width: 760px;
+}
+
+.publicMobileFacts div {
+  background: #f8fbfa;
+  border: 1px solid rgba(13, 43, 36, 0.12);
+  border-radius: 12px;
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+}
+
+.publicMobileFacts span {
+  color: var(--brand-dark);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.publicMobileFacts strong {
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.publicMobileFacts small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
 .heroActions {
