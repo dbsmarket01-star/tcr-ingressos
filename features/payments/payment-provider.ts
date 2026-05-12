@@ -288,14 +288,14 @@ export class AsaasPaymentProvider implements PaymentProvider {
   }
 
   async createPaymentIntent(input: PaymentIntentInput): Promise<PaymentIntentResult> {
+    if (input.amountInCents <= 0) {
+      throw new Error("O valor do Pix precisa ser maior que zero.");
+    }
+
     const customer = await this.createCustomer(input);
 
     if (!customer.id) {
       throw new Error("Asaas nao retornou o cliente da cobranca.");
-    }
-
-    if (input.amountInCents <= 0) {
-      throw new Error("O valor do Pix precisa ser maior que zero.");
     }
 
     const dueDate = new Date();
@@ -341,6 +341,10 @@ export class AsaasPaymentProvider implements PaymentProvider {
   }
 
   async createCreditCardPayment(input: CreditCardPaymentInput): Promise<PaymentIntentResult> {
+    if (input.amountInCents <= 0) {
+      throw new Error("O valor do cartão precisa ser maior que zero.");
+    }
+
     const customer = await this.createCustomer(input);
 
     if (!customer.id) {
@@ -353,10 +357,6 @@ export class AsaasPaymentProvider implements PaymentProvider {
     const sanitizedPhone = input.customerPhone?.replace(/\D/g, "");
     const paymentValue = input.amountInCents / 100;
     const installmentCount = input.installments > 1 ? input.installments : undefined;
-
-    if (input.amountInCents <= 0) {
-      throw new Error("O valor do cartão precisa ser maior que zero.");
-    }
 
     const payment = await this.request<AsaasPaymentResponse>("/payments", {
       method: "POST",
