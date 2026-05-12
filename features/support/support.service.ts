@@ -132,7 +132,7 @@ export async function resendTicketsEmailByOrderCode(
     throw new Error("Este pedido ainda não possui ingressos emitidos.");
   }
 
-  await sendTicketsEmail({
+  const emailResult = await sendTicketsEmail({
     to: order.customer.email,
     buyerName: order.customer.name,
     orderCode: order.code,
@@ -152,7 +152,14 @@ export async function resendTicketsEmailByOrderCode(
   await prisma.order.update({
     where: { id: order.id },
     data: {
-      ticketsEmailSentAt: new Date()
+      ticketsEmailSentAt: new Date(),
+      ticketsEmailProviderId: emailResult.providerId ?? null,
+      ticketsEmailStatus: emailResult.status,
+      ticketsEmailLastCheckedAt: new Date(),
+      ticketsEmailLastError: null,
+      ticketsEmailAttempts: {
+        increment: 1
+      }
     }
   });
 
@@ -293,7 +300,7 @@ export async function resendPublicAccessEmailsByCustomerEmail(email: string, org
 
   for (const order of orders) {
     if (order.status === "PAID" && order.tickets.length > 0) {
-      await sendTicketsEmail({
+      const emailResult = await sendTicketsEmail({
         to: order.customer.email,
         buyerName: order.customer.name,
         orderCode: order.code,
@@ -313,7 +320,14 @@ export async function resendPublicAccessEmailsByCustomerEmail(email: string, org
       await prisma.order.update({
         where: { id: order.id },
         data: {
-          ticketsEmailSentAt: new Date()
+          ticketsEmailSentAt: new Date(),
+          ticketsEmailProviderId: emailResult.providerId ?? null,
+          ticketsEmailStatus: emailResult.status,
+          ticketsEmailLastCheckedAt: new Date(),
+          ticketsEmailLastError: null,
+          ticketsEmailAttempts: {
+            increment: 1
+          }
         }
       });
 

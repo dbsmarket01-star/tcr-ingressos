@@ -114,6 +114,17 @@ type EmailPayload = {
   html: string;
   text: string;
   headers?: Record<string, string>;
+  tags?: Array<{
+    name: string;
+    value: string;
+  }>;
+};
+
+export type EmailSendResult = {
+  provider: "resend" | "dry-run";
+  providerId?: string;
+  status: "accepted" | "dry_run";
+  from: string;
 };
 
 function extractResendMessage(error: unknown) {
@@ -145,6 +156,10 @@ async function sendWithResend(
   }
 
   return result;
+}
+
+function getResendEmailId(result: Awaited<ReturnType<typeof sendWithResend>>) {
+  return result.data?.id;
 }
 
 async function sendBatchWithResend(
@@ -370,18 +385,33 @@ export async function sendTicketsEmail(input: TicketEmailInput) {
       orderCode: input.orderCode,
       tickets: input.tickets.map((ticket) => ticket.url)
     });
-    return;
+    return {
+      provider: "dry-run",
+      status: "dry_run",
+      from
+    } satisfies EmailSendResult;
   }
 
   const resend = new Resend(apiKey);
 
-  await sendWithResend(resend, {
+  const result = await sendWithResend(resend, {
     from,
     to: input.to,
     subject: `Seus ingressos - ${input.eventTitle}`,
     html: buildTicketEmailHtml(input),
-    text: buildTicketEmailText(input)
+    text: buildTicketEmailText(input),
+    tags: [
+      { name: "type", value: "tickets" },
+      { name: "order_code", value: input.orderCode }
+    ]
   });
+
+  return {
+    provider: "resend",
+    providerId: getResendEmailId(result),
+    status: "accepted",
+    from
+  } satisfies EmailSendResult;
 }
 
 export function createPublicTicketUrl(ticketCode: string, organization?: EmailOrganization | null) {

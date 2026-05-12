@@ -12625,6 +12625,25 @@ body.operationTheme .loginBrandDark .brandLogo {
   line-height: 1.45;
 }
 
+.paymentNotice {
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 12px;
+}
+
+.paymentNotice.success {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  color: #166534;
+}
+
+.paymentNotice.error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
 .checkInForm input[name="code"] {
   font-size: 20px;
   min-height: 54px;

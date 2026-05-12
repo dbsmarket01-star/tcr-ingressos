@@ -12,6 +12,7 @@ import {
   approveSimulatedPaymentAction,
   failSimulatedPaymentAction,
   payWithCreditCardAction,
+  resendApprovedTicketsEmailAction,
   startPaymentAction
 } from "@/features/payments/payment.actions";
 import {
@@ -69,6 +70,8 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
 
   const paymentError = typeof query.paymentError === "string" ? query.paymentError : null;
   const paymentErrorMethod = query.paymentMethod === "pix" ? "pix" : "card";
+  const ticketEmailStatus = query.ticketEmail === "sent" || query.ticketEmail === "error" ? query.ticketEmail : null;
+  const ticketEmailMessage = typeof query.ticketEmailMessage === "string" ? query.ticketEmailMessage : null;
   const showPaymentSimulator =
     process.env.NODE_ENV !== "production" && process.env.SHOW_PAYMENT_SIMULATOR === "true";
   const isAsaasCheckout =
@@ -104,9 +107,11 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
     })
     .filter((option) => option.installmentValueInCents >= MIN_CARD_INSTALLMENT_AMOUNT_IN_CENTS);
   const eventHeroDate = formatDateTime(order.event.startsAt);
-  const ticketEmailStatusText = order.ticketsEmailSentAt
-    ? `Ingressos enviados por e-mail em ${formatDateTime(order.ticketsEmailSentAt)}.`
-    : "Assim que o pagamento for aprovado, enviaremos os ingressos automaticamente para o e-mail do comprador.";
+  const ticketEmailStatusText = order.ticketsEmailDeliveredAt
+    ? `Ingressos entregues por e-mail em ${formatDateTime(order.ticketsEmailDeliveredAt)}.`
+    : order.ticketsEmailSentAt
+      ? `Ingressos enviados por e-mail em ${formatDateTime(order.ticketsEmailSentAt)}.`
+      : "Assim que o pagamento for aprovado, enviaremos os ingressos automaticamente para o e-mail do comprador.";
   const orderHeroTitle =
     order.status === "PAID"
       ? "Compra aprovada"
@@ -565,8 +570,16 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
           ) : null}
 
           {order.status === "PAID" ? (
-            <div className="paymentCompleteBox">
+            <div className="paymentCompleteBox" id="ingressos">
               <h3>Compra aprovada</h3>
+              {ticketEmailStatus ? (
+                <div className={ticketEmailStatus === "sent" ? "paymentNotice success" : "paymentNotice error"}>
+                  {ticketEmailMessage ||
+                    (ticketEmailStatus === "sent"
+                      ? "Ingressos reenviados por e-mail."
+                      : "Não foi possível reenviar os ingressos agora.")}
+                </div>
+              ) : null}
               <p>
                 Seus ingressos estão liberados. Apresente o QR Code na entrada do evento.
                 {order.ticketsEmailSentAt ? ` ${ticketEmailStatusText}` : ""}
@@ -578,6 +591,15 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                   </Link>
                 ))}
               </div>
+              <form action={resendApprovedTicketsEmailAction}>
+                <input type="hidden" name="orderCode" value={order.code} />
+                <SubmitButton className="secondaryButton fullButton" pendingText="Reenviando ingressos...">
+                  Reenviar ingressos por e-mail
+                </SubmitButton>
+              </form>
+              <p className="checkoutFootnote">
+                Se não encontrar o e-mail, confira também spam, promoções e atualizações.
+              </p>
             </div>
           ) : null}
         </aside>

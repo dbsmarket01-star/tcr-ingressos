@@ -5,9 +5,11 @@ const prismaMock = {
   payment: {
     findFirst: vi.fn(),
     update: vi.fn(),
+    updateMany: vi.fn(),
     findUniqueOrThrow: vi.fn()
   },
   order: {
+    update: vi.fn(),
     updateMany: vi.fn()
   },
   ticket: {
@@ -36,6 +38,11 @@ vi.mock("@/features/orders/order.service", () => ({
   expirePendingOrderByCode: vi.fn()
 }));
 
+vi.mock("@/features/hospitality/home-list.service", () => ({
+  createHomeListEntriesForApprovedOrder: vi.fn(),
+  updateHomeListStatusForOrder: vi.fn()
+}));
+
 vi.mock("@/features/tracking/meta-conversions.service", () => ({
   trackMetaPurchaseForPaidOrder: trackMetaPurchaseMock
 }));
@@ -61,6 +68,12 @@ vi.mock("@/features/payments/payment-provider", () => ({
 describe("payment webhook idempotency", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sendTicketsEmailMock.mockResolvedValue({
+      provider: "resend",
+      providerId: "email_123",
+      status: "accepted",
+      from: "A2 Imergidos <ingressos@a2imergidos.com.br>"
+    });
   });
 
   it("treats repeated APPROVED webhook as no-op when payment is already approved", async () => {
@@ -208,5 +221,112 @@ describe("payment webhook idempotency", () => {
     expect(prismaMock.$executeRaw).not.toHaveBeenCalled();
     expect(sendTicketsEmailMock).not.toHaveBeenCalled();
     expect(result).toBe(updatedPayment);
+  });
+
+  it("issues tickets and records the Resend id when an APPROVED webhook confirms a pending order", async () => {
+    const pendingPayment = {
+      id: "pay_5",
+      orderId: "order_5",
+      status: "PENDING",
+      amountInCents: 2500,
+      externalId: "pay_asaas_5",
+      order: {
+        id: "order_5",
+        code: "PED555",
+        eventId: "event_1",
+        couponId: null,
+        status: "PENDING_PAYMENT",
+        ticketsEmailSentAt: null,
+        ticketsEmailStatus: null,
+        customer: {
+          email: "buyer@example.com",
+          name: "Buyer"
+        },
+        items: [
+          {
+            id: "item_1",
+            lotId: "lot_1",
+            quantity: 1
+          }
+        ],
+        event: {
+          title: "A2 Imergidos Gramado",
+          startsAt: new Date("2026-08-28T18:00:00.000Z"),
+          venueName: "Hotel Serra Azul",
+          autoPurchaseApprovedEmailEnabled: true,
+          organization: {
+            name: "A2 Imergidos",
+            publicDomain: "a2imergidos.com.br",
+            adminDomain: "produtor.a2imergidos.com.br",
+            primaryColor: "#0f5f8c"
+          }
+        },
+        tickets: []
+      }
+    };
+
+    prismaMock.$transaction.mockImplementation(async (callback: (tx: typeof prismaMock) => Promise<unknown>) =>
+      callback(prismaMock as never)
+    );
+    prismaMock.payment.findFirst.mockResolvedValue(pendingPayment);
+    prismaMock.payment.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.ticket.create.mockResolvedValue({
+      code: "TICKET-1",
+      lot: {
+        name: "Ingresso Casal"
+      }
+    });
+    prismaMock.order.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.payment.findUniqueOrThrow.mockResolvedValue({
+      ...pendingPayment,
+      status: "APPROVED",
+      paidAt: new Date("2026-05-12T18:20:00.000Z")
+    });
+    prismaMock.order.update.mockResolvedValue({
+      ...pendingPayment.order,
+      ticketsEmailSentAt: new Date("2026-05-12T18:20:01.000Z")
+    });
+
+    const { handlePaymentWebhook } = await import("@/features/payments/payment.service");
+
+    await handlePaymentWebhook({
+      externalId: "pay_asaas_5",
+      orderCode: "PED555",
+      status: "APPROVED",
+      rawPayload: {
+        payment: {
+          id: "pay_asaas_5",
+          value: 25,
+          status: "CONFIRMED",
+          billingType: "PIX"
+        }
+      }
+    });
+
+    expect(sendTicketsEmailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "buyer@example.com",
+        orderCode: "PED555",
+        brandName: "A2 Imergidos",
+        tickets: [
+          expect.objectContaining({
+            code: "TICKET-1",
+            lotName: "Ingresso Casal"
+          })
+        ]
+      })
+    );
+    expect(prismaMock.order.update).toHaveBeenCalledWith({
+      where: { id: "order_5" },
+      data: expect.objectContaining({
+        ticketsEmailProviderId: "email_123",
+        ticketsEmailStatus: "accepted",
+        ticketsEmailLastError: null,
+        ticketsEmailAttempts: {
+          increment: 1
+        }
+      })
+    });
   });
 });

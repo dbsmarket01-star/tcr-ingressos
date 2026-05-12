@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { assertRateLimit } from "@/features/security/rate-limit";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
+import { resendTicketsEmailByOrderCode } from "@/features/support/support.service";
 import { creditCardPaymentSchema } from "./credit-card.schema";
 import {
   approvePaymentByOrderCode,
@@ -44,6 +46,18 @@ function creditCardValidationMessage(error: unknown) {
 
 function paymentErrorRedirectPath(orderCode: string, message: string, method: "pix" | "card" = "card") {
   return `/pedido/${orderCode}?paymentError=${encodeURIComponent(message)}&paymentMethod=${method}#aviso-pagamento`;
+}
+
+function ticketEmailRedirectPath(orderCode: string, status: "sent" | "error", message?: string) {
+  const params = new URLSearchParams({
+    ticketEmail: status
+  });
+
+  if (message) {
+    params.set("ticketEmailMessage", message);
+  }
+
+  return `/pedido/${orderCode}?${params.toString()}#ingressos`;
 }
 
 async function getActionIp() {
@@ -165,4 +179,28 @@ export async function payWithCreditCardAction(formData: FormData) {
   }
 
   redirect(`/pedido/${parsed.data.orderCode}`);
+}
+
+export async function resendApprovedTicketsEmailAction(formData: FormData) {
+  const orderCode = String(formData.get("orderCode") ?? "").trim();
+
+  if (!orderCode) {
+    throw new Error("Pedido não informado.");
+  }
+
+  let redirectPath = "";
+
+  try {
+    const ip = await getActionIp();
+    assertRateLimit(`ticket-email-resend:${ip}:${orderCode}`, { limit: 3, windowMs: 10 * 60_000 });
+    const organizationContext = await getCurrentOrganizationContext();
+    const result = await resendTicketsEmailByOrderCode(orderCode, organizationContext.organization.id);
+    revalidatePath(`/pedido/${orderCode}`);
+    redirectPath = ticketEmailRedirectPath(orderCode, "sent", `Ingressos reenviados para ${result.email}.`);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Não foi possível reenviar os ingressos por e-mail.";
+    redirectPath = ticketEmailRedirectPath(orderCode, "error", message);
+  }
+
+  redirect(redirectPath);
 }

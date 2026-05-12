@@ -1,6 +1,6 @@
 import { HomeListStatus, OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { createPublicTicketUrl, sendTicketsEmail } from "@/features/email/email.service";
+import { createPublicTicketUrl, sendTicketsEmail, type EmailSendResult } from "@/features/email/email.service";
 import { createHomeListEntriesForApprovedOrder, updateHomeListStatusForOrder } from "@/features/hospitality/home-list.service";
 import { expirePendingOrderByCode } from "@/features/orders/order.service";
 import {
@@ -63,11 +63,40 @@ export type AsaasExternalPaymentSyncResult =
       reason: "not_found";
     };
 
-async function markTicketsEmailSent(orderId: string) {
+const FAILED_TICKET_EMAIL_STATUSES = new Set(["failed", "bounced", "complained", "suppressed"]);
+
+function normalizeEmailError(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+async function markTicketsEmailSent(orderId: string, result: EmailSendResult | undefined) {
+  const checkedAt = new Date();
+
   await prisma.order.update({
     where: { id: orderId },
     data: {
-      ticketsEmailSentAt: new Date()
+      ticketsEmailSentAt: checkedAt,
+      ticketsEmailProviderId: result?.providerId ?? null,
+      ticketsEmailStatus: result?.status ?? "accepted",
+      ticketsEmailLastCheckedAt: checkedAt,
+      ticketsEmailLastError: null,
+      ticketsEmailAttempts: {
+        increment: 1
+      }
+    }
+  });
+}
+
+async function markTicketsEmailFailed(orderId: string, error: unknown) {
+  await prisma.order.update({
+    where: { id: orderId },
+    data: {
+      ticketsEmailStatus: "failed",
+      ticketsEmailLastCheckedAt: new Date(),
+      ticketsEmailLastError: normalizeEmailError(error),
+      ticketsEmailAttempts: {
+        increment: 1
+      }
     }
   });
 }
@@ -78,14 +107,21 @@ async function sendTicketsEmailSafely(orderId: string, email: TicketEmailPayload
   }
 
   try {
-    await sendTicketsEmail(email);
-    await markTicketsEmailSent(orderId);
+    const result = await sendTicketsEmail(email);
+    await markTicketsEmailSent(orderId, result);
   } catch (error) {
+    await markTicketsEmailFailed(orderId, error).catch((recordError) => {
+      console.error("[email] Falha ao registrar erro de envio dos ingressos", {
+        orderId,
+        orderCode: email.orderCode,
+        error: normalizeEmailError(recordError)
+      });
+    });
     console.error("[email] Falha ao enviar ingressos", {
       orderId,
       orderCode: email.orderCode,
       to: email.to,
-      error: error instanceof Error ? error.message : error
+      error: normalizeEmailError(error)
     });
   }
 }
@@ -578,7 +614,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
               eventId: true,
               couponId: true,
               status: true,
-              ticketsEmailSentAt: true,
+          ticketsEmailSentAt: true,
+          ticketsEmailStatus: true,
               customer: true,
               items: true,
               event: {
@@ -623,7 +660,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         if (
           payment.order.event.autoPurchaseApprovedEmailEnabled === false ||
           tickets.length === 0 ||
-          payment.order.ticketsEmailSentAt
+          payment.order.ticketsEmailSentAt &&
+          !FAILED_TICKET_EMAIL_STATUSES.has(payment.order.ticketsEmailStatus || "")
         ) {
           return null;
         }
