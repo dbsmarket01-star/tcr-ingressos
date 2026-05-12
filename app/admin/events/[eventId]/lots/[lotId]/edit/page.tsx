@@ -161,6 +161,9 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
 
         <div className="formSection">
           <h2>Regras de venda</h2>
+          <p className="muted">
+            Use o status para tirar um ingresso do ar sem excluir o lote. Ingressos pausados não aparecem no site e não entram no checkout.
+          </p>
           <div className="grid twoColumns">
             <label className="field">
               <span>Mínimo por pedido</span>

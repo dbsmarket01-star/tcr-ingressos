@@ -5,7 +5,7 @@ import { HotelLotFields } from "@/components/forms/HotelLotFields";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { getEventForManagement } from "@/features/events/event.service";
 import { listHotelsForOrganization } from "@/features/hospitality/hotel.service";
-import { createTicketLotAction } from "@/features/lots/lot.actions";
+import { createTicketLotAction, updateTicketLotStatusAction } from "@/features/lots/lot.actions";
 import { formatCurrency } from "@/lib/format";
 import { getPublicEventUrl } from "@/lib/public-url";
 
@@ -26,6 +26,14 @@ const lotStatusLabels = {
   CLOSED: "Encerrado"
 } as const;
 
+const lotStatusTone = {
+  ACTIVE: "published",
+  DRAFT: "draft",
+  PAUSED: "pending",
+  SOLD_OUT: "canceled",
+  CLOSED: "canceled"
+} as const;
+
 function formatPixDiscount(lot: { pixDiscountPercentBps: number; pixDiscountFixedInCents: number }) {
   if (lot.pixDiscountFixedInCents > 0) {
     return `${formatCurrency(lot.pixDiscountFixedInCents)} no Pix`;
@@ -36,6 +44,26 @@ function formatPixDiscount(lot: { pixDiscountPercentBps: number; pixDiscountFixe
   }
 
   return "Sem desconto";
+}
+
+function getLotStatusAction(status: keyof typeof lotStatusLabels) {
+  if (status === "ACTIVE") {
+    return {
+      nextStatus: "PAUSED",
+      label: "Pausar",
+      title: "Pausar ingresso e tirar do site"
+    };
+  }
+
+  if (status === "PAUSED" || status === "DRAFT" || status === "CLOSED") {
+    return {
+      nextStatus: "ACTIVE",
+      label: status === "CLOSED" ? "Reabrir" : "Ativar",
+      title: "Ativar ingresso no site"
+    };
+  }
+
+  return null;
 }
 
 export default async function EventLotsPage({ params, searchParams }: EventLotsPageProps) {
@@ -62,6 +90,15 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
     >
       {typeof query.lotError === "string" ? <div className="errorBox spacedSection">{query.lotError}</div> : null}
       {query.lotSaved === "1" ? <div className="successBox spacedSection">Ingresso atualizado com sucesso.</div> : null}
+      {query.lotStatus === "paused" ? (
+        <div className="successBox spacedSection">Ingresso pausado e retirado do site de vendas.</div>
+      ) : null}
+      {query.lotStatus === "active" ? (
+        <div className="successBox spacedSection">Ingresso ativado e disponível no site de vendas.</div>
+      ) : null}
+      {query.lotStatus === "updated" ? (
+        <div className="successBox spacedSection">Status do ingresso atualizado com sucesso.</div>
+      ) : null}
 
       <section className="eventOverviewShell">
         <div className="eventOverviewBreadcrumbs">
@@ -108,33 +145,58 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
                   </tr>
                 </thead>
                 <tbody>
-                  {event.lots.map((lot) => (
-                    <tr key={lot.id}>
-                      <td>
-                        <strong>{lot.name}</strong>
-                        {lot.description ? <br /> : null}
-                        {lot.description ? <small className="muted">{lot.description}</small> : null}
-                      </td>
-                      <td>{lotStatusLabels[lot.status]}</td>
-                      <td>{formatCurrency(lot.priceInCents)}</td>
-                      <td>
-                        {lot.soldQuantity + lot.reservedQuantity} / {lot.totalQuantity}
-                      </td>
-                      <td>{formatPixDiscount(lot)}</td>
-                      <td>
-                        {lot.hasHotel && lot.hotel
-                          ? `${lot.hotel.name} - ${lot.hotel.city}/${lot.hotel.state}`
-                          : lot.hasHotel
-                            ? "Possui hotel"
-                            : "Sem hotel"}
-                      </td>
-                      <td>
-                        <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}/lots/${lot.id}/edit`}>
-                          Editar
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
+                  {event.lots.map((lot) => {
+                    const statusAction = getLotStatusAction(lot.status);
+
+                    return (
+                      <tr key={lot.id}>
+                        <td>
+                          <strong>{lot.name}</strong>
+                          {lot.description ? <br /> : null}
+                          {lot.description ? <small className="muted">{lot.description}</small> : null}
+                        </td>
+                        <td>
+                          <span className={`status ${lotStatusTone[lot.status]}`}>
+                            {lotStatusLabels[lot.status]}
+                          </span>
+                        </td>
+                        <td>{formatCurrency(lot.priceInCents)}</td>
+                        <td>
+                          {lot.soldQuantity + lot.reservedQuantity} / {lot.totalQuantity}
+                        </td>
+                        <td>{formatPixDiscount(lot)}</td>
+                        <td>
+                          {lot.hasHotel && lot.hotel
+                            ? `${lot.hotel.name} - ${lot.hotel.city}/${lot.hotel.state}`
+                            : lot.hasHotel
+                              ? "Possui hotel"
+                              : "Sem hotel"}
+                        </td>
+                        <td>
+                          <div className="lotTableActions">
+                            <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}/lots/${lot.id}/edit`}>
+                              Editar
+                            </Link>
+                            {statusAction ? (
+                              <form action={updateTicketLotStatusAction} className="inlineForm">
+                                <input type="hidden" name="eventId" value={event.id} />
+                                <input type="hidden" name="eventSlug" value={event.slug} />
+                                <input type="hidden" name="lotId" value={lot.id} />
+                                <input type="hidden" name="status" value={statusAction.nextStatus} />
+                                <button
+                                  className={`secondaryButton smallButton ${lot.status === "ACTIVE" ? "lotPauseButton" : "lotActivateButton"}`}
+                                  title={statusAction.title}
+                                  type="submit"
+                                >
+                                  {statusAction.label}
+                                </button>
+                              </form>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

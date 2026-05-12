@@ -98,6 +98,7 @@ export async function updateTicketLotStatusAction(formData: FormData) {
   await requirePermission("EVENTS");
   const eventId = String(formData.get("eventId") ?? "").trim();
   const lotId = String(formData.get("lotId") ?? "").trim();
+  const eventSlug = String(formData.get("eventSlug") ?? "").trim();
   const status = String(formData.get("status") ?? "").trim();
 
   if (!eventId || !lotId) {
@@ -111,7 +112,7 @@ export async function updateTicketLotStatusAction(formData: FormData) {
   }
 
   try {
-    await updateTicketLotStatus(lotId, status);
+    await updateTicketLotStatus(lotId, status as LotStatus);
   } catch (error) {
     redirect(`/admin/events/${eventId}/lots?lotError=${encodeURIComponent(lotErrorMessage(error, "Não foi possível atualizar o status do lote."))}`);
   }
@@ -119,7 +120,14 @@ export async function updateTicketLotStatusAction(formData: FormData) {
   revalidatePath("/admin/events");
   revalidatePath(`/admin/events/${eventId}`);
   revalidatePath(`/admin/events/${eventId}/lots`);
-  redirect(`/admin/events/${eventId}/lots?lotSaved=1`);
+  revalidatePath("/");
+
+  if (eventSlug) {
+    revalidatePath(`/evento/${eventSlug}`);
+  }
+
+  const statusMessage = status === "PAUSED" ? "paused" : status === "ACTIVE" ? "active" : "updated";
+  redirect(`/admin/events/${eventId}/lots?lotStatus=${statusMessage}`);
 }
 
 export async function updateTicketLotPricingAction(formData: FormData) {

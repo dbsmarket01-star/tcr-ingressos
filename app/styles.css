@@ -11763,6 +11763,41 @@ body.operationTheme .loginBrandDark .brandLogo {
   padding: 6px 8px;
 }
 
+.lotTableActions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lotTableActions .inlineForm {
+  margin: 0;
+}
+
+.lotTableActions button {
+  cursor: pointer;
+}
+
+.lotPauseButton {
+  border-color: rgba(180, 83, 9, 0.24);
+  color: #92400e;
+}
+
+.lotPauseButton:hover {
+  background: #fff7ed;
+  border-color: rgba(180, 83, 9, 0.42);
+}
+
+.lotActivateButton {
+  border-color: rgba(var(--brand-rgb), 0.22);
+  color: var(--brand-dark);
+}
+
+.lotActivateButton:hover {
+  background: rgba(var(--brand-rgb), 0.08);
+  border-color: rgba(var(--brand-rgb), 0.38);
+}
+
 .permissionList {
   display: grid;
   gap: 10px;
