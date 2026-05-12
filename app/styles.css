@@ -4396,7 +4396,6 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 
 .dashboardGeneralSearchIcon,
 .dashboardGeneralSearchHint,
-.dashboardGeneralBell,
 .dashboardGeneralUserCard span,
 .dashboardGeneralDateSummary svg,
 .dashboardGeneralOperationItem i,
@@ -4405,7 +4404,6 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 }
 
 .dashboardGeneralSearchIcon svg,
-.dashboardGeneralBell svg,
 .dashboardGeneralDateSummary svg,
 .dashboardGeneralOperationItem i svg,
 .dashboardGeneralActivityItem i svg,
@@ -4433,36 +4431,6 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   align-items: center;
   display: inline-flex;
   gap: 12px;
-}
-
-.dashboardGeneralBell {
-  align-items: center;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid #dce9e4;
-  border-radius: 16px;
-  display: inline-flex;
-  height: 52px;
-  justify-content: center;
-  position: relative;
-  width: 52px;
-}
-
-.dashboardGeneralBell i {
-  align-items: center;
-  background: var(--brand);
-  border: 2px solid white;
-  border-radius: 999px;
-  color: white;
-  display: inline-flex;
-  font-size: 10px;
-  font-style: normal;
-  font-weight: 800;
-  height: 18px;
-  justify-content: center;
-  position: absolute;
-  right: 8px;
-  top: 8px;
-  width: 18px;
 }
 
 .dashboardGeneralUserCard {

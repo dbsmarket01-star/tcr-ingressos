@@ -606,13 +606,6 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </form>
 
           <div className="dashboardGeneralUserBar">
-            <button className="dashboardGeneralBell" type="button" aria-label="Notificações">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 17H5.5a1.5 1.5 0 0 1-1.2-2.4L6 12.5V10a6 6 0 1 1 12 0v2.5l1.7 2.1A1.5 1.5 0 0 1 18.5 17H15" />
-                <path d="M10 20a2 2 0 0 0 4 0" />
-              </svg>
-              <i>3</i>
-            </button>
             <div className="dashboardGeneralUserCard">
               <div className="dashboardGeneralAvatar">{admin.name.slice(0, 1).toUpperCase()}</div>
               <div>
