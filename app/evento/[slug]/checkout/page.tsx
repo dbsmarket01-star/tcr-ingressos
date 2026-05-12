@@ -260,13 +260,13 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
               <MetaTrackingFields />
 
               <div className="checkoutBuyer checkoutBuyerNoTopBorder">
-                <Link
+                <a
                   className="googleButton"
                   href={`/api/auth/google/start?returnTo=${encodeURIComponent(currentCheckoutPath)}`}
                 >
                   <span>G</span>
                   Continuar com Google
-                </Link>
+                </a>
                 {buyerProfile ? (
                   <p className="success">
                     Nome e e-mail preenchidos com sua conta Google: {buyerProfile.email}
