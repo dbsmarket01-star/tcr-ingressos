@@ -183,7 +183,7 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
         </div>
 
         <div className="formActions">
-          <Link className="secondaryButton" href={`/admin/events/${lot.eventId}`}>
+          <Link className="secondaryButton" href={`/admin/events/${lot.eventId}/lots`}>
             Cancelar
           </Link>
           <button className="button" type="submit">

@@ -74,7 +74,7 @@ export async function createTicketLotAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent("Verifique os campos obrigatórios do lote.")}`);
+    redirect(`/admin/events/${eventId}/lots?lotError=${encodeURIComponent("Verifique os campos obrigatórios do lote.")}`);
   }
 
   await requireEventAccess(eventId);
@@ -85,12 +85,13 @@ export async function createTicketLotAction(formData: FormData) {
       status: status === "ACTIVE" ? LotStatus.ACTIVE : LotStatus.DRAFT
     });
   } catch (error) {
-    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent(lotErrorMessage(error, "Não foi possível salvar o lote."))}`);
+    redirect(`/admin/events/${eventId}/lots?lotError=${encodeURIComponent(lotErrorMessage(error, "Não foi possível salvar o lote."))}`);
   }
 
   revalidatePath("/admin/events");
   revalidatePath(`/admin/events/${eventId}`);
-  redirect(`/admin/events/${eventId}?lotSaved=1`);
+  revalidatePath(`/admin/events/${eventId}/lots`);
+  redirect(`/admin/events/${eventId}/lots?lotSaved=1`);
 }
 
 export async function updateTicketLotStatusAction(formData: FormData) {
@@ -100,24 +101,25 @@ export async function updateTicketLotStatusAction(formData: FormData) {
   const status = String(formData.get("status") ?? "").trim();
 
   if (!eventId || !lotId) {
-    redirect(`/admin/events/${eventId || ""}?lotError=${encodeURIComponent("Lote não informado.")}`);
+    redirect(`/admin/events/${eventId || ""}/lots?lotError=${encodeURIComponent("Lote não informado.")}`);
   }
 
   await requireEventAccess(eventId);
 
   if (status !== "ACTIVE" && status !== "PAUSED" && status !== "CLOSED" && status !== "DRAFT") {
-    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent("Status inválido para este lote.")}`);
+    redirect(`/admin/events/${eventId}/lots?lotError=${encodeURIComponent("Status inválido para este lote.")}`);
   }
 
   try {
     await updateTicketLotStatus(lotId, status);
   } catch (error) {
-    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent(lotErrorMessage(error, "Não foi possível atualizar o status do lote."))}`);
+    redirect(`/admin/events/${eventId}/lots?lotError=${encodeURIComponent(lotErrorMessage(error, "Não foi possível atualizar o status do lote."))}`);
   }
 
   revalidatePath("/admin/events");
   revalidatePath(`/admin/events/${eventId}`);
-  redirect(`/admin/events/${eventId}?lotSaved=1`);
+  revalidatePath(`/admin/events/${eventId}/lots`);
+  redirect(`/admin/events/${eventId}/lots?lotSaved=1`);
 }
 
 export async function updateTicketLotPricingAction(formData: FormData) {
@@ -127,7 +129,7 @@ export async function updateTicketLotPricingAction(formData: FormData) {
   const price = Number(formData.get("price") ?? 0);
 
   if (!eventId || !lotId) {
-    redirect(`/admin/events/${eventId || ""}?lotError=${encodeURIComponent("Lote não informado.")}`);
+    redirect(`/admin/events/${eventId || ""}/lots?lotError=${encodeURIComponent("Lote não informado.")}`);
   }
 
   await requireEventAccess(eventId);
@@ -141,19 +143,20 @@ export async function updateTicketLotPricingAction(formData: FormData) {
     });
 
   if (!parsed.success) {
-    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent("Verifique preço, taxa e juros do lote.")}`);
+    redirect(`/admin/events/${eventId}/lots?lotError=${encodeURIComponent("Verifique preço, taxa e juros do lote.")}`);
   }
 
   try {
     await updateTicketLotPricing(lotId, parsed.data);
   } catch (error) {
-    redirect(`/admin/events/${eventId}?lotError=${encodeURIComponent(lotErrorMessage(error, "Não foi possível atualizar preço e taxas do lote."))}`);
+    redirect(`/admin/events/${eventId}/lots?lotError=${encodeURIComponent(lotErrorMessage(error, "Não foi possível atualizar preço e taxas do lote."))}`);
   }
 
   revalidatePath("/admin/events");
   revalidatePath(`/admin/events/${eventId}`);
+  revalidatePath(`/admin/events/${eventId}/lots`);
   revalidatePath(`/evento/${String(formData.get("eventSlug") ?? "").trim()}`);
-  redirect(`/admin/events/${eventId}?lotSaved=1`);
+  redirect(`/admin/events/${eventId}/lots?lotSaved=1`);
 }
 
 export async function updateTicketLotAction(formData: FormData) {
@@ -209,6 +212,7 @@ export async function updateTicketLotAction(formData: FormData) {
 
   revalidatePath("/admin/events");
   revalidatePath(`/admin/events/${eventId}`);
+  revalidatePath(`/admin/events/${eventId}/lots`);
   revalidatePath(`/evento/${eventSlug}`);
-  redirect(`/admin/events/${eventId}`);
+  redirect(`/admin/events/${eventId}/lots?lotSaved=1`);
 }
