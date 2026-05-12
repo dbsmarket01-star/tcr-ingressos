@@ -67,15 +67,41 @@ function formatPrice(valueInCents?: number) {
 
 export function HomeEventCarousel({ events }: HomeEventCarouselProps) {
   const railRef = useRef<HTMLDivElement | null>(null);
+  const hasCarouselControls = events.length > 1;
 
   const scrollRail = (direction: "prev" | "next") => {
-    if (!railRef.current) {
+    const rail = railRef.current;
+
+    if (!rail) {
       return;
     }
 
-    const amount = Math.max(railRef.current.clientWidth * 0.82, 280);
-    railRef.current.scrollBy({
-      left: direction === "next" ? amount : -amount,
+    const maxScrollLeft = rail.scrollWidth - rail.clientWidth;
+
+    if (maxScrollLeft <= 0) {
+      return;
+    }
+
+    const firstCard = rail.querySelector<HTMLElement>(".tcrEventCard");
+    const railStyles = window.getComputedStyle(rail);
+    const gap = Number.parseFloat(railStyles.columnGap || railStyles.gap || "0") || 0;
+    const step = firstCard
+      ? firstCard.getBoundingClientRect().width + gap
+      : Math.max(rail.clientWidth * 0.82, 280);
+    const tolerance = 8;
+    const isAtStart = rail.scrollLeft <= tolerance;
+    const isAtEnd = rail.scrollLeft >= maxScrollLeft - tolerance;
+    const target =
+      direction === "next"
+        ? isAtEnd
+          ? 0
+          : Math.min(rail.scrollLeft + step, maxScrollLeft)
+        : isAtStart
+          ? maxScrollLeft
+          : Math.max(rail.scrollLeft - step, 0);
+
+    rail.scrollTo({
+      left: target,
       behavior: "smooth"
     });
   };
@@ -90,10 +116,12 @@ export function HomeEventCarousel({ events }: HomeEventCarouselProps) {
   }
 
   return (
-    <div className="tcrCarouselShell">
-      <button aria-label="Eventos anteriores" className="tcrCarouselArrow tcrCarouselArrowPrev" onClick={() => scrollRail("prev")} type="button">
-        ‹
-      </button>
+    <div className={`tcrCarouselShell ${hasCarouselControls ? "hasCarouselControls" : "isSingleCarousel"}`}>
+      {hasCarouselControls ? (
+        <button aria-label="Eventos anteriores" className="tcrCarouselArrow tcrCarouselArrowPrev" onClick={() => scrollRail("prev")} type="button">
+          ‹
+        </button>
+      ) : null}
       <div className="tcrCarouselRail" ref={railRef}>
         {events.map((event) => (
           <article className="tcrEventCard" key={event.id}>
@@ -119,9 +147,11 @@ export function HomeEventCarousel({ events }: HomeEventCarouselProps) {
           </article>
         ))}
       </div>
-      <button aria-label="Próximos eventos" className="tcrCarouselArrow tcrCarouselArrowNext" onClick={() => scrollRail("next")} type="button">
-        ›
-      </button>
+      {hasCarouselControls ? (
+        <button aria-label="Próximos eventos" className="tcrCarouselArrow tcrCarouselArrowNext" onClick={() => scrollRail("next")} type="button">
+          ›
+        </button>
+      ) : null}
     </div>
   );
 }

@@ -18111,3 +18111,127 @@ small,
     padding: 16px 16px 16px 62px !important;
   }
 }
+
+/* Final carousel controls: keep arrows out of the event cards and loop via JS */
+.tcrCarouselShell {
+  display: grid !important;
+  gap: 14px !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  overflow: visible !important;
+  position: relative !important;
+}
+
+.tcrCarouselShell.hasCarouselControls {
+  align-items: center !important;
+  grid-template-columns: 52px minmax(0, 1fr) 52px !important;
+}
+
+.tcrCarouselShell .tcrCarouselRail {
+  grid-column: 1 / -1 !important;
+  min-width: 0 !important;
+  scroll-behavior: smooth !important;
+  scroll-snap-type: x mandatory !important;
+}
+
+.tcrCarouselShell .tcrEventCard {
+  scroll-snap-align: start !important;
+}
+
+.tcrCarouselShell.hasCarouselControls .tcrCarouselRail {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+}
+
+.tcrCarouselArrow {
+  align-items: center !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(17, 33, 53, 0.1) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 12px 28px rgba(15, 33, 53, 0.12) !important;
+  color: #102239 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  font-size: 30px !important;
+  height: 52px !important;
+  inset: auto !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  position: static !important;
+  transform: none !important;
+  width: 52px !important;
+  z-index: 1 !important;
+}
+
+.tcrCarouselArrow:hover {
+  border-color: rgba(var(--brand-rgb), 0.24) !important;
+  box-shadow: 0 14px 30px rgba(var(--brand-rgb), 0.16) !important;
+  color: var(--brand-dark) !important;
+}
+
+.tcrCarouselArrowPrev {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  justify-self: start !important;
+}
+
+.tcrCarouselArrowNext {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  justify-self: end !important;
+}
+
+@media (max-width: 640px) {
+  .homePage .tcrCarouselShell,
+  .tcrCarouselShell {
+    gap: 10px !important;
+    grid-template-columns: 1fr !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    max-width: min(470px, 100%) !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .homePage .tcrCarouselShell.hasCarouselControls,
+  .tcrCarouselShell.hasCarouselControls {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .homePage .tcrCarouselShell.hasCarouselControls .tcrCarouselRail,
+  .tcrCarouselShell.hasCarouselControls .tcrCarouselRail {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+  }
+
+  .homePage .tcrCarouselRail,
+  .tcrCarouselRail {
+    grid-auto-columns: 100% !important;
+    margin: 0 !important;
+    overflow-x: auto !important;
+    padding: 4px 0 8px !important;
+    scroll-padding-inline: 0 !important;
+  }
+
+  .homePage .tcrCarouselArrow,
+  .tcrCarouselArrow {
+    font-size: 28px !important;
+    height: 44px !important;
+    width: 44px !important;
+  }
+
+  .homePage .tcrCarouselArrowPrev,
+  .tcrCarouselArrowPrev {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    justify-self: end !important;
+    transform: none !important;
+  }
+
+  .homePage .tcrCarouselArrowNext,
+  .tcrCarouselArrowNext {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    justify-self: start !important;
+    transform: none !important;
+  }
+}
