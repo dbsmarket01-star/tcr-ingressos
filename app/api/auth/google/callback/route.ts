@@ -14,7 +14,18 @@ type GoogleUserInfoResponse = {
 };
 
 function getBaseUrl(request: Request) {
-  return (process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || new URL(request.url).origin).replace(/\/$/, "");
+  const requestUrl = new URL(request.url);
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const host = forwardedHost || request.headers.get("host") || requestUrl.host;
+  const protocol = forwardedProto || requestUrl.protocol.replace(/:$/, "");
+  const origin = `${protocol}://${host}`.replace(/\/$/, "");
+
+  if (!origin.includes("localhost") && !origin.includes("127.0.0.1") && !origin.includes("[::1]")) {
+    return origin;
+  }
+
+  return (process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || origin).replace(/\/$/, "");
 }
 
 function sanitizeReturnTo(value: string) {
