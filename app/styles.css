@@ -1892,13 +1892,13 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 
 .sidebar {
   background:
-    radial-gradient(circle at top left, rgba(var(--brand-rgb), 0.18), transparent 24%),
-    radial-gradient(circle at bottom right, rgba(var(--admin-primary-rgb), 0.16), transparent 22%),
+    radial-gradient(circle at top left, rgba(var(--brand-rgb), 0.14), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(var(--admin-primary-rgb), 0.12), transparent 22%),
     linear-gradient(
       180deg,
-      var(--admin-primary-dark) 0%,
-      color-mix(in srgb, var(--admin-primary-dark) 82%, #0d1526) 58%,
-      color-mix(in srgb, var(--admin-primary-dark) 72%, #06111f) 100%
+      color-mix(in srgb, var(--admin-primary-dark) 72%, #18352f 28%) 0%,
+      color-mix(in srgb, var(--admin-primary-dark) 76%, #10261f 24%) 56%,
+      color-mix(in srgb, var(--admin-primary-dark) 64%, #071511 36%) 100%
     );
   color: white;
   height: 100vh;
@@ -8826,11 +8826,11 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 
 .loginIntro {
   background:
-    radial-gradient(circle at top left, rgba(var(--brand-rgb), 0.14), transparent 18%),
+    radial-gradient(circle at top left, rgba(var(--brand-rgb), 0.12), transparent 18%),
     linear-gradient(
       160deg,
-      color-mix(in srgb, var(--admin-primary-dark) 80%, #0d1525),
-      color-mix(in srgb, var(--admin-primary) 32%, #1f3561)
+      color-mix(in srgb, var(--admin-primary-dark) 68%, #132f2d 32%),
+      color-mix(in srgb, var(--admin-primary) 28%, #1f3a3a 72%)
     ),
     url("https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=1200&q=80");
   background-position: center;
@@ -8874,6 +8874,25 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 .loginBrandDark .brandMark {
   background: linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--brand) 72%, white 28%));
   box-shadow: 0 10px 20px rgba(var(--brand-rgb), 0.18);
+}
+
+body.operationTheme .loginBrandDark {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.14), transparent 28%),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand-dark) 74%, #071511 26%),
+      color-mix(in srgb, var(--brand) 54%, #112821 46%)
+    );
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 16px 34px rgba(var(--brand-rgb), 0.16);
+  color: #ffffff;
+}
+
+body.operationTheme .loginBrandDark .brandLogo {
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.2));
 }
 
 .loginIntroCopy {
