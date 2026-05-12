@@ -11245,6 +11245,7 @@ body.operationTheme .loginBrandDark .brandLogo {
 
 .orderPaymentPanel {
   gap: 18px;
+  overflow: visible;
 }
 
 .orderSummaryBox {
@@ -12129,6 +12130,7 @@ body.operationTheme .loginBrandDark .brandLogo {
 
 .paymentChoiceDisclosure[open] {
   border-color: #b7dace;
+  overflow: visible;
   box-shadow: 0 12px 24px rgba(22, 32, 42, 0.05);
 }
 
@@ -12141,6 +12143,8 @@ body.operationTheme .loginBrandDark .brandLogo {
   list-style: none;
   min-height: 70px;
   padding: 14px;
+  scroll-margin-top: 96px;
+  touch-action: manipulation;
 }
 
 .paymentChoiceDisclosure summary::-webkit-details-marker {
@@ -14747,6 +14751,14 @@ body.operationTheme .loginBrandDark .brandLogo {
     min-width: 0;
     order: 1;
     overflow: hidden;
+  }
+
+  .orderPaymentPanel {
+    overflow: visible;
+  }
+
+  .orderPaymentPanel .paymentChoiceDisclosure[open] {
+    overflow: visible;
   }
 
   .publicContent {

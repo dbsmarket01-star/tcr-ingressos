@@ -71,6 +71,8 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
   const baseTotalInCents = order.subtotalInCents + order.serviceFeeInCents - order.discountInCents;
   const pixTotalInCents = Math.max(baseTotalInCents - order.pixDiscountInCents, 0);
   const maxCreditCardInstallments = getCreditCardInstallmentLimitForEvent(order.event);
+  const shouldOpenCreditCard = Boolean(paymentError || !order.payment?.pixQrCodePayload);
+  const shouldOpenPix = Boolean(order.payment?.pixQrCodePayload && !paymentError);
   const installmentOptions = Array.from({ length: maxCreditCardInstallments }, (_, index) => index + 1).map((installment) => {
     const interestInCents = order.items.reduce(
       (sum, item) =>
@@ -197,7 +199,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
               </p>
               <small>Retorno do banco: {paymentError}</small>
             </div>
-            <a className="secondaryButton paymentErrorAction" href="#formas-de-pagamento">
+            <a className="secondaryButton paymentErrorAction" href="#cartao-de-credito">
               Tentar novamente
             </a>
           </section>
@@ -326,7 +328,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
           {order.status === "PENDING_PAYMENT" ? (
             <div className="paymentMethodStack">
               <div className="paymentChoiceList">
-                <details className="paymentChoiceDisclosure" open={Boolean(order.payment?.pixQrCodePayload)}>
+                <details className="paymentChoiceDisclosure" open={shouldOpenPix}>
                   <summary data-open-label="Abrir Pix">
                     <span>Pix</span>
                     <strong>{formatCurrency(pixTotalInCents)}</strong>
@@ -406,7 +408,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                 </details>
 
                 {isAsaasCheckout ? (
-                  <details className="paymentChoiceDisclosure">
+                  <details className="paymentChoiceDisclosure" id="cartao-de-credito" open={shouldOpenCreditCard}>
                     <summary data-open-label="Abrir cartão">
                       <span>Cartão de crédito</span>
                       <strong>Selecionar</strong>
