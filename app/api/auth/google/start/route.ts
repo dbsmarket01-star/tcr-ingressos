@@ -16,6 +16,22 @@ function getBaseUrl(request: Request) {
   return (process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || origin).replace(/\/$/, "");
 }
 
+function getGoogleCallbackBaseUrl(request: Request) {
+  const configured = process.env.GOOGLE_OAUTH_CALLBACK_BASE_URL?.trim();
+
+  if (configured) {
+    return configured.replace(/\/$/, "");
+  }
+
+  const currentBaseUrl = getBaseUrl(request);
+
+  if (currentBaseUrl.includes("localhost") || currentBaseUrl.includes("127.0.0.1")) {
+    return currentBaseUrl;
+  }
+
+  return "https://www.tcringressos.app.br";
+}
+
 function sanitizeReturnTo(value: string | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
     return "/";
@@ -39,8 +55,8 @@ export async function GET(request: Request) {
     return redirectWithStatus(returnTo, request, "unavailable");
   }
 
-  const state = await createGoogleOAuthState(returnTo);
-  const redirectUri = `${getBaseUrl(request)}/api/auth/google/callback`;
+  const state = await createGoogleOAuthState(returnTo, getBaseUrl(request));
+  const redirectUri = `${getGoogleCallbackBaseUrl(request)}/api/auth/google/callback`;
   const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
 
   authUrl.searchParams.set("client_id", clientId);

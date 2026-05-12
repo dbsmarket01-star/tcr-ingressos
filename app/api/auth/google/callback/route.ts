@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { consumeGoogleOAuthState, setBuyerProfile } from "@/features/customer-auth/google-buyer.service";
+import {
+  consumeGoogleOAuthState,
+  createGoogleOAuthCompletionToken,
+  setBuyerProfile
+} from "@/features/customer-auth/google-buyer.service";
 
 type GoogleTokenResponse = {
   access_token?: string;
@@ -26,6 +30,22 @@ function getBaseUrl(request: Request) {
   }
 
   return (process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || origin).replace(/\/$/, "");
+}
+
+function getGoogleCallbackBaseUrl(request: Request) {
+  const configured = process.env.GOOGLE_OAUTH_CALLBACK_BASE_URL?.trim();
+
+  if (configured) {
+    return configured.replace(/\/$/, "");
+  }
+
+  const currentBaseUrl = getBaseUrl(request);
+
+  if (currentBaseUrl.includes("localhost") || currentBaseUrl.includes("127.0.0.1")) {
+    return currentBaseUrl;
+  }
+
+  return "https://www.tcringressos.app.br";
 }
 
 function sanitizeReturnTo(value: string) {
@@ -59,7 +79,7 @@ export async function GET(request: Request) {
     return redirectWithStatus(stateResult.returnTo, request, "unavailable");
   }
 
-  const redirectUri = `${getBaseUrl(request)}/api/auth/google/callback`;
+  const redirectUri = `${getGoogleCallbackBaseUrl(request)}/api/auth/google/callback`;
   const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: {
@@ -91,11 +111,22 @@ export async function GET(request: Request) {
     return redirectWithStatus(stateResult.returnTo, request, "invalid");
   }
 
-  await setBuyerProfile({
+  const profile = {
     name: userInfo.name,
     email: userInfo.email.toLowerCase(),
     picture: userInfo.picture
-  });
+  };
+
+  const currentOrigin = getBaseUrl(request);
+  const finalOrigin = stateResult.finalOrigin;
+
+  if (finalOrigin && finalOrigin !== currentOrigin) {
+    const completeUrl = new URL("/api/auth/google/complete", finalOrigin);
+    completeUrl.searchParams.set("token", createGoogleOAuthCompletionToken(profile, stateResult.returnTo));
+    return NextResponse.redirect(completeUrl);
+  }
+
+  await setBuyerProfile(profile);
 
   return redirectWithStatus(stateResult.returnTo, request, "connected");
 }

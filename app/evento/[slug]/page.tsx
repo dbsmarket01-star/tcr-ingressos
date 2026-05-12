@@ -203,9 +203,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
               </small>
             </div>
           </div>
-          <div className="publicMeta">
-            <span>{formatDateTime(event.startsAt)}</span>
-          </div>
           <div className="heroActions">
             <a className="button" href="#ingressos">
               {ctaText}
@@ -224,30 +221,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             <p>{event.description}</p>
           </section>
         ) : null}
-
-          <section className="contentBlock eventDateLocalBlock">
-            <h2>Data e local</h2>
-            <div className="detailGrid">
-              <div>
-                <span>Data e horário</span>
-                <strong>{formatDateTime(event.startsAt)}</strong>
-              </div>
-              <div>
-                <span>Local</span>
-                <strong>{event.venueName}</strong>
-              </div>
-              <div>
-                <span>Endereço</span>
-                <strong>{event.venueAddress}</strong>
-              </div>
-              <div>
-                <span>Cidade</span>
-                <strong>
-                  {event.city}, {event.state}
-                </strong>
-              </div>
-            </div>
-          </section>
 
           {event.importantInfo ? (
             <section className="contentBlock eventImportantInfoBlock">
