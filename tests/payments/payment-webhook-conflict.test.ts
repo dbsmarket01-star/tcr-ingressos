@@ -9,6 +9,7 @@ const prismaMock = {
     findUniqueOrThrow: vi.fn()
   },
   order: {
+    update: vi.fn(),
     updateMany: vi.fn()
   },
   ticket: {
@@ -37,6 +38,11 @@ vi.mock("@/features/orders/order.service", () => ({
   expirePendingOrderByCode: vi.fn()
 }));
 
+vi.mock("@/features/hospitality/home-list.service", () => ({
+  createHomeListEntriesForApprovedOrder: vi.fn(),
+  updateHomeListStatusForOrder: vi.fn()
+}));
+
 vi.mock("@/features/tracking/meta-conversions.service", () => ({
   trackMetaPurchaseForPaidOrder: trackMetaPurchaseMock
 }));
@@ -62,13 +68,19 @@ vi.mock("@/features/payments/payment-provider", () => ({
 describe("payment webhook conflict handling", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sendTicketsEmailMock.mockResolvedValue({
+      provider: "resend",
+      providerId: "email_expired",
+      status: "accepted",
+      from: "A2 Imergidos <ingressos@a2imergidos.com.br>"
+    });
   });
 
-  it("does not reconfirm stock or recreate tickets when APPROVED arrives for an expired order", async () => {
+  it("confirms an expired order when Asaas later reports a received Pix", async () => {
     const expiredOrderPayment = {
       id: "pay_2",
       orderId: "order_2",
-      status: "PENDING",
+      status: "CANCELED",
       amountInCents: 10000,
       externalId: "ext_2",
       order: {
@@ -78,6 +90,7 @@ describe("payment webhook conflict handling", () => {
         couponId: null,
         status: "EXPIRED",
         ticketsEmailSentAt: null,
+        ticketsEmailStatus: null,
         customer: {
           email: "buyer@example.com",
           name: "Buyer"
@@ -96,7 +109,9 @@ describe("payment webhook conflict handling", () => {
           autoPurchaseApprovedEmailEnabled: true,
           organization: {
             name: "A2 Imergidos",
-            publicDomain: "a2imergidos.com.br"
+            publicDomain: "a2imergidos.com.br",
+            adminDomain: "produtor.a2imergidos.com.br",
+            primaryColor: "#0f5f8c"
           }
         },
         tickets: []
@@ -107,8 +122,25 @@ describe("payment webhook conflict handling", () => {
       callback(prismaMock as never)
     );
     prismaMock.payment.findFirst.mockResolvedValue(expiredOrderPayment);
-    prismaMock.payment.update.mockResolvedValue({
+    prismaMock.payment.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    prismaMock.ticket.create
+      .mockResolvedValueOnce({
+        code: "TICKET-1",
+        lot: {
+          name: "Pista"
+        }
+      })
+      .mockResolvedValueOnce({
+        code: "TICKET-2",
+        lot: {
+          name: "Pista"
+        }
+      });
+    prismaMock.order.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.payment.findUniqueOrThrow.mockResolvedValue({
       ...expiredOrderPayment,
+      status: "APPROVED",
       rawPayload: { id: "ext_2" }
     });
 
@@ -120,20 +152,58 @@ describe("payment webhook conflict handling", () => {
       rawPayload: { id: "ext_2", value: 100 }
     });
 
-    expect(prismaMock.payment.update).toHaveBeenCalledTimes(1);
-    expect(prismaMock.payment.update).toHaveBeenCalledWith({
-      where: { id: "pay_2" },
-      data: {
+    expect(prismaMock.payment.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: "pay_2",
+        status: {
+          in: ["CREATED", "PENDING", "CANCELED", "FAILED"]
+        }
+      },
+      data: expect.objectContaining({
+        status: "APPROVED",
         externalId: "ext_2",
-        rawPayload: { id: "ext_2", value: 100 }
+        amountInCents: 10000
+      })
+    });
+    expect(prismaMock.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(prismaMock.order.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: "order_2",
+        status: {
+          in: ["PENDING_PAYMENT", "EXPIRED"]
+        }
+      },
+      data: expect.objectContaining({
+        status: "PAID",
+        totalInCents: 10000,
+        canceledAt: null
+      })
+    });
+    expect(prismaMock.ticket.create).toHaveBeenCalledTimes(2);
+    expect(sendTicketsEmailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "buyer@example.com",
+        orderCode: "PED999",
+        tickets: [
+          expect.objectContaining({ code: "TICKET-1" }),
+          expect.objectContaining({ code: "TICKET-2" })
+        ]
+      })
+    );
+    expect(prismaMock.order.update).toHaveBeenCalledWith({
+      where: { id: "order_2" },
+      data: {
+        ticketsEmailSentAt: expect.any(Date),
+        ticketsEmailProviderId: "email_expired",
+        ticketsEmailStatus: "accepted",
+        ticketsEmailLastCheckedAt: expect.any(Date),
+        ticketsEmailLastError: null,
+        ticketsEmailAttempts: {
+          increment: 1
+        }
       }
     });
-    expect(prismaMock.payment.updateMany).not.toHaveBeenCalled();
-    expect(prismaMock.order.updateMany).not.toHaveBeenCalled();
-    expect(prismaMock.ticket.create).not.toHaveBeenCalled();
-    expect(prismaMock.$executeRaw).not.toHaveBeenCalled();
-    expect(sendTicketsEmailMock).not.toHaveBeenCalled();
-    expect((result as unknown as typeof expiredOrderPayment).order.status).toBe("EXPIRED");
+    expect(result).toEqual(expect.objectContaining({ status: "APPROVED" }));
   });
 
   it("treats repeated REFUNDED webhook as no-op when payment and order are already refunded", async () => {

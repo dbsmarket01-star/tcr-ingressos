@@ -730,7 +730,11 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         const capturedAmountInCents = resolveCapturedAmountInCents(payment, payload.rawPayload);
         const paidAt = new Date();
 
-        if (payment.order.status !== OrderStatus.PENDING_PAYMENT) {
+        const canConfirmApprovedOrder =
+          payment.order.status === OrderStatus.PENDING_PAYMENT ||
+          payment.order.status === OrderStatus.EXPIRED;
+
+        if (!canConfirmApprovedOrder) {
           const currentPayment = await tx.payment.update({
             where: { id: payment.id },
             data: {
@@ -746,11 +750,16 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           };
         }
 
+        const claimablePaymentStatuses =
+          payment.order.status === OrderStatus.EXPIRED
+            ? [PaymentStatus.CREATED, PaymentStatus.PENDING, PaymentStatus.CANCELED, PaymentStatus.FAILED]
+            : [PaymentStatus.CREATED, PaymentStatus.PENDING];
+
         const claimedPayment = await tx.payment.updateMany({
           where: {
             id: payment.id,
             status: {
-              in: [PaymentStatus.CREATED, PaymentStatus.PENDING]
+              in: claimablePaymentStatuses
             }
           },
           data: {
@@ -776,15 +785,23 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           };
         }
 
+        const shouldConsumeReservation = payment.order.status === OrderStatus.PENDING_PAYMENT;
+
         for (const item of payment.order.items) {
-          const updatedRows = await tx.$executeRaw`
-            UPDATE "TicketLot"
-            SET
-              "reservedQuantity" = "reservedQuantity" - ${item.quantity},
-              "soldQuantity" = "soldQuantity" + ${item.quantity}
-            WHERE "id" = ${item.lotId}
-              AND "reservedQuantity" >= ${item.quantity}
-          `;
+          const updatedRows = shouldConsumeReservation
+            ? await tx.$executeRaw`
+                UPDATE "TicketLot"
+                SET
+                  "reservedQuantity" = "reservedQuantity" - ${item.quantity},
+                  "soldQuantity" = "soldQuantity" + ${item.quantity}
+                WHERE "id" = ${item.lotId}
+                  AND "reservedQuantity" >= ${item.quantity}
+              `
+            : await tx.$executeRaw`
+                UPDATE "TicketLot"
+                SET "soldQuantity" = "soldQuantity" + ${item.quantity}
+                WHERE "id" = ${item.lotId}
+              `;
 
           if (updatedRows !== 1) {
             throw new Error("Nao foi possivel confirmar o estoque reservado.");
@@ -830,7 +847,9 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         const claimedOrder = await tx.order.updateMany({
           where: {
             id: payment.orderId,
-            status: OrderStatus.PENDING_PAYMENT
+            status: {
+              in: [OrderStatus.PENDING_PAYMENT, OrderStatus.EXPIRED]
+            }
           },
           data: {
             status: OrderStatus.PAID,
