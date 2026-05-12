@@ -198,6 +198,10 @@
 }
 
 .homeListEntryCard {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 251, 255, 0.96)),
+    #ffffff;
+  border: 1px solid rgba(156, 175, 192, 0.3);
   display: grid;
   gap: 18px;
 }
@@ -207,6 +211,32 @@
   display: grid;
   gap: 16px;
   grid-template-columns: minmax(0, 1fr) minmax(260px, 380px);
+}
+
+.homeListEntryTitle {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.homeListEntryTitleMeta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.homeListRoomBadge {
+  align-items: center;
+  background: color-mix(in srgb, var(--brand) 10%, #f8fbff 90%);
+  border: 1px solid color-mix(in srgb, var(--brand) 24%, #d8e3ec 76%);
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--brand) 70%, #132033 30%);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  min-height: 28px;
+  padding: 4px 10px;
 }
 
 .homeListEntryHeader h2,
@@ -228,7 +258,11 @@
 }
 
 .homeListEntryControls {
+  background: rgba(248, 251, 250, 0.9);
+  border: 1px solid var(--line);
+  border-radius: 16px;
   grid-template-columns: minmax(0, 1fr) minmax(110px, 0.8fr);
+  padding: 12px;
 }
 
 .homeListMetaGrid {
@@ -242,6 +276,7 @@
 .homeListMetaGrid div {
   display: grid;
   gap: 4px;
+  min-width: 0;
 }
 
 .homeListMetaGrid span {
@@ -254,6 +289,37 @@
 
 .homeListGuestGrid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.homeListGuestGrid section {
+  background: #ffffff;
+  border: 1px solid rgba(156, 175, 192, 0.28);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.homeListGuestGrid h3 {
+  color: color-mix(in srgb, var(--brand) 66%, #132033 34%);
+  font-size: 18px;
+}
+
+.homeListNotesField {
+  background: color-mix(in srgb, var(--brand) 7%, #ffffff 93%);
+  border: 1px solid color-mix(in srgb, var(--brand) 18%, #d9e5ed 82%);
+  border-radius: 16px;
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
+.homeListNotesField span {
+  color: color-mix(in srgb, var(--brand) 68%, #172033 32%);
+  font-weight: 900;
+}
+
+.homeListNotesField textarea {
+  min-height: 96px;
+  resize: vertical;
 }
 
 .statusOk {

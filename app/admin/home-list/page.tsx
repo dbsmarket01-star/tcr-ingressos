@@ -5,7 +5,7 @@ import { PrintButton } from "@/components/forms/PrintButton";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { updateHomeListEntryAction } from "@/features/hospitality/home-list.actions";
 import { getHomeListFilterOptions, listHomeListEntries } from "@/features/hospitality/home-list.service";
-import { formatDateInput, formatDateTime } from "@/lib/format";
+import { formatDateInput } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -113,7 +113,7 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
           </label>
           <label className="field">
             <span>Busca</span>
-            <input name="search" defaultValue={filters.search ?? ""} placeholder="Nome, CPF ou pedido" />
+            <input name="search" defaultValue={filters.search ?? ""} placeholder="Nome, CPF, quarto ou observação" />
           </label>
           <div className="homeListFilterActions">
             <button className="button" type="submit">
@@ -171,14 +171,15 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
               <input type="hidden" name="entryId" value={entry.id} />
               <input type="hidden" name="returnTo" value={returnTo} />
               <div className="homeListEntryHeader">
-                <div>
-                  <span className={`status ${entry.status === HomeListStatus.CONFIRMED ? "statusOk" : entry.status === HomeListStatus.CANCELED ? "statusDanger" : "statusWarning"}`}>
-                    {statusLabels[entry.status]}
-                  </span>
+                <div className="homeListEntryTitle">
+                  <div className="homeListEntryTitleMeta">
+                    <span className={`status ${entry.status === HomeListStatus.CONFIRMED ? "statusOk" : entry.status === HomeListStatus.CANCELED ? "statusDanger" : "statusWarning"}`}>
+                      {statusLabels[entry.status]}
+                    </span>
+                    <span className="homeListRoomBadge">Quarto {entry.roomNumber || "a definir"}</span>
+                  </div>
                   <h2>{entry.hotel.name}</h2>
-                  <p>
-                    {entry.event.title} - Pedido {entry.order.code} - Compra em {formatDateTime(entry.purchaseDate)}
-                  </p>
+                  <p>{entry.event.title}</p>
                 </div>
                 <div className="homeListEntryControls">
                   <label className="field">
@@ -200,6 +201,10 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
 
               <div className="homeListMetaGrid">
                 <div>
+                  <span>Evento</span>
+                  <strong>{entry.event.title}</strong>
+                </div>
+                <div>
                   <span>Hotel</span>
                   <strong>
                     {entry.hotel.name} - {entry.hotel.city}/{entry.hotel.state}
@@ -208,10 +213,6 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
                 <div>
                   <span>Ingresso</span>
                   <strong>{entry.lot.name}</strong>
-                </div>
-                <div>
-                  <span>Pedido</span>
-                  <strong>{entry.order.code}</strong>
                 </div>
               </div>
 
@@ -255,6 +256,16 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
                   </label>
                 </section>
               </div>
+
+              <label className="homeListNotesField">
+                <span>Observações para o hotel</span>
+                <textarea
+                  name="notes"
+                  defaultValue={entry.notes ?? ""}
+                  placeholder="Ex.: casal palestrante, quarto com suíte, duas camas extras, preferência por cama de casal..."
+                  rows={4}
+                />
+              </label>
 
               <div className="formActions">
                 <button className="button" type="submit">

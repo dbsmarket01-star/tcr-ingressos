@@ -846,6 +846,7 @@ model HomeListEntry {
   orderHotelGuestId String      @unique
   status          HomeListStatus @default(CONFIRMED)
   roomNumber      String?
+  notes           String?
   purchaseDate    DateTime
   confirmedAt     DateTime?
   canceledAt      DateTime?

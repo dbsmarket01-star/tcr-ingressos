@@ -11,6 +11,7 @@ export type HomeListFilters = {
 export type HomeListUpdateInput = {
   status: HomeListStatus;
   roomNumber?: string | null;
+  notes?: string | null;
   guest1Name: string;
   guest1Document: string;
   guest1BirthDate: Date;
@@ -20,6 +21,29 @@ export type HomeListUpdateInput = {
   guest2Document: string;
   guest2BirthDate: Date;
 };
+
+async function getNextRoomNumber(tx: Prisma.TransactionClient, eventId: string, hotelId: string) {
+  const rooms = await tx.homeListEntry.findMany({
+    where: {
+      eventId,
+      hotelId,
+      roomNumber: {
+        not: null
+      }
+    },
+    select: {
+      roomNumber: true
+    }
+  });
+  const highestRoomNumber = rooms.reduce((highest, room) => {
+    const numericPart = String(room.roomNumber ?? "").match(/\d+/)?.[0];
+    const number = numericPart ? Number.parseInt(numericPart, 10) : 0;
+
+    return Number.isFinite(number) ? Math.max(highest, number) : highest;
+  }, 0);
+
+  return String(highestRoomNumber + 1).padStart(2, "0");
+}
 
 export async function createHomeListEntriesForApprovedOrder(
   tx: Prisma.TransactionClient,
@@ -70,6 +94,8 @@ export async function createHomeListEntriesForApprovedOrder(
       continue;
     }
 
+    const roomNumber = await getNextRoomNumber(tx, order.eventId, guest.hotelId);
+
     await tx.homeListEntry.create({
       data: {
         organizationId: order.event.organizationId,
@@ -80,6 +106,8 @@ export async function createHomeListEntriesForApprovedOrder(
         lotId: guest.lotId,
         orderHotelGuestId: guest.id,
         status: HomeListStatus.CONFIRMED,
+        roomNumber,
+        notes: null,
         purchaseDate,
         confirmedAt: paidAt,
         guest1Name: guest.guest1Name,
@@ -140,6 +168,8 @@ function buildHomeListWhere(
             { guest1Document: { contains: search, mode: "insensitive" } },
             { guest2Name: { contains: search, mode: "insensitive" } },
             { guest2Document: { contains: search, mode: "insensitive" } },
+            { roomNumber: { contains: search, mode: "insensitive" } },
+            { notes: { contains: search, mode: "insensitive" } },
             { order: { code: { contains: search, mode: "insensitive" } } }
           ]
         }
@@ -255,6 +285,7 @@ export async function updateHomeListEntry(
     data: {
       status: input.status,
       roomNumber: input.roomNumber || null,
+      notes: input.notes || null,
       canceledAt: input.status === HomeListStatus.CANCELED ? new Date() : null,
       confirmedAt: input.status === HomeListStatus.CONFIRMED ? new Date() : undefined,
       guest1Name: input.guest1Name,

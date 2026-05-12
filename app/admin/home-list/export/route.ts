@@ -1,15 +1,9 @@
 import { HomeListStatus } from "@prisma/client";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { listHomeListEntriesForExport } from "@/features/hospitality/home-list.service";
-import { formatDateInput, formatDateTime } from "@/lib/format";
+import { formatDateInput } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
-
-const statusLabels: Record<HomeListStatus, string> = {
-  PENDING: "Pendente",
-  CONFIRMED: "Confirmado",
-  CANCELED: "Cancelado"
-};
 
 function parseStatus(value: string | null) {
   if (value === HomeListStatus.PENDING || value === HomeListStatus.CONFIRMED || value === HomeListStatus.CANCELED) {
@@ -44,9 +38,6 @@ export async function GET(request: Request) {
   const headers = [
     "Evento",
     "Hotel",
-    "Numero do pedido",
-    "Data da compra",
-    "Status da hospedagem",
     "Quarto",
     "Hospede 1 - nome",
     "Hospede 1 - CPF",
@@ -55,15 +46,13 @@ export async function GET(request: Request) {
     "Hospede 1 - telefone",
     "Hospede 2 - nome",
     "Hospede 2 - CPF",
-    "Hospede 2 - nascimento"
+    "Hospede 2 - nascimento",
+    "Observacoes"
   ];
 
   const rows = entries.map((entry) => [
     entry.event.title,
     `${entry.hotel.name} - ${entry.hotel.city}/${entry.hotel.state}`,
-    entry.order.code,
-    formatDateTime(entry.purchaseDate),
-    statusLabels[entry.status],
     entry.roomNumber ?? "",
     entry.guest1Name,
     entry.guest1Document,
@@ -72,7 +61,8 @@ export async function GET(request: Request) {
     entry.guest1Phone,
     entry.guest2Name,
     entry.guest2Document,
-    formatDateInput(entry.guest2BirthDate)
+    formatDateInput(entry.guest2BirthDate),
+    entry.notes ?? ""
   ]);
 
   const html = `<!doctype html>

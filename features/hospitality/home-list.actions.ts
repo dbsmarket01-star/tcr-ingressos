@@ -53,6 +53,7 @@ export async function updateHomeListEntryAction(formData: FormData) {
       {
         status: parseStatus(formData.get("status")),
         roomNumber: String(formData.get("roomNumber") ?? "").trim() || null,
+        notes: String(formData.get("notes") ?? "").trim() || null,
         guest1Name: requiredText(formData, "guest1Name", "o nome do hóspede principal"),
         guest1Document: requiredText(formData, "guest1Document", "o CPF do hóspede principal"),
         guest1BirthDate: parseDateField(formData.get("guest1BirthDate"), "a data de nascimento do hóspede principal"),
