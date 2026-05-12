@@ -89,7 +89,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const bannerCrop = parseImageCrop(event.bannerCrop) || imageCropFromBannerPosition(event.bannerPosition);
   const publicBannerCrop = bannerCrop;
   const mapCrop = parseImageCrop(event.eventMapCrop);
-  const socialProofText = event.conversionSocialProofText?.trim() || "Vendas abertas";
   const ctaText = event.conversionCtaText || "Garantir minha vaga";
   const highlightedLotId = event.highlightedLotId || activeLots[0]?.id;
   const eventLead = event.subtitle?.trim() || "";
@@ -207,7 +206,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             <a className="button" href="#ingressos">
               {ctaText}
             </a>
-            {socialProofText ? <span>{socialProofText}</span> : null}
           </div>
         </div>
       </section>
