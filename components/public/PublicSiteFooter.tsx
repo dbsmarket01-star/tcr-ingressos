@@ -77,6 +77,16 @@ function WhatsappIcon() {
   );
 }
 
+function MastercardMark() {
+  return (
+    <svg className="paymentMarkMastercardSvg" aria-hidden="true" viewBox="0 0 64 40" focusable="false">
+      <circle cx="24" cy="20" r="16" fill="#EB001B" />
+      <circle cx="40" cy="20" r="16" fill="#F79E1B" />
+      <path d="M32 6.14A16 16 0 0 1 32 33.86A16 16 0 0 1 32 6.14Z" fill="#FF5F00" />
+    </svg>
+  );
+}
+
 export function PublicSiteFooter({ brandName, supportPhone, settings }: PublicSiteFooterProps) {
   const whatsappHref = settings.whatsappUrl || normalizeWhatsappHref(supportPhone);
   const socialLinks = [
@@ -126,11 +136,7 @@ export function PublicSiteFooter({ brandName, supportPhone, settings }: PublicSi
             <span className="paymentMark paymentMarkPix">pix</span>
             <span className="paymentMark paymentMarkVisa">VISA</span>
             <span className="paymentMark paymentMarkMastercard" aria-label="Mastercard">
-              <span className="paymentMarkMastercardIcon" aria-hidden="true">
-                <i />
-                <i />
-              </span>
-              <span className="paymentMarkMastercardText">MC</span>
+              <MastercardMark />
             </span>
           </div>
         </div>
