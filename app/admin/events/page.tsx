@@ -154,14 +154,9 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
 
         <section className="eventsIndexPanel">
           <form className="eventsIndexFiltersBar">
-            <label className="eventsIndexSearchField">
-              <span className="srOnly">Buscar eventos</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M20 20l-3.5-3.5" />
-              </svg>
-              <input defaultValue={query} name="q" placeholder="Buscar eventos..." />
-              <button aria-label="Aplicar filtros" className="eventsIndexSearchSubmit" type="submit">
+            <div className="eventsIndexSearchGroup">
+              <label htmlFor="events-index-search">Busca</label>
+              <div className="eventsIndexSearchField">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -173,8 +168,18 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                   <circle cx="11" cy="11" r="7" />
                   <path d="M20 20l-3.5-3.5" />
                 </svg>
-              </button>
-            </label>
+                <input
+                  defaultValue={query}
+                  id="events-index-search"
+                  name="q"
+                  placeholder="Busque por evento, cidade ou local"
+                  type="search"
+                />
+                <button aria-label="Aplicar filtros" className="eventsIndexSearchSubmit" type="submit">
+                  Buscar
+                </button>
+              </div>
+            </div>
 
             <label className="eventsIndexFilterField">
               <span>Status</span>

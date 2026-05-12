@@ -35,6 +35,19 @@
   --event-banner-ratio: 1900 / 828;
 }
 
+.srOnly {
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .segmentedField {
   border: 0;
   display: flex;
@@ -6026,13 +6039,20 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   align-items: end;
   display: grid;
   gap: 14px;
-  grid-template-columns: minmax(240px, 1.3fr) repeat(3, minmax(180px, 0.92fr)) auto;
+  grid-template-columns: minmax(300px, 1.06fr) repeat(3, minmax(170px, 0.74fr)) auto;
 }
 
-.eventsIndexSearchField,
+.eventsIndexSearchGroup,
 .eventsIndexFilterField {
   display: grid;
   gap: 8px;
+  min-width: 0;
+}
+
+.eventsIndexSearchGroup > label {
+  color: #596679;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .eventsIndexSearchField {
@@ -6042,13 +6062,15 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   border-radius: 16px;
   display: grid;
   gap: 12px;
-  grid-template-columns: 18px minmax(0, 1fr) 40px;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
   min-height: 54px;
-  padding: 0 16px;
+  min-width: 0;
+  padding: 0 8px 0 16px;
 }
 
 .eventsIndexSearchField svg {
   color: #6f7f79;
+  flex: 0 0 auto;
   display: block;
   height: 18px;
   width: 18px;
@@ -6065,21 +6087,20 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 
 .eventsIndexSearchSubmit {
   align-items: center;
-  background: transparent;
+  background: var(--brand);
   border: 0;
   border-radius: 12px;
-  color: #425466;
+  color: white;
   cursor: pointer;
   display: inline-flex;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
   height: 36px;
   justify-content: center;
-  padding: 0;
-  width: 36px;
-}
-
-.eventsIndexSearchSubmit svg {
-  height: 18px;
-  width: 18px;
+  min-width: 86px;
+  padding: 0 14px;
+  white-space: nowrap;
 }
 
 .eventsIndexFilterField span,
@@ -6399,12 +6420,11 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 
 @media (max-width: 1560px) {
   .eventsIndexFiltersBar {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(260px, 1.15fr) repeat(2, minmax(170px, 0.8fr));
   }
 
-  .eventsIndexSearchField,
   .eventsIndexFilterActions {
-    grid-column: span 2;
+    justify-content: flex-start;
   }
 
   .eventsIndexTableHead {
@@ -6459,7 +6479,6 @@ img.brandLogo[src*="a2-imergidos-logo"] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .eventsIndexSearchField,
   .eventsIndexFilterActions {
     grid-column: span 2;
   }
@@ -6477,19 +6496,20 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   }
 
   .eventsIndexFiltersBar,
+  .eventsIndexSearchGroup,
   .eventsIndexSearchField,
   .eventsIndexFilterActions,
   .eventsIndexRowCard {
     grid-template-columns: 1fr;
   }
 
-  .eventsIndexSearchField,
+  .eventsIndexSearchGroup,
   .eventsIndexFilterActions {
     grid-column: auto;
   }
 
   .eventsIndexSearchField {
-    grid-template-columns: 18px minmax(0, 1fr) 40px;
+    grid-template-columns: 18px minmax(0, 1fr) auto;
   }
 
   .eventsIndexThumb {
