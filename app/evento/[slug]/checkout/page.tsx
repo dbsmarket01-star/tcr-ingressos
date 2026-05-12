@@ -86,9 +86,10 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
   const { slug } = await params;
   const query = searchParams ? await searchParams : {};
   const organizationContext = await getCurrentOrganizationContext();
-  const [event, buyerProfile] = await Promise.all([
+  const [event, buyerProfile, companySettings] = await Promise.all([
     getCachedPublicEventBySlugInOrganization(slug, organizationContext.organization.id),
-    getBuyerProfile()
+    getBuyerProfile(),
+    getCompanySettingsByOrganizationId(organizationContext.organization.id)
   ]);
 
   if (!event) {
@@ -142,7 +143,6 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
   const orderTotalInCents = selectedItems.reduce((sum, item) => sum + item.totalInCents, 0);
   const currentCheckoutPath = buildCheckoutPath(event.slug, query);
   const landingPage = firstParam(query.landingPage) || tracking.landingPage;
-  const companySettings = await getCompanySettingsByOrganizationId(organizationContext.organization.id);
   const publicSocialSettings = companySettings as typeof companySettings & {
     instagramUrl?: string | null;
     facebookUrl?: string | null;

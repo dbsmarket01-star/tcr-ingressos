@@ -67,7 +67,10 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const { slug } = await params;
   const query = searchParams ? await searchParams : {};
   const organizationContext = await getCurrentOrganizationContext();
-  const event = await getCachedPublicEventBySlugInOrganization(slug, organizationContext.organization.id);
+  const [event, companySettings] = await Promise.all([
+    getCachedPublicEventBySlugInOrganization(slug, organizationContext.organization.id),
+    getCompanySettingsByOrganizationId(organizationContext.organization.id)
+  ]);
 
   if (!event) {
     notFound();
@@ -105,7 +108,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     name: lot.name,
     totalWithFeeInCents: lot.priceInCents + calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps)
   }));
-  const companySettings = await getCompanySettingsByOrganizationId(organizationContext.organization.id);
   const publicSocialSettings = companySettings as typeof companySettings & {
     instagramUrl?: string | null;
     facebookUrl?: string | null;
@@ -182,8 +184,11 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             src={heroImage}
             alt={`Banner do evento ${event.title}`}
             decoding="async"
+            fetchPriority="high"
+            height={828}
             loading="eager"
             style={imageCropStyle(publicBannerCrop)}
+            width={1900}
           />
         </div>
         <div className="publicHeroInner">
