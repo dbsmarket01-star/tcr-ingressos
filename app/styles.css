@@ -11022,6 +11022,88 @@ body.operationTheme .loginBrandDark .brandLogo {
   min-width: 0;
 }
 
+.paymentErrorBanner {
+  align-items: center;
+  background:
+    radial-gradient(circle at top right, rgba(191, 63, 85, 0.12), transparent 30%),
+    linear-gradient(135deg, #fff6f3, #ffffff);
+  border: 1px solid #f0b9aa;
+  border-left: 6px solid #d94b35;
+  border-radius: 18px;
+  box-shadow: 0 18px 36px rgba(191, 63, 85, 0.1);
+  color: #611a13;
+  display: grid;
+  gap: 16px;
+  grid-column: 1 / -1;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  margin-bottom: -6px;
+  padding: 18px;
+  scroll-margin-top: 110px;
+}
+
+.paymentErrorBanner:focus {
+  outline: 3px solid rgba(217, 75, 53, 0.22);
+  outline-offset: 4px;
+}
+
+.paymentErrorIcon {
+  align-items: center;
+  background: #d94b35;
+  border-radius: 999px;
+  box-shadow: 0 12px 22px rgba(217, 75, 53, 0.22);
+  color: white;
+  display: inline-flex;
+  font-size: 28px;
+  font-weight: 900;
+  height: 48px;
+  justify-content: center;
+  line-height: 1;
+  width: 48px;
+}
+
+.paymentErrorCopy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.paymentErrorCopy span {
+  color: #9f2d1f;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.paymentErrorCopy h2,
+.paymentErrorCopy p {
+  margin: 0;
+}
+
+.paymentErrorCopy h2 {
+  color: #2d1512;
+  font-size: clamp(22px, 2.4vw, 30px);
+  line-height: 1.08;
+}
+
+.paymentErrorCopy p,
+.paymentErrorCopy small {
+  line-height: 1.45;
+}
+
+.paymentErrorCopy small {
+  color: #7a332b;
+  font-weight: 800;
+}
+
+.paymentErrorAction {
+  align-self: center;
+  background: #ffffff;
+  border-color: #f0b9aa;
+  color: #611a13;
+  white-space: nowrap;
+}
+
 .orderHeroBlock {
   background: linear-gradient(135deg, #f7faf9, #ffffff);
   border: 1px solid var(--line);
@@ -15011,6 +15093,23 @@ body.operationTheme .loginBrandDark .brandLogo {
     padding: 16px;
   }
 
+  .paymentErrorBanner {
+    align-items: start;
+    grid-template-columns: 42px minmax(0, 1fr);
+    padding: 16px;
+  }
+
+  .paymentErrorIcon {
+    font-size: 24px;
+    height: 42px;
+    width: 42px;
+  }
+
+  .paymentErrorAction {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+
   .orderHeroMeta {
     gap: 8px;
     grid-template-columns: 1fr;
@@ -15229,6 +15328,21 @@ body.operationTheme .loginBrandDark .brandLogo {
   .orderHeroBlock {
     gap: 8px;
     padding: 14px;
+  }
+
+  .paymentErrorBanner {
+    border-radius: 14px;
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .paymentErrorIcon {
+    height: 38px;
+    width: 38px;
+  }
+
+  .paymentErrorCopy h2 {
+    font-size: 21px;
   }
 
   .orderHeroMeta,

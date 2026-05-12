@@ -183,6 +183,26 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
       </header>
 
       <section className="container orderGrid">
+        {paymentError ? (
+          <section className="paymentErrorBanner" id="aviso-pagamento" role="alert" tabIndex={-1}>
+            <div className="paymentErrorIcon" aria-hidden="true">
+              !
+            </div>
+            <div className="paymentErrorCopy">
+              <span>Pagamento não aprovado</span>
+              <h2>Seu cartão não autorizou esta compra.</h2>
+              <p>
+                Nenhuma cobrança foi concluída. Confira os dados do cartão, limite disponível ou autorização no app do banco.
+                Você também pode tentar outro cartão ou pagar via Pix.
+              </p>
+              <small>Retorno do banco: {paymentError}</small>
+            </div>
+            <a className="secondaryButton paymentErrorAction" href="#formas-de-pagamento">
+              Tentar novamente
+            </a>
+          </section>
+        ) : null}
+
         <article className="card">
           <div className="orderHeroBlock">
             <span className={`status ${orderStatusClasses[order.status]}`}>{orderStatusLabels[order.status]}</span>
@@ -294,14 +314,13 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
             </p>
           </div>
 
-          <div className="paymentBox">
+          <div className="paymentBox" id="formas-de-pagamento">
             <div className="paymentBoxHeader">
               <div>
                 <h3>Forma de pagamento</h3>
                 <span>Escolha uma opção para liberar seus ingressos automaticamente após aprovação.</span>
               </div>
             </div>
-            {paymentError ? <div className="errorBox">{paymentError}</div> : null}
           </div>
 
           {order.status === "PENDING_PAYMENT" ? (

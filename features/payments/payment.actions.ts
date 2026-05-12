@@ -42,6 +42,10 @@ function creditCardValidationMessage(error: unknown) {
   return "Preencha os dados do cartão corretamente.";
 }
 
+function paymentErrorRedirectPath(orderCode: string, message: string) {
+  return `/pedido/${orderCode}?paymentError=${encodeURIComponent(message)}#aviso-pagamento`;
+}
+
 async function getActionIp() {
   const headerStore = await headers();
   const forwardedFor = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim();
@@ -67,7 +71,7 @@ export async function startPaymentAction(formData: FormData) {
     revalidatePath(`/pedido/${orderCode}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível iniciar o pagamento.";
-    redirect(`/pedido/${orderCode}?paymentError=${encodeURIComponent(message)}`);
+    redirect(paymentErrorRedirectPath(orderCode, message));
   }
 
   if (checkoutUrl) {
@@ -116,7 +120,7 @@ export async function syncAsaasPaymentAction(formData: FormData) {
     revalidatePath("/admin/tickets");
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível verificar o pagamento.";
-    redirect(`/pedido/${orderCode}?paymentError=${encodeURIComponent(message)}`);
+    redirect(paymentErrorRedirectPath(orderCode, message));
   }
 
   redirect(`/pedido/${orderCode}`);
@@ -140,7 +144,7 @@ export async function payWithCreditCardAction(formData: FormData) {
   const orderCode = String(formData.get("orderCode") ?? "").trim();
 
   if (!parsed.success) {
-    redirect(`/pedido/${orderCode}?paymentError=${encodeURIComponent(creditCardValidationMessage(parsed.error))}`);
+    redirect(paymentErrorRedirectPath(orderCode, creditCardValidationMessage(parsed.error)));
   }
 
   const remoteIp = await getActionIp();
@@ -157,7 +161,7 @@ export async function payWithCreditCardAction(formData: FormData) {
     revalidatePath("/admin/tickets");
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível pagar com cartão.";
-    redirect(`/pedido/${parsed.data.orderCode}?paymentError=${encodeURIComponent(message)}`);
+    redirect(paymentErrorRedirectPath(parsed.data.orderCode, message));
   }
 
   redirect(`/pedido/${parsed.data.orderCode}`);
