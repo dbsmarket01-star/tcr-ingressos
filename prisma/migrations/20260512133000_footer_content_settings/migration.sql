@@ -1,0 +1,16 @@
+ALTER TABLE "CompanySettings"
+  ADD COLUMN IF NOT EXISTS "footerDescription" TEXT,
+  ADD COLUMN IF NOT EXISTS "footerAboutTitle" TEXT,
+  ADD COLUMN IF NOT EXISTS "footerAboutContent" TEXT,
+  ADD COLUMN IF NOT EXISTS "footerHowItWorksTitle" TEXT,
+  ADD COLUMN IF NOT EXISTS "footerHowItWorksContent" TEXT,
+  ADD COLUMN IF NOT EXISTS "footerTermsTitle" TEXT,
+  ADD COLUMN IF NOT EXISTS "footerTermsContent" TEXT,
+  ADD COLUMN IF NOT EXISTS "footerPrivacyTitle" TEXT,
+  ADD COLUMN IF NOT EXISTS "footerPrivacyContent" TEXT,
+  ADD COLUMN IF NOT EXISTS "footerHelpTitle" TEXT,
+  ADD COLUMN IF NOT EXISTS "footerHelpContent" TEXT,
+  ADD COLUMN IF NOT EXISTS "footerFaqTitle" TEXT,
+  ADD COLUMN IF NOT EXISTS "footerFaqContent" TEXT,
+  ADD COLUMN IF NOT EXISTS "footerContactTitle" TEXT,
+  ADD COLUMN IF NOT EXISTS "footerContactContent" TEXT;

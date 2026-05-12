@@ -9,11 +9,12 @@ import { updateOrganizationLogo } from "@/features/organizations/organization.ad
 import { savePublicImageUpload } from "@/features/uploads/local-upload.service";
 import { companySettingsSchema } from "./company-settings.schema";
 import { updateCompanySettings } from "./company-settings.service";
+import { footerInfoItems } from "./footer-content";
 import { splitRuleFormSchema } from "./split-settings.schema";
 import { replacePaymentSplitRules } from "./split-settings.service";
 
 function settingsValidationMessage() {
-  return "Verifique nome da empresa, documento, e-mail, taxa padrão e links sociais.";
+  return "Verifique nome da empresa, documento, e-mail, taxa padrão, links sociais e textos do rodapé.";
 }
 
 function normalizeDecimal(value: FormDataEntryValue | null) {
@@ -104,6 +105,10 @@ function normalizeWhatsappUrl(raw: string) {
   return withHttps(value);
 }
 
+function readOptionalText(formData: FormData, field: string) {
+  return String(formData.get(field) ?? "").trim() || undefined;
+}
+
 export async function updateCompanySettingsAction(formData: FormData) {
   const admin = await requirePermission("SETTINGS");
 
@@ -117,6 +122,21 @@ export async function updateCompanySettingsAction(formData: FormData) {
     facebookUrl: normalizeFacebookUrl(normalizeUrlLike(formData.get("facebookUrl"))),
     youtubeUrl: normalizeYoutubeUrl(normalizeUrlLike(formData.get("youtubeUrl"))),
     whatsappUrl: normalizeWhatsappUrl(normalizeUrlLike(formData.get("whatsappUrl"))),
+    footerDescription: readOptionalText(formData, "footerDescription"),
+    footerAboutTitle: readOptionalText(formData, "footerAboutTitle"),
+    footerAboutContent: readOptionalText(formData, "footerAboutContent"),
+    footerHowItWorksTitle: readOptionalText(formData, "footerHowItWorksTitle"),
+    footerHowItWorksContent: readOptionalText(formData, "footerHowItWorksContent"),
+    footerTermsTitle: readOptionalText(formData, "footerTermsTitle"),
+    footerTermsContent: readOptionalText(formData, "footerTermsContent"),
+    footerPrivacyTitle: readOptionalText(formData, "footerPrivacyTitle"),
+    footerPrivacyContent: readOptionalText(formData, "footerPrivacyContent"),
+    footerHelpTitle: readOptionalText(formData, "footerHelpTitle"),
+    footerHelpContent: readOptionalText(formData, "footerHelpContent"),
+    footerFaqTitle: readOptionalText(formData, "footerFaqTitle"),
+    footerFaqContent: readOptionalText(formData, "footerFaqContent"),
+    footerContactTitle: readOptionalText(formData, "footerContactTitle"),
+    footerContactContent: readOptionalText(formData, "footerContactContent"),
     defaultCurrency: String(formData.get("defaultCurrency") ?? "BRL"),
     platformFeePercent: normalizeDecimal(formData.get("platformFeePercent")),
     orderReservationMinutes: String(formData.get("orderReservationMinutes") ?? "120"),
@@ -143,6 +163,7 @@ export async function updateCompanySettingsAction(formData: FormData) {
   revalidatePath("/admin/settings");
   revalidatePath("/admin/audit");
   revalidatePath("/");
+  footerInfoItems.forEach((item) => revalidatePath(`/info/${item.slug}`));
   redirect("/admin/settings?saved=1");
 }
 

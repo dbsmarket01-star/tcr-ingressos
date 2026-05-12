@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { footerInfoSections, type FooterContentSettings } from "@/features/settings/footer-content";
 
 type PublicSiteFooterProps = {
   brandName: string;
@@ -10,7 +11,7 @@ type PublicSiteFooterProps = {
     youtubeUrl?: string | null;
     whatsappUrl?: string | null;
     supportEmail?: string | null;
-  };
+  } & FooterContentSettings;
 };
 
 function normalizeWhatsappHref(rawPhone?: string | null) {
@@ -89,6 +90,7 @@ function MastercardMark() {
 
 export function PublicSiteFooter({ brandName, supportPhone, settings }: PublicSiteFooterProps) {
   const whatsappHref = settings.whatsappUrl || normalizeWhatsappHref(supportPhone);
+  const footerDescription = settings.footerDescription?.trim() || "A plataforma oficial para viver grandes experiências.";
   const socialLinks = [
     settings.instagramUrl ? { label: "Instagram", href: settings.instagramUrl, icon: <InstagramIcon /> } : null,
     settings.facebookUrl ? { label: "Facebook", href: settings.facebookUrl, icon: <FacebookIcon /> } : null,
@@ -101,22 +103,19 @@ export function PublicSiteFooter({ brandName, supportPhone, settings }: PublicSi
       <div className="container publicSiteFooterInner publicFooterReferenceInner">
         <div className="publicSiteFooterBrand publicFooterReferenceBrand">
           <strong className="publicFooterReferenceBrandTitle">{brandName}</strong>
-          <span>A plataforma oficial para viver grandes experiências.</span>
+          <span>{footerDescription}</span>
         </div>
         <div className="publicSiteFooterLinks publicFooterReferenceLinks">
-          <div>
-            <strong>Institucional</strong>
-            <a href="#topo">Sobre nós</a>
-            <a href="#como-funciona">Como funciona</a>
-            <a href="#ajuda">Termos de uso</a>
-            <a href="#ajuda">Privacidade</a>
-          </div>
-          <div id="ajuda">
-            <strong>Ajuda</strong>
-            <a href="#ajuda">Central de ajuda</a>
-            <a href="#como-funciona">Dúvidas frequentes</a>
-            {settings.supportEmail ? <a href={`mailto:${settings.supportEmail}`}>Contato</a> : <a href="/login">Contato</a>}
-          </div>
+          {footerInfoSections.map((section) => (
+            <div id={section.title === "Ajuda" ? "ajuda" : undefined} key={section.title}>
+              <strong>{section.title}</strong>
+              {section.items.map((item) => (
+                <a href={`/info/${item.slug}`} key={item.slug}>
+                  {settings[item.titleField]?.trim() || item.label}
+                </a>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
       <div className="container publicSiteFooterBottom publicFooterReferenceBottom">

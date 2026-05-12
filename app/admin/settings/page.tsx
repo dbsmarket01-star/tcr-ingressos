@@ -11,6 +11,7 @@ import {
 import { getCompanySettings } from "@/features/settings/company-settings.service";
 import { getPaymentHealth } from "@/features/settings/payment-health.service";
 import { buildSplitRulesPreview, listPaymentSplitRules } from "@/features/settings/split-settings.service";
+import { footerInfoSections, type FooterContentSettings } from "@/features/settings/footer-content";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { formatCurrency } from "@/lib/format";
 
@@ -56,7 +57,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     facebookUrl?: string | null;
     youtubeUrl?: string | null;
     whatsappUrl?: string | null;
-  };
+  } & FooterContentSettings;
   const splitRows = Array.from({ length: 6 }).map((_, index) => splitRules[index] ?? null);
   const splitPreview = buildSplitRulesPreview(splitRules);
 
@@ -145,6 +146,59 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <input name="whatsappUrl" defaultValue={companyIdentity.whatsappUrl ?? ""} placeholder="https://wa.me/5511999999999" />
           </label>
         </div>
+
+        <div className="formSection footerSettingsEditor">
+          <div className="formSectionHeader">
+            <div>
+              <span className="sectionEyebrow">Rodapé público</span>
+              <h2>Institucional e ajuda</h2>
+            </div>
+            <p className="muted">
+              Esses textos alimentam os botões do rodapé público da bilheteria: Sobre nós, Como funciona,
+              Termos, Privacidade, Central de ajuda, Dúvidas frequentes e Contato.
+            </p>
+          </div>
+          <label className="field">
+            <span>Descrição curta do rodapé</span>
+            <input
+              name="footerDescription"
+              defaultValue={companyIdentity.footerDescription ?? ""}
+              placeholder="Ex: A plataforma oficial para viver grandes experiências."
+            />
+          </label>
+          <div className="footerSettingsGrid">
+            {footerInfoSections.map((section) => (
+              <section className="footerSettingsGroup" key={section.title}>
+                <h3>{section.title}</h3>
+                {section.items.map((item) => (
+                  <div className="footerSettingsItem" key={item.slug}>
+                    <label className="field">
+                      <span>Título: {item.label}</span>
+                      <input
+                        name={item.titleField}
+                        defaultValue={companyIdentity[item.titleField] ?? ""}
+                        placeholder={item.label}
+                      />
+                    </label>
+                    <label className="field">
+                      <span>Conteúdo</span>
+                      <textarea
+                        name={item.contentField}
+                        defaultValue={companyIdentity[item.contentField] ?? ""}
+                        placeholder={`Texto da página "${item.label}"`}
+                        rows={6}
+                      />
+                    </label>
+                    <small className="muted">
+                      Link público: /info/{item.slug}
+                    </small>
+                  </div>
+                ))}
+              </section>
+            ))}
+          </div>
+        </div>
+
         <label className="field">
           <span>Taxa padrão da plataforma (%)</span>
           <input

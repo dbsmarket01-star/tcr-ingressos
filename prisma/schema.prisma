@@ -323,6 +323,21 @@ model CompanySettings {
   facebookUrl     String?
   youtubeUrl      String?
   whatsappUrl     String?
+  footerDescription String?
+  footerAboutTitle String?
+  footerAboutContent String?
+  footerHowItWorksTitle String?
+  footerHowItWorksContent String?
+  footerTermsTitle String?
+  footerTermsContent String?
+  footerPrivacyTitle String?
+  footerPrivacyContent String?
+  footerHelpTitle String?
+  footerHelpContent String?
+  footerFaqTitle String?
+  footerFaqContent String?
+  footerContactTitle String?
+  footerContactContent String?
   defaultCurrency String   @default("BRL")
   platformFeeBps  Int      @default(1000)
   orderReservationMinutes Int @default(120)
