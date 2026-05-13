@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { getFinanceReport } from "@/features/finance/finance-report.service";
 import { formatDateTime } from "@/lib/format";
 
@@ -17,13 +17,17 @@ function formatDate(value?: Date | null) {
 }
 
 export async function GET(request: Request) {
-  await requirePermission("FINANCE");
+  const admin = await requirePermission("FINANCE");
   const url = new URL(request.url);
-  const report = await getFinanceReport({
-    eventId: url.searchParams.get("eventId") || undefined,
-    startDate: url.searchParams.get("startDate") || undefined,
-    endDate: url.searchParams.get("endDate") || undefined
-  });
+  const report = await getFinanceReport(
+    {
+      eventId: url.searchParams.get("eventId") || undefined,
+      startDate: url.searchParams.get("startDate") || undefined,
+      endDate: url.searchParams.get("endDate") || undefined
+    },
+    admin.organizationId,
+    getAdminAllowedEventIds(admin)
+  );
 
   const rows: unknown[][] = [
     ["Resumo financeiro"],
@@ -34,28 +38,23 @@ export async function GET(request: Request) {
     ["Taxas e impostos", formatMoney(report.totals.serviceFeeInCents)],
     ["Juros de cartao", formatMoney(report.totals.cardInterestInCents)],
     ["Descontos", formatMoney(report.totals.discountInCents)],
-    ["Liquido aproximado", formatMoney(report.totals.netRevenueInCents)],
-    ["Taxas identificadas", formatMoney(report.totals.estimatedFeesInCents)],
     ["Split enviado", formatMoney(report.totals.splitTotalInCents)],
-    ["Plataforma apos split", formatMoney(report.totals.platformAfterSplitInCents)],
     ["Pedidos com split", report.totals.splitPaymentsCount],
     ["Cobertura split (%)", report.totals.splitCoverage],
     ["Pedidos pagos", report.totals.paidOrders],
     ["Pedidos pendentes", report.totals.pendingOrders],
     ["Cancelados/expirados", report.totals.canceledOrders],
     ["Ingressos emitidos", report.totals.ticketsIssued],
-    ["Cobertura liquido real (%)", report.totals.netValueCoverage],
     [],
     ["Por forma de pagamento"],
-    ["Forma", "Pedidos", "Bruto", "Taxas", "Juros", "Descontos", "Liquido"],
+    ["Forma", "Pedidos", "Bruto", "Taxas", "Juros", "Descontos"],
     ...report.byMethod.map((row) => [
       row.method,
       row.count,
       formatMoney(row.grossInCents),
       formatMoney(row.serviceFeeInCents),
       formatMoney(row.cardInterestInCents),
-      formatMoney(row.discountInCents),
-      formatMoney(row.netInCents)
+      formatMoney(row.discountInCents)
     ]),
     [],
     ["Split Asaas por carteira"],
@@ -68,7 +67,7 @@ export async function GET(request: Request) {
     ]),
     [],
     ["Por evento"],
-    ["Evento", "Pedidos pagos", "Ingressos", "Taxas", "Juros", "Descontos", "Bruto", "Liquido"],
+    ["Evento", "Pedidos pagos", "Ingressos", "Taxas", "Juros", "Descontos", "Bruto"],
     ...report.byEvent.map((row) => [
       row.title,
       row.count,
@@ -76,12 +75,11 @@ export async function GET(request: Request) {
       formatMoney(row.serviceFeeInCents),
       formatMoney(row.cardInterestInCents),
       formatMoney(row.discountInCents),
-      formatMoney(row.grossInCents),
-      formatMoney(row.netInCents)
+      formatMoney(row.grossInCents)
     ]),
     [],
     ["Por origem"],
-    ["Origem", "Pedidos", "Ingressos", "Taxas", "Juros", "Descontos", "Bruto", "Liquido"],
+    ["Origem", "Pedidos", "Ingressos", "Taxas", "Juros", "Descontos", "Bruto"],
     ...report.bySource.map((row) => [
       row.source,
       row.count,
@@ -89,8 +87,7 @@ export async function GET(request: Request) {
       formatMoney(row.serviceFeeInCents),
       formatMoney(row.cardInterestInCents),
       formatMoney(row.discountInCents),
-      formatMoney(row.grossInCents),
-      formatMoney(row.netInCents)
+      formatMoney(row.grossInCents)
     ]),
     [],
     ["Pagamentos confirmados recentes"],

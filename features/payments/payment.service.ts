@@ -146,15 +146,21 @@ function mapAsaasPaymentStatus(status?: string) {
   return "PENDING" as const;
 }
 
-function resolveCapturedAmountInCents(
-  payment: { amountInCents: number },
-  rawPayload?: unknown
-) {
-  if (!rawPayload || typeof rawPayload !== "object") {
-    return payment.amountInCents;
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
   }
 
-  const value = (rawPayload as { value?: unknown }).value;
+  return null;
+}
+
+function extractPaymentPayload(rawPayload: unknown) {
+  const root = asRecord(rawPayload);
+  const nestedPayment = asRecord(root?.payment);
+  return nestedPayment ?? root;
+}
+
+function numberToCents(value: unknown) {
   const numericValue =
     typeof value === "number"
       ? value
@@ -163,10 +169,81 @@ function resolveCapturedAmountInCents(
         : Number.NaN;
 
   if (!Number.isFinite(numericValue) || numericValue <= 0) {
-    return payment.amountInCents;
+    return null;
   }
 
   return Math.round(numericValue * 100);
+}
+
+function isInstallmentPaymentPayload(rawPayload: unknown) {
+  const payload = extractPaymentPayload(rawPayload);
+
+  if (!payload) {
+    return false;
+  }
+
+  const installmentCount = payload.installmentCount;
+  const description = typeof payload.description === "string" ? payload.description : "";
+
+  return Boolean(
+    payload.installment ||
+      payload.installmentNumber ||
+      payload.installmentValue ||
+      (typeof installmentCount === "number" && installmentCount > 1) ||
+      /parcela/i.test(description)
+  );
+}
+
+function resolveCapturedAmountInCents(
+  payment: { amountInCents: number },
+  rawPayload?: unknown
+) {
+  const payload = extractPaymentPayload(rawPayload);
+  const valueInCents = numberToCents(payload?.value);
+
+  if (valueInCents === null) {
+    return payment.amountInCents;
+  }
+
+  return valueInCents;
+}
+
+function resolveCommercialOrderTotalInCents(order: {
+  totalInCents: number;
+  subtotalInCents: number;
+  serviceFeeInCents: number;
+  pixDiscountInCents: number;
+  cardInterestInCents: number;
+  discountInCents: number;
+}) {
+  const calculatedCardTotalInCents = Math.max(
+    order.subtotalInCents + order.serviceFeeInCents + order.cardInterestInCents - order.discountInCents,
+    0
+  );
+  const calculatedPixTotalInCents = Math.max(calculatedCardTotalInCents - order.pixDiscountInCents, 0);
+
+  return Math.max(order.totalInCents, calculatedCardTotalInCents, calculatedPixTotalInCents);
+}
+
+function resolveApprovedAmountInCents(
+  payment: { amountInCents: number },
+  order: {
+    totalInCents: number;
+    subtotalInCents: number;
+    serviceFeeInCents: number;
+    pixDiscountInCents: number;
+    cardInterestInCents: number;
+    discountInCents: number;
+  },
+  rawPayload?: unknown
+) {
+  const capturedAmountInCents = resolveCapturedAmountInCents(payment, rawPayload);
+
+  if (!isInstallmentPaymentPayload(rawPayload)) {
+    return capturedAmountInCents;
+  }
+
+  return Math.max(payment.amountInCents, resolveCommercialOrderTotalInCents(order), capturedAmountInCents);
 }
 
 export async function startPaymentForOrder(orderCode: string) {
@@ -775,8 +852,14 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
               eventId: true,
               couponId: true,
               status: true,
-          ticketsEmailSentAt: true,
-          ticketsEmailStatus: true,
+              subtotalInCents: true,
+              serviceFeeInCents: true,
+              pixDiscountInCents: true,
+              cardInterestInCents: true,
+              discountInCents: true,
+              totalInCents: true,
+              ticketsEmailSentAt: true,
+              ticketsEmailStatus: true,
               customer: true,
               items: true,
               event: {
@@ -888,7 +971,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
       }
 
       if (payload.status === "APPROVED") {
-        const capturedAmountInCents = resolveCapturedAmountInCents(payment, payload.rawPayload);
+        const approvedAmountInCents = resolveApprovedAmountInCents(payment, payment.order, payload.rawPayload);
         const paidAt = new Date();
 
         const canConfirmApprovedOrder =
@@ -927,7 +1010,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           data: {
             status: PaymentStatus.APPROVED,
             externalId: payload.externalId || payment.externalId,
-            amountInCents: capturedAmountInCents,
+            amountInCents: approvedAmountInCents,
             paidAt,
             failedAt: null,
             failureReason: null,
@@ -1015,7 +1098,6 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           },
           data: {
             status: OrderStatus.PAID,
-            totalInCents: capturedAmountInCents,
             paidAt,
             canceledAt: null
           }

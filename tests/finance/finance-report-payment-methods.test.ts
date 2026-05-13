@@ -99,10 +99,13 @@ describe("finance report payment methods", () => {
       ]);
 
     const { getFinanceReport } = await import("@/features/finance/finance-report.service");
-    const report = await getFinanceReport({
-      startDate: "2026-05-01",
-      endDate: "2026-05-31"
-    });
+    const report = await getFinanceReport(
+      {
+        startDate: "2026-05-01",
+        endDate: "2026-05-31"
+      },
+      "org_a2"
+    );
 
     const pix = report.byMethod.find((row) => row.method === "PIX");
     const card = report.byMethod.find((row) => row.method === "CREDIT_CARD");
@@ -111,5 +114,10 @@ describe("finance report payment methods", () => {
     expect(pix?.grossInCents).toBe(2500);
     expect(card?.count).toBe(1);
     expect(card?.grossInCents).toBe(5000);
+    expect(prismaMock.event.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { organizationId: "org_a2" }
+    }));
+    expect(prismaMock.order.findMany.mock.calls[0]?.[0].where.event).toEqual({ organizationId: "org_a2" });
+    expect(prismaMock.order.findMany.mock.calls[1]?.[0].where.event).toEqual({ organizationId: "org_a2" });
   });
 });

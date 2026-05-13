@@ -35,7 +35,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
   const admin = await requirePermission("FINANCE");
   const organizationContext = await getCurrentOrganizationContext();
   const params = await searchParams;
-  const report = await getFinanceReport(params, getAdminAllowedEventIds(admin));
+  const report = await getFinanceReport(params, admin.organizationId, getAdminAllowedEventIds(admin));
   const exportHref = `/admin/finance/export?${new URLSearchParams({
     ...(report.filters.eventId ? { eventId: report.filters.eventId } : {}),
     ...(report.filters.startDate ? { startDate: report.filters.startDate } : {}),
@@ -123,10 +123,6 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
           <span className="muted">Ingressos emitidos</span>
           <strong>{report.totals.ticketsIssued}</strong>
         </article>
-        <article className="card metric">
-          <span className="muted">Líquido aproximado</span>
-          <strong>{formatCurrency(report.totals.netRevenueInCents)}</strong>
-        </article>
       </section>
 
       <section className="card spacedSection">
@@ -179,8 +175,8 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
       <section className="card spacedSection">
         <div className="sectionHeader inlineHeader">
           <div>
-            <h2>Resumo de repasse</h2>
-            <p className="muted">Use este quadro para conferir rapidamente o que ficou com a operação e o que saiu no split.</p>
+            <h2>Composição do faturamento pago</h2>
+            <p className="muted">Use este quadro para conferir o valor cheio das vendas confirmadas e seus componentes comerciais.</p>
           </div>
         </div>
         <div className="financeStatusGrid">
@@ -201,14 +197,6 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
             <strong>{formatCurrency(report.totals.discountInCents)}</strong>
           </div>
           <div>
-            <span>Líquido aproximado</span>
-            <strong>{formatCurrency(report.totals.netRevenueInCents)}</strong>
-          </div>
-          <div>
-            <span>Cobertura do líquido real</span>
-            <strong>{report.totals.netValueCoverage}% dos pagos</strong>
-          </div>
-          <div>
             <span>Split automático</span>
             <strong>{formatCurrency(report.totals.splitTotalInCents)}</strong>
           </div>
@@ -221,10 +209,6 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
             <strong>{report.totals.splitCoverage}% dos pagos</strong>
           </div>
         </div>
-        <p className="muted">
-          O líquido aproximado usa o valor líquido retornado pelo provedor quando disponível. Quando o provedor não informa,
-          o sistema usa o total pago como referência conservadora para não esconder receita.
-        </p>
       </section>
 
       <section className="grid twoColumns spacedSection">
@@ -245,7 +229,6 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                   <th>Taxas</th>
                   <th>Juros</th>
                   <th>Descontos</th>
-                  <th>Líquido</th>
                 </tr>
               </thead>
               <tbody>
@@ -257,7 +240,6 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                     <td>{formatCurrency(row.serviceFeeInCents)}</td>
                     <td>{formatCurrency(row.cardInterestInCents)}</td>
                     <td>{formatCurrency(row.discountInCents)}</td>
-                    <td>{formatCurrency(row.netInCents)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -345,7 +327,6 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                 <th>Juros</th>
                 <th>Descontos</th>
                 <th>Bruto</th>
-                <th>Liquido</th>
               </tr>
             </thead>
             <tbody>
@@ -358,7 +339,6 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                   <td>{formatCurrency(row.cardInterestInCents)}</td>
                   <td>{formatCurrency(row.discountInCents)}</td>
                   <td>{formatCurrency(row.grossInCents)}</td>
-                  <td>{formatCurrency(row.netInCents)}</td>
                 </tr>
               ))}
             </tbody>
@@ -385,7 +365,6 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                 <th>Juros</th>
                 <th>Descontos</th>
                 <th>Bruto</th>
-                <th>Liquido</th>
               </tr>
             </thead>
             <tbody>
@@ -398,7 +377,6 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                   <td>{formatCurrency(row.cardInterestInCents)}</td>
                   <td>{formatCurrency(row.discountInCents)}</td>
                   <td>{formatCurrency(row.grossInCents)}</td>
-                  <td>{formatCurrency(row.netInCents)}</td>
                 </tr>
               ))}
             </tbody>

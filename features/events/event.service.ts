@@ -589,5 +589,5 @@ export function getEventCapacity(event: Pick<EventListItem, "lots">) {
 }
 
 export function getEventRevenueInCents(event: Pick<EventListItem, "orders">) {
-  return event.orders.reduce((sum, order) => sum + (order.payment?.amountInCents ?? order.totalInCents), 0);
+  return event.orders.reduce((sum, order) => sum + order.totalInCents, 0);
 }

@@ -1,4 +1,4 @@
-import { OrderStatus, PaymentProvider, PaymentStatus } from "@prisma/client";
+import { OrderStatus, PaymentProvider, PaymentStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSourceLabel } from "@/features/tracking/tracking";
 import { summarizeAsaasSplit } from "@/features/payments/split-report.service";
@@ -12,6 +12,27 @@ type FinanceReportFilters = {
 type EventScope = string[] | null | undefined;
 
 type PaymentMethod = "PIX" | "CREDIT_CARD" | "SIMULATED" | "OTHER";
+
+function buildScopedEventWhere(
+  organizationId: string,
+  allowedEventIds?: EventScope,
+  eventId?: string
+): Prisma.EventWhereInput {
+  const where: Prisma.EventWhereInput = {
+    organizationId
+  };
+
+  if (eventId) {
+    where.id = allowedEventIds && !allowedEventIds.includes(eventId) ? "__event_not_allowed__" : eventId;
+    return where;
+  }
+
+  if (allowedEventIds) {
+    where.id = { in: allowedEventIds };
+  }
+
+  return where;
+}
 
 function parseStartDate(value?: string) {
   if (!value) {
@@ -121,14 +142,20 @@ function addBreakdownToMap<
   row.discountInCents += discountInCents;
 }
 
-export async function getFinanceReport(filters: FinanceReportFilters, allowedEventIds?: EventScope) {
+export async function getFinanceReport(
+  filters: FinanceReportFilters,
+  organizationId: string,
+  allowedEventIds?: EventScope
+) {
   const startDate = parseStartDate(filters.startDate);
   const endDate = parseEndDate(filters.endDate);
   const eventId = filters.eventId || undefined;
+  const eventsWhere = buildScopedEventWhere(organizationId, allowedEventIds);
+  const ordersEventWhere = buildScopedEventWhere(organizationId, allowedEventIds, eventId);
 
   const [events, ordersInPeriod, paidOrders] = await Promise.all([
     prisma.event.findMany({
-      where: allowedEventIds ? { id: { in: allowedEventIds } } : undefined,
+      where: eventsWhere,
       orderBy: [{ startsAt: "desc" }, { title: "asc" }],
       select: {
         id: true,
@@ -137,8 +164,7 @@ export async function getFinanceReport(filters: FinanceReportFilters, allowedEve
     }),
     prisma.order.findMany({
       where: {
-        ...(eventId ? { eventId } : {}),
-        ...(!eventId && allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+        event: ordersEventWhere,
         createdAt: {
           gte: startDate,
           lte: endDate
@@ -168,8 +194,7 @@ export async function getFinanceReport(filters: FinanceReportFilters, allowedEve
     prisma.order.findMany({
       where: {
         status: OrderStatus.PAID,
-        ...(eventId ? { eventId } : {}),
-        ...(!eventId && allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+        event: ordersEventWhere,
         paidAt: {
           gte: startDate,
           lte: endDate

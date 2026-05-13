@@ -71,7 +71,7 @@ function getDaysUntil(startsAt: Date) {
 }
 
 function buildDailySeries(
-  orders: Array<{ paidAt: Date | null; totalInCents: number; payment: { amountInCents: number } | null }>,
+  orders: Array<{ paidAt: Date | null; totalInCents: number }>,
   days = 30
 ) {
   const end = new Date();
@@ -106,7 +106,7 @@ function buildDailySeries(
     const index = indexByKey.get(key);
     if (index === undefined) continue;
     rows[index].salesCount += 1;
-    rows[index].revenueInCents += order.payment?.amountInCents ?? order.totalInCents;
+    rows[index].revenueInCents += order.totalInCents;
   }
 
   return rows;
@@ -335,8 +335,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
   const salesSeries = buildDailySeries(
     paidOrders.map((order) => ({
       paidAt: order.paidAt,
-      totalInCents: order.totalInCents,
-      payment: order.payment
+      totalInCents: order.totalInCents
     })),
     30
   );
@@ -740,7 +739,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
                       <td>{order.code}</td>
                       <td>{order.customer.name}</td>
                       <td>{formatEventDate(order.paidAt ?? order.createdAt)}</td>
-                      <td>{formatCurrency(order.payment?.amountInCents ?? order.totalInCents)}</td>
+                      <td>{formatCurrency(order.totalInCents)}</td>
                       <td>{order.payment?.provider === "ASAAS" ? "Pix/Asaas" : order.payment?.provider ?? "-"}</td>
                     </tr>
                   ))}
