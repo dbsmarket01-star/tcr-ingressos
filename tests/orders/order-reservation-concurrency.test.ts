@@ -108,4 +108,101 @@ describe("order reservation concurrency", () => {
     expect(txMock.$executeRaw).toHaveBeenCalledTimes(1);
     expect(txMock.order.create).not.toHaveBeenCalled();
   });
+
+  it("blocks hotel checkout when the companion CPF is invalid", async () => {
+    const txMock = {
+      event: {
+        findFirst: vi.fn(async () => ({ id: "event_1", couponsEnabled: false }))
+      },
+      customer: {
+        findFirst: vi.fn(async () => ({
+          id: "customer_1",
+          name: "Buyer",
+          email: "buyer@example.com",
+          document: "52998224725"
+        })),
+        create: vi.fn()
+      },
+      ticketLot: {
+        findFirst: vi.fn(async () => ({
+          id: "lot_1",
+          eventId: "event_1",
+          status: "ACTIVE",
+          name: "Ingresso com hotel",
+          minPerOrder: 1,
+          maxPerOrder: 4,
+          salesStartsAt: null,
+          salesEndsAt: null,
+          priceInCents: 10000,
+          serviceFeeBps: 0,
+          pixDiscountPercentBps: 0,
+          pixDiscountFixedInCents: 0,
+          cardInterestBpsPerInstallment: 0,
+          cardInterestStartsAtInstallment: 99,
+          churchQuestionEnabled: false,
+          hasHotel: true,
+          hotelId: "hotel_1",
+          hotel: {
+            id: "hotel_1",
+            name: "Hotel Teste"
+          }
+        }))
+      },
+      $executeRaw: vi.fn(async () => 1),
+      order: {
+        create: vi.fn()
+      }
+    };
+
+    prismaMock.$transaction.mockImplementation(async (callback: (tx: typeof txMock) => Promise<unknown>) =>
+      callback(txMock as never)
+    );
+
+    const { createCheckoutOrder } = await import("@/features/orders/order.service");
+
+    await expect(
+      createCheckoutOrder({
+        eventId: "event_1",
+        eventSlug: "evento-teste",
+        buyerName: "Buyer",
+        buyerEmail: "buyer@example.com",
+        buyerDocument: "52998224725",
+        buyerPhone: "11999999999",
+        couponCode: undefined,
+        items: [
+          {
+            lotId: "lot_1",
+            quantity: 1
+          }
+        ],
+        hotelGuests: [
+          {
+            lotId: "lot_1",
+            guestIndex: 1,
+            guest1Name: "Buyer",
+            guest1Document: "529.982.247-25",
+            guest1BirthDate: "1990-01-01",
+            guest1Email: "buyer@example.com",
+            guest1Phone: "11999999999",
+            guest2Name: "Acompanhante",
+            guest2Document: "111.111.111-11",
+            guest2BirthDate: "1991-01-01"
+          }
+        ],
+        utmSource: undefined,
+        utmMedium: undefined,
+        utmCampaign: undefined,
+        utmContent: undefined,
+        utmTerm: undefined,
+        referrer: undefined,
+        landingPage: undefined,
+        metaFbp: undefined,
+        metaFbc: undefined,
+        clientIpAddress: undefined,
+        clientUserAgent: undefined
+      })
+    ).rejects.toThrow("Informe um CPF válido para o acompanhante em Ingresso com hotel - hospedagem 1.");
+
+    expect(txMock.order.create).not.toHaveBeenCalled();
+  });
 });

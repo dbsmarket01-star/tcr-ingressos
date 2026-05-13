@@ -5,6 +5,7 @@ import { createPublicOrderUrl, sendOrderExpiredEmail } from "@/features/email/em
 import { updateHomeListStatusForOrder } from "@/features/hospitality/home-list.service";
 import { calculatePixDiscountInCents, calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import { getOrderReservationMinutes } from "@/features/settings/company-settings.service";
+import { isValidCpf, onlyDocumentDigits } from "@/lib/document-validation";
 import type { CheckoutOrderInput } from "./order.schema";
 
 const FALLBACK_ORDER_RESERVATION_MINUTES = 120;
@@ -38,6 +39,16 @@ function parseHotelBirthDate(value: string | undefined, message: string) {
   }
 
   return date;
+}
+
+function requiredHotelCpf(value: string | undefined, message: string) {
+  const text = requiredHotelField(value, message);
+
+  if (!isValidCpf(text)) {
+    throw new Error(message);
+  }
+
+  return onlyDocumentDigits(text);
 }
 
 export async function createCheckoutOrder(input: CheckoutOrderInput, organizationId?: string | null) {
@@ -204,12 +215,12 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
               hotelId: lot.hotelId,
               guestIndex,
               guest1Name: requiredHotelField(guest?.guest1Name || input.buyerName, `Informe o nome do hóspede principal em ${context}.`),
-              guest1Document: requiredHotelField(guest?.guest1Document || input.buyerDocument, `Informe o CPF do hóspede principal em ${context}.`),
+              guest1Document: requiredHotelCpf(guest?.guest1Document || input.buyerDocument, `Informe um CPF válido para o hóspede principal em ${context}.`),
               guest1BirthDate: parseHotelBirthDate(guest?.guest1BirthDate, `Informe a data de nascimento do hóspede principal em ${context}.`),
               guest1Email: requiredHotelField(guest?.guest1Email || input.buyerEmail, `Informe o e-mail do hóspede principal em ${context}.`),
               guest1Phone: requiredHotelField(guest?.guest1Phone || input.buyerPhone, `Informe o telefone do hóspede principal em ${context}.`),
               guest2Name: requiredHotelField(guest?.guest2Name, `Informe o nome do acompanhante em ${context}.`),
-              guest2Document: requiredHotelField(guest?.guest2Document, `Informe o CPF do acompanhante em ${context}.`),
+              guest2Document: requiredHotelCpf(guest?.guest2Document, `Informe um CPF válido para o acompanhante em ${context}.`),
               guest2BirthDate: parseHotelBirthDate(guest?.guest2BirthDate, `Informe a data de nascimento do acompanhante em ${context}.`)
             });
           }
