@@ -74,13 +74,29 @@ function extractPaymentPayload(rawPayload: unknown) {
   return nestedPayment ?? root;
 }
 
+function isManualSalePayload(rawPayload: unknown) {
+  return extractPaymentPayload(rawPayload)?.origin === "MANUAL_SALE";
+}
+
 function extractBillingType(rawPayload: unknown, provider: PaymentProvider, hasPixQrCode: boolean): PaymentMethod {
+  const payload = extractPaymentPayload(rawPayload);
+  const billingType = typeof payload?.billingType === "string" ? payload.billingType : null;
+
+  if (isManualSalePayload(rawPayload)) {
+    if (billingType === "PIX") {
+      return "PIX";
+    }
+
+    if (billingType === "CREDIT_CARD") {
+      return "CREDIT_CARD";
+    }
+
+    return "OTHER";
+  }
+
   if (provider === "SIMULATED") {
     return "SIMULATED";
   }
-
-  const payload = extractPaymentPayload(rawPayload);
-  const billingType = typeof payload?.billingType === "string" ? payload.billingType : null;
 
   if (billingType === "PIX") {
     return "PIX";

@@ -60,6 +60,12 @@ export const adminNavItems: AdminNavItem[] = [
     area: "ORDERS"
   },
   {
+    href: "/admin/manual-sales",
+    label: "Venda manual",
+    description: "Cadastro de vendas antigas ou externas",
+    area: "ORDERS"
+  },
+  {
     href: "/admin/tickets",
     label: "Ingressos",
     description: "Emissão, status e QR Code",
@@ -157,7 +163,7 @@ export const adminNavGroups: AdminNavGroup[] = [
     description: "Eventos, vendas pagas e pedidos gerados",
     defaultOpen: true,
     items: adminNavItems.filter((item) =>
-      ["/admin/events", "/admin/finance", "/admin/orders", "/admin/home-list"].includes(item.href)
+      ["/admin/events", "/admin/finance", "/admin/orders", "/admin/manual-sales", "/admin/home-list"].includes(item.href)
     )
   },
   {

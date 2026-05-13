@@ -10023,6 +10023,23 @@ body.operationTheme .loginBrandDark .brandLogo {
   margin: 0;
 }
 
+.manualSaleGuestCard {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(244, 249, 251, 0.88));
+  border: 1px solid var(--line-soft);
+  border-radius: 18px;
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.manualSaleGuestCard + .manualSaleGuestCard {
+  margin-top: 16px;
+}
+
+.manualSaleGuestCard h3 {
+  margin: 0;
+}
+
 .advancedSection {
   gap: 12px;
 }
