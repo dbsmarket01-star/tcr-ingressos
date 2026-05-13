@@ -170,7 +170,7 @@ describe("payment webhook conflict handling", () => {
       where: {
         id: "order_2",
         status: {
-          in: ["PENDING_PAYMENT", "EXPIRED"]
+          in: ["PENDING_PAYMENT", "EXPIRED", "CANCELED"]
         }
       },
       data: expect.objectContaining({

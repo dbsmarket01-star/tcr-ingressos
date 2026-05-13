@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { expirePendingOrders } from "@/features/orders/order.service";
 import { reconcileAsaasPayments } from "@/features/payments/payment.service";
 
 export const dynamic = "force-dynamic";
@@ -33,17 +32,19 @@ export async function GET(request: Request) {
     );
   }
 
+  const url = new URL(request.url);
+  const limit = Number.parseInt(url.searchParams.get("limit") || "500", 10);
+  const lookbackHours = Number.parseInt(url.searchParams.get("lookbackHours") || String(24 * 7), 10);
+
   try {
-    const reconciliation = await reconcileAsaasPayments({
-      limit: 500,
-      lookbackHours: 24 * 7
+    const result = await reconcileAsaasPayments({
+      limit: Number.isFinite(limit) ? limit : 500,
+      lookbackHours: Number.isFinite(lookbackHours) ? lookbackHours : 24 * 7
     });
-    const result = await expirePendingOrders({ limit: 500 });
 
     return NextResponse.json(
       {
         ok: true,
-        reconciliation,
         ...result
       },
       {
@@ -53,12 +54,12 @@ export async function GET(request: Request) {
       }
     );
   } catch (error) {
-    console.error("[maintenance:expire-orders]", error);
+    console.error("[maintenance:reconcile-asaas-payments]", error);
 
     return NextResponse.json(
       {
         ok: false,
-        error: "Nao foi possivel expirar pedidos pendentes."
+        error: "Nao foi possivel reconciliar pagamentos Asaas."
       },
       {
         status: 500,

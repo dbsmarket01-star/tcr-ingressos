@@ -52,15 +52,23 @@ function cleanToken(value?: string | null) {
   return value?.replace(/^Bearer\s+/i, "").trim();
 }
 
+function getConfiguredAsaasWebhookTokens() {
+  return Object.entries(process.env)
+    .filter(([key]) => key === "ASAAS_WEBHOOK_TOKEN" || key.startsWith("ASAAS_WEBHOOK_TOKEN_"))
+    .map(([, value]) => value?.trim())
+    .filter((value): value is string => Boolean(value));
+}
+
 function isValidAsaasWebhook(
   request: Request,
   body: AsaasWebhookPayload | null,
   url: URL,
   organization?: PaymentOrganizationContext | null
 ) {
-  const expectedToken = getAsaasWebhookTokenForOrganization(organization).value;
+  const scopedToken = getAsaasWebhookTokenForOrganization(organization).value;
+  const expectedTokens = scopedToken ? [scopedToken] : getConfiguredAsaasWebhookTokens();
 
-  if (!expectedToken) {
+  if (expectedTokens.length === 0) {
     return true;
   }
 
@@ -75,9 +83,9 @@ function isValidAsaasWebhook(
     body?.accessToken
   ]
     .map(cleanToken)
-    .filter(Boolean);
+    .filter((token): token is string => Boolean(token));
 
-  return candidates.some((receivedToken) => receivedToken === expectedToken);
+  return candidates.some((receivedToken) => expectedTokens.includes(receivedToken));
 }
 
 function webhookResponse(payload: Record<string, unknown>, init?: ResponseInit) {

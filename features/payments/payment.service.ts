@@ -139,6 +139,10 @@ function mapAsaasPaymentStatus(status?: string) {
     return "FAILED" as const;
   }
 
+  if (status === "DELETED" || status === "CANCELED" || status === "CANCELLED") {
+    return "CANCELED" as const;
+  }
+
   return "PENDING" as const;
 }
 
@@ -479,6 +483,163 @@ export async function syncAsaasPaymentByExternalId(externalId: string) {
   } satisfies AsaasExternalPaymentSyncResult;
 }
 
+export type AsaasPaymentReconciliationResult = {
+  checked: number;
+  synced: number;
+  approved: number;
+  pending: number;
+  failed: number;
+  refunded: number;
+  skipped: number;
+  errors: Array<{
+    orderCode: string;
+    externalId: string;
+    message: string;
+  }>;
+};
+
+type ReconcileAsaasPaymentsOptions = {
+  limit?: number;
+  lookbackHours?: number;
+  organizationId?: string | null;
+};
+
+export async function reconcileAsaasPayments(
+  options?: ReconcileAsaasPaymentsOptions
+): Promise<AsaasPaymentReconciliationResult> {
+  const limit = Math.min(Math.max(options?.limit ?? 100, 1), 500);
+  const lookbackHours = Math.min(Math.max(options?.lookbackHours ?? 72, 1), 24 * 30);
+  const since = new Date(Date.now() - lookbackHours * 60 * 60 * 1000);
+
+  const payments = await prisma.payment.findMany({
+    where: {
+      provider: "ASAAS",
+      externalId: {
+        not: null
+      },
+      createdAt: {
+        gte: since
+      },
+      ...(options?.organizationId
+        ? {
+            order: {
+              event: {
+                organizationId: options.organizationId
+              }
+            }
+          }
+        : {}),
+      OR: [
+        {
+          status: {
+            in: [PaymentStatus.CREATED, PaymentStatus.PENDING, PaymentStatus.CANCELED, PaymentStatus.FAILED]
+          }
+        },
+        {
+          order: {
+            status: {
+              in: [OrderStatus.PENDING_PAYMENT, OrderStatus.EXPIRED, OrderStatus.CANCELED]
+            }
+          }
+        }
+      ]
+    },
+    orderBy: {
+      updatedAt: "asc"
+    },
+    take: limit,
+    include: {
+      order: {
+        select: {
+          code: true,
+          status: true,
+          event: {
+            select: {
+              organization: {
+                select: paymentOrganizationSelect
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  const result: AsaasPaymentReconciliationResult = {
+    checked: 0,
+    synced: 0,
+    approved: 0,
+    pending: 0,
+    failed: 0,
+    refunded: 0,
+    skipped: 0,
+    errors: []
+  };
+
+  for (const localPayment of payments) {
+    const externalId = localPayment.externalId;
+
+    if (!externalId) {
+      result.skipped += 1;
+      continue;
+    }
+
+    result.checked += 1;
+
+    try {
+      const asaas = getAsaasProvider(localPayment.order.event.organization);
+      const remotePayment = await asaas.getPayment(externalId);
+      const nextStatus = mapAsaasPaymentStatus(remotePayment.status);
+
+      if (
+        nextStatus === "PENDING" &&
+        localPayment.order.status !== OrderStatus.PENDING_PAYMENT &&
+        localPayment.status !== PaymentStatus.PENDING
+      ) {
+        result.pending += 1;
+        result.skipped += 1;
+        continue;
+      }
+
+      await handlePaymentWebhook({
+        externalId: String(remotePayment.id || externalId),
+        orderCode: localPayment.order.code,
+        status: nextStatus,
+        reason: remotePayment.status,
+        rawPayload: remotePayment
+      });
+
+      result.synced += 1;
+
+      if (nextStatus === "APPROVED") {
+        result.approved += 1;
+      } else if (nextStatus === "REFUNDED") {
+        result.refunded += 1;
+      } else if (nextStatus === "FAILED" || nextStatus === "CANCELED") {
+        result.failed += 1;
+      } else {
+        result.pending += 1;
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      result.errors.push({
+        orderCode: localPayment.order.code,
+        externalId,
+        message
+      });
+
+      console.error("[asaas-reconcile] Falha ao reconciliar pagamento.", {
+        orderCode: localPayment.order.code,
+        externalId,
+        error: message
+      });
+    }
+  }
+
+  return result;
+}
+
 export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & { remoteIp: string }) {
   await expirePendingOrderByCode(input.orderCode);
 
@@ -732,7 +893,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
 
         const canConfirmApprovedOrder =
           payment.order.status === OrderStatus.PENDING_PAYMENT ||
-          payment.order.status === OrderStatus.EXPIRED;
+          payment.order.status === OrderStatus.EXPIRED ||
+          payment.order.status === OrderStatus.CANCELED;
 
         if (!canConfirmApprovedOrder) {
           const currentPayment = await tx.payment.update({
@@ -751,7 +913,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         }
 
         const claimablePaymentStatuses =
-          payment.order.status === OrderStatus.EXPIRED
+          payment.order.status === OrderStatus.EXPIRED || payment.order.status === OrderStatus.CANCELED
             ? [PaymentStatus.CREATED, PaymentStatus.PENDING, PaymentStatus.CANCELED, PaymentStatus.FAILED]
             : [PaymentStatus.CREATED, PaymentStatus.PENDING];
 
@@ -848,7 +1010,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           where: {
             id: payment.orderId,
             status: {
-              in: [OrderStatus.PENDING_PAYMENT, OrderStatus.EXPIRED]
+              in: [OrderStatus.PENDING_PAYMENT, OrderStatus.EXPIRED, OrderStatus.CANCELED]
             }
           },
           data: {
