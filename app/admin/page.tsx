@@ -1047,10 +1047,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                         }
                       />
                     </i>
-                    <div>
+                    <div className="dashboardGeneralActivityCopy">
                       <strong>{activity.title}</strong>
-                      <span>{activity.subtitle}</span>
-                      <small>{activity.meta}</small>
+                      <span className="dashboardGeneralActivityReference">{activity.subtitle}</span>
+                      <small className="dashboardGeneralActivityMeta">
+                        <b>{activity.metaLabel}</b>
+                        <span>{activity.meta}</span>
+                      </small>
                     </div>
                     <time>{formatRelativeTime(activity.happenedAt)}</time>
                   </article>

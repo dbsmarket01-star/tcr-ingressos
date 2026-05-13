@@ -5252,8 +5252,42 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   border-radius: 16px;
   display: grid;
   gap: 12px;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) max-content;
   padding: 14px 16px;
+}
+
+.dashboardGeneralActivityCopy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.dashboardGeneralActivityReference,
+.dashboardGeneralActivityMeta,
+.dashboardGeneralActivityMeta span {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.dashboardGeneralActivityReference {
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.dashboardGeneralActivityMeta {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.dashboardGeneralActivityMeta b {
+  color: #475569;
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .dashboardGeneralActivityItem time {

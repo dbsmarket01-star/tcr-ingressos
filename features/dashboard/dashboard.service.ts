@@ -637,6 +637,7 @@ export async function getDashboardMetrics(
               ? "Pedido iniciado"
               : "Movimentação de pedido",
       subtitle: `Pedido ${order.code}`,
+      metaLabel: order.status === "PAID" ? "Cliente" : "Evento",
       meta:
         order.status === "PAID"
           ? order.customer.name
@@ -647,6 +648,7 @@ export async function getDashboardMetrics(
       id: `checkin-${checkIn.id}`,
       title: "Check-in realizado",
       subtitle: `Ingresso ${checkIn.ticket.code}`,
+      metaLabel: "Cliente",
       meta: checkIn.ticket.order.customer.name,
       happenedAt: checkIn.checkedAt
     })),
@@ -654,6 +656,7 @@ export async function getDashboardMetrics(
       id: `lead-${lead.id}`,
       title: "Novo cliente cadastrado",
       subtitle: lead.name,
+      metaLabel: "Evento",
       meta: lead.event.title,
       happenedAt: lead.createdAt
     }))
