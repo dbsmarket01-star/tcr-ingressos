@@ -70,7 +70,7 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
 
   return (
     <AdminShell
-      title="HOME LIST"
+      title="Home List"
       description="Hospedagem por evento e hotel, gerada automaticamente após pagamento aprovado."
     >
       {saved ? <div className="successBox spacedSection">Registro atualizado com sucesso.</div> : null}
@@ -163,7 +163,7 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
         {entries.length === 0 ? (
           <div className="emptyState card">
             <h2>Nenhuma hospedagem encontrada</h2>
-            <p className="muted">A HOME LIST aparece aqui automaticamente quando um pedido com hotel tiver pagamento aprovado.</p>
+            <p className="muted">A Home List aparece aqui automaticamente quando um pedido com hotel tiver pagamento aprovado.</p>
           </div>
         ) : (
           entries.map((entry) => (
@@ -263,7 +263,7 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
                   name="notes"
                   defaultValue={entry.notes ?? ""}
                   placeholder="Ex.: casal palestrante, quarto com suíte, duas camas extras, preferência por cama de casal..."
-                  rows={4}
+                  rows={3}
                 />
               </label>
 

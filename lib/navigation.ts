@@ -67,7 +67,7 @@ export const adminNavItems: AdminNavItem[] = [
   },
   {
     href: "/admin/home-list",
-    label: "HOME LIST",
+    label: "Home List",
     description: "Hotelaria e hóspedes por evento",
     area: "REPORTS"
   },
