@@ -24,6 +24,7 @@ const prismaMock = {
 
 const sendTicketsEmailMock = vi.fn();
 const trackMetaPurchaseMock = vi.fn();
+const updateHomeListStatusForOrderMock = vi.fn();
 
 vi.mock("@/lib/prisma", () => ({
   prisma: prismaMock
@@ -40,7 +41,7 @@ vi.mock("@/features/orders/order.service", () => ({
 
 vi.mock("@/features/hospitality/home-list.service", () => ({
   createHomeListEntriesForApprovedOrder: vi.fn(),
-  updateHomeListStatusForOrder: vi.fn()
+  updateHomeListStatusForOrder: updateHomeListStatusForOrderMock
 }));
 
 vi.mock("@/features/tracking/meta-conversions.service", () => ({
@@ -273,5 +274,118 @@ describe("payment webhook conflict handling", () => {
     expect(prismaMock.$executeRaw).not.toHaveBeenCalled();
     expect(sendTicketsEmailMock).not.toHaveBeenCalled();
     expect(result).toBe(refundedPayment);
+  });
+
+  it("removes a paid sale from inventory and cancels tickets when Asaas reports refund or chargeback", async () => {
+    const approvedPayment = {
+      id: "pay_4",
+      orderId: "order_4",
+      status: "APPROVED",
+      amountInCents: 249700,
+      externalId: "ext_4",
+      order: {
+        id: "order_4",
+        code: "PED777",
+        eventId: "event_1",
+        couponId: null,
+        status: "PAID",
+        ticketsEmailSentAt: new Date(),
+        customer: {
+          email: "buyer@example.com",
+          name: "Buyer"
+        },
+        items: [
+          {
+            id: "item_1",
+            lotId: "lot_1",
+            quantity: 2
+          }
+        ],
+        event: {
+          title: "Evento",
+          startsAt: new Date("2026-01-01T20:00:00.000Z"),
+          venueName: "Local",
+          autoPurchaseApprovedEmailEnabled: true,
+          organization: {
+            name: "A2 Imergidos",
+            publicDomain: "a2imergidos.com.br"
+          }
+        },
+        tickets: [
+          {
+            id: "ticket_1",
+            code: "TK1",
+            lot: {
+              name: "Pista"
+            }
+          },
+          {
+            id: "ticket_2",
+            code: "TK2",
+            lot: {
+              name: "Pista"
+            }
+          }
+        ]
+      }
+    };
+    const refundedPayment = {
+      ...approvedPayment,
+      status: "REFUNDED"
+    };
+
+    prismaMock.$transaction.mockImplementation(async (callback: (tx: typeof prismaMock) => Promise<unknown>) =>
+      callback(prismaMock as never)
+    );
+    prismaMock.payment.findFirst.mockResolvedValue(approvedPayment);
+    prismaMock.payment.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.order.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.payment.findUniqueOrThrow.mockResolvedValue(refundedPayment);
+
+    const { handlePaymentWebhook } = await import("@/features/payments/payment.service");
+
+    await handlePaymentWebhook({
+      externalId: "ext_4",
+      status: "REFUNDED",
+      reason: "PAYMENT_CHARGEBACK_REQUESTED",
+      rawPayload: { event: "PAYMENT_CHARGEBACK_REQUESTED", payment: { id: "ext_4", status: "CONFIRMED" } }
+    });
+
+    expect(prismaMock.payment.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: "pay_4",
+        status: "APPROVED"
+      },
+      data: expect.objectContaining({
+        status: "REFUNDED",
+        externalId: "ext_4",
+        failureReason: "PAYMENT_CHARGEBACK_REQUESTED"
+      })
+    });
+    expect(prismaMock.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(prismaMock.ticket.updateMany).toHaveBeenCalledWith({
+      where: {
+        orderId: "order_4",
+        status: {
+          in: ["ACTIVE", "INVALID", "USED"]
+        }
+      },
+      data: expect.objectContaining({
+        status: "CANCELED"
+      })
+    });
+    expect(prismaMock.order.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: "order_4",
+        status: {
+          in: ["PAID", "PENDING_PAYMENT", "EXPIRED", "CANCELED"]
+        }
+      },
+      data: expect.objectContaining({
+        status: "REFUNDED"
+      })
+    });
+    expect(updateHomeListStatusForOrderMock).toHaveBeenCalledWith(prismaMock, "order_4", "CANCELED");
+    expect(sendTicketsEmailMock).not.toHaveBeenCalled();
   });
 });

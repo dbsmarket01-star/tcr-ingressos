@@ -1,4 +1,4 @@
-import { EventPageVisitType, EventStatus, PaymentProvider, type Prisma } from "@prisma/client";
+import { EventPageVisitType, EventStatus, OrderStatus, PaymentProvider, type Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 type DashboardFilters = {
@@ -230,6 +230,9 @@ export async function getDashboardMetrics(
   };
 
   const createdPeriodWhere = {
+    status: {
+      not: OrderStatus.REFUNDED
+    },
     event: dashboardEventWhere,
     createdAt: {
       gte: periodStart,
@@ -238,6 +241,9 @@ export async function getDashboardMetrics(
   };
 
   const previousCreatedPeriodWhere = {
+    status: {
+      not: OrderStatus.REFUNDED
+    },
     event: dashboardEventWhere,
     createdAt: {
       gte: previousPeriodStart,
@@ -369,7 +375,10 @@ export async function getDashboardMetrics(
     }),
     prisma.ticket.groupBy({
       where: {
-        event: dashboardEventWhere
+        event: dashboardEventWhere,
+        status: {
+          in: ["ACTIVE", "USED"]
+        }
       },
       by: ["status"],
       _count: {
@@ -409,7 +418,10 @@ export async function getDashboardMetrics(
     }),
     prisma.order.findMany({
       where: {
-        event: dashboardEventWhere
+        event: dashboardEventWhere,
+        status: {
+          not: OrderStatus.REFUNDED
+        }
       },
       orderBy: {
         createdAt: "desc"
@@ -498,6 +510,7 @@ export async function getDashboardMetrics(
   );
 
   const countByTicketStatus = Object.fromEntries(ticketCounts.map((item) => [item.status, item._count._all]));
+  const issuedTicketCount = (countByTicketStatus.ACTIVE ?? 0) + (countByTicketStatus.USED ?? 0);
   const countByCheckInStatus = Object.fromEntries(checkInCounts.map((item) => [item.status, item._count._all]));
   const ticketCountByEvent = new Map<string, { active: number; used: number }>();
 
@@ -724,7 +737,7 @@ export async function getDashboardMetrics(
       conversionRate: percentage(currentPaidOrders.length, currentPublicEventVisits)
     },
     operations: {
-      ticketsIssued: ticketCounts.reduce((sum, item) => sum + item._count._all, 0),
+      ticketsIssued: issuedTicketCount,
       checkInsApproved: countByCheckInStatus.APPROVED ?? 0,
       pendingOrders: currentOrdersCreated - currentPaidOrders.length
     },
@@ -738,7 +751,7 @@ export async function getDashboardMetrics(
     recentOrders,
     recentActivities,
     totals: {
-      ticketsIssued: ticketCounts.reduce((sum, item) => sum + item._count._all, 0)
+      ticketsIssued: issuedTicketCount
     }
   };
 }

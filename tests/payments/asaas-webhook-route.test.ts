@@ -84,4 +84,43 @@ describe("Asaas payment webhook route", () => {
     expect(response.status).toBe(401);
     expect(syncAsaasPaymentByExternalIdMock).not.toHaveBeenCalled();
   });
+
+  it("maps Asaas chargeback events as refunded even when the payment still looks confirmed", async () => {
+    findAsaasWebhookOrganizationMock.mockResolvedValue({
+      id: "org_a2",
+      slug: "a2-imergidos",
+      name: "A2 Imergidos"
+    });
+    handlePaymentWebhookMock.mockResolvedValue({});
+
+    const { POST } = await import("@/app/api/webhooks/payments/asaas/route");
+
+    const response = await POST(
+      new Request("https://www.a2imergidos.com.br/api/webhooks/payments/asaas", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-asaas-token": "a2-webhook-token"
+        },
+        body: JSON.stringify({
+          event: "PAYMENT_CHARGEBACK_REQUESTED",
+          payment: {
+            id: "pay_chargeback_a2",
+            status: "CONFIRMED",
+            externalReference: "ING-CHARGEBACK"
+          }
+        })
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(handlePaymentWebhookMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        externalId: "pay_chargeback_a2",
+        orderCode: "ING-CHARGEBACK",
+        status: "REFUNDED",
+        reason: "PAYMENT_CHARGEBACK_REQUESTED"
+      })
+    );
+  });
 });

@@ -127,19 +127,26 @@ async function sendTicketsEmailSafely(orderId: string, email: TicketEmailPayload
 }
 
 function mapAsaasPaymentStatus(status?: string) {
-  if (status === "CONFIRMED" || status === "RECEIVED") {
-    return "APPROVED" as const;
-  }
+  const normalizedStatus = status?.trim().toUpperCase();
 
-  if (status === "REFUNDED") {
+  if (
+    normalizedStatus === "REFUNDED" ||
+    normalizedStatus === "CHARGEBACK_REQUESTED" ||
+    normalizedStatus === "CHARGEBACK_DISPUTE" ||
+    normalizedStatus === "CHARGEBACK"
+  ) {
     return "REFUNDED" as const;
   }
 
-  if (status === "OVERDUE") {
+  if (normalizedStatus === "CONFIRMED" || normalizedStatus === "RECEIVED") {
+    return "APPROVED" as const;
+  }
+
+  if (normalizedStatus === "OVERDUE") {
     return "FAILED" as const;
   }
 
-  if (status === "DELETED" || status === "CANCELED" || status === "CANCELLED") {
+  if (normalizedStatus === "DELETED" || normalizedStatus === "CANCELED" || normalizedStatus === "CANCELLED") {
     return "CANCELED" as const;
   }
 
@@ -948,6 +955,18 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         (payment.status === PaymentStatus.REFUNDED || payment.order.status === OrderStatus.REFUNDED)
       ) {
         return { payment, orderId: payment.orderId, email: null };
+      }
+
+      if (payment.status === PaymentStatus.REFUNDED || payment.order.status === OrderStatus.REFUNDED) {
+        const currentPayment = await tx.payment.update({
+          where: { id: payment.id },
+          data: {
+            externalId: payload.externalId || payment.externalId,
+            rawPayload: (payload.rawPayload || payload) as Prisma.InputJsonValue
+          }
+        });
+
+        return { payment: currentPayment, orderId: payment.orderId, email: null };
       }
 
       if (

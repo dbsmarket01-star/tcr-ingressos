@@ -23,7 +23,29 @@ type AsaasWebhookPayload = {
   };
 };
 
+function isAsaasRefundOrChargeback(event?: string, status?: string) {
+  const normalizedEvent = event?.trim().toUpperCase();
+  const normalizedStatus = status?.trim().toUpperCase();
+  const values = [normalizedEvent, normalizedStatus].filter(Boolean);
+
+  return values.some((value) =>
+    value === "REFUNDED" ||
+    value === "PAYMENT_DELETED" ||
+    value === "PAYMENT_REFUNDED" ||
+    value === "PAYMENT_REFUND_IN_PROGRESS" ||
+    value === "PAYMENT_CHARGEBACK_REQUESTED" ||
+    value === "PAYMENT_CHARGEBACK_DISPUTE" ||
+    value === "CHARGEBACK_REQUESTED" ||
+    value === "CHARGEBACK_DISPUTE" ||
+    value === "CHARGEBACK"
+  );
+}
+
 function mapAsaasStatus(event?: string, status?: string) {
+  if (isAsaasRefundOrChargeback(event, status)) {
+    return "REFUNDED" as const;
+  }
+
   if (
     event === "PAYMENT_CONFIRMED" ||
     event === "PAYMENT_RECEIVED" ||
@@ -31,15 +53,6 @@ function mapAsaasStatus(event?: string, status?: string) {
     status === "RECEIVED"
   ) {
     return "APPROVED" as const;
-  }
-
-  if (
-    event === "PAYMENT_DELETED" ||
-    event === "PAYMENT_REFUNDED" ||
-    event === "PAYMENT_REFUND_IN_PROGRESS" ||
-    status === "REFUNDED"
-  ) {
-    return "REFUNDED" as const;
   }
 
   if (event === "PAYMENT_OVERDUE" || status === "OVERDUE") {

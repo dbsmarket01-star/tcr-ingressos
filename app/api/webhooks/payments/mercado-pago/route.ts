@@ -8,7 +8,11 @@ function mapMercadoPagoStatus(status?: string) {
     return "APPROVED" as const;
   }
 
-  if (status === "rejected" || status === "cancelled" || status === "refunded" || status === "charged_back") {
+  if (status === "refunded" || status === "charged_back") {
+    return "REFUNDED" as const;
+  }
+
+  if (status === "rejected" || status === "cancelled") {
     return "FAILED" as const;
   }
 

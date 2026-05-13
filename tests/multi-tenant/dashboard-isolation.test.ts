@@ -83,6 +83,35 @@ describe("dashboard tenant isolation", () => {
         })
       })
     );
+    expect(prismaMock.order.count).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: {
+            not: "REFUNDED"
+          }
+        })
+      })
+    );
+    expect(prismaMock.order.findMany).toHaveBeenNthCalledWith(
+      5,
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: {
+            not: "REFUNDED"
+          }
+        })
+      })
+    );
+    expect(prismaMock.ticket.groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: {
+            in: ["ACTIVE", "USED"]
+          }
+        })
+      })
+    );
   });
 
   it("keeps per-user event restrictions inside the organization scope", async () => {
