@@ -571,35 +571,64 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
 
           {order.status === "PAID" ? (
             <div className="paymentCompleteBox" id="ingressos">
-              <h3>Compra aprovada</h3>
+              <div className="approvedStatusHeader">
+                <span className="approvedStatusIcon" aria-hidden="true">
+                  OK
+                </span>
+                <div className="approvedStatusCopy">
+                  <span>Pagamento confirmado</span>
+                  <h3>Compra aprovada</h3>
+                  <p>Seus ingressos estão liberados para acesso ao evento.</p>
+                </div>
+              </div>
               {ticketEmailStatus ? (
                 <div className={ticketEmailStatus === "sent" ? "paymentNotice success" : "paymentNotice error"}>
-                  {ticketEmailMessage ||
-                    (ticketEmailStatus === "sent"
-                      ? "Ingressos reenviados por e-mail."
-                      : "Não foi possível reenviar os ingressos agora.")}
+                  <strong>{ticketEmailStatus === "sent" ? "Envio por e-mail atualizado" : "Falha no envio por e-mail"}</strong>
+                  <span>
+                    {ticketEmailMessage ||
+                      (ticketEmailStatus === "sent"
+                        ? "Ingressos reenviados por e-mail."
+                        : "Não foi possível reenviar os ingressos agora.")}
+                  </span>
                 </div>
               ) : null}
-              <p>
-                Seus ingressos estão liberados. Apresente o QR Code na entrada do evento.
-                {order.ticketsEmailSentAt ? ` ${ticketEmailStatusText}` : ""}
-              </p>
-              <div className="ticketList">
-                {order.tickets.map((ticket) => (
-                  <Link className="secondaryButton fullButton" href={`/ingresso/${ticket.code}`} key={ticket.id}>
-                    Abrir ingresso {ticket.lot.name}
-                  </Link>
-                ))}
+              <div className="approvedGuidanceGrid">
+                <div className="approvedGuidanceCard">
+                  <span>Entrada do evento</span>
+                  <strong>Apresente o QR Code</strong>
+                  <p>Cada ingresso possui um QR Code individual. Abra no celular ou leve impresso para validar na entrada.</p>
+                </div>
+                <div className="approvedGuidanceCard">
+                  <span>Entrega por e-mail</span>
+                  <strong>{order.tickets.length === 1 ? "1 ingresso liberado" : `${order.tickets.length} ingressos liberados`}</strong>
+                  <p>{ticketEmailStatusText}</p>
+                </div>
               </div>
-              <form action={resendApprovedTicketsEmailAction}>
-                <input type="hidden" name="orderCode" value={order.code} />
-                <SubmitButton className="secondaryButton fullButton" pendingText="Reenviando ingressos...">
-                  Reenviar ingressos por e-mail
-                </SubmitButton>
-              </form>
-              <p className="checkoutFootnote">
-                Se não encontrar o e-mail, confira também spam, promoções e atualizações.
-              </p>
+              <div className="approvedTicketsPanel">
+                <div className="approvedSectionHeader">
+                  <span>Ingressos</span>
+                  <strong>Abra o ingresso e apresente o QR Code no dia do evento.</strong>
+                </div>
+                <div className="approvedTicketList">
+                  {order.tickets.map((ticket) => (
+                    <Link className="approvedTicketLink" href={`/ingresso/${ticket.code}`} key={ticket.id}>
+                      <span>Abrir ingresso</span>
+                      <strong>{ticket.lot.name}</strong>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              <div className="approvedResendPanel">
+                <form action={resendApprovedTicketsEmailAction}>
+                  <input type="hidden" name="orderCode" value={order.code} />
+                  <SubmitButton className="secondaryButton fullButton" pendingText="Reenviando ingressos...">
+                    Reenviar ingressos por e-mail
+                  </SubmitButton>
+                </form>
+                <p className="checkoutFootnote">
+                  Se não encontrar o e-mail, confira também spam, promoções e atualizações.
+                </p>
+              </div>
             </div>
           ) : null}
         </aside>

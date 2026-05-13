@@ -12607,17 +12607,20 @@ body.operationTheme .loginBrandDark .brandLogo {
 }
 
 .paymentCompleteBox {
-  background: #ecfdf5;
+  background:
+    linear-gradient(180deg, rgba(236, 253, 245, 0.92), rgba(245, 255, 250, 0.98));
   border: 1px solid #9be2c3;
   border-radius: 8px;
   color: #075c40;
   display: grid;
-  gap: 12px;
-  padding: 14px;
+  gap: 16px;
+  overflow: hidden;
+  padding: 18px;
 }
 
 .paymentCompleteBox h3,
-.paymentCompleteBox p {
+.paymentCompleteBox p,
+.paymentCompleteBox strong {
   margin: 0;
 }
 
@@ -12625,11 +12628,71 @@ body.operationTheme .loginBrandDark .brandLogo {
   line-height: 1.45;
 }
 
+.approvedStatusHeader {
+  align-items: flex-start;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.approvedStatusIcon {
+  align-items: center;
+  background: linear-gradient(135deg, #059669, #047857);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 999px;
+  box-shadow: 0 16px 32px rgba(5, 150, 105, 0.22);
+  color: white;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  height: 46px;
+  justify-content: center;
+  letter-spacing: 0.03em;
+  width: 46px;
+}
+
+.approvedStatusCopy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.approvedStatusCopy > span,
+.approvedGuidanceCard > span,
+.approvedSectionHeader > span {
+  color: #047857;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.approvedStatusCopy h3 {
+  color: #064e3b;
+  font-size: 24px;
+  line-height: 1.12;
+}
+
+.approvedStatusCopy p {
+  color: #315c51;
+  font-weight: 700;
+}
+
 .paymentNotice {
+  display: grid;
+  gap: 4px;
   border-radius: 8px;
   font-size: 14px;
-  font-weight: 700;
   padding: 10px 12px;
+}
+
+.paymentNotice strong {
+  font-weight: 900;
+}
+
+.paymentNotice span {
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 .paymentNotice.success {
@@ -12642,6 +12705,118 @@ body.operationTheme .loginBrandDark .brandLogo {
   background: #fef2f2;
   border: 1px solid #fecaca;
   color: #991b1b;
+}
+
+.approvedGuidanceGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.approvedGuidanceCard,
+.approvedTicketsPanel,
+.approvedResendPanel {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(134, 239, 172, 0.72);
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+}
+
+.approvedGuidanceCard strong {
+  color: #064e3b;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.approvedGuidanceCard p,
+.approvedSectionHeader strong,
+.approvedResendPanel .checkoutFootnote {
+  color: #315c51;
+  font-size: 14px;
+}
+
+.approvedSectionHeader {
+  display: grid;
+  gap: 4px;
+}
+
+.approvedTicketList {
+  display: grid;
+  gap: 10px;
+}
+
+.approvedTicketLink {
+  background: linear-gradient(180deg, #ffffff, #f8fbfb);
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #0f172a;
+  display: grid;
+  gap: 5px;
+  padding: 13px 14px;
+  text-decoration: none;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.approvedTicketLink:hover {
+  border-color: #0ea5b7;
+  box-shadow: 0 12px 24px rgba(15, 82, 102, 0.12);
+  transform: translateY(-1px);
+}
+
+.approvedTicketLink span {
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.approvedTicketLink strong {
+  color: #122033;
+  font-size: 16px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.approvedResendPanel {
+  background: rgba(240, 253, 250, 0.78);
+}
+
+@media (max-width: 640px) {
+  .paymentCompleteBox {
+    border-radius: 14px;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .approvedStatusHeader {
+    gap: 12px;
+  }
+
+  .approvedStatusIcon {
+    height: 42px;
+    width: 42px;
+  }
+
+  .approvedStatusCopy h3 {
+    font-size: 22px;
+  }
+
+  .approvedGuidanceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .approvedGuidanceCard,
+  .approvedTicketsPanel,
+  .approvedResendPanel {
+    border-radius: 12px;
+    padding: 13px;
+  }
 }
 
 .checkInForm input[name="code"] {
@@ -18008,6 +18183,10 @@ small,
   .platformMarketingBand,
   .platformClosingCta,
   .paymentBox,
+  .paymentCompleteBox,
+  .approvedGuidanceCard,
+  .approvedTicketsPanel,
+  .approvedResendPanel,
   .paymentChoiceDisclosure,
   .orderSummaryBox,
   .orderActionNote,
