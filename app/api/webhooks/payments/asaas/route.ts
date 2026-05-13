@@ -6,6 +6,7 @@ import {
 } from "@/features/payments/payment.service";
 import { getAsaasWebhookTokenForOrganization } from "@/features/payments/payment-organization-config";
 import type { PaymentOrganizationContext } from "@/features/payments/payment-organization-config";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
@@ -52,21 +53,41 @@ function cleanToken(value?: string | null) {
   return value?.replace(/^Bearer\s+/i, "").trim();
 }
 
-function getConfiguredAsaasWebhookTokens() {
-  return Object.entries(process.env)
-    .filter(([key]) => key === "ASAAS_WEBHOOK_TOKEN" || key.startsWith("ASAAS_WEBHOOK_TOKEN_"))
-    .map(([, value]) => value?.trim())
-    .filter((value): value is string => Boolean(value));
+async function getConfiguredAsaasWebhookTokens() {
+  const tokens = new Set<string>();
+  const globalToken = process.env.ASAAS_WEBHOOK_TOKEN?.trim();
+
+  if (globalToken) {
+    tokens.add(globalToken);
+  }
+
+  const organizations = await prisma.organization.findMany({
+    select: {
+      id: true,
+      slug: true,
+      name: true
+    }
+  });
+
+  for (const organization of organizations) {
+    const token = getAsaasWebhookTokenForOrganization(organization).value?.trim();
+
+    if (token) {
+      tokens.add(token);
+    }
+  }
+
+  return [...tokens];
 }
 
-function isValidAsaasWebhook(
+async function isValidAsaasWebhook(
   request: Request,
   body: AsaasWebhookPayload | null,
   url: URL,
   organization?: PaymentOrganizationContext | null
 ) {
   const scopedToken = getAsaasWebhookTokenForOrganization(organization).value;
-  const expectedTokens = scopedToken ? [scopedToken] : getConfiguredAsaasWebhookTokens();
+  const expectedTokens = scopedToken ? [scopedToken] : await getConfiguredAsaasWebhookTokens();
 
   if (expectedTokens.length === 0) {
     return true;
@@ -115,7 +136,7 @@ export async function POST(request: Request) {
       externalId: paymentId
     });
 
-    if (!isValidAsaasWebhook(request, body, url, organization)) {
+    if (!(await isValidAsaasWebhook(request, body, url, organization))) {
       return webhookResponse({ error: "Token invalido." }, { status: 401 });
     }
 
