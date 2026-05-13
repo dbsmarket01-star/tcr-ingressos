@@ -139,6 +139,8 @@ function buildDateSeries(start: Date, end: Date) {
 
 type PaidOrderLite = {
   customerId: string;
+  subtotalInCents: number;
+  serviceFeeInCents: number;
   totalInCents: number;
   paidAt: Date | null;
   createdAt: Date;
@@ -479,6 +481,10 @@ export async function getDashboardMetrics(
 
   const currentRevenueInCents = currentPaidOrders.reduce((sum, order) => sum + order.totalInCents, 0);
   const previousRevenueInCents = previousPaidOrders.reduce((sum, order) => sum + order.totalInCents, 0);
+  const currentTicketSalesInCents = currentPaidOrders.reduce((sum, order) => sum + order.subtotalInCents, 0);
+  const previousTicketSalesInCents = previousPaidOrders.reduce((sum, order) => sum + order.subtotalInCents, 0);
+  const currentServiceFeesInCents = currentPaidOrders.reduce((sum, order) => sum + order.serviceFeeInCents, 0);
+  const previousServiceFeesInCents = previousPaidOrders.reduce((sum, order) => sum + order.serviceFeeInCents, 0);
   const currentAverageTicket = currentPaidOrders.length > 0 ? Math.round(currentRevenueInCents / currentPaidOrders.length) : 0;
   const previousAverageTicket = previousPaidOrders.length > 0 ? Math.round(previousRevenueInCents / previousPaidOrders.length) : 0;
 
@@ -663,6 +669,10 @@ export async function getDashboardMetrics(
     kpis: {
       revenueInCents: currentRevenueInCents,
       revenueChangePercent: changePercent(currentRevenueInCents, previousRevenueInCents),
+      ticketSalesInCents: currentTicketSalesInCents,
+      ticketSalesChangePercent: changePercent(currentTicketSalesInCents, previousTicketSalesInCents),
+      serviceFeesInCents: currentServiceFeesInCents,
+      serviceFeesChangePercent: changePercent(currentServiceFeesInCents, previousServiceFeesInCents),
       paidOrders: currentPaidOrders.length,
       paidOrdersChangePercent: changePercent(currentPaidOrders.length, previousPaidOrders.length),
       averageTicketInCents: currentAverageTicket,

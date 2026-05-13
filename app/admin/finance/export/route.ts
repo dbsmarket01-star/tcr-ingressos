@@ -34,8 +34,8 @@ export async function GET(request: Request) {
     ["Periodo inicial", report.filters.startDate],
     ["Periodo final", report.filters.endDate],
     ["Bruto confirmado", formatMoney(report.totals.grossRevenueInCents)],
-    ["Ingressos", formatMoney(report.totals.ticketSubtotalInCents)],
-    ["Taxas e impostos", formatMoney(report.totals.serviceFeeInCents)],
+    ["Venda de ingressos", formatMoney(report.totals.ticketSubtotalInCents)],
+    ["Taxas recebidas", formatMoney(report.totals.serviceFeeInCents)],
     ["Juros de cartao", formatMoney(report.totals.cardInterestInCents)],
     ["Descontos", formatMoney(report.totals.discountInCents)],
     ["Split enviado", formatMoney(report.totals.splitTotalInCents)],
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     ["Ingressos emitidos", report.totals.ticketsIssued],
     [],
     ["Por forma de pagamento"],
-    ["Forma", "Pedidos", "Bruto", "Taxas", "Juros", "Descontos"],
+    ["Forma", "Pedidos", "Bruto", "Taxas recebidas", "Juros", "Descontos"],
     ...report.byMethod.map((row) => [
       row.method,
       row.count,
@@ -67,7 +67,7 @@ export async function GET(request: Request) {
     ]),
     [],
     ["Por evento"],
-    ["Evento", "Pedidos pagos", "Ingressos", "Taxas", "Juros", "Descontos", "Bruto"],
+    ["Evento", "Pedidos pagos", "Ingressos", "Taxas recebidas", "Juros", "Descontos", "Bruto"],
     ...report.byEvent.map((row) => [
       row.title,
       row.count,
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
     ]),
     [],
     ["Por origem"],
-    ["Origem", "Pedidos", "Ingressos", "Taxas", "Juros", "Descontos", "Bruto"],
+    ["Origem", "Pedidos", "Ingressos", "Taxas recebidas", "Juros", "Descontos", "Bruto"],
     ...report.bySource.map((row) => [
       row.source,
       row.count,

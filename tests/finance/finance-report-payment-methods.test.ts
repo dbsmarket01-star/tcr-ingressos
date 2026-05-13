@@ -65,8 +65,9 @@ describe("finance report payment methods", () => {
         paidOrder({
           id: "order_pix",
           code: "ING-PIX",
-          totalInCents: 2500,
+          totalInCents: 2925,
           subtotalInCents: 2500,
+          serviceFeeInCents: 425,
           payment: {
             provider: "ASAAS",
             status: "APPROVED",
@@ -83,8 +84,9 @@ describe("finance report payment methods", () => {
         paidOrder({
           id: "order_card",
           code: "ING-CARD",
-          totalInCents: 5000,
+          totalInCents: 5850,
           subtotalInCents: 5000,
+          serviceFeeInCents: 850,
           payment: {
             provider: "ASAAS",
             status: "APPROVED",
@@ -111,9 +113,11 @@ describe("finance report payment methods", () => {
     const card = report.byMethod.find((row) => row.method === "CREDIT_CARD");
 
     expect(pix?.count).toBe(1);
-    expect(pix?.grossInCents).toBe(2500);
+    expect(pix?.grossInCents).toBe(2925);
     expect(card?.count).toBe(1);
-    expect(card?.grossInCents).toBe(5000);
+    expect(card?.grossInCents).toBe(5850);
+    expect(report.totals.ticketSubtotalInCents).toBe(7500);
+    expect(report.totals.serviceFeeInCents).toBe(1275);
     expect(prismaMock.event.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { organizationId: "org_a2" }
     }));

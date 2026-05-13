@@ -120,6 +120,16 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
           <strong>{formatCurrency(report.totals.grossRevenueInCents)}</strong>
         </article>
         <article className="card metric">
+          <span className="muted">Venda de ingressos</span>
+          <strong>{formatCurrency(report.totals.ticketSubtotalInCents)}</strong>
+          <small>Valor dos ingressos, sem taxas do sistema</small>
+        </article>
+        <article className="card metric">
+          <span className="muted">Taxas recebidas</span>
+          <strong>{formatCurrency(report.totals.serviceFeeInCents)}</strong>
+          <small>Taxa de sistema faturada nas vendas pagas</small>
+        </article>
+        <article className="card metric">
           <span className="muted">Ingressos emitidos</span>
           <strong>{report.totals.ticketsIssued}</strong>
         </article>
@@ -181,11 +191,11 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
         </div>
         <div className="financeStatusGrid">
           <div>
-            <span>Valor dos ingressos</span>
+            <span>Venda de ingressos</span>
             <strong>{formatCurrency(report.totals.ticketSubtotalInCents)}</strong>
           </div>
           <div>
-            <span>Taxas cobradas</span>
+            <span>Taxas recebidas</span>
             <strong>{formatCurrency(report.totals.serviceFeeInCents)}</strong>
           </div>
           <div>
@@ -226,7 +236,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                   <th>Forma</th>
                   <th>Pedidos</th>
                   <th>Bruto</th>
-                  <th>Taxas</th>
+                  <th>Taxas recebidas</th>
                   <th>Juros</th>
                   <th>Descontos</th>
                 </tr>
@@ -323,7 +333,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                 <th>Evento</th>
                 <th>Pedidos pagos</th>
                 <th>Ingressos</th>
-                <th>Taxas</th>
+                <th>Taxas recebidas</th>
                 <th>Juros</th>
                 <th>Descontos</th>
                 <th>Bruto</th>
@@ -361,7 +371,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                 <th>Origem</th>
                 <th>Pedidos</th>
                 <th>Ingressos</th>
-                <th>Taxas</th>
+                <th>Taxas recebidas</th>
                 <th>Juros</th>
                 <th>Descontos</th>
                 <th>Bruto</th>

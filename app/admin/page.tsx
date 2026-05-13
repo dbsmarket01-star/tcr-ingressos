@@ -544,10 +544,22 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   )`;
   const kpis = [
     {
-      label: "Faturamento total",
+      label: "Faturamento pago",
       value: formatCurrency(dashboard.kpis.revenueInCents),
       delta: formatKpiDelta(dashboard.kpis.revenueChangePercent),
       icon: "money" as const
+    },
+    {
+      label: "Venda de ingressos",
+      value: formatCurrency(dashboard.kpis.ticketSalesInCents),
+      delta: formatKpiDelta(dashboard.kpis.ticketSalesChangePercent),
+      icon: "ticket" as const
+    },
+    {
+      label: "Taxas recebidas",
+      value: formatCurrency(dashboard.kpis.serviceFeesInCents),
+      delta: formatKpiDelta(dashboard.kpis.serviceFeesChangePercent),
+      icon: "percent" as const
     },
     {
       label: "Vendas realizadas",
