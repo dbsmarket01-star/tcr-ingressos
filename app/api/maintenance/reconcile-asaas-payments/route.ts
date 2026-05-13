@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getMaintenanceOrganizationForRequest } from "@/features/maintenance/maintenance-organization";
 import { reconcileAsaasPayments } from "@/features/payments/payment.service";
 
 export const dynamic = "force-dynamic";
@@ -37,14 +38,23 @@ export async function GET(request: Request) {
   const lookbackHours = Number.parseInt(url.searchParams.get("lookbackHours") || String(24 * 7), 10);
 
   try {
+    const organization = await getMaintenanceOrganizationForRequest(request);
     const result = await reconcileAsaasPayments({
       limit: Number.isFinite(limit) ? limit : 500,
-      lookbackHours: Number.isFinite(lookbackHours) ? lookbackHours : 24 * 7
+      lookbackHours: Number.isFinite(lookbackHours) ? lookbackHours : 24 * 7,
+      organizationId: organization?.id
     });
 
     return NextResponse.json(
       {
         ok: true,
+        organization: organization
+          ? {
+              id: organization.id,
+              slug: organization.slug,
+              name: organization.name
+            }
+          : null,
         ...result
       },
       {

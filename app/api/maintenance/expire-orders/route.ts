@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { expirePendingOrders } from "@/features/orders/order.service";
+import { getMaintenanceOrganizationForRequest } from "@/features/maintenance/maintenance-organization";
 import { reconcileAsaasPayments } from "@/features/payments/payment.service";
 
 export const dynamic = "force-dynamic";
@@ -34,15 +35,27 @@ export async function GET(request: Request) {
   }
 
   try {
+    const organization = await getMaintenanceOrganizationForRequest(request);
     const reconciliation = await reconcileAsaasPayments({
       limit: 500,
-      lookbackHours: 24 * 7
+      lookbackHours: 24 * 7,
+      organizationId: organization?.id
     });
-    const result = await expirePendingOrders({ limit: 500 });
+    const result = await expirePendingOrders({
+      limit: 500,
+      organizationId: organization?.id
+    });
 
     return NextResponse.json(
       {
         ok: true,
+        organization: organization
+          ? {
+              id: organization.id,
+              slug: organization.slug,
+              name: organization.name
+            }
+          : null,
         reconciliation,
         ...result
       },
