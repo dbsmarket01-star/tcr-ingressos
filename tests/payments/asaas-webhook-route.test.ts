@@ -123,4 +123,82 @@ describe("Asaas payment webhook route", () => {
       })
     );
   });
+
+  it("maps refused credit card capture events as failed", async () => {
+    findAsaasWebhookOrganizationMock.mockResolvedValue({
+      id: "org_a2",
+      slug: "a2-imergidos",
+      name: "A2 Imergidos"
+    });
+    handlePaymentWebhookMock.mockResolvedValue({});
+
+    const { POST } = await import("@/app/api/webhooks/payments/asaas/route");
+
+    const response = await POST(
+      new Request("https://www.a2imergidos.com.br/api/webhooks/payments/asaas", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-asaas-token": "a2-webhook-token"
+        },
+        body: JSON.stringify({
+          event: "PAYMENT_CREDIT_CARD_CAPTURE_REFUSED",
+          payment: {
+            id: "pay_refused_a2",
+            status: "PENDING",
+            externalReference: "ING-REFUSED"
+          }
+        })
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(handlePaymentWebhookMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        externalId: "pay_refused_a2",
+        orderCode: "ING-REFUSED",
+        status: "FAILED",
+        reason: "PAYMENT_CREDIT_CARD_CAPTURE_REFUSED"
+      })
+    );
+  });
+
+  it("maps deleted Asaas payments as canceled instead of refunded", async () => {
+    findAsaasWebhookOrganizationMock.mockResolvedValue({
+      id: "org_a2",
+      slug: "a2-imergidos",
+      name: "A2 Imergidos"
+    });
+    handlePaymentWebhookMock.mockResolvedValue({});
+
+    const { POST } = await import("@/app/api/webhooks/payments/asaas/route");
+
+    const response = await POST(
+      new Request("https://www.a2imergidos.com.br/api/webhooks/payments/asaas", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-asaas-token": "a2-webhook-token"
+        },
+        body: JSON.stringify({
+          event: "PAYMENT_DELETED",
+          payment: {
+            id: "pay_deleted_a2",
+            status: "DELETED",
+            externalReference: "ING-DELETED"
+          }
+        })
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(handlePaymentWebhookMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        externalId: "pay_deleted_a2",
+        orderCode: "ING-DELETED",
+        status: "CANCELED",
+        reason: "PAYMENT_DELETED"
+      })
+    );
+  });
 });

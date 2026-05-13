@@ -30,9 +30,9 @@ function isAsaasRefundOrChargeback(event?: string, status?: string) {
 
   return values.some((value) =>
     value === "REFUNDED" ||
-    value === "PAYMENT_DELETED" ||
     value === "PAYMENT_REFUNDED" ||
     value === "PAYMENT_REFUND_IN_PROGRESS" ||
+    value === "PAYMENT_RECEIVED_IN_CASH_UNDONE" ||
     value === "PAYMENT_CHARGEBACK_REQUESTED" ||
     value === "PAYMENT_CHARGEBACK_DISPUTE" ||
     value === "CHARGEBACK_REQUESTED" ||
@@ -42,21 +42,41 @@ function isAsaasRefundOrChargeback(event?: string, status?: string) {
 }
 
 function mapAsaasStatus(event?: string, status?: string) {
+  const normalizedEvent = event?.trim().toUpperCase();
+  const normalizedStatus = status?.trim().toUpperCase();
+
   if (isAsaasRefundOrChargeback(event, status)) {
     return "REFUNDED" as const;
   }
 
   if (
-    event === "PAYMENT_CONFIRMED" ||
-    event === "PAYMENT_RECEIVED" ||
-    status === "CONFIRMED" ||
-    status === "RECEIVED"
+    normalizedEvent === "PAYMENT_CONFIRMED" ||
+    normalizedEvent === "PAYMENT_RECEIVED" ||
+    normalizedStatus === "CONFIRMED" ||
+    normalizedStatus === "RECEIVED"
   ) {
     return "APPROVED" as const;
   }
 
-  if (event === "PAYMENT_OVERDUE" || status === "OVERDUE") {
+  if (
+    normalizedEvent === "PAYMENT_CREDIT_CARD_CAPTURE_REFUSED" ||
+    normalizedEvent === "PAYMENT_REPROVED_BY_RISK_ANALYSIS" ||
+    normalizedEvent === "PAYMENT_OVERDUE" ||
+    normalizedStatus === "OVERDUE" ||
+    normalizedStatus === "REPROVED" ||
+    normalizedStatus === "REFUSED"
+  ) {
     return "FAILED" as const;
+  }
+
+  if (
+    normalizedEvent === "PAYMENT_DELETED" ||
+    normalizedEvent === "PAYMENT_BANK_SLIP_CANCELLED" ||
+    normalizedStatus === "DELETED" ||
+    normalizedStatus === "CANCELED" ||
+    normalizedStatus === "CANCELLED"
+  ) {
+    return "CANCELED" as const;
   }
 
   return "PENDING" as const;

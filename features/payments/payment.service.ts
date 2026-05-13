@@ -142,7 +142,7 @@ function mapAsaasPaymentStatus(status?: string) {
     return "APPROVED" as const;
   }
 
-  if (normalizedStatus === "OVERDUE") {
+  if (normalizedStatus === "OVERDUE" || normalizedStatus === "REFUSED" || normalizedStatus === "REPROVED") {
     return "FAILED" as const;
   }
 
