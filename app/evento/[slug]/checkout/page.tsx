@@ -138,6 +138,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
   const tracking = getTrackingParamsFromSearch(query, `/evento/${event.slug}`);
   const totalQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
   const hotelItems = selectedItems.filter((item) => item.lot.hasHotel);
+  const asksChurchName = selectedItems.some((item) => item.lot.churchQuestionEnabled);
   const ticketsTotalInCents = selectedItems.reduce((sum, item) => sum + item.subtotalInCents, 0);
   const serviceFeeTotalInCents = selectedItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
   const orderTotalInCents = selectedItems.reduce((sum, item) => sum + item.totalInCents, 0);
@@ -318,6 +319,20 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                   />
                   <small>Usado apenas para suporte do pedido, caso seja necessário.</small>
                 </label>
+                {asksChurchName ? (
+                  <label className="field">
+                    <span>Você é de alguma igreja? Qual? <small>(opcional)</small></span>
+                    <input
+                      name="churchName"
+                      autoComplete="organization"
+                      defaultValue={firstParam(query.churchName) || ""}
+                      placeholder="Ex.: Igreja Batista Central"
+                    />
+                    <small>
+                      Se você vem por uma igreja parceira, informe aqui para organizarmos os grupos. Você pode deixar em branco.
+                    </small>
+                  </label>
+                ) : null}
               </div>
 
               {hotelItems.length > 0 ? (

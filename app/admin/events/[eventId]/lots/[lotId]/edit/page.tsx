@@ -52,6 +52,26 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
             <span>Descrição</span>
             <input name="description" defaultValue={lot.description ?? ""} />
           </label>
+          <div className="formSection compactFormSection">
+            <div className="formSectionHeader">
+              <div>
+                <span className="sectionEyebrow">Dados opcionais no checkout</span>
+                <h2>Pergunta sobre igreja</h2>
+              </div>
+              <p className="muted">
+                Mostra um campo opcional para o comprador informar a igreja/parceiro do grupo.
+              </p>
+            </div>
+            <label className="checkboxField">
+              <input
+                name="churchQuestionEnabled"
+                type="checkbox"
+                value="true"
+                defaultChecked={lot.churchQuestionEnabled}
+              />
+              <span>Mostrar o campo opcional “De qual igreja você é?” neste ingresso.</span>
+            </label>
+          </div>
           <div className="grid twoColumns">
             <label className="field">
               <span>Preço</span>

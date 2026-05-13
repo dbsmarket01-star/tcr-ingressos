@@ -543,6 +543,7 @@ export async function duplicateEvent(eventId: string) {
           name: lot.name,
           description: lot.description,
           hasHotel: lot.hasHotel,
+          churchQuestionEnabled: lot.churchQuestionEnabled,
           priceInCents: lot.priceInCents,
           serviceFeeBps: lot.serviceFeeBps,
           pixDiscountPercentBps: lot.pixDiscountPercentBps,

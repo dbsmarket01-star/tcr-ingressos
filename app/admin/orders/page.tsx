@@ -141,7 +141,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           <div>
             <h2>Filtros de atendimento</h2>
             <p className="muted">
-              Busque por cliente, pedido, cupom ou evento para localizar compras e resolver suporte mais rápido.
+              Busque por cliente, pedido, igreja, cupom ou evento para localizar compras e resolver suporte mais rápido.
             </p>
           </div>
           <Link className="button" href={exportHref}>
@@ -153,7 +153,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
             <span>Buscar</span>
             <input
               name="search"
-              placeholder="Pedido, cliente, email, CPF, cupom ou evento"
+              placeholder="Pedido, cliente, email, CPF, igreja, cupom ou evento"
               defaultValue={params.search || ""}
             />
           </label>
@@ -215,6 +215,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               <tr>
                 <th>Pedido</th>
                 <th>Cliente</th>
+                <th>Igreja</th>
                 <th>Evento</th>
                 <th>Status</th>
                 <th>Total</th>
@@ -236,6 +237,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                     <br />
                     <span className="muted">{order.customer.email}</span>
                   </td>
+                  <td>{order.churchName || "-"}</td>
                   <td>{order.event.title}</td>
                   <td>
                     <span className={`status ${order.status === "PAID" ? "published" : "draft"}`}>

@@ -7,6 +7,7 @@ export const checkoutOrderSchema = z.object({
   buyerEmail: z.string().email(),
   buyerDocument: z.string().min(5),
   buyerPhone: z.string().optional(),
+  churchName: z.string().max(120).optional(),
   couponCode: z.string().optional(),
   utmSource: z.string().optional(),
   utmMedium: z.string().optional(),

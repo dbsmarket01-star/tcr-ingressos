@@ -651,6 +651,7 @@ model TicketLot {
   name             String
   description      String?
   hasHotel         Boolean   @default(false)
+  churchQuestionEnabled Boolean @default(false)
   priceInCents     Int
   serviceFeeBps    Int       @default(0)
   pixDiscountPercentBps Int  @default(0)
@@ -739,6 +740,7 @@ model Order {
   customerId      String
   couponId        String?
   couponCode      String?
+  churchName      String?
   status          OrderStatus @default(PENDING_PAYMENT)
   subtotalInCents Int
   serviceFeeInCents Int      @default(0)
@@ -787,6 +789,7 @@ model Order {
   @@index([createdAt])
   @@index([customerId])
   @@index([couponId])
+  @@index([eventId, churchName])
   @@index([ticketsEmailProviderId])
 }
 

@@ -139,6 +139,10 @@ export default async function AdminOrderDetailPage({ params, searchParams }: Adm
               <span>Documento</span>
               <strong>{order.customer.document || "-"}</strong>
             </div>
+            <div>
+              <span>Igreja</span>
+              <strong>{order.churchName || "-"}</strong>
+            </div>
           </div>
         </article>
 

@@ -107,6 +107,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
         guest2BirthDate: Date;
       }> = [];
       const hotelGuestsByLot = new Map<string, Map<number, CheckoutHotelGuestInput>>();
+      let churchQuestionEnabledForOrder = false;
 
       for (const guest of input.hotelGuests ?? []) {
         if (!hotelGuestsByLot.has(guest.lotId)) {
@@ -183,6 +184,10 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           totalInCents: lot.priceInCents * item.quantity
         });
 
+        if (lot.churchQuestionEnabled) {
+          churchQuestionEnabledForOrder = true;
+        }
+
         if (lot.hasHotel) {
           if (!lot.hotelId || !lot.hotel) {
             throw new Error(`O ingresso ${lot.name} está marcado com hotel, mas nenhum hotel foi vinculado.`);
@@ -244,6 +249,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           customerId: customer.id,
           couponId: coupon?.id || null,
           couponCode: coupon?.code || null,
+          churchName: churchQuestionEnabledForOrder ? compactText(input.churchName).slice(0, 120) || null : null,
           status: OrderStatus.PENDING_PAYMENT,
           subtotalInCents,
           serviceFeeInCents,

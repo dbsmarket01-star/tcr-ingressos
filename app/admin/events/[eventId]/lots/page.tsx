@@ -141,6 +141,7 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
                     <th>Quantidade</th>
                     <th>Pix</th>
                     <th>Hotel</th>
+                    <th>Igreja</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -172,6 +173,7 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
                               ? "Possui hotel"
                               : "Sem hotel"}
                         </td>
+                        <td>{lot.churchQuestionEnabled ? "Perguntar no checkout" : "Não pergunta"}</td>
                         <td>
                           <div className="lotTableActions">
                             <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}/lots/${lot.id}/edit`}>
@@ -232,6 +234,21 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
               <span>Descrição</span>
               <input name="description" placeholder="Opcional" />
             </label>
+            <div className="formSection compactFormSection">
+              <div className="formSectionHeader">
+                <div>
+                  <span className="sectionEyebrow">Dados opcionais no checkout</span>
+                  <h2>Pergunta sobre igreja</h2>
+                </div>
+                <p className="muted">
+                  Use quando precisar identificar grupos de igrejas parceiras. O comprador poderá deixar em branco.
+                </p>
+              </div>
+              <label className="checkboxField">
+                <input name="churchQuestionEnabled" type="checkbox" value="true" />
+                <span>Mostrar o campo opcional “De qual igreja você é?” neste ingresso.</span>
+              </label>
+            </div>
             <div className="grid twoColumns">
               <label className="field">
                 <span>Preço</span>

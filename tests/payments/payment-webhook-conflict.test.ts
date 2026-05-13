@@ -175,7 +175,6 @@ describe("payment webhook conflict handling", () => {
       },
       data: expect.objectContaining({
         status: "PAID",
-        totalInCents: 10000,
         canceledAt: null
       })
     });

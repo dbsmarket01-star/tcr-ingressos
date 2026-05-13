@@ -89,6 +89,7 @@ function buildOrderWhere(
             { customer: { email: { contains: search, mode: "insensitive" } } },
             { customer: { phone: { contains: search, mode: "insensitive" } } },
             { customer: { document: { contains: search, mode: "insensitive" } } },
+            { churchName: { contains: search, mode: "insensitive" } },
             { event: { title: { contains: search, mode: "insensitive" } } }
           ]
         }

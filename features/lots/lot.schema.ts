@@ -50,6 +50,7 @@ export const ticketLotSchema = z.object({
   name: z.string().min(2),
   description: z.string().optional(),
   hasHotel: z.boolean().default(false),
+  churchQuestionEnabled: z.boolean().default(false),
   hotelId: z.string().optional(),
   newHotelName: z.string().optional(),
   newHotelCity: z.string().optional(),

@@ -114,6 +114,7 @@ function buildCheckoutReturnUrl(formData: FormData, eventSlug: string, message: 
   addQueryParam(params, "utm_term", formData.get("utmTerm"));
   addQueryParam(params, "ref", formData.get("referrer"));
   addQueryParam(params, "landingPage", formData.get("landingPage"));
+  addQueryParam(params, "churchName", formData.get("churchName"));
 
   lotIds.forEach((lotId) => {
     const quantity = String(formData.get(`quantity_${lotId}`) ?? "0").trim();
@@ -154,6 +155,7 @@ export async function createCheckoutOrderAction(formData: FormData) {
     buyerEmail: String(formData.get("buyerEmail") ?? "").trim(),
     buyerDocument: String(formData.get("buyerDocument") ?? "").trim(),
     buyerPhone: String(formData.get("buyerPhone") ?? "").trim() || undefined,
+    churchName: String(formData.get("churchName") ?? "").trim() || undefined,
     couponCode: String(formData.get("coupon") ?? "").trim() || undefined,
     utmSource: String(formData.get("utmSource") ?? "").trim() || undefined,
     utmMedium: String(formData.get("utmMedium") ?? "").trim() || undefined,
