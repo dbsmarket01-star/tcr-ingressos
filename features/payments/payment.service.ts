@@ -616,13 +616,19 @@ export async function reconcileAsaasPayments(
       OR: [
         {
           status: {
-            in: [PaymentStatus.CREATED, PaymentStatus.PENDING, PaymentStatus.CANCELED, PaymentStatus.FAILED]
+            in: [
+              PaymentStatus.CREATED,
+              PaymentStatus.PENDING,
+              PaymentStatus.CANCELED,
+              PaymentStatus.FAILED,
+              PaymentStatus.APPROVED
+            ]
           }
         },
         {
           order: {
             status: {
-              in: [OrderStatus.PENDING_PAYMENT, OrderStatus.EXPIRED, OrderStatus.CANCELED]
+              in: [OrderStatus.PENDING_PAYMENT, OrderStatus.EXPIRED, OrderStatus.CANCELED, OrderStatus.PAID]
             }
           }
         }

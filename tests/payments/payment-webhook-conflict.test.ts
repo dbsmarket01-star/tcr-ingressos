@@ -4,6 +4,7 @@ const prismaMock = {
   $transaction: vi.fn(),
   payment: {
     findFirst: vi.fn(),
+    findMany: vi.fn(),
     update: vi.fn(),
     updateMany: vi.fn(),
     findUniqueOrThrow: vi.fn()
@@ -387,5 +388,38 @@ describe("payment webhook conflict handling", () => {
     });
     expect(updateHomeListStatusForOrderMock).toHaveBeenCalledWith(prismaMock, "order_4", "CANCELED");
     expect(sendTicketsEmailMock).not.toHaveBeenCalled();
+  });
+
+  it("includes approved Asaas payments in reconciliation so missed refunds can be found", async () => {
+    prismaMock.payment.findMany.mockResolvedValue([]);
+
+    const { reconcileAsaasPayments } = await import("@/features/payments/payment.service");
+
+    const result = await reconcileAsaasPayments({
+      organizationId: "org_a2",
+      lookbackHours: 24
+    });
+
+    expect(result.checked).toBe(0);
+    expect(prismaMock.payment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: expect.arrayContaining([
+            {
+              status: {
+                in: ["CREATED", "PENDING", "CANCELED", "FAILED", "APPROVED"]
+              }
+            },
+            {
+              order: {
+                status: {
+                  in: ["PENDING_PAYMENT", "EXPIRED", "CANCELED", "PAID"]
+                }
+              }
+            }
+          ])
+        })
+      })
+    );
   });
 });
