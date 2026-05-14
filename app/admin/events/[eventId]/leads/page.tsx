@@ -25,6 +25,7 @@ import { getPublicLeadCaptureUrl } from "@/lib/public-url";
 import { getLeadOriginBucket, getSourceLabel } from "@/features/tracking/tracking";
 import { LeadBroadcastPreview } from "./LeadBroadcastPreview";
 import { LeadBroadcastCampaignRunner } from "./LeadBroadcastCampaignRunner";
+import { LeadBroadcastBodyToolbar } from "./LeadBroadcastBodyToolbar";
 import { LeadBroadcastDestinationHelper } from "./LeadBroadcastDestinationHelper";
 import { LeadBroadcastTemplates } from "./LeadBroadcastTemplates";
 import { LeadBroadcastSubmitButton } from "./LeadBroadcastSubmitButton";
@@ -246,6 +247,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                     required
                   />
                 </label>
+                <LeadBroadcastBodyToolbar />
                 <div className="grid twoColumnGrid">
                   <label className="field">
                     <span>Texto do botão</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { parseImageCrop } from "@/lib/image-crop";
 
 type LeadBroadcastPreviewProps = {
@@ -123,6 +123,28 @@ function resolvePreviewAccentDarkColor(color?: string | null) {
 function resolvePreviewAccentShadowColor(color?: string | null, alpha = 0.16) {
   const { r, g, b } = previewAccentRgb(color);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function renderPreviewInlineFormatting(value: string) {
+  const nodes: ReactNode[] = [];
+  const regex = /\*\*([^*]+)\*\*/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(value))) {
+    if (match.index > lastIndex) {
+      nodes.push(value.slice(lastIndex, match.index));
+    }
+
+    nodes.push(<strong key={`${match.index}-${match[1]}`}>{match[1]}</strong>);
+    lastIndex = regex.lastIndex;
+  }
+
+  if (lastIndex < value.length) {
+    nodes.push(value.slice(lastIndex));
+  }
+
+  return nodes.length > 0 ? nodes : value;
 }
 
 export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
@@ -295,7 +317,7 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
             ) : null}
             <p className="leadBroadcastPreviewBrand">{props.brandName}</p>
           </div>
-          <p className="leadBroadcastPreviewGreeting">Ola, Diego.</p>
+          <p className="leadBroadcastPreviewGreeting">Olá, Diego.</p>
 
           {previewImageUrl ? (
             <div className="leadBroadcastPreviewImageWrap">
@@ -321,9 +343,9 @@ export function LeadBroadcastPreview(props: LeadBroadcastPreviewProps) {
 
           <div className="leadBroadcastPreviewBody">
             {paragraphs.length > 0 ? (
-              paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)
+              paragraphs.map((paragraph, index) => <p key={`${paragraph}-${index}`}>{renderPreviewInlineFormatting(paragraph)}</p>)
             ) : (
-              <p>Sua mensagem aparece aqui conforme voce escreve.</p>
+              <p>Sua mensagem aparece aqui conforme você escreve.</p>
             )}
           </div>
 

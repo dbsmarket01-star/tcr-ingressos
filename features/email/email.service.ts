@@ -732,12 +732,34 @@ export async function sendLeadCaptureConfirmationEmail(input: LeadCaptureConfirm
   });
 }
 
+function escapeEmailHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function renderBroadcastInlineFormatting(value: string) {
+  const escaped = escapeEmailHtml(value);
+
+  return escaped.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+}
+
+function stripBroadcastTextFormatting(value: string) {
+  return value.replace(/\*\*([^*]+)\*\*/g, "$1");
+}
+
 function renderBroadcastBodyAsHtml(body: string) {
   return body
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean)
-    .map((line) => `<p style="margin: 0 0 10px;">${line}</p>`)
+    .map(
+      (line) =>
+        `<p style="color: #263448; font-size: 16px; line-height: 1.55; margin: 0 0 13px; overflow-wrap: break-word;">${renderBroadcastInlineFormatting(line)}</p>`
+    )
     .join("");
 }
 
@@ -891,8 +913,8 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
     ? `
       <div style="margin: 0 0 24px;">
         <img
-          src="${imageUrl}"
-          alt="${input.eventTitle}"
+          src="${escapeEmailHtml(imageUrl)}"
+          alt="${escapeEmailHtml(input.eventTitle)}"
           width="640"
           style="border: 0; border-radius: 18px; display: block; height: auto; line-height: 100%; margin: 0 auto; max-width: 640px; outline: none; text-decoration: none; width: 100%;"
         />
@@ -901,55 +923,66 @@ function buildLeadBroadcastHtml(input: LeadBroadcastEmailInput) {
     : "";
   const ctaButton = input.ctaUrl
     ? `
-      <p style="margin: 18px 0 0;">
-        <a href="${input.ctaUrl}" style="background: ${accentColor}; border-radius: 12px; color: white; display: inline-block; font-weight: 700; padding: 14px 22px; text-decoration: none;">
-          ${input.ctaLabel || "Abrir link"}
+      <p style="margin: 20px 0 0;">
+        <a class="lead-email-button" href="${escapeEmailHtml(input.ctaUrl)}" style="background: ${accentColor}; border-radius: 12px; color: white; display: inline-block; font-size: 15px; font-weight: 700; line-height: 1.2; padding: 14px 22px; text-decoration: none;">
+          ${escapeEmailHtml(input.ctaLabel || "Abrir link")}
         </a>
       </p>
     `
     : "";
   const supportLine = input.supportEmail
-    ? `<p style="margin: 22px 0 0; color: #607089; font-size: 13px;">Suporte: ${input.supportEmail}</p>`
+    ? `<p style="margin: 22px 0 0; color: #607089; font-size: 13px;">Suporte: ${escapeEmailHtml(input.supportEmail)}</p>`
     : "";
   const unsubscribeLine = input.unsubscribeUrl
-    ? `<p style="margin: 18px 0 0; color: #7a8798; font-size: 12px; text-align: center;">Não quer mais receber este tipo de e-mail? <a href="${input.unsubscribeUrl}" style="color: #607089;">Descadastrar</a></p>`
+    ? `<p style="margin: 18px 0 0; color: #7a8798; font-size: 12px; text-align: center;">Não quer mais receber este tipo de e-mail? <a href="${escapeEmailHtml(input.unsubscribeUrl)}" style="color: #607089;">Descadastrar</a></p>`
     : "";
   const trackingPixel = input.openTrackingUrl
-    ? `<img src="${input.openTrackingUrl}" alt="" width="1" height="1" style="border: 0; display: block; height: 1px; opacity: 0; width: 1px;" />`
+    ? `<img src="${escapeEmailHtml(input.openTrackingUrl)}" alt="" width="1" height="1" style="border: 0; display: block; height: 1px; opacity: 0; width: 1px;" />`
     : "";
   const instagramLine =
     instagramDisplay && instagramHref
       ? `
-        <p style="margin: 18px 0 0; color: #607089; font-size: 13px;">
-          <a href="${instagramHref}" style="align-items: center; color: #607089; display: inline-flex; gap: 8px; text-decoration: none;">
+        <p style="margin: 18px 0 0; color: #607089; font-size: 13px; line-height: 1.4;">
+          <a href="${escapeEmailHtml(instagramHref)}" style="align-items: center; color: #607089; display: inline-flex; gap: 8px; text-decoration: none;">
             <span style="display: inline-flex; flex: 0 0 auto; height: 22px; width: 22px;">
-              <img src="${instagramIconUrl}" alt="" width="22" height="22" style="display: block; height: 22px; width: 22px;" />
+              <img src="${escapeEmailHtml(instagramIconUrl)}" alt="" width="22" height="22" style="display: block; height: 22px; width: 22px;" />
             </span>
-            ${instagramDisplay}
+            ${escapeEmailHtml(instagramDisplay)}
           </a>
         </p>
       `
       : "";
 
   return `
-    <div style="background: #f3f6fb; margin: 0; padding: 24px 16px;">
-      <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.55; margin: 0 auto; max-width: 720px;">
-        <div style="background: #ffffff; border: 1px solid #e0e7f0; border-radius: 24px; box-shadow: 0 20px 60px ${cardShadowColor}; overflow: hidden; padding: 22px;">
-          <div style="margin: 0 0 18px; text-align: center;">
+    <style>
+      @media only screen and (max-width: 600px) {
+        .lead-email-shell { padding: 10px 8px !important; }
+        .lead-email-card { border-radius: 18px !important; padding: 18px !important; }
+        .lead-email-logo-badge { border-radius: 12px !important; padding: 8px 11px !important; }
+        .lead-email-logo { max-width: 92px !important; width: 92px !important; }
+        .lead-email-greeting { font-size: 15px !important; margin-bottom: 14px !important; }
+        .lead-email-body p { font-size: 15px !important; line-height: 1.52 !important; margin-bottom: 12px !important; }
+        .lead-email-button { box-sizing: border-box !important; display: block !important; padding: 14px 18px !important; text-align: center !important; width: 100% !important; }
+      }
+    </style>
+    <div class="lead-email-shell" style="background: #eef4f8; margin: 0; padding: 18px 10px;">
+      <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.5; margin: 0 auto; max-width: 600px; width: 100%;">
+        <div class="lead-email-card" style="background: #ffffff; border: 1px solid #dbe5ef; border-radius: 22px; box-shadow: 0 16px 44px ${cardShadowColor}; box-sizing: border-box; overflow: hidden; padding: 24px;">
+          <div style="margin: 0 0 16px; text-align: center;">
             ${
               logoUrl
                 ? `<div style="display: inline-block; margin: 0 auto 12px;">
-                    <div style="background: ${accentDarkColor}; border-radius: 14px; box-shadow: 0 10px 24px ${accentShadowColor}; display: inline-block; padding: 10px 14px;">
-                      <img src="${logoUrl}" alt="${brandName}" width="104" style="display: block; height: auto; margin: 0 auto; max-width: 104px;" />
+                    <div class="lead-email-logo-badge" style="background: ${accentDarkColor}; border-radius: 14px; box-shadow: 0 10px 24px ${accentShadowColor}; display: inline-block; padding: 9px 13px;">
+                      <img class="lead-email-logo" src="${escapeEmailHtml(logoUrl)}" alt="${escapeEmailHtml(brandName)}" width="100" style="display: block; height: auto; margin: 0 auto; max-width: 100px;" />
                     </div>
                   </div>`
                 : ""
             }
-            <p style="margin: 0; color: #607089; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">${brandName}</p>
+            <p style="margin: 0; color: #607089; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; line-height: 1.35; text-transform: uppercase;">${escapeEmailHtml(brandName)}</p>
           </div>
-          <p style="color: #425066; font-size: 16px; margin: 0 0 16px; text-align: left;">Olá, ${input.name}.</p>
+          <p class="lead-email-greeting" style="color: #516075; font-size: 15px; line-height: 1.45; margin: 0 0 16px; text-align: left;">Olá, ${escapeEmailHtml(input.name)}.</p>
           ${imageBlock}
-          <div style="color: #243042; font-size: 16px;">
+          <div class="lead-email-body" style="color: #243042;">
             ${renderBroadcastBodyAsHtml(sanitizedBody)}
           </div>
           ${ctaButton}
@@ -969,7 +1002,7 @@ function buildLeadBroadcastText(input: LeadBroadcastEmailInput) {
   return [
     `Olá, ${input.name}.`,
     "",
-    sanitizedBody,
+    stripBroadcastTextFormatting(sanitizedBody),
     input.ctaUrl ? `${input.ctaLabel || "Abrir link"}: ${input.ctaUrl}` : null,
     input.instagramUrl ? `Instagram: ${normalizeInstagramHandle(input.instagramUrl)}` : null,
     input.supportEmail ? `Suporte: ${input.supportEmail}` : null,
