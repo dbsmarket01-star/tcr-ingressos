@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isLikelyAutomatedEmailCheck } from "@/features/leads/lead-email-tracking.service";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -20,15 +21,17 @@ export async function GET(
     return NextResponse.redirect(new URL("/", _request.url));
   }
 
-  try {
-    await prisma.leadEmailCampaignClick.create({
-      data: {
-        campaignId,
-        leadId
-      }
-    });
-  } catch {
-    // Ignore duplicate click records for the same lead/campaign.
+  if (!isLikelyAutomatedEmailCheck(_request)) {
+    try {
+      await prisma.leadEmailCampaignClick.create({
+        data: {
+          campaignId,
+          leadId
+        }
+      });
+    } catch {
+      // Ignore duplicate click records for the same lead/campaign.
+    }
   }
 
   return NextResponse.redirect(campaign.destinationUrl);

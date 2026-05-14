@@ -193,7 +193,10 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
           <LeadBroadcastCampaignRunner
             initialCampaign={{
               ...activeCampaign,
-              pendingCount: Math.max(activeCampaign.totalCount - activeCampaign.sentCount - activeCampaign.failedCount, 0),
+              pendingCount:
+                "pendingCount" in activeCampaign
+                  ? activeCampaign.pendingCount + activeCampaign.processingCount
+                  : Math.max(activeCampaign.totalCount - activeCampaign.sentCount - activeCampaign.failedCount, 0),
               createdAt: activeCampaign.createdAt.toISOString(),
               processingStartedAt: activeCampaign.processingStartedAt?.toISOString() ?? null,
               completedAt: activeCampaign.completedAt?.toISOString() ?? null
@@ -404,11 +407,16 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
           <div className="sectionHeader">
             <div>
               <h2>Termômetro dos e-mails</h2>
-              <p className="muted">Veja com clareza quantos envios foram feitos, quantas aberturas tivemos e quantos cliques aconteceram no botão.</p>
+              <p className="muted">
+                Veja quantos e-mails foram aceitos pelo provedor, quantas falhas voltaram e quais interações foram registradas.
+                Aberturas e cliques podem incluir verificações automáticas dos provedores de e-mail.
+              </p>
             </div>
           </div>
           {(() => {
             const totalSent = emailCampaigns.reduce((sum, campaign) => sum + campaign.sentCount, 0);
+            const totalPending = emailCampaigns.reduce((sum, campaign) => sum + campaign.pendingCount + campaign.processingCount, 0);
+            const totalFailed = emailCampaigns.reduce((sum, campaign) => sum + campaign.failedCount, 0);
             const totalOpens = emailCampaigns.reduce((sum, campaign) => sum + campaign._count.opens, 0);
             const totalClicks = emailCampaigns.reduce((sum, campaign) => sum + campaign._count.clicks, 0);
             const totalOpenRate = totalSent > 0 ? Math.round((totalOpens / totalSent) * 100) : 0;
@@ -417,9 +425,9 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
             return (
               <div className="campaignSummaryGrid">
                 <article className="campaignSummaryCard">
-                  <span>Envios realizados</span>
+                  <span>Aceitos pelo provedor</span>
                   <strong>{totalSent}</strong>
-                  <small>Total de e-mails aceitos pelo provedor.</small>
+                  <small>{totalPending} pendentes · {totalFailed} falhas.</small>
                 </article>
                 <article className="campaignSummaryCard">
                   <span>Aberturas</span>
@@ -438,6 +446,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
             {emailCampaigns.slice(0, 8).map((campaign) => {
               const clicks = campaign._count.clicks;
               const opens = campaign._count.opens;
+              const pending = campaign.pendingCount + campaign.processingCount;
               const openRate = campaign.sentCount > 0 ? Math.round((opens / campaign.sentCount) * 100) : 0;
               const ctr = campaign.sentCount > 0 ? Math.round((clicks / campaign.sentCount) * 100) : 0;
 
@@ -451,7 +460,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                   </div>
                   <div className="campaignInsightMetrics">
                     <div className="campaignInsightMetricCard">
-                      <span>Envios feitos</span>
+                      <span>Aceitos</span>
                       <strong>{campaign.sentCount}</strong>
                     </div>
                     <div className="campaignInsightMetricCard">
@@ -464,7 +473,8 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                     </div>
                   </div>
                   <div className="campaignInsightStats">
-                    <span>{campaign.totalCount} na fila</span>
+                    <span>{campaign.recipientCount} destinatários</span>
+                    <span>{pending} pendentes</span>
                     <span>{campaign.failedCount} falhas</span>
                     <strong>{openRate}% open rate</strong>
                     <strong>{ctr}% CTR</strong>

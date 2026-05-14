@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isLikelyAutomatedEmailCheck } from "@/features/leads/lead-email-tracking.service";
 import { prisma } from "@/lib/prisma";
 
 const PIXEL_BYTES = Uint8Array.from([
@@ -8,20 +9,22 @@ const PIXEL_BYTES = Uint8Array.from([
 ]);
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ campaignId: string; leadId: string }> }
 ) {
   const { campaignId, leadId } = await params;
 
-  try {
-    await prisma.leadEmailCampaignOpen.create({
-      data: {
-        campaignId,
-        leadId
-      }
-    });
-  } catch {
-    // Ignore duplicate open records for the same lead/campaign.
+  if (!isLikelyAutomatedEmailCheck(request)) {
+    try {
+      await prisma.leadEmailCampaignOpen.create({
+        data: {
+          campaignId,
+          leadId
+        }
+      });
+    } catch {
+      // Ignore duplicate open records for the same lead/campaign.
+    }
   }
 
   return new NextResponse(PIXEL_BYTES, {

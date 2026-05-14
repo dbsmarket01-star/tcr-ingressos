@@ -1,11 +1,13 @@
 import { Prisma } from "@prisma/client";
 import { sendLeadBroadcastEmailBatch } from "@/features/email/email.service";
+import { syncLeadEmailCampaignCounts } from "@/features/leads/lead-email-campaign-metrics.service";
 import { getOrganizationContextById } from "@/features/organizations/organization.service";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { prisma } from "@/lib/prisma";
 
 const BATCH_SIZE = 100;
 const REQUEST_SPACING_MS = 300;
+const STALE_PROCESSING_WINDOW_MS = 10 * 60 * 1000;
 
 type CampaignSnapshot = {
   id: string;
@@ -88,7 +90,31 @@ async function claimLeadEmailCampaignRecipients(campaignId: string, batchSize: n
   `);
 }
 
+async function recoverStaleProcessingRecipients(campaignId: string) {
+  const cutoff = new Date(Date.now() - STALE_PROCESSING_WINDOW_MS);
+
+  return prisma.leadEmailCampaignRecipient.updateMany({
+    where: {
+      campaignId,
+      status: "PROCESSING",
+      updatedAt: {
+        lt: cutoff
+      }
+    },
+    data: {
+      status: "PENDING",
+      errorMessage: null
+    }
+  });
+}
+
 async function finalizeLeadEmailCampaign(campaignId: string) {
+  const synced = await syncLeadEmailCampaignCounts(campaignId);
+
+  if (synced) {
+    return getLeadEmailCampaignSnapshot(campaignId);
+  }
+
   const latest = await prisma.leadEmailCampaign.findUnique({
     where: {
       id: campaignId
@@ -212,6 +238,8 @@ export async function processLeadEmailCampaignInBackground(campaignId: string) {
   const companySettings = await getCompanySettingsByOrganizationId(organizationId);
 
   while (true) {
+    await recoverStaleProcessingRecipients(campaign.id);
+
     const recipients = await claimLeadEmailCampaignRecipients(campaign.id, BATCH_SIZE);
 
     if (recipients.length === 0) {
@@ -330,6 +358,7 @@ export async function processLeadEmailCampaignInBackground(campaignId: string) {
       );
 
       await prisma.$transaction(updates);
+      await syncLeadEmailCampaignCounts(campaign.id);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Falha ao processar campanha.";
 
@@ -357,6 +386,7 @@ export async function processLeadEmailCampaignInBackground(campaignId: string) {
           }
         })
       ]);
+      await syncLeadEmailCampaignCounts(campaign.id);
     }
 
     await sleep(REQUEST_SPACING_MS);

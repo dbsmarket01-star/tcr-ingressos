@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getLeadEmailCampaignRecipientBreakdowns } from "./lead-email-campaign-metrics.service";
 import { createHash } from "node:crypto";
 import type { EventLeadInput } from "./lead.schema";
 import { unstable_cache } from "next/cache";
@@ -341,7 +342,7 @@ export async function unsubscribeEventLeadFromCampaignEmails(campaignId: string,
 export async function listLeadEmailCampaignSummaries(eventId: string) {
   await reconcileInvalidLeadEmailCampaigns(eventId);
 
-  return prisma.leadEmailCampaign.findMany({
+  const campaigns = await prisma.leadEmailCampaign.findMany({
     where: {
       eventId
     },
@@ -369,6 +370,32 @@ export async function listLeadEmailCampaignSummaries(eventId: string) {
       }
     }
   });
+  const breakdowns = await getLeadEmailCampaignRecipientBreakdowns(campaigns.map((campaign) => campaign.id));
+
+  return campaigns.map((campaign) => {
+    const breakdown = breakdowns.get(campaign.id);
+
+    if (!breakdown || breakdown.recipientCount === 0) {
+      return {
+        ...campaign,
+        acceptedCount: campaign.sentCount,
+        pendingCount: Math.max(campaign.totalCount - campaign.sentCount - campaign.failedCount, 0),
+        processingCount: 0,
+        recipientCount: campaign.totalCount
+      };
+    }
+
+    return {
+      ...campaign,
+      totalCount: breakdown.recipientCount,
+      sentCount: breakdown.acceptedCount,
+      failedCount: breakdown.failedCount,
+      acceptedCount: breakdown.acceptedCount,
+      pendingCount: breakdown.pendingCount,
+      processingCount: breakdown.processingCount,
+      recipientCount: breakdown.recipientCount
+    };
+  });
 }
 
 export async function reconcileInvalidLeadEmailCampaigns(eventId: string) {
@@ -391,7 +418,7 @@ export async function reconcileInvalidLeadEmailCampaigns(eventId: string) {
 export async function getActiveLeadEmailCampaign(eventId: string) {
   await reconcileInvalidLeadEmailCampaigns(eventId);
 
-  return prisma.leadEmailCampaign.findFirst({
+  const campaign = await prisma.leadEmailCampaign.findFirst({
     where: {
       eventId,
       status: {
@@ -414,6 +441,27 @@ export async function getActiveLeadEmailCampaign(eventId: string) {
       lastError: true
     }
   });
+
+  if (!campaign) {
+    return null;
+  }
+
+  const breakdowns = await getLeadEmailCampaignRecipientBreakdowns([campaign.id]);
+  const breakdown = breakdowns.get(campaign.id);
+
+  if (!breakdown || breakdown.recipientCount === 0) {
+    return campaign;
+  }
+
+  return {
+    ...campaign,
+    totalCount: breakdown.recipientCount,
+    sentCount: breakdown.acceptedCount,
+    failedCount: breakdown.failedCount,
+    pendingCount: breakdown.pendingCount,
+    processingCount: breakdown.processingCount,
+    recipientCount: breakdown.recipientCount
+  };
 }
 
 export async function listLeadEmailTemplates(eventId: string) {

@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
+import {
+  isLeadEmailProviderFailureStatus,
+  syncLeadEmailCampaignCounts
+} from "@/features/leads/lead-email-campaign-metrics.service";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
+export const maxDuration = 30;
 
 type ResendEmailWebhookPayload = {
   type?: string;
@@ -127,9 +132,74 @@ export async function POST(request: Request) {
     }
   });
 
+  const leadRecipient = await prisma.leadEmailCampaignRecipient.findFirst({
+    where: {
+      providerMessageId: providerId
+    },
+    select: {
+      id: true,
+      campaignId: true,
+      leadId: true,
+      status: true
+    }
+  });
+  let leadRecipientMatched = 0;
+
+  if (leadRecipient) {
+    leadRecipientMatched = 1;
+
+    if (status === "opened" || status === "clicked") {
+      await prisma.leadEmailCampaignOpen
+        .create({
+          data: {
+            campaignId: leadRecipient.campaignId,
+            leadId: leadRecipient.leadId
+          }
+        })
+        .catch(() => null);
+    }
+
+    if (status === "clicked") {
+      await prisma.leadEmailCampaignClick
+        .create({
+          data: {
+            campaignId: leadRecipient.campaignId,
+            leadId: leadRecipient.leadId
+          }
+        })
+        .catch(() => null);
+    }
+
+    if (isLeadEmailProviderFailureStatus(status)) {
+      await prisma.leadEmailCampaignRecipient.update({
+        where: {
+          id: leadRecipient.id
+        },
+        data: {
+          status: "FAILED",
+          errorMessage: failureReason || `Entrega marcada como ${status} pelo Resend.`
+        }
+      });
+    } else if (leadRecipient.status !== "FAILED") {
+      await prisma.leadEmailCampaignRecipient.update({
+        where: {
+          id: leadRecipient.id
+        },
+        data: {
+          status: "SENT",
+          errorMessage: status === "delivery_delayed" ? "Entrega atrasada pelo provedor." : null
+        }
+      });
+    }
+
+    await syncLeadEmailCampaignCounts(leadRecipient.campaignId);
+  }
+
   return webhookResponse({
     received: true,
-    matched: updateResult.count,
+    matched: updateResult.count + leadRecipientMatched,
+    orderMatched: updateResult.count,
+    leadRecipientMatched,
     status
   });
 }

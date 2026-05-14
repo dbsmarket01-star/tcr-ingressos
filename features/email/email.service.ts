@@ -1047,31 +1047,40 @@ export async function sendLeadBroadcastEmailBatch(inputs: LeadBroadcastEmailInpu
   const resend = new Resend(apiKey);
   const result = await sendBatchWithResend(resend, payloads);
   const errors = result.errors ?? [];
-  const failedIndexes = new Set(errors.map((entry) => entry.index));
+  const failed = new Map<number, string>();
+
+  for (const entry of errors) {
+    failed.set(entry.index, entry.message);
+  }
+
   const sentIds = result.data ?? [];
   let successCursor = 0;
   const sent: Array<{ index: number; id: string }> = [];
 
   for (let index = 0; index < payloads.length; index += 1) {
-    if (failedIndexes.has(index)) {
+    if (failed.has(index)) {
       continue;
     }
 
     const response = sentIds[successCursor];
+    successCursor += 1;
+
+    if (!response?.id) {
+      failed.set(index, "O provedor aceitou o lote, mas não retornou ID rastreável para este e-mail.");
+      continue;
+    }
 
     sent.push({
       index,
-      id: response?.id || `batch-${index + 1}`
+      id: response.id
     });
-
-    successCursor += 1;
   }
 
   return {
     sent,
-    failed: errors.map((entry) => ({
-      index: entry.index,
-      message: entry.message
+    failed: Array.from(failed.entries()).map(([index, message]) => ({
+      index,
+      message
     }))
   };
 }
