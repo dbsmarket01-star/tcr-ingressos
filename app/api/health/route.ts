@@ -12,11 +12,22 @@ function hasValue(value?: string) {
   return Boolean(value && value.trim().length > 0);
 }
 
+function getDatabasePoolingStatus() {
+  const databaseUrl = process.env.DATABASE_URL || "";
+
+  return {
+    enabled: databaseUrl.includes("pgbouncer=true"),
+    connectionLimitConfigured: /(?:[?&])connection_limit=\d+(?:&|$)/.test(databaseUrl),
+    connectionLimitOne: /(?:[?&])connection_limit=1(?:&|$)/.test(databaseUrl)
+  };
+}
+
 export async function GET() {
   const startedAt = Date.now();
 
   try {
     await prisma.$queryRaw`SELECT 1`;
+    const databasePooling = getDatabasePoolingStatus();
 
     return NextResponse.json(
       {
@@ -31,7 +42,9 @@ export async function GET() {
           region: process.env.VERCEL_REGION || process.env.AWS_REGION || null
         },
         infrastructure: {
-          databasePooling: hasValue(process.env.DATABASE_URL) && process.env.DATABASE_URL!.includes("pgbouncer=true"),
+          databasePooling: databasePooling.enabled,
+          databaseConnectionLimitConfigured: databasePooling.connectionLimitConfigured,
+          databaseConnectionLimitOne: databasePooling.connectionLimitOne,
           storageProvider: process.env.UPLOAD_STORAGE_PROVIDER || "LOCAL",
           paymentProvider: process.env.PAYMENT_PROVIDER || "SIMULATED",
           emailConfigured: hasValue(process.env.RESEND_API_KEY),

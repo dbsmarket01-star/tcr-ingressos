@@ -97,6 +97,7 @@ export default async function ProductionPage() {
           <div>
             <span>Webhook Asaas</span>
             <strong className="breakText">{readiness.links.asaasWebhook}</strong>
+            <p className="formHint">{readiness.links.asaasWebhookNote}</p>
           </div>
           <div>
             <span>Cron de expiração com query</span>
@@ -108,8 +109,9 @@ export default async function ProductionPage() {
           </div>
         </div>
         <p className="formHint">
-          Troque o texto do token Asaas e CRON_SECRET pelos valores cadastrados nas variáveis de ambiente.
-          Não envie esses tokens em conversas ou prints públicos.
+          No Asaas, use a URL do webhook acima e configure o token com o valor real da variável{" "}
+          {readiness.links.asaasWebhookTokenEnvName}. No cron manual, troque CRON_SECRET pelo valor real da
+          variável. Não envie esses tokens em conversas ou prints públicos.
         </p>
       </section>
 

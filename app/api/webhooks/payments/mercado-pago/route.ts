@@ -3,6 +3,10 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { handlePaymentWebhook } from "@/features/payments/payment.service";
 import { getMercadoPagoProvider } from "@/features/payments/payment-provider";
 
+export const dynamic = "force-dynamic";
+export const preferredRegion = "gru1";
+export const maxDuration = 60;
+
 function mapMercadoPagoStatus(status?: string) {
   if (status === "approved") {
     return "APPROVED" as const;

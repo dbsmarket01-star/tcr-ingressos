@@ -106,7 +106,7 @@ export async function getProductionReadiness(organizationId?: string) {
       status: health.database.usesPooling ? "READY" : "WARNING",
       action: health.database.usesPooling
         ? undefined
-        : "Usar DATABASE_URL com pgbouncer=true e connection_limit=1 ou limite equivalente do provedor."
+        : "Usar DATABASE_URL com pgbouncer=true e connection_limit=1."
     },
     {
       label: "Domínio público",
@@ -355,7 +355,9 @@ export async function getProductionReadiness(organizationId?: string) {
     operation,
     goLive,
     links: {
-      asaasWebhook: `${health.asaas.webhookUrl}?token=${health.asaas.webhookTokenEnvName}`,
+      asaasWebhook: health.asaas.webhookUrl,
+      asaasWebhookTokenEnvName: health.asaas.webhookTokenEnvName,
+      asaasWebhookNote: `Configurar no painel Asaas com a URL acima e o valor real de ${health.asaas.webhookTokenEnvName}.`,
       cron: `${health.appUrl}/api/maintenance/expire-orders?token=CRON_SECRET`,
       cronBearer: `${health.appUrl}/api/maintenance/expire-orders`,
       appUrl: health.appUrl,

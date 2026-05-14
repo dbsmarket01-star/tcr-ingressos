@@ -49,6 +49,16 @@ function getDatabasePlan() {
   return process.env.DATABASE_PLAN || "Nao informado";
 }
 
+function getDatabasePoolingStatus() {
+  const databaseUrl = process.env.DATABASE_URL || "";
+
+  return {
+    enabled: databaseUrl.includes("pgbouncer=true"),
+    connectionLimitConfigured: /(?:[?&])connection_limit=\d+(?:&|$)/.test(databaseUrl),
+    connectionLimitOne: /(?:[?&])connection_limit=1(?:&|$)/.test(databaseUrl)
+  };
+}
+
 function isLocalUrl(value: string) {
   return value.includes("localhost") || value.includes("127.0.0.1");
 }
@@ -60,6 +70,7 @@ export async function getPaymentHealth(organizationId?: string) {
   const provider = getPaymentProviderNameForOrganization(organization);
   const asaas = getAsaasHealthConfigForOrganization(organization);
   const asaasApiUrl = asaas.apiUrl;
+  const databasePooling = getDatabasePoolingStatus();
   const includeGlobalSplitEnv = canUseGlobalPaymentEnv(organization);
   const [recentPayments, dbSplitRules] = await Promise.all([
     prisma.payment.groupBy({
@@ -128,10 +139,10 @@ export async function getPaymentHealth(organizationId?: string) {
       plan: getDatabasePlan(),
       databaseUrlConfigured: hasValue(process.env.DATABASE_URL),
       directUrlConfigured: hasValue(process.env.DIRECT_URL),
-      usesPooling:
-        hasValue(process.env.DATABASE_URL) &&
-        process.env.DATABASE_URL!.includes("pgbouncer=true") &&
-        process.env.DATABASE_URL!.includes("connection_limit=")
+      usesPooling: hasValue(process.env.DATABASE_URL) && databasePooling.enabled && databasePooling.connectionLimitOne,
+      poolingEnabled: databasePooling.enabled,
+      connectionLimitConfigured: databasePooling.connectionLimitConfigured,
+      connectionLimitOne: databasePooling.connectionLimitOne
     },
     uploads: {
       provider: process.env.UPLOAD_STORAGE_PROVIDER || "LOCAL",
