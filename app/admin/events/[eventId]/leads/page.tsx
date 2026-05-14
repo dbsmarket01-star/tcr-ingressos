@@ -481,6 +481,20 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                     <strong>{openRate}% open rate</strong>
                     <strong>{ctr}% CTR</strong>
                   </div>
+                  {campaign.failedCount > 0 || campaign.warningReasons.length > 0 ? (
+                    <div className="campaignInsightReasonList">
+                      {campaign.failureReasons.map((reason) => (
+                        <span key={`failed-${reason.message}`}>
+                          {reason.count} falha(s): {reason.message}
+                        </span>
+                      ))}
+                      {campaign.warningReasons.map((reason) => (
+                        <span key={`warning-${reason.message}`} className="campaignInsightWarningReason">
+                          {reason.count} alerta(s): {reason.message}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               );
             })}

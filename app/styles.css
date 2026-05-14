@@ -14358,6 +14358,7 @@ body.operationTheme .loginBrandDark .brandLogo {
   border: 1px solid rgba(13, 43, 36, 0.08);
   border-radius: 16px;
   display: flex;
+  flex-wrap: wrap;
   gap: 18px;
   justify-content: space-between;
   padding: 14px 16px;
@@ -14416,6 +14417,24 @@ body.operationTheme .loginBrandDark .brandLogo {
   color: var(--brand-dark);
   font-size: 16px;
   margin: 0;
+}
+
+.campaignInsightReasonList {
+  background: rgba(255, 247, 237, 0.78);
+  border: 1px solid rgba(217, 119, 6, 0.18);
+  border-radius: 14px;
+  color: #8a4b00;
+  display: grid;
+  flex: 1 1 100%;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 5px;
+  line-height: 1.35;
+  padding: 10px 12px;
+}
+
+.campaignInsightWarningReason {
+  color: #946200;
 }
 
 @media (min-width: 980px) {

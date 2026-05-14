@@ -8,6 +8,12 @@ export type LeadEmailCampaignRecipientBreakdown = {
   recipientCount: number;
 };
 
+export type LeadEmailCampaignReasonBreakdown = {
+  message: string;
+  count: number;
+  status: "FAILED" | "SENT";
+};
+
 const FAILURE_EMAIL_STATUSES = new Set(["failed", "bounced", "complained", "suppressed"]);
 
 export function isLeadEmailProviderFailureStatus(status: string) {
@@ -111,4 +117,53 @@ export async function syncLeadEmailCampaignCounts(campaignId: string) {
       completedAt: activeCount > 0 ? null : campaign.completedAt ?? new Date()
     }
   });
+}
+
+export async function getLeadEmailCampaignReasonBreakdowns(campaignIds: string[]) {
+  if (campaignIds.length === 0) {
+    return new Map<string, LeadEmailCampaignReasonBreakdown[]>();
+  }
+
+  const groups = await prisma.leadEmailCampaignRecipient.groupBy({
+    by: ["campaignId", "status", "errorMessage"],
+    where: {
+      campaignId: {
+        in: campaignIds
+      },
+      errorMessage: {
+        not: null
+      },
+      status: {
+        in: ["FAILED", "SENT"]
+      }
+    },
+    _count: {
+      _all: true
+    },
+    orderBy: {
+      _count: {
+        errorMessage: "desc"
+      }
+    }
+  });
+
+  const breakdowns = new Map<string, LeadEmailCampaignReasonBreakdown[]>();
+
+  for (const campaignId of campaignIds) {
+    breakdowns.set(campaignId, []);
+  }
+
+  for (const group of groups) {
+    if (!group.errorMessage || (group.status !== "FAILED" && group.status !== "SENT")) {
+      continue;
+    }
+
+    breakdowns.get(group.campaignId)?.push({
+      message: group.errorMessage,
+      count: group._count._all,
+      status: group.status
+    });
+  }
+
+  return breakdowns;
 }
