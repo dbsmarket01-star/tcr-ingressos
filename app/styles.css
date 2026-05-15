@@ -2075,7 +2075,9 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.05));
   border: 1px solid rgba(255, 255, 255, 0.11);
   border-radius: 18px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 14px 28px rgba(0, 0, 0, 0.13);
   overflow: hidden;
 }
 
@@ -2101,6 +2103,14 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 
 .sideNavGroup:nth-child(5) summary {
   border-left-color: color-mix(in srgb, var(--surface) 52%, var(--brand) 48%);
+}
+
+.sideNavGroup:nth-child(6) summary {
+  border-left-color: #9fb8ff;
+}
+
+.sideNavGroup:nth-child(7) summary {
+  border-left-color: #d7a6ff;
 }
 
 .sideNavGroup summary strong {
@@ -2138,7 +2148,7 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 
 .sideNavGroup summary:hover,
 .sideNavGroup[open] summary {
-  background: rgba(255, 255, 255, 0.075);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.115), rgba(255, 255, 255, 0.055));
 }
 
 .sideNavGroupItems {
@@ -19535,7 +19545,6 @@ small,
 
 .adminShell:has(.crmReferencePage) {
   background: #f4f7fb;
-  grid-template-columns: 268px minmax(0, 1fr);
 }
 
 .adminShell:has(.crmReferencePage) .adminHeader {
@@ -19544,123 +19553,6 @@ small,
 
 .adminShell:has(.crmReferencePage) .adminMain {
   padding: 38px 34px 0;
-}
-
-.adminShell:has(.crmReferencePage) .sidebar {
-  background:
-    radial-gradient(circle at 12% 0%, rgba(15, 130, 89, 0.42), transparent 28%),
-    linear-gradient(180deg, #063c2f 0%, #023526 48%, #02291f 100%);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 30px 18px 22px;
-}
-
-.adminShell:has(.crmReferencePage) .sidebarBrand {
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  margin-bottom: 44px;
-  min-height: 40px;
-  padding: 0 10px;
-}
-
-.adminShell:has(.crmReferencePage) .sidebarBrand .brandLogo {
-  max-height: 42px;
-  max-width: 185px;
-}
-
-.adminShell:has(.crmReferencePage) .sidebarIntro {
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  margin-bottom: 28px;
-  padding: 0 10px;
-}
-
-.adminShell:has(.crmReferencePage) .sidebarIntro .eyebrow {
-  color: #ffffff;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-}
-
-.adminShell:has(.crmReferencePage) .sidebarIntro p {
-  color: rgba(255, 255, 255, 0.84);
-  font-size: 13px;
-  line-height: 1.72;
-  max-width: 205px;
-}
-
-.adminShell:has(.crmReferencePage) .sideNav {
-  gap: 10px;
-}
-
-.adminShell:has(.crmReferencePage) .sideNavGroup {
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-.adminShell:has(.crmReferencePage) .sideNavGroup summary {
-  align-items: center;
-  border-left: 0;
-  border-radius: 12px;
-  color: rgba(255, 255, 255, 0.78);
-  display: flex;
-  min-height: 42px;
-  padding: 10px 38px 10px 14px;
-}
-
-.adminShell:has(.crmReferencePage) .sideNavGroup summary::after {
-  color: rgba(255, 255, 255, 0.76);
-  content: "›";
-  font-size: 24px;
-  line-height: 1;
-  top: 9px;
-  transform: none;
-}
-
-.adminShell:has(.crmReferencePage) .sideNavGroup[open] summary::after {
-  content: "›";
-}
-
-.adminShell:has(.crmReferencePage) .sideNavGroup summary:hover,
-.adminShell:has(.crmReferencePage) .sideNavGroup[open] summary {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.adminShell:has(.crmReferencePage) .sideNavGroup summary strong {
-  color: #ffffff;
-  font-size: 14px;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.adminShell:has(.crmReferencePage) .sideNavGroupItems {
-  background: transparent;
-  border-top: 0;
-  gap: 8px;
-  padding: 6px 0 8px;
-}
-
-.adminShell:has(.crmReferencePage) .sideNav a {
-  align-items: center;
-  border-radius: 12px;
-  min-height: 42px;
-  padding: 10px 14px;
-}
-
-.adminShell:has(.crmReferencePage) .sideNav a::before {
-  display: none;
-}
-
-.adminShell:has(.crmReferencePage) .sideNav a.active {
-  background: linear-gradient(90deg, rgba(16, 185, 129, 0.34), rgba(16, 185, 129, 0.16));
-  box-shadow: inset 3px 0 0 #19d78e;
-}
-
-.adminShell:has(.crmReferencePage) .sideNav a strong {
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 14px;
 }
 
 .crmReferencePage {
