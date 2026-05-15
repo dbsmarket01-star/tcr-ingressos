@@ -6158,6 +6158,32 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   line-height: 1;
 }
 
+.eventsIndexToolbar {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+}
+
+.eventsIndexToolbar > div {
+  display: grid;
+  gap: 4px;
+}
+
+.eventsIndexToolbar span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.eventsIndexToolbar strong {
+  color: #111827;
+  font-size: 22px;
+  line-height: 1.15;
+}
+
 .eventsIndexPanel {
   display: grid;
   gap: 24px;
@@ -6262,6 +6288,8 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 .eventsIndexTableWrap {
   display: grid;
   gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
 }
 
 .eventsIndexTableHead {
@@ -6271,6 +6299,7 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   font-weight: 900;
   gap: 18px;
   grid-template-columns: minmax(280px, 1.4fr) minmax(130px, 0.58fr) minmax(210px, 1fr) minmax(170px, 0.78fr) minmax(140px, 0.62fr) minmax(140px, 0.58fr) minmax(176px, 0.72fr);
+  min-width: 1180px;
   padding: 0 14px;
   text-transform: uppercase;
 }
@@ -6289,6 +6318,7 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   display: grid;
   gap: 18px;
   grid-template-columns: minmax(280px, 1.4fr) minmax(130px, 0.58fr) minmax(210px, 1fr) minmax(170px, 0.78fr) minmax(140px, 0.62fr) minmax(140px, 0.58fr) minmax(176px, 0.72fr);
+  min-width: 1180px;
   padding: 14px;
 }
 
@@ -6555,29 +6585,6 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   .eventsIndexFilterActions {
     justify-content: flex-start;
   }
-
-  .eventsIndexTableHead {
-    display: none;
-  }
-
-  .eventsIndexRows {
-    gap: 16px;
-  }
-
-  .eventsIndexRowCard {
-    align-items: start;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    padding: 18px;
-  }
-
-  .eventsIndexEventCell,
-  .eventsIndexActionsCell {
-    grid-column: 1 / -1;
-  }
-
-  .eventsIndexActionsCell {
-    justify-content: flex-start;
-  }
 }
 
 @media (max-width: 1440px) {
@@ -6630,6 +6637,30 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   .eventsIndexFilterActions,
   .eventsIndexRowCard {
     grid-template-columns: 1fr;
+  }
+
+  .eventsIndexToolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .eventsIndexTableHead {
+    display: none;
+  }
+
+  .eventsIndexRowCard {
+    align-items: start;
+    min-width: 0;
+    padding: 18px;
+  }
+
+  .eventsIndexEventCell,
+  .eventsIndexActionsCell {
+    grid-column: 1 / -1;
+  }
+
+  .eventsIndexActionsCell {
+    justify-content: flex-start;
   }
 
   .eventsIndexSearchGroup,

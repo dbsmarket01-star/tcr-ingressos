@@ -142,17 +142,17 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       description="Visualize e gerencie todos os seus eventos em um só lugar."
     >
       <section className="eventsIndexShell">
-        <section className="eventsIndexHeaderCard">
-          <div>
-            <h2>Lista de congressos e eventos</h2>
-            <p>Visualize e gerencie todos os seus eventos em um só lugar.</p>
-          </div>
-          <Link className="button eventsIndexPrimaryAction" href="/admin/events/new">
-            Novo evento
-          </Link>
-        </section>
-
         <section className="eventsIndexPanel">
+          <div className="eventsIndexToolbar">
+            <div>
+              <span>Eventos cadastrados</span>
+              <strong>{filteredEvents.length} evento(s)</strong>
+            </div>
+            <Link className="button eventsIndexPrimaryAction" href="/admin/events/new">
+              Novo evento
+            </Link>
+          </div>
+
           <form className="eventsIndexFiltersBar">
             <div className="eventsIndexSearchGroup">
               <label htmlFor="events-index-search">Busca</label>
