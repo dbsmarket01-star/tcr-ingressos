@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
-import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
-import { cancelPendingOrderAction, expirePendingOrdersAction } from "@/features/orders/order.admin.actions";
 import {
   getOrdersSummary,
   listAdminOrders,
@@ -12,32 +10,176 @@ import { formatCurrency, formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
-const orderStatusLabels = {
+const orderStatusLabels: Record<string, string> = {
   DRAFT: "Rascunho",
   PENDING_PAYMENT: "Pendente",
   PAID: "Pago",
   CANCELED: "Cancelado",
-  EXPIRED: "Expirado",
-  REFUNDED: "Reembolsado"
+  EXPIRED: "Vencido",
+  REFUNDED: "Estornado"
+};
+
+const orderStatusClasses: Record<string, string> = {
+  DRAFT: "neutral",
+  PENDING_PAYMENT: "pending",
+  PAID: "paid",
+  CANCELED: "canceled",
+  EXPIRED: "expired",
+  REFUNDED: "canceled"
+};
+
+const paymentStatusLabels: Record<string, string> = {
+  CREATED: "Criado",
+  PENDING: "Aguardando",
+  APPROVED: "Aprovado",
+  FAILED: "Falhou",
+  CANCELED: "Cancelado",
+  REFUNDED: "Estornado"
+};
+
+type OrderSearchParams = {
+  eventId?: string;
+  status?: string;
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+  city?: string;
+  state?: string;
 };
 
 type OrdersPageProps = {
-  searchParams?: Promise<{
-    expired?: string;
-    released?: string;
-    eventId?: string;
-    status?: string;
-    search?: string;
-    startDate?: string;
-    endDate?: string;
-    canceled?: string;
-    orderError?: string;
-  }>;
+  searchParams?: Promise<OrderSearchParams>;
 };
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+
+  return null;
+}
+
+function extractPaymentPayload(rawPayload: unknown) {
+  const root = asRecord(rawPayload);
+  const nestedPayment = asRecord(root?.payment);
+  return nestedPayment ?? root;
+}
+
+function findCardLast4(value: unknown, depth = 0): string | null {
+  if (depth > 4) {
+    return null;
+  }
+
+  if (typeof value === "string") {
+    const digits = value.replace(/\D/g, "");
+    return digits.length >= 4 ? digits.slice(-4) : null;
+  }
+
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  for (const [key, nestedValue] of Object.entries(record)) {
+    const normalizedKey = key.toLowerCase();
+    if (
+      normalizedKey.includes("last4") ||
+      normalizedKey.includes("lastfour") ||
+      normalizedKey.includes("creditcardnumber") ||
+      normalizedKey.includes("cardnumber")
+    ) {
+      const last4 = findCardLast4(nestedValue, depth + 1);
+      if (last4) {
+        return last4;
+      }
+    }
+  }
+
+  for (const nestedValue of Object.values(record)) {
+    const last4 = findCardLast4(nestedValue, depth + 1);
+    if (last4) {
+      return last4;
+    }
+  }
+
+  return null;
+}
+
+function paymentMethodLabel(payment?: {
+  provider: string;
+  status: string;
+  pixQrCodePayload?: string | null;
+  rawPayload?: unknown;
+} | null) {
+  if (!payment) {
+    return {
+      title: "Não iniciado",
+      detail: "Sem cobrança"
+    };
+  }
+
+  const payload = extractPaymentPayload(payment.rawPayload);
+  const billingType = typeof payload?.billingType === "string" ? payload.billingType : null;
+  const manualLabel = typeof payload?.paymentMethodLabel === "string" ? payload.paymentMethodLabel : null;
+
+  if (manualLabel) {
+    return {
+      title: manualLabel,
+      detail: paymentStatusLabels[payment.status] ?? payment.status
+    };
+  }
+
+  if (payment.provider === "SIMULATED") {
+    return {
+      title: "Simulado",
+      detail: paymentStatusLabels[payment.status] ?? payment.status
+    };
+  }
+
+  if (billingType === "PIX" || payment.pixQrCodePayload) {
+    return {
+      title: "Pix",
+      detail: payment.status === "APPROVED" ? "Aprovado" : "Aguardando"
+    };
+  }
+
+  if (billingType === "BOLETO") {
+    return {
+      title: "Boleto",
+      detail: payment.status === "APPROVED" ? "Aprovado" : "Não pago"
+    };
+  }
+
+  if (billingType === "CREDIT_CARD") {
+    const last4 = findCardLast4(payload);
+    return {
+      title: last4 ? `Cartão •••• ${last4}` : "Cartão",
+      detail: payment.status === "APPROVED" ? "Aprovado" : paymentStatusLabels[payment.status] ?? payment.status
+    };
+  }
+
+  return {
+    title: "Outros",
+    detail: paymentStatusLabels[payment.status] ?? payment.status
+  };
+}
+
+function buildExportHref(params: OrderSearchParams) {
+  const query = new URLSearchParams({
+    ...(params.eventId ? { eventId: params.eventId } : {}),
+    ...(params.status ? { status: params.status } : {}),
+    ...(params.search ? { search: params.search } : {}),
+    ...(params.startDate ? { startDate: params.startDate } : {}),
+    ...(params.endDate ? { endDate: params.endDate } : {}),
+    ...(params.city ? { city: params.city } : {}),
+    ...(params.state ? { state: params.state } : {})
+  });
+
+  return `/admin/orders/export?${query.toString()}`;
+}
 
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const admin = await requirePermission("ORDERS");
-  const organizationContext = await getCurrentOrganizationContext();
   const params = searchParams ? await searchParams : {};
   const allowedEventIds = getAdminAllowedEventIds(admin);
   const [{ orders, totalCount }, events, summary] = await Promise.all([
@@ -45,234 +187,209 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
     listOrderFilterEventsForOrganization(admin.organizationId, allowedEventIds),
     getOrdersSummary(params, admin.organizationId, allowedEventIds)
   ]);
-  const exportHref = `/admin/orders/export?${new URLSearchParams({
-    ...(params.eventId ? { eventId: params.eventId } : {}),
-    ...(params.status ? { status: params.status } : {}),
-    ...(params.search ? { search: params.search } : {}),
-    ...(params.startDate ? { startDate: params.startDate } : {}),
-    ...(params.endDate ? { endDate: params.endDate } : {})
-  }).toString()}`;
+
+  const cityOptions = Array.from(new Set(events.map((event) => event.city).filter(Boolean))).sort((left, right) =>
+    left.localeCompare(right, "pt-BR")
+  );
+  const stateOptions = Array.from(new Set(events.map((event) => event.state).filter(Boolean))).sort((left, right) =>
+    left.localeCompare(right, "pt-BR")
+  );
+  const exportHref = buildExportHref(params);
 
   return (
     <AdminShell
       title="Pedidos"
-      description="Gerencie pedidos gerados que ainda não foram pagos, foram cancelados, expiraram ou acabaram reembolsados."
+      description="Gerencie pedidos gerados: pagos, pendentes, vencidos, cancelados ou estornados."
     >
-      <section className="operationCommandStrip spacedSection" aria-label="Atalhos da área de pedidos">
-        <article className="operationCommandCard">
-          <span className="eyebrow">Atendimento comercial</span>
-          <h2>Pedidos gerados da {organizationContext.brandName} com leitura rápida e ação direta.</h2>
-          <p>Aqui entram só os pedidos que ainda pedem ação: pendentes, cancelados, expirados, rascunhos ou reembolsados.</p>
-        </article>
-        <div className="operationCommandActions">
-          <Link className="secondaryButton smallButton" href="/admin">
-            Dashboard
-          </Link>
-          <Link className="secondaryButton smallButton" href="/admin/events">
-            Eventos
-          </Link>
-          <Link className="secondaryButton smallButton" href="/admin/support">
-            Atendimento
-          </Link>
-          <Link className="secondaryButton smallButton" href="/admin/finance">
-            Financeiro
-          </Link>
+      <section className="ordersDeskPage" aria-label="Gestão de pedidos">
+        <div className="ordersSummaryGrid">
+          <article className="ordersSummaryCard">
+            <span className="ordersMetricIcon ordersMetricIconTotal">▣</span>
+            <div>
+              <span>Total de pedidos</span>
+              <strong>{summary.totalOrders}</strong>
+              <small>Todos os status</small>
+            </div>
+          </article>
+          <article className="ordersSummaryCard">
+            <span className="ordersMetricIcon ordersMetricIconPaid">✓</span>
+            <div>
+              <span>Pagos</span>
+              <strong>{summary.paidOrders}</strong>
+              <small>Pagamento confirmado</small>
+            </div>
+          </article>
+          <article className="ordersSummaryCard">
+            <span className="ordersMetricIcon ordersMetricIconPending">◷</span>
+            <div>
+              <span>Pendentes</span>
+              <strong>{summary.pendingOrders}</strong>
+              <small>Aguardando pagamento</small>
+            </div>
+          </article>
+          <article className="ordersSummaryCard">
+            <span className="ordersMetricIcon ordersMetricIconExpired">×</span>
+            <div>
+              <span>Vencidos/Cancelados</span>
+              <strong>{summary.canceledOrders}</strong>
+              <small>Sem venda ativa</small>
+            </div>
+          </article>
+          <article className="ordersSummaryCard">
+            <span className="ordersMetricIcon ordersMetricIconRevenue">$</span>
+            <div>
+              <span>Faturamento total</span>
+              <strong>{formatCurrency(summary.totalInCents)}</strong>
+              <small>Valor bruto pago</small>
+            </div>
+          </article>
         </div>
-      </section>
 
-      <section className="adminPanelHero compact">
-        <div>
-          <span className="sectionEyebrow">Atendimento comercial</span>
-          <h2>Pedidos que ainda exigem gestão</h2>
-          <p className="muted">A ideia aqui é simples: localizar o pedido, entender o que aconteceu e decidir a próxima ação em poucos cliques.</p>
-        </div>
-      </section>
-
-      <section className="grid dashboardGrid">
-        <article className="card dashboardHeroMetric metric">
-          <span className="muted">Pedidos no recorte</span>
-          <strong>{summary.pendingOrders + summary.canceledOrders}</strong>
-          <small>Pendentes, cancelados, expirados ou reembolsados</small>
-        </article>
-        <article className="card metric">
-          <span className="muted">Pendentes</span>
-          <strong>{summary.pendingOrders}</strong>
-        </article>
-        <article className="card metric">
-          <span className="muted">Cancelados/expirados</span>
-          <strong>{summary.canceledOrders}</strong>
-        </article>
-        <article className="card metric">
-          <span className="muted">Valor em pendência</span>
-          <strong>{formatCurrency(summary.totalInCents)}</strong>
-        </article>
-      </section>
-
-      <section className="card orderMaintenance adminPanelBlock">
-        <div>
-          <h2>Reservas vencidas</h2>
-          <p className="muted">
-            Use este botão quando quiser forçar a limpeza do estoque reservado por pedidos que já passaram do prazo.
-          </p>
-          {params.expired ? (
-            <p className="success">
-              {params.expired} pedido(s) expirado(s), {params.released ?? "0"} ingresso(s) liberado(s).
-            </p>
-          ) : null}
-          {params.canceled ? (
-            <p className="success">
-              Pedido {params.canceled} cancelado. {params.released ?? "0"} ingresso(s) liberado(s).
-            </p>
-          ) : null}
-          {params.orderError ? <div className="errorBox">{params.orderError}</div> : null}
-        </div>
-        <form action={expirePendingOrdersAction}>
-          <button className="secondaryButton" type="submit">
-            Liberar reservas vencidas
-          </button>
-        </form>
-        <Link className="button" href={exportHref}>
-          Exportar CSV
-        </Link>
-      </section>
-
-      <section className="card financeFilters adminPanelBlock">
-        <div className="filterPanelHeader">
-          <div>
-            <h2>Filtros de atendimento</h2>
-            <p className="muted">
-              Busque por cliente, pedido, igreja, cupom ou evento para localizar compras e resolver suporte mais rápido.
-            </p>
+        <section className="ordersFilterPanel" aria-label="Filtros de pedidos">
+          <div className="ordersFilterHeader">
+            <span aria-hidden="true">⌁</span>
+            <h2>Filtros</h2>
           </div>
-          <Link className="button" href={exportHref}>
-            Exportar CSV
-          </Link>
-        </div>
-        <form className="financeFiltersForm">
-          <label className="field">
-            <span>Buscar</span>
-            <input
-              name="search"
-              placeholder="Pedido, cliente, email, CPF, igreja, cupom ou evento"
-              defaultValue={params.search || ""}
-            />
-          </label>
-          <label className="field">
-            <span>Evento</span>
-            <select name="eventId" defaultValue={params.eventId || ""}>
-              <option value="">Todos os eventos</option>
-              {events.map((event) => (
-                <option value={event.id} key={event.id}>
-                  {event.title}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span>Status</span>
-            <select name="status" defaultValue={params.status || ""}>
-              <option value="">Todos</option>
-              {Object.entries(orderStatusLabels).map(([value, label]) => (
-                <option value={value} key={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span>Início</span>
-            <input type="date" name="startDate" defaultValue={params.startDate || ""} />
-          </label>
-          <label className="field">
-            <span>Fim</span>
-            <input type="date" name="endDate" defaultValue={params.endDate || ""} />
-          </label>
-          <button className="button" type="submit">
-            Filtrar
-          </button>
-          <Link className="secondaryButton" href="/admin/orders">
-            Limpar
-          </Link>
-        </form>
-        <p className="muted filterSummary">
-          Mostrando {orders.length} de {totalCount} pedido(s). A exportação CSV usa estes mesmos filtros.
-        </p>
-      </section>
+          <form className="ordersFilterForm">
+            <div className="ordersFilterGrid">
+              <label className="field ordersPeriodField">
+                <span>Período</span>
+                <div className="ordersDateRange">
+                  <input type="date" name="startDate" defaultValue={params.startDate || ""} aria-label="Data inicial" />
+                  <input type="date" name="endDate" defaultValue={params.endDate || ""} aria-label="Data final" />
+                </div>
+              </label>
+              <label className="field">
+                <span>Evento</span>
+                <select name="eventId" defaultValue={params.eventId || ""}>
+                  <option value="">Todos os eventos</option>
+                  {events.map((event) => (
+                    <option value={event.id} key={event.id}>
+                      {event.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Cidade (opcional)</span>
+                <select name="city" defaultValue={params.city || ""}>
+                  <option value="">Todas as cidades</option>
+                  {cityOptions.map((city) => (
+                    <option value={city} key={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Estado (opcional)</span>
+                <select name="state" defaultValue={params.state || ""}>
+                  <option value="">Todos os estados</option>
+                  {stateOptions.map((state) => (
+                    <option value={state} key={state}>
+                      {state}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Status</span>
+                <select name="status" defaultValue={params.status || ""}>
+                  <option value="">Todos os status</option>
+                  {Object.entries(orderStatusLabels).map(([value, label]) => (
+                    <option value={value} key={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
 
-      <section className="card adminPanelBlock">
-        <div className="sectionHeader inlineHeader">
-          <div>
-            <h2>Lista de pedidos gerados</h2>
-            <p className="muted">Mantivemos aqui só o que ajuda de verdade na gestão de pedidos que ainda não viraram venda confirmada ou precisaram de intervenção.</p>
+            <label className="field ordersSearchField">
+              <span>Buscar</span>
+              <input name="search" placeholder="Pedido, nome, e-mail, telefone, CPF ou evento" defaultValue={params.search || ""} />
+            </label>
+
+            <div className="ordersFilterActions">
+              <button className="ordersPrimaryButton" type="submit">
+                Filtrar
+              </button>
+              <Link className="ordersSecondaryButton" href="/admin/orders">
+                Limpar filtros
+              </Link>
+              <Link className="ordersSecondaryButton ordersExportButton" href={exportHref}>
+                Exportar PDF
+              </Link>
+            </div>
+          </form>
+        </section>
+
+        <section className="ordersTablePanel" aria-label="Lista de pedidos">
+          <div className="ordersTableHeader">
+            <div>
+              <h2>Lista de pedidos</h2>
+              <p>Mostrando {orders.length} de {totalCount} pedido(s)</p>
+            </div>
           </div>
-        </div>
-        {orders.length === 0 ? (
-          <div className="empty">Nenhum pedido registrado ainda.</div>
-        ) : (
-          <div className="tableScroll wideTableScroll adminTableWrap">
-          <table className="table operationalTable ordersTable">
-            <thead>
-              <tr>
-                <th>Pedido</th>
-                <th>Cliente</th>
-                <th>Igreja</th>
-                <th>Evento</th>
-                <th>Status</th>
-                <th>Total</th>
-                <th>Expira em</th>
-                <th>Criado em</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((order) => (
-                <tr key={order.id}>
-                  <td>
-                    <Link href={`/admin/orders/${order.code}`}>
-                      <strong>{order.code}</strong>
-                    </Link>
-                  </td>
-                  <td>
-                    {order.customer.name}
-                    <br />
-                    <span className="muted">{order.customer.email}</span>
-                  </td>
-                  <td>{order.churchName || "-"}</td>
-                  <td>{order.event.title}</td>
-                  <td>
-                    <span className={`status ${order.status === "PAID" ? "published" : "draft"}`}>
-                      {orderStatusLabels[order.status]}
-                    </span>
-                    <br />
-                    <span className="muted">Pagamento: {order.payment?.status ?? "-"}</span>
-                  </td>
-                  <td>{formatCurrency(order.totalInCents)}</td>
-                  <td>{order.expiresAt ? formatDateTime(order.expiresAt) : "-"}</td>
-                  <td>{formatDateTime(order.createdAt)}</td>
-                  <td>
-                    <div className="actionRow">
-                      <Link className="secondaryButton smallButton" href={`/admin/orders/${order.code}`}>
-                        Detalhe
-                      </Link>
-                      <Link className="secondaryButton smallButton" href={`/admin/support?q=${encodeURIComponent(order.code)}`}>
-                        Atender
-                      </Link>
-                      {order.status === "PENDING_PAYMENT" || order.status === "EXPIRED" ? (
-                        <form action={cancelPendingOrderAction}>
-                          <input type="hidden" name="orderCode" value={order.code} />
-                          <button className="secondaryButton smallButton" type="submit">
-                            Cancelar
-                          </button>
-                        </form>
-                      ) : null}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-        )}
+
+          {orders.length === 0 ? (
+            <div className="ordersEmptyState">Nenhum pedido encontrado com estes filtros.</div>
+          ) : (
+            <div className="ordersTableWrap">
+              <table className="ordersDeskTable">
+                <thead>
+                  <tr>
+                    <th>Pedido</th>
+                    <th>Cliente</th>
+                    <th>Evento</th>
+                    <th>Cidade</th>
+                    <th>Data do pedido</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Pagamento</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order) => {
+                    const payment = paymentMethodLabel(order.payment);
+
+                    return (
+                      <tr key={order.id}>
+                        <td className="ordersCodeCell">
+                          <strong>{order.code}</strong>
+                        </td>
+                        <td className="ordersCustomerCell">
+                          <strong>{order.customer.name}</strong>
+                          <span>{order.customer.email}</span>
+                          <span>{order.customer.phone || "Telefone não informado"}</span>
+                        </td>
+                        <td className="ordersEventCell">
+                          <strong>{order.event.title}</strong>
+                          <span>{order.event.venueName}</span>
+                        </td>
+                        <td className="ordersCityCell">
+                          <strong>{order.event.city}</strong>
+                          <span>{order.event.state}</span>
+                        </td>
+                        <td className="ordersDateCell">{formatDateTime(order.createdAt)}</td>
+                        <td className="ordersValueCell">{formatCurrency(order.totalInCents)}</td>
+                        <td>
+                          <span className={`ordersStatusBadge ${orderStatusClasses[order.status] ?? "neutral"}`}>
+                            {orderStatusLabels[order.status] ?? order.status}
+                          </span>
+                        </td>
+                        <td className="ordersPaymentCell">
+                          <strong>{payment.title}</strong>
+                          <span>{payment.detail}</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
       </section>
     </AdminShell>
   );

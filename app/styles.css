@@ -21359,3 +21359,371 @@ small,
     min-width: 0;
   }
 }
+
+.ordersDeskPage {
+  display: grid;
+  gap: 18px;
+}
+
+.ordersSummaryGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(5, minmax(170px, 1fr));
+}
+
+.ordersSummaryCard {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
+  display: grid;
+  gap: 14px;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 116px;
+  padding: 18px;
+}
+
+.ordersSummaryCard span:not(.ordersMetricIcon) {
+  color: #637083;
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.25;
+  white-space: normal;
+}
+
+.ordersSummaryCard strong {
+  color: #111827;
+  display: block;
+  font-size: 25px;
+  line-height: 1.1;
+  margin-top: 7px;
+  white-space: nowrap;
+}
+
+.ordersSummaryCard small {
+  color: #64748b;
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 7px;
+}
+
+.ordersMetricIcon {
+  align-items: center;
+  border-radius: 50%;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 24px;
+  font-weight: 900;
+  height: 58px;
+  justify-content: center;
+  line-height: 1;
+  width: 58px;
+}
+
+.ordersMetricIconTotal {
+  background: #e8f6ef;
+  color: #08753a;
+}
+
+.ordersMetricIconPaid,
+.ordersMetricIconRevenue {
+  background: #dcf8e8;
+  color: #008744;
+}
+
+.ordersMetricIconPending {
+  background: #fff1d9;
+  color: #d96c00;
+}
+
+.ordersMetricIconExpired {
+  background: #ffe2e7;
+  color: #e11d48;
+}
+
+.ordersFilterPanel,
+.ordersTablePanel {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.05);
+  padding: 20px;
+}
+
+.ordersFilterHeader {
+  align-items: center;
+  display: flex;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+
+.ordersFilterHeader span {
+  color: #0f513f;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.ordersFilterHeader h2,
+.ordersTableHeader h2 {
+  color: #111827;
+  font-size: 19px;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.ordersFilterForm {
+  display: grid;
+  gap: 14px;
+}
+
+.ordersFilterGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1.2fr 1.15fr 1fr 1fr 1fr;
+}
+
+.ordersDateRange {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ordersSearchField {
+  max-width: 680px;
+}
+
+.ordersFilterActions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.ordersPrimaryButton,
+.ordersSecondaryButton {
+  align-items: center;
+  border-radius: 8px;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 22px;
+  text-decoration: none;
+}
+
+.ordersPrimaryButton {
+  background: linear-gradient(135deg, #00593f, #007848);
+  border: 1px solid rgba(0, 89, 63, 0.42);
+  box-shadow: 0 16px 26px rgba(0, 89, 63, 0.18);
+  color: #fff;
+}
+
+.ordersSecondaryButton {
+  background: #fff;
+  border: 1px solid #dce5ea;
+  color: #111827;
+}
+
+.ordersExportButton {
+  margin-left: auto;
+  min-width: 190px;
+}
+
+.ordersTableHeader {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.ordersTableHeader p {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 6px 0 0;
+}
+
+.ordersTableWrap {
+  border: 1px solid #dfe7ea;
+  border-radius: 14px;
+  overflow-x: auto;
+}
+
+.ordersDeskTable {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 1180px;
+  width: 100%;
+}
+
+.ordersDeskTable th {
+  background: linear-gradient(180deg, #fbfdfe, #f5f8fa);
+  border-bottom: 1px solid #dfe7ea;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  padding: 13px 14px;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ordersDeskTable td {
+  border-bottom: 1px solid #edf2f4;
+  color: #111827;
+  font-size: 14px;
+  line-height: 1.35;
+  padding: 15px 14px;
+  vertical-align: middle;
+}
+
+.ordersDeskTable tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.ordersDeskTable tbody tr:hover {
+  background: #fbfdfc;
+}
+
+.ordersCodeCell,
+.ordersDateCell,
+.ordersValueCell {
+  white-space: nowrap;
+}
+
+.ordersCodeCell strong {
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
+.ordersCustomerCell,
+.ordersEventCell,
+.ordersCityCell,
+.ordersPaymentCell {
+  min-width: 180px;
+}
+
+.ordersCustomerCell strong,
+.ordersEventCell strong,
+.ordersCityCell strong,
+.ordersPaymentCell strong {
+  display: block;
+  font-weight: 900;
+  max-width: 280px;
+  overflow-wrap: anywhere;
+}
+
+.ordersCustomerCell span,
+.ordersEventCell span,
+.ordersCityCell span,
+.ordersPaymentCell span {
+  color: #64748b;
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+
+.ordersValueCell {
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.ordersStatusBadge {
+  align-items: center;
+  border-radius: 8px;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 40px;
+  min-width: 150px;
+  padding: 0 16px;
+  white-space: nowrap;
+}
+
+.ordersStatusBadge.paid {
+  background: #dcf8e8;
+  border: 1px solid #a9e7c1;
+  color: #08753a;
+}
+
+.ordersStatusBadge.pending {
+  background: #fff1d9;
+  border: 1px solid #ffd28a;
+  color: #b45309;
+}
+
+.ordersStatusBadge.expired {
+  background: #ffe0e0;
+  border: 1px solid #ffb8b8;
+  color: #dc2626;
+}
+
+.ordersStatusBadge.canceled {
+  background: #ffe8ec;
+  border: 1px solid #ffc4cf;
+  color: #be123c;
+}
+
+.ordersStatusBadge.neutral {
+  background: #edf2f7;
+  border: 1px solid #d8e1ea;
+  color: #475569;
+}
+
+.ordersEmptyState {
+  align-items: center;
+  border: 1px dashed #cfdbe2;
+  border-radius: 12px;
+  color: #64748b;
+  display: flex;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 160px;
+  text-align: center;
+}
+
+@media (max-width: 1320px) {
+  .ordersSummaryGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ordersFilterGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .ordersSummaryGrid,
+  .ordersFilterGrid,
+  .ordersDateRange {
+    grid-template-columns: 1fr;
+  }
+
+  .ordersFilterActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ordersPrimaryButton,
+  .ordersSecondaryButton,
+  .ordersExportButton {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .ordersFilterPanel,
+  .ordersTablePanel {
+    border-radius: 14px;
+    padding: 16px;
+  }
+}

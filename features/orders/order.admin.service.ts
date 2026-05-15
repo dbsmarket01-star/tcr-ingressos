@@ -8,6 +8,8 @@ export type AdminOrderFilters = {
   search?: string;
   startDate?: string;
   endDate?: string;
+  city?: string;
+  state?: string;
 };
 
 type EventScope = string[] | null | undefined;
@@ -55,23 +57,16 @@ function buildOrderWhere(
   const endDate = parseEndDate(filters.endDate);
   const status = parseStatus(filters.status);
   const search = filters.search?.trim();
+  const eventWhere: Prisma.EventWhereInput = {
+    ...buildOrderEventWhere(organizationId, allowedEventIds),
+    ...(filters.city ? { city: filters.city } : {}),
+    ...(filters.state ? { state: filters.state } : {})
+  };
 
   return {
-    event: buildOrderEventWhere(organizationId, allowedEventIds),
+    event: eventWhere,
     ...(filters.eventId ? { eventId: filters.eventId } : {}),
-    ...(status
-      ? { status }
-      : {
-          status: {
-            in: [
-              OrderStatus.DRAFT,
-              OrderStatus.PENDING_PAYMENT,
-              OrderStatus.CANCELED,
-              OrderStatus.EXPIRED,
-              OrderStatus.REFUNDED
-            ]
-          }
-        }),
+    ...(status ? { status } : {}),
     ...(startDate || endDate
       ? {
           createdAt: {
@@ -102,7 +97,9 @@ export async function listOrderFilterEvents() {
     orderBy: [{ startsAt: "desc" }, { title: "asc" }],
     select: {
       id: true,
-      title: true
+      title: true,
+      city: true,
+      state: true
     }
   });
 }
@@ -124,7 +121,9 @@ export async function listOrderFilterEventsForOrganization(organizationId: strin
     orderBy: [{ startsAt: "desc" }, { title: "asc" }],
     select: {
       id: true,
-      title: true
+      title: true,
+      city: true,
+      state: true
     }
   });
 }
@@ -170,6 +169,13 @@ export async function getOrdersSummary(
   await expirePendingOrders({ limit: 100, organizationId, allowedEventIds });
 
   const where = buildOrderWhere(filters, organizationId, allowedEventIds);
+  const requestedStatus = parseStatus(filters.status);
+  const paidWhere: Prisma.OrderWhereInput = {
+    ...where,
+    ...(requestedStatus && requestedStatus !== OrderStatus.PAID
+      ? { id: { in: [] } }
+      : { status: OrderStatus.PAID })
+  };
 
   const [statusGroups, totals] = await Promise.all([
     prisma.order.groupBy({
@@ -180,7 +186,7 @@ export async function getOrdersSummary(
       }
     }),
     prisma.order.aggregate({
-      where,
+      where: paidWhere,
       _sum: {
         totalInCents: true,
         serviceFeeInCents: true,
@@ -190,6 +196,7 @@ export async function getOrdersSummary(
     })
   ]);
 
+  const totalOrders = statusGroups.reduce((sum, item) => sum + item._count._all, 0);
   const countByStatus = statusGroups.reduce(
     (acc, item) => ({
       ...acc,
@@ -199,9 +206,10 @@ export async function getOrdersSummary(
   );
 
   return {
+    totalOrders,
     paidOrders: countByStatus.PAID ?? 0,
     pendingOrders: countByStatus.PENDING_PAYMENT ?? 0,
-    canceledOrders: (countByStatus.CANCELED ?? 0) + (countByStatus.EXPIRED ?? 0),
+    canceledOrders: (countByStatus.CANCELED ?? 0) + (countByStatus.EXPIRED ?? 0) + (countByStatus.REFUNDED ?? 0),
     totalInCents: totals._sum.totalInCents ?? 0,
     serviceFeeInCents: totals._sum.serviceFeeInCents ?? 0,
     cardInterestInCents: totals._sum.cardInterestInCents ?? 0,
