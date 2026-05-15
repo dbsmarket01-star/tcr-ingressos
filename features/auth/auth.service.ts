@@ -34,6 +34,7 @@ export type AdminArea =
   | "OPERATIONS"
   | "EVENTS"
   | "CRM"
+  | "MARKETING"
   | "ORDERS"
   | "SUPPORT"
   | "FINANCE"
@@ -57,6 +58,7 @@ const areaPermissions: Record<AdminArea, AdminRole[]> = {
   OPERATIONS: [AdminRole.OWNER],
   EVENTS: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.STAFF],
   CRM: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.SUPPORT, AdminRole.STAFF],
+  MARKETING: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.SUPPORT, AdminRole.STAFF],
   ORDERS: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.FINANCE, AdminRole.SUPPORT, AdminRole.STAFF],
   SUPPORT: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.SUPPORT, AdminRole.STAFF],
   FINANCE: [AdminRole.OWNER, AdminRole.MANAGER, AdminRole.FINANCE],
