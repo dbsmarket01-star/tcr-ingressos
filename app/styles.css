@@ -14420,20 +14420,40 @@ body.operationTheme .loginBrandDark .brandLogo {
 }
 
 .campaignInsightReasonList {
-  background: rgba(255, 247, 237, 0.78);
-  border: 1px solid rgba(217, 119, 6, 0.18);
+  background: linear-gradient(135deg, rgba(246, 250, 252, 0.96), rgba(255, 251, 245, 0.94));
+  border: 1px solid rgba(25, 82, 118, 0.12);
   border-radius: 14px;
-  color: #8a4b00;
-  display: grid;
+  color: #355164;
+  display: flex;
+  flex-wrap: wrap;
   flex: 1 1 100%;
   font-size: 13px;
-  font-weight: 700;
-  gap: 5px;
+  gap: 8px;
   line-height: 1.35;
-  padding: 10px 12px;
+  padding: 12px;
+}
+
+.campaignInsightReasonPill {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(25, 82, 118, 0.12);
+  border-radius: 999px;
+  display: inline-flex;
+  gap: 6px;
+  max-width: 100%;
+  padding: 7px 10px;
+}
+
+.campaignInsightReasonPill b {
+  color: #8a4b00;
+  white-space: nowrap;
 }
 
 .campaignInsightWarningReason {
+  color: #536b7b;
+}
+
+.campaignInsightWarningReason b {
   color: #946200;
 }
 
@@ -19432,5 +19452,772 @@ small,
   .commercialKanbanMeta,
   .commercialKanbanActions {
     grid-template-columns: 1fr;
+  }
+}
+
+.adminShell:has(.crmReferencePage) {
+  background: #f4f7fb;
+  grid-template-columns: 268px minmax(0, 1fr);
+}
+
+.adminShell:has(.crmReferencePage) .adminHeader {
+  display: none;
+}
+
+.adminShell:has(.crmReferencePage) .adminMain {
+  padding: 38px 34px 0;
+}
+
+.adminShell:has(.crmReferencePage) .sidebar {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(15, 130, 89, 0.42), transparent 28%),
+    linear-gradient(180deg, #063c2f 0%, #023526 48%, #02291f 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 30px 18px 22px;
+}
+
+.adminShell:has(.crmReferencePage) .sidebarBrand {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  margin-bottom: 44px;
+  min-height: 40px;
+  padding: 0 10px;
+}
+
+.adminShell:has(.crmReferencePage) .sidebarBrand .brandLogo {
+  max-height: 42px;
+  max-width: 185px;
+}
+
+.adminShell:has(.crmReferencePage) .sidebarIntro {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  margin-bottom: 28px;
+  padding: 0 10px;
+}
+
+.adminShell:has(.crmReferencePage) .sidebarIntro .eyebrow {
+  color: #ffffff;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.adminShell:has(.crmReferencePage) .sidebarIntro p {
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 13px;
+  line-height: 1.72;
+  max-width: 205px;
+}
+
+.adminShell:has(.crmReferencePage) .sideNav {
+  gap: 10px;
+}
+
+.adminShell:has(.crmReferencePage) .sideNavGroup {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.adminShell:has(.crmReferencePage) .sideNavGroup summary {
+  align-items: center;
+  border-left: 0;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.78);
+  display: flex;
+  min-height: 42px;
+  padding: 10px 38px 10px 14px;
+}
+
+.adminShell:has(.crmReferencePage) .sideNavGroup summary::after {
+  color: rgba(255, 255, 255, 0.76);
+  content: "›";
+  font-size: 24px;
+  line-height: 1;
+  top: 9px;
+  transform: none;
+}
+
+.adminShell:has(.crmReferencePage) .sideNavGroup[open] summary::after {
+  content: "›";
+}
+
+.adminShell:has(.crmReferencePage) .sideNavGroup summary:hover,
+.adminShell:has(.crmReferencePage) .sideNavGroup[open] summary {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.adminShell:has(.crmReferencePage) .sideNavGroup summary strong {
+  color: #ffffff;
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.adminShell:has(.crmReferencePage) .sideNavGroupItems {
+  background: transparent;
+  border-top: 0;
+  gap: 8px;
+  padding: 6px 0 8px;
+}
+
+.adminShell:has(.crmReferencePage) .sideNav a {
+  align-items: center;
+  border-radius: 12px;
+  min-height: 42px;
+  padding: 10px 14px;
+}
+
+.adminShell:has(.crmReferencePage) .sideNav a::before {
+  display: none;
+}
+
+.adminShell:has(.crmReferencePage) .sideNav a.active {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.34), rgba(16, 185, 129, 0.16));
+  box-shadow: inset 3px 0 0 #19d78e;
+}
+
+.adminShell:has(.crmReferencePage) .sideNav a strong {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+}
+
+.crmReferencePage {
+  color: #142033;
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+
+.crmReferencePage svg {
+  fill: none;
+  height: 20px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  width: 20px;
+}
+
+.crmReferenceHeader {
+  align-items: start;
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+}
+
+.crmReferenceHeader h1 {
+  color: #10192d;
+  font-size: 28px;
+  line-height: 1.1;
+  margin: 0 0 8px;
+}
+
+.crmReferenceHeader p {
+  color: #5d6b82;
+  font-size: 14px;
+  margin: 0;
+}
+
+.crmReferenceTools {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+}
+
+.crmTopSearch {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #dce4ef;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.035);
+  color: #627089;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto minmax(280px, 420px);
+  height: 50px;
+  padding: 0 16px;
+}
+
+.crmTopSearch input {
+  border: 0;
+  color: #172033;
+  font-size: 14px;
+  outline: 0;
+}
+
+.crmGhostIconButton,
+.crmPlainIconButton {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #24344f;
+  display: inline-flex;
+  height: 40px;
+  justify-content: center;
+  padding: 0;
+  position: relative;
+  width: 40px;
+}
+
+.crmGhostIconButton span {
+  align-items: center;
+  background: #13803d;
+  border: 2px solid #f4f7fb;
+  border-radius: 999px;
+  color: #ffffff;
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 900;
+  height: 20px;
+  justify-content: center;
+  position: absolute;
+  right: 1px;
+  top: 1px;
+  width: 20px;
+}
+
+.crmMetricStrip {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid #e1e7ef;
+  border-radius: 12px;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.06);
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  padding: 20px 14px;
+}
+
+.crmMetricCard {
+  align-items: center;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 252, 250, 0.98));
+  border: 1px solid #dbe6ef;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.035);
+  display: flex;
+  gap: 16px;
+  min-height: 92px;
+  padding: 18px;
+}
+
+.crmMetricCard div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.crmMetricCard span:not(.crmMetricIcon) {
+  color: #596a83;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.crmMetricCard strong {
+  color: #10192d;
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.crmMetricCard small {
+  color: #627089;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.crmMetricIcon {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  flex: 0 0 54px;
+  height: 54px;
+  justify-content: center;
+  width: 54px;
+}
+
+.crmMetricCard.toneAPPROVED .crmMetricIcon {
+  background: #d9f7e3;
+  color: #0f8d43;
+}
+
+.crmMetricCard.toneORDERS .crmMetricIcon {
+  background: #dcecff;
+  color: #2563eb;
+}
+
+.crmMetricCard.tonePENDING .crmMetricIcon {
+  background: #fff2ce;
+  color: #d18a00;
+}
+
+.crmMetricCard.toneDELIVERED .crmMetricIcon {
+  background: #d9f5f6;
+  color: #0f8c96;
+}
+
+.crmMetricCard.toneCHECKED_IN .crmMetricIcon {
+  background: #efe0ff;
+  color: #7a3ed8;
+}
+
+.crmFilterBar {
+  background: #ffffff;
+  border: 1px solid #e1e7ef;
+  border-radius: 12px;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.055);
+  padding: 18px 20px;
+}
+
+.crmFilterForm {
+  align-items: end;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1.35fr 1fr 1.05fr 1fr auto auto;
+}
+
+.crmFilterForm label {
+  display: grid;
+  gap: 8px;
+}
+
+.crmFilterForm label > span {
+  color: #334158;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.crmFilterForm input,
+.crmFilterForm select,
+.crmInputWithIcon {
+  background: #ffffff;
+  border: 1px solid #dbe4ee;
+  border-radius: 8px;
+  color: #24344f;
+  font-size: 14px;
+  height: 44px;
+  min-width: 0;
+}
+
+.crmFilterForm input,
+.crmFilterForm select {
+  padding: 0 14px;
+}
+
+.crmInputWithIcon {
+  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding-right: 12px;
+}
+
+.crmInputWithIcon input {
+  border: 0;
+  height: 42px;
+  outline: 0;
+}
+
+.crmInputWithIcon svg {
+  color: #40506a;
+  height: 18px;
+  width: 18px;
+}
+
+.crmPrimaryButton,
+.crmSecondaryButton {
+  align-items: center;
+  border-radius: 8px;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 900;
+  gap: 8px;
+  height: 44px;
+  justify-content: center;
+  padding: 0 18px;
+  white-space: nowrap;
+}
+
+.crmPrimaryButton {
+  background: linear-gradient(180deg, #0b6d4a, #085338);
+  border: 1px solid #07543a;
+  box-shadow: 0 12px 26px rgba(8, 83, 56, 0.22);
+  color: #ffffff;
+}
+
+.crmSecondaryButton {
+  background: #ffffff;
+  border: 1px solid #dce4ef;
+  color: #24344f;
+}
+
+.crmKanbanViewport {
+  margin: 0 -2px;
+  overflow-x: auto;
+  padding: 2px 2px 28px;
+}
+
+.crmKanbanBoard {
+  align-items: start;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(6, 240px);
+  min-width: 1530px;
+}
+
+.crmKanbanColumn {
+  border: 1px solid #dfe7ef;
+  border-radius: 12px;
+  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.045);
+  display: grid;
+  gap: 14px;
+  min-height: 620px;
+  padding: 14px;
+}
+
+.crmKanbanColumn.toneLEAD {
+  background: linear-gradient(180deg, #f4f8ff, #fbfdff);
+  border-top: 3px solid #3b82f6;
+}
+
+.crmKanbanColumn.toneABANDONED {
+  background: linear-gradient(180deg, #fff6ef, #fffdfb);
+  border-top: 3px solid #f97316;
+}
+
+.crmKanbanColumn.tonePENDING {
+  background: linear-gradient(180deg, #fffbeb, #fffefa);
+  border-top: 3px solid #eab308;
+}
+
+.crmKanbanColumn.toneAPPROVED {
+  background: linear-gradient(180deg, #f0fdf4, #fbfffc);
+  border-top: 3px solid #16a34a;
+}
+
+.crmKanbanColumn.toneDELIVERED {
+  background: linear-gradient(180deg, #effcff, #fbfeff);
+  border-top: 3px solid #0e9aa7;
+}
+
+.crmKanbanColumn.toneCHECKED_IN {
+  background: linear-gradient(180deg, #faf5ff, #fffafe);
+  border-top: 3px solid #8b5cf6;
+}
+
+.crmKanbanColumnHeader {
+  align-items: start;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.crmKanbanColumnHeader h2,
+.crmKanbanColumnHeader p {
+  margin: 0;
+}
+
+.crmKanbanColumnHeader h2 {
+  font-size: 15px;
+  line-height: 1.18;
+}
+
+.crmKanbanColumnHeader p {
+  color: #637087;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.crmKanbanColumnHeader > span {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  height: 25px;
+  justify-content: center;
+  min-width: 30px;
+  padding: 0 8px;
+}
+
+.crmKanbanColumn.toneLEAD .crmKanbanColumnHeader h2,
+.crmKanbanColumn.toneLEAD .crmKanbanColumnHeader > span,
+.crmDealCard.toneLEAD .crmStatusBadge {
+  color: #1164db;
+}
+
+.crmKanbanColumn.toneABANDONED .crmKanbanColumnHeader h2,
+.crmKanbanColumn.toneABANDONED .crmKanbanColumnHeader > span,
+.crmDealCard.toneABANDONED .crmStatusBadge {
+  color: #d94f00;
+}
+
+.crmKanbanColumn.tonePENDING .crmKanbanColumnHeader h2,
+.crmKanbanColumn.tonePENDING .crmKanbanColumnHeader > span,
+.crmDealCard.tonePENDING .crmStatusBadge {
+  color: #b77900;
+}
+
+.crmKanbanColumn.toneAPPROVED .crmKanbanColumnHeader h2,
+.crmKanbanColumn.toneAPPROVED .crmKanbanColumnHeader > span,
+.crmDealCard.toneAPPROVED .crmStatusBadge {
+  color: #08753a;
+}
+
+.crmKanbanColumn.toneDELIVERED .crmKanbanColumnHeader h2,
+.crmKanbanColumn.toneDELIVERED .crmKanbanColumnHeader > span,
+.crmDealCard.toneDELIVERED .crmStatusBadge {
+  color: #087987;
+}
+
+.crmKanbanColumn.toneCHECKED_IN .crmKanbanColumnHeader h2,
+.crmKanbanColumn.toneCHECKED_IN .crmKanbanColumnHeader > span,
+.crmDealCard.toneCHECKED_IN .crmStatusBadge {
+  color: #7c3bd3;
+}
+
+.crmKanbanColumnHeader > span {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.crmKanbanColumnCards {
+  display: grid;
+  gap: 12px;
+}
+
+.crmDealCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.055);
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.crmDealHeader {
+  align-items: start;
+  display: grid;
+  gap: 9px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.crmAvatar {
+  align-items: center;
+  background: #dbeafe;
+  border-radius: 999px;
+  color: #1559c7;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 900;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+
+.crmDealCard.toneABANDONED .crmAvatar {
+  background: #fed7aa;
+  color: #c2410c;
+}
+
+.crmDealCard.tonePENDING .crmAvatar {
+  background: #def7bf;
+  color: #4d7c0f;
+}
+
+.crmDealCard.toneAPPROVED .crmAvatar {
+  background: #bbf7d0;
+  color: #047857;
+}
+
+.crmDealCard.toneDELIVERED .crmAvatar {
+  background: #c6f3f7;
+  color: #087987;
+}
+
+.crmDealCard.toneCHECKED_IN .crmAvatar {
+  background: #ead8ff;
+  color: #7c3bd3;
+}
+
+.crmDealHeader h3 {
+  color: #111827;
+  font-size: 13px;
+  line-height: 1.2;
+  margin: 0 0 4px;
+}
+
+.crmDealHeader p {
+  color: #26364f;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.32;
+  margin: 0;
+}
+
+.crmStatusBadge {
+  align-items: center;
+  background: #ecfdf3;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 9px;
+  font-weight: 900;
+  height: 21px;
+  justify-content: center;
+  max-width: 74px;
+  padding: 0 7px;
+  text-transform: uppercase;
+}
+
+.crmDealDetails,
+.crmDealDate {
+  color: #526078;
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.crmDealDetails span,
+.crmDealDate {
+  align-items: center;
+  display: flex;
+  gap: 7px;
+  min-width: 0;
+}
+
+.crmDealDetails svg,
+.crmDealDate svg {
+  color: #627089;
+  flex: 0 0 15px;
+  height: 15px;
+  width: 15px;
+}
+
+.crmDealDate {
+  border-top: 1px solid #e8eef5;
+  padding-top: 9px;
+}
+
+.crmDealActions {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.crmIconButton {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #dde6f0;
+  border-radius: 8px;
+  color: #23344f;
+  display: inline-flex;
+  height: 38px;
+  justify-content: center;
+}
+
+.crmIconButton svg {
+  height: 17px;
+  width: 17px;
+}
+
+.crmWhatsappButton {
+  background: #f0fbf4;
+  border-color: #d3f2df;
+  color: #079444;
+}
+
+.crmIconButton.isDisabled {
+  opacity: 0.45;
+}
+
+.crmKanbanEmpty {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px dashed rgba(15, 23, 42, 0.16);
+  border-radius: 11px;
+  color: #637087;
+  display: flex;
+  font-size: 13px;
+  justify-content: center;
+  min-height: 118px;
+  padding: 14px;
+  text-align: center;
+}
+
+.crmColumnMore {
+  align-items: center;
+  align-self: end;
+  border-radius: 8px;
+  display: flex;
+  font-size: 13px;
+  font-weight: 900;
+  justify-content: center;
+  margin-top: 4px;
+  min-height: 38px;
+}
+
+.crmKanbanColumn.toneLEAD .crmColumnMore {
+  color: #1164db;
+}
+
+.crmKanbanColumn.toneABANDONED .crmColumnMore {
+  color: #d94f00;
+}
+
+.crmKanbanColumn.tonePENDING .crmColumnMore {
+  color: #b77900;
+}
+
+.crmKanbanColumn.toneAPPROVED .crmColumnMore {
+  color: #08753a;
+}
+
+.crmKanbanColumn.toneDELIVERED .crmColumnMore {
+  color: #087987;
+}
+
+.crmKanbanColumn.toneCHECKED_IN .crmColumnMore {
+  color: #7c3bd3;
+}
+
+@media (max-width: 1280px) {
+  .crmMetricStrip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .crmFilterForm {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .crmPrimaryButton,
+  .crmSecondaryButton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .adminShell:has(.crmReferencePage) .adminMain {
+    padding: 20px 14px 0;
+  }
+
+  .crmReferenceHeader,
+  .crmReferenceTools {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .crmTopSearch {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .crmMetricStrip,
+  .crmFilterForm {
+    grid-template-columns: 1fr;
+  }
+
+  .crmKanbanBoard {
+    grid-template-columns: repeat(6, minmax(240px, 82vw));
+    min-width: 0;
   }
 }
