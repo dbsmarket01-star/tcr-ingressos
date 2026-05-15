@@ -39,19 +39,6 @@ function getInitials(name: string) {
   return (parts.map((part) => part.charAt(0)).join("") || "CL").toUpperCase();
 }
 
-function getColumnCta(stage: CommercialKanbanStage) {
-  const labels: Record<CommercialKanbanStage, string> = {
-    LEAD: "Ver todos os leads",
-    ABANDONED: "Ver mais carrinhos",
-    PENDING: "Ver mais pendentes",
-    APPROVED: "Ver mais aprovadas",
-    DELIVERED: "Ver mais entregues",
-    CHECKED_IN: "Ver mais check-ins"
-  };
-
-  return labels[stage];
-}
-
 function getMetricIcon(kind: "money" | "bag" | "clock" | "check" | "send" | "qr") {
   const paths = {
     money: (
@@ -339,9 +326,11 @@ export default async function CrmPage({ searchParams }: CrmPageProps) {
                     column.cards.slice(0, 8).map((card) => <KanbanCard card={card} key={card.id} />)
                   )}
                 </div>
-                <Link className="crmColumnMore" href={column.id === "LEAD" ? "/admin/leads" : "/admin/orders"}>
-                  + {getColumnCta(column.id)}
-                </Link>
+                {column.cards.length > 8 ? (
+                  <div className="crmColumnMore">
+                    Mais {column.cards.length - 8} neste filtro
+                  </div>
+                ) : null}
               </article>
             ))}
           </div>
