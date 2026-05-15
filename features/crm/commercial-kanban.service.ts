@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { expirePendingOrders } from "@/features/orders/order.service";
 
 type EventScope = string[] | null | undefined;
+const MINIMUM_KANBAN_ORDER_AMOUNT_IN_CENTS = 5000;
 
 export type CommercialKanbanFilters = {
   eventId?: string;
@@ -330,7 +331,8 @@ function buildLeadCard(lead: CommercialLead): CommercialKanbanCard {
 function buildOrderWhere(
   filters: CommercialKanbanFilters,
   organizationId: string,
-  allowedEventIds?: EventScope
+  allowedEventIds?: EventScope,
+  options: { enforceMinimumAmount?: boolean } = { enforceMinimumAmount: true }
 ): Prisma.OrderWhereInput {
   const search = normalizeSearch(filters.search);
 
@@ -347,6 +349,13 @@ function buildOrderWhere(
         OrderStatus.REFUNDED
       ]
     },
+    ...(options.enforceMinimumAmount === false
+      ? {}
+      : {
+          totalInCents: {
+            gte: MINIMUM_KANBAN_ORDER_AMOUNT_IN_CENTS
+          }
+        }),
     ...(search
       ? {
           OR: [
@@ -394,7 +403,7 @@ export async function getCommercialKanbanBoard(
 ): Promise<CommercialKanbanBoard> {
   await expirePendingOrders({ limit: 100, organizationId, allowedEventIds });
 
-  const [events, orders, leads] = await Promise.all([
+  const [events, orders, orderLeadKeys, leads] = await Promise.all([
     prisma.event.findMany({
       where: buildEventScopeWhere(organizationId, allowedEventIds),
       orderBy: [{ startsAt: "desc" }, { title: "asc" }],
@@ -411,6 +420,18 @@ export async function getCommercialKanbanBoard(
       take: 240,
       include: orderInclude
     }),
+    prisma.order.findMany({
+      where: buildOrderWhere(filters, organizationId, allowedEventIds, { enforceMinimumAmount: false }),
+      take: 1000,
+      select: {
+        eventId: true,
+        customer: {
+          select: {
+            email: true
+          }
+        }
+      }
+    }),
     prisma.eventLead.findMany({
       where: buildLeadWhere(filters, organizationId, allowedEventIds),
       orderBy: {
@@ -424,7 +445,7 @@ export async function getCommercialKanbanBoard(
   const now = new Date();
   const orderCards = orders.map((order) => buildOrderCard(order, now));
   const orderEmailKeys = new Set(
-    orders.map((order) => `${order.eventId}:${order.customer.email.toLowerCase().trim()}`)
+    orderLeadKeys.map((order) => `${order.eventId}:${order.customer.email.toLowerCase().trim()}`)
   );
   const leadCards = leads
     .filter((lead) => !orderEmailKeys.has(`${lead.eventId}:${lead.email.toLowerCase().trim()}`))

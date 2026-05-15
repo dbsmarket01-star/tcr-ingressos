@@ -244,24 +244,11 @@ export default async function CrmPage({ searchParams }: CrmPageProps) {
             <h1>CRM / Kanban</h1>
             <p>Acompanhe e gerencie todo o fluxo de atendimento e vendas.</p>
           </div>
-          <div className="crmReferenceTools">
-            <form className="crmTopSearch">
-              <ActionIcon kind="search" />
-              <input name="search" placeholder="Buscar por nome, e-mail, telefone, pedido..." defaultValue={params.search || ""} />
-            </form>
-            <button className="crmGhostIconButton" type="button" aria-label="Notificacoes">
-              <ActionIcon kind="bell" />
-              <span>12</span>
-            </button>
-            <button className="crmPlainIconButton" type="button" aria-label="Mais opcoes">
-              <ActionIcon kind="dots" />
-            </button>
-          </div>
         </header>
 
         <section className="crmMetricStrip" aria-label="Resumo comercial">
-          <MetricCard kind="money" label="Vendas totais" value={formatCurrency(board.summary.paidInCents)} note="+ 12% vs mes anterior" tone="APPROVED" />
-          <MetricCard kind="bag" label="Pedidos" value={orderCount} note="+ 8% vs mes anterior" tone="ORDERS" />
+          <MetricCard kind="money" label="Vendas totais" value={formatCurrency(board.summary.paidInCents)} note="Pedidos pagos acima de R$ 50" tone="APPROVED" />
+          <MetricCard kind="bag" label="Pedidos" value={orderCount} note="Pedidos acima de R$ 50" tone="ORDERS" />
           <MetricCard kind="clock" label="Pendentes" value={pendingCount} note="Aguardando pagamento" tone="PENDING" />
           <MetricCard kind="check" label="Aprovados" value={approvedCount} note="Pagamento confirmado" tone="APPROVED" />
           <MetricCard kind="send" label="Entregues" value={deliveredCount} note="Ingressos enviados" tone="DELIVERED" />
