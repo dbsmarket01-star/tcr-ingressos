@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import {
   isLeadEmailProviderFailureStatus,
-  syncLeadEmailCampaignCounts
+  syncLeadEmailCampaignCounts,
+  translateLeadEmailProviderReason
 } from "@/features/leads/lead-email-campaign-metrics.service";
 import { prisma } from "@/lib/prisma";
 
@@ -119,6 +120,7 @@ export async function POST(request: Request) {
   const status = mapResendEmailStatus(body?.type);
   const checkedAt = body?.created_at ? new Date(body.created_at) : new Date();
   const failureReason = getResendFailureReason(body);
+  const translatedFailureReason = failureReason ? translateLeadEmailProviderReason(failureReason) : null;
 
   const updateResult = await prisma.order.updateMany({
     where: {
@@ -127,7 +129,7 @@ export async function POST(request: Request) {
     data: {
       ticketsEmailStatus: status,
       ticketsEmailLastCheckedAt: checkedAt,
-      ticketsEmailLastError: failureReason,
+      ticketsEmailLastError: translatedFailureReason,
       ...(status === "delivered" ? { ticketsEmailDeliveredAt: checkedAt } : {})
     }
   });
@@ -177,7 +179,7 @@ export async function POST(request: Request) {
         },
         data: {
           status: "FAILED",
-          errorMessage: failureReason || `Entrega marcada como ${status} pelo Resend.`
+          errorMessage: translatedFailureReason || `Entrega marcada como ${status} pelo Resend.`
         }
       });
     } else if (leadRecipient.status !== "FAILED") {

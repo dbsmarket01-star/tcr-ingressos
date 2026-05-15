@@ -65,11 +65,11 @@ function summarizeCampaignReason(message: string) {
     return "Marcado como spam/reclamação";
   }
 
-  if (normalized.includes("suppressed")) {
+  if (normalized.includes("suppressed") || normalized.includes("supressão") || normalized.includes("supressao")) {
     return "Bloqueado por lista de supressão";
   }
 
-  if (normalized.includes("bounce") || normalized.includes("bounced")) {
+  if (normalized.includes("bounce") || normalized.includes("bounced") || normalized.includes("devolvido")) {
     return "E-mail devolvido pelo destinatário";
   }
 

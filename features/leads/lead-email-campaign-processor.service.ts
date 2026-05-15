@@ -1,6 +1,9 @@
 import { Prisma } from "@prisma/client";
 import { sendLeadBroadcastEmailBatch } from "@/features/email/email.service";
-import { syncLeadEmailCampaignCounts } from "@/features/leads/lead-email-campaign-metrics.service";
+import {
+  syncLeadEmailCampaignCounts,
+  translateLeadEmailProviderReason
+} from "@/features/leads/lead-email-campaign-metrics.service";
 import { getOrganizationContextById } from "@/features/organizations/organization.service";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { prisma } from "@/lib/prisma";
@@ -304,6 +307,7 @@ export async function processLeadEmailCampaignInBackground(campaignId: string) {
 
       for (const failed of sendResult.failed) {
         const recipient = recipients[failed.index];
+        const translatedMessage = translateLeadEmailProviderReason(failed.message);
 
         updates.push(
           prisma.leadEmailCampaignRecipient.update({
@@ -312,7 +316,7 @@ export async function processLeadEmailCampaignInBackground(campaignId: string) {
             },
             data: {
               status: "FAILED",
-              errorMessage: failed.message
+              errorMessage: translatedMessage
             }
           })
         );
@@ -335,6 +339,7 @@ export async function processLeadEmailCampaignInBackground(campaignId: string) {
       }
 
       const failedTotal = sendResult.failed.length + unaccountedIndexes.length;
+      const firstFailureMessage = sendResult.failed[0]?.message;
 
       updates.push(
         prisma.leadEmailCampaign.update({
@@ -349,7 +354,7 @@ export async function processLeadEmailCampaignInBackground(campaignId: string) {
               increment: failedTotal
             },
             lastError:
-              sendResult.failed[0]?.message ||
+              (firstFailureMessage ? translateLeadEmailProviderReason(firstFailureMessage) : null) ||
               (unaccountedIndexes.length > 0
                 ? "Alguns destinatários não retornaram status final do provedor."
                 : null)
@@ -360,7 +365,7 @@ export async function processLeadEmailCampaignInBackground(campaignId: string) {
       await prisma.$transaction(updates);
       await syncLeadEmailCampaignCounts(campaign.id);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Falha ao processar campanha.";
+      const message = translateLeadEmailProviderReason(error instanceof Error ? error.message : "Falha ao processar campanha.");
 
       await prisma.$transaction([
         ...recipients.map((recipient) =>

@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import {
   getLeadEmailCampaignReasonBreakdowns,
-  getLeadEmailCampaignRecipientBreakdowns
+  getLeadEmailCampaignRecipientBreakdowns,
+  translateLeadEmailProviderReason
 } from "./lead-email-campaign-metrics.service";
 import { createHash } from "node:crypto";
 import type { EventLeadInput } from "./lead.schema";
@@ -461,11 +462,15 @@ export async function getActiveLeadEmailCampaign(eventId: string) {
   const breakdown = breakdowns.get(campaign.id);
 
   if (!breakdown || breakdown.recipientCount === 0) {
-    return campaign;
+    return {
+      ...campaign,
+      lastError: campaign.lastError ? translateLeadEmailProviderReason(campaign.lastError) : null
+    };
   }
 
   return {
     ...campaign,
+    lastError: campaign.lastError ? translateLeadEmailProviderReason(campaign.lastError) : null,
     totalCount: breakdown.recipientCount,
     sentCount: breakdown.acceptedCount,
     failedCount: breakdown.failedCount,
