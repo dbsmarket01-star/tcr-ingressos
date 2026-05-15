@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 
 type CheckInScannerProps = {
   action: (formData: FormData) => void | Promise<void>;
+  eventId: string;
+  eventTitle: string;
 };
 
 type BarcodeDetectorShape = {
@@ -20,7 +22,7 @@ declare global {
   }
 }
 
-export function CheckInScanner({ action }: CheckInScannerProps) {
+export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const deviceInputRef = useRef<HTMLInputElement>(null);
@@ -131,11 +133,12 @@ export function CheckInScanner({ action }: CheckInScannerProps) {
   const showCameraPreview = cameraStatus === "starting" || cameraStatus === "scanning";
 
   return (
-    <form action={action} className="card form checkInForm" ref={formRef}>
+    <form action={action} className="checkInScannerCard form checkInForm" ref={formRef}>
+      <input type="hidden" name="eventId" value={eventId} />
       <div className="checkInFormHeader">
         <div>
           <h2>Validar ingresso</h2>
-          <p>Use a câmera para o QR Code ou valide manualmente quando precisar.</p>
+          <p>Evento selecionado: {eventTitle}</p>
         </div>
         <span>{cameraStatus === "scanning" ? "Lendo" : "Pronto"}</span>
       </div>

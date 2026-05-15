@@ -1,9 +1,7 @@
-import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { validateTicketAction } from "@/features/check-in/check-in.actions";
-import { getCheckInStats, listRecentCheckIns } from "@/features/check-in/check-in.service";
-import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
+import { getCheckInStats, listCheckInEvents, listRecentCheckIns } from "@/features/check-in/check-in.service";
 import { formatDateTime } from "@/lib/format";
 import { CheckInScanner } from "./CheckInScanner";
 
@@ -16,6 +14,7 @@ type CheckInPageProps = {
     ticket?: string;
     ticketUrl?: string;
     event?: string;
+    eventId?: string;
     lot?: string;
     buyer?: string;
     checkedAt?: string;
@@ -36,204 +35,220 @@ const statusInstructions = {
   CANCELED: "Não liberar entrada. Ingresso cancelado."
 };
 
+const emptyStats = {
+  approvedToday: 0,
+  blockedToday: 0,
+  totalToday: 0
+};
+
+function formatEventOptionDate(value: Date) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Sao_Paulo"
+  }).format(value);
+}
+
 export default async function CheckInPage({ searchParams }: CheckInPageProps) {
   const admin = await requirePermission("CHECKIN");
-  const organizationContext = await getCurrentOrganizationContext();
   const result = await searchParams;
   const allowedEventIds = getAdminAllowedEventIds(admin);
+  const selectedEventId = result.eventId?.trim() ?? "";
+  const eventOptions = await listCheckInEvents(admin.organizationId, allowedEventIds);
+  const selectedEvent = eventOptions.find((event) => event.id === selectedEventId) ?? null;
+  const scopedEventIds = selectedEvent ? [selectedEvent.id] : [];
   const [recentCheckIns, stats] = await Promise.all([
-    listRecentCheckIns(admin.organizationId, allowedEventIds),
-    getCheckInStats(admin.organizationId, allowedEventIds)
+    selectedEvent ? listRecentCheckIns(admin.organizationId, scopedEventIds) : Promise.resolve([]),
+    selectedEvent ? getCheckInStats(admin.organizationId, scopedEventIds) : Promise.resolve(emptyStats)
   ]);
   const status = result.status as keyof typeof statusLabels | undefined;
 
   return (
     <AdminShell
       title="Check-in"
-      description="Valide QR Code com rapidez, bloqueie reutilização e mantenha a porta fluindo."
+      description="Valide QR Codes com rapidez, bloqueie reutilização e mantenha a porta fluindo."
     >
-      <section className="operationCommandStrip spacedSection" aria-label="Atalhos da área de check-in">
-        <article className="operationCommandCard">
-          <span className="eyebrow">Operação de portaria</span>
-          <h2>Entrada rápida e leitura segura para a {organizationContext.brandName}</h2>
-          <p>O foco aqui é manter a fila fluindo, bloquear reutilização e ter um caminho claro quando o QR Code falhar, já dentro da rotina da operação.</p>
-        </article>
-        <div className="operationCommandActions">
-          <Link className="secondaryButton smallButton" href="/admin">
-            Dashboard
-          </Link>
-          <Link className="secondaryButton smallButton" href="/admin/support">
-            Atendimento
-          </Link>
-          <Link className="secondaryButton smallButton" href="/admin/tickets">
-            Ingressos
-          </Link>
-        </div>
-      </section>
-
-      <section className="grid dashboardGrid">
-        <article className="card metric">
-          <span className="muted">Entradas hoje</span>
-          <strong>{stats.approvedToday}</strong>
-        </article>
-        <article className="card metric">
-          <span className="muted">Bloqueios hoje</span>
-          <strong>{stats.blockedToday}</strong>
-        </article>
-        <article className="card metric">
-          <span className="muted">Leituras hoje</span>
-          <strong>{stats.totalToday}</strong>
-        </article>
-        <article className="card metric">
-          <span className="muted">Histórico carregado</span>
-          <strong>{recentCheckIns.length}</strong>
-        </article>
-      </section>
-
-      <section className="card spacedSection checkInOpsBar">
-        <div>
-          <span>Fluxo da portaria</span>
-          <strong>Ler QR Code, conferir resultado e liberar apenas se aparecer Válido.</strong>
-        </div>
-        <div>
-          <span>Reutilização</span>
-          <strong>Se aparecer Já usado, bloqueie a entrada e acione o responsável.</strong>
-        </div>
-        <div>
-          <span>Plano B</span>
-          <strong>Sem câmera, digite ou cole o código do ingresso manualmente.</strong>
-        </div>
-      </section>
-
-      <section className="operationsAlertGrid spacedSection">
-        <article className="operationAlert">
-          <span>Quando aparecer válido</span>
-          <strong>Liberar entrada</strong>
-          <p>Confirme rapidamente nome ou lote se quiser uma checagem extra.</p>
-        </article>
-        <article className="operationAlert warning">
-          <span>Quando aparecer já usado</span>
-          <strong>Segurar a entrada</strong>
-          <p>Conferir documento e acionar o atendimento antes de qualquer liberação.</p>
-        </article>
-        <article className="operationAlert danger">
-          <span>Quando aparecer inválido ou cancelado</span>
-          <strong>Não liberar</strong>
-          <p>Oriente o cliente a procurar suporte com o pedido ou o e-mail do ingresso.</p>
-        </article>
-      </section>
-
-      <section className="grid twoColumns spacedSection">
-        <CheckInScanner action={validateTicketAction} />
-
-        <aside className={`card checkInResult ${status ? `checkIn${status}` : ""}`} aria-live="polite">
-          <h2>Leitura atual</h2>
-          {status ? (
-            <>
-              <div className="checkInDecision">
-                <span>{statusLabels[status]}</span>
-                <strong>{statusInstructions[status]}</strong>
-                <p>{result.message}</p>
-              </div>
-              {result.ticket ? (
-                <div className="paymentBox">
-                  <div className="summaryLine">
-                    <span>Ingresso</span>
-                    <strong>{result.ticket}</strong>
-                  </div>
-                  <div className="summaryLine">
-                    <span>Evento</span>
-                    <strong>{result.event}</strong>
-                  </div>
-                  <div className="summaryLine">
-                    <span>Lote</span>
-                    <strong>{result.lot}</strong>
-                  </div>
-                  <div className="summaryLine">
-                    <span>Comprador</span>
-                    <strong>{result.buyer}</strong>
-                  </div>
-                  {result.checkedAt ? (
-                    <div className="summaryLine">
-                      <span>Horário</span>
-                      <strong>{formatDateTime(new Date(result.checkedAt))}</strong>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-              <div className="checkInResultActions">
-                {result.ticket && result.ticketUrl ? (
-                  <a className="secondaryButton fullButton" href={result.ticketUrl} target="_blank" rel="noreferrer noopener">
-                    Abrir ingresso
-                  </a>
-                ) : null}
-                <a className="button fullButton" href="/admin/check-in">
-                  Nova leitura
-                </a>
-              </div>
-            </>
-          ) : (
-            <div className="checkInIdle">
-              <strong>Nenhuma leitura realizada ainda.</strong>
-              <p>Abra a câmera ou cole o código do ingresso para começar. O resultado aparece aqui com a orientação do que fazer na hora.</p>
+      <section className="checkInDeskPage">
+        <section className="checkInEventSelectCard">
+          <form className="checkInEventSelectForm">
+            <div className="checkInEventSelectCopy">
+              <span>1. Selecione o evento</span>
+              <strong>Escolha o evento do dia para liberar a leitura de QR Codes.</strong>
             </div>
-          )}
-        </aside>
-      </section>
-
-      <section className="card spacedSection">
-        <div className="sectionHeader inlineHeader">
-          <div>
-            <h2>Histórico recente</h2>
-            <p className="muted">Use este histórico para confirmar rapidamente o que acabou de acontecer na porta.</p>
+            <div className="checkInSelectRow">
+              <select aria-label="Selecionar evento para check-in" defaultValue={selectedEvent?.id ?? ""} name="eventId">
+                <option value="">Selecione o evento para iniciar o check-in</option>
+                {eventOptions.map((event) => (
+                  <option key={event.id} value={event.id}>
+                    {event.title} - {formatEventOptionDate(event.startsAt)}
+                  </option>
+                ))}
+              </select>
+              <button className="button checkInSelectButton" type="submit">
+                Liberar check-in
+              </button>
+            </div>
+          </form>
+          <div className="checkInEventStatusBox">
+            <span className="checkInCalendarIcon" aria-hidden="true" />
+            <p>
+              {selectedEvent ? (
+                <>
+                  <strong>{selectedEvent.title}</strong>
+                  <br />
+                  {selectedEvent.venueName} - {selectedEvent.city}, {selectedEvent.state}
+                </>
+              ) : (
+                <>
+                  Selecione um evento ao lado
+                  <br />
+                  <strong>para iniciar o check-in.</strong>
+                </>
+              )}
+            </p>
           </div>
-          <Link className="secondaryButton smallButton" href="/admin/support">
-            Abrir atendimento
-          </Link>
-        </div>
+        </section>
 
-        {recentCheckIns.length === 0 ? (
-          <div className="empty">Nenhum check-in registrado ainda.</div>
-        ) : (
-          <div className="tableScroll">
-            <table className="table operationalTable">
-              <thead>
-                <tr>
-                  <th>Horário</th>
-                  <th>Status</th>
-                  <th>Evento</th>
-                  <th>Ingresso</th>
-                  <th>Comprador</th>
-                  <th>Dispositivo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentCheckIns.map((checkIn) => (
-                  <tr key={checkIn.id}>
-                    <td>{formatDateTime(checkIn.checkedAt)}</td>
-                    <td>
-                      <span
-                        className={`status ${
-                          checkIn.status === "APPROVED" ? "published" : "draft"
-                        }`}
-                      >
+        <section className="checkInMetricGrid">
+          <article className="checkInMetricCard">
+            <span className="checkInMetricIcon checkInMetricGreen">E</span>
+            <div>
+              <span>Entradas hoje</span>
+              <strong>{stats.approvedToday}</strong>
+              <small>pessoas</small>
+            </div>
+          </article>
+          <article className="checkInMetricCard">
+            <span className="checkInMetricIcon checkInMetricRed">B</span>
+            <div>
+              <span>Bloqueios hoje</span>
+              <strong>{stats.blockedToday}</strong>
+              <small>tentativas</small>
+            </div>
+          </article>
+          <article className="checkInMetricCard">
+            <span className="checkInMetricIcon checkInMetricBlue">L</span>
+            <div>
+              <span>Leituras hoje</span>
+              <strong>{stats.totalToday}</strong>
+              <small>check-ins</small>
+            </div>
+          </article>
+          <article className="checkInMetricCard">
+            <span className="checkInMetricIcon checkInMetricPurple">H</span>
+            <div>
+              <span>Histórico carregado</span>
+              <strong>{recentCheckIns.length}</strong>
+              <small>registros</small>
+            </div>
+          </article>
+        </section>
+
+        <section className="checkInWorkGrid">
+          <article className="checkInMainPanel">
+            {selectedEvent ? (
+              <>
+                {status ? (
+                  <div className={`checkInCurrentResult checkIn${status}`} aria-live="polite">
+                    <span>{statusLabels[status]}</span>
+                    <strong>{statusInstructions[status]}</strong>
+                    <p>{result.message}</p>
+                    {result.ticket ? (
+                      <div className="checkInResultSummary">
+                        <span>Ingresso: <strong>{result.ticket}</strong></span>
+                        <span>Comprador: <strong>{result.buyer}</strong></span>
+                        <span>Lote: <strong>{result.lot}</strong></span>
+                        {result.checkedAt ? <span>Horário: <strong>{formatDateTime(new Date(result.checkedAt))}</strong></span> : null}
+                      </div>
+                    ) : null}
+                    <div className="checkInResultActions">
+                      {result.ticket && result.ticketUrl ? (
+                        <a className="secondaryButton" href={result.ticketUrl} target="_blank" rel="noreferrer noopener">
+                          Abrir ingresso
+                        </a>
+                      ) : null}
+                      <a className="button" href={`/admin/check-in?eventId=${selectedEvent.id}`}>
+                        Nova leitura
+                      </a>
+                    </div>
+                  </div>
+                ) : null}
+                <CheckInScanner action={validateTicketAction} eventId={selectedEvent.id} eventTitle={selectedEvent.title} />
+              </>
+            ) : (
+              <div className="checkInLockedState">
+                <span className="checkInLockIcon" aria-hidden="true" />
+                <h2>Leitura de QR Code bloqueada</h2>
+                <p>Selecione um evento para liberar a câmera e iniciar a validação.</p>
+                <div className="checkInLockedSteps">
+                  <span>Escolha o evento do dia na seção acima.</span>
+                  <span>Aponte a câmera para o QR Code do ingresso.</span>
+                  <span>Valide a entrada e permita o acesso.</span>
+                </div>
+              </div>
+            )}
+          </article>
+
+          <aside className="checkInRecentPanel">
+            <div className="checkInPanelTitle">
+              <span className="checkInHistoryIcon" aria-hidden="true" />
+              <h2>Últimos check-ins</h2>
+            </div>
+            {recentCheckIns.length === 0 ? (
+              <div className="checkInRecentEmpty">
+                <span aria-hidden="true" />
+                <strong>Nenhuma leitura realizada ainda.</strong>
+                <p>Os últimos check-ins aparecerão aqui.</p>
+              </div>
+            ) : (
+              <div className="checkInRecentList">
+                {recentCheckIns.slice(0, 8).map((checkIn) => (
+                  <article className="checkInRecentItem" key={checkIn.id}>
+                    <div>
+                      <strong>{checkIn.ticket.order.customer.name}</strong>
+                      <span>{checkIn.ticket.lot.name}</span>
+                    </div>
+                    <div>
+                      <span className={`status ${checkIn.status === "APPROVED" ? "published" : "draft"}`}>
                         {statusLabels[checkIn.status]}
                       </span>
-                    </td>
-                    <td>{checkIn.event.title}</td>
-                    <td>
-                      <strong>{checkIn.ticket.code}</strong>
-                      <br />
-                      <span className="muted">{checkIn.ticket.lot.name}</span>
-                    </td>
-                    <td>{checkIn.ticket.order.customer.name}</td>
-                    <td>{checkIn.deviceName ?? "-"}</td>
-                  </tr>
+                      <small>{formatDateTime(checkIn.checkedAt)}</small>
+                    </div>
+                  </article>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            )}
+          </aside>
+        </section>
+
+        <section className="checkInTipsPanel">
+          <h2>Dicas rápidas</h2>
+          <div className="checkInTipsGrid">
+            <article>
+              <span className="checkInTipIcon checkInMetricBlue">1</span>
+              <div>
+                <strong>Cada ingresso só pode ser validado uma vez.</strong>
+                <p>Releituras são bloqueadas automaticamente.</p>
+              </div>
+            </article>
+            <article>
+              <span className="checkInTipIcon checkInMetricGreen">2</span>
+              <div>
+                <strong>Mantenha sua conexão estável.</strong>
+                <p>Isso garante sincronização em tempo real.</p>
+              </div>
+            </article>
+            <article>
+              <span className="checkInTipIcon checkInMetricGreen">3</span>
+              <div>
+                <strong>Problemas com a leitura?</strong>
+                <p>Entre em contato com suporte imediato.</p>
+              </div>
+            </article>
           </div>
-        )}
+        </section>
       </section>
     </AdminShell>
   );

@@ -13671,6 +13671,624 @@ body.operationTheme .loginBrandDark .brandLogo {
   color: #8f1830;
 }
 
+.checkInDeskPage {
+  display: grid;
+  gap: 22px;
+}
+
+.checkInEventSelectCard,
+.checkInMetricCard,
+.checkInMainPanel,
+.checkInRecentPanel,
+.checkInTipsPanel,
+.checkInScannerCard {
+  background:
+    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.035), transparent 28%),
+    rgba(255, 255, 255, 0.96);
+  border: 1px solid #dde8e4;
+  border-radius: 16px;
+  box-shadow: 0 18px 42px rgba(16, 24, 40, 0.045);
+}
+
+.checkInEventSelectCard {
+  align-items: stretch;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1.9fr) minmax(300px, 1fr);
+  padding: 28px;
+}
+
+.checkInEventSelectForm {
+  border-right: 1px solid #e5ece9;
+  display: grid;
+  gap: 18px;
+  padding-right: 28px;
+}
+
+.checkInEventSelectCopy {
+  display: grid;
+  gap: 10px;
+}
+
+.checkInEventSelectCopy span {
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.checkInEventSelectCopy strong {
+  color: #64748b;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.checkInSelectRow {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.checkInSelectRow select {
+  appearance: none;
+  background:
+    linear-gradient(45deg, transparent 50%, #334155 50%) calc(100% - 23px) 50% / 7px 7px no-repeat,
+    linear-gradient(135deg, #334155 50%, transparent 50%) calc(100% - 18px) 50% / 7px 7px no-repeat,
+    #ffffff;
+  border: 1px solid #d8e3df;
+  border-radius: 10px;
+  color: #334155;
+  font: inherit;
+  min-height: 56px;
+  padding: 0 46px 0 16px;
+  width: 100%;
+}
+
+.checkInSelectButton {
+  border-radius: 10px;
+  min-height: 56px;
+  padding-inline: 22px;
+  white-space: nowrap;
+}
+
+.checkInEventStatusBox {
+  align-items: center;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 8px 10px;
+}
+
+.checkInEventStatusBox p {
+  color: #536173;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.checkInEventStatusBox strong {
+  color: #162033;
+  font-weight: 900;
+}
+
+.checkInCalendarIcon,
+.checkInLockIcon,
+.checkInHistoryIcon,
+.checkInRecentEmpty > span {
+  align-items: center;
+  border-radius: 16px;
+  display: inline-flex;
+  justify-content: center;
+  position: relative;
+}
+
+.checkInCalendarIcon {
+  background: #f3f6f8;
+  height: 84px;
+  width: 84px;
+}
+
+.checkInCalendarIcon::before {
+  background: #cbd5e1;
+  border-radius: 6px;
+  content: "";
+  height: 34px;
+  width: 42px;
+}
+
+.checkInCalendarIcon::after {
+  border-top: 4px solid #f3f6f8;
+  content: "";
+  height: 18px;
+  left: 50%;
+  position: absolute;
+  top: 34px;
+  transform: translateX(-50%);
+  width: 42px;
+}
+
+.checkInMetricGrid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.checkInMetricCard {
+  align-items: center;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 112px;
+  padding: 24px;
+}
+
+.checkInMetricCard div {
+  align-items: baseline;
+  column-gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.checkInMetricCard div > span {
+  color: #475569;
+  flex: 0 0 100%;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.checkInMetricCard strong {
+  color: var(--brand);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.checkInMetricCard small {
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.checkInMetricIcon,
+.checkInTipIcon {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 900;
+  height: 50px;
+  justify-content: center;
+  width: 50px;
+}
+
+.checkInMetricGreen {
+  background: #dcfce7;
+  color: #047857;
+}
+
+.checkInMetricRed {
+  background: #fee2e2;
+  color: #e11d48;
+}
+
+.checkInMetricBlue {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.checkInMetricPurple {
+  background: #f3e8ff;
+  color: #9333ea;
+}
+
+.checkInWorkGrid {
+  align-items: stretch;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.95fr);
+}
+
+.checkInMainPanel,
+.checkInRecentPanel {
+  display: grid;
+  min-height: 420px;
+  padding: 28px;
+}
+
+.checkInMainPanel {
+  align-content: center;
+}
+
+.checkInLockedState {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  margin: auto;
+  max-width: 650px;
+  text-align: center;
+}
+
+.checkInLockIcon {
+  background: #dcfce7;
+  color: #047857;
+  height: 78px;
+  width: 78px;
+}
+
+.checkInLockIcon::before {
+  border: 4px solid currentColor;
+  border-radius: 8px;
+  content: "";
+  height: 26px;
+  margin-top: 10px;
+  width: 28px;
+}
+
+.checkInLockIcon::after {
+  border: 4px solid currentColor;
+  border-bottom: 0;
+  border-radius: 999px 999px 0 0;
+  content: "";
+  height: 20px;
+  left: 50%;
+  position: absolute;
+  top: 21px;
+  transform: translateX(-50%);
+  width: 24px;
+}
+
+.checkInLockedState h2 {
+  color: #0f172a;
+  font-size: 22px;
+  margin: 0;
+}
+
+.checkInLockedState p {
+  color: #64748b;
+  font-size: 16px;
+  margin: 0;
+}
+
+.checkInLockedSteps {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 24px;
+  width: 100%;
+}
+
+.checkInLockedSteps span {
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid #e3ece8;
+  border-radius: 10px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  padding: 18px;
+}
+
+.checkInScannerCard {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+}
+
+.checkInScannerCard .field {
+  gap: 8px;
+}
+
+.checkInScannerCard .button,
+.checkInScannerCard .secondaryButton {
+  border-radius: 10px;
+}
+
+.checkInCurrentResult {
+  border: 1px solid #dbe8e2;
+  border-radius: 14px;
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 18px;
+}
+
+.checkInCurrentResult > span {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.checkInCurrentResult > strong {
+  font-size: 22px;
+  line-height: 1.16;
+}
+
+.checkInCurrentResult p {
+  margin: 0;
+}
+
+.checkInCurrentResult.checkInAPPROVED {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+
+.checkInCurrentResult.checkInALREADY_USED,
+.checkInCurrentResult.checkInINVALID,
+.checkInCurrentResult.checkInCANCELED {
+  background: #fff1f2;
+  border-color: #fecdd3;
+  color: #9f1239;
+}
+
+.checkInResultSummary {
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid currentColor;
+  border-radius: 10px;
+  display: grid;
+  gap: 7px;
+  opacity: 0.9;
+  padding: 12px;
+}
+
+.checkInResultSummary span {
+  font-weight: 700;
+}
+
+.checkInCurrentResult .checkInResultActions {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.checkInRecentPanel {
+  align-content: start;
+  gap: 22px;
+}
+
+.checkInPanelTitle {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.checkInPanelTitle h2 {
+  color: #0f172a;
+  font-size: 20px;
+  margin: 0;
+}
+
+.checkInHistoryIcon {
+  color: #334155;
+  height: 24px;
+  width: 24px;
+}
+
+.checkInHistoryIcon::before {
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  content: "";
+  height: 15px;
+  width: 15px;
+}
+
+.checkInHistoryIcon::after {
+  background: currentColor;
+  box-shadow: 5px 4px 0 currentColor;
+  content: "";
+  height: 2px;
+  left: 11px;
+  position: absolute;
+  top: 11px;
+  width: 7px;
+}
+
+.checkInRecentEmpty {
+  align-content: center;
+  border: 1px solid #dfe8e4;
+  border-radius: 12px;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  min-height: 310px;
+  padding: 28px;
+  text-align: center;
+}
+
+.checkInRecentEmpty > span {
+  border: 3px solid #64748b;
+  border-radius: 8px;
+  height: 44px;
+  opacity: 0.8;
+  width: 34px;
+}
+
+.checkInRecentEmpty > span::before,
+.checkInRecentEmpty > span::after {
+  background: #64748b;
+  content: "";
+  height: 3px;
+  left: 9px;
+  position: absolute;
+  width: 16px;
+}
+
+.checkInRecentEmpty > span::before {
+  top: 15px;
+}
+
+.checkInRecentEmpty > span::after {
+  top: 25px;
+}
+
+.checkInRecentEmpty strong {
+  color: #334155;
+}
+
+.checkInRecentEmpty p {
+  color: #64748b;
+  margin: 0;
+}
+
+.checkInRecentList {
+  display: grid;
+  gap: 10px;
+}
+
+.checkInRecentItem {
+  align-items: center;
+  background: #f8fbfa;
+  border: 1px solid #e2ece8;
+  border-radius: 12px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 14px;
+}
+
+.checkInRecentItem div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.checkInRecentItem strong,
+.checkInRecentItem span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkInRecentItem strong {
+  color: #0f172a;
+}
+
+.checkInRecentItem span,
+.checkInRecentItem small {
+  color: #64748b;
+}
+
+.checkInRecentItem div:last-child {
+  justify-items: end;
+}
+
+.checkInTipsPanel {
+  display: grid;
+  gap: 22px;
+  padding: 24px 28px;
+}
+
+.checkInTipsPanel h2 {
+  color: #0f172a;
+  font-size: 20px;
+  margin: 0;
+}
+
+.checkInTipsGrid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.checkInTipsGrid article {
+  align-items: center;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.checkInTipsGrid strong {
+  color: #0f172a;
+  display: block;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.checkInTipsGrid p {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+@media (max-width: 1280px) {
+  .checkInEventSelectCard,
+  .checkInWorkGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .checkInEventSelectForm {
+    border-right: 0;
+    border-bottom: 1px solid #e5ece9;
+    padding: 0 0 22px;
+  }
+
+  .checkInMetricGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .checkInDeskPage {
+    gap: 16px;
+  }
+
+  .checkInEventSelectCard,
+  .checkInMainPanel,
+  .checkInRecentPanel,
+  .checkInTipsPanel {
+    border-radius: 14px;
+    padding: 18px;
+  }
+
+  .checkInSelectRow,
+  .checkInMetricGrid,
+  .checkInLockedSteps,
+  .checkInTipsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .checkInSelectButton {
+    width: 100%;
+  }
+
+  .checkInEventStatusBox {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .checkInMetricCard {
+    min-height: 96px;
+    padding: 18px;
+  }
+
+  .checkInMainPanel,
+  .checkInRecentPanel {
+    min-height: 0;
+  }
+
+  .checkInLockedState {
+    padding: 16px 0;
+  }
+
+  .checkInLockedSteps {
+    margin-top: 10px;
+  }
+
+  .checkInCurrentResult .checkInResultActions,
+  .scannerActions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .checkInRecentItem {
+    grid-template-columns: 1fr;
+  }
+
+  .checkInRecentItem div:last-child {
+    justify-items: start;
+  }
+}
+
 .empty {
   border: 1px dashed var(--line);
   border-radius: 8px;

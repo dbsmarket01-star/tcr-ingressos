@@ -18,7 +18,12 @@ export type CheckInResult = {
   };
 };
 
-export async function validateTicketForCheckIn(inputCode: string, deviceName?: string, admin?: CurrentAdmin) {
+export async function validateTicketForCheckIn(
+  inputCode: string,
+  deviceName?: string,
+  admin?: CurrentAdmin,
+  selectedEventId?: string
+) {
   const code = inputCode.trim();
 
   if (!code) {
@@ -33,6 +38,7 @@ export async function validateTicketForCheckIn(inputCode: string, deviceName?: s
       const ticket = await tx.ticket.findFirst({
         where: {
           OR: [{ code }, { qrCodeToken: code }],
+          ...(selectedEventId ? { eventId: selectedEventId } : {}),
           ...(admin
             ? {
                 event: {
@@ -176,6 +182,23 @@ export async function validateTicketForCheckIn(inputCode: string, deviceName?: s
       timeout: 10000
     }
   );
+}
+
+export async function listCheckInEvents(organizationId: string, allowedEventIds?: string[] | null) {
+  return prisma.event.findMany({
+    where: buildCheckInEventWhere(organizationId, allowedEventIds),
+    orderBy: {
+      startsAt: "asc"
+    },
+    select: {
+      id: true,
+      title: true,
+      startsAt: true,
+      venueName: true,
+      city: true,
+      state: true
+    }
+  });
 }
 
 function buildCheckInEventWhere(organizationId: string, allowedEventIds?: string[] | null): Prisma.EventWhereInput {

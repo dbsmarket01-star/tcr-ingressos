@@ -9,7 +9,13 @@ export async function validateTicketAction(formData: FormData) {
   const admin = await requirePermission("CHECKIN");
   const code = String(formData.get("code") ?? "").trim();
   const deviceName = String(formData.get("deviceName") ?? "").trim();
-  const result = await validateTicketForCheckIn(code, deviceName || undefined, admin);
+  const selectedEventId = String(formData.get("eventId") ?? "").trim();
+
+  if (!selectedEventId) {
+    redirect("/admin/check-in?status=INVALID&message=Selecione+um+evento+antes+de+validar+o+ingresso.");
+  }
+
+  const result = await validateTicketForCheckIn(code, deviceName || undefined, admin, selectedEventId);
 
   revalidatePath("/admin/check-in");
 
@@ -17,6 +23,7 @@ export async function validateTicketAction(formData: FormData) {
     status: result.status,
     message: result.message
   });
+  params.set("eventId", selectedEventId);
 
   if (result.ticket) {
     params.set("ticket", result.ticket.code);
