@@ -37,6 +37,69 @@ type EventLeadsPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
+function getCampaignStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    QUEUED: "Na fila",
+    PROCESSING: "Enviando",
+    COMPLETED: "Concluído",
+    COMPLETED_WITH_ERRORS: "Concluído com falhas",
+    FAILED: "Falhou",
+    CANCELED: "Cancelado"
+  };
+
+  return labels[status] || status;
+}
+
+function getCampaignStatusClass(status: string) {
+  return status.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+}
+
+function summarizeCampaignReason(message: string) {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("mailbox") || normalized.includes("inbox was full") || normalized.includes("caixa")) {
+    return "Caixa de entrada cheia";
+  }
+
+  if (normalized.includes("complaint") || normalized.includes("complain") || normalized.includes("spam")) {
+    return "Marcado como spam/reclamação";
+  }
+
+  if (normalized.includes("suppressed")) {
+    return "Bloqueado por lista de supressão";
+  }
+
+  if (normalized.includes("bounce") || normalized.includes("bounced")) {
+    return "E-mail devolvido pelo destinatário";
+  }
+
+  if (normalized.includes("delayed") || normalized.includes("atrasada")) {
+    return "Entrega atrasada";
+  }
+
+  if (normalized.includes("status final")) {
+    return "Entrega sem confirmação final";
+  }
+
+  if (normalized.includes("invalid") || normalized.includes("invalido") || normalized.includes("inválido")) {
+    return "E-mail inválido";
+  }
+
+  return "Falha reportada pelo provedor";
+}
+
+function compactCampaignReasons(reasons: Array<{ message: string; count: number }>) {
+  const grouped = reasons.reduce((acc, reason) => {
+    const label = summarizeCampaignReason(reason.message);
+    acc.set(label, (acc.get(label) ?? 0) + reason.count);
+    return acc;
+  }, new Map<string, number>());
+
+  return Array.from(grouped.entries())
+    .map(([label, count]) => ({ label, count }))
+    .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label, "pt-BR"));
+}
+
 export default async function EventLeadsPage({ params, searchParams }: EventLeadsPageProps) {
   const admin = await requirePermission("EVENTS");
   const emptySearchParams: Record<string, string | string[] | undefined> = {};
@@ -427,19 +490,24 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
             return (
               <div className="campaignSummaryGrid">
                 <article className="campaignSummaryCard">
-                  <span>Aceitos pelo provedor</span>
+                  <span>E-mails enviados</span>
                   <strong>{totalSent}</strong>
-                  <small>{totalPending} pendentes · {totalFailed} falhas.</small>
+                  <small>Aceitos pelo provedor para entrega.</small>
+                </article>
+                <article className="campaignSummaryCard campaignSummaryCardWarning">
+                  <span>Falhas registradas</span>
+                  <strong>{totalFailed}</strong>
+                  <small>{totalPending} pendentes na fila de envio.</small>
                 </article>
                 <article className="campaignSummaryCard">
                   <span>Aberturas</span>
                   <strong>{totalOpens}</strong>
-                  <small>{totalOpenRate}% de open rate no consolidado.</small>
+                  <small>{totalOpenRate}% de taxa de abertura consolidada.</small>
                 </article>
                 <article className="campaignSummaryCard">
                   <span>Cliques no botão</span>
                   <strong>{totalClicks}</strong>
-                  <small>{totalCtr}% de CTR no consolidado.</small>
+                  <small>{totalCtr}% de taxa de cliques consolidada.</small>
                 </article>
               </div>
             );
@@ -451,19 +519,30 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
               const pending = campaign.pendingCount + campaign.processingCount;
               const openRate = campaign.sentCount > 0 ? Math.round((opens / campaign.sentCount) * 100) : 0;
               const ctr = campaign.sentCount > 0 ? Math.round((clicks / campaign.sentCount) * 100) : 0;
+              const failureReasons = compactCampaignReasons(campaign.failureReasons);
+              const warningReasons = compactCampaignReasons(campaign.warningReasons);
 
               return (
                 <div key={campaign.id} className="campaignInsightRow">
                   <div className="campaignInsightCopy">
-                    <strong>{campaign.subject}</strong>
+                    <div className="campaignInsightTitleRow">
+                      <strong>{campaign.subject}</strong>
+                      <span className={`campaignStatusBadge campaignStatus-${getCampaignStatusClass(campaign.status)}`}>
+                        {getCampaignStatusLabel(campaign.status)}
+                      </span>
+                    </div>
                     <small>
-                      {formatDateTime(campaign.createdAt)} · {campaign.ctaLabel || "Abrir link"} · {campaign.status}
+                      {formatDateTime(campaign.createdAt)} · Botão: {campaign.ctaLabel || "Abrir link"}
                     </small>
                   </div>
                   <div className="campaignInsightMetrics">
                     <div className="campaignInsightMetricCard">
-                      <span>Aceitos</span>
+                      <span>Enviados</span>
                       <strong>{campaign.sentCount}</strong>
+                    </div>
+                    <div className="campaignInsightMetricCard campaignInsightMetricWarning">
+                      <span>Falhas</span>
+                      <strong>{campaign.failedCount}</strong>
                     </div>
                     <div className="campaignInsightMetricCard">
                       <span>Aberturas</span>
@@ -476,21 +555,22 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                   </div>
                   <div className="campaignInsightStats">
                     <span>{campaign.recipientCount} destinatários</span>
-                    <span>{pending} pendentes</span>
-                    <span>{campaign.failedCount} falhas</span>
-                    <strong>{openRate}% open rate</strong>
-                    <strong>{ctr}% CTR</strong>
+                    {pending > 0 ? <span>{pending} pendentes</span> : null}
+                    <strong>{openRate}% taxa de abertura</strong>
+                    <strong>{ctr}% taxa de cliques</strong>
                   </div>
-                  {campaign.failedCount > 0 || campaign.warningReasons.length > 0 ? (
+                  {failureReasons.length > 0 || warningReasons.length > 0 ? (
                     <div className="campaignInsightReasonList">
-                      {campaign.failureReasons.map((reason) => (
-                        <span key={`failed-${reason.message}`}>
-                          {reason.count} falha(s): {reason.message}
+                      {failureReasons.map((reason) => (
+                        <span key={`failed-${reason.label}`} className="campaignInsightReasonPill campaignInsightFailureReason">
+                          <b>{reason.count}</b>
+                          {reason.label}
                         </span>
                       ))}
-                      {campaign.warningReasons.map((reason) => (
-                        <span key={`warning-${reason.message}`} className="campaignInsightWarningReason">
-                          {reason.count} alerta(s): {reason.message}
+                      {warningReasons.map((reason) => (
+                        <span key={`warning-${reason.label}`} className="campaignInsightReasonPill campaignInsightWarningReason">
+                          <b>{reason.count}</b>
+                          {reason.label}
                         </span>
                       ))}
                     </div>

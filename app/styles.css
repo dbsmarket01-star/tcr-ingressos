@@ -14315,8 +14315,8 @@ body.operationTheme .loginBrandDark .brandLogo {
 
 .campaignSummaryGrid {
   display: grid;
-  gap: 14px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: 0 0 16px;
 }
 
@@ -14329,21 +14329,21 @@ body.operationTheme .loginBrandDark .brandLogo {
 
 .campaignSummaryCard {
   display: grid;
-  gap: 6px;
-  padding: 16px 18px;
+  gap: 5px;
+  padding: 14px 16px;
 }
 
 .campaignSummaryCard span,
 .campaignInsightMetricCard span {
   color: #4f6862;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .campaignSummaryCard strong {
   color: var(--ink);
-  font-size: clamp(28px, 3vw, 38px);
+  font-size: clamp(24px, 2.4vw, 34px);
   line-height: 1;
 }
 
@@ -14352,21 +14352,35 @@ body.operationTheme .loginBrandDark .brandLogo {
   line-height: 1.45;
 }
 
+.campaignSummaryCardWarning {
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.96), rgba(255, 255, 255, 0.92));
+  border-color: rgba(202, 138, 4, 0.18);
+}
+
+.campaignSummaryCardWarning strong {
+  color: #8a4b00;
+}
+
 .campaignInsightRow {
-  align-items: center;
-  background: rgba(255, 255, 255, 0.88);
+  align-items: start;
+  background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(13, 43, 36, 0.08);
   border-radius: 16px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px;
-  justify-content: space-between;
-  padding: 14px 16px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(260px, 1.25fr) minmax(420px, 1.7fr) minmax(160px, 0.65fr);
+  padding: 14px;
 }
 
 .campaignInsightCopy {
-  flex: 1 1 260px;
   min-width: 0;
+}
+
+.campaignInsightTitleRow {
+  align-items: flex-start;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
 }
 
 .campaignInsightRow strong {
@@ -14383,54 +14397,69 @@ body.operationTheme .loginBrandDark .brandLogo {
 
 .campaignInsightMetrics {
   display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  min-width: min(100%, 520px);
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: 100%;
 }
 
 .campaignInsightMetricCard {
-  padding: 12px 14px;
+  padding: 10px 12px;
 }
 
 .campaignInsightMetricCard strong {
   color: var(--brand-dark);
-  font-size: 28px;
+  font-size: 24px;
   line-height: 1;
-  margin: 8px 0 0;
+  margin: 6px 0 0;
+}
+
+.campaignInsightMetricWarning {
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.94), rgba(255, 255, 255, 0.92));
+  border-color: rgba(202, 138, 4, 0.18);
+}
+
+.campaignInsightMetricWarning strong {
+  color: #8a4b00;
 }
 
 .campaignInsightStats {
-  align-items: flex-end;
-  display: grid;
-  gap: 4px;
-  justify-items: end;
-  text-align: right;
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.campaignInsightStats span {
+.campaignInsightStats span,
+.campaignInsightStats strong {
+  align-self: flex-start;
+  background: rgba(244, 248, 246, 0.92);
+  border: 1px solid rgba(13, 43, 36, 0.08);
+  border-radius: 999px;
   color: #4f6862;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+  padding: 6px 9px;
 }
 
 .campaignInsightStats strong {
   color: var(--brand-dark);
-  font-size: 16px;
-  margin: 0;
+  font-weight: 900;
 }
 
 .campaignInsightReasonList {
-  background: linear-gradient(135deg, rgba(246, 250, 252, 0.96), rgba(255, 251, 245, 0.94));
-  border: 1px solid rgba(25, 82, 118, 0.12);
+  background: linear-gradient(135deg, rgba(250, 252, 252, 0.96), rgba(255, 251, 245, 0.92));
+  border: 1px solid rgba(13, 43, 36, 0.08);
   border-radius: 14px;
   color: #355164;
   display: flex;
   flex-wrap: wrap;
-  flex: 1 1 100%;
+  grid-column: 1 / -1;
   font-size: 13px;
-  gap: 8px;
+  gap: 7px;
   line-height: 1.35;
-  padding: 12px;
+  padding: 10px;
 }
 
 .campaignInsightReasonPill {
@@ -14441,12 +14470,23 @@ body.operationTheme .loginBrandDark .brandLogo {
   display: inline-flex;
   gap: 6px;
   max-width: 100%;
-  padding: 7px 10px;
+  padding: 6px 10px;
 }
 
 .campaignInsightReasonPill b {
+  align-items: center;
+  background: rgba(138, 75, 0, 0.1);
+  border-radius: 999px;
   color: #8a4b00;
+  display: inline-flex;
+  justify-content: center;
+  min-width: 24px;
+  padding: 2px 7px;
   white-space: nowrap;
+}
+
+.campaignInsightFailureReason {
+  border-color: rgba(202, 138, 4, 0.22);
 }
 
 .campaignInsightWarningReason {
@@ -14454,7 +14494,45 @@ body.operationTheme .loginBrandDark .brandLogo {
 }
 
 .campaignInsightWarningReason b {
+  background: rgba(25, 82, 118, 0.08);
   color: #946200;
+}
+
+.campaignStatusBadge {
+  border-radius: 999px;
+  border: 1px solid rgba(13, 43, 36, 0.08);
+  color: #315950;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  padding: 6px 8px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.campaignStatus-completed {
+  background: rgba(220, 252, 231, 0.9);
+  color: #0f6b3b;
+}
+
+.campaignStatus-completed-with-errors {
+  background: rgba(255, 247, 237, 0.95);
+  border-color: rgba(234, 88, 12, 0.16);
+  color: #9a3412;
+}
+
+.campaignStatus-processing,
+.campaignStatus-queued {
+  background: rgba(224, 242, 254, 0.92);
+  color: #075985;
+}
+
+.campaignStatus-failed,
+.campaignStatus-canceled {
+  background: rgba(254, 226, 226, 0.9);
+  color: #991b1b;
 }
 
 @media (min-width: 980px) {
@@ -15714,7 +15792,7 @@ body.operationTheme .loginBrandDark .brandLogo {
 
   .campaignInsightRow {
     align-items: start;
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .campaignSummaryGrid,
