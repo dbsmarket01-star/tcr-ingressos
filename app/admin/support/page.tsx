@@ -2,11 +2,9 @@ import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { CopyButton } from "@/components/forms/CopyButton";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
-import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { resendPendingPaymentEmailAction, resendTicketsEmailAction } from "@/features/support/support.actions";
 import { searchSupportOrders } from "@/features/support/support.service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
-import { getPublicOrderUrl, getPublicTicketUrl } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -29,278 +27,216 @@ const orderStatusLabels = {
   REFUNDED: "Reembolsado"
 };
 
-const ticketStatusLabels = {
-  ACTIVE: "Ativo",
-  USED: "Usado",
-  CANCELED: "Cancelado",
-  INVALID: "Inválido"
-};
+function getInitials(name: string) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join("")
+    .toUpperCase() || "CL";
+}
+
+function toWhatsappHref(phone?: string | null) {
+  if (!phone) return null;
+  const digits = phone.replace(/\D/g, "");
+  if (!digits) return null;
+  return `https://wa.me/${digits.startsWith("55") ? digits : `55${digits}`}`;
+}
 
 export default async function SupportPage({ searchParams }: SupportPageProps) {
   const admin = await requirePermission("SUPPORT");
-  const organizationContext = await getCurrentOrganizationContext();
   const params = await searchParams;
   const query = params.q?.trim() ?? "";
-  const orders = await searchSupportOrders(query, admin.organizationId, getAdminAllowedEventIds(admin));
-  const toWhatsappHref = (phone?: string | null) => {
-    if (!phone) return null;
-    const digits = phone.replace(/\D/g, "");
-    if (!digits) return null;
-    return `https://wa.me/${digits}`;
-  };
+  const orders = query ? await searchSupportOrders(query, admin.organizationId, getAdminAllowedEventIds(admin)) : [];
 
   return (
     <AdminShell
       title="Atendimento"
-      description="Busque pedidos, clientes e ingressos para resolver suporte na hora."
+      description="Localize pedidos e reenvie ingressos rapidamente."
     >
-      <section className="operationCommandStrip spacedSection" aria-label="Atalhos da área de atendimento">
-        <article className="operationCommandCard">
-          <span className="eyebrow">Atendimento rápido</span>
-          <h2>Resolva suporte da {organizationContext.brandName} sem ficar caçando informação.</h2>
-          <p>Pedido, ingresso, cliente e ação de reenvio precisam viver juntos. Esta tela agora já começa com os atalhos que mais fazem sentido no suporte.</p>
-        </article>
-        <div className="operationCommandActions">
-          <Link className="secondaryButton smallButton" href="/admin/orders">
-            Pedidos
-          </Link>
-          <Link className="secondaryButton smallButton" href="/admin/check-in">
-            Check-in
-          </Link>
-          <Link className="secondaryButton smallButton" href="/admin">
-            Dashboard
-          </Link>
-        </div>
-      </section>
-
-      <section className="card supportSearch">
-        <form className="supportSearchForm">
-          <label className="field">
-            <span>Buscar por pedido, ingresso, nome, e-mail, telefone ou evento</span>
-            <input
-              name="q"
-              placeholder="Ex: ING-..., nome do cliente, e-mail ou código do ingresso"
-              defaultValue={query}
-            />
-          </label>
-          <button className="button" type="submit">
-            Buscar
-          </button>
-          {query ? (
-            <Link className="secondaryButton" href="/admin/support">
-              Limpar
-            </Link>
-          ) : null}
-        </form>
-        <div className="supportSearchHints" aria-label="Exemplos de busca">
-          <span>Pedido ING-...</span>
-          <span>E-mail do cliente</span>
-          <span>CPF ou telefone</span>
-          <span>Código do ingresso</span>
-        </div>
-
-        {params.sent ? (
-          <p className="success">
-            Ingressos do pedido {params.order} reenviados para {params.sent}.
-          </p>
-        ) : null}
-        {params.paymentSent ? (
-          <p className="success">
-            Link de pagamento do pedido {params.order} reenviado para {params.paymentSent}.
-          </p>
-        ) : null}
-
-        {params.error ? <p className="errorBox">{params.error}</p> : null}
-      </section>
-
-      <section className="grid supportResults">
-        {orders.length === 0 ? (
-          <div className="empty">
-            {query
-              ? "Nenhum resultado encontrado. Confira se o código, e-mail, telefone ou nome foi digitado corretamente."
-              : "Digite um pedido, ingresso, nome, e-mail, telefone ou evento para iniciar o atendimento."}
+      <div className="supportDeskPage">
+        <section className="supportDeskSearchCard" aria-label="Busca de atendimento">
+          <form className="supportDeskSearchForm">
+            <label>
+              <span>Buscar pedido, cliente ou ingresso</span>
+              <input
+                name="q"
+                placeholder="Ex: Nome, e-mail, telefone, CPF ou código do ingresso"
+                defaultValue={query}
+              />
+            </label>
+            <button className="supportDeskSearchButton" type="submit">
+              Buscar
+            </button>
+          </form>
+          <div className="supportDeskChips" aria-label="Tipos de busca">
+            <span>Pedido</span>
+            <span>E-mail</span>
+            <span>Telefone</span>
+            <span>CPF</span>
+            <span>Código do ingresso</span>
           </div>
-        ) : (
-          orders.map((order) => (
-            <article className="card supportOrderCard" key={order.id}>
-              <div className="sectionHeader inlineHeader">
-                <div>
-                  <h2>{order.code}</h2>
-                  <p className="muted">
-                    {order.customer.name} - {order.customer.email}
-                  </p>
-                </div>
-                <div className="supportHeaderActions">
-                  <CopyButton className="secondaryButton smallButton" label="Copiar pedido" copiedLabel="Copiado" value={order.code} />
-                  <span className={`status ${order.status === "PAID" ? "published" : "draft"}`}>
-                    {orderStatusLabels[order.status]}
-                  </span>
-                </div>
-              </div>
 
-              <div className="supportSummaryGrid">
-                <div>
-                  <span>Evento</span>
-                  <strong>{order.event.title}</strong>
-                </div>
-                <div>
-                  <span>Pedido</span>
-                  <strong>{order.code}</strong>
-                </div>
-                <div>
-                  <span>Total</span>
-                  <strong>{formatCurrency(order.totalInCents)}</strong>
-                </div>
-                <div>
-                  <span>Pagamento</span>
-                  <strong>{order.payment?.status ?? "-"}</strong>
-                </div>
-                <div>
-                  <span>E-mail de ingresso</span>
-                  <strong>{order.ticketsEmailSentAt ? formatDateTime(order.ticketsEmailSentAt) : "Pendente"}</strong>
-                </div>
-                <div>
-                  <span>Ingressos</span>
-                  <strong>{order.tickets.length}</strong>
-                </div>
-                <div>
-                  <span>Origem</span>
-                  <strong>{order.utmSource || order.utmMedium ? `${order.utmSource ?? "-"} / ${order.utmMedium ?? "-"}` : "Direto"}</strong>
-                </div>
-                <div>
-                  <span>Expira em</span>
-                  <strong>{order.expiresAt ? formatDateTime(order.expiresAt) : "-"}</strong>
-                </div>
-                <div>
-                  <span>Criado em</span>
-                  <strong>{formatDateTime(order.createdAt)}</strong>
-                </div>
-              </div>
+          {params.sent ? (
+            <div className="successBox supportDeskFeedback">
+              Ingressos do pedido {params.order} reenviados para {params.sent}.
+            </div>
+          ) : null}
+          {params.paymentSent ? (
+            <div className="successBox supportDeskFeedback">
+              Link de pagamento do pedido {params.order} reenviado para {params.paymentSent}.
+            </div>
+          ) : null}
+          {params.error ? <div className="errorBox supportDeskFeedback">{params.error}</div> : null}
+        </section>
 
-              <div className="supportDetailsGrid">
-                <div>
-                  <h3>Contato</h3>
-                  <p>
-                    <strong>{order.customer.name}</strong>
-                    <br />
-                    <span className="breakText">{order.customer.email}</span>
-                    <br />
-                    <span>{order.customer.phone ?? "Telefone não informado"}</span>
-                  </p>
-                  <div className="supportInlineCopies">
-                    <CopyButton className="secondaryButton smallButton" label="Copiar e-mail" copiedLabel="Copiado" value={order.customer.email} />
-                    {order.customer.phone ? (
-                      <CopyButton className="secondaryButton smallButton" label="Copiar telefone" copiedLabel="Copiado" value={order.customer.phone} />
-                    ) : null}
-                    {toWhatsappHref(order.customer.phone) ? (
-                      <a
-                        className="secondaryButton smallButton"
-                        href={toWhatsappHref(order.customer.phone) ?? undefined}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                      >
-                        Abrir WhatsApp
-                      </a>
+        <section className="supportDeskResults" aria-label="Resultados de atendimento">
+          {orders.length === 0 ? (
+            <article className="supportDeskEmpty">
+              <strong>{query ? "Nenhum pedido encontrado." : "Comece pela busca."}</strong>
+              <span>
+                {query
+                  ? "Confira nome, e-mail, telefone, CPF, código do pedido ou código do ingresso."
+                  : "Use a busca acima para localizar rapidamente pedidos, clientes e ingressos."}
+              </span>
+            </article>
+          ) : (
+            orders.map((order) => {
+              const whatsappHref = toWhatsappHref(order.customer.phone);
+
+              return (
+                <article className="supportDeskOrderCard" key={order.id}>
+                  <div className="supportDeskFoundHeader">
+                    <div className="supportDeskFoundIcon" aria-hidden="true">✓</div>
+                    <div>
+                      <h2>Pedido encontrado</h2>
+                      <p>Confira os dados do cliente e gerencie o ingresso.</p>
+                    </div>
+                    <Link className="supportDeskNewButton" href="/admin/support">
+                      Novo atendimento
+                    </Link>
+                  </div>
+
+                  <div className="supportDeskCustomerPanel">
+                    <div className="supportDeskCustomerIntro">
+                      <span className="supportDeskAvatar">{getInitials(order.customer.name)}</span>
+                      <div>
+                        <strong>{order.customer.name}</strong>
+                        <span>{order.customer.email}</span>
+                        <span>{order.customer.phone || "Telefone não informado"}</span>
+                      </div>
+                    </div>
+
+                    <div className="supportDeskInfo">
+                      <span>Pedido</span>
+                      <strong>{order.code}</strong>
+                    </div>
+                    <div className="supportDeskInfo">
+                      <span>Evento</span>
+                      <strong>{order.event.title}</strong>
+                    </div>
+                    <div className="supportDeskInfo">
+                      <span>Data do pedido</span>
+                      <strong>{formatDateTime(order.createdAt)}</strong>
+                    </div>
+                    <div className="supportDeskInfo">
+                      <span>Status</span>
+                      <strong className={`supportDeskStatus supportDeskStatus${order.status}`}>
+                        {orderStatusLabels[order.status]}
+                      </strong>
+                    </div>
+                    <div className="supportDeskInfo supportDeskTotal">
+                      <span>Total</span>
+                      <strong>{formatCurrency(order.totalInCents)}</strong>
+                    </div>
+                  </div>
+
+                  <div className="supportDeskTicketPanel">
+                    {order.items.map((item) => (
+                      <div className="supportDeskTicketRow" key={item.id}>
+                        <div className="supportDeskTicketIcon" aria-hidden="true" />
+                        <div className="supportDeskTicketName">
+                          <strong>{item.quantity}x {item.lot.name}</strong>
+                          <span>{item.lot.description || "Setor geral"}</span>
+                        </div>
+                        <div>
+                          <span>Valor unitário</span>
+                          <strong>{formatCurrency(item.unitPriceInCents)}</strong>
+                        </div>
+                        <div>
+                          <span>Total do ingresso</span>
+                          <strong>{formatCurrency(item.totalInCents)}</strong>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="supportDeskQuickActions">
+                    <h3>Ações rápidas</h3>
+                    <div className="supportDeskActionGrid">
+                      {whatsappHref ? (
+                        <a
+                          className="supportQuickAction supportWhatsappAction"
+                          href={whatsappHref}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                        >
+                          Enviar mensagem no WhatsApp
+                        </a>
+                      ) : (
+                        <span className="supportQuickAction supportWhatsappAction isDisabled">
+                          WhatsApp não informado
+                        </span>
+                      )}
+                      <form action={resendTicketsEmailAction}>
+                        <input type="hidden" name="orderCode" value={order.code} />
+                        <input type="hidden" name="query" value={query} />
+                        <button className="supportQuickAction supportEmailSendAction" type="submit" disabled={order.tickets.length === 0}>
+                          Reenviar ingresso por e-mail
+                        </button>
+                      </form>
+                      <CopyButton
+                        className="supportQuickAction supportCopyEmailAction"
+                        label="Copiar e-mail"
+                        copiedLabel="E-mail copiado"
+                        value={order.customer.email}
+                      />
+                      {order.customer.phone ? (
+                        <CopyButton
+                          className="supportQuickAction supportCopyPhoneAction"
+                          label="Copiar telefone"
+                          copiedLabel="Telefone copiado"
+                          value={order.customer.phone}
+                        />
+                      ) : (
+                        <span className="supportQuickAction supportCopyPhoneAction isDisabled">
+                          Telefone não informado
+                        </span>
+                      )}
+                    </div>
+                    {order.status === "PENDING_PAYMENT" ? (
+                      <form action={resendPendingPaymentEmailAction} className="supportDeskPaymentRecovery">
+                        <input type="hidden" name="orderCode" value={order.code} />
+                        <input type="hidden" name="query" value={query} />
+                        <button className="supportDeskTextButton" type="submit">
+                          Reenviar link de pagamento
+                        </button>
+                      </form>
                     ) : null}
                   </div>
-                </div>
-                <div>
-                  <h3>Itens</h3>
-                  {order.items.map((item) => (
-                    <p key={item.id}>
-                      {item.quantity}x {item.lot.name} - {formatCurrency(item.totalInCents)}
-                    </p>
-                  ))}
-                </div>
-              </div>
+                </article>
+              );
+            })
+          )}
+        </section>
 
-              <div className="supportResolutionBox">
-                <div>
-                  <span>Situação sugerida</span>
-                  <strong>
-                    {order.status === "PAID"
-                      ? "Cliente pode receber os ingressos."
-                      : order.status === "PENDING_PAYMENT"
-                        ? "Cliente ainda precisa concluir o pagamento."
-                        : "Conferir histórico antes de orientar o cliente."}
-                  </strong>
-                </div>
-                <div>
-                  <span>Ação mais provável</span>
-                  <strong>
-                    {order.status === "PAID"
-                      ? "Reenviar ingressos ou abrir QR Code."
-                      : order.status === "PENDING_PAYMENT"
-                        ? "Reenviar link de pagamento ou orientar no Pix."
-                        : "Abrir o pedido interno e revisar o histórico."}
-                  </strong>
-                </div>
-              </div>
-
-              <div className="ticketList">
-                <h3>Ingressos</h3>
-                {order.tickets.length === 0 ? (
-                  <p className="muted">Ingressos ainda não emitidos.</p>
-                ) : (
-                  order.tickets.map((ticket) => (
-                    <Link
-                      className="ticketCard"
-                      href={getPublicTicketUrl(ticket.code, order.event.organization)}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      key={ticket.id}
-                    >
-                      <div>
-                        <strong>{ticket.code}</strong>
-                        <span className="muted">{ticket.lot.name}</span>
-                      </div>
-                      <div className="supportHeaderActions">
-                        <CopyButton
-                          className="secondaryButton smallButton"
-                          label="Copiar"
-                          copiedLabel="Copiado"
-                          value={ticket.code}
-                        />
-                        <span className={`status ${ticket.status === "ACTIVE" ? "published" : "draft"}`}>
-                          {ticketStatusLabels[ticket.status]}
-                        </span>
-                      </div>
-                    </Link>
-                  ))
-                )}
-              </div>
-
-              <div className="supportActions">
-                <Link
-                  className="secondaryButton"
-                  href={getPublicOrderUrl(order.code, order.event.organization)}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                >
-                  Abrir pedido
-                </Link>
-                <Link className="secondaryButton" href={`/admin/orders/${order.code}`}>
-                  Detalhe interno
-                </Link>
-                <form action={resendPendingPaymentEmailAction}>
-                  <input type="hidden" name="orderCode" value={order.code} />
-                  <input type="hidden" name="query" value={query} />
-                  <button className="secondaryButton" type="submit" disabled={order.status !== "PENDING_PAYMENT"}>
-                    Reenviar pagamento
-                  </button>
-                </form>
-                <form action={resendTicketsEmailAction}>
-                  <input type="hidden" name="orderCode" value={order.code} />
-                  <input type="hidden" name="query" value={query} />
-                  <button className="button" type="submit" disabled={order.tickets.length === 0}>
-                    Reenviar ingressos
-                  </button>
-                </form>
-              </div>
-            </article>
-          ))
-        )}
-      </section>
+        <aside className="supportDeskHint">
+          <strong>Dica rápida</strong>
+          <span>Use a busca acima para encontrar pedidos por nome, e-mail, telefone, CPF ou código do ingresso.</span>
+        </aside>
+      </div>
     </AdminShell>
   );
 }
