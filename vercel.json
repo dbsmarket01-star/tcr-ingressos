@@ -5,6 +5,10 @@
     {
       "path": "/api/maintenance/expire-orders",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/cart-abandonment",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

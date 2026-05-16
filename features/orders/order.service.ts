@@ -5,6 +5,7 @@ import { createPublicOrderUrl, sendOrderExpiredEmail } from "@/features/email/em
 import { updateHomeListStatusForOrder } from "@/features/hospitality/home-list.service";
 import { calculatePixDiscountInCents, calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import { getOrderReservationMinutes } from "@/features/settings/company-settings.service";
+import { sendCartAbandonmentWhatsApp } from "@/features/whatsapp/whatsapp.service";
 import { isValidCpf, onlyDocumentDigits } from "@/lib/document-validation";
 import type { CheckoutOrderInput } from "./order.schema";
 
@@ -499,6 +500,108 @@ export async function expirePendingOrders(options?: {
   };
 }
 
+export async function sendCartAbandonmentReminders(options?: {
+  limit?: number;
+  now?: Date;
+  organizationId?: string | null;
+}) {
+  const now = options?.now ?? new Date();
+  const limit = Math.min(Math.max(options?.limit ?? 100, 1), 500);
+  const minExpiresAt = new Date(now.getTime() + 5 * 60 * 1000);
+  const maxExpiresAt = new Date(now.getTime() + 15 * 60 * 1000);
+  const orders = await prisma.order.findMany({
+    where: {
+      status: OrderStatus.PENDING_PAYMENT,
+      cartAbandonmentSentAt: null,
+      expiresAt: {
+        gte: minExpiresAt,
+        lte: maxExpiresAt
+      },
+      ...(options?.organizationId
+        ? {
+            event: {
+              organizationId: options.organizationId,
+              status: {
+                not: EventStatus.DRAFT
+              }
+            }
+          }
+        : {})
+    },
+    orderBy: {
+      expiresAt: "asc"
+    },
+    take: limit,
+    include: {
+      customer: {
+        select: {
+          name: true,
+          phone: true
+        }
+      },
+      event: {
+        select: {
+          title: true,
+          organization: {
+            select: {
+              name: true,
+              publicDomain: true,
+              adminDomain: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  let sent = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  for (const order of orders) {
+    if (!order.customer.phone || !order.expiresAt) {
+      skipped += 1;
+      continue;
+    }
+
+    try {
+      await sendCartAbandonmentWhatsApp({
+        buyerName: order.customer.name,
+        buyerPhone: order.customer.phone,
+        eventTitle: order.event.title,
+        orderUrl: createPublicOrderUrl(order.code, order.event.organization),
+        expiresAt: order.expiresAt
+      });
+
+      await prisma.order.updateMany({
+        where: {
+          id: order.id,
+          cartAbandonmentSentAt: null
+        },
+        data: {
+          cartAbandonmentSentAt: new Date()
+        }
+      });
+
+      sent += 1;
+    } catch (error) {
+      failed += 1;
+      console.error("[WhatsApp] Falha ao enviar abandono de carrinho", {
+        orderId: order.id,
+        orderCode: order.code,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  }
+
+  return {
+    checked: orders.length,
+    sent,
+    skipped,
+    failed
+  };
+}
+
 export async function expirePendingOrderByCode(code: string, organizationId?: string | null) {
   const order = await prisma.order.findFirst({
     where: {
@@ -883,6 +986,7 @@ async function notifyOrderExpired(order: {
       orderCode: order.code,
       brandName: order.event.organization?.name || "Ingresaas",
       brandPrimaryColor: order.event.organization?.primaryColor,
+      organization: order.event.organization,
       eventTitle: order.event.title,
       orderUrl: createPublicOrderUrl(order.code, order.event.organization)
     });

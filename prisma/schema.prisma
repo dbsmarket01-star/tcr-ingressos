@@ -758,6 +758,8 @@ model Order {
   ticketsEmailLastCheckedAt DateTime?
   ticketsEmailLastError String?
   ticketsEmailAttempts Int @default(0)
+  purchaseApprovedWhatsAppSentAt DateTime?
+  cartAbandonmentSentAt DateTime?
   paidAt          DateTime?
   canceledAt      DateTime?
   utmSource       String?

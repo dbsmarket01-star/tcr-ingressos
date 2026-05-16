@@ -1,6 +1,6 @@
 import { HomeListStatus, OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { createPublicTicketUrl, sendTicketsEmail, type EmailSendResult } from "@/features/email/email.service";
+import { createPublicOrderUrl, createPublicTicketUrl, sendTicketsEmail, type EmailSendResult } from "@/features/email/email.service";
 import { createHomeListEntriesForApprovedOrder, updateHomeListStatusForOrder } from "@/features/hospitality/home-list.service";
 import { expirePendingOrderByCode } from "@/features/orders/order.service";
 import {
@@ -13,6 +13,7 @@ import {
 import { getCreditCardInstallmentLimitForEvent } from "@/lib/payment-installments";
 import { trackMetaPurchaseForPaidOrder } from "@/features/tracking/meta-conversions.service";
 import { createQrCodeToken, createTicketCode } from "@/features/tickets/ticket-code";
+import { sendPurchaseApprovedWhatsApp, type PurchaseApprovedWhatsAppInput } from "@/features/whatsapp/whatsapp.service";
 import { buildAsaasSplitsForOrder } from "./asaas-split.service";
 import { getAsaasProvider, getPaymentProvider } from "./payment-provider";
 import type { PaymentOrganizationContext } from "./payment-organization-config";
@@ -46,6 +47,8 @@ type TicketEmailPayload = {
     url: string;
   }>;
 };
+
+type PurchaseApprovedWhatsAppPayload = PurchaseApprovedWhatsAppInput;
 
 const paymentOrganizationSelect = {
   id: true,
@@ -124,6 +127,31 @@ async function sendTicketsEmailSafely(orderId: string, email: TicketEmailPayload
       error: normalizeEmailError(error)
     });
   }
+}
+
+async function sendPurchaseApprovedWhatsAppSafely(orderId: string, payload: PurchaseApprovedWhatsAppPayload | null) {
+  if (!payload) {
+    return;
+  }
+
+  await sendPurchaseApprovedWhatsApp(payload)
+    .then(async () => {
+      await prisma.order.update({
+        where: {
+          id: orderId
+        },
+        data: {
+          purchaseApprovedWhatsAppSentAt: new Date()
+        }
+      });
+    })
+    .catch((error) => {
+      console.error("[WhatsApp] Falha ao enviar compra aprovada", {
+        orderId,
+        orderCode: payload.orderCode,
+        error: normalizeEmailError(error)
+      });
+    });
 }
 
 function mapAsaasPaymentStatus(status?: string) {
@@ -873,6 +901,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
               totalInCents: true,
               ticketsEmailSentAt: true,
               ticketsEmailStatus: true,
+              purchaseApprovedWhatsAppSentAt: true,
               customer: true,
               items: true,
               event: {
@@ -940,6 +969,20 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         };
       };
 
+      const buildApprovedWhatsApp = () => {
+        if (payment.order.purchaseApprovedWhatsAppSentAt || !payment.order.customer.phone) {
+          return null;
+        }
+
+        return {
+          buyerName: payment.order.customer.name,
+          buyerPhone: payment.order.customer.phone,
+          eventTitle: payment.order.event.title,
+          orderCode: payment.order.code,
+          orderUrl: createPublicOrderUrl(payment.order.code, payment.order.event.organization)
+        };
+      };
+
       if (
         (payment.status === PaymentStatus.APPROVED || payment.order.status === OrderStatus.PAID) &&
         payload.status !== "REFUNDED"
@@ -953,14 +996,14 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           }))
         );
 
-        return { payment, orderId: payment.orderId, email: approvedTicketsEmail };
+        return { payment, orderId: payment.orderId, email: approvedTicketsEmail, whatsapp: buildApprovedWhatsApp() };
       }
 
       if (
         payload.status === "REFUNDED" &&
         (payment.status === PaymentStatus.REFUNDED || payment.order.status === OrderStatus.REFUNDED)
       ) {
-        return { payment, orderId: payment.orderId, email: null };
+        return { payment, orderId: payment.orderId, email: null, whatsapp: null };
       }
 
       if (payment.status === PaymentStatus.REFUNDED || payment.order.status === OrderStatus.REFUNDED) {
@@ -972,14 +1015,14 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           }
         });
 
-        return { payment: currentPayment, orderId: payment.orderId, email: null };
+        return { payment: currentPayment, orderId: payment.orderId, email: null, whatsapp: null };
       }
 
       if (
         (payload.status === "FAILED" && payment.status === PaymentStatus.FAILED) ||
         (payload.status === "CANCELED" && payment.status === PaymentStatus.CANCELED)
       ) {
-        return { payment, orderId: payment.orderId, email: null };
+        return { payment, orderId: payment.orderId, email: null, whatsapp: null };
       }
 
       if (payload.status === "PENDING") {
@@ -992,7 +1035,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           }
         });
 
-        return { payment: updatedPayment, orderId: payment.orderId, email: null };
+        return { payment: updatedPayment, orderId: payment.orderId, email: null, whatsapp: null };
       }
 
       if (payload.status === "APPROVED") {
@@ -1016,7 +1059,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           return {
             payment: currentPayment,
             orderId: payment.orderId,
-            email: null
+            email: null,
+            whatsapp: null
           };
         }
 
@@ -1051,7 +1095,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           return {
             payment: currentPayment,
             orderId: payment.orderId,
-            email: null
+            email: null,
+            whatsapp: null
           };
         }
 
@@ -1154,7 +1199,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         return {
           payment: updatedPayment,
           orderId: payment.orderId,
-          email: buildApprovedTicketsEmail(generatedTickets)
+          email: buildApprovedTicketsEmail(generatedTickets),
+          whatsapp: buildApprovedWhatsApp()
         };
       }
 
@@ -1178,7 +1224,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
             where: { id: payment.id }
           });
 
-          return { payment: currentPayment, orderId: payment.orderId, email: null };
+          return { payment: currentPayment, orderId: payment.orderId, email: null, whatsapp: null };
         }
 
         if (payment.order.status === OrderStatus.PAID) {
@@ -1225,12 +1271,12 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           where: { id: payment.id }
         });
 
-        return { payment: updatedPayment, orderId: payment.orderId, email: null };
+        return { payment: updatedPayment, orderId: payment.orderId, email: null, whatsapp: null };
       }
 
       if (payload.status === "FAILED" || payload.status === "CANCELED") {
         if (payment.status === PaymentStatus.APPROVED || payment.order.status === OrderStatus.PAID) {
-          return { payment, orderId: payment.orderId, email: null };
+          return { payment, orderId: payment.orderId, email: null, whatsapp: null };
         }
 
         const nextPaymentStatus =
@@ -1257,7 +1303,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
             where: { id: payment.id }
           });
 
-          return { payment: currentPayment, orderId: payment.orderId, email: null };
+          return { payment: currentPayment, orderId: payment.orderId, email: null, whatsapp: null };
         }
 
         if (payment.order.status === OrderStatus.PENDING_PAYMENT || payment.order.status === OrderStatus.EXPIRED) {
@@ -1291,10 +1337,10 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           where: { id: payment.id }
         });
 
-        return { payment: updatedPayment, orderId: payment.orderId, email: null };
+        return { payment: updatedPayment, orderId: payment.orderId, email: null, whatsapp: null };
       }
 
-      return { payment, orderId: payment.orderId, email: null };
+      return { payment, orderId: payment.orderId, email: null, whatsapp: null };
     },
     {
       isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
@@ -1304,6 +1350,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
   );
 
   await sendTicketsEmailSafely(result.orderId, result.email);
+  await sendPurchaseApprovedWhatsAppSafely(result.orderId, result.whatsapp);
 
   try {
     await trackMetaPurchaseForPaidOrder(result.orderId);
