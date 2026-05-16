@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { CopyButton } from "@/components/forms/CopyButton";
 import { requirePermission } from "@/features/auth/auth.service";
 import { createOrganizationInitialOwnerAction } from "@/features/organizations/organization.actions";
 import { getOrganizationDetailForPlatformAdmin } from "@/features/organizations/organization.admin.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
+import { getPaymentOrganizationEnvSuffix } from "@/features/payments/payment-organization-config";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +20,15 @@ type OperationDetailPageProps = {
     updated?: string;
   }>;
 };
+
+function normalizeEmailEnvKey(value?: string | null) {
+  return (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
 
 export default async function OperationDetailPage({ params, searchParams }: OperationDetailPageProps) {
   await requirePermission("OPERATIONS");
@@ -36,6 +47,26 @@ export default async function OperationDetailPage({ params, searchParams }: Oper
   if (!operation) {
     notFound();
   }
+
+  const paymentEnvSuffix = getPaymentOrganizationEnvSuffix(operation) || "SLUG_DA_OPERACAO";
+  const emailEnvSuffix = normalizeEmailEnvKey(operation.name) || paymentEnvSuffix;
+  const publicBaseUrl = operation.publicDomain ? `https://${operation.publicDomain}` : "https://dominio-publico-do-cliente";
+  const adminBaseUrl = operation.adminDomain ? `https://${operation.adminDomain}` : "https://produtor.dominio-do-cliente";
+  const asaasWebhookUrl = `${publicBaseUrl}/api/webhooks/payments/asaas`;
+  const vercelDomainCommands = [
+    operation.publicDomain ? `vercel domains add ${operation.publicDomain} <projeto-vercel-da-operacao>` : "vercel domains add dominio-publico-do-cliente <projeto-vercel-da-operacao>",
+    operation.adminDomain ? `vercel domains add ${operation.adminDomain} <projeto-vercel-da-operacao>` : "vercel domains add produtor.dominio-do-cliente <projeto-vercel-da-operacao>"
+  ];
+  const paymentEnvRows = [
+    `ASAAS_API_KEY_${paymentEnvSuffix}=chave_producao_asaas_da_operacao`,
+    `ASAAS_WEBHOOK_TOKEN_${paymentEnvSuffix}=token_webhook_da_operacao`,
+    `ASAAS_API_URL=https://api.asaas.com/v3`,
+    `PAYMENT_PROVIDER=ASAAS`
+  ];
+  const emailEnvRows = [
+    `EMAIL_FROM_${emailEnvSuffix}=${operation.name} <ingressos@${operation.publicDomain || "dominio-do-cliente"}>`,
+    `RESEND_API_KEY=chave_resend_da_plataforma_ou_da_operacao`
+  ];
 
   return (
     <AdminShell
@@ -85,6 +116,71 @@ export default async function OperationDetailPage({ params, searchParams }: Oper
             </a>
           ) : null}
         </div>
+      </section>
+
+      <section className="platformActivationGrid spacedSection" aria-label="Ativação da bilheteria filha">
+        <article className="platformActivationCard">
+          <span className="eyebrow">1. Domínios</span>
+          <h3>Conecte site público e painel do produtor.</h3>
+          <p>
+            A operação precisa de dois domínios: um para venda pública e outro para o produtor administrar eventos,
+            pedidos e equipe.
+          </p>
+          <div className="platformEnvList">
+            <div>
+              <span>Site público</span>
+              <strong>{publicBaseUrl}</strong>
+              <CopyButton className="secondaryButton tinyButton" label="Copiar" copiedLabel="Copiado" value={publicBaseUrl} />
+            </div>
+            <div>
+              <span>Painel produtor</span>
+              <strong>{adminBaseUrl}</strong>
+              <CopyButton className="secondaryButton tinyButton" label="Copiar" copiedLabel="Copiado" value={adminBaseUrl} />
+            </div>
+          </div>
+          <pre className="platformSetupCode">{vercelDomainCommands.join("\n")}</pre>
+        </article>
+
+        <article className="platformActivationCard">
+          <span className="eyebrow">2. Asaas próprio</span>
+          <h3>Use variáveis isoladas por cliente.</h3>
+          <p>
+            A chave Asaas desta operação deve ser exclusiva. Assim, dinheiro, cobrança e webhook não se misturam
+            com TCR, A2 ou qualquer outra bilheteria.
+          </p>
+          <div className="platformEnvList">
+            <div>
+              <span>Sufixo da operação</span>
+              <strong>{paymentEnvSuffix}</strong>
+              <CopyButton className="secondaryButton tinyButton" label="Copiar" copiedLabel="Copiado" value={paymentEnvSuffix} />
+            </div>
+            <div>
+              <span>Webhook Asaas</span>
+              <strong>{asaasWebhookUrl}</strong>
+              <CopyButton className="secondaryButton tinyButton" label="Copiar" copiedLabel="Copiado" value={asaasWebhookUrl} />
+            </div>
+          </div>
+          <pre className="platformSetupCode">{paymentEnvRows.join("\n")}</pre>
+        </article>
+
+        <article className="platformActivationCard">
+          <span className="eyebrow">3. E-mail e revisão final</span>
+          <h3>Feche remetente, suporte e checklist.</h3>
+          <p>
+            Configure o remetente da operação e revise a tela de produção antes de liberar tráfego pago ou lote real.
+          </p>
+          <div className="platformEnvList">
+            <div>
+              <span>Remetente sugerido</span>
+              <strong>{operation.publicDomain ? `ingressos@${operation.publicDomain}` : "ingressos@dominio-do-cliente"}</strong>
+            </div>
+            <div>
+              <span>Checklist</span>
+              <strong>{`${adminBaseUrl}/admin/production`}</strong>
+            </div>
+          </div>
+          <pre className="platformSetupCode">{emailEnvRows.join("\n")}</pre>
+        </article>
       </section>
 
       <section className="platformOperationOwnerStrip spacedSection" aria-label="Resumo executivo da operação">

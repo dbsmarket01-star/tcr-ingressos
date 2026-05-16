@@ -7257,6 +7257,89 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   justify-content: space-between;
 }
 
+.platformActivationGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.platformActivationCard {
+  background: linear-gradient(180deg, #ffffff, #f8fbff);
+  border: 1px solid #dce7ff;
+  border-radius: 20px;
+  box-shadow: 0 18px 40px rgba(25, 48, 94, 0.05);
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.platformActivationCard h3,
+.platformActivationCard p {
+  margin: 0;
+}
+
+.platformActivationCard h3 {
+  color: #17325f;
+  font-size: 20px;
+  line-height: 1.18;
+}
+
+.platformActivationCard p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.platformEnvList {
+  display: grid;
+  gap: 10px;
+}
+
+.platformEnvList div {
+  background: #f4f8ff;
+  border: 1px solid #dbe4f4;
+  border-radius: 14px;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px;
+}
+
+.platformEnvList span {
+  color: #60789b;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.platformEnvList strong {
+  color: #14213f;
+  font-size: 13px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.platformSetupCode {
+  background: #102033;
+  border-radius: 14px;
+  color: #d8f4ec;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+  overflow-x: auto;
+  padding: 14px;
+  white-space: pre-wrap;
+}
+
+.tinyButton {
+  font-size: 11px;
+  min-height: 28px;
+  padding: 0 9px;
+  width: fit-content;
+}
+
 .tablePrimaryCell {
   display: grid;
   gap: 4px;
@@ -16437,6 +16520,7 @@ body.operationTheme .loginBrandDark .brandLogo {
   .platformSplitGrid,
   .platformRevenueStrip,
   .platformOperationsGrid,
+  .platformActivationGrid,
   .mediaUploadGrid,
   .mediaSizingGuide,
   .orderGrid,
@@ -18328,6 +18412,7 @@ body.operationTheme .loginBrandDark .brandLogo {
   .platformOverviewHero,
   .platformOperationsHero,
   .platformOperationCommandBar,
+  .platformActivationCard,
   .platformOperationCard,
   .platformOperationCreateCard,
   .platformOperationsFilterCard,

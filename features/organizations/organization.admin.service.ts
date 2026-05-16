@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 type CreateOrganizationInput = {
   name: string;
   slug: string;
+  templateOrganizationId?: string | null;
   publicDomain?: string | null;
   adminDomain?: string | null;
   logoUrl?: string | null;
@@ -44,6 +45,36 @@ type OrganizationConflictInput = {
   ownerEmail?: string | null;
   excludeId?: string | null;
 };
+
+const companySettingsTemplateSelect = {
+  instagramUrl: true,
+  facebookUrl: true,
+  youtubeUrl: true,
+  whatsappUrl: true,
+  footerDescription: true,
+  footerAboutTitle: true,
+  footerAboutContent: true,
+  footerHowItWorksTitle: true,
+  footerHowItWorksContent: true,
+  footerTermsTitle: true,
+  footerTermsContent: true,
+  footerPrivacyTitle: true,
+  footerPrivacyContent: true,
+  footerHelpTitle: true,
+  footerHelpContent: true,
+  footerFaqTitle: true,
+  footerFaqContent: true,
+  footerContactTitle: true,
+  footerContactContent: true,
+  defaultCurrency: true,
+  platformFeeBps: true,
+  orderReservationMinutes: true,
+  cardPendingReservationMinutes: true
+} satisfies Prisma.CompanySettingsSelect;
+
+type CompanySettingsTemplate = Prisma.CompanySettingsGetPayload<{
+  select: typeof companySettingsTemplateSelect;
+}>;
 
 function normalizeValue(value?: string | null) {
   const trimmed = value?.trim() || "";
@@ -126,6 +157,7 @@ async function upsertOrganizationCompanySettings(
     publicDomain?: string | null;
     supportEmail?: string | null;
     supportPhone?: string | null;
+    templateSettings?: CompanySettingsTemplate | null;
   }
 ) {
   const supportEmail = buildOrganizationSupportEmail({
@@ -133,6 +165,7 @@ async function upsertOrganizationCompanySettings(
     publicDomain: input.publicDomain
   });
   const supportPhone = normalizeValue(input.supportPhone);
+  const template = input.templateSettings;
 
   return tx.companySettings.upsert({
     where: {
@@ -151,10 +184,29 @@ async function upsertOrganizationCompanySettings(
       document: "00.000.000/0001-00",
       supportEmail,
       supportPhone,
-      defaultCurrency: "BRL",
-      platformFeeBps: 0,
-      orderReservationMinutes: 120,
-      cardPendingReservationMinutes: 30
+      instagramUrl: template?.instagramUrl ?? null,
+      facebookUrl: template?.facebookUrl ?? null,
+      youtubeUrl: template?.youtubeUrl ?? null,
+      whatsappUrl: template?.whatsappUrl ?? null,
+      footerDescription: template?.footerDescription ?? null,
+      footerAboutTitle: template?.footerAboutTitle ?? null,
+      footerAboutContent: template?.footerAboutContent ?? null,
+      footerHowItWorksTitle: template?.footerHowItWorksTitle ?? null,
+      footerHowItWorksContent: template?.footerHowItWorksContent ?? null,
+      footerTermsTitle: template?.footerTermsTitle ?? null,
+      footerTermsContent: template?.footerTermsContent ?? null,
+      footerPrivacyTitle: template?.footerPrivacyTitle ?? null,
+      footerPrivacyContent: template?.footerPrivacyContent ?? null,
+      footerHelpTitle: template?.footerHelpTitle ?? null,
+      footerHelpContent: template?.footerHelpContent ?? null,
+      footerFaqTitle: template?.footerFaqTitle ?? null,
+      footerFaqContent: template?.footerFaqContent ?? null,
+      footerContactTitle: template?.footerContactTitle ?? null,
+      footerContactContent: template?.footerContactContent ?? null,
+      defaultCurrency: template?.defaultCurrency ?? "BRL",
+      platformFeeBps: template?.platformFeeBps ?? 0,
+      orderReservationMinutes: template?.orderReservationMinutes ?? 120,
+      cardPendingReservationMinutes: template?.cardPendingReservationMinutes ?? 30
     }
   });
 }
@@ -533,6 +585,15 @@ export async function createOrganization(input: CreateOrganizationInput) {
       ownerEmail
     });
 
+    const templateSettings = input.templateOrganizationId
+      ? await tx.companySettings.findUnique({
+          where: {
+            organizationId: input.templateOrganizationId
+          },
+          select: companySettingsTemplateSelect
+        })
+      : null;
+
     const organization = await tx.organization.create({
       data: {
         name: input.name.trim(),
@@ -567,7 +628,8 @@ export async function createOrganization(input: CreateOrganizationInput) {
       name: organization.name,
       publicDomain: organization.publicDomain,
       supportEmail: organization.supportEmail,
-      supportPhone: organization.supportPhone
+      supportPhone: organization.supportPhone,
+      templateSettings
     });
 
     return organization;

@@ -19,6 +19,7 @@ export async function createOrganizationAction(formData: FormData) {
   const admin = await requirePermission("OPERATIONS");
   const name = readText(formData, "name");
   const slug = readText(formData, "slug");
+  const templateOrganizationId = readText(formData, "templateOrganizationId");
   const ownerName = readText(formData, "ownerName");
   const ownerEmail = readText(formData, "ownerEmail");
   const ownerPassword = readText(formData, "ownerPassword");
@@ -41,6 +42,7 @@ export async function createOrganizationAction(formData: FormData) {
     organization = await createOrganization({
       name,
       slug,
+      templateOrganizationId,
       publicDomain: readText(formData, "publicDomain"),
       adminDomain: readText(formData, "adminDomain"),
       logoUrl: readText(formData, "logoUrl"),
@@ -71,15 +73,17 @@ export async function createOrganizationAction(formData: FormData) {
       publicDomain: organization.publicDomain,
       adminDomain: organization.adminDomain,
       primaryColor: organization.primaryColor,
-      secondaryColor: organization.secondaryColor
+      secondaryColor: organization.secondaryColor,
+      templateOrganizationId: templateOrganizationId || null
     }
   });
 
   revalidatePath("/admin");
   revalidatePath("/admin/operations");
+  revalidatePath(`/admin/operations/${organization.id}`);
   revalidatePath("/");
   revalidatePath("/login");
-  redirect(`/admin/operations?created=${encodeURIComponent(organization.name)}`);
+  redirect(`/admin/operations/${organization.id}?updated=${encodeURIComponent(`${organization.name} criada. Complete domínios, Asaas e revisão final.`)}`);
 }
 
 export async function updateOrganizationAction(formData: FormData) {

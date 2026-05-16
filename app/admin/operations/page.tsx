@@ -91,6 +91,7 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
   const totalLeads = organizations.reduce((total, organization) => total + organization.leadsCount, 0);
   const secureOrganizations = organizations.filter((organization) => organization.securityTone === "published");
   const operationsWithInitialTeam = organizations.filter((organization) => organization._count.adminUsers > 0);
+  const operationTemplates = organizations.filter((organization) => organization.isActive);
 
   return (
     <AdminShell
@@ -162,6 +163,7 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
             <span>Valida domínio duplicado</span>
             <span>Cria usuário inicial</span>
             <span>Entrega acesso separado</span>
+            <span>Permite usar modelo</span>
           </div>
 
           <div className="platformCreateFlow">
@@ -178,6 +180,22 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
               <span>Cores, logo e suporte</span>
             </div>
           </div>
+
+          <label className="field">
+            <span>Modelo operacional</span>
+            <select name="templateOrganizationId" defaultValue="">
+              <option value="">Base limpa da Ingresaas</option>
+              {operationTemplates.map((organization) => (
+                <option key={organization.id} value={organization.id}>
+                  Copiar configuração segura de {organization.name}
+                </option>
+              ))}
+            </select>
+            <small className="formHint">
+              O modelo copia apenas parâmetros seguros da operação: taxa, prazos de reserva, rodapé e canais sociais.
+              Eventos, pedidos, clientes, chaves Asaas, split e vendas nunca são copiados.
+            </small>
+          </label>
 
           <div className="grid twoColumns">
             <label className="field">
