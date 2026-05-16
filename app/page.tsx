@@ -145,73 +145,100 @@ function HeadsetIcon() {
   );
 }
 
+function GlobeIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M4 12H20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M12 4C14.1 6.05 15.2 8.72 15.2 12C15.2 15.28 14.1 17.95 12 20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M12 4C9.9 6.05 8.8 8.72 8.8 12C8.8 15.28 9.9 17.95 12 20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function GrowthIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <path d="M5 18V10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M11 18V6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M17 18V12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M4.8 7.4L9.2 3L13.8 7.6L20 1.8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15.4 1.8H20V6.4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function WalletIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <path d="M4 7.5C4 6.12 5.12 5 6.5 5H18.5C19.33 5 20 5.67 20 6.5V17.5C20 18.33 19.33 19 18.5 19H6.5C5.12 19 4 17.88 4 16.5V7.5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M16 12H20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M6.6 8.2H13.4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function UsersIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M3.8 19C4.55 16.52 6.5 15 9 15C11.5 15 13.45 16.52 14.2 19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M15 11.3C16.54 11 17.7 9.64 17.7 8C17.7 6.36 16.54 5 15 4.7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M15.8 15.25C18.1 15.6 19.72 16.95 20.25 19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ArrowRightIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M13 6L19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function PlayIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="8.4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M10.2 8.8L15.8 12L10.2 15.2V8.8Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <rect x="4.5" y="5.5" width="15" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M8 4V7.2M16 4V7.2M5 10H19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <rect x="6.3" y="10" width="11.4" height="9" rx="2.2" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M8.8 10V8.3C8.8 6.53 10.23 5.1 12 5.1C13.77 5.1 15.2 6.53 15.2 8.3V10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function DotIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="4" fill="currentColor" />
+    </svg>
+  );
+}
+
 const leadAnnualRevenueBands = [
   "Até R$ 300 mil por ano",
   "De R$ 300 mil a R$ 1 milhão por ano",
   "De R$ 1 milhão a R$ 3 milhões por ano",
   "De R$ 3 milhões a R$ 10 milhões por ano",
   "Acima de R$ 10 milhões por ano"
-];
-
-const marketingPillars = [
-  {
-    title: "Saque e capital de giro",
-    body: "Receba com mais liberdade e mantenha mídia, equipe e fornecedores girando sem depender do fim do evento."
-  },
-  {
-    title: "Mais margem por venda",
-    body: "Além do ingresso, a operação captura entre 7% e 20% a mais por venda com a própria estrutura."
-  },
-  {
-    title: "Base 100% do cliente",
-    body: "Nome, telefone e e-mail ficam na sua base, não no colo de plataforma concorrente."
-  }
-];
-
-const advantageCards = [
-  {
-    title: "Autonomia comercial",
-    body: "Sua marca aparece primeiro. Seu domínio, sua comunicação e sua lógica comercial ficam no controle da operação."
-  },
-  {
-    title: "Controle financeiro mais rápido",
-    body: "Menos atraso entre venda e caixa disponível ajuda a girar campanha, equipe e próximos eventos com mais velocidade."
-  },
-  {
-    title: "Base própria para crescer",
-    body: "Cada campanha fortalece uma base que continua sendo sua, o que melhora recorrência, remarketing e independência."
-  },
-  {
-    title: "Operação em um só fluxo",
-    body: "Venda, pedido, ticket, QR Code, check-in e lead convivem no mesmo sistema para a equipe operar com menos ruído."
-  }
-];
-
-const processSteps = [
-  "Você preenche o formulário e o comercial entende o perfil da sua operação.",
-  "A Ingresaas configura domínio, acesso inicial, identidade visual e estrutura de venda.",
-  "Sua bilheteria entra no ar com painel próprio, base própria e fluxo pronto para vender."
-];
-
-const securityPoints = [
-  {
-    title: "Login próprio do cliente",
-    body: "Cada operação entra no próprio admin com e-mail e senha, sem misturar equipe, dado ou configuração."
-  },
-  {
-    title: "Acesso separado por papel",
-    body: "A plataforma controla quem pode ver dados, mexer em configuração e operar áreas sensíveis."
-  },
-  {
-    title: "Governança central da base",
-    body: "A Ingresaas acompanha domínio, branding e saúde da operação sem virar o painel público do cliente."
-  }
-];
-
-const heroProofPoints = [
-  "Venda no próprio domínio e fortaleça sua marca",
-  "Ganhe mais caixa e mais velocidade para operar",
-  "Pare de entregar seus leads para terceiros"
 ];
 
 function getPlatformLeadMessage(success?: string, error?: string) {
@@ -248,253 +275,205 @@ export default async function Home({ searchParams }: HomePageProps) {
     const platformLeadMessage = getPlatformLeadMessage(query.success, query.error);
 
     return (
-      <main className="shell homePage platformHomePage">
-        <section className="platformMarketingHero">
-          <div className="platformMarketingHeroGrid">
-            <div className="platformMarketingHeroContent">
-              <div className="brand homeBrand" aria-label={organizationContext.platformName}>
-                <span className="brandMark">{organizationContext.brandMark}</span>
-                <span>{organizationContext.platformName}</span>
-              </div>
-              <span className="homeEyebrow">Bilheteria própria para produtores e operações</span>
-              <h1>Venda no seu domínio, ganhe mais margem e assuma o controle da sua bilheteria.</h1>
+      <main className="ingressaasMarketPage">
+        <section className="ingressaasHeroShell">
+          <header className="ingressaasMarketHeader">
+            <Link className="ingressaasMarketLogo" href="/" aria-label={organizationContext.platformName}>
+              <span className="ingressaasLogoMark">
+                <ShieldIcon />
+              </span>
+              <span>{organizationContext.platformName}</span>
+            </Link>
+
+            <nav className="ingressaasHeaderActions" aria-label="Ações principais">
+              <a className="ingressaasHeaderButton" href="#quero-minha-bilheteria">
+                <HeadsetIcon />
+                <span>Falar com especialista</span>
+              </a>
+              <a className="ingressaasHeaderButton primary" href="#quero-minha-bilheteria">
+                <TicketIcon />
+                <span>Quero minha bilheteria</span>
+              </a>
+            </nav>
+          </header>
+
+          <div className="ingressaasHeroGrid">
+            <div className="ingressaasHeroCopy">
+              <span className="ingressaasHeroEyebrow">A bilheteria própria para produtores</span>
+              <h1>
+                Tenha a sua própria <strong>bilheteria.</strong>
+              </h1>
+
+              <ul className="ingressaasHeroBullets" aria-label="Benefícios principais">
+                <li>
+                  <span><GlobeIcon /></span>
+                  Venda com o <strong>seu próprio domínio</strong>
+                </li>
+                <li>
+                  <span><GrowthIcon /></span>
+                  Ganhe <strong>mais por ingresso</strong> vendido
+                </li>
+                <li>
+                  <span><WalletIcon /></span>
+                  Saque seu dinheiro <strong>na hora</strong>
+                </li>
+              </ul>
+
               <p>
-                A {organizationContext.platformName} foi desenhada para produtores que querem operar com marca própria,
-                sacar com mais liberdade, capturar de 7% a 20% a mais por venda e manter a base de clientes 100% sob
-                o próprio controle.
+                A {organizationContext.platformName} foi criada para produtores que querem parar de depender de
+                marketplaces e operar com mais margem, mais controle e 100% dos seus clientes.
               </p>
 
-              <div className="platformMarketingHeroActions">
-                <a className="button" href="#quero-minha-bilheteria">
-                  Quero conversar com o comercial
+              <div className="ingressaasHeroActions">
+                <a className="ingressaasCtaButton" href="#quero-minha-bilheteria">
+                  Quero vender no meu domínio <ArrowRightIcon />
                 </a>
-                <Link className="secondaryButton" href="/login">
-                  Já sou cliente
-                </Link>
-              </div>
-
-              <div className="homeTrustStrip" aria-label="Principais ganhos para a operação">
-                {["Saque mais livre", "7% a 20% mais margem", "Base 100% própria"].map((item) => (
-                  <span key={item}>{item}</span>
-                ))}
-              </div>
-
-              <div className="platformHeroProofList" aria-label="Resumo do valor da plataforma">
-                {heroProofPoints.map((item) => (
-                  <span key={item}>{item}</span>
-                ))}
+                <a className="ingressaasOutlineButton" href="#como-funciona">
+                  <PlayIcon /> Ver como funciona
+                </a>
               </div>
             </div>
 
-            <aside className="platformMarketingHeroPanel" aria-label="Benefícios principais">
-              <article className="platformMarketingSummaryCard">
-                <span className="eyebrow">Resumo comercial</span>
-                <h2>Uma bilheteria própria para vender mais e depender menos de terceiros.</h2>
-                <div className="platformMarketingSummaryGrid">
-                  <div>
-                    <small>Margem extra</small>
-                    <strong>7% a 20%</strong>
-                  </div>
-                  <div>
-                    <small>Base de clientes</small>
-                    <strong>100% sua</strong>
-                  </div>
-                  <div>
-                    <small>Saque e caixa</small>
-                    <strong>Mais agilidade</strong>
-                  </div>
-                </div>
-                <p>
-                  O foco da Ingresaas é simples: colocar sua operação para vender com mais autonomia, mais margem e
-                  mais controle comercial.
-                </p>
-              </article>
-            </aside>
-          </div>
-        </section>
+            <aside className="ingressaasDashboardMock" aria-label="Resumo comercial da bilheteria">
+              <div className="ingressaasDashboardHeader">
+                <strong><DotIcon /> Resumo comercial</strong>
+                <span><CalendarIcon /> 12/05/2026 - 18/05/2026</span>
+              </div>
 
-        <section className="container platformMarketingSection">
-          <div className="platformBenefitGrid">
-            {marketingPillars.map((item) => (
-              <article className="platformBenefitCard" key={item.title}>
-                <strong>{item.title}</strong>
-                <p>{item.body}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="container platformMarketingSection">
-          <div className="sectionHeader homeSectionHeader platformSalesHeader">
-            <div>
-              <span className="eyebrow">Por que trocar a lógica da operação</span>
-              <h2>Uma bilheteria própria muda caixa, margem, dados e autonomia ao mesmo tempo.</h2>
-              <p>
-                Não é só sobre vender ingresso. É sobre vender com mais controle, mais lucro e uma base própria para
-                crescer com mais independência.
-              </p>
-            </div>
-          </div>
-
-          <div className="platformAdvantageGrid">
-            {advantageCards.map((item) => (
-              <article className="platformAdvantageCard" key={item.title}>
-                <strong>{item.title}</strong>
-                <p>{item.body}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="container platformMarketingSection">
-          <article className="platformMarketingBand">
-            <div>
-              <span className="eyebrow">O que o produtor ganha na prática</span>
-              <h2>Mais controle comercial, mais caixa disponível e uma operação com cara de marca própria.</h2>
-              <p>
-                A base técnica cuida de venda, ticket, QR Code e check-in. A equipe fica mais focada em vender,
-                acompanhar resultado e crescer relacionamento com o público.
-              </p>
-            </div>
-            <a className="button" href="#quero-minha-bilheteria">
-              Quero minha bilheteria
-            </a>
-          </article>
-        </section>
-
-        <section className="container platformMarketingSection">
-          <div className="platformSplitMarketingGrid">
-            <article className="platformProcessCard">
-              <span className="eyebrow">Como a operação entra</span>
-              <h2>Você não precisa construir tecnologia do zero para começar a vender com domínio próprio.</h2>
-              <ol className="platformChecklist">
-                {processSteps.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ol>
-            </article>
-
-            <article className="platformSecurityCard">
-              <span className="eyebrow">Acesso e segurança</span>
-              <h2>O cliente entra com login próprio e a plataforma protege os dados, relatórios e configurações.</h2>
-              <div className="platformAccessGrid compactAccessGrid">
-                {securityPoints.map((item) => (
-                  <article className="platformAccessCard" key={item.title}>
-                    <strong>{item.title}</strong>
-                    <p>{item.body}</p>
+              <div className="ingressaasMetricGrid">
+                {[
+                  ["Ingressos vendidos", "1.250", "+18.2%"],
+                  ["Faturamento bruto", "R$ 87.540,00", "+22.7%"],
+                  ["Visitantes", "942", "+15.4%"],
+                  ["Ticket médio", "R$ 69,25", "+8.6%"]
+                ].map(([label, value, growth]) => (
+                  <article className="ingressaasMetricCard" key={label}>
+                    <span>{label}</span>
+                    <strong>{value}</strong>
+                    <small>{growth} <em>vs ontem</em> ↗</small>
                   </article>
                 ))}
               </div>
+
+              <div className="ingressaasChartsGrid">
+                <article className="ingressaasLineCard">
+                  <div>
+                    <strong>Vendas por dia</strong>
+                    <span>Últimos 7 dias</span>
+                  </div>
+                  <svg viewBox="0 0 360 190" role="img" aria-label="Gráfico de vendas por dia">
+                    <path d="M36 36H334M36 84H334M36 132H334M36 166H334" />
+                    <polyline points="42,122 74,104 106,110 138,78 170,122 202,104 234,112 266,88 298,74 330,42" />
+                    <circle cx="330" cy="42" r="6" />
+                    <text x="34" y="178">12/05</text>
+                    <text x="106" y="178">13/05</text>
+                    <text x="178" y="178">15/05</text>
+                    <text x="258" y="178">17/05</text>
+                  </svg>
+                </article>
+
+                <article className="ingressaasDonutCard">
+                  <strong>Canais de venda</strong>
+                  <div className="ingressaasDonutContent">
+                    <div className="ingressaasDonut" aria-label="85% site próprio">
+                      <span>85%<small>Site próprio</small></span>
+                    </div>
+                    <ul>
+                      <li><i /> Site próprio <strong>85%</strong></li>
+                      <li><i /> Instagram <strong>8%</strong></li>
+                      <li><i /> Link na bio <strong>5%</strong></li>
+                      <li><i /> Outros <strong>2%</strong></li>
+                    </ul>
+                  </div>
+                </article>
+              </div>
+
+              <article className="ingressaasFloatingCard">
+                <span><ShieldIcon /></span>
+                <div>
+                  <strong>Operação 100% sua</strong>
+                  <p>Dados, clientes e resultados no seu controle.</p>
+                </div>
+                <span><LockIcon /></span>
+              </article>
+            </aside>
+          </div>
+
+          <div className="ingressaasValueStrip" id="como-funciona">
+            <article>
+              <span><GrowthIcon /></span>
+              <div>
+                <strong>Mais margem para você</strong>
+                <h2>+7% a +20%</h2>
+                <h3>de margem por venda</h3>
+                <p>Além do ingresso, você ganha de 7% a 20% a mais por venda com sua própria estrutura.</p>
+              </div>
+            </article>
+            <article>
+              <span><UsersIcon /></span>
+              <div>
+                <strong>Base de clientes 100% sua</strong>
+                <h2>100%</h2>
+                <h3>dos seus clientes</h3>
+                <p>Nome, telefone e e-mail ficam na sua base, não no colo de plataforma concorrente.</p>
+              </div>
+            </article>
+            <article>
+              <span><WalletIcon /></span>
+              <div>
+                <strong>Seu dinheiro <em>sob seu controle</em></strong>
+                <h2>Saque quando quiser</h2>
+                <p>Receba seu faturamento quando quiser, com liberdade total para usar como precisar.</p>
+              </div>
             </article>
           </div>
         </section>
 
-        <section className="container platformMarketingSection" id="quero-minha-bilheteria">
-          <div className="platformLeadSection">
-            <div className="platformLeadIntro">
-              <span className="eyebrow">Fale com o comercial</span>
-              <h2>Conte o perfil da sua produtora e vamos desenhar sua bilheteria própria.</h2>
-              <p>
-                Preencha seus dados para o time comercial entender nicho, porte e momento da operação. A ideia é
-                colocar sua bilheteria no ar com mais velocidade, menos ruído e uma proposta que faça sentido para a
-                sua realidade.
-              </p>
-
-              <div className="platformLeadMiniStats">
-                <article>
-                  <span>Margem extra</span>
-                  <strong>7% a 20%</strong>
-                </article>
-                <article>
-                  <span>Base do cliente</span>
-                  <strong>100% sua</strong>
-                </article>
-                <article>
-                  <span>Fluxo</span>
-                  <strong>Saque + venda + lead</strong>
-                </article>
-              </div>
-            </div>
-
-            <form action={createPlatformLeadAction} className="platformLeadForm card">
-              <div className="platformLeadFormHeader">
-                <strong>Quero conhecer a Ingresaas</strong>
-                <p>Preencha e nosso comercial entra em contato para entender a sua operação.</p>
-              </div>
-
-              {platformLeadMessage ? (
-                <div className={`formFeedback ${platformLeadMessage.tone === "error" ? "error" : "success"}`}>
-                  {platformLeadMessage.text}
-                </div>
-              ) : null}
-
-              <div className="platformLeadFormGrid">
-                <label className="platformLeadField">
-                  <span>Nome</span>
-                  <input name="name" type="text" placeholder="Seu nome completo" required />
-                </label>
-
-                <label className="platformLeadField">
-                  <span>E-mail</span>
-                  <input name="email" type="email" placeholder="voce@empresa.com.br" required />
-                </label>
-
-                <label className="platformLeadField">
-                  <span>Telefone</span>
-                  <input name="phone" type="tel" placeholder="(11) 99999-9999" required />
-                </label>
-
-                <label className="platformLeadField">
-                  <span>Faturamento anual da produtora</span>
-                  <select name="annualRevenueBand" defaultValue="" required>
-                    <option value="" disabled>
-                      Selecione uma faixa
-                    </option>
-                    {leadAnnualRevenueBands.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="platformLeadField">
-                  <span>@ do Instagram <small>(opcional)</small></span>
-                  <input name="instagramHandle" type="text" placeholder="@suaprodutora" />
-                </label>
-
-                <label className="platformLeadField platformLeadFieldFull">
-                  <span>Nicho principal dos eventos</span>
-                  <input name="eventNiche" type="text" placeholder="Gospel, samba, funk, conferências, festivais..." required />
-                </label>
-              </div>
-
-              <button className="button fullButton" type="submit">
-                Quero falar com o comercial
-              </button>
-            </form>
+        <section className="ingressaasLeadSection" id="quero-minha-bilheteria">
+          <div className="ingressaasLeadIntro">
+            <span className="ingressaasHeroEyebrow">Implantação comercial</span>
+            <h2>Conte o perfil da sua produtora e vamos desenhar sua bilheteria própria.</h2>
+            <p>Preencha os dados para o time comercial entender nicho, porte e momento da operação.</p>
           </div>
-        </section>
 
-        <section className="container platformMarketingSection">
-          <article className="platformClosingCta platformMarketingClosing">
-            <div>
-              <span className="eyebrow">Próximo passo</span>
-              <h2>Tenha sua própria bilheteria, preserve sua base e aumente a lucratividade da operação.</h2>
-              <p>
-                Se a sua produtora já vende evento, já investe em mídia e já movimenta público, faz sentido conversar
-                sobre uma estrutura própria para vender com mais controle, mais margem e mais velocidade financeira.
-              </p>
-            </div>
-            <div className="platformClosingActions">
-              <a className="button" href="#quero-minha-bilheteria">
-                Solicitar contato
-              </a>
-              <Link className="secondaryButton" href="/login">
-                Já sou cliente
-              </Link>
-            </div>
-          </article>
+          <form action={createPlatformLeadAction} className="ingressaasLeadForm">
+            {platformLeadMessage ? (
+              <div className={`formFeedback ${platformLeadMessage.tone === "error" ? "error" : "success"}`}>
+                {platformLeadMessage.text}
+              </div>
+            ) : null}
+
+            <label>
+              <span>Nome</span>
+              <input name="name" type="text" placeholder="Seu nome completo" required />
+            </label>
+            <label>
+              <span>E-mail</span>
+              <input name="email" type="email" placeholder="voce@empresa.com.br" required />
+            </label>
+            <label>
+              <span>Telefone</span>
+              <input name="phone" type="tel" placeholder="(11) 99999-9999" required />
+            </label>
+            <label>
+              <span>Faturamento anual</span>
+              <select name="annualRevenueBand" defaultValue="" required>
+                <option value="" disabled>Selecione uma faixa</option>
+                {leadAnnualRevenueBands.map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>@ do Instagram <small>(opcional)</small></span>
+              <input name="instagramHandle" type="text" placeholder="@suaprodutora" />
+            </label>
+            <label>
+              <span>Nicho principal</span>
+              <input name="eventNiche" type="text" placeholder="Conferências, shows, eventos gospel..." required />
+            </label>
+            <button className="ingressaasCtaButton" type="submit">Quero minha bilheteria</button>
+          </form>
         </section>
       </main>
     );

@@ -2426,6 +2426,888 @@ img.brandLogo[src*="a2-imergidos-logo"] {
     linear-gradient(180deg, #f4f8ff 0, #fbfcff 520px, #ffffff 100%);
 }
 
+.ingressaasMarketPage {
+  background: #eef4ff;
+  color: #071a4a;
+  min-height: 100vh;
+}
+
+.ingressaasHeroShell {
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.98) 0%, rgba(243, 247, 255, 0.98) 34%, rgba(120, 157, 255, 0.62) 67%, #08258d 100%),
+    #eef4ff;
+  min-height: 100svh;
+  overflow: hidden;
+  padding: 26px 5.3vw 34px;
+  position: relative;
+}
+
+.ingressaasHeroShell::before,
+.ingressaasHeroShell::after {
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 999px;
+  content: "";
+  pointer-events: none;
+  position: absolute;
+}
+
+.ingressaasHeroShell::before {
+  height: 760px;
+  right: 9vw;
+  top: -230px;
+  width: 760px;
+}
+
+.ingressaasHeroShell::after {
+  height: 860px;
+  right: -120px;
+  top: -280px;
+  width: 860px;
+}
+
+.ingressaasMarketHeader {
+  align-items: center;
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  margin: 0 auto;
+  max-width: 1510px;
+  position: relative;
+  z-index: 2;
+}
+
+.ingressaasMarketLogo,
+.ingressaasHeaderActions,
+.ingressaasHeaderButton,
+.ingressaasHeroActions,
+.ingressaasCtaButton,
+.ingressaasOutlineButton {
+  align-items: center;
+  display: inline-flex;
+}
+
+.ingressaasMarketLogo {
+  color: #071a4a;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.ingressaasMarketLogo > span:last-child {
+  font-size: 28px;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.ingressaasLogoMark {
+  align-items: center;
+  background: linear-gradient(135deg, #235bf5, #6d8cff);
+  border-radius: 12px;
+  color: #ffffff;
+  display: inline-flex;
+  height: 40px;
+  justify-content: center;
+  position: relative;
+  width: 44px;
+}
+
+.ingressaasLogoMark::before {
+  background: #ffffff;
+  border-radius: 999px;
+  content: "";
+  height: 6px;
+  left: 50%;
+  position: absolute;
+  top: 17px;
+  transform: translateX(-50%);
+  width: 6px;
+}
+
+.ingressaasLogoMark svg {
+  height: 28px;
+  width: 28px;
+}
+
+.ingressaasHeaderActions {
+  gap: 16px;
+}
+
+.ingressaasHeaderButton {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(21, 75, 245, 0.16);
+  border-radius: 9px;
+  box-shadow: 0 14px 30px rgba(10, 38, 119, 0.1);
+  color: #2354f4;
+  font-size: 15px;
+  font-weight: 900;
+  gap: 9px;
+  min-height: 48px;
+  padding: 0 20px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.ingressaasHeaderButton.primary {
+  background: linear-gradient(180deg, #0eb15f, #07934e);
+  border-color: rgba(5, 135, 72, 0.55);
+  box-shadow: 0 18px 34px rgba(8, 140, 75, 0.24);
+  color: #ffffff;
+}
+
+.ingressaasHeaderButton svg {
+  height: 19px;
+  width: 19px;
+}
+
+.ingressaasHeroGrid {
+  align-items: start;
+  display: grid;
+  gap: clamp(34px, 4.2vw, 78px);
+  grid-template-columns: minmax(500px, 0.86fr) minmax(560px, 1.14fr);
+  margin: 52px auto 0;
+  max-width: 1510px;
+  position: relative;
+  z-index: 1;
+}
+
+.ingressaasHeroCopy {
+  display: grid;
+  gap: 22px;
+  max-width: 660px;
+}
+
+.ingressaasHeroEyebrow {
+  background: rgba(232, 239, 255, 0.98);
+  border-radius: 999px;
+  color: #2459f5;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 950;
+  justify-self: start;
+  letter-spacing: 0.1em;
+  padding: 9px 15px;
+  text-transform: uppercase;
+}
+
+.ingressaasHeroCopy h1 {
+  color: #071a4a;
+  font-size: clamp(54px, 5vw, 78px);
+  letter-spacing: 0;
+  line-height: 0.96;
+  margin: 0;
+}
+
+.ingressaasHeroCopy h1 strong {
+  background: linear-gradient(90deg, #214ff1, #6e35ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font: inherit;
+}
+
+.ingressaasHeroBullets {
+  display: grid;
+  gap: 14px;
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+}
+
+.ingressaasHeroBullets li {
+  align-items: center;
+  color: #091d52;
+  display: flex;
+  font-size: clamp(22px, 2vw, 28px);
+  font-weight: 900;
+  gap: 14px;
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.ingressaasHeroBullets li > span,
+.ingressaasValueStrip article > span,
+.ingressaasFloatingCard > span {
+  align-items: center;
+  border-radius: 16px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  justify-content: center;
+}
+
+.ingressaasHeroBullets li > span {
+  background: linear-gradient(180deg, #eef4ff, #dce7ff);
+  color: #275af4;
+  height: 42px;
+  width: 42px;
+}
+
+.ingressaasHeroBullets strong {
+  color: #2f56f2;
+}
+
+.ingressaasHeroBullets svg {
+  height: 23px;
+  width: 23px;
+}
+
+.ingressaasHeroCopy p {
+  color: #31436f;
+  font-size: 17px;
+  line-height: 1.65;
+  margin: 0;
+  max-width: 620px;
+}
+
+.ingressaasHeroActions {
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.ingressaasCtaButton,
+.ingressaasOutlineButton {
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 950;
+  gap: 10px;
+  justify-content: center;
+  min-height: 54px;
+  padding: 0 28px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.ingressaasCtaButton {
+  background: linear-gradient(180deg, #12b86a, #079a55);
+  border: 1px solid rgba(0, 128, 66, 0.34);
+  box-shadow: 0 18px 34px rgba(6, 142, 76, 0.22);
+  color: #ffffff;
+}
+
+.ingressaasOutlineButton {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid #305cf5;
+  color: #071a4a;
+}
+
+.ingressaasCtaButton svg,
+.ingressaasOutlineButton svg {
+  height: 22px;
+  width: 22px;
+}
+
+.ingressaasDashboardMock {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  border-radius: 20px;
+  box-shadow: 0 34px 70px rgba(6, 22, 83, 0.18);
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  position: relative;
+}
+
+.ingressaasDashboardHeader {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 0 10px 4px;
+}
+
+.ingressaasDashboardHeader strong,
+.ingressaasDashboardHeader span {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.ingressaasDashboardHeader strong {
+  color: #06184a;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.ingressaasDashboardHeader span {
+  background: #f7faff;
+  border: 1px solid #dfe7ff;
+  border-radius: 10px;
+  color: #1a326c;
+  font-size: 13px;
+  font-weight: 800;
+  min-height: 36px;
+  padding: 0 12px;
+}
+
+.ingressaasDashboardHeader svg {
+  color: #2b5cf5;
+  height: 16px;
+  width: 16px;
+}
+
+.ingressaasMetricGrid,
+.ingressaasChartsGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.ingressaasMetricGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ingressaasMetricCard,
+.ingressaasLineCard,
+.ingressaasDonutCard {
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+  border: 1px solid #dfe6f4;
+  border-radius: 12px;
+  box-shadow: 0 14px 32px rgba(8, 28, 83, 0.04);
+}
+
+.ingressaasMetricCard {
+  display: grid;
+  gap: 13px;
+  min-height: 128px;
+  padding: 21px 18px;
+}
+
+.ingressaasMetricCard span {
+  color: #596988;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ingressaasMetricCard strong {
+  color: #06184a;
+  font-size: clamp(21px, 1.7vw, 29px);
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+.ingressaasMetricCard small {
+  color: #079251;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.ingressaasMetricCard em {
+  color: #6d7894;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.ingressaasChartsGrid {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.95fr);
+}
+
+.ingressaasLineCard,
+.ingressaasDonutCard {
+  min-height: 246px;
+  padding: 20px 18px 16px;
+}
+
+.ingressaasLineCard > div,
+.ingressaasDonutCard > strong {
+  align-items: center;
+  color: #06184a;
+  display: flex;
+  font-size: 15px;
+  font-weight: 950;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.ingressaasLineCard > div span {
+  background: #f7faff;
+  border: 1px solid #dfe7ff;
+  border-radius: 10px;
+  color: #10275e;
+  font-size: 13px;
+  min-height: 36px;
+  padding: 8px 12px;
+}
+
+.ingressaasLineCard svg {
+  display: block;
+  height: auto;
+  overflow: visible;
+  width: 100%;
+}
+
+.ingressaasLineCard path {
+  fill: none;
+  stroke: #e8eef8;
+  stroke-width: 1.4;
+}
+
+.ingressaasLineCard polyline {
+  fill: none;
+  stroke: #3158ff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
+.ingressaasLineCard circle {
+  fill: #3158ff;
+}
+
+.ingressaasLineCard text {
+  fill: #66728f;
+  font-size: 12px;
+}
+
+.ingressaasDonutContent {
+  align-items: center;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 136px minmax(0, 1fr);
+}
+
+.ingressaasDonut {
+  align-items: center;
+  aspect-ratio: 1;
+  background: conic-gradient(#3158ff 0 85%, #8b35e8 85% 93%, #f2ae12 93% 98%, #9aa6c1 98% 100%);
+  border-radius: 50%;
+  display: grid;
+  justify-items: center;
+  position: relative;
+}
+
+.ingressaasDonut::before {
+  background: #ffffff;
+  border-radius: 50%;
+  content: "";
+  height: 62%;
+  position: absolute;
+  width: 62%;
+}
+
+.ingressaasDonut span {
+  color: #071a4a;
+  display: grid;
+  font-size: 29px;
+  font-weight: 950;
+  line-height: 1;
+  position: relative;
+  text-align: center;
+}
+
+.ingressaasDonut small {
+  font-size: 11px;
+  font-weight: 800;
+  margin-top: 6px;
+}
+
+.ingressaasDonutContent ul {
+  display: grid;
+  gap: 13px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ingressaasDonutContent li {
+  align-items: center;
+  color: #172a5d;
+  display: grid;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 10px;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+}
+
+.ingressaasDonutContent li i {
+  background: #3158ff;
+  border-radius: 999px;
+  height: 10px;
+  width: 10px;
+}
+
+.ingressaasDonutContent li:nth-child(2) i {
+  background: #8b35e8;
+}
+
+.ingressaasDonutContent li:nth-child(3) i {
+  background: #f2ae12;
+}
+
+.ingressaasDonutContent li:nth-child(4) i {
+  background: #9aa6c1;
+}
+
+.ingressaasFloatingCard {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  bottom: -76px;
+  box-shadow: 0 24px 46px rgba(7, 26, 74, 0.14);
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 42px minmax(0, 1fr) 56px;
+  max-width: 400px;
+  padding: 22px;
+  position: absolute;
+  right: 34px;
+}
+
+.ingressaasFloatingCard > span {
+  background: #eef4ff;
+  color: #3158ff;
+  height: 42px;
+  width: 42px;
+}
+
+.ingressaasFloatingCard > span:last-child {
+  border-radius: 14px;
+  height: 56px;
+  width: 56px;
+}
+
+.ingressaasFloatingCard strong,
+.ingressaasFloatingCard p {
+  margin: 0;
+}
+
+.ingressaasFloatingCard strong {
+  color: #06184a;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.ingressaasFloatingCard p {
+  color: #56698f;
+  font-size: 14px;
+  line-height: 1.55;
+  margin-top: 6px;
+}
+
+.ingressaasFloatingCard svg {
+  height: 23px;
+  width: 23px;
+}
+
+.ingressaasValueStrip {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  border-radius: 18px;
+  box-shadow: 0 24px 56px rgba(7, 26, 74, 0.1);
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 92px auto 0;
+  max-width: 1410px;
+  position: relative;
+  z-index: 2;
+}
+
+.ingressaasValueStrip article {
+  align-items: center;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 72px minmax(0, 1fr);
+  min-height: 176px;
+  padding: 30px 34px;
+}
+
+.ingressaasValueStrip article + article {
+  border-left: 1px solid #dfe6f4;
+}
+
+.ingressaasValueStrip article > span {
+  background: linear-gradient(180deg, #f1f5ff, #e5ebff);
+  color: #3158ff;
+  height: 72px;
+  width: 72px;
+}
+
+.ingressaasValueStrip article:nth-child(3) > span {
+  background: linear-gradient(180deg, #fff8e8, #f5ead7);
+  color: #f0a20a;
+}
+
+.ingressaasValueStrip svg {
+  height: 36px;
+  width: 36px;
+}
+
+.ingressaasValueStrip strong,
+.ingressaasValueStrip h2,
+.ingressaasValueStrip h3,
+.ingressaasValueStrip p {
+  margin: 0;
+}
+
+.ingressaasValueStrip strong {
+  color: #071a4a;
+  font-size: 17px;
+  font-weight: 950;
+}
+
+.ingressaasValueStrip strong em {
+  color: #f0a20a;
+  font-style: normal;
+}
+
+.ingressaasValueStrip h2 {
+  color: #3158ff;
+  font-size: clamp(30px, 3vw, 39px);
+  line-height: 1.05;
+  margin-top: 10px;
+}
+
+.ingressaasValueStrip article:nth-child(3) h2 {
+  color: #071a4a;
+  font-size: clamp(24px, 2vw, 29px);
+}
+
+.ingressaasValueStrip h3 {
+  color: #3158ff;
+  font-size: 18px;
+  line-height: 1.2;
+  margin-top: 6px;
+}
+
+.ingressaasValueStrip p {
+  color: #58698f;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 14px;
+}
+
+.ingressaasLeadSection {
+  background: #f7f9ff;
+  display: grid;
+  gap: 28px;
+  grid-template-columns: minmax(0, 0.8fr) minmax(420px, 1fr);
+  margin: 0 auto;
+  max-width: 1510px;
+  padding: 72px 5.3vw;
+}
+
+.ingressaasLeadIntro {
+  align-content: start;
+  display: grid;
+  gap: 14px;
+}
+
+.ingressaasLeadIntro h2,
+.ingressaasLeadIntro p {
+  margin: 0;
+}
+
+.ingressaasLeadIntro h2 {
+  color: #071a4a;
+  font-size: clamp(30px, 3vw, 44px);
+  line-height: 1.08;
+  max-width: 14ch;
+}
+
+.ingressaasLeadIntro p {
+  color: #596b91;
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 55ch;
+}
+
+.ingressaasLeadForm {
+  background: #ffffff;
+  border: 1px solid #dfe6f4;
+  border-radius: 18px;
+  box-shadow: 0 22px 48px rgba(7, 26, 74, 0.08);
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 24px;
+}
+
+.ingressaasLeadForm .formFeedback,
+.ingressaasLeadForm button {
+  grid-column: 1 / -1;
+}
+
+.ingressaasLeadForm label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ingressaasLeadForm label span {
+  color: #172a5d;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.ingressaasLeadForm input,
+.ingressaasLeadForm select {
+  background: #fbfdff;
+  border: 1px solid #d7e0ef;
+  border-radius: 10px;
+  color: #071a4a;
+  font: inherit;
+  min-height: 46px;
+  padding: 0 13px;
+  width: 100%;
+}
+
+@media (max-width: 1180px) {
+  .ingressaasHeroGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .ingressaasHeroCopy {
+    max-width: 800px;
+  }
+
+  .ingressaasDashboardMock {
+    max-width: 900px;
+  }
+
+  .ingressaasValueStrip {
+    margin-top: 110px;
+  }
+}
+
+@media (max-width: 1350px) and (min-width: 1181px) {
+  .ingressaasCtaButton,
+  .ingressaasOutlineButton {
+    font-size: 14px;
+    min-height: 50px;
+    padding: 0 16px;
+  }
+
+  .ingressaasCtaButton svg,
+  .ingressaasOutlineButton svg {
+    height: 19px;
+    width: 19px;
+  }
+}
+
+@media (max-width: 920px) {
+  .ingressaasHeroShell {
+    padding: 20px 18px 32px;
+  }
+
+  .ingressaasMarketHeader,
+  .ingressaasHeaderActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ingressaasHeaderActions {
+    gap: 10px;
+  }
+
+  .ingressaasHeaderButton,
+  .ingressaasCtaButton,
+  .ingressaasOutlineButton {
+    width: 100%;
+  }
+
+  .ingressaasHeroGrid {
+    margin-top: 38px;
+  }
+
+  .ingressaasHeroCopy h1 {
+    font-size: clamp(44px, 14vw, 64px);
+  }
+
+  .ingressaasHeroBullets li {
+    font-size: 20px;
+  }
+
+  .ingressaasMetricGrid,
+  .ingressaasChartsGrid,
+  .ingressaasValueStrip,
+  .ingressaasLeadSection,
+  .ingressaasLeadForm {
+    grid-template-columns: 1fr;
+  }
+
+  .ingressaasMetricCard {
+    min-height: 118px;
+  }
+
+  .ingressaasDonutContent {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .ingressaasDonut {
+    width: 170px;
+  }
+
+  .ingressaasFloatingCard {
+    bottom: auto;
+    margin-top: 10px;
+    max-width: none;
+    position: relative;
+    right: auto;
+  }
+
+  .ingressaasValueStrip {
+    margin-top: 24px;
+  }
+
+  .ingressaasValueStrip article + article {
+    border-left: 0;
+    border-top: 1px solid #dfe6f4;
+  }
+
+  .ingressaasLeadSection {
+    padding: 52px 18px;
+  }
+}
+
+@media (max-width: 560px) {
+  .ingressaasMarketLogo > span:last-child {
+    font-size: 24px;
+  }
+
+  .ingressaasHeroEyebrow {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+
+  .ingressaasHeroBullets li {
+    align-items: flex-start;
+  }
+
+  .ingressaasDashboardHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ingressaasLineCard,
+  .ingressaasDonutCard {
+    padding: 18px 14px;
+  }
+
+  .ingressaasLineCard > div {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ingressaasValueStrip article {
+    gap: 16px;
+    grid-template-columns: 56px minmax(0, 1fr);
+    padding: 24px 18px;
+  }
+
+  .ingressaasValueStrip article > span {
+    height: 56px;
+    width: 56px;
+  }
+
+  .ingressaasValueStrip svg {
+    height: 28px;
+    width: 28px;
+  }
+}
+
 .platformHero {
   background:
     radial-gradient(circle at top right, rgba(201, 221, 255, 0.42), transparent 24%),
