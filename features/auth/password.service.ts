@@ -33,10 +33,11 @@ export async function changeAdminPassword(adminId: string, currentPassword: stri
   });
 }
 
-export async function requestAdminPasswordReset(email: string) {
+export async function requestAdminPasswordReset(email: string, organizationId?: string | null) {
   const admin = await prisma.adminUser.findFirst({
     where: {
       email: email.toLowerCase(),
+      ...(organizationId ? { organizationId } : {}),
       isActive: true
     },
     select: {

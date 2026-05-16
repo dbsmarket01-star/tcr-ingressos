@@ -34,6 +34,7 @@ export async function createAdminUser(input: {
   const normalizedEmail = input.email.toLowerCase();
   const existingUser = await prisma.adminUser.findFirst({
     where: {
+      organizationId: input.organizationId,
       email: normalizedEmail
     },
     select: {

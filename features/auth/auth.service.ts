@@ -274,10 +274,11 @@ export async function requirePermission(area: AdminArea) {
   return admin;
 }
 
-export async function findActiveAdminByEmail(email: string) {
+export async function findActiveAdminByEmail(email: string, organizationId?: string | null) {
   const admin = await prisma.adminUser.findFirst({
     where: {
       email,
+      ...(organizationId ? { organizationId } : {}),
       isActive: true
     },
     select: {

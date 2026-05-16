@@ -11,6 +11,7 @@ import {
 import { createAuditLog } from "@/features/audit/audit.service";
 import { changeAdminPassword, requestAdminPasswordReset, resetAdminPassword } from "./password.service";
 import { clearAdminSession, createAdminSession, findActiveAdminByEmail, requireAdmin } from "./auth.service";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 
 export async function loginAction(formData: FormData) {
   const parsed = loginSchema.safeParse({
@@ -22,7 +23,9 @@ export async function loginAction(formData: FormData) {
     redirect("/login?error=invalid");
   }
 
-  const admin = await findActiveAdminByEmail(parsed.data.email);
+  const organizationContext = await getCurrentOrganizationContext();
+  const scopedOrganizationId = organizationContext.isPlatformHost ? null : organizationContext.organization.id;
+  const admin = await findActiveAdminByEmail(parsed.data.email, scopedOrganizationId);
 
   if (!admin) {
     redirect("/login?error=invalid");
@@ -77,7 +80,9 @@ export async function requestPasswordResetAction(formData: FormData) {
   });
 
   if (parsed.success) {
-    await requestAdminPasswordReset(parsed.data.email);
+    const organizationContext = await getCurrentOrganizationContext();
+    const scopedOrganizationId = organizationContext.isPlatformHost ? null : organizationContext.organization.id;
+    await requestAdminPasswordReset(parsed.data.email, scopedOrganizationId);
   }
 
   redirect("/login/forgot?sent=1");

@@ -277,7 +277,7 @@ model AdminUser {
   id           String    @id @default(cuid())
   organizationId String
   name         String
-  email        String    @unique
+  email        String
   passwordHash String
   role         AdminRole @default(STAFF)
   isActive     Boolean   @default(true)
@@ -295,6 +295,7 @@ model AdminUser {
   @@index([organizationId])
   @@index([role])
   @@index([isActive])
+  @@unique([organizationId, email])
 }
 
 model AdminAuditLog {

@@ -42,7 +42,6 @@ type OrganizationConflictInput = {
   slug: string;
   publicDomain?: string | null;
   adminDomain?: string | null;
-  ownerEmail?: string | null;
   excludeId?: string | null;
 };
 
@@ -289,19 +288,10 @@ async function ensureOrganizationUniqueness(
           },
           select: { id: true, name: true }
         })
-      : Promise.resolve(null),
-    input.ownerEmail
-      ? tx.adminUser.findFirst({
-          where: {
-            email: input.ownerEmail,
-            ...(input.excludeId ? { organizationId: { not: input.excludeId } } : {})
-          },
-          select: { id: true, name: true }
-        })
       : Promise.resolve(null)
   ];
 
-  const [slugConflict, publicDomainConflict, adminDomainConflict, ownerConflict] = await Promise.all(checks);
+  const [slugConflict, publicDomainConflict, adminDomainConflict] = await Promise.all(checks);
 
   if (slugConflict) {
     throw new Error("Já existe um cliente com esse slug interno.");
@@ -315,9 +305,6 @@ async function ensureOrganizationUniqueness(
     throw new Error("Esse domínio admin já está vinculado a outro cliente.");
   }
 
-  if (ownerConflict) {
-    throw new Error("O e-mail do usuário inicial já está em uso em outra conta.");
-  }
 }
 
 export async function listOrganizationsForPlatformAdmin(filters?: {
@@ -581,8 +568,7 @@ export async function createOrganization(input: CreateOrganizationInput) {
     await ensureOrganizationUniqueness(tx, {
       slug: normalizedSlug,
       publicDomain,
-      adminDomain,
-      ownerEmail
+      adminDomain
     });
 
     const templateSettings = input.templateOrganizationId
@@ -723,6 +709,7 @@ export async function createOrganizationInitialOwner(input: CreateOrganizationIn
 
   const existingUser = await prisma.adminUser.findFirst({
     where: {
+      organizationId: input.organizationId,
       email: normalizedEmail
     },
     select: {
