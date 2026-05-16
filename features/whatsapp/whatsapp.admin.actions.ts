@@ -80,6 +80,7 @@ export async function sendLeadWhatsAppBroadcast(formData: FormData) {
       createdAt: "desc"
     },
     select: {
+      id: true,
       name: true,
       phone: true
     }
@@ -93,7 +94,15 @@ export async function sendLeadWhatsAppBroadcast(formData: FormData) {
   }
 
   const eventUrl = getPublicEventUrl(event.slug, event.organization);
-  const result = await sendBulkWhatsApp(leads, templateName, (lead) => [lead.name, event.title, eventUrl]);
+  const result = await sendBulkWhatsApp(
+    leads,
+    templateName,
+    (lead) => [lead.name, event.title, eventUrl],
+    {
+      organizationId: admin.organizationId,
+      eventId: event.id
+    }
+  );
 
   redirectWithStatus({
     status: result.failed > 0 ? "parcial" : "ok",

@@ -22,6 +22,29 @@ function getParam(params: Record<string, string | string[] | undefined>, key: st
   return Array.isArray(value) ? value[0] : value;
 }
 
+function whatsappStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    SENT: "Enviado",
+    DELIVERED: "Entregue",
+    READ: "Lido",
+    FAILED: "Falhou",
+    RECEIVED: "Recebido"
+  };
+
+  return labels[status] || status;
+}
+
+function whatsappTypeLabel(type: string) {
+  const labels: Record<string, string> = {
+    PURCHASE_APPROVED: "Compra aprovada",
+    CART_ABANDONMENT: "Carrinho abandonado",
+    BULK: "Disparo em massa",
+    WEBHOOK: "Webhook Meta"
+  };
+
+  return labels[type] || type;
+}
+
 export default async function MarketingWhatsAppPage({ searchParams }: MarketingWhatsAppPageProps) {
   const admin = await requirePermission("MARKETING");
   const organizationContext = await getCurrentOrganizationContext();
@@ -56,6 +79,30 @@ export default async function MarketingWhatsAppPage({ searchParams }: MarketingW
   const sent = getParam(params, "sent");
   const failed = getParam(params, "failed");
   const total = getParam(params, "total");
+  const webhookUrl = `${organizationContext.publicBaseUrl}/api/webhooks/whatsapp/meta`;
+  const recentMessages = await prisma.whatsAppMessageLog.findMany({
+    where: {
+      organizationId: admin.organizationId
+    },
+    orderBy: {
+      createdAt: "desc"
+    },
+    take: 12
+  });
+  const messageStatusCounts = await prisma.whatsAppMessageLog.groupBy({
+    by: ["status"],
+    where: {
+      organizationId: admin.organizationId
+    },
+    _count: {
+      _all: true
+    }
+  });
+  const countByStatus = new Map(messageStatusCounts.map((item) => [item.status, item._count._all]));
+  const sentOrAccepted =
+    (countByStatus.get("SENT") || 0) +
+    (countByStatus.get("DELIVERED") || 0) +
+    (countByStatus.get("READ") || 0);
 
   return (
     <AdminShell
@@ -101,6 +148,11 @@ export default async function MarketingWhatsAppPage({ searchParams }: MarketingW
           <strong>2</strong>
           <small>compra_aprovada e abandono_carrinho</small>
         </article>
+        <article className="card metric">
+          <span className="muted">Webhook Meta</span>
+          <strong>{envStatus(process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN)}</strong>
+          <small>Token de verificacao</small>
+        </article>
       </section>
 
       <section className="card adminPanelBlock spacedSection">
@@ -123,6 +175,44 @@ export default async function MarketingWhatsAppPage({ searchParams }: MarketingW
             <strong>5 min</strong>
             <small>Cron verifica pedidos perto de expirar e envia template abandono_carrinho.</small>
           </article>
+        </div>
+      </section>
+
+      <section className="card adminPanelBlock spacedSection">
+        <div className="sectionHeader inlineHeader">
+          <div>
+            <h2>Status e auditoria</h2>
+            <p className="muted">
+              Tudo que for enviado pela API oficial fica registrado para conferirmos entrega, leitura ou falha.
+            </p>
+          </div>
+        </div>
+        <div className="grid dashboardGrid commercialSummaryGrid">
+          <article className="card metric">
+            <span className="muted">Enviados</span>
+            <strong>{sentOrAccepted}</strong>
+            <small>Enviados, entregues ou lidos</small>
+          </article>
+          <article className="card metric">
+            <span className="muted">Entregues</span>
+            <strong>{countByStatus.get("DELIVERED") || 0}</strong>
+            <small>Confirmados pela Meta</small>
+          </article>
+          <article className="card metric">
+            <span className="muted">Lidos</span>
+            <strong>{countByStatus.get("READ") || 0}</strong>
+            <small>Quando a Meta informar leitura</small>
+          </article>
+          <article className="card metric">
+            <span className="muted">Falhas</span>
+            <strong>{countByStatus.get("FAILED") || 0}</strong>
+            <small>Bloqueio, template ou telefone invalido</small>
+          </article>
+        </div>
+        <div className="calloutBox">
+          <strong>URL para configurar na Meta:</strong>
+          <code>{webhookUrl}</code>
+          <span className="muted">Use essa URL como callback do webhook do WhatsApp Business.</span>
         </div>
       </section>
 
@@ -203,6 +293,49 @@ export default async function MarketingWhatsAppPage({ searchParams }: MarketingW
                         Ver leads
                       </Link>
                     </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section className="card adminPanelBlock spacedSection">
+        <div className="sectionHeader inlineHeader">
+          <div>
+            <h2>Ultimos disparos</h2>
+            <p className="muted">Historico recente para auditoria de compra aprovada, carrinho abandonado e campanhas.</p>
+          </div>
+        </div>
+        {recentMessages.length === 0 ? (
+          <div className="empty">Nenhum disparo registrado ainda.</div>
+        ) : (
+          <div className="tableScroll wideTableScroll adminTableWrap">
+            <table className="table operationalTable">
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Contato</th>
+                  <th>Template</th>
+                  <th>Status</th>
+                  <th>Data</th>
+                  <th>Detalhe</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentMessages.map((messageLog) => (
+                  <tr key={messageLog.id}>
+                    <td>{whatsappTypeLabel(messageLog.type)}</td>
+                    <td>
+                      <strong>{messageLog.recipientName || "Sem nome"}</strong>
+                      <br />
+                      <span className="muted">{messageLog.recipientPhone || "Telefone nao informado"}</span>
+                    </td>
+                    <td>{messageLog.templateName || "-"}</td>
+                    <td>{whatsappStatusLabel(messageLog.status)}</td>
+                    <td>{formatDateTime(messageLog.createdAt)}</td>
+                    <td>{messageLog.errorMessage || messageLog.providerMessageId || "-"}</td>
                   </tr>
                 ))}
               </tbody>

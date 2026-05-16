@@ -110,6 +110,21 @@ enum LeadEmailCampaignRecipientStatus {
   FAILED
 }
 
+enum WhatsAppMessageType {
+  PURCHASE_APPROVED
+  CART_ABANDONMENT
+  BULK
+  WEBHOOK
+}
+
+enum WhatsAppMessageStatus {
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  RECEIVED
+}
+
 enum SplitRuleType {
   PERCENTAGE
   FIXED_PER_ORDER
@@ -793,6 +808,36 @@ model Order {
   @@index([couponId])
   @@index([eventId, churchName])
   @@index([ticketsEmailProviderId])
+}
+
+model WhatsAppMessageLog {
+  id                String                @id @default(cuid())
+  organizationId    String?
+  eventId           String?
+  orderId           String?
+  leadId            String?
+  type              WhatsAppMessageType
+  status            WhatsAppMessageStatus
+  templateName      String?
+  recipientName     String?
+  recipientPhone    String?
+  providerMessageId String?
+  errorMessage      String?
+  payload           Json?
+  webhookPayload    Json?
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  readAt            DateTime?
+  failedAt          DateTime?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  @@index([organizationId, createdAt])
+  @@index([eventId, createdAt])
+  @@index([orderId])
+  @@index([leadId])
+  @@index([providerMessageId])
+  @@index([status, createdAt])
 }
 
 model OrderItem {
