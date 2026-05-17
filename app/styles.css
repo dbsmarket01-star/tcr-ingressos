@@ -2658,7 +2658,6 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 }
 
 .ingressaasHeroActions {
-  flex-wrap: wrap;
   gap: 16px;
   margin-top: 6px;
 }
@@ -2770,7 +2769,8 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   display: grid;
   gap: 13px;
   min-height: 128px;
-  padding: 21px 18px;
+  min-width: 0;
+  padding: 21px 16px;
 }
 
 .ingressaasMetricCard span {
@@ -2781,7 +2781,7 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 
 .ingressaasMetricCard strong {
   color: #06184a;
-  font-size: clamp(21px, 1.7vw, 29px);
+  font-size: clamp(20px, 1.2vw, 23px);
   line-height: 1.05;
   white-space: nowrap;
 }

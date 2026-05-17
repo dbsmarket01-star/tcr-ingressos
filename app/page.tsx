@@ -198,15 +198,6 @@ function ArrowRightIcon() {
   );
 }
 
-function PlayIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="8.4" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M10.2 8.8L15.8 12L10.2 15.2V8.8Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 function CalendarIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
@@ -326,10 +317,7 @@ export default async function Home({ searchParams }: HomePageProps) {
 
               <div className="ingressaasHeroActions">
                 <a className="ingressaasCtaButton" href="#quero-minha-bilheteria">
-                  Quero vender no meu domínio <ArrowRightIcon />
-                </a>
-                <a className="ingressaasOutlineButton" href="#como-funciona">
-                  <PlayIcon /> Ver como funciona
+                  Quero minha bilheteria <ArrowRightIcon />
                 </a>
               </div>
             </div>
@@ -404,9 +392,9 @@ export default async function Home({ searchParams }: HomePageProps) {
               <span><GrowthIcon /></span>
               <div>
                 <strong>Mais margem para você</strong>
-                <h2>+7% a +20%</h2>
+                <h2>5% a 15% a mais</h2>
                 <h3>de margem por venda</h3>
-                <p>Além do ingresso, você ganha de 7% a 20% a mais por venda com sua própria estrutura.</p>
+                <p>Além do ingresso, você ganha de 5% a 15% a mais por venda com sua própria estrutura.</p>
               </div>
             </article>
             <article>
