@@ -405,6 +405,7 @@ model Event {
   eventMapCrop                     String?
   eventMapTemplate                 String      @default("AUTO")
   eventMapNotes                    String?
+  eventMapLayout                   Json?
   googleMapsUrl                    String?
   doorsOpenAt                      DateTime?
   startsAt                         DateTime

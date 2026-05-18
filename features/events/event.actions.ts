@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createEvent, duplicateEvent, updateEvent, updateEventStatus } from "./event.service";
 import { eventDraftSchema } from "./event.schema";
+import { parseEventMapLayoutFormValue } from "./event-map";
 import { createAuditLog } from "@/features/audit/audit.service";
 import { requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { savePublicImageUpload } from "@/features/uploads/local-upload.service";
@@ -51,6 +52,7 @@ function validationMessage(error: unknown) {
         eventMapCrop: "Enquadramento do mapa",
         eventMapTemplate: "Modelo do mapa",
         eventMapNotes: "Observações do mapa",
+        eventMapLayout: "Mapa modular",
         googleMapsUrl: "Link do Google Maps",
         metaPixelId: "Meta Pixel ID",
         metaConversionsApiToken: "Token da API de conversão do Meta",
@@ -146,6 +148,7 @@ export async function createEventAction(formData: FormData) {
     eventMapCrop: String(formData.get("eventMapCrop") ?? "").trim() || undefined,
     eventMapTemplate: String(formData.get("eventMapTemplate") ?? "AUTO"),
     eventMapNotes: String(formData.get("eventMapNotes") ?? "").trim() || undefined,
+    eventMapLayout: parseEventMapLayoutFormValue(formData.get("eventMapLayout")),
     googleMapsUrl: String(formData.get("googleMapsUrl") ?? "").trim() || undefined,
     importantInfo: String(formData.get("importantInfo") ?? "").trim() || undefined,
     metaPixelId: String(formData.get("metaPixelId") ?? "").trim() || undefined,
@@ -268,6 +271,7 @@ export async function updateEventAction(formData: FormData) {
     eventMapCrop: String(formData.get("eventMapCrop") ?? "").trim() || undefined,
     eventMapTemplate: String(formData.get("eventMapTemplate") ?? "AUTO"),
     eventMapNotes: String(formData.get("eventMapNotes") ?? "").trim() || undefined,
+    eventMapLayout: parseEventMapLayoutFormValue(formData.get("eventMapLayout")),
     googleMapsUrl: String(formData.get("googleMapsUrl") ?? "").trim() || undefined,
     importantInfo: String(formData.get("importantInfo") ?? "").trim() || undefined,
     metaPixelId: String(formData.get("metaPixelId") ?? "").trim() || undefined,

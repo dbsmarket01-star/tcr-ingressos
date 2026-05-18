@@ -98,6 +98,7 @@ export const eventDraftSchema = z.object({
   eventMapCrop: imageCropSchema,
   eventMapTemplate: eventMapTemplateSchema,
   eventMapNotes: z.string().max(500).optional(),
+  eventMapLayout: z.unknown().optional(),
   googleMapsUrl: googleMapsUrlSchema,
   importantInfo: z.string().optional(),
   metaPixelId: metaPixelIdSchema,

@@ -121,6 +121,7 @@ export async function createEvent(input: EventDraftInput & { status: EventStatus
     eventMapCrop: input.eventMapCrop || null,
     eventMapTemplate: input.eventMapTemplate,
     eventMapNotes: input.eventMapNotes || null,
+    eventMapLayout: input.eventMapLayout as Prisma.InputJsonValue,
     googleMapsUrl: input.googleMapsUrl || null,
     doorsOpenAt: input.doorsOpenAt || null,
     startsAt: input.startsAt,
@@ -286,6 +287,30 @@ export async function getEventForManagement(
         }
       }
     }
+  });
+}
+
+export async function listEventMapSources(
+  organizationId: string,
+  allowedEventIds?: string[] | null,
+  excludeEventId?: string
+) {
+  return prisma.event.findMany({
+    where: {
+      organizationId,
+      eventMapLayout: {
+        not: Prisma.JsonNull
+      },
+      ...(allowedEventIds ? { id: { in: allowedEventIds } } : {}),
+      ...(excludeEventId ? { id: { not: excludeEventId } } : {})
+    },
+    orderBy: [{ startsAt: "desc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+      title: true,
+      eventMapLayout: true
+    },
+    take: 40
   });
 }
 
@@ -506,6 +531,7 @@ export async function updateEvent(eventId: string, input: EventDraftInput & { st
     eventMapCrop: input.eventMapCrop || null,
     eventMapTemplate: input.eventMapTemplate,
     eventMapNotes: input.eventMapNotes || null,
+    eventMapLayout: input.eventMapLayout as Prisma.InputJsonValue,
     googleMapsUrl: input.googleMapsUrl || null,
     doorsOpenAt: input.doorsOpenAt || null,
     startsAt: input.startsAt,
@@ -612,6 +638,7 @@ export async function duplicateEvent(eventId: string) {
         eventMapCrop: event.eventMapCrop,
         eventMapTemplate: event.eventMapTemplate,
         eventMapNotes: event.eventMapNotes,
+        eventMapLayout: event.eventMapLayout === null ? Prisma.JsonNull : event.eventMapLayout,
         googleMapsUrl: event.googleMapsUrl,
         doorsOpenAt: event.doorsOpenAt,
         startsAt: event.startsAt,

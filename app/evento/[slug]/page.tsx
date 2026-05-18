@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { notFound } from "next/navigation";
 import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
+import { EventMapView } from "@/components/public/EventMapView";
 import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrganization } from "@/features/events/event.service";
@@ -373,7 +374,9 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             </section>
           ) : null}
 
-          {event.eventMapImageUrl ? (
+          {event.eventMapLayout ? (
+            <EventMapView layout={event.eventMapLayout} notes={event.eventMapNotes} />
+          ) : event.eventMapImageUrl ? (
             <section className="contentBlock eventMapBlock">
               <h2>Mapa do evento</h2>
               <div className={`eventMapImageFrame ${mapCrop ? "hasCrop" : ""}`}>
@@ -386,6 +389,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                   style={imageCropStyle(mapCrop)}
                 />
               </div>
+              <p className="eventModularMapNotice">Imagem meramente ilustrativa do local.</p>
               {event.eventMapNotes ? <p className="mapNotes">{event.eventMapNotes}</p> : null}
             </section>
           ) : null}

@@ -1,16 +1,20 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { EventMapEditor } from "@/components/admin/EventMapEditor";
 import { ImageUploadField } from "@/components/forms/ImageUploadField";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { createEventAction } from "@/features/events/event.actions";
+import { eventMapLayoutToFormValue } from "@/features/events/event-map";
+import { listEventMapSources } from "@/features/events/event.service";
 
 type NewEventPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function NewEventPage({ searchParams }: NewEventPageProps) {
-  await requirePermission("EVENTS");
+  const admin = await requirePermission("EVENTS");
+  const mapSources = await listEventMapSources(admin.organizationId!, getAdminAllowedEventIds(admin));
   const params = searchParams ? await searchParams : {};
   const error = typeof params.error === "string" ? params.error : null;
 
@@ -538,8 +542,15 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             <p className="muted">Organize visualmente palco, setores e referências para o cliente entender melhor o ingresso.</p>
           </div>
           <p className="muted">
-            Escolha um modelo de setores, envie uma imagem própria ou use os lotes como setores. Não há cadeira numerada nesta etapa.
+            Monte um mapa modular arrastando blocos ou envie uma imagem própria como fallback. Não há cadeira numerada nesta etapa.
           </p>
+          <EventMapEditor
+            mapSources={mapSources.map((source) => ({
+              id: source.id,
+              title: source.title,
+              layoutValue: eventMapLayoutToFormValue(source.eventMapLayout)
+            }))}
+          />
           <label className="field">
             <span>Modelo do mapa</span>
             <select name="eventMapTemplate" defaultValue="AUTO">

@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { EventMapEditor } from "@/components/admin/EventMapEditor";
 import { ImageUploadField } from "@/components/forms/ImageUploadField";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { updateEventAction } from "@/features/events/event.actions";
-import { getEventForManagement } from "@/features/events/event.service";
+import { eventMapLayoutToFormValue } from "@/features/events/event-map";
+import { getEventForManagement, listEventMapSources } from "@/features/events/event.service";
 import { buildEventSeo } from "@/features/seo/event-seo";
 import { formatDateTimeInput } from "@/lib/format";
 import { getPublicLeadCaptureUrl } from "@/lib/public-url";
@@ -24,7 +26,11 @@ export default async function EditEventPage({ params, searchParams }: EditEventP
   const { eventId } = await params;
   const query = searchParams ? await searchParams : {};
   await requireEventAccess(eventId);
-  const event = await getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin));
+  const allowedEventIds = getAdminAllowedEventIds(admin);
+  const [event, mapSources] = await Promise.all([
+    getEventForManagement(eventId, admin.organizationId!, allowedEventIds),
+    listEventMapSources(admin.organizationId!, allowedEventIds, eventId)
+  ]);
   const error = typeof query.error === "string" ? query.error : null;
 
   if (!event) {
@@ -721,8 +727,16 @@ export default async function EditEventPage({ params, searchParams }: EditEventP
             <p className="muted">Deixe o mapa e os setores mais fáceis de entender antes de abrir a venda para o público.</p>
           </div>
           <p className="muted">
-            Escolha um modelo de setores, envie uma imagem própria ou use os lotes como setores. Não há cadeira numerada nesta etapa.
+            Monte um mapa modular arrastando blocos ou mantenha uma imagem própria como fallback. Não há cadeira numerada nesta etapa.
           </p>
+          <EventMapEditor
+            initialValue={eventMapLayoutToFormValue(event.eventMapLayout)}
+            mapSources={mapSources.map((source) => ({
+              id: source.id,
+              title: source.title,
+              layoutValue: eventMapLayoutToFormValue(source.eventMapLayout)
+            }))}
+          />
           <label className="field">
               <span>Modelo do mapa</span>
               <select name="eventMapTemplate" defaultValue={event.eventMapTemplate}>
