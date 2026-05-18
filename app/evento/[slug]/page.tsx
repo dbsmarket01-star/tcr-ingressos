@@ -134,6 +134,20 @@ function getTicketDescriptionTopics(description?: string | null) {
     .filter(Boolean);
 }
 
+function getEditorialParagraphs(value?: string | null) {
+  return String(value ?? "")
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+}
+
+function getImportantInfoTopics(value?: string | null) {
+  return String(value ?? "")
+    .split(/\r?\n|(?<=\.)\s+/)
+    .map((topic) => topic.trim())
+    .filter(Boolean);
+}
+
 function getAvailableLotQuantity(lot: {
   hasTypeOptions: boolean;
   totalQuantity: number;
@@ -230,6 +244,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     whatsappUrl?: string | null;
   };
   const eventDirections = buildEventDirections(event);
+  const descriptionParagraphs = getEditorialParagraphs(event.description);
+  const importantInfoTopics = getImportantInfoTopics(event.importantInfo);
 
   return (
     <main className="shell">
@@ -333,18 +349,27 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
       <section className="container publicGrid">
         <article className="publicContent">
-          {event.description?.trim() ? (
-          <section className="editorialBlock eventDescriptionBlock">
-            <span className="eyebrow">Experiência do evento</span>
-            <h2>Descrição do evento</h2>
-            <p>{event.description}</p>
-          </section>
-        ) : null}
+          {descriptionParagraphs.length > 0 ? (
+            <section className="eventInfoBlock eventDescriptionBlock">
+              <span className="eyebrow">Experiência do evento</span>
+              <h2>Descrição do evento</h2>
+              <div className="eventInfoText">
+                {descriptionParagraphs.map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
-          {event.importantInfo ? (
-            <section className="contentBlock eventImportantInfoBlock">
+          {importantInfoTopics.length > 0 ? (
+            <section className="eventInfoBlock eventImportantInfoBlock">
+              <span className="eyebrow">Antes de comprar</span>
               <h2>Informações importantes</h2>
-              <p>{event.importantInfo}</p>
+              <ul className="eventInfoList">
+                {importantInfoTopics.map((topic) => (
+                  <li key={topic}>{topic}</li>
+                ))}
+              </ul>
             </section>
           ) : null}
 
