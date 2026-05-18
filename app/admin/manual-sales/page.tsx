@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { createManualSaleAction } from "@/features/manual-sales/manual-sale.actions";
 import { listManualSaleOptions } from "@/features/manual-sales/manual-sale.service";
@@ -47,22 +48,32 @@ export default async function ManualSalesPage({ searchParams }: ManualSalesPageP
   const params = searchParams ? await searchParams : {};
   const selectedEventId = firstParam(params.eventId) || "";
   const selectedLotId = firstParam(params.lotId) || "";
+  const selectedLotOptionId = firstParam(params.lotOptionId) || "";
   const selectedQuantity = parseQuantity(firstParam(params.quantity));
   const options = await listManualSaleOptions(admin.organizationId, getAdminAllowedEventIds(admin));
   const selectedEvent = options.find((event) => event.id === selectedEventId) || null;
   const selectedLot = selectedEvent?.lots.find((lot) => lot.id === selectedLotId) || null;
+  const availableTypeOptions =
+    selectedLot?.typeOptions.filter(
+      (option) => option.status === "ACTIVE" && option.soldQuantity + option.reservedQuantity < 1
+    ) ?? [];
+  const selectedLotOption = availableTypeOptions.find((option) => option.id === selectedLotOptionId) || null;
+  const effectiveQuantity = selectedLot?.hasTypeOptions ? (selectedLotOption ? 1 : 0) : selectedQuantity;
   const availableQuantity = selectedLot
-    ? Math.max(selectedLot.totalQuantity - selectedLot.soldQuantity - selectedLot.reservedQuantity, 0)
+    ? selectedLot.hasTypeOptions
+      ? availableTypeOptions.length
+      : Math.max(selectedLot.totalQuantity - selectedLot.soldQuantity - selectedLot.reservedQuantity, 0)
     : 0;
-  const suggestedTotalInCents = selectedLot ? selectedLot.priceInCents * selectedQuantity : 0;
-  const hotelGuestCount = selectedLot?.hasHotel ? selectedQuantity : 0;
+  const suggestedTotalInCents = selectedLot ? selectedLot.priceInCents * effectiveQuantity : 0;
+  const hotelGuestCount = selectedLot?.hasHotel ? effectiveQuantity : 0;
+  const canShowSaleForm = Boolean(selectedEvent && selectedLot && (!selectedLot.hasTypeOptions || selectedLotOption));
 
   return (
     <AdminShell
       title="Venda manual"
       description="Registre vendas antigas ou externas dentro da bilheteria atual, com pedido, QR Code, relatórios e Home List quando houver hotel."
     >
-      {typeof params.error === "string" ? <div className="errorBox spacedSection">{params.error}</div> : null}
+      {typeof params.error === "string" ? <ErrorNotice message={params.error} className="spacedSection" /> : null}
       {typeof params.created === "string" ? (
         <div className="successBox spacedSection">
           Venda manual registrada no pedido{" "}
@@ -133,8 +144,30 @@ export default async function ManualSalesPage({ searchParams }: ManualSalesPageP
           </label>
           <label className="field">
             <span>Quantidade</span>
-            <input name="quantity" type="number" min="1" max="20" defaultValue={selectedQuantity} required />
+            <input
+              name="quantity"
+              type="number"
+              min="1"
+              max={selectedLot?.hasTypeOptions ? "1" : "20"}
+              defaultValue={selectedLot?.hasTypeOptions ? 1 : selectedQuantity}
+              readOnly={Boolean(selectedLot?.hasTypeOptions)}
+              required
+            />
           </label>
+          {selectedLot?.hasTypeOptions ? (
+            <label className="field">
+              <span>Tipo/camarote</span>
+              <select name="lotOptionId" defaultValue={selectedLotOptionId} required>
+                <option value="">Selecione</option>
+                {availableTypeOptions.map((option) => (
+                  <option value={option.id} key={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <small>Escolha exatamente qual camarote/tipo foi vendido.</small>
+            </label>
+          ) : null}
           <button className="button" type="submit">
             Montar formulario
           </button>
@@ -144,11 +177,12 @@ export default async function ManualSalesPage({ searchParams }: ManualSalesPageP
         </form>
       </section>
 
-      {selectedEvent && selectedLot ? (
+      {canShowSaleForm && selectedEvent && selectedLot ? (
         <form action={createManualSaleAction} className="card form wideForm adminPanelBlock">
           <input type="hidden" name="eventId" value={selectedEvent.id} />
           <input type="hidden" name="lotId" value={selectedLot.id} />
-          <input type="hidden" name="quantity" value={selectedQuantity} />
+          <input type="hidden" name="lotOptionId" value={selectedLotOption?.id ?? ""} />
+          <input type="hidden" name="quantity" value={effectiveQuantity} />
           <input type="hidden" name="hotelGuestCount" value={hotelGuestCount} />
 
           <div className="formSectionHeader">
@@ -157,7 +191,9 @@ export default async function ManualSalesPage({ searchParams }: ManualSalesPageP
               <h2>{selectedEvent.title}</h2>
             </div>
             <p className="muted">
-              {selectedLot.name} · {lotStatusLabels[selectedLot.status]} · {availableQuantity} ingresso(s) disponivel(is).
+              {selectedLotOption ? `${selectedLot.name} - ${selectedLotOption.label}` : selectedLot.name} ·{" "}
+              {lotStatusLabels[selectedLot.status]} · {availableQuantity} ingresso(s) disponivel(is).
+              {selectedLot.admissionsPerUnit > 1 ? ` Cada unidade gera ${selectedLot.admissionsPerUnit} QR Codes.` : ""}
             </p>
           </div>
 
@@ -174,11 +210,11 @@ export default async function ManualSalesPage({ searchParams }: ManualSalesPageP
           <div className="grid twoColumns">
             <label className="field">
               <span>CPF/CNPJ</span>
-              <input name="buyerDocument" placeholder="Opcional para ingresso sem hotel" />
+              <input name="buyerDocument" placeholder="Opcional. Ex: 123.456.789-43" />
             </label>
             <label className="field">
               <span>Telefone</span>
-              <input name="buyerPhone" placeholder="Opcional para ingresso sem hotel" />
+              <input name="buyerPhone" placeholder="Opcional. Ex: 1194444-2222" />
             </label>
           </div>
           <div className="grid twoColumns">
@@ -259,7 +295,7 @@ export default async function ManualSalesPage({ searchParams }: ManualSalesPageP
                         </label>
                         <label className="field">
                           <span>CPF</span>
-                          <input name={`${prefix}Guest1Document`} required />
+                          <input name={`${prefix}Guest1Document`} placeholder="123.456.789-43" required />
                         </label>
                         <label className="field">
                           <span>Data de nascimento</span>
@@ -271,7 +307,7 @@ export default async function ManualSalesPage({ searchParams }: ManualSalesPageP
                         </label>
                         <label className="field">
                           <span>Telefone</span>
-                          <input name={`${prefix}Guest1Phone`} required />
+                          <input name={`${prefix}Guest1Phone`} placeholder="1194444-2222" required />
                         </label>
                       </div>
                       <div className="formSection compactFormSection">
@@ -282,7 +318,7 @@ export default async function ManualSalesPage({ searchParams }: ManualSalesPageP
                         </label>
                         <label className="field">
                           <span>CPF</span>
-                          <input name={`${prefix}Guest2Document`} required />
+                          <input name={`${prefix}Guest2Document`} placeholder="123.456.789-43" required />
                         </label>
                         <label className="field">
                           <span>Data de nascimento</span>

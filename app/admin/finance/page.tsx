@@ -31,6 +31,10 @@ const orderStatusLabels = {
   REFUNDED: "Reembolsado"
 };
 
+function formatLotDisplayName(lotName: string, optionLabel?: string | null) {
+  return optionLabel ? `${lotName} - ${optionLabel}` : lotName;
+}
+
 export default async function FinancePage({ searchParams }: FinancePageProps) {
   const admin = await requirePermission("FINANCE");
   const organizationContext = await getCurrentOrganizationContext();
@@ -168,7 +172,9 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                     </td>
                     <td>{order.event.title}</td>
                     <td>
-                      {Array.from(new Set(order.items.map((item) => item.lot.name))).join(", ")}
+                      {Array.from(
+                        new Set(order.items.map((item) => formatLotDisplayName(item.lot.name, item.lotOption?.label)))
+                      ).join(", ")}
                     </td>
                     <td>{formatCurrency(order.totalInCents)}</td>
                     <td>

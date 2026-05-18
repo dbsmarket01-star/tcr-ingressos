@@ -52,6 +52,23 @@ const whatsappGroupUrlSchema = z
     message: "Use um link de grupo ou convite do WhatsApp."
   })
   .optional();
+const googleMapsUrlSchema = z
+  .string()
+  .url("Link do Google Maps deve ser uma URL válida.")
+  .refine(
+    (value) => {
+      try {
+        const host = new URL(value).hostname.replace(/^www\./, "").toLowerCase();
+        return host.includes("google.") || host === "maps.app.goo.gl" || host === "goo.gl";
+      } catch {
+        return false;
+      }
+    },
+    {
+      message: "Use um link do Google Maps."
+    }
+  )
+  .optional();
 const youtubeUrlSchema = z
   .string()
   .url("Link do vídeo deve ser uma URL válida.")
@@ -65,6 +82,7 @@ export const eventDraftSchema = z.object({
   slug: z.string().min(3).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   subtitle: z.string().optional(),
   description: z.string().max(5000).optional(),
+  doorsOpenAt: z.coerce.date().optional(),
   startsAt: z.coerce.date(),
   endsAt: z.coerce.date().optional(),
   venueName: z.string().min(2),
@@ -80,6 +98,7 @@ export const eventDraftSchema = z.object({
   eventMapCrop: imageCropSchema,
   eventMapTemplate: eventMapTemplateSchema,
   eventMapNotes: z.string().max(500).optional(),
+  googleMapsUrl: googleMapsUrlSchema,
   importantInfo: z.string().optional(),
   metaPixelId: metaPixelIdSchema,
   metaConversionsApiToken: metaConversionsApiTokenSchema,

@@ -1,4 +1,5 @@
 import { AdminShell } from "@/components/admin/AdminShell";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { changePasswordAction } from "@/features/auth/auth.actions";
 import { requirePermission } from "@/features/auth/auth.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
@@ -42,9 +43,7 @@ export default async function AdminAccountPage({ searchParams }: AdminAccountPag
       <section className="grid twoColumns spacedSection">
         <form action={changePasswordAction} className="card form platformOperationsFilterCard">
           <h2>Trocar senha</h2>
-          {hasError ? (
-            <div className="errorBox">Confira a senha atual e confirme a nova senha corretamente.</div>
-          ) : null}
+          {hasError ? <ErrorNotice message="Confira a senha atual e confirme a nova senha corretamente." /> : null}
           {changed ? <div className="successBox">Senha alterada com sucesso.</div> : null}
 
           <label className="field">

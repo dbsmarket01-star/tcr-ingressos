@@ -569,6 +569,19 @@
   background: linear-gradient(180deg, color-mix(in srgb, var(--brand) 70%, #ffffff 30%), color-mix(in srgb, var(--brand) 92%, #000000 8%));
 }
 
+.tcrPremiumTicketsCta {
+  align-items: center;
+  display: inline-flex;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.tcrPremiumTicketsCta svg {
+  color: #ffffff;
+  height: 22px;
+  width: 22px;
+}
+
 .tcrPremiumMobileMenu {
   display: none;
 }
@@ -1818,13 +1831,14 @@ textarea {
 
 body.operationTheme .topbar {
   background:
-    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.22), transparent 24%),
-    radial-gradient(circle at 86% 18%, rgba(var(--brand-rgb), 0.58), transparent 34%),
+    radial-gradient(circle at 14% 0%, rgba(255, 255, 255, 0.24), transparent 26%),
+    radial-gradient(circle at 82% 8%, rgba(255, 255, 255, 0.1), transparent 22%),
+    radial-gradient(circle at 86% 18%, rgba(var(--brand-rgb), 0.72), transparent 38%),
     linear-gradient(
       120deg,
-      color-mix(in srgb, var(--brand-dark) 72%, #020817 28%) 0%,
-      color-mix(in srgb, var(--brand) 54%, #042f4c 46%) 48%,
-      color-mix(in srgb, var(--brand-dark) 56%, #04111f 44%) 100%
+      color-mix(in srgb, var(--brand-dark) 80%, #020817 20%) 0%,
+      color-mix(in srgb, var(--brand) 62%, #063f58 38%) 48%,
+      color-mix(in srgb, var(--brand-dark) 64%, #04111f 36%) 100%
     ),
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0));
   border-bottom-color: rgba(var(--brand-rgb), 0.18);
@@ -1867,6 +1881,22 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   max-width: 132px;
 }
 
+img.brandLogo[src*="elo-conference-wordmark-white"] {
+  filter: drop-shadow(0 7px 14px rgba(3, 22, 25, 0.24));
+  height: 42px;
+  max-width: 138px;
+}
+
+.topbar img.brandLogo[src*="elo-conference-wordmark-white"] {
+  height: 44px;
+  max-width: 144px;
+}
+
+.sidebarBrand img.brandLogo[src*="elo-conference-wordmark-white"] {
+  height: 48px;
+  max-width: 158px;
+}
+
 .nav {
   display: flex;
   flex-wrap: wrap;
@@ -1898,14 +1928,28 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 }
 
 .button {
-  background: var(--brand);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand) 68%, #ffffff 32%) 0%,
+      var(--brand) 42%,
+      color-mix(in srgb, var(--brand-dark) 84%, #062a36 16%) 100%
+    );
   border: 0;
+  box-shadow: 0 14px 30px rgba(var(--brand-rgb), 0.18);
   color: white;
   cursor: pointer;
 }
 
 .button:hover {
-  background: var(--brand-dark);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand) 76%, #ffffff 24%) 0%,
+      color-mix(in srgb, var(--brand) 86%, var(--brand-dark) 14%) 44%,
+      var(--brand-dark) 100%
+    );
+  box-shadow: 0 18px 34px rgba(var(--brand-rgb), 0.24);
 }
 
 .button:hover,
@@ -4878,6 +4922,86 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   color: #647184;
   font-size: 14px;
   line-height: 1.55;
+}
+
+.ticketLookupEventList {
+  display: grid;
+  gap: 14px;
+}
+
+.ticketLookupEvents {
+  display: grid;
+  gap: 14px;
+}
+
+.ticketLookupEventCard {
+  background: #ffffff;
+  border: 1px solid rgba(216, 226, 234, 0.96);
+  border-radius: 20px;
+  box-shadow: 0 14px 32px rgba(15, 38, 58, 0.06);
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.ticketLookupEventCard h2,
+.ticketLookupEventCard p,
+.ticketLookupEventMeta {
+  margin: 0;
+}
+
+.ticketLookupEventCard h2 {
+  color: #13213a;
+  font-size: 20px;
+  line-height: 1.18;
+  margin-top: 10px;
+}
+
+.ticketLookupEventCard p {
+  color: #607087;
+  font-size: 14px;
+  line-height: 1.45;
+  margin-top: 6px;
+}
+
+.ticketLookupEventBadge {
+  background: rgba(var(--brand-rgb), 0.1);
+  border: 1px solid rgba(var(--brand-rgb), 0.2);
+  border-radius: 999px;
+  color: rgb(var(--brand-rgb));
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 10px;
+}
+
+.ticketLookupEventMeta {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ticketLookupEventMeta div {
+  background: #f7fafb;
+  border: 1px solid rgba(225, 232, 238, 0.96);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+.ticketLookupEventMeta dt {
+  color: #758299;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ticketLookupEventMeta dd {
+  color: #172235;
+  font-size: 14px;
+  font-weight: 800;
+  margin: 4px 0 0;
+  overflow-wrap: break-word;
 }
 
 .ticketLookupDivider {
@@ -8992,6 +9116,68 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   object-fit: cover;
 }
 
+.eventDirectionsBlock {
+  background: linear-gradient(180deg, #ffffff, #f8fbfa);
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(29, 36, 48, 0.08);
+  margin-bottom: 30px;
+  margin-top: 24px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.eventDirectionsHeader {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  padding: 20px 22px;
+}
+
+.eventDirectionsHeader div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.eventDirectionsHeader span {
+  color: var(--brand-dark);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.eventDirectionsHeader h2 {
+  color: var(--ink);
+  font-size: 26px;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.eventDirectionsHeader p {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.eventDirectionsFrame {
+  aspect-ratio: 16 / 5;
+  background: #eaf2ef;
+  border-top: 1px solid var(--line-soft);
+  min-height: 260px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.eventDirectionsFrame iframe {
+  border: 0;
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
 .purchasePanel {
   background: white;
   border: 1px solid var(--line-soft);
@@ -9269,6 +9455,7 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   font-size: 12px;
   font-style: italic;
   line-height: 1.25;
+  white-space: pre-line;
 }
 
 .ticketPickerUrgency {
@@ -9288,6 +9475,41 @@ img.brandLogo[src*="a2-imergidos-logo"] {
   font-size: 18px;
   font-weight: 800;
   text-align: center;
+}
+
+.ticketTypeSelector {
+  display: grid;
+  gap: 6px;
+  justify-self: end;
+  min-width: 172px;
+}
+
+.ticketTypeSelector label {
+  display: grid;
+  gap: 5px;
+}
+
+.ticketTypeSelector span {
+  color: #475467;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.ticketTypeSelector select {
+  appearance: none;
+  background:
+    linear-gradient(45deg, transparent 50%, #344054 50%) calc(100% - 17px) 50% / 7px 7px no-repeat,
+    linear-gradient(135deg, #ffffff, #f8fbfa);
+  border: 1px solid #cfd7df;
+  border-radius: 8px;
+  color: #101828;
+  font-size: 14px;
+  font-weight: 800;
+  min-height: 40px;
+  padding: 0 36px 0 12px;
+  width: 100%;
 }
 
 .ticketQuantityButton {
@@ -9448,6 +9670,16 @@ img.brandLogo[src*="a2-imergidos-logo"] {
 
   .ticketQuantityStepper output {
     font-size: 16px;
+  }
+
+  .ticketTypeSelector {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    min-width: 0;
+  }
+
+  .ticketTypeSelector select {
+    min-height: 44px;
   }
 }
 
@@ -10038,6 +10270,11 @@ body.operationTheme .loginBrandDark {
 
 body.operationTheme .loginBrandDark .brandLogo {
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.2));
+}
+
+body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-white"] {
+  height: 48px;
+  max-width: 158px;
 }
 
 .loginIntroCopy {
@@ -10981,6 +11218,21 @@ body.operationTheme .loginBrandDark .brandLogo {
   justify-content: center;
   min-height: 180px;
   padding: 24px;
+}
+
+.settingsBrandPreviewBox:has(img[src*="elo-conference-wordmark-white"]) {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.24), transparent 28%),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand) 76%, #ffffff 24%),
+      color-mix(in srgb, var(--brand) 72%, var(--brand-dark) 28%) 52%,
+      color-mix(in srgb, var(--brand-dark) 82%, #062a36 18%)
+    );
+  border-color: rgba(var(--brand-rgb), 0.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 18px 36px rgba(var(--brand-rgb), 0.18);
 }
 
 .settingsBrandPreviewImage {
@@ -12164,6 +12416,12 @@ body.operationTheme .loginBrandDark .brandLogo {
   padding-top: 14px;
 }
 
+.buyerLocationGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 @media (max-width: 900px) {
   .checkoutFlowGrid {
     grid-template-columns: 1fr;
@@ -12185,6 +12443,10 @@ body.operationTheme .loginBrandDark .brandLogo {
     border-radius: 8px;
     box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
     padding: 16px;
+  }
+
+  .buyerLocationGrid {
+    grid-template-columns: 1fr;
   }
 
   .checkoutCartPanel h1,
@@ -12544,6 +12806,38 @@ body.operationTheme .loginBrandDark .brandLogo {
   margin: 0;
 }
 
+.ticketScheduleGrid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0 0 18px;
+}
+
+.ticketScheduleGrid.singleScheduleItem {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ticketScheduleGrid div {
+  background: #f7faf9;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+}
+
+.ticketScheduleGrid span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ticketScheduleGrid strong {
+  font-size: 20px;
+  line-height: 1;
+}
+
 .ticketQrStage {
   align-items: center;
   background: #f8fbfa;
@@ -12715,13 +13009,20 @@ body.operationTheme .loginBrandDark .brandLogo {
 }
 
 @media print {
+  @page {
+    margin: 8mm;
+    size: A4 portrait;
+  }
+
   .topbar,
   .ticketPageGrid aside {
     display: none;
   }
 
+  html,
   body {
     background: white;
+    font-size: 11px;
   }
 
   .container {
@@ -12736,18 +13037,70 @@ body.operationTheme .loginBrandDark .brandLogo {
   .ticketDocument {
     border: 0;
     box-shadow: none;
+    padding: 0;
+    page-break-inside: avoid;
+  }
+
+  .ticketDocument h1 {
+    font-size: 24px;
+    margin: 4px 0 6px;
   }
 
   .ticketHero {
     background: white;
     border-bottom: 1px solid var(--line);
     color: black;
-    margin: 0 0 16px;
-    padding: 0 0 16px;
+    margin: 0 0 8px;
+    padding: 0 0 8px;
   }
 
   .ticketHero p {
     color: black;
+  }
+
+  .ticketScheduleGrid {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .ticketScheduleGrid div,
+  .ticketDetailsGrid div {
+    padding: 7px 8px;
+  }
+
+  .ticketScheduleGrid strong {
+    font-size: 16px;
+  }
+
+  .ticketQrStage {
+    margin-bottom: 8px;
+    padding: 8px;
+  }
+
+  .ticketQrCode {
+    border-radius: 4px;
+    margin-bottom: 6px;
+    max-width: 220px;
+    padding: 8px;
+    width: 220px;
+  }
+
+  .ticketQrStage > strong {
+    font-size: 13px;
+  }
+
+  .ticketQrStage > span {
+    font-size: 9px;
+    line-height: 1.2;
+  }
+
+  .ticketDetailsGrid {
+    gap: 6px;
+  }
+
+  .ticketDetailsGrid span,
+  .ticketScheduleGrid span {
+    font-size: 9px;
   }
 
   .ticketInstructionGrid,
@@ -12782,6 +13135,113 @@ body.operationTheme .loginBrandDark .brandLogo {
   border-radius: 8px;
   color: #8f1830;
   padding: 14px;
+}
+
+.errorNotice {
+  align-items: flex-start;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 14px;
+  box-shadow: 0 16px 36px rgba(154, 52, 18, 0.08);
+  color: #7c2d12;
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.errorNotice > span {
+  align-items: center;
+  background: #ffedd5;
+  border-radius: 999px;
+  color: #c2410c;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 900;
+  height: 24px;
+  justify-content: center;
+  margin-top: 1px;
+  width: 24px;
+}
+
+.errorNotice strong {
+  color: #431407;
+  display: block;
+  font-size: 14px;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.errorNotice p {
+  color: #7c2d12;
+  font-size: 14px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.notFoundShell {
+  align-items: center;
+  background:
+    radial-gradient(circle at 15% 15%, rgba(var(--brand-rgb, 40, 115, 79), 0.14), transparent 34%),
+    linear-gradient(135deg, #f8fafc 0%, #eef7f4 100%);
+  display: flex;
+  min-height: 100vh;
+  padding: 32px;
+}
+
+.notFoundCard {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 28px;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.12);
+  display: grid;
+  gap: 18px;
+  margin: 0 auto;
+  max-width: 680px;
+  padding: clamp(28px, 5vw, 54px);
+}
+
+.adminNotFoundCard {
+  max-width: 720px;
+}
+
+.notFoundBadge {
+  align-items: center;
+  background: rgba(var(--brand-rgb, 40, 115, 79), 0.1);
+  border: 1px solid rgba(var(--brand-rgb, 40, 115, 79), 0.18);
+  border-radius: 999px;
+  color: var(--brand, #28734f);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  justify-self: start;
+  letter-spacing: 0.08em;
+  padding: 8px 12px;
+  text-transform: uppercase;
+}
+
+.notFoundCard h1 {
+  color: #0f172a;
+  font-size: clamp(34px, 6vw, 58px);
+  letter-spacing: 0;
+  line-height: 0.98;
+  margin: 0;
+  max-width: 12ch;
+}
+
+.notFoundCard p {
+  color: #53627a;
+  font-size: 18px;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 58ch;
+}
+
+.notFoundActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
 }
 
 .supportSearch {
@@ -17738,6 +18198,32 @@ body.operationTheme .loginBrandDark .brandLogo {
     padding-top: 12px;
   }
 
+  .eventDirectionsBlock {
+    border-radius: 16px;
+    margin-bottom: 110px;
+    margin-top: 14px;
+  }
+
+  .eventDirectionsHeader {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .eventDirectionsHeader h2 {
+    font-size: 22px;
+  }
+
+  .eventDirectionsHeader .secondaryButton {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .eventDirectionsFrame {
+    aspect-ratio: 1 / 1;
+    min-height: 280px;
+  }
+
   .purchasePanel {
     border-radius: 14px;
     box-shadow: 0 12px 24px rgba(18, 36, 48, 0.06);
@@ -17769,8 +18255,7 @@ body.operationTheme .loginBrandDark .brandLogo {
   }
 
   .eventDateLocalBlock,
-  .eventImportantInfoBlock,
-  .eventMapBlock {
+  .eventImportantInfoBlock {
     display: none;
   }
 
@@ -19773,6 +20258,10 @@ body.operationTheme .loginBrandDark .brandLogo {
   .ticketLookupHints {
     grid-template-columns: 1fr;
   }
+
+  .ticketLookupEventMeta {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Final homepage footer/value band reference alignment */
@@ -20859,7 +21348,7 @@ small,
     overflow: hidden !important;
   }
 
-  .homePage .tcrPremiumActions .button {
+  .homePage .tcrPremiumActions .button:not(.tcrPremiumTicketsCta) {
     display: none !important;
   }
 

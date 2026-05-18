@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { getAdminOrderDetail } from "@/features/orders/order-detail.service";
 import { refundPaidOrderAction } from "@/features/orders/order.admin.actions";
@@ -46,6 +47,10 @@ const ticketStatusLabels = {
   INVALID: "Inválido"
 };
 
+function formatLotDisplayName(lotName: string, optionLabel?: string | null) {
+  return optionLabel ? `${lotName} - ${optionLabel}` : lotName;
+}
+
 export default async function AdminOrderDetailPage({ params, searchParams }: AdminOrderDetailPageProps) {
   const admin = await requirePermission("ORDERS");
   const { code } = await params;
@@ -71,7 +76,7 @@ export default async function AdminOrderDetailPage({ params, searchParams }: Adm
           {query.ticketsCanceled ?? "0"} ingresso(s) foram cancelado(s).
         </div>
       ) : null}
-      {orderError ? <div className="errorBox spacedSection">{orderError}</div> : null}
+      {orderError ? <ErrorNotice message={orderError} className="spacedSection" /> : null}
 
       <section className="card orderMaintenance">
         <div>
@@ -258,7 +263,7 @@ export default async function AdminOrderDetailPage({ params, searchParams }: Adm
             <tbody>
               {order.items.map((item) => (
                 <tr key={item.id}>
-                  <td>{item.lot.name}</td>
+                  <td>{formatLotDisplayName(item.lot.name, item.lotOption?.label)}</td>
                   <td>{item.quantity}</td>
                   <td>{formatCurrency(item.unitPriceInCents)}</td>
                   <td>{formatCurrency(item.serviceFeeInCents)}</td>
@@ -304,7 +309,7 @@ export default async function AdminOrderDetailPage({ params, searchParams }: Adm
                     <td>
                       <strong>{ticket.code}</strong>
                     </td>
-                    <td>{ticket.lot.name}</td>
+                    <td>{formatLotDisplayName(ticket.lot.name, ticket.lotOption?.label)}</td>
                     <td>{ticketStatusLabels[ticket.status]}</td>
                     <td>{formatDateTime(ticket.issuedAt)}</td>
                     <td>

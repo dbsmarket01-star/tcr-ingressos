@@ -11,12 +11,12 @@ const bannerPositionOptions = [
   {
     label: "Preservar topo / rosto alto",
     value: "center top",
-    help: "Melhor quando a cabeca, data ou titulo ficam cortados no topo."
+    help: "Melhor quando a cabeça, data ou título ficam cortados no topo."
   },
   {
     label: "Topo com leve respiro",
     value: "center 18%",
-    help: "Mantem o topo visivel, mas aproxima um pouco do centro."
+    help: "Mantém o topo visível, mas aproxima um pouco do centro."
   },
   {
     label: "Foco superior equilibrado",
@@ -26,7 +26,7 @@ const bannerPositionOptions = [
   {
     label: "Centro visual",
     value: "center center",
-    help: "Use quando a arte ja foi criada na proporcao ideal."
+    help: "Use quando a arte já foi criada na proporção ideal."
   },
   {
     label: "Foco inferior",
@@ -87,13 +87,13 @@ export function BannerPositionField({
           ))}
         </select>
         <small>
-          Se o topo estiver cortando rosto, microfone ou texto, escolha uma opcao de topo e salve o
+          Se o topo estiver cortando rosto, microfone ou texto, escolha uma opção de topo e salve o
           evento.
         </small>
       </label>
 
       <div className="bannerPositionPreview">
-        <span>Previa aproximada do topo publico</span>
+        <span>Prévia aproximada do topo público</span>
         {previewImageUrl ? (
           <div
             className="bannerPreviewFrame"
@@ -102,7 +102,7 @@ export function BannerPositionField({
               backgroundPosition: currentValue
             }}
           >
-            <strong>Area do titulo</strong>
+            <strong>Área do título</strong>
           </div>
         ) : (
           <div className="bannerPreviewPlaceholder">
@@ -110,7 +110,7 @@ export function BannerPositionField({
           </div>
         )}
         <p>
-          Dica rapida: para banners de palestrante/artista, normalmente "Preservar topo" resolve
+          Dica rápida: para banners de palestrante/artista, normalmente "Preservar topo" resolve
           melhor do que "Centro visual".
         </p>
       </div>

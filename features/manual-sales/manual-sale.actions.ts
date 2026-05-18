@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { parseMoneyToCents } from "@/features/pricing/pricing";
+import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 import { createManualSale, type ManualSalePaymentMethod } from "./manual-sale.service";
 
 function requiredText(formData: FormData, field: string, label: string) {
@@ -119,6 +120,7 @@ export async function createManualSaleAction(formData: FormData) {
       {
         eventId: requiredText(formData, "eventId", "o evento"),
         lotId: requiredText(formData, "lotId", "o ingresso/lote"),
+        lotOptionId: optionalText(formData, "lotOptionId"),
         quantity,
         buyerName: requiredText(formData, "buyerName", "o nome do comprador"),
         buyerEmail: requiredText(formData, "buyerEmail", "o e-mail do comprador"),
@@ -138,12 +140,12 @@ export async function createManualSaleAction(formData: FormData) {
       admin.id
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Nao foi possivel registrar a venda manual.";
+    const message = getFriendlyErrorMessage(error, "Não foi possível registrar a venda manual.");
     redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
   }
 
   if (!result) {
-    redirect(`${returnTo}?error=${encodeURIComponent("Nao foi possivel registrar a venda manual.")}`);
+    redirect(`${returnTo}?error=${encodeURIComponent("Não foi possível registrar a venda manual.")}`);
   }
 
   revalidatePath("/admin");

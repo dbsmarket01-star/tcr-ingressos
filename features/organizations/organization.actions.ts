@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAuditLog } from "@/features/audit/audit.service";
 import { requirePermission } from "@/features/auth/auth.service";
+import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 import {
   createOrganizationInitialOwner,
   createOrganization,
@@ -57,7 +58,7 @@ export async function createOrganizationAction(formData: FormData) {
   } catch (error) {
     redirect(
       `/admin/operations?error=${encodeURIComponent(
-        error instanceof Error ? error.message : "Não foi possível criar o cliente."
+        getFriendlyErrorMessage(error, "Não foi possível criar o cliente.")
       )}`
     );
   }
@@ -112,7 +113,7 @@ export async function updateOrganizationAction(formData: FormData) {
   } catch (error) {
     redirect(
       `/admin/operations?error=${encodeURIComponent(
-        error instanceof Error ? error.message : "Não foi possível atualizar o cliente."
+        getFriendlyErrorMessage(error, "Não foi possível atualizar o cliente.")
       )}`
     );
   }
@@ -154,7 +155,7 @@ export async function updateOrganizationStatusAction(formData: FormData) {
   } catch (error) {
     redirect(
       `/admin/operations?error=${encodeURIComponent(
-        error instanceof Error ? error.message : "Não foi possível atualizar o status do cliente."
+        getFriendlyErrorMessage(error, "Não foi possível atualizar o status do cliente.")
       )}`
     );
   }
@@ -207,7 +208,7 @@ export async function createOrganizationInitialOwnerAction(formData: FormData) {
   } catch (error) {
     redirect(
       `/admin/operations/${organizationId}?error=${encodeURIComponent(
-        error instanceof Error ? error.message : "Não foi possível liberar o acesso inicial da operação."
+        getFriendlyErrorMessage(error, "Não foi possível liberar o acesso inicial da operação.")
       )}`
     );
   }

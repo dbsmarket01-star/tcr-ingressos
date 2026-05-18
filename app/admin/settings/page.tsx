@@ -2,6 +2,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { ModuleCard } from "@/components/admin/ModuleCard";
 import { CopyButton } from "@/components/forms/CopyButton";
 import { ImageUploadField } from "@/components/forms/ImageUploadField";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { requirePermission } from "@/features/auth/auth.service";
 import {
   updateCompanySettingsAction,
@@ -92,7 +93,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
       </section>
 
       <form action={updateCompanySettingsAction} className="card form wideForm">
-        {error ? <div className="errorBox">{error}</div> : null}
+        {error ? <ErrorNotice message={error} /> : null}
         {saved ? <div className="successBox">Configurações salvas com sucesso.</div> : null}
         {params.brandingSaved === "1" ? <div className="successBox">Logo da operação salva com sucesso.</div> : null}
         {params.splitSaved === "1" ? <div className="successBox">Regras de split salvas com sucesso.</div> : null}
@@ -123,7 +124,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           </label>
           <label className="field">
             <span>Telefone de suporte</span>
-            <input name="supportPhone" defaultValue={companySettings.supportPhone ?? ""} />
+            <input name="supportPhone" defaultValue={companySettings.supportPhone ?? ""} placeholder="Ex: 1194444-2222" />
           </label>
         </div>
         <div className="grid twoColumns">
@@ -143,7 +144,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           </label>
           <label className="field">
             <span>WhatsApp</span>
-            <input name="whatsappUrl" defaultValue={companyIdentity.whatsappUrl ?? ""} placeholder="https://wa.me/5511999999999" />
+            <input name="whatsappUrl" defaultValue={companyIdentity.whatsappUrl ?? ""} placeholder="https://wa.me/5511944442222" />
           </label>
         </div>
 

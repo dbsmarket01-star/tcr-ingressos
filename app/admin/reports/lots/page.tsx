@@ -93,7 +93,7 @@ export default async function LotSalesReportPage({ searchParams }: LotSalesRepor
           <strong>{report.totals.totalCheckInPercent}%</strong>
         </article>
         <article className="card metric">
-          <span className="muted">Ticket médio</span>
+          <span className="muted">Ticket médio por ingresso</span>
           <strong>{formatCurrency(report.totals.averageGrossPerSoldTicketInCents)}</strong>
         </article>
         <article className="card metric">
@@ -141,7 +141,7 @@ export default async function LotSalesReportPage({ searchParams }: LotSalesRepor
                 <th>Reservado</th>
                 <th>Disponível</th>
                 <th>Check-ins</th>
-                <th>Ticket médio</th>
+                <th>Ticket médio por ingresso</th>
                 <th>Taxas</th>
                 <th>Bruto pago</th>
               </tr>

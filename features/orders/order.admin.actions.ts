@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAuditLog } from "@/features/audit/audit.service";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
+import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 import { cancelPendingOrderByCode, expirePendingOrders, refundPaidOrderByCode } from "./order.service";
 
 export async function expirePendingOrdersAction() {
@@ -31,7 +32,7 @@ export async function cancelPendingOrderAction(formData: FormData) {
   const orderCode = String(formData.get("orderCode") ?? "").trim();
 
   if (!orderCode) {
-    throw new Error("Pedido nao informado.");
+    throw new Error("Pedido não informado.");
   }
 
   try {
@@ -54,7 +55,7 @@ export async function cancelPendingOrderAction(formData: FormData) {
 
     redirect(`/admin/orders?canceled=${encodeURIComponent(orderCode)}&released=${result.releasedQuantity}`);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Nao foi possivel cancelar o pedido.";
+    const message = getFriendlyErrorMessage(error, "Não foi possível cancelar o pedido.");
     redirect(`/admin/orders?orderError=${encodeURIComponent(message)}`);
   }
 }
@@ -67,7 +68,7 @@ export async function refundPaidOrderAction(formData: FormData) {
     String(formData.get("refundReason") ?? "").trim() || "Reembolso registrado manualmente pela operacao.";
 
   if (!orderCode) {
-    throw new Error("Pedido nao informado.");
+    throw new Error("Pedido não informado.");
   }
 
   try {
@@ -99,7 +100,7 @@ export async function refundPaidOrderAction(formData: FormData) {
       `/admin/orders/${orderCode}?refunded=1&released=${result.releasedQuantity}&ticketsCanceled=${result.canceledTickets}`
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Nao foi possivel registrar o reembolso.";
+    const message = getFriendlyErrorMessage(error, "Não foi possível registrar o reembolso.");
     redirect(`/admin/orders/${orderCode}?orderError=${encodeURIComponent(message)}`);
   }
 }

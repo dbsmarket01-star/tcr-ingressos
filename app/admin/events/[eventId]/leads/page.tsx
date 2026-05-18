@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { CopyButton } from "@/components/forms/CopyButton";
 import { ImageUploadField } from "@/components/forms/ImageUploadField";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { countEventPageVisits } from "@/features/analytics/page-visit.service";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { getEventForManagement } from "@/features/events/event.service";
@@ -224,7 +225,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
             <strong>{whatsappClicks}</strong>
           </div>
         </div>
-        {sendError ? <div className="errorBox">{sendError}</div> : null}
+        {sendError ? <ErrorNotice message={sendError} /> : null}
       </section>
 
       <section className="card spacedSection" id="lead-broadcast">
@@ -249,10 +250,10 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
             {sendScope ? <small className="feedbackScopeText">{sendScope}</small> : null}
           </div>
         ) : null}
-        {sendError ? <div className="errorBox inlineFeedbackBox">{sendError}</div> : null}
+        {sendError ? <ErrorNotice message={sendError} className="inlineFeedbackBox" /> : null}
         {templateSaved ? <div className="successBox inlineFeedbackBox">Modelo salvo com sucesso.</div> : null}
         {templateDeleted ? <div className="successBox inlineFeedbackBox">Modelo apagado com sucesso.</div> : null}
-        {templateError ? <div className="errorBox inlineFeedbackBox">{templateError}</div> : null}
+        {templateError ? <ErrorNotice message={templateError} className="inlineFeedbackBox" /> : null}
         {activeCampaign ? (
           <LeadBroadcastCampaignRunner
             initialCampaign={{

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { requirePermission } from "@/features/auth/auth.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { resolveUnlockRequestAction } from "@/features/protection-unlock/unlock-request.actions";
@@ -71,7 +72,7 @@ export default async function UnlocksPage({ searchParams }: UnlocksPageProps) {
           </Link>
         </div>
 
-        {error ? <div className="errorBox">{error}</div> : null}
+        {error ? <ErrorNotice message={error} /> : null}
         {resolved ? (
           <div className="successBox">
             Solicitação {resolved === "denied" ? "negada" : "encerrada"} com sucesso.

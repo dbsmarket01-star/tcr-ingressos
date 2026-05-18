@@ -68,6 +68,87 @@ export type AsaasExternalPaymentSyncResult =
 
 const FAILED_TICKET_EMAIL_STATUSES = new Set(["failed", "bounced", "complained", "suppressed"]);
 
+function formatLotNameWithOption(lotName: string, optionLabel?: string | null) {
+  return optionLabel ? `${lotName} - ${optionLabel}` : lotName;
+}
+
+async function releaseReservedTicketLotOption(
+  tx: Prisma.TransactionClient,
+  lotOptionId: string | null | undefined,
+  quantity: number
+) {
+  if (!lotOptionId) {
+    return;
+  }
+
+  await tx.$executeRaw`
+    UPDATE "TicketLotOption"
+    SET "reservedQuantity" = GREATEST("reservedQuantity" - ${quantity}, 0)
+    WHERE "id" = ${lotOptionId}
+  `;
+}
+
+async function confirmReservedTicketLotOption(
+  tx: Prisma.TransactionClient,
+  lotOptionId: string | null | undefined,
+  quantity: number
+) {
+  if (!lotOptionId) {
+    return;
+  }
+
+  const updatedRows = await tx.$executeRaw`
+    UPDATE "TicketLotOption"
+    SET
+      "reservedQuantity" = "reservedQuantity" - ${quantity},
+      "soldQuantity" = "soldQuantity" + ${quantity}
+    WHERE "id" = ${lotOptionId}
+      AND "reservedQuantity" >= ${quantity}
+  `;
+
+  if (updatedRows !== 1) {
+    throw new Error("Nao foi possivel confirmar o tipo/camarote reservado.");
+  }
+}
+
+async function sellTicketLotOptionWithoutReservation(
+  tx: Prisma.TransactionClient,
+  lotOptionId: string | null | undefined,
+  quantity: number
+) {
+  if (!lotOptionId) {
+    return;
+  }
+
+  const updatedRows = await tx.$executeRaw`
+    UPDATE "TicketLotOption"
+    SET "soldQuantity" = "soldQuantity" + ${quantity}
+    WHERE "id" = ${lotOptionId}
+      AND "reservedQuantity" = 0
+      AND "soldQuantity" = 0
+  `;
+
+  if (updatedRows !== 1) {
+    throw new Error("O tipo/camarote selecionado ja nao esta disponivel.");
+  }
+}
+
+async function releaseSoldTicketLotOption(
+  tx: Prisma.TransactionClient,
+  lotOptionId: string | null | undefined,
+  quantity: number
+) {
+  if (!lotOptionId) {
+    return;
+  }
+
+  await tx.$executeRaw`
+    UPDATE "TicketLotOption"
+    SET "soldQuantity" = GREATEST("soldQuantity" - ${quantity}, 0)
+    WHERE "id" = ${lotOptionId}
+  `;
+}
+
 function normalizeEmailError(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
@@ -912,6 +993,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
                   autoPurchaseApprovedEmailEnabled: true,
                   organization: {
                     select: {
+                      id: true,
                       name: true,
                       publicDomain: true,
                       adminDomain: true,
@@ -927,6 +1009,11 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
                   lot: {
                     select: {
                       name: true
+                    }
+                  },
+                  lotOption: {
+                    select: {
+                      label: true
                     }
                   }
                 }
@@ -979,7 +1066,10 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           buyerPhone: payment.order.customer.phone,
           eventTitle: payment.order.event.title,
           orderCode: payment.order.code,
-          orderUrl: createPublicOrderUrl(payment.order.code, payment.order.event.organization)
+          orderUrl: createPublicOrderUrl(payment.order.code, payment.order.event.organization),
+          organizationId: payment.order.event.organization?.id,
+          eventId: payment.order.eventId,
+          orderId: payment.order.id
         };
       };
 
@@ -992,7 +1082,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         const approvedTicketsEmail = buildApprovedTicketsEmail(
           payment.order.tickets.map((ticket) => ({
             code: ticket.code,
-            lotName: ticket.lot.name
+            lotName: formatLotNameWithOption(ticket.lot.name, ticket.lotOption?.label)
           }))
         );
 
@@ -1121,13 +1211,21 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           if (updatedRows !== 1) {
             throw new Error("Nao foi possivel confirmar o estoque reservado.");
           }
+
+          if (shouldConsumeReservation) {
+            await confirmReservedTicketLotOption(tx, item.lotOptionId, item.quantity);
+          } else {
+            await sellTicketLotOptionWithoutReservation(tx, item.lotOptionId, item.quantity);
+          }
         }
 
         let generatedTickets: Array<{ code: string; lotName: string }> = [];
 
         if (payment.order.tickets.length === 0) {
           for (const item of payment.order.items) {
-            for (let index = 0; index < item.quantity; index += 1) {
+            const ticketsToIssue = item.quantity * Math.max(item.admissionsPerUnit ?? 1, 1);
+
+            for (let index = 0; index < ticketsToIssue; index += 1) {
               const ticket = await tx.ticket.create({
                 data: {
                   code: createTicketCode(),
@@ -1136,6 +1234,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
                   orderItemId: item.id,
                   eventId: payment.order.eventId,
                   lotId: item.lotId,
+                  lotOptionId: item.lotOptionId || null,
                   status: "ACTIVE"
                 },
                 include: {
@@ -1143,19 +1242,24 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
                     select: {
                       name: true
                     }
+                  },
+                  lotOption: {
+                    select: {
+                      label: true
+                    }
                   }
                 }
               });
               generatedTickets.push({
                 code: ticket.code,
-                lotName: ticket.lot.name
+                lotName: formatLotNameWithOption(ticket.lot.name, ticket.lotOption?.label)
               });
             }
           }
         } else {
           generatedTickets = payment.order.tickets.map((ticket) => ({
             code: ticket.code,
-            lotName: ticket.lot.name
+            lotName: formatLotNameWithOption(ticket.lot.name, ticket.lotOption?.label)
           }));
         }
 
@@ -1234,6 +1338,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
               SET "soldQuantity" = GREATEST("soldQuantity" - ${item.quantity}, 0)
               WHERE "id" = ${item.lotId}
             `;
+            await releaseSoldTicketLotOption(tx, item.lotOptionId, item.quantity);
           }
 
           if (payment.order.tickets.length > 0) {
@@ -1314,6 +1419,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
                 SET "reservedQuantity" = GREATEST("reservedQuantity" - ${item.quantity}, 0)
                 WHERE "id" = ${item.lotId}
               `;
+              await releaseReservedTicketLotOption(tx, item.lotOptionId, item.quantity);
             }
           }
 

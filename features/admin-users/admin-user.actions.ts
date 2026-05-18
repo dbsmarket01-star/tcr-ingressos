@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAuditLog } from "@/features/audit/audit.service";
 import { requirePermission } from "@/features/auth/auth.service";
+import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 import {
   createAdminUser,
   getAdminUserByIdInOrganization,
@@ -56,7 +57,7 @@ export async function createAdminUserAction(formData: FormData) {
   } catch (error) {
     redirect(
       `/admin/users?error=${encodeURIComponent(
-        error instanceof Error ? error.message : "Não foi possível validar o escopo do usuário."
+        getFriendlyErrorMessage(error, "Não foi possível validar o escopo do usuário.")
       )}`
     );
   }
@@ -79,7 +80,7 @@ export async function createAdminUserAction(formData: FormData) {
   } catch (error) {
     redirect(
       `/admin/users?error=${encodeURIComponent(
-        error instanceof Error ? error.message : "Não foi possível criar o usuário."
+        getFriendlyErrorMessage(error, "Não foi possível criar o usuário.")
       )}`
     );
   }
@@ -193,7 +194,7 @@ export async function updateAdminUserEventAccessAction(formData: FormData) {
   } catch (error) {
     redirect(
       `/admin/users?error=${encodeURIComponent(
-        error instanceof Error ? error.message : "Não foi possível validar o acesso por evento."
+        getFriendlyErrorMessage(error, "Não foi possível validar o acesso por evento.")
       )}`
     );
   }

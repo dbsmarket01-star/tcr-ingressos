@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { HotelLotFields } from "@/components/forms/HotelLotFields";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { getEventForManagement } from "@/features/events/event.service";
 import { listHotelsForOrganization } from "@/features/hospitality/hotel.service";
@@ -88,7 +89,7 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
       headerVariant="minimal"
       hideSidebarIntro
     >
-      {typeof query.lotError === "string" ? <div className="errorBox spacedSection">{query.lotError}</div> : null}
+      {typeof query.lotError === "string" ? <ErrorNotice message={query.lotError} className="spacedSection" /> : null}
       {query.lotSaved === "1" ? <div className="successBox spacedSection">Ingresso atualizado com sucesso.</div> : null}
       {query.lotStatus === "paused" ? (
         <div className="successBox spacedSection">Ingresso pausado e retirado do site de vendas.</div>
@@ -139,6 +140,8 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
                     <th>Status</th>
                     <th>Preço</th>
                     <th>Quantidade</th>
+                    <th>QR Codes</th>
+                    <th>Tipos</th>
                     <th>Pix</th>
                     <th>Hotel</th>
                     <th>Igreja</th>
@@ -164,6 +167,16 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
                         <td>{formatCurrency(lot.priceInCents)}</td>
                         <td>
                           {lot.soldQuantity + lot.reservedQuantity} / {lot.totalQuantity}
+                        </td>
+                        <td>{lot.admissionsPerUnit} por compra</td>
+                        <td>
+                          {lot.hasTypeOptions ? (
+                            <span className="status pending">
+                              {lot.typeOptions.filter((option) => option.status === "ACTIVE").length} tipo(s)
+                            </span>
+                          ) : (
+                            "Sem tipos"
+                          )}
                         </td>
                         <td>{formatPixDiscount(lot)}</td>
                         <td>
@@ -237,6 +250,30 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
             <div className="formSection compactFormSection">
               <div className="formSectionHeader">
                 <div>
+                  <span className="sectionEyebrow">Camarotes e tipos</span>
+                  <h2>Opções individuais do ingresso</h2>
+                </div>
+                <p className="muted">
+                  Use para vender um único ingresso como “Camarote para 8 pessoas” e listar cada camarote disponível em um seletor.
+                </p>
+              </div>
+              <label className="checkboxField">
+                <input name="hasTypeOptions" type="checkbox" value="true" />
+                <span>Este ingresso possui tipos/camarotes individuais.</span>
+              </label>
+              <label className="field">
+                <span>Tipos disponíveis</span>
+                <textarea
+                  name="typeOptionsText"
+                  placeholder={"Ex:\nCamarote 01\nCamarote 02\nCamarote 04\nCamarote 08"}
+                  rows={6}
+                />
+                <small>Informe um tipo por linha. Cada tipo só poderá ser vendido uma vez.</small>
+              </label>
+            </div>
+            <div className="formSection compactFormSection">
+              <div className="formSectionHeader">
+                <div>
                   <span className="sectionEyebrow">Dados opcionais no checkout</span>
                   <h2>Pergunta sobre igreja</h2>
                 </div>
@@ -260,6 +297,11 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
                 <input name="totalQuantity" type="number" min="1" required />
               </label>
             </div>
+            <label className="field">
+              <span>QR Codes por compra/unidade</span>
+              <input name="admissionsPerUnit" type="number" min="1" max="100" defaultValue="1" required />
+              <small>Use 1 para ingresso normal. Ex: camarote para 8 pessoas = 8 QR Codes individuais.</small>
+            </label>
             <div className="grid twoColumns">
               <label className="field">
                 <span>Mínimo por pedido</span>

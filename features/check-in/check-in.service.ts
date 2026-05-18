@@ -18,6 +18,10 @@ export type CheckInResult = {
   };
 };
 
+function formatLotDisplayName(lotName: string, optionLabel?: string | null) {
+  return optionLabel ? `${lotName} - ${optionLabel}` : lotName;
+}
+
 export async function validateTicketForCheckIn(
   inputCode: string,
   deviceName?: string,
@@ -62,6 +66,7 @@ export async function validateTicketForCheckIn(
             }
           },
           lot: true,
+          lotOption: true,
           order: {
             include: {
               customer: true
@@ -108,7 +113,7 @@ export async function validateTicketForCheckIn(
           ticket: {
             code: ticket.code,
             eventTitle: ticket.event.title,
-            lotName: ticket.lot.name,
+            lotName: formatLotDisplayName(ticket.lot.name, ticket.lotOption?.label),
             buyerName: ticket.order.customer.name,
             checkedAt: ticket.usedAt || undefined,
             publicUrl: getPublicTicketUrl(ticket.code, ticket.event.organization)
@@ -145,7 +150,7 @@ export async function validateTicketForCheckIn(
           ticket: {
             code: ticket.code,
             eventTitle: ticket.event.title,
-            lotName: ticket.lot.name,
+            lotName: formatLotDisplayName(ticket.lot.name, ticket.lotOption?.label),
             buyerName: ticket.order.customer.name,
             checkedAt: ticket.usedAt || undefined,
             publicUrl: getPublicTicketUrl(ticket.code, ticket.event.organization)
@@ -169,7 +174,7 @@ export async function validateTicketForCheckIn(
         ticket: {
           code: ticket.code,
           eventTitle: ticket.event.title,
-          lotName: ticket.lot.name,
+          lotName: formatLotDisplayName(ticket.lot.name, ticket.lotOption?.label),
           buyerName: ticket.order.customer.name,
           checkedAt: usedAt,
           publicUrl: getPublicTicketUrl(ticket.code, ticket.event.organization)
@@ -225,6 +230,7 @@ export async function listRecentCheckIns(organizationId: string, allowedEventIds
       ticket: {
         include: {
           lot: true,
+          lotOption: true,
           order: {
             include: {
               customer: true

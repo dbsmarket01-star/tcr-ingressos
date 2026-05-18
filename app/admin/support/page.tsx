@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { CopyButton } from "@/components/forms/CopyButton";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { resendPendingPaymentEmailAction, resendTicketsEmailAction } from "@/features/support/support.actions";
 import { searchSupportOrders } from "@/features/support/support.service";
@@ -43,6 +44,10 @@ function toWhatsappHref(phone?: string | null) {
   const digits = phone.replace(/\D/g, "");
   if (!digits) return null;
   return `https://wa.me/${digits.startsWith("55") ? digits : `55${digits}`}`;
+}
+
+function formatLotDisplayName(lotName: string, optionLabel?: string | null) {
+  return optionLabel ? `${lotName} - ${optionLabel}` : lotName;
 }
 
 export default async function SupportPage({ searchParams }: SupportPageProps) {
@@ -89,7 +94,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
               Link de pagamento do pedido {params.order} reenviado para {params.paymentSent}.
             </div>
           ) : null}
-          {params.error ? <div className="errorBox supportDeskFeedback">{params.error}</div> : null}
+          {params.error ? <ErrorNotice message={params.error} className="supportDeskFeedback" /> : null}
         </section>
 
         <section className="supportDeskResults" aria-label="Resultados de atendimento">
@@ -156,9 +161,9 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
                   <div className="supportDeskTicketPanel">
                     {order.items.map((item) => (
                       <div className="supportDeskTicketRow" key={item.id}>
-                        <div className="supportDeskTicketIcon" aria-hidden="true" />
-                        <div className="supportDeskTicketName">
-                          <strong>{item.quantity}x {item.lot.name}</strong>
+                      <div className="supportDeskTicketIcon" aria-hidden="true" />
+                      <div className="supportDeskTicketName">
+                          <strong>{item.quantity}x {formatLotDisplayName(item.lot.name, item.lotOption?.label)}</strong>
                           <span>{item.lot.description || "Setor geral"}</span>
                         </div>
                         <div>

@@ -1,6 +1,7 @@
 import { AdminRole } from "@prisma/client";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminUserEventScopeField } from "@/components/admin/AdminUserEventScopeField";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import {
   createAdminUserAction,
   updateAdminUserEventAccessAction,
@@ -99,7 +100,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
       title="Usuários"
       description={`Gerencie equipe interna, papéis e acesso ao painel da ${organizationContext.brandName}.`}
     >
-      {error ? <div className="errorBox spacedSection">{error}</div> : null}
+      {error ? <ErrorNotice message={error} className="spacedSection" /> : null}
       {created ? <div className="successBox spacedSection">Usuário criado: {created}</div> : null}
       {updated ? <div className="successBox spacedSection">{updated}</div> : null}
 

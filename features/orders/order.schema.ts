@@ -7,6 +7,11 @@ export const checkoutOrderSchema = z.object({
   buyerEmail: z.string().email(),
   buyerDocument: z.string().min(5),
   buyerPhone: z.string().optional(),
+  buyerPostalCode: z.string().refine((value) => value.replace(/\D/g, "").length === 8, {
+    message: "Informe um CEP válido."
+  }),
+  buyerCity: z.string().min(2),
+  buyerState: z.string().max(2).optional(),
   churchName: z.string().max(120).optional(),
   couponCode: z.string().optional(),
   utmSource: z.string().optional(),
@@ -24,6 +29,7 @@ export const checkoutOrderSchema = z.object({
     .array(
       z.object({
         lotId: z.string().min(1),
+        lotOptionId: z.string().optional(),
         quantity: z.number().int().min(0)
       })
     )

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { parseInstallmentStart, parseMoneyToCents, parsePercentageToBps } from "@/features/pricing/pricing";
+import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 import { createTicketLot, updateTicketLot, updateTicketLotPricing, updateTicketLotStatus } from "./lot.service";
 import { ticketLotPricingSchema, ticketLotSchema } from "./lot.schema";
 
@@ -26,7 +27,7 @@ function parseHotelFields(formData: FormData) {
 }
 
 function lotErrorMessage(error: unknown, fallback: string) {
-  return error instanceof Error ? error.message : fallback;
+  return getFriendlyErrorMessage(error, fallback);
 }
 
 function validationErrorMessage(
@@ -70,6 +71,9 @@ export async function createTicketLotAction(formData: FormData) {
     name: String(formData.get("name") ?? "").trim(),
     description: String(formData.get("description") ?? "").trim() || undefined,
     churchQuestionEnabled: String(formData.get("churchQuestionEnabled") ?? "false") === "true",
+    hasTypeOptions: String(formData.get("hasTypeOptions") ?? "false") === "true",
+    admissionsPerUnit: Number(formData.get("admissionsPerUnit") ?? 1),
+    typeOptionsText: String(formData.get("typeOptionsText") ?? "").trim() || undefined,
     ...parseHotelFields(formData),
     priceInCents: Math.round(price * 100),
     serviceFeeBps: parsePercentageToBps(formData.get("serviceFeePercent")),
@@ -202,6 +206,9 @@ export async function updateTicketLotAction(formData: FormData) {
     name: String(formData.get("name") ?? "").trim(),
     description: String(formData.get("description") ?? "").trim() || undefined,
     churchQuestionEnabled: String(formData.get("churchQuestionEnabled") ?? "false") === "true",
+    hasTypeOptions: String(formData.get("hasTypeOptions") ?? "false") === "true",
+    admissionsPerUnit: Number(formData.get("admissionsPerUnit") ?? 1),
+    typeOptionsText: String(formData.get("typeOptionsText") ?? "").trim() || undefined,
     ...parseHotelFields(formData),
     priceInCents: Math.round(price * 100),
     serviceFeeBps: parsePercentageToBps(formData.get("serviceFeePercent")),

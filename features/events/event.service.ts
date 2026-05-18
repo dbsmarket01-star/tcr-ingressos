@@ -121,6 +121,8 @@ export async function createEvent(input: EventDraftInput & { status: EventStatus
     eventMapCrop: input.eventMapCrop || null,
     eventMapTemplate: input.eventMapTemplate,
     eventMapNotes: input.eventMapNotes || null,
+    googleMapsUrl: input.googleMapsUrl || null,
+    doorsOpenAt: input.doorsOpenAt || null,
     startsAt: input.startsAt,
     endsAt: input.endsAt || null,
     venueName: input.venueName,
@@ -200,6 +202,9 @@ export async function getEventForManagement(
               city: true,
               state: true
             }
+          },
+          typeOptions: {
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
           }
         }
       },
@@ -305,6 +310,9 @@ export async function getPublicEventBySlug(slug: string, organizationId: string)
               city: true,
               state: true
             }
+          },
+          typeOptions: {
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
           }
         }
       }
@@ -333,7 +341,7 @@ function normalizeCachedEventDates<T>(event: T): T {
 
   const normalized = event as Record<string, unknown>;
 
-  for (const field of ["startsAt", "endsAt", "salesStartsAt", "salesEndsAt", "createdAt", "updatedAt"]) {
+  for (const field of ["doorsOpenAt", "startsAt", "endsAt", "salesStartsAt", "salesEndsAt", "createdAt", "updatedAt"]) {
     if (field in normalized && normalized[field]) {
       normalized[field] = toDate(normalized[field]);
     }
@@ -385,6 +393,8 @@ export async function updateEvent(eventId: string, input: EventDraftInput & { st
     eventMapCrop: input.eventMapCrop || null,
     eventMapTemplate: input.eventMapTemplate,
     eventMapNotes: input.eventMapNotes || null,
+    googleMapsUrl: input.googleMapsUrl || null,
+    doorsOpenAt: input.doorsOpenAt || null,
     startsAt: input.startsAt,
     endsAt: input.endsAt || null,
     venueName: input.venueName,
@@ -460,7 +470,12 @@ export async function duplicateEvent(eventId: string) {
     where: { id: eventId },
     include: {
       lots: {
-        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        include: {
+          typeOptions: {
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
+          }
+        }
       }
     }
   });
@@ -484,6 +499,8 @@ export async function duplicateEvent(eventId: string) {
         eventMapCrop: event.eventMapCrop,
         eventMapTemplate: event.eventMapTemplate,
         eventMapNotes: event.eventMapNotes,
+        googleMapsUrl: event.googleMapsUrl,
+        doorsOpenAt: event.doorsOpenAt,
         startsAt: event.startsAt,
         endsAt: event.endsAt,
         venueName: event.venueName,
@@ -544,6 +561,8 @@ export async function duplicateEvent(eventId: string) {
           description: lot.description,
           hasHotel: lot.hasHotel,
           churchQuestionEnabled: lot.churchQuestionEnabled,
+          hasTypeOptions: lot.hasTypeOptions,
+          admissionsPerUnit: lot.admissionsPerUnit,
           priceInCents: lot.priceInCents,
           serviceFeeBps: lot.serviceFeeBps,
           pixDiscountPercentBps: lot.pixDiscountPercentBps,
@@ -563,6 +582,19 @@ export async function duplicateEvent(eventId: string) {
       });
 
       lotIdMap.set(lot.id, duplicatedLot.id);
+
+      if (lot.hasTypeOptions && lot.typeOptions.length > 0) {
+        await tx.ticketLotOption.createMany({
+          data: lot.typeOptions.map((option) => ({
+            lotId: duplicatedLot.id,
+            label: option.label,
+            status: option.status,
+            reservedQuantity: 0,
+            soldQuantity: 0,
+            sortOrder: option.sortOrder
+          }))
+        });
+      }
     }
 
     const highlightedLotId = event.highlightedLotId ? lotIdMap.get(event.highlightedLotId) : null;

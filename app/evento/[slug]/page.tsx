@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
 import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrganization } from "@/features/events/event.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
@@ -15,6 +16,7 @@ import { imageCropFromBannerPosition, imageCropStyle, parseImageCrop } from "@/l
 import { TrackingRuntime } from "./TrackingRuntime";
 import { CheckoutEstimator } from "./CheckoutEstimator";
 import { TicketQuantityStepper } from "./TicketQuantityStepper";
+import { TicketTypeSelector } from "./TicketTypeSelector";
 import { AddToCartButton } from "./AddToCartButton";
 import { FeeExplanationButton } from "./FeeExplanationButton";
 
@@ -27,6 +29,102 @@ type EventPageProps = {
   }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
+
+type EventDirectionsInput = {
+  googleMapsUrl?: string | null;
+  venueName: string;
+  venueAddress: string;
+  city: string;
+  state: string;
+};
+
+function normalizeGoogleMapsUrl(value?: string | null) {
+  const rawValue = value?.trim();
+
+  if (!rawValue) {
+    return null;
+  }
+
+  try {
+    const url = new URL(rawValue);
+    const host = url.hostname.replace(/^www\./, "").toLowerCase();
+    const isGoogleHost = host.includes("google.") || host === "maps.app.goo.gl" || host === "goo.gl";
+    const hasMapsPath = url.pathname.includes("/maps") || host.startsWith("maps.") || host === "maps.app.goo.gl";
+
+    if (!isGoogleHost || !hasMapsPath) {
+      return null;
+    }
+
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+function getEventLocationQuery(event: EventDirectionsInput) {
+  return [event.venueName, event.venueAddress, event.city, event.state].filter(Boolean).join(", ");
+}
+
+function getMapsQueryFromUrl(url: URL) {
+  const queryParam = url.searchParams.get("q") || url.searchParams.get("query") || url.searchParams.get("destination");
+
+  if (queryParam) {
+    return queryParam;
+  }
+
+  const placeParts = url.pathname.split("/").filter(Boolean);
+  const placeIndex = placeParts.findIndex((part) => part === "place");
+
+  if (placeIndex >= 0 && placeParts[placeIndex + 1]) {
+    return decodeURIComponent(placeParts[placeIndex + 1].replace(/\+/g, " "));
+  }
+
+  const coordinates = url.href.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+  return coordinates ? `${coordinates[1]},${coordinates[2]}` : null;
+}
+
+function buildEventDirections(event: EventDirectionsInput) {
+  const mapsUrl = normalizeGoogleMapsUrl(event.googleMapsUrl);
+
+  if (!mapsUrl) {
+    return null;
+  }
+
+  const fallbackQuery = getEventLocationQuery(event);
+  const mapQuery = getMapsQueryFromUrl(mapsUrl) || fallbackQuery;
+
+  if (!mapQuery) {
+    return null;
+  }
+
+  const embedUrl = mapsUrl.pathname.includes("/maps/embed")
+    ? mapsUrl.toString()
+    : `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`;
+
+  return {
+    embedUrl,
+    directionsUrl: mapsUrl.toString(),
+    locationLabel: event.venueName || `${event.city}, ${event.state}`
+  };
+}
+
+function getAvailableTypeOptions<T extends { status: string; soldQuantity: number; reservedQuantity: number }>(options: T[]) {
+  return options.filter((option) => option.status === "ACTIVE" && option.soldQuantity + option.reservedQuantity === 0);
+}
+
+function getAvailableLotQuantity(lot: {
+  hasTypeOptions: boolean;
+  totalQuantity: number;
+  soldQuantity: number;
+  reservedQuantity: number;
+  typeOptions: Array<{ status: string; soldQuantity: number; reservedQuantity: number }>;
+}) {
+  if (lot.hasTypeOptions) {
+    return getAvailableTypeOptions(lot.typeOptions).length;
+  }
+
+  return Math.max(lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity, 0);
+}
 
 export async function generateMetadata({ params }: Pick<EventPageProps, "params">): Promise<Metadata> {
   const { slug } = await params;
@@ -80,7 +178,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const activeLots = event.lots.filter((lot) => {
     const startsOk = !lot.salesStartsAt || lot.salesStartsAt <= now;
     const endsOk = !lot.salesEndsAt || lot.salesEndsAt >= now;
-    const hasStock = lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity > 0;
+    const hasStock = getAvailableLotQuantity(lot) > 0;
     return startsOk && endsOk && hasStock;
   });
 
@@ -114,6 +212,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     youtubeUrl?: string | null;
     whatsappUrl?: string | null;
   };
+  const eventDirections = buildEventDirections(event);
 
   return (
     <main className="shell">
@@ -259,8 +358,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           {activeLots.length === 0 ? (
             <div className="empty">Nenhum ingresso disponível no momento.</div>
           ) : (
-            <form action={`/evento/${event.slug}/checkout`} className="form" method="get">
-              {checkoutError ? <div className="errorBox">{checkoutError}</div> : null}
+            <form action={`/evento/${event.slug}/checkout`} className="form" method="get" noValidate>
+              <ErrorNotice message={checkoutError} />
               <input type="hidden" name="utm_source" value={tracking.utmSource ?? ""} />
               <input type="hidden" name="utm_medium" value={tracking.utmMedium ?? ""} />
               <input type="hidden" name="utm_campaign" value={tracking.utmCampaign ?? ""} />
@@ -271,7 +370,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
               {typeof query.fbclid === "string" ? <input type="hidden" name="fbclid" value={query.fbclid} /> : null}
               <div className="ticketPickerList">
                 {activeLots.map((lot) => {
-                  const available = lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity;
+                  const available = getAvailableLotQuantity(lot);
+                  const availableOptions = lot.hasTypeOptions ? getAvailableTypeOptions(lot.typeOptions) : [];
                   const isLowStock = available <= 25;
                   const serviceFeeInCents = calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps);
                   const lotEndsSoon = lot.salesEndsAt
@@ -282,7 +382,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
                   return (
                     <article className={`ticketPickerCard ${isHighlighted ? "recommendedLot" : ""}`} key={lot.id}>
-                      <input type="hidden" name="lotId" value={lot.id} />
                       <div className="ticketPickerInfo">
                         <strong className="ticketPickerTitle">{lot.name}</strong>
                         <p className="ticketPickerPrice">
@@ -290,17 +389,34 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                           {serviceFeeInCents > 0 ? <span> (+{formatCurrency(serviceFeeInCents)} taxa)</span> : null}
                         </p>
                         {lot.description ? <small>{lot.description}</small> : null}
+                        {lot.admissionsPerUnit > 1 ? (
+                          <small className="ticketPickerAdmissionNote">
+                            Cada compra gera {lot.admissionsPerUnit} QR Codes individuais.
+                          </small>
+                        ) : null}
                         {isLowStock || lotEndsSoon ? (
                           <small className="ticketPickerUrgency">
                             {isLowStock ? `Últimos ${available} ingressos` : "Lote vira em breve"}
                           </small>
                         ) : null}
                       </div>
-                      <TicketQuantityStepper
-                        label={lot.name}
-                        max={maxQuantity}
-                        name={`quantity_${lot.id}`}
-                      />
+                      {lot.hasTypeOptions ? (
+                        <TicketTypeSelector
+                          label={lot.name}
+                          lotId={lot.id}
+                          options={availableOptions.map((option) => ({
+                            id: option.id,
+                            label: option.label
+                          }))}
+                        />
+                      ) : (
+                        <TicketQuantityStepper
+                          label={lot.name}
+                          lotId={lot.id}
+                          max={maxQuantity}
+                          name={`quantity_${lot.id}`}
+                        />
+                      )}
                     </article>
                   );
                 })}
@@ -317,6 +433,29 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           )}
         </aside>
       </section>
+      {eventDirections ? (
+        <section className="container eventDirectionsBlock" aria-labelledby="event-directions-title">
+          <div className="eventDirectionsHeader">
+            <div>
+              <span>Localização</span>
+              <h2 id="event-directions-title">Como chegar ao evento</h2>
+              <p>{eventDirections.locationLabel}</p>
+            </div>
+            <a className="secondaryButton" href={eventDirections.directionsUrl} target="_blank" rel="noreferrer">
+              Abrir rota no Google Maps
+            </a>
+          </div>
+          <div className="eventDirectionsFrame">
+            <iframe
+              title={`Como chegar ao evento ${event.title}`}
+              src={eventDirections.embedUrl}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+            />
+          </div>
+        </section>
+      ) : null}
       {activeLots.length > 0 ? (
         <a className="mobileCheckoutBar" href="#ingressos">
           <span>

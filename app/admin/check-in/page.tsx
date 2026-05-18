@@ -51,6 +51,10 @@ function formatEventOptionDate(value: Date) {
   }).format(value);
 }
 
+function formatLotDisplayName(lotName: string, optionLabel?: string | null) {
+  return optionLabel ? `${lotName} - ${optionLabel}` : lotName;
+}
+
 export default async function CheckInPage({ searchParams }: CheckInPageProps) {
   const admin = await requirePermission("CHECKIN");
   const result = await searchParams;
@@ -208,7 +212,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
                   <article className="checkInRecentItem" key={checkIn.id}>
                     <div>
                       <strong>{checkIn.ticket.order.customer.name}</strong>
-                      <span>{checkIn.ticket.lot.name}</span>
+                      <span>{formatLotDisplayName(checkIn.ticket.lot.name, checkIn.ticket.lotOption?.label)}</span>
                     </div>
                     <div>
                       <span className={`status ${checkIn.status === "APPROVED" ? "published" : "draft"}`}>

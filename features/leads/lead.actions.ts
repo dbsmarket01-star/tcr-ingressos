@@ -7,6 +7,7 @@ import { headers } from "next/headers";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { trackMetaLeadForEventSubmission } from "@/features/tracking/meta-conversions.service";
 import { sendLeadCaptureConfirmationEmail } from "@/features/email/email.service";
+import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 import { eventLeadSchema } from "./lead.schema";
 import { createOrUpdateEventLead, getLeadCaptureEventBySlug } from "./lead.service";
 import { verifyTurnstileToken } from "./turnstile.service";
@@ -140,7 +141,7 @@ export async function createEventLeadAction(formData: FormData) {
       });
     }
   } catch (error) {
-    redirect(`/lista/${eventSlug}?error=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível concluir seu cadastro.")}`);
+    redirect(`/lista/${eventSlug}?error=${encodeURIComponent(getFriendlyErrorMessage(error, "Não foi possível concluir seu cadastro."))}`);
   }
 
   const redirectParams = new URLSearchParams();

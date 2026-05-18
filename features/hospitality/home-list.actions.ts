@@ -4,6 +4,7 @@ import { HomeListStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
+import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 import { updateHomeListEntry } from "./home-list.service";
 
 function parseDateField(value: FormDataEntryValue | null, label: string) {
@@ -43,7 +44,7 @@ export async function updateHomeListEntryAction(formData: FormData) {
   const returnTo = String(formData.get("returnTo") ?? "/admin/home-list").trim();
 
   if (!entryId) {
-    redirect(`/admin/home-list?error=${encodeURIComponent("Registro nao informado.")}`);
+    redirect(`/admin/home-list?error=${encodeURIComponent("Registro não informado.")}`);
   }
 
   try {
@@ -66,7 +67,7 @@ export async function updateHomeListEntryAction(formData: FormData) {
       getAdminAllowedEventIds(admin)
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Nao foi possivel atualizar a HOME LIST.";
+    const message = getFriendlyErrorMessage(error, "Não foi possível atualizar a Home List.");
     redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}error=${encodeURIComponent(message)}`);
   }
 

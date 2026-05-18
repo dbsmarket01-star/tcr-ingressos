@@ -7,6 +7,12 @@ data/*.local.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+**/.dart_tool
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/build
+**/.packages
+**/.pub-cache
 
 /generated/prisma
 public/uploads/*
@@ -14,3 +20,5 @@ public/uploads/*
 vercel-production.env
 OFC - vercel-production.env
 asaas-vercel-fix.env
+.vercel
+.env*.local

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { HotelLotFields } from "@/components/forms/HotelLotFields";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { requirePermission } from "@/features/auth/auth.service";
 import { listHotelsForOrganization } from "@/features/hospitality/hotel.service";
 import { updateTicketLotAction } from "@/features/lots/lot.actions";
@@ -35,7 +36,7 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
       title="Editar ingresso"
       description={`Atualize nome, preço, taxas, quantidade e regras de venda de ${lot.event.title}.`}
     >
-      {typeof query.error === "string" ? <div className="errorBox spacedSection">{query.error}</div> : null}
+      {typeof query.error === "string" ? <ErrorNotice message={query.error} className="spacedSection" /> : null}
 
       <form action={updateTicketLotAction} className="card form wideForm">
         <input type="hidden" name="eventId" value={lot.eventId} />
@@ -52,6 +53,36 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
             <span>Descrição</span>
             <input name="description" defaultValue={lot.description ?? ""} />
           </label>
+          <div className="formSection compactFormSection">
+            <div className="formSectionHeader">
+              <div>
+                <span className="sectionEyebrow">Camarotes e tipos</span>
+                <h2>Opções individuais do ingresso</h2>
+              </div>
+              <p className="muted">
+                Use para vender um único ingresso com um seletor de camarotes. Cada opção fica com estoque próprio.
+              </p>
+            </div>
+            <label className="checkboxField">
+              <input
+                name="hasTypeOptions"
+                type="checkbox"
+                value="true"
+                defaultChecked={lot.hasTypeOptions}
+              />
+              <span>Este ingresso possui tipos/camarotes individuais.</span>
+            </label>
+            <label className="field">
+              <span>Tipos disponíveis</span>
+              <textarea
+                name="typeOptionsText"
+                defaultValue={lot.typeOptions.map((option) => option.label).join("\n")}
+                placeholder={"Ex:\nCamarote 01\nCamarote 02\nCamarote 04\nCamarote 08"}
+                rows={6}
+              />
+              <small>Informe um tipo por linha. Tipos já vendidos não serão apagados do histórico.</small>
+            </label>
+          </div>
           <div className="formSection compactFormSection">
             <div className="formSectionHeader">
               <div>
@@ -93,6 +124,18 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
               </small>
             </label>
           </div>
+          <label className="field">
+            <span>QR Codes por compra/unidade</span>
+            <input
+              name="admissionsPerUnit"
+              type="number"
+              min="1"
+              max="100"
+              defaultValue={lot.admissionsPerUnit}
+              required
+            />
+            <small>Use 1 para ingresso normal. Ex: camarote para 8 pessoas = 8 QR Codes individuais.</small>
+          </label>
         </div>
 
         <HotelLotFields

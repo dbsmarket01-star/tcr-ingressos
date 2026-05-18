@@ -15,6 +15,14 @@ export function formatDateTime(value: string | Date) {
   }).format(new Date(value));
 }
 
+export function formatTime(value: string | Date) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: BRAZIL_TIME_ZONE
+  }).format(new Date(value));
+}
+
 export function formatLongDateTime(value: string | Date) {
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "full",

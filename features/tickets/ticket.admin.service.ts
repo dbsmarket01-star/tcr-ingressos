@@ -92,6 +92,7 @@ export async function listAdminTickets(
           }
         },
         lot: true,
+        lotOption: true,
         order: {
           include: {
             customer: true
@@ -149,6 +150,7 @@ export async function listTicketsForCsvExport(
         }
       },
       lot: true,
+      lotOption: true,
       order: {
         include: {
           customer: true

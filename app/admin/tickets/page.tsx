@@ -15,6 +15,10 @@ const ticketStatusLabels = {
   INVALID: "Inválido"
 };
 
+function formatLotDisplayName(lotName: string, optionLabel?: string | null) {
+  return optionLabel ? `${lotName} - ${optionLabel}` : lotName;
+}
+
 type TicketsPageProps = {
   searchParams?: Promise<{
     eventId?: string;
@@ -168,7 +172,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                       </span>
                     </td>
                     <td>{ticket.event.title}</td>
-                    <td>{ticket.lot.name}</td>
+                    <td>{formatLotDisplayName(ticket.lot.name, ticket.lotOption?.label)}</td>
                     <td>
                       {ticket.order.customer.name}
                       <br />

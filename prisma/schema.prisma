@@ -33,6 +33,11 @@ enum LotStatus {
   CLOSED
 }
 
+enum TicketLotOptionStatus {
+  ACTIVE
+  PAUSED
+}
+
 enum OrderStatus {
   DRAFT
   PENDING_PAYMENT
@@ -274,28 +279,28 @@ model Organization {
 }
 
 model AdminUser {
-  id           String    @id @default(cuid())
-  organizationId String
-  name         String
-  email        String
-  passwordHash String
-  role         AdminRole @default(STAFF)
-  isActive     Boolean   @default(true)
-  accessAllEvents Boolean @default(true)
-  allowedEventIds String[] @default([])
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  organizationId  String
+  name            String
+  email           String
+  passwordHash    String
+  role            AdminRole @default(STAFF)
+  isActive        Boolean   @default(true)
+  accessAllEvents Boolean   @default(true)
+  allowedEventIds String[]  @default([])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id])
-  createdEvents Event[]
-  checkIns      CheckIn[]
+  organization        Organization              @relation(fields: [organizationId], references: [id])
+  createdEvents       Event[]
+  checkIns            CheckIn[]
   passwordResetTokens AdminPasswordResetToken[]
-  auditLogs AdminAuditLog[]
+  auditLogs           AdminAuditLog[]
 
+  @@unique([organizationId, email])
   @@index([organizationId])
   @@index([role])
   @@index([isActive])
-  @@unique([organizationId, email])
 }
 
 model AdminAuditLog {
@@ -328,57 +333,57 @@ model AdminPasswordResetToken {
 }
 
 model CompanySettings {
-  id              String   @id @default(cuid())
-  organizationId  String
-  companyName     String
-  tradeName       String
-  document        String
-  supportEmail    String
-  supportPhone    String?
-  instagramUrl    String?
-  facebookUrl     String?
-  youtubeUrl      String?
-  whatsappUrl     String?
-  footerDescription String?
-  footerAboutTitle String?
-  footerAboutContent String?
-  footerHowItWorksTitle String?
-  footerHowItWorksContent String?
-  footerTermsTitle String?
-  footerTermsContent String?
-  footerPrivacyTitle String?
-  footerPrivacyContent String?
-  footerHelpTitle String?
-  footerHelpContent String?
-  footerFaqTitle String?
-  footerFaqContent String?
-  footerContactTitle String?
-  footerContactContent String?
-  defaultCurrency String   @default("BRL")
-  platformFeeBps  Int      @default(1000)
-  orderReservationMinutes Int @default(120)
-  cardPendingReservationMinutes Int @default(30)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                            String   @id @default(cuid())
+  organizationId                String
+  companyName                   String
+  tradeName                     String
+  document                      String
+  supportEmail                  String
+  supportPhone                  String?
+  instagramUrl                  String?
+  facebookUrl                   String?
+  youtubeUrl                    String?
+  whatsappUrl                   String?
+  footerDescription             String?
+  footerAboutTitle              String?
+  footerAboutContent            String?
+  footerHowItWorksTitle         String?
+  footerHowItWorksContent       String?
+  footerTermsTitle              String?
+  footerTermsContent            String?
+  footerPrivacyTitle            String?
+  footerPrivacyContent          String?
+  footerHelpTitle               String?
+  footerHelpContent             String?
+  footerFaqTitle                String?
+  footerFaqContent              String?
+  footerContactTitle            String?
+  footerContactContent          String?
+  defaultCurrency               String   @default("BRL")
+  platformFeeBps                Int      @default(1000)
+  orderReservationMinutes       Int      @default(120)
+  cardPendingReservationMinutes Int      @default(30)
+  createdAt                     DateTime @default(now())
+  updatedAt                     DateTime @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id])
 
-  @@index([organizationId])
   @@unique([organizationId])
+  @@index([organizationId])
 }
 
 model PaymentSplitRule {
-  id           String        @id @default(cuid())
-  organizationId String
-  name         String
-  walletId     String
-  type         SplitRuleType
-  percentageBps Int?
+  id                String        @id @default(cuid())
+  organizationId    String
+  name              String
+  walletId          String
+  type              SplitRuleType
+  percentageBps     Int?
   fixedValueInCents Int?
-  isActive     Boolean       @default(true)
-  sortOrder    Int           @default(0)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  isActive          Boolean       @default(true)
+  sortOrder         Int           @default(0)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id])
 
@@ -387,87 +392,89 @@ model PaymentSplitRule {
 }
 
 model Event {
-  id                  String      @id @default(cuid())
-  organizationId      String
-  slug                String      @unique
-  title               String
-  subtitle            String?
-  description         String
-  bannerUrl           String?
-  bannerPosition      String      @default("center center")
-  bannerCrop          String?
-  eventMapImageUrl    String?
-  eventMapCrop        String?
-  eventMapTemplate    String      @default("AUTO")
-  eventMapNotes       String?
-  startsAt            DateTime
-  endsAt              DateTime?
-  venueName           String
-  venueAddress        String
-  city                String
-  state               String
-  status              EventStatus @default(DRAFT)
-  salesStartsAt       DateTime?
-  salesEndsAt         DateTime?
-  importantInfo       String?
-  metaPixelId         String?
-  metaConversionsApiToken String?
-  metaTestEventCode   String?
-  googleTagManagerId  String?
-  seoTitle            String?
-  seoDescription      String?
-  seoKeywords         String?
-  seoImageUrl         String?
-  supportWhatsappUrl  String?
-  couponsEnabled      Boolean     @default(false)
-  leadCaptureEnabled  Boolean     @default(false)
-  leadCaptureHeadline String?
-  leadCaptureDescription String?
-  leadCaptureOfferText String?
-  leadCaptureCtaText  String?
-  leadCaptureBadgeText String?
-  leadCaptureHeroSupportText String?
-  leadCaptureBenefitsText String?
-  leadCaptureFormIntroEyebrow String?
-  leadCaptureFormIntroTitle String?
-  leadCaptureFormIntroDescription String?
-  leadCaptureFormTimingText String?
-  leadCaptureBonusText String?
-  leadCaptureProofText String?
-  leadCaptureFooterStatsText String?
-  leadCaptureHeroImageUrl String?
-  leadCaptureHeroCrop String?
-  leadCaptureVenueGallery String?
-  leadCaptureVideoUrl String?
-  leadCaptureWhatsappGroupUrl String?
-  leadCaptureThankYouTitle String?
-  leadCaptureThankYouDescription String?
-  leadCaptureThankYouButtonText String?
-  autoLeadCaptureEmailEnabled Boolean @default(true)
-  autoPurchaseApprovedEmailEnabled Boolean @default(true)
-  autoPendingPaymentEmailEnabled Boolean @default(true)
-  conversionSocialProofText String?
-  conversionUrgencyText     String?
-  conversionCtaText         String?
-  highlightedLotId          String?
-  createdById         String?
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
+  id                               String      @id @default(cuid())
+  organizationId                   String
+  slug                             String      @unique
+  title                            String
+  subtitle                         String?
+  description                      String
+  bannerUrl                        String?
+  bannerPosition                   String      @default("center center")
+  bannerCrop                       String?
+  eventMapImageUrl                 String?
+  eventMapCrop                     String?
+  eventMapTemplate                 String      @default("AUTO")
+  eventMapNotes                    String?
+  googleMapsUrl                    String?
+  doorsOpenAt                      DateTime?
+  startsAt                         DateTime
+  endsAt                           DateTime?
+  venueName                        String
+  venueAddress                     String
+  city                             String
+  state                            String
+  status                           EventStatus @default(DRAFT)
+  salesStartsAt                    DateTime?
+  salesEndsAt                      DateTime?
+  importantInfo                    String?
+  metaPixelId                      String?
+  metaConversionsApiToken          String?
+  metaTestEventCode                String?
+  googleTagManagerId               String?
+  seoTitle                         String?
+  seoDescription                   String?
+  seoKeywords                      String?
+  seoImageUrl                      String?
+  supportWhatsappUrl               String?
+  couponsEnabled                   Boolean     @default(false)
+  leadCaptureEnabled               Boolean     @default(false)
+  leadCaptureHeadline              String?
+  leadCaptureDescription           String?
+  leadCaptureOfferText             String?
+  leadCaptureCtaText               String?
+  leadCaptureBadgeText             String?
+  leadCaptureHeroSupportText       String?
+  leadCaptureBenefitsText          String?
+  leadCaptureFormIntroEyebrow      String?
+  leadCaptureFormIntroTitle        String?
+  leadCaptureFormIntroDescription  String?
+  leadCaptureFormTimingText        String?
+  leadCaptureBonusText             String?
+  leadCaptureProofText             String?
+  leadCaptureFooterStatsText       String?
+  leadCaptureHeroImageUrl          String?
+  leadCaptureHeroCrop              String?
+  leadCaptureVenueGallery          String?
+  leadCaptureVideoUrl              String?
+  leadCaptureWhatsappGroupUrl      String?
+  leadCaptureThankYouTitle         String?
+  leadCaptureThankYouDescription   String?
+  leadCaptureThankYouButtonText    String?
+  autoLeadCaptureEmailEnabled      Boolean     @default(true)
+  autoPurchaseApprovedEmailEnabled Boolean     @default(true)
+  autoPendingPaymentEmailEnabled   Boolean     @default(true)
+  conversionSocialProofText        String?
+  conversionUrgencyText            String?
+  conversionCtaText                String?
+  highlightedLotId                 String?
+  createdById                      String?
+  createdAt                        DateTime    @default(now())
+  updatedAt                        DateTime    @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id])
-  createdBy AdminUser? @relation(fields: [createdById], references: [id], onDelete: SetNull)
-  lots      TicketLot[]
-  orders    Order[]
-  tickets   Ticket[]
-  checkIns  CheckIn[]
-  coupons   Coupon[]
-  homeListEntries HomeListEntry[]
-  presaleChecks EventPresaleCheck[]
-  leads     EventLead[]
+  organization        Organization         @relation(fields: [organizationId], references: [id])
+  createdBy           AdminUser?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  lots                TicketLot[]
+  orders              Order[]
+  tickets             Ticket[]
+  checkIns            CheckIn[]
+  coupons             Coupon[]
+  homeListEntries     HomeListEntry[]
+  presaleChecks       EventPresaleCheck[]
+  leads               EventLead[]
   leadCaptureAttempts LeadCaptureAttempt[]
-  leadEmailCampaigns LeadEmailCampaign[]
-  leadEmailTemplates LeadEmailTemplate[]
-  pageVisits EventPageVisit[]
+  leadEmailCampaigns  LeadEmailCampaign[]
+  leadEmailTemplates  LeadEmailTemplate[]
+  pageVisits          EventPageVisit[]
 
   @@index([organizationId])
   @@index([status, startsAt])
@@ -475,44 +482,44 @@ model Event {
 }
 
 model EventLead {
-  id         String   @id @default(cuid())
-  eventId     String
-  name       String
-  email      String
-  phone      String?
-  municipality String?
-  emailOptOutAt DateTime?
-  thankYouViewedAt DateTime?
-  whatsappClickedAt DateTime?
-  whatsappClickCount Int @default(0)
-  utmSource  String?
-  utmMedium  String?
-  utmCampaign String?
-  utmContent String?
-  utmTerm    String?
-  referrer   String?
-  landingPage String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                 String    @id @default(cuid())
+  eventId            String
+  name               String
+  email              String
+  phone              String?
+  municipality       String?
+  emailOptOutAt      DateTime?
+  thankYouViewedAt   DateTime?
+  whatsappClickedAt  DateTime?
+  whatsappClickCount Int       @default(0)
+  utmSource          String?
+  utmMedium          String?
+  utmCampaign        String?
+  utmContent         String?
+  utmTerm            String?
+  referrer           String?
+  landingPage        String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event               Event                        @relation(fields: [eventId], references: [id], onDelete: Cascade)
   emailCampaignClicks LeadEmailCampaignClick[]
-  emailCampaignOpens LeadEmailCampaignOpen[]
-  campaignRecipients LeadEmailCampaignRecipient[]
+  emailCampaignOpens  LeadEmailCampaignOpen[]
+  campaignRecipients  LeadEmailCampaignRecipient[]
 
+  @@unique([eventId, email])
   @@index([eventId, createdAt])
   @@index([email])
-  @@unique([eventId, email])
 }
 
 model EventPageVisit {
-  id            String             @id @default(cuid())
+  id             String             @id @default(cuid())
   eventId        String
-  pageType      EventPageVisitType
-  sessionKey    String
-  visitedOn     String
-  firstVisitedAt DateTime          @default(now())
-  lastVisitedAt DateTime           @updatedAt
+  pageType       EventPageVisitType
+  sessionKey     String
+  visitedOn      String
+  firstVisitedAt DateTime           @default(now())
+  lastVisitedAt  DateTime           @updatedAt
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
@@ -522,30 +529,30 @@ model EventPageVisit {
 }
 
 model LeadEmailCampaign {
-  id             String   @id @default(cuid())
-  eventId        String
-  subject        String
-  body           String
-  imageUrl       String?
-  imageCrop      String?
-  imageWidth     Int?
-  imageHeight    Int?
-  ctaLabel       String?
-  destinationUrl String
-  instagramUrl   String?
-  status         LeadEmailCampaignStatus @default(QUEUED)
-  totalCount     Int      @default(0)
-  sentCount      Int      @default(0)
-  failedCount    Int      @default(0)
+  id                  String                  @id @default(cuid())
+  eventId             String
+  subject             String
+  body                String
+  imageUrl            String?
+  imageCrop           String?
+  imageWidth          Int?
+  imageHeight         Int?
+  ctaLabel            String?
+  destinationUrl      String
+  instagramUrl        String?
+  status              LeadEmailCampaignStatus @default(QUEUED)
+  totalCount          Int                     @default(0)
+  sentCount           Int                     @default(0)
+  failedCount         Int                     @default(0)
   processingStartedAt DateTime?
-  completedAt    DateTime?
-  lastError      String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  completedAt         DateTime?
+  lastError           String?
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
 
-  event  Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  clicks LeadEmailCampaignClick[]
-  opens  LeadEmailCampaignOpen[]
+  event      Event                        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  clicks     LeadEmailCampaignClick[]
+  opens      LeadEmailCampaignOpen[]
   recipients LeadEmailCampaignRecipient[]
 
   @@index([eventId, createdAt])
@@ -553,17 +560,17 @@ model LeadEmailCampaign {
 }
 
 model LeadEmailCampaignRecipient {
-  id         String   @id @default(cuid())
-  campaignId String
-  leadId     String
-  email      String
-  name       String
-  status     LeadEmailCampaignRecipientStatus @default(PENDING)
-  errorMessage String?
+  id                String                           @id @default(cuid())
+  campaignId        String
+  leadId            String
+  email             String
+  name              String
+  status            LeadEmailCampaignRecipientStatus @default(PENDING)
+  errorMessage      String?
   providerMessageId String?
-  sentAt     DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  sentAt            DateTime?
+  createdAt         DateTime                         @default(now())
+  updatedAt         DateTime                         @updatedAt
 
   campaign LeadEmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   lead     EventLead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
@@ -637,22 +644,22 @@ model PlatformLead {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
+  @@unique([email])
   @@index([createdAt])
   @@index([email])
-  @@unique([email])
 }
 
 model EventPresaleCheck {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   eventId     String
   key         String
   label       String
   description String
-  checked     Boolean  @default(false)
+  checked     Boolean   @default(false)
   note        String?
   checkedAt   DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
@@ -661,75 +668,101 @@ model EventPresaleCheck {
 }
 
 model TicketLot {
-  id               String    @id @default(cuid())
-  eventId          String
-  hotelId          String?
-  name             String
-  description      String?
-  hasHotel         Boolean   @default(false)
-  churchQuestionEnabled Boolean @default(false)
-  priceInCents     Int
-  serviceFeeBps    Int       @default(0)
-  pixDiscountPercentBps Int  @default(0)
-  pixDiscountFixedInCents Int @default(0)
-  cardInterestBpsPerInstallment Int @default(0)
-  cardInterestStartsAtInstallment Int @default(2)
-  totalQuantity    Int
-  reservedQuantity Int       @default(0)
-  soldQuantity     Int       @default(0)
-  minPerOrder      Int       @default(1)
-  maxPerOrder      Int       @default(10)
-  salesStartsAt    DateTime?
-  salesEndsAt      DateTime?
-  sortOrder        Int       @default(0)
-  status           LotStatus @default(DRAFT)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id                              String    @id @default(cuid())
+  eventId                         String
+  hotelId                         String?
+  name                            String
+  description                     String?
+  hasHotel                        Boolean   @default(false)
+  churchQuestionEnabled           Boolean   @default(false)
+  hasTypeOptions                  Boolean   @default(false)
+  admissionsPerUnit               Int       @default(1)
+  priceInCents                    Int
+  serviceFeeBps                   Int       @default(0)
+  pixDiscountPercentBps           Int       @default(0)
+  pixDiscountFixedInCents         Int       @default(0)
+  cardInterestBpsPerInstallment   Int       @default(0)
+  cardInterestStartsAtInstallment Int       @default(2)
+  totalQuantity                   Int
+  reservedQuantity                Int       @default(0)
+  soldQuantity                    Int       @default(0)
+  minPerOrder                     Int       @default(1)
+  maxPerOrder                     Int       @default(10)
+  salesStartsAt                   DateTime?
+  salesEndsAt                     DateTime?
+  sortOrder                       Int       @default(0)
+  status                          LotStatus @default(DRAFT)
+  createdAt                       DateTime  @default(now())
+  updatedAt                       DateTime  @updatedAt
 
-  event      Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  hotel      Hotel?      @relation(fields: [hotelId], references: [id], onDelete: SetNull)
-  orderItems OrderItem[]
+  event            Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  hotel            Hotel?            @relation(fields: [hotelId], references: [id], onDelete: SetNull)
+  orderItems       OrderItem[]
   orderHotelGuests OrderHotelGuest[]
-  homeListEntries HomeListEntry[]
-  tickets    Ticket[]
+  homeListEntries  HomeListEntry[]
+  tickets          Ticket[]
+  typeOptions      TicketLotOption[]
 
   @@index([eventId, status, sortOrder])
   @@index([hotelId])
 }
 
-model Hotel {
-  id              String   @id @default(cuid())
-  organizationId  String
-  name            String
-  city            String
-  state           String
-  internalNotes   String?
-  availableRooms  Int?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model TicketLotOption {
+  id               String                @id @default(cuid())
+  lotId            String
+  label            String
+  status           TicketLotOptionStatus @default(ACTIVE)
+  reservedQuantity Int                   @default(0)
+  soldQuantity     Int                   @default(0)
+  sortOrder        Int                   @default(0)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  ticketLots TicketLot[]
+  lot        TicketLot   @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+  tickets    Ticket[]
+
+  @@unique([lotId, label])
+  @@index([lotId, status, sortOrder])
+}
+
+model Hotel {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  city           String
+  state          String
+  internalNotes  String?
+  availableRooms Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  ticketLots       TicketLot[]
   orderHotelGuests OrderHotelGuest[]
-  homeListEntries HomeListEntry[]
+  homeListEntries  HomeListEntry[]
 
   @@index([organizationId, name])
 }
 
 model Customer {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  document  String?
-  phone     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  document   String?
+  phone      String?
+  city       String?
+  state      String?
+  postalCode String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   orders       Order[]
   participants Participant[]
 
   @@index([email])
   @@index([document])
+  @@index([city, state])
 }
 
 model Participant {
@@ -750,57 +783,60 @@ model Participant {
 }
 
 model Order {
-  id              String      @id @default(cuid())
-  code            String      @unique
-  eventId         String
-  customerId      String
-  couponId        String?
-  couponCode      String?
-  churchName      String?
-  status          OrderStatus @default(PENDING_PAYMENT)
-  subtotalInCents Int
-  serviceFeeInCents Int      @default(0)
-  pixDiscountInCents Int     @default(0)
-  cardInterestInCents Int    @default(0)
-  discountInCents Int         @default(0)
-  totalInCents    Int
-  currency        String      @default("BRL")
-  expiresAt       DateTime?
-  expiredEmailSentAt DateTime?
-  ticketsEmailSentAt DateTime?
-  ticketsEmailDeliveredAt DateTime?
-  ticketsEmailProviderId String?
-  ticketsEmailStatus String?
-  ticketsEmailLastCheckedAt DateTime?
-  ticketsEmailLastError String?
-  ticketsEmailAttempts Int @default(0)
+  id                             String      @id @default(cuid())
+  code                           String      @unique
+  eventId                        String
+  customerId                     String
+  couponId                       String?
+  couponCode                     String?
+  churchName                     String?
+  status                         OrderStatus @default(PENDING_PAYMENT)
+  subtotalInCents                Int
+  serviceFeeInCents              Int         @default(0)
+  pixDiscountInCents             Int         @default(0)
+  cardInterestInCents            Int         @default(0)
+  discountInCents                Int         @default(0)
+  totalInCents                   Int
+  currency                       String      @default("BRL")
+  buyerCity                      String?
+  buyerState                     String?
+  buyerPostalCode                String?
+  expiresAt                      DateTime?
+  expiredEmailSentAt             DateTime?
+  ticketsEmailSentAt             DateTime?
+  ticketsEmailDeliveredAt        DateTime?
+  ticketsEmailProviderId         String?
+  ticketsEmailStatus             String?
+  ticketsEmailLastCheckedAt      DateTime?
+  ticketsEmailLastError          String?
+  ticketsEmailAttempts           Int         @default(0)
   purchaseApprovedWhatsAppSentAt DateTime?
-  cartAbandonmentSentAt DateTime?
-  paidAt          DateTime?
-  canceledAt      DateTime?
-  utmSource       String?
-  utmMedium       String?
-  utmCampaign     String?
-  utmContent      String?
-  utmTerm         String?
-  referrer        String?
-  landingPage     String?
-  metaFbp         String?
-  metaFbc         String?
-  clientIpAddress String?
-  clientUserAgent String?
-  metaPurchaseTrackedAt DateTime?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  cartAbandonmentSentAt          DateTime?
+  paidAt                         DateTime?
+  canceledAt                     DateTime?
+  utmSource                      String?
+  utmMedium                      String?
+  utmCampaign                    String?
+  utmContent                     String?
+  utmTerm                        String?
+  referrer                       String?
+  landingPage                    String?
+  metaFbp                        String?
+  metaFbc                        String?
+  clientIpAddress                String?
+  clientUserAgent                String?
+  metaPurchaseTrackedAt          DateTime?
+  createdAt                      DateTime    @default(now())
+  updatedAt                      DateTime    @updatedAt
 
-  event    Event       @relation(fields: [eventId], references: [id], onDelete: Restrict)
-  customer Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  coupon   Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
-  items    OrderItem[]
-  payment  Payment?
-  tickets  Ticket[]
+  event            Event             @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  customer         Customer          @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  coupon           Coupon?           @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  items            OrderItem[]
+  payment          Payment?
+  tickets          Ticket[]
   orderHotelGuests OrderHotelGuest[]
-  homeListEntries HomeListEntry[]
+  homeListEntries  HomeListEntry[]
 
   @@index([eventId, status, createdAt])
   @@index([status, expiresAt])
@@ -808,6 +844,7 @@ model Order {
   @@index([customerId])
   @@index([couponId])
   @@index([eventId, churchName])
+  @@index([buyerCity, buyerState])
   @@index([ticketsEmailProviderId])
 }
 
@@ -842,72 +879,39 @@ model WhatsAppMessageLog {
 }
 
 model OrderItem {
-  id               String   @id @default(cuid())
-  orderId          String
-  lotId            String
-  quantity         Int
-  unitPriceInCents Int
-  serviceFeeBps    Int      @default(0)
-  serviceFeeInCents Int     @default(0)
-  cardInterestBpsPerInstallment Int @default(0)
-  cardInterestStartsAtInstallment Int @default(2)
-  totalInCents     Int
-  createdAt        DateTime @default(now())
+  id                              String   @id @default(cuid())
+  orderId                         String
+  lotId                           String
+  lotOptionId                     String?
+  quantity                        Int
+  admissionsPerUnit               Int      @default(1)
+  unitPriceInCents                Int
+  serviceFeeBps                   Int      @default(0)
+  serviceFeeInCents               Int      @default(0)
+  cardInterestBpsPerInstallment   Int      @default(0)
+  cardInterestStartsAtInstallment Int      @default(2)
+  totalInCents                    Int
+  createdAt                       DateTime @default(now())
 
-  order   Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  lot     TicketLot  @relation(fields: [lotId], references: [id], onDelete: Restrict)
-  tickets Ticket[]
-  hotelGuests OrderHotelGuest[]
+  order           Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  lot             TicketLot         @relation(fields: [lotId], references: [id], onDelete: Restrict)
+  lotOption       TicketLotOption?  @relation(fields: [lotOptionId], references: [id], onDelete: Restrict)
+  tickets         Ticket[]
+  hotelGuests     OrderHotelGuest[]
   homeListEntries HomeListEntry[]
 
   @@index([orderId])
   @@index([lotId])
+  @@index([lotOptionId])
 }
 
 model OrderHotelGuest {
-  id             String   @id @default(cuid())
-  orderId        String
-  orderItemId    String
-  lotId          String
-  hotelId        String
-  guestIndex     Int      @default(1)
-  guest1Name     String
-  guest1Document String
-  guest1BirthDate DateTime
-  guest1Email    String
-  guest1Phone    String
-  guest2Name     String
-  guest2Document String
-  guest2BirthDate DateTime
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
-  lot TicketLot @relation(fields: [lotId], references: [id], onDelete: Restrict)
-  hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Restrict)
-  homeListEntry HomeListEntry?
-
-  @@unique([orderItemId, guestIndex])
-  @@index([orderId])
-  @@index([hotelId])
-}
-
-model HomeListEntry {
-  id              String         @id @default(cuid())
-  organizationId  String
-  eventId         String
-  hotelId         String
+  id              String   @id @default(cuid())
   orderId         String
   orderItemId     String
   lotId           String
-  orderHotelGuestId String      @unique
-  status          HomeListStatus @default(CONFIRMED)
-  roomNumber      String?
-  notes           String?
-  purchaseDate    DateTime
-  confirmedAt     DateTime?
-  canceledAt      DateTime?
+  hotelId         String
+  guestIndex      Int      @default(1)
   guest1Name      String
   guest1Document  String
   guest1BirthDate DateTime
@@ -916,15 +920,52 @@ model HomeListEntry {
   guest2Name      String
   guest2Document  String
   guest2BirthDate DateTime
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Restrict)
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
-  lot TicketLot @relation(fields: [lotId], references: [id], onDelete: Restrict)
+  order         Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem     OrderItem      @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  lot           TicketLot      @relation(fields: [lotId], references: [id], onDelete: Restrict)
+  hotel         Hotel          @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  homeListEntry HomeListEntry?
+
+  @@unique([orderItemId, guestIndex])
+  @@index([orderId])
+  @@index([hotelId])
+}
+
+model HomeListEntry {
+  id                String         @id @default(cuid())
+  organizationId    String
+  eventId           String
+  hotelId           String
+  orderId           String
+  orderItemId       String
+  lotId             String
+  orderHotelGuestId String         @unique
+  status            HomeListStatus @default(CONFIRMED)
+  roomNumber        String?
+  notes             String?
+  purchaseDate      DateTime
+  confirmedAt       DateTime?
+  canceledAt        DateTime?
+  guest1Name        String
+  guest1Document    String
+  guest1BirthDate   DateTime
+  guest1Email       String
+  guest1Phone       String
+  guest2Name        String
+  guest2Document    String
+  guest2BirthDate   DateTime
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  event           Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  hotel           Hotel           @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  order           Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem       OrderItem       @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  lot             TicketLot       @relation(fields: [lotId], references: [id], onDelete: Restrict)
   orderHotelGuest OrderHotelGuest @relation(fields: [orderHotelGuestId], references: [id], onDelete: Cascade)
 
   @@index([organizationId, eventId])
@@ -934,22 +975,22 @@ model HomeListEntry {
 }
 
 model Payment {
-  id              String          @id @default(cuid())
-  orderId         String          @unique
-  provider        PaymentProvider @default(SIMULATED)
-  status          PaymentStatus   @default(CREATED)
-  externalId      String?
-  checkoutUrl     String?
-  pixQrCodeImage  String?
+  id               String          @id @default(cuid())
+  orderId          String          @unique
+  provider         PaymentProvider @default(SIMULATED)
+  status           PaymentStatus   @default(CREATED)
+  externalId       String?
+  checkoutUrl      String?
+  pixQrCodeImage   String?
   pixQrCodePayload String?
-  pixExpiresAt    DateTime?
-  amountInCents   Int
-  paidAt          DateTime?
-  failedAt        DateTime?
-  failureReason   String?
-  rawPayload      Json?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  pixExpiresAt     DateTime?
+  amountInCents    Int
+  paidAt           DateTime?
+  failedAt         DateTime?
+  failureReason    String?
+  rawPayload       Json?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
@@ -967,6 +1008,7 @@ model Ticket {
   orderItemId   String
   eventId       String
   lotId         String
+  lotOptionId   String?
   participantId String?
   status        TicketStatus @default(ACTIVE)
   issuedAt      DateTime     @default(now())
@@ -977,12 +1019,14 @@ model Ticket {
   orderItem   OrderItem    @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
   event       Event        @relation(fields: [eventId], references: [id], onDelete: Restrict)
   lot         TicketLot    @relation(fields: [lotId], references: [id], onDelete: Restrict)
+  lotOption   TicketLotOption? @relation(fields: [lotOptionId], references: [id], onDelete: Restrict)
   participant Participant? @relation(fields: [participantId], references: [id], onDelete: SetNull)
   checkIns    CheckIn[]
 
   @@index([eventId, status])
   @@index([orderId])
   @@index([lotId])
+  @@index([lotOptionId])
 }
 
 model CheckIn {
@@ -1004,21 +1048,21 @@ model CheckIn {
 }
 
 model Coupon {
-  id              String       @id @default(cuid())
-  eventId         String
-  code            String
-  type            CouponType
-  status          CouponStatus @default(ACTIVE)
-  percentage      Int?
-  amountInCents   Int?
-  maxRedemptions  Int?
-  redeemedCount   Int          @default(0)
-  startsAt        DateTime?
-  endsAt          DateTime?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id             String       @id @default(cuid())
+  eventId        String
+  code           String
+  type           CouponType
+  status         CouponStatus @default(ACTIVE)
+  percentage     Int?
+  amountInCents  Int?
+  maxRedemptions Int?
+  redeemedCount  Int          @default(0)
+  startsAt       DateTime?
+  endsAt         DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event  Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
   orders Order[]
 
   @@unique([eventId, code])
@@ -1026,23 +1070,23 @@ model Coupon {
 }
 
 model SubscriptionPlan {
-  id                    String               @id @default(cuid())
-  code                  String               @unique
-  name                  String
-  description           String?
-  status                PlanStatus           @default(DRAFT)
-  interval              SubscriptionInterval
-  durationDays          Int
-  priceInCents          Int
-  trialDays             Int                  @default(7)
-  gracePeriodDays       Int                  @default(2)
-  maxDevices            Int
-  allowsAccountability  Boolean              @default(false)
-  allowsEmergencyMode   Boolean              @default(true)
-  allowsRecoveryTools   Boolean              @default(true)
-  sortOrder             Int                  @default(0)
-  createdAt             DateTime             @default(now())
-  updatedAt             DateTime             @updatedAt
+  id                   String               @id @default(cuid())
+  code                 String               @unique
+  name                 String
+  description          String?
+  status               PlanStatus           @default(DRAFT)
+  interval             SubscriptionInterval
+  durationDays         Int
+  priceInCents         Int
+  trialDays            Int                  @default(7)
+  gracePeriodDays      Int                  @default(2)
+  maxDevices           Int
+  allowsAccountability Boolean              @default(false)
+  allowsEmergencyMode  Boolean              @default(true)
+  allowsRecoveryTools  Boolean              @default(true)
+  sortOrder            Int                  @default(0)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
 
   subscriptions Subscription[]
 
@@ -1050,44 +1094,44 @@ model SubscriptionPlan {
 }
 
 model AppUser {
-  id                       String          @id @default(cuid())
-  name                     String
-  email                    String          @unique
-  passwordHash             String?
-  status                   AppUserStatus   @default(TRIAL)
-  trialEndsAt              DateTime?
-  accessEndsAt             DateTime?
-  accountabilityEmail      String?
-  recoveryStartDate        DateTime?
-  currentStreakDays        Int             @default(0)
-  longestStreakDays        Int             @default(0)
-  emergencyModeEnabled     Boolean         @default(false)
-  emergencyModeUntil       DateTime?
-  mustStayProtected        Boolean         @default(true)
-  createdAt                DateTime        @default(now())
-  updatedAt                DateTime        @updatedAt
+  id                   String        @id @default(cuid())
+  name                 String
+  email                String        @unique
+  passwordHash         String?
+  status               AppUserStatus @default(TRIAL)
+  trialEndsAt          DateTime?
+  accessEndsAt         DateTime?
+  accountabilityEmail  String?
+  recoveryStartDate    DateTime?
+  currentStreakDays    Int           @default(0)
+  longestStreakDays    Int           @default(0)
+  emergencyModeEnabled Boolean       @default(false)
+  emergencyModeUntil   DateTime?
+  mustStayProtected    Boolean       @default(true)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
 
-  subscriptions            Subscription[]
-  devices                  ProtectedDevice[]
-  protectionEvents         ProtectionEvent[]
-  bypassIncidents          BypassIncident[]
-  sessions                 AppUserSession[]
-  unlockRequests           UnlockRequest[]
-  accountabilityRelations  AccountabilityLink[] @relation("UserAccountability")
-  guardianRelations        AccountabilityLink[] @relation("GuardianAccountability")
+  subscriptions           Subscription[]
+  devices                 ProtectedDevice[]
+  protectionEvents        ProtectionEvent[]
+  bypassIncidents         BypassIncident[]
+  sessions                AppUserSession[]
+  unlockRequests          UnlockRequest[]
+  accountabilityRelations AccountabilityLink[] @relation("UserAccountability")
+  guardianRelations       AccountabilityLink[] @relation("GuardianAccountability")
 
   @@index([status, accessEndsAt])
 }
 
 model AppUserSession {
-  id            String   @id @default(cuid())
-  userId        String
-  tokenHash     String   @unique
-  deviceLabel   String?
-  expiresAt     DateTime
-  lastUsedAt    DateTime?
-  revokedAt     DateTime?
-  createdAt     DateTime @default(now())
+  id          String    @id @default(cuid())
+  userId      String
+  tokenHash   String    @unique
+  deviceLabel String?
+  expiresAt   DateTime
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
 
   user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1096,29 +1140,29 @@ model AppUserSession {
 }
 
 model Subscription {
-  id                     String             @id @default(cuid())
-  userId                 String
-  planId                 String
-  status                 SubscriptionStatus @default(TRIALING)
-  gateway                PaymentGateway     @default(ASAAS)
-  asaasCustomerId        String?
-  asaasSubscriptionId    String?            @unique
-  asaasPaymentId         String?
-  externalReference      String?            @unique
-  startedAt              DateTime           @default(now())
-  trialEndsAt            DateTime?
-  currentPeriodStartsAt  DateTime?
-  currentPeriodEndsAt    DateTime?
-  graceEndsAt            DateTime?
-  canceledAt             DateTime?
-  lastPaymentAt          DateTime?
-  nextBillingAt          DateTime?
-  metadata               Json?
-  createdAt              DateTime           @default(now())
-  updatedAt              DateTime           @updatedAt
+  id                    String             @id @default(cuid())
+  userId                String
+  planId                String
+  status                SubscriptionStatus @default(TRIALING)
+  gateway               PaymentGateway     @default(ASAAS)
+  asaasCustomerId       String?
+  asaasSubscriptionId   String?            @unique
+  asaasPaymentId        String?
+  externalReference     String?            @unique
+  startedAt             DateTime           @default(now())
+  trialEndsAt           DateTime?
+  currentPeriodStartsAt DateTime?
+  currentPeriodEndsAt   DateTime?
+  graceEndsAt           DateTime?
+  canceledAt            DateTime?
+  lastPaymentAt         DateTime?
+  nextBillingAt         DateTime?
+  metadata              Json?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
 
-  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  user          AppUser                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan          SubscriptionPlan           @relation(fields: [planId], references: [id], onDelete: Restrict)
   paymentEvents SubscriptionPaymentEvent[]
 
   @@index([userId, status])
@@ -1126,17 +1170,17 @@ model Subscription {
 }
 
 model SubscriptionPaymentEvent {
-  id                   String             @id @default(cuid())
-  subscriptionId       String
-  gateway              PaymentGateway     @default(ASAAS)
-  gatewayEventId       String?
-  gatewayPaymentId     String?
-  gatewayStatus        String
-  amountInCents        Int?
-  paidAt               DateTime?
-  dueDate              DateTime?
-  rawPayload           Json?
-  createdAt            DateTime           @default(now())
+  id               String         @id @default(cuid())
+  subscriptionId   String
+  gateway          PaymentGateway @default(ASAAS)
+  gatewayEventId   String?
+  gatewayPaymentId String?
+  gatewayStatus    String
+  amountInCents    Int?
+  paidAt           DateTime?
+  dueDate          DateTime?
+  rawPayload       Json?
+  createdAt        DateTime       @default(now())
 
   subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
@@ -1145,35 +1189,35 @@ model SubscriptionPaymentEvent {
 }
 
 model ProtectedDevice {
-  id                       String            @id @default(cuid())
-  userId                   String
-  nickname                 String?
-  platform                 MobilePlatform
-  status                   DeviceStatus      @default(PENDING)
-  protectionMode           ProtectionMode
-  protectionStatus         ProtectionStatus  @default(OFFLINE)
-  deviceFingerprint        String            @unique
-  installationKey          String            @unique
-  pushToken                String?
-  appVersion               String?
-  osVersion                String?
-  lastHeartbeatAt          DateTime?
-  vpnEnabled               Boolean           @default(false)
-  dnsProfileInstalled      Boolean           @default(false)
-  externalVpnDetected      Boolean           @default(false)
-  developerModeDetected    Boolean           @default(false)
-  uninstallGuardEnabled    Boolean           @default(false)
-  protectedByPin           Boolean           @default(false)
-  riskLevel                DeviceRiskLevel   @default(LOW)
-  riskUpdatedAt            DateTime?
-  protectionLockedAt       DateTime?
-  createdAt                DateTime          @default(now())
-  updatedAt                DateTime          @updatedAt
+  id                    String           @id @default(cuid())
+  userId                String
+  nickname              String?
+  platform              MobilePlatform
+  status                DeviceStatus     @default(PENDING)
+  protectionMode        ProtectionMode
+  protectionStatus      ProtectionStatus @default(OFFLINE)
+  deviceFingerprint     String           @unique
+  installationKey       String           @unique
+  pushToken             String?
+  appVersion            String?
+  osVersion             String?
+  lastHeartbeatAt       DateTime?
+  vpnEnabled            Boolean          @default(false)
+  dnsProfileInstalled   Boolean          @default(false)
+  externalVpnDetected   Boolean          @default(false)
+  developerModeDetected Boolean          @default(false)
+  uninstallGuardEnabled Boolean          @default(false)
+  protectedByPin        Boolean          @default(false)
+  riskLevel             DeviceRiskLevel  @default(LOW)
+  riskUpdatedAt         DateTime?
+  protectionLockedAt    DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 
-  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             AppUser           @relation(fields: [userId], references: [id], onDelete: Cascade)
   protectionEvents ProtectionEvent[]
-  bypassIncidents BypassIncident[]
-  unlockRequests UnlockRequest[]
+  bypassIncidents  BypassIncident[]
+  unlockRequests   UnlockRequest[]
 
   @@index([userId, status])
   @@index([platform, protectionStatus])
@@ -1181,17 +1225,17 @@ model ProtectedDevice {
 }
 
 model ProtectionEvent {
-  id                 String              @id @default(cuid())
-  userId             String
-  deviceId           String?
-  type               ProtectionEventType
-  severity           BypassSeverity      @default(LOW)
-  blockedValue       String?
-  matchedRule        String?
-  metadata           Json?
-  createdAt          DateTime            @default(now())
+  id           String              @id @default(cuid())
+  userId       String
+  deviceId     String?
+  type         ProtectionEventType
+  severity     BypassSeverity      @default(LOW)
+  blockedValue String?
+  matchedRule  String?
+  metadata     Json?
+  createdAt    DateTime            @default(now())
 
-  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   AppUser          @relation(fields: [userId], references: [id], onDelete: Cascade)
   device ProtectedDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
@@ -1200,17 +1244,17 @@ model ProtectionEvent {
 }
 
 model BypassIncident {
-  id                 String            @id @default(cuid())
-  userId             String
-  deviceId           String?
-  severity           BypassSeverity
-  title              String
-  description        String
-  resolvedAt         DateTime?
-  metadata           Json?
-  createdAt          DateTime          @default(now())
+  id          String         @id @default(cuid())
+  userId      String
+  deviceId    String?
+  severity    BypassSeverity
+  title       String
+  description String
+  resolvedAt  DateTime?
+  metadata    Json?
+  createdAt   DateTime       @default(now())
 
-  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   AppUser          @relation(fields: [userId], references: [id], onDelete: Cascade)
   device ProtectedDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
 
   @@index([userId, severity, createdAt])
@@ -1218,17 +1262,17 @@ model BypassIncident {
 }
 
 model AccountabilityLink {
-  id                 String    @id @default(cuid())
-  userId             String
-  guardianUserId     String?
-  guardianEmail      String
-  guardianName       String?
-  isActive           Boolean   @default(true)
-  receivesAlerts     Boolean   @default(true)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id             String   @id @default(cuid())
+  userId         String
+  guardianUserId String?
+  guardianEmail  String
+  guardianName   String?
+  isActive       Boolean  @default(true)
+  receivesAlerts Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  user AppUser @relation("UserAccountability", fields: [userId], references: [id], onDelete: Cascade)
+  user     AppUser  @relation("UserAccountability", fields: [userId], references: [id], onDelete: Cascade)
   guardian AppUser? @relation("GuardianAccountability", fields: [guardianUserId], references: [id], onDelete: SetNull)
 
   @@index([userId, isActive])
@@ -1236,24 +1280,24 @@ model AccountabilityLink {
 }
 
 model ProtectionPolicy {
-  id                           String   @id @default(cuid())
-  slug                         String   @unique
-  name                         String
-  description                  String?
-  version                      Int      @default(1)
-  isActive                     Boolean  @default(true)
-  targetPornographyOnly        Boolean  @default(true)
-  enforceAndroidVpn            Boolean  @default(true)
-  enforceIosDnsProxy           Boolean  @default(true)
-  blockUnknownDnsChanges       Boolean  @default(true)
-  detectExternalVpn            Boolean  @default(true)
-  detectProxy                  Boolean  @default(true)
-  detectDeveloperMode          Boolean  @default(true)
-  pinRequiredToDisable         Boolean  @default(true)
-  heartbeatIntervalMinutes     Int      @default(15)
-  staleHeartbeatGraceMinutes   Int      @default(45)
-  updatedAt                    DateTime @updatedAt
-  createdAt                    DateTime @default(now())
+  id                         String   @id @default(cuid())
+  slug                       String   @unique
+  name                       String
+  description                String?
+  version                    Int      @default(1)
+  isActive                   Boolean  @default(true)
+  targetPornographyOnly      Boolean  @default(true)
+  enforceAndroidVpn          Boolean  @default(true)
+  enforceIosDnsProxy         Boolean  @default(true)
+  blockUnknownDnsChanges     Boolean  @default(true)
+  detectExternalVpn          Boolean  @default(true)
+  detectProxy                Boolean  @default(true)
+  detectDeveloperMode        Boolean  @default(true)
+  pinRequiredToDisable       Boolean  @default(true)
+  heartbeatIntervalMinutes   Int      @default(15)
+  staleHeartbeatGraceMinutes Int      @default(45)
+  updatedAt                  DateTime @updatedAt
+  createdAt                  DateTime @default(now())
 
   sources BlocklistSource[]
 
@@ -1261,18 +1305,18 @@ model ProtectionPolicy {
 }
 
 model BlocklistSource {
-  id                String   @id @default(cuid())
-  policyId          String
-  code              String
-  name              String
-  description       String?
-  version           Int      @default(1)
-  isEnabled         Boolean  @default(true)
-  priority          Int      @default(0)
-  updatedAt         DateTime @updatedAt
-  createdAt         DateTime @default(now())
+  id          String   @id @default(cuid())
+  policyId    String
+  code        String
+  name        String
+  description String?
+  version     Int      @default(1)
+  isEnabled   Boolean  @default(true)
+  priority    Int      @default(0)
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
 
-  policy ProtectionPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  policy  ProtectionPolicy @relation(fields: [policyId], references: [id], onDelete: Cascade)
   entries BlocklistEntry[]
 
   @@unique([policyId, code])
@@ -1280,14 +1324,14 @@ model BlocklistSource {
 }
 
 model BlocklistEntry {
-  id          String             @id @default(cuid())
-  sourceId    String
-  value       String
-  type        BlocklistEntryType
-  note        String?
-  isActive    Boolean            @default(true)
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  id        String             @id @default(cuid())
+  sourceId  String
+  value     String
+  type      BlocklistEntryType
+  note      String?
+  isActive  Boolean            @default(true)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
 
   source BlocklistSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
 
@@ -1297,25 +1341,25 @@ model BlocklistEntry {
 }
 
 model UnlockRequest {
-  id                 String              @id @default(cuid())
-  userId             String
-  deviceId           String?
-  actionType         UnlockActionType
-  status             UnlockRequestStatus @default(PENDING)
-  requestedByEmail   String
-  partnerEmail       String
-  approvalCodeHash   String
-  reason             String?
-  expiresAt          DateTime
-  approvedAt         DateTime?
-  cooldownEndsAt     DateTime?
-  deniedAt           DateTime?
-  completedAt        DateTime?
-  metadata           Json?
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  id               String              @id @default(cuid())
+  userId           String
+  deviceId         String?
+  actionType       UnlockActionType
+  status           UnlockRequestStatus @default(PENDING)
+  requestedByEmail String
+  partnerEmail     String
+  approvalCodeHash String
+  reason           String?
+  expiresAt        DateTime
+  approvedAt       DateTime?
+  cooldownEndsAt   DateTime?
+  deniedAt         DateTime?
+  completedAt      DateTime?
+  metadata         Json?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
 
-  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   AppUser          @relation(fields: [userId], references: [id], onDelete: Cascade)
   device ProtectedDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
 
   @@index([userId, status, createdAt])

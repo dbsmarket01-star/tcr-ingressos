@@ -188,6 +188,13 @@ type PaidOrderLite = {
   }>;
 };
 
+function getPaidTicketQuantity(orders: PaidOrderLite[]) {
+  return orders.reduce((sum, order) => {
+    const itemQuantity = order.items.reduce((itemSum, item) => itemSum + item.quantity, 0);
+    return sum + (itemQuantity || order.tickets.length);
+  }, 0);
+}
+
 function computeCustomerBreakdown(orders: PaidOrderLite[], previousCustomerIds: Set<string>) {
   const paidOrdersTotal = orders.length;
   const uniqueCustomers = new Set<string>();
@@ -513,8 +520,10 @@ export async function getDashboardMetrics(
   const previousTicketSalesInCents = previousPaidOrders.reduce((sum, order) => sum + order.subtotalInCents, 0);
   const currentServiceFeesInCents = currentPaidOrders.reduce((sum, order) => sum + order.serviceFeeInCents, 0);
   const previousServiceFeesInCents = previousPaidOrders.reduce((sum, order) => sum + order.serviceFeeInCents, 0);
-  const currentAverageTicket = currentPaidOrders.length > 0 ? Math.round(currentRevenueInCents / currentPaidOrders.length) : 0;
-  const previousAverageTicket = previousPaidOrders.length > 0 ? Math.round(previousRevenueInCents / previousPaidOrders.length) : 0;
+  const currentPaidTicketQuantity = getPaidTicketQuantity(currentPaidOrders as PaidOrderLite[]);
+  const previousPaidTicketQuantity = getPaidTicketQuantity(previousPaidOrders as PaidOrderLite[]);
+  const currentAverageTicket = currentPaidTicketQuantity > 0 ? Math.round(currentRevenueInCents / currentPaidTicketQuantity) : 0;
+  const previousAverageTicket = previousPaidTicketQuantity > 0 ? Math.round(previousRevenueInCents / previousPaidTicketQuantity) : 0;
 
   const currentCustomerBreakdown = computeCustomerBreakdown(
     currentPaidOrders as PaidOrderLite[],

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
+import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 import { resendPendingPaymentEmailByOrderCode, resendTicketsEmailByOrderCode } from "./support.service";
 
 export async function resendTicketsEmailAction(formData: FormData) {
@@ -20,7 +21,7 @@ export async function resendTicketsEmailAction(formData: FormData) {
     params.set("sent", result.email);
     params.set("order", result.orderCode);
   } catch (error) {
-    params.set("error", error instanceof Error ? error.message : "Não foi possível reenviar o e-mail.");
+    params.set("error", getFriendlyErrorMessage(error, "Não foi possível reenviar o e-mail."));
   }
 
   revalidatePath("/admin/support");
@@ -46,7 +47,7 @@ export async function resendPendingPaymentEmailAction(formData: FormData) {
     params.set("paymentSent", result.email);
     params.set("order", result.orderCode);
   } catch (error) {
-    params.set("error", error instanceof Error ? error.message : "Não foi possível reenviar o link de pagamento.");
+    params.set("error", getFriendlyErrorMessage(error, "Não foi possível reenviar o link de pagamento."));
   }
 
   revalidatePath("/admin/support");

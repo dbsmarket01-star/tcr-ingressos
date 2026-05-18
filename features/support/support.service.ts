@@ -69,7 +69,8 @@ export async function searchSupportOrders(query: string | undefined, organizatio
       payment: true,
       items: {
         include: {
-          lot: true
+          lot: true,
+          lotOption: true
         }
       },
       tickets: {
@@ -77,7 +78,8 @@ export async function searchSupportOrders(query: string | undefined, organizatio
           issuedAt: "asc"
         },
         include: {
-          lot: true
+          lot: true,
+          lotOption: true
         }
       }
     }
@@ -118,7 +120,8 @@ export async function resendTicketsEmailByOrderCode(
           issuedAt: "asc"
         },
         include: {
-          lot: true
+          lot: true,
+          lotOption: true
         }
       }
     }
@@ -144,7 +147,7 @@ export async function resendTicketsEmailByOrderCode(
     venueName: order.event.venueName,
     tickets: order.tickets.map((ticket) => ({
       code: ticket.code,
-      lotName: ticket.lot.name,
+      lotName: ticket.lotOption ? `${ticket.lot.name} - ${ticket.lotOption.label}` : ticket.lot.name,
       url: createPublicTicketUrl(ticket.code, order.event.organization)
     }))
   });
@@ -234,7 +237,7 @@ function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
 }
 
-export async function findPublicOrdersByCustomerEmail(email: string, organizationId: string) {
+export async function findPublicOrdersByCustomerEmail(email: string, organizationId: string, eventId?: string) {
   const normalizedEmail = normalizeEmail(email);
 
   if (!normalizedEmail || !normalizedEmail.includes("@")) {
@@ -245,24 +248,29 @@ export async function findPublicOrdersByCustomerEmail(email: string, organizatio
     where: {
       event: {
         organizationId,
-        status: {
-          not: EventStatus.DRAFT
+        status: EventStatus.PUBLISHED,
+        startsAt: {
+          gte: new Date()
         }
       },
+      ...(eventId ? { eventId } : {}),
       customer: {
         email: {
           equals: normalizedEmail,
           mode: "insensitive"
         }
       },
-      status: {
-        in: ["PAID", "PENDING_PAYMENT"]
+      status: "PAID",
+      tickets: {
+        some: {
+          status: "ACTIVE"
+        }
       }
     },
     orderBy: {
       createdAt: "desc"
     },
-    take: 12,
+    take: 24,
     include: {
       customer: true,
       event: {
@@ -277,26 +285,29 @@ export async function findPublicOrdersByCustomerEmail(email: string, organizatio
         }
       },
       tickets: {
+        where: {
+          status: "ACTIVE"
+        },
         orderBy: {
           issuedAt: "asc"
         },
         include: {
-          lot: true
+          lot: true,
+          lotOption: true
         }
       }
     }
   });
 }
 
-export async function resendPublicAccessEmailsByCustomerEmail(email: string, organizationId: string) {
-  const orders = await findPublicOrdersByCustomerEmail(email, organizationId);
+export async function resendPublicAccessEmailsByCustomerEmail(email: string, organizationId: string, eventId?: string) {
+  const orders = await findPublicOrdersByCustomerEmail(email, organizationId, eventId);
 
   if (orders.length === 0) {
-    throw new Error("Não encontramos compras com esse e-mail nesta operação.");
+    throw new Error("Não encontramos ingressos ativos para esse e-mail neste evento.");
   }
 
   let sentTickets = 0;
-  let sentPending = 0;
 
   for (const order of orders) {
     if (order.status === "PAID" && order.tickets.length > 0) {
@@ -312,7 +323,7 @@ export async function resendPublicAccessEmailsByCustomerEmail(email: string, org
         venueName: order.event.venueName,
         tickets: order.tickets.map((ticket) => ({
           code: ticket.code,
-          lotName: ticket.lot.name,
+          lotName: ticket.lotOption ? `${ticket.lot.name} - ${ticket.lotOption.label}` : ticket.lot.name,
           url: createPublicTicketUrl(ticket.code, order.event.organization)
         }))
       });
@@ -332,37 +343,17 @@ export async function resendPublicAccessEmailsByCustomerEmail(email: string, org
       });
 
       sentTickets += 1;
-      continue;
-    }
-
-    if (order.status === "PENDING_PAYMENT") {
-      await sendOrderPendingPaymentEmail({
-        to: order.customer.email,
-        buyerName: order.customer.name,
-        orderCode: order.code,
-        brandName: order.event.organization?.name || "Ingresaas",
-        brandPrimaryColor: order.event.organization?.primaryColor,
-        organization: order.event.organization,
-        eventTitle: order.event.title,
-        eventDate: order.event.startsAt,
-        venueName: order.event.venueName,
-        totalInCents: order.totalInCents,
-        expiresAt: order.expiresAt,
-        orderUrl: createPublicOrderUrl(order.code, order.event.organization)
-      });
-
-      sentPending += 1;
     }
   }
 
-  if (sentTickets === 0 && sentPending === 0) {
-    throw new Error("Não há ingressos emitidos ou pedidos recuperáveis para esse e-mail.");
+  if (sentTickets === 0) {
+    throw new Error("Não há ingressos ativos para reenviar nesse evento.");
   }
 
   return {
     email: normalizeEmail(email),
     ordersFound: orders.length,
     sentTickets,
-    sentPending
+    sentPending: 0
   };
 }

@@ -72,7 +72,7 @@ async function saveSupabaseStorageImage(file: File, folder: string) {
   const bucket = process.env.SUPABASE_STORAGE_BUCKET || "event-media";
 
   if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Supabase Storage nao configurado. Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.");
+    throw new Error("Supabase Storage não configurado. Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.");
   }
 
   const safeFolder = safeStorageFolder(folder);
@@ -93,7 +93,7 @@ async function saveSupabaseStorageImage(file: File, folder: string) {
 
   if (!response.ok) {
     const message = await response.text().catch(() => "");
-    throw new Error(`Nao foi possivel enviar imagem para o Supabase Storage. ${message}`.trim());
+    throw new Error(`Não foi possível enviar imagem para o Supabase Storage. ${message}`.trim());
   }
 
   return `${supabaseUrl}/storage/v1/object/public/${bucket}/${objectPath}`;

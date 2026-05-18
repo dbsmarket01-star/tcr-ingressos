@@ -7,6 +7,7 @@ import { requirePermission } from "@/features/auth/auth.service";
 import { getOrganizationBrandingById } from "@/features/organizations/organization.service";
 import { updateOrganizationLogo } from "@/features/organizations/organization.admin.service";
 import { savePublicImageUpload } from "@/features/uploads/local-upload.service";
+import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 import { companySettingsSchema } from "./company-settings.schema";
 import { updateCompanySettings } from "./company-settings.service";
 import { footerInfoItems } from "./footer-content";
@@ -208,13 +209,13 @@ export async function updateOrganizationLogoAction(formData: FormData) {
   const admin = await requirePermission("SETTINGS");
 
   if (!admin.organizationId) {
-    redirect("/admin/settings?error=Organizacao%20nao%20encontrada.");
+    redirect("/admin/settings?error=Operacao%20nao%20encontrada.");
   }
 
   const organization = await getOrganizationBrandingById(admin.organizationId);
 
   if (!organization) {
-    redirect("/admin/settings?error=Organizacao%20nao%20encontrada.");
+    redirect("/admin/settings?error=Operacao%20nao%20encontrada.");
   }
 
   let logoUploadUrl: string | null = null;
@@ -227,7 +228,7 @@ export async function updateOrganizationLogoAction(formData: FormData) {
   } catch (error) {
     redirect(
       `/admin/settings?error=${encodeURIComponent(
-        error instanceof Error ? error.message : "Nao foi possivel salvar a logo."
+        getFriendlyErrorMessage(error, "Não foi possível salvar a logo.")
       )}`
     );
   }

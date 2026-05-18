@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { getFriendlyError } from "@/lib/friendly-error";
 
 export default function AdminErrorPage({
   error,
@@ -10,15 +11,15 @@ export default function AdminErrorPage({
   reset: () => void;
 }) {
   console.error(error);
+  const friendlyError = getFriendlyError(error, "Tente novamente antes de repetir qualquer ação sensível.");
 
   return (
     <main className="adminFallback">
       <section className="card">
         <p className="publicBadge">Painel administrativo</p>
-        <h1>Falha ao carregar esta area</h1>
-        <p className="muted">
-          A operacao nao foi concluida. Tente novamente antes de repetir qualquer acao sensivel.
-        </p>
+        <h1>{friendlyError.title}</h1>
+        <p className="muted">{friendlyError.message}</p>
+        {error.digest ? <small className="muted">Código para suporte: {error.digest}</small> : null}
         <div className="formActions">
           <button className="button" type="button" onClick={reset}>
             Tentar novamente

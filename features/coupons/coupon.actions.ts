@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { parsePercentageToBps } from "@/features/pricing/pricing";
+import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 import { couponSchema } from "./coupon.schema";
 import { createCoupon, updateCouponStatus } from "./coupon.service";
 
@@ -18,7 +19,7 @@ function couponErrorMessage(error: unknown, fallback: string) {
     return "Já existe um cupom com este código neste evento.";
   }
 
-  return error instanceof Error ? error.message : fallback;
+  return getFriendlyErrorMessage(error, fallback);
 }
 
 export async function createCouponAction(formData: FormData) {

@@ -51,6 +51,9 @@ export const ticketLotSchema = z.object({
   description: z.string().optional(),
   hasHotel: z.boolean().default(false),
   churchQuestionEnabled: z.boolean().default(false),
+  hasTypeOptions: z.boolean().default(false),
+  admissionsPerUnit: z.number().int().min(1).max(100).default(1),
+  typeOptionsText: z.string().optional(),
   hotelId: z.string().optional(),
   newHotelName: z.string().optional(),
   newHotelCity: z.string().optional(),
@@ -72,7 +75,23 @@ export const ticketLotSchema = z.object({
   validatePixDiscount(data, ctx);
 
   if (!data.hasHotel) {
+    if (data.hasTypeOptions && !data.typeOptionsText?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Informe pelo menos um tipo/camarote para este ingresso.",
+        path: ["typeOptionsText"]
+      });
+    }
+
     return;
+  }
+
+  if (data.hasTypeOptions && !data.typeOptionsText?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Informe pelo menos um tipo/camarote para este ingresso.",
+      path: ["typeOptionsText"]
+    });
   }
 
   if (!data.hotelId && !data.newHotelName) {

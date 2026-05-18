@@ -568,7 +568,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       icon: "ticket" as const
     },
     {
-      label: "Ticket médio",
+      label: "Ticket médio por ingresso",
       value: formatCurrency(dashboard.kpis.averageTicketInCents),
       delta: formatKpiDelta(dashboard.kpis.averageTicketChangePercent),
       icon: "chart" as const

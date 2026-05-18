@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createAuditLog } from "@/features/audit/audit.service";
 import { requirePermission } from "@/features/auth/auth.service";
 import { resolveUnlockRequestByAdmin } from "@/features/protection-unlock/unlock-request.service";
+import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 
 export async function resolveUnlockRequestAction(formData: FormData) {
   const admin = await requirePermission("INCIDENTS");
@@ -44,7 +45,7 @@ export async function resolveUnlockRequestAction(formData: FormData) {
 
     params.set("resolved", resolution.toLowerCase());
   } catch (error) {
-    params.set("error", error instanceof Error ? error.message : "Não foi possível atualizar a solicitação.");
+    params.set("error", getFriendlyErrorMessage(error, "Não foi possível atualizar a solicitação."));
   }
 
   revalidatePath("/admin/unlocks");

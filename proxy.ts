@@ -106,7 +106,17 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isAdminHost && pathname === "/") {
-    return withInternalHeaders(NextResponse.redirect(new URL("/login", request.url)));
+    const hasAdminSession = Boolean(
+      request.cookies.get("ingresaas_admin_session")?.value || request.cookies.get("tcr_admin_session")?.value
+    );
+
+    return withInternalHeaders(
+      NextResponse.rewrite(new URL(hasAdminSession ? "/admin" : "/login", request.url), {
+        request: {
+          headers: requestHeaders
+        }
+      })
+    );
   }
 
   if (isAdminHost && (isInternalPath(pathname) || isAllowedAdminHostAsset(pathname))) {

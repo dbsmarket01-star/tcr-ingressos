@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 
 type TicketQuantityStepperProps = {
+  lotId: string;
   max: number;
   name: string;
   label: string;
 };
 
-export function TicketQuantityStepper({ max, name, label }: TicketQuantityStepperProps) {
+export function TicketQuantityStepper({ lotId, max, name, label }: TicketQuantityStepperProps) {
   const [quantity, setQuantity] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const safeMax = Math.max(0, max);
@@ -23,6 +24,7 @@ export function TicketQuantityStepper({ max, name, label }: TicketQuantitySteppe
 
   return (
     <div className="ticketQuantityStepper" aria-label={label}>
+      {quantity > 0 ? <input type="hidden" name="lotId" value={lotId} /> : null}
       <input ref={inputRef} type="hidden" name={name} value={quantity} readOnly />
       <button
         aria-label={`Remover ${label}`}

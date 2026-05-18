@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { requirePermission } from "@/features/auth/auth.service";
 import {
   createOrganizationAction,
@@ -98,7 +99,7 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
       title="Operações"
       description="Cadastre clientes, ligue domínio e identidade, e acompanhe receita e saúde de cada operação em um só lugar."
     >
-      {error ? <div className="errorBox spacedSection">{error}</div> : null}
+      {error ? <ErrorNotice message={error} className="spacedSection" /> : null}
       {created ? <div className="successBox spacedSection">Cliente criado: {created}</div> : null}
       {updated ? <div className="successBox spacedSection">{updated}</div> : null}
 
@@ -258,7 +259,7 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
 
             <label className="field">
               <span>Contato de suporte</span>
-              <input name="supportPhone" placeholder="Ex.: +55 11 99999-9999" />
+              <input name="supportPhone" placeholder="Ex.: 1194444-2222" />
             </label>
           </div>
 
@@ -530,7 +531,7 @@ export default async function AdminOperationsPage({ searchParams }: AdminOperati
               </label>
               <label className="field">
                 <span>Telefone / WhatsApp</span>
-                <input defaultValue={organization.supportPhone ?? ""} name="supportPhone" />
+                <input defaultValue={organization.supportPhone ?? ""} name="supportPhone" placeholder="Ex.: 1194444-2222" />
               </label>
 
               <div className="operationsAdminInlineActions">

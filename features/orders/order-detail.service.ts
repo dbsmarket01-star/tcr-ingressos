@@ -34,12 +34,14 @@ export async function getAdminOrderDetail(code: string, organizationId: string, 
       items: {
         include: {
           lot: true,
+          lotOption: true,
           tickets: true
         }
       },
       tickets: {
         include: {
           lot: true,
+          lotOption: true,
           participant: true,
           checkIns: {
             orderBy: {

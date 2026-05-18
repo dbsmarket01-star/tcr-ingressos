@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     "Percentual vendido",
     "Check-ins",
     "Percentual check-in",
-    "Ticket medio",
+    "Ticket medio por ingresso",
     "Taxas",
     "Receita bruta"
   ];

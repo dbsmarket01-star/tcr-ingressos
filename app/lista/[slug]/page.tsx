@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { TurnstileField } from "@/components/forms/TurnstileField";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { createEventLeadAction } from "@/features/leads/lead.actions";
 import { getLeadCaptureEventBySlug } from "@/features/leads/lead.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
@@ -295,7 +296,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
               />
 
               <div className="leadPremiumFormTiming">{formTimingText}</div>
-              {error ? <div className="errorBox">{error}</div> : null}
+              <ErrorNotice message={error} />
               <label className="field">
                 <span>Nome completo</span>
                 <input name="name" placeholder="Seu nome completo" required />
@@ -310,7 +311,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
               </label>
               <label className="field">
                 <span>Telefone com DDD</span>
-                <input name="phone" inputMode="tel" placeholder="Ex: (11) 99999-9999" required />
+                <input name="phone" inputMode="tel" placeholder="Ex: 1194444-2222" required />
               </label>
               <TurnstileField siteKey={turnstileSiteKey} />
               <SubmitButton className="button fullButton leadPremiumCtaButton" pendingText="Enviando cadastro...">

@@ -227,7 +227,8 @@ export async function getFinanceReport(
         payment: true,
         items: {
           include: {
-            lot: true
+            lot: true,
+            lotOption: true
           }
         },
         tickets: {

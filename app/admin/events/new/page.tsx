@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { ImageUploadField } from "@/components/forms/ImageUploadField";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { requirePermission } from "@/features/auth/auth.service";
 import { createEventAction } from "@/features/events/event.actions";
 
@@ -19,7 +20,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
       description="Preencha primeiro o essencial do evento e deixe os blocos avançados para depois."
     >
       <form action={createEventAction} className="card form wideForm">
-        {error ? <div className="errorBox">{error}</div> : null}
+        {error ? <ErrorNotice message={error} /> : null}
         <section className="adminPanelHero compact">
           <div>
             <span className="sectionEyebrow">Cadastro guiado</span>
@@ -100,10 +101,17 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           </div>
           <div className="grid twoColumns">
             <label className="field">
+              <span>Abertura dos portões</span>
+              <input name="doorsOpenAt" type="datetime-local" />
+              <small>Opcional. Use quando a entrada abre antes do início.</small>
+            </label>
+            <label className="field">
               <span>Início do evento</span>
               <input name="startsAt" type="datetime-local" required />
               <small>Escolha a data e o horário de início do evento.</small>
             </label>
+          </div>
+          <div className="grid twoColumns">
             <label className="field">
               <span>Fim do evento</span>
               <input name="endsAt" type="datetime-local" />
@@ -117,6 +125,11 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           <label className="field">
             <span>Endereço</span>
             <input name="venueAddress" placeholder="Rua, número, bairro" required />
+          </label>
+          <label className="field">
+            <span>Link do Google Maps</span>
+            <input name="googleMapsUrl" placeholder="https://maps.google.com/..." />
+            <small>Opcional. Quando preenchido, mostra “Como chegar ao evento” na página pública.</small>
           </label>
           <div className="grid twoColumns">
             <label className="field">

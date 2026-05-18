@@ -150,7 +150,8 @@ export async function listAdminOrders(
         payment: true,
         items: {
           include: {
-            lot: true
+            lot: true,
+            lotOption: true
           }
         }
       }
@@ -236,7 +237,8 @@ export async function listOrdersForCsvExport(
       payment: true,
       items: {
         include: {
-          lot: true
+          lot: true,
+          lotOption: true
         }
       }
     }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { CopyButton } from "@/components/forms/CopyButton";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { requirePermission } from "@/features/auth/auth.service";
 import { createOrganizationInitialOwnerAction } from "@/features/organizations/organization.actions";
 import { getOrganizationDetailForPlatformAdmin } from "@/features/organizations/organization.admin.service";
@@ -73,7 +74,7 @@ export default async function OperationDetailPage({ params, searchParams }: Oper
       title={operation.name}
       description="Visão detalhada da bilheteria filha, com branding, equipe, eventos e links rápidos da operação."
     >
-      {error ? <div className="errorBox spacedSection">{error}</div> : null}
+      {error ? <ErrorNotice message={error} className="spacedSection" /> : null}
       {updated ? <div className="successBox spacedSection">{updated}</div> : null}
 
       <section className="platformOperationsHero spacedSection" aria-label="Cabeçalho da operação">

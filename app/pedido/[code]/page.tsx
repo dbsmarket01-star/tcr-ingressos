@@ -58,6 +58,10 @@ const orderStatusClasses = {
   REFUNDED: "draft"
 };
 
+function formatLotDisplayName(lotName: string, optionLabel?: string | null) {
+  return optionLabel ? `${lotName} - ${optionLabel}` : lotName;
+}
+
 export default async function OrderPage({ params, searchParams }: OrderPageProps) {
   const { code } = await params;
   const query = searchParams ? await searchParams : {};
@@ -263,7 +267,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
               {order.items.map((item) => (
                 <div className="orderItemLine" key={item.id}>
                   <div>
-                    <strong>{item.lot.name}</strong>
+                    <strong>{formatLotDisplayName(item.lot.name, item.lotOption?.label)}</strong>
                     <span>
                       {item.quantity}x {formatCurrency(item.unitPriceInCents)}
                       {item.serviceFeeInCents > 0 ? ` + ${formatCurrency(item.serviceFeeInCents)} taxa` : ""}
@@ -282,7 +286,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                 {order.tickets.map((ticket) => (
                   <Link className="ticketCard" href={`/ingresso/${ticket.code}`} key={ticket.id}>
                     <div>
-                      <strong>{ticket.lot.name}</strong>
+                      <strong>{formatLotDisplayName(ticket.lot.name, ticket.lotOption?.label)}</strong>
                       <span className="muted">{ticket.code}</span>
                     </div>
                     <span className={`status ${ticket.status === "ACTIVE" ? "published" : "draft"}`}>
@@ -513,6 +517,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                           <input
                             inputMode="numeric"
                             name="holderCpfCnpj"
+                            placeholder="123.456.789-43"
                             required
                             defaultValue={order.customer.document || ""}
                           />
@@ -613,7 +618,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                   {order.tickets.map((ticket) => (
                     <Link className="approvedTicketLink" href={`/ingresso/${ticket.code}`} key={ticket.id}>
                       <span>Abrir ingresso</span>
-                      <strong>{ticket.lot.name}</strong>
+                      <strong>{formatLotDisplayName(ticket.lot.name, ticket.lotOption?.label)}</strong>
                     </Link>
                   ))}
                 </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { resetPasswordAction } from "@/features/auth/auth.actions";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 
@@ -40,9 +41,7 @@ export default async function ResetPasswordPage({ params, searchParams }: ResetP
           </div>
 
           {hasError ? (
-            <div className="errorBox">
-              Link expirado ou inválido, ou as senhas não coincidem. Solicite uma nova redefinição.
-            </div>
+            <ErrorNotice message="Link expirado ou inválido, ou as senhas não coincidem. Solicite uma nova redefinição." />
           ) : null}
 
           <form action={resetPasswordAction} className="form">

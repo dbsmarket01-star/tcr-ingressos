@@ -38,11 +38,20 @@ export async function loginAction(formData: FormData) {
   }
 
   await createAdminSession(admin);
+  if (organizationContext.isAdminHost) {
+    redirect("/");
+  }
+
   redirect("/admin");
 }
 
 export async function logoutAction() {
+  const organizationContext = await getCurrentOrganizationContext();
   await clearAdminSession();
+  if (organizationContext.isAdminHost) {
+    redirect("/");
+  }
+
   redirect("/login");
 }
 

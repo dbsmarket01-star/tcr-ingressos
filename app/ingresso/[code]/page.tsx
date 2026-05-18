@@ -6,7 +6,8 @@ import { PrintButton } from "@/components/forms/PrintButton";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { createTicketQrCodeSvg } from "@/features/tickets/ticket-qrcode";
 import { getTicketByCode } from "@/features/tickets/ticket.service";
-import { formatDateTime } from "@/lib/format";
+import { getPublicEventBranding } from "@/lib/event-branding";
+import { formatDateTime, formatTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,10 @@ const ticketStatusMessages = {
   INVALID: "Este ingresso está inválido e não deve liberar entrada."
 };
 
+function formatLotDisplayName(lotName: string, optionLabel?: string | null) {
+  return optionLabel ? `${lotName} - ${optionLabel}` : lotName;
+}
+
 export default async function TicketPage({ params }: TicketPageProps) {
   const { code } = await params;
   const organizationContext = await getCurrentOrganizationContext();
@@ -57,24 +62,22 @@ export default async function TicketPage({ params }: TicketPageProps) {
   const lastCheckIn = ticket.checkIns[0];
   const canEnter = ticket.status === "ACTIVE";
   const eventLocation = `${ticket.event.venueName} - ${ticket.event.city}, ${ticket.event.state}`;
-  const brandName = organizationContext.brandName;
-  const brandMark = brandName.trim().charAt(0).toUpperCase() || "I";
-  const publicHomeHref = organizationContext.publicBaseUrl || "/";
+  const eventBranding = getPublicEventBranding(organizationContext, ticket.event);
 
   return (
     <main className="shell">
       <header className="topbar">
-        <Link className="brand" href={publicHomeHref}>
-          {organizationContext.brandLogoUrl ? (
+        <Link className="brand" href={eventBranding.homeHref}>
+          {eventBranding.brandLogoUrl ? (
             <img
-              alt={brandName}
+              alt={eventBranding.brandName}
               className="brandLogo"
-              src={organizationContext.brandLogoUrl}
+              src={eventBranding.brandLogoUrl}
             />
           ) : (
-            <span className="brandMark">{brandMark}</span>
+            <span className="brandMark">{eventBranding.brandMark}</span>
           )}
-          {!organizationContext.brandLogoUrl ? <span>{brandName}</span> : null}
+          {!eventBranding.brandLogoUrl ? <span>{eventBranding.brandName}</span> : null}
         </Link>
         <nav className="nav" aria-label="Navegação">
           <Link href={`/pedido/${ticket.order.code}`}>Pedido</Link>
@@ -94,6 +97,19 @@ export default async function TicketPage({ params }: TicketPageProps) {
             <p>
               {formatDateTime(ticket.event.startsAt)} - {eventLocation}
             </p>
+          </div>
+
+          <div className={`ticketScheduleGrid ${ticket.event.doorsOpenAt ? "" : "singleScheduleItem"}`}>
+            {ticket.event.doorsOpenAt ? (
+              <div>
+                <span>Abertura dos portões</span>
+                <strong>{formatTime(ticket.event.doorsOpenAt)}</strong>
+              </div>
+            ) : null}
+            <div>
+              <span>Início do evento</span>
+              <strong>{formatTime(ticket.event.startsAt)}</strong>
+            </div>
           </div>
 
           <div className={`ticketQrStage ${canEnter ? "ticketValidStage" : "ticketBlockedStage"}`}>
@@ -127,7 +143,7 @@ export default async function TicketPage({ params }: TicketPageProps) {
           <div className="ticketDetailsGrid">
             <div>
               <span>Ingresso</span>
-              <strong>{ticket.lot.name}</strong>
+              <strong>{formatLotDisplayName(ticket.lot.name, ticket.lotOption?.label)}</strong>
             </div>
             <div>
               <span>Comprador</span>
@@ -140,6 +156,16 @@ export default async function TicketPage({ params }: TicketPageProps) {
             <div>
               <span>Emitido em</span>
               <strong>{formatDateTime(ticket.issuedAt)}</strong>
+            </div>
+            {ticket.event.doorsOpenAt ? (
+              <div>
+                <span>Abertura</span>
+                <strong>{formatTime(ticket.event.doorsOpenAt)}</strong>
+              </div>
+            ) : null}
+            <div>
+              <span>Início</span>
+              <strong>{formatTime(ticket.event.startsAt)}</strong>
             </div>
             <div>
               <span>Local</span>

@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import type { Metadata } from "next";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { getOrderByCode } from "@/features/orders/order.service";
 import { getTicketByCode } from "@/features/tickets/ticket.service";
 import { findPublicOrdersByCustomerEmail } from "@/features/support/support.service";
 import { resendPublicAccessByEmailAction } from "@/features/support/public-ticket-lookup.actions";
+import { formatCurrency, formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +35,42 @@ function normalizeLookupCode(raw?: string) {
   }
 
   return raw.trim().toUpperCase();
+}
+
+type EmailLookupOrder = Awaited<ReturnType<typeof findPublicOrdersByCustomerEmail>>[number];
+
+function groupOrdersByEvent(orders: EmailLookupOrder[]) {
+  const groups = new Map<
+    string,
+    {
+      event: EmailLookupOrder["event"];
+      orderCount: number;
+      ticketCount: number;
+      totalInCents: number;
+    }
+  >();
+
+  for (const order of orders) {
+    const current = groups.get(order.event.id);
+
+    if (current) {
+      current.orderCount += 1;
+      current.ticketCount += order.tickets.length;
+      current.totalInCents += order.totalInCents;
+      continue;
+    }
+
+    groups.set(order.event.id, {
+      event: order.event,
+      orderCount: 1,
+      ticketCount: order.tickets.length,
+      totalInCents: order.totalInCents
+    });
+  }
+
+  return Array.from(groups.values()).sort(
+    (first, second) => new Date(first.event.startsAt).getTime() - new Date(second.event.startsAt).getTime()
+  );
 }
 
 export default async function TicketLookupPage({ searchParams }: TicketLookupPageProps) {
@@ -63,6 +101,7 @@ export default async function TicketLookupPage({ searchParams }: TicketLookupPag
   const emailLookupError = !lookupError && query.error ? String(query.error) : null;
   const emailLookupSuccess = query.sent === "1" && query.success ? String(query.success) : null;
   const hasEmailMatches = lookupEmail && emailOrders.length > 0;
+  const eventGroups = groupOrdersByEvent(emailOrders);
 
   return (
     <main className="shell ticketLookupPage">
@@ -87,10 +126,10 @@ export default async function TicketLookupPage({ searchParams }: TicketLookupPag
           <span className="eyebrow">Área do cliente</span>
           <h1>Encontrar meus ingressos</h1>
           <p>
-            Informe o e-mail usado na compra para reenviar seus ingressos com um clique. Se preferir, você também pode usar o código do pedido ou do ingresso.
+            Informe o e-mail usado na compra para ver os eventos futuros vinculados a ele. Depois escolha o evento e receba os ingressos no próprio e-mail.
           </p>
 
-          <form action={resendPublicAccessByEmailAction} className="ticketLookupForm">
+          <form className="ticketLookupForm" method="get">
             <label className="field">
               <span>E-mail do comprador</span>
               <input
@@ -103,22 +142,65 @@ export default async function TicketLookupPage({ searchParams }: TicketLookupPag
             </label>
 
             <button className="button fullButton" type="submit">
-              Receber meus ingressos por e-mail
+              Ver meus eventos
             </button>
           </form>
 
           {emailLookupSuccess ? <div className="formFeedback success">{emailLookupSuccess}</div> : null}
-          {emailLookupError ? <div className="formFeedback error">{emailLookupError}</div> : null}
+          <ErrorNotice message={emailLookupError} className="formFeedback" />
+          {lookupEmail && !hasEmailMatches && !emailLookupError && !emailLookupSuccess ? (
+            <div className="formFeedback error">Não encontramos ingressos ativos em eventos futuros com esse e-mail nesta operação.</div>
+          ) : null}
 
-          {hasEmailMatches ? (
-            <div className="ticketLookupMatchBox">
-              <strong>Encontramos {emailOrders.length} compra(s) com esse e-mail.</strong>
-              <span>
-                {emailOrders
-                  .slice(0, 3)
-                  .map((order) => order.event.title)
-                  .join(" • ")}
-              </span>
+          {eventGroups.length > 0 ? (
+            <div className="ticketLookupEventList">
+              <div className="ticketLookupMatchBox">
+                <strong>Encontramos {eventGroups.length} evento(s) futuro(s) com ingressos ativos.</strong>
+                <span>Escolha abaixo qual evento você quer receber no e-mail cadastrado.</span>
+              </div>
+
+              <div className="ticketLookupEvents">
+                {eventGroups.map((group) => {
+                  const place = [group.event.venueName, `${group.event.city}, ${group.event.state}`]
+                    .filter(Boolean)
+                    .join(" • ");
+
+                  return (
+                    <article className="ticketLookupEventCard" key={group.event.id}>
+                      <div>
+                        <span className="ticketLookupEventBadge">
+                          {group.ticketCount} ingresso{group.ticketCount === 1 ? "" : "s"}
+                        </span>
+                        <h2>{group.event.title}</h2>
+                        <p>{place}</p>
+                      </div>
+
+                      <dl className="ticketLookupEventMeta">
+                        <div>
+                          <dt>Data</dt>
+                          <dd>{formatDateTime(group.event.startsAt)}</dd>
+                        </div>
+                        <div>
+                          <dt>Pedidos</dt>
+                          <dd>{group.orderCount}</dd>
+                        </div>
+                        <div>
+                          <dt>Total</dt>
+                          <dd>{formatCurrency(group.totalInCents)}</dd>
+                        </div>
+                      </dl>
+
+                      <form action={resendPublicAccessByEmailAction}>
+                        <input name="email" type="hidden" value={lookupEmail} />
+                        <input name="eventId" type="hidden" value={group.event.id} />
+                        <button className="button fullButton" type="submit">
+                          Receber ingressos deste evento
+                        </button>
+                      </form>
+                    </article>
+                  );
+                })}
+              </div>
             </div>
           ) : null}
 
@@ -143,12 +225,12 @@ export default async function TicketLookupPage({ searchParams }: TicketLookupPag
             </button>
           </form>
 
-          {lookupError ? <div className="formFeedback error">{lookupError}</div> : null}
+          <ErrorNotice message={lookupError} className="formFeedback" />
 
           <div className="ticketLookupHints">
             <div>
               <strong>Busca por e-mail</strong>
-              <span>O sistema verifica compras desta operação e reenvia seus ingressos ou links válidos para o mesmo e-mail.</span>
+              <span>Mostramos apenas eventos futuros com ingressos ativos comprados nesta operação.</span>
             </div>
             <div>
               <strong>Pedido</strong>

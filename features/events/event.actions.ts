@@ -8,6 +8,7 @@ import { eventDraftSchema } from "./event.schema";
 import { createAuditLog } from "@/features/audit/audit.service";
 import { requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { savePublicImageUpload } from "@/features/uploads/local-upload.service";
+import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 
 function optionalDate(value: FormDataEntryValue | null) {
   const text = String(value ?? "").trim();
@@ -34,6 +35,7 @@ function validationMessage(error: unknown) {
         title: "Nome do evento",
         slug: "Slug público",
         description: "Descrição",
+        doorsOpenAt: "Abertura dos portões",
         startsAt: "Início do evento",
         endsAt: "Fim do evento",
         venueName: "Nome do local",
@@ -49,6 +51,7 @@ function validationMessage(error: unknown) {
         eventMapCrop: "Enquadramento do mapa",
         eventMapTemplate: "Modelo do mapa",
         eventMapNotes: "Observações do mapa",
+        googleMapsUrl: "Link do Google Maps",
         metaPixelId: "Meta Pixel ID",
         metaConversionsApiToken: "Token da API de conversão do Meta",
         metaTestEventCode: "Código de teste do Meta",
@@ -119,7 +122,7 @@ export async function createEventAction(formData: FormData) {
     seoUploadUrl = await savePublicImageUpload(formData.get("seoImageFile") as File | null, `events/${slug}/seo`);
     leadHeroUploadUrl = await savePublicImageUpload(formData.get("leadCaptureHeroFile") as File | null, `events/${slug}/lead-hero`);
   } catch (error) {
-    redirect(`/admin/events/new?error=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível salvar a imagem.")}`);
+    redirect(`/admin/events/new?error=${encodeURIComponent(getFriendlyErrorMessage(error, "Não foi possível salvar a imagem."))}`);
   }
 
   const parsed = eventDraftSchema.safeParse({
@@ -127,6 +130,7 @@ export async function createEventAction(formData: FormData) {
     slug,
     subtitle: String(formData.get("subtitle") ?? "").trim() || undefined,
     description: String(formData.get("description") ?? "").trim(),
+    doorsOpenAt: optionalDate(formData.get("doorsOpenAt")),
     startsAt: formData.get("startsAt"),
     endsAt: optionalDate(formData.get("endsAt")),
     venueName: String(formData.get("venueName") ?? "").trim(),
@@ -142,6 +146,7 @@ export async function createEventAction(formData: FormData) {
     eventMapCrop: String(formData.get("eventMapCrop") ?? "").trim() || undefined,
     eventMapTemplate: String(formData.get("eventMapTemplate") ?? "AUTO"),
     eventMapNotes: String(formData.get("eventMapNotes") ?? "").trim() || undefined,
+    googleMapsUrl: String(formData.get("googleMapsUrl") ?? "").trim() || undefined,
     importantInfo: String(formData.get("importantInfo") ?? "").trim() || undefined,
     metaPixelId: String(formData.get("metaPixelId") ?? "").trim() || undefined,
     metaConversionsApiToken: String(formData.get("metaConversionsApiToken") ?? "").trim() || undefined,
@@ -233,7 +238,7 @@ export async function updateEventAction(formData: FormData) {
     seoUploadUrl = await savePublicImageUpload(formData.get("seoImageFile") as File | null, `events/${slug}/seo`);
     leadHeroUploadUrl = await savePublicImageUpload(formData.get("leadCaptureHeroFile") as File | null, `events/${slug}/lead-hero`);
   } catch (error) {
-    redirect(`/admin/events/${eventId}/edit?error=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível salvar a imagem.")}`);
+    redirect(`/admin/events/${eventId}/edit?error=${encodeURIComponent(getFriendlyErrorMessage(error, "Não foi possível salvar a imagem."))}`);
   }
 
   const parsed = eventDraftSchema.safeParse({
@@ -241,6 +246,7 @@ export async function updateEventAction(formData: FormData) {
     slug,
     subtitle: String(formData.get("subtitle") ?? "").trim() || undefined,
     description: String(formData.get("description") ?? "").trim(),
+    doorsOpenAt: optionalDate(formData.get("doorsOpenAt")),
     startsAt: formData.get("startsAt"),
     endsAt: optionalDate(formData.get("endsAt")),
     venueName: String(formData.get("venueName") ?? "").trim(),
@@ -262,6 +268,7 @@ export async function updateEventAction(formData: FormData) {
     eventMapCrop: String(formData.get("eventMapCrop") ?? "").trim() || undefined,
     eventMapTemplate: String(formData.get("eventMapTemplate") ?? "AUTO"),
     eventMapNotes: String(formData.get("eventMapNotes") ?? "").trim() || undefined,
+    googleMapsUrl: String(formData.get("googleMapsUrl") ?? "").trim() || undefined,
     importantInfo: String(formData.get("importantInfo") ?? "").trim() || undefined,
     metaPixelId: String(formData.get("metaPixelId") ?? "").trim() || undefined,
     metaConversionsApiToken: String(formData.get("metaConversionsApiToken") ?? "").trim() || undefined,
@@ -352,7 +359,7 @@ export async function updateEventStatusAction(formData: FormData) {
   try {
     await updateEventStatus(eventId, status);
   } catch (error) {
-    redirect(`/admin/events/${eventId}?eventError=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível atualizar o evento.")}`);
+    redirect(`/admin/events/${eventId}?eventError=${encodeURIComponent(getFriendlyErrorMessage(error, "Não foi possível atualizar o evento."))}`);
   }
 
   revalidatePath("/admin/events");
@@ -381,7 +388,7 @@ export async function duplicateEventAction(formData: FormData) {
   try {
     duplicatedEvent = await duplicateEvent(eventId);
   } catch (error) {
-    redirect(`/admin/events/${eventId}?eventError=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível duplicar o evento.")}`);
+    redirect(`/admin/events/${eventId}?eventError=${encodeURIComponent(getFriendlyErrorMessage(error, "Não foi possível duplicar o evento."))}`);
   }
 
   await createAuditLog({

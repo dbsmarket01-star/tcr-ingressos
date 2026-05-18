@@ -441,7 +441,7 @@ export default async function Home({ searchParams }: HomePageProps) {
             </label>
             <label>
               <span>Telefone</span>
-              <input name="phone" type="tel" placeholder="(11) 99999-9999" required />
+              <input name="phone" type="tel" placeholder="1194444-2222" required />
             </label>
             <label>
               <span>Faturamento anual</span>
@@ -503,16 +503,9 @@ export default async function Home({ searchParams }: HomePageProps) {
           </form>
 
           <div className="tcrPremiumActions">
-            <Link className="tcrPremiumGhostAction" href="/meus-ingressos">
+            <Link className="button tcrPremiumTicketsCta" href="/meus-ingressos">
               <TicketIcon />
               <span>Meus ingressos</span>
-            </Link>
-            <Link className="tcrPremiumTextLink" href="/meus-ingressos">
-              <UserIcon />
-              <span>Entrar</span>
-            </Link>
-            <Link className="button" href="/meus-ingressos">
-              Criar conta
             </Link>
           </div>
 

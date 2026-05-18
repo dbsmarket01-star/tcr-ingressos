@@ -21,6 +21,14 @@ function compactText(value?: string | null) {
   return String(value ?? "").trim();
 }
 
+function onlyDigits(value?: string | null) {
+  return String(value ?? "").replace(/\D/g, "");
+}
+
+function compactState(value?: string | null) {
+  return compactText(value).slice(0, 2).toUpperCase() || null;
+}
+
 function requiredHotelField(value: string | undefined, message: string) {
   const text = compactText(value);
 
@@ -52,8 +60,126 @@ function requiredHotelCpf(value: string | undefined, message: string) {
   return onlyDocumentDigits(text);
 }
 
+async function reserveTicketLotOption(
+  tx: Prisma.TransactionClient,
+  lotId: string,
+  lotOptionId: string,
+  lotName: string
+) {
+  const option = await tx.ticketLotOption.findFirst({
+    where: {
+      id: lotOptionId,
+      lotId,
+      status: "ACTIVE"
+    },
+    select: {
+      id: true,
+      label: true
+    }
+  });
+
+  if (!option) {
+    throw new Error(`Selecione um tipo disponível para ${lotName}.`);
+  }
+
+  const reservedRows = await tx.$executeRaw`
+    UPDATE "TicketLotOption"
+    SET "reservedQuantity" = "reservedQuantity" + 1
+    WHERE "id" = ${option.id}
+      AND "lotId" = ${lotId}
+      AND "status" = 'ACTIVE'
+      AND ("soldQuantity" + "reservedQuantity") = 0
+  `;
+
+  if (reservedRows !== 1) {
+    throw new Error(`${option.label} acabou de ser reservado por outra pessoa. Escolha outro tipo.`);
+  }
+
+  return option;
+}
+
+async function releaseReservedTicketLotOption(
+  tx: Prisma.TransactionClient,
+  lotOptionId: string | null | undefined,
+  quantity: number
+) {
+  if (!lotOptionId) {
+    return;
+  }
+
+  await tx.$executeRaw`
+    UPDATE "TicketLotOption"
+    SET "reservedQuantity" = GREATEST("reservedQuantity" - ${quantity}, 0)
+    WHERE "id" = ${lotOptionId}
+  `;
+}
+
+async function confirmReservedTicketLotOption(
+  tx: Prisma.TransactionClient,
+  lotOptionId: string | null | undefined,
+  quantity: number
+) {
+  if (!lotOptionId) {
+    return;
+  }
+
+  const updatedRows = await tx.$executeRaw`
+    UPDATE "TicketLotOption"
+    SET
+      "reservedQuantity" = "reservedQuantity" - ${quantity},
+      "soldQuantity" = "soldQuantity" + ${quantity}
+    WHERE "id" = ${lotOptionId}
+      AND "reservedQuantity" >= ${quantity}
+  `;
+
+  if (updatedRows !== 1) {
+    throw new Error("Nao foi possivel confirmar o tipo/camarote reservado.");
+  }
+}
+
+async function sellTicketLotOptionWithoutReservation(
+  tx: Prisma.TransactionClient,
+  lotOptionId: string | null | undefined,
+  quantity: number
+) {
+  if (!lotOptionId) {
+    return;
+  }
+
+  const updatedRows = await tx.$executeRaw`
+    UPDATE "TicketLotOption"
+    SET "soldQuantity" = "soldQuantity" + ${quantity}
+    WHERE "id" = ${lotOptionId}
+      AND "reservedQuantity" = 0
+      AND "soldQuantity" = 0
+  `;
+
+  if (updatedRows !== 1) {
+    throw new Error("O tipo/camarote selecionado ja nao esta disponivel.");
+  }
+}
+
+async function releaseSoldTicketLotOption(
+  tx: Prisma.TransactionClient,
+  lotOptionId: string | null | undefined,
+  quantity: number
+) {
+  if (!lotOptionId) {
+    return;
+  }
+
+  await tx.$executeRaw`
+    UPDATE "TicketLotOption"
+    SET "soldQuantity" = GREATEST("soldQuantity" - ${quantity}, 0)
+    WHERE "id" = ${lotOptionId}
+  `;
+}
+
 export async function createCheckoutOrder(input: CheckoutOrderInput, organizationId?: string | null) {
   const selectedItems = input.items.filter((item) => item.quantity > 0);
+  const buyerCity = compactText(input.buyerCity).slice(0, 100);
+  const buyerState = compactState(input.buyerState);
+  const buyerPostalCode = onlyDigits(input.buyerPostalCode).slice(0, 8);
   const reservationMinutes = await getOrderReservationMinutes(organizationId || undefined).catch(
     () => FALLBACK_ORDER_RESERVATION_MINUTES
   );
@@ -77,24 +203,40 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
         throw new Error("Evento indisponivel para compra.");
       }
 
-      const customer =
-        (await tx.customer.findFirst({
-          where: {
-            email: input.buyerEmail,
-            document: input.buyerDocument
-          }
-        })) ||
-        (await tx.customer.create({
-          data: {
-            name: input.buyerName,
-            email: input.buyerEmail,
-            document: input.buyerDocument,
-            phone: input.buyerPhone || null
-          }
-        }));
+      const existingCustomer = await tx.customer.findFirst({
+        where: {
+          email: input.buyerEmail,
+          document: input.buyerDocument
+        }
+      });
+      const customer = existingCustomer
+        ? await tx.customer.update({
+            where: {
+              id: existingCustomer.id
+            },
+            data: {
+              name: input.buyerName,
+              phone: input.buyerPhone || existingCustomer.phone,
+              city: buyerCity || existingCustomer.city,
+              state: buyerState || existingCustomer.state,
+              postalCode: buyerPostalCode || existingCustomer.postalCode
+            }
+          })
+        : await tx.customer.create({
+            data: {
+              name: input.buyerName,
+              email: input.buyerEmail,
+              document: input.buyerDocument,
+              phone: input.buyerPhone || null,
+              city: buyerCity || null,
+              state: buyerState,
+              postalCode: buyerPostalCode || null
+            }
+          });
 
       const orderItems: Array<{
         lotId: string;
+        lotOptionId?: string | null;
         quantity: number;
         unitPriceInCents: number;
         serviceFeeBps: number;
@@ -103,6 +245,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
         pixDiscountFixedInCents: number;
         cardInterestBpsPerInstallment: number;
         cardInterestStartsAtInstallment: number;
+        admissionsPerUnit: number;
         totalInCents: number;
       }> = [];
       const hotelGuestsToCreate: Array<{
@@ -154,6 +297,22 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           throw new Error(`Quantidade invalida para ${lot.name}.`);
         }
 
+        let lotOption: { id: string; label: string } | null = null;
+
+        if (lot.hasTypeOptions) {
+          if (item.quantity !== 1) {
+            throw new Error(`Selecione apenas um tipo por pedido para ${lot.name}.`);
+          }
+
+          if (!item.lotOptionId) {
+            throw new Error(`Selecione um tipo disponível para ${lot.name}.`);
+          }
+
+          lotOption = await reserveTicketLotOption(tx, lot.id, item.lotOptionId, lot.name);
+        } else if (item.lotOptionId) {
+          throw new Error(`O ingresso ${lot.name} nao possui tipos/camarotes configurados.`);
+        }
+
         const now = new Date();
 
         if (lot.salesStartsAt && lot.salesStartsAt > now) {
@@ -185,6 +344,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
 
         orderItems.push({
           lotId: lot.id,
+          lotOptionId: lotOption?.id || null,
           quantity: item.quantity,
           unitPriceInCents: lot.priceInCents,
           serviceFeeBps: lot.serviceFeeBps,
@@ -193,6 +353,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           pixDiscountFixedInCents: lot.pixDiscountFixedInCents,
           cardInterestBpsPerInstallment: lot.cardInterestBpsPerInstallment,
           cardInterestStartsAtInstallment: lot.cardInterestStartsAtInstallment,
+          admissionsPerUnit: Math.max(lot.admissionsPerUnit, 1),
           totalInCents: lot.priceInCents * item.quantity
         });
 
@@ -269,6 +430,9 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           cardInterestInCents: 0,
           discountInCents,
           totalInCents,
+          buyerCity: buyerCity || null,
+          buyerState,
+          buyerPostalCode: buyerPostalCode || null,
           expiresAt,
           utmSource: input.utmSource || null,
           utmMedium: input.utmMedium || null,
@@ -284,7 +448,9 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           items: {
             create: orderItems.map((item) => ({
               lotId: item.lotId,
+              lotOptionId: item.lotOptionId || null,
               quantity: item.quantity,
+              admissionsPerUnit: item.admissionsPerUnit,
               unitPriceInCents: item.unitPriceInCents,
               serviceFeeBps: item.serviceFeeBps,
               serviceFeeInCents: item.serviceFeeInCents,
@@ -461,6 +627,7 @@ export async function expirePendingOrders(options?: {
             SET "reservedQuantity" = GREATEST("reservedQuantity" - ${item.quantity}, 0)
             WHERE "id" = ${item.lotId}
           `;
+          await releaseReservedTicketLotOption(tx, item.lotOptionId, item.quantity);
           released += item.quantity;
         }
 
@@ -544,6 +711,7 @@ export async function sendCartAbandonmentReminders(options?: {
           title: true,
           organization: {
             select: {
+              id: true,
               name: true,
               publicDomain: true,
               adminDomain: true
@@ -570,7 +738,10 @@ export async function sendCartAbandonmentReminders(options?: {
         buyerPhone: order.customer.phone,
         eventTitle: order.event.title,
         orderUrl: createPublicOrderUrl(order.code, order.event.organization),
-        expiresAt: order.expiresAt
+        expiresAt: order.expiresAt,
+        organizationId: order.event.organization?.id,
+        eventId: order.eventId,
+        orderId: order.id
       });
 
       await prisma.order.updateMany({
@@ -681,6 +852,7 @@ export async function expirePendingOrderByCode(code: string, organizationId?: st
           SET "reservedQuantity" = GREATEST("reservedQuantity" - ${item.quantity}, 0)
           WHERE "id" = ${item.lotId}
         `;
+        await releaseReservedTicketLotOption(tx, item.lotOptionId, item.quantity);
         releasedQuantity += item.quantity;
       }
 
@@ -787,6 +959,7 @@ export async function cancelPendingOrderByCode(
             SET "reservedQuantity" = GREATEST("reservedQuantity" - ${item.quantity}, 0)
             WHERE "id" = ${item.lotId}
           `;
+          await releaseReservedTicketLotOption(tx, item.lotOptionId, item.quantity);
           releasedQuantity += item.quantity;
         }
       }
@@ -905,6 +1078,7 @@ export async function refundPaidOrderByCode(
           SET "soldQuantity" = GREATEST("soldQuantity" - ${item.quantity}, 0)
           WHERE "id" = ${item.lotId}
         `;
+        await releaseSoldTicketLotOption(tx, item.lotOptionId, item.quantity);
         releasedQuantity += item.quantity;
       }
 
@@ -1038,6 +1212,7 @@ export async function getOrderByCode(code: string, organizationId?: string | nul
       tickets: {
         include: {
           lot: true,
+          lotOption: true,
           participant: true
         },
         orderBy: {
@@ -1046,7 +1221,8 @@ export async function getOrderByCode(code: string, organizationId?: string | nul
       },
       items: {
         include: {
-          lot: true
+          lot: true,
+          lotOption: true
         }
       }
     }

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createPublicOrderUrl, sendOrderPendingPaymentEmail } from "@/features/email/email.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { assertRateLimit } from "@/features/security/rate-limit";
+import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 import { checkoutOrderSchema } from "./order.schema";
 import { createCheckoutOrder } from "./order.service";
 
@@ -24,6 +25,14 @@ function checkoutValidationMessage(error: unknown) {
 
     if (field === "buyerDocument") {
       return "Preencha seu CPF.";
+    }
+
+    if (field === "buyerPostalCode") {
+      return "Preencha um CEP válido.";
+    }
+
+    if (field === "buyerCity") {
+      return "Preencha sua cidade.";
     }
 
     if (field === "items") {
@@ -115,12 +124,20 @@ function buildCheckoutReturnUrl(formData: FormData, eventSlug: string, message: 
   addQueryParam(params, "ref", formData.get("referrer"));
   addQueryParam(params, "landingPage", formData.get("landingPage"));
   addQueryParam(params, "churchName", formData.get("churchName"));
+  addQueryParam(params, "buyerPostalCode", formData.get("buyerPostalCode"));
+  addQueryParam(params, "buyerCity", formData.get("buyerCity"));
+  addQueryParam(params, "buyerState", formData.get("buyerState"));
 
   lotIds.forEach((lotId) => {
     const quantity = String(formData.get(`quantity_${lotId}`) ?? "0").trim();
+    const lotOptionId = String(formData.get(`lotOption_${lotId}`) ?? "").trim();
 
     params.append("lotId", lotId);
     params.set(`quantity_${lotId}`, quantity || "0");
+
+    if (lotOptionId) {
+      params.set(`lotOption_${lotId}`, lotOptionId);
+    }
   });
 
   return `/evento/${eventSlug}/checkout?${params.toString()}#cadastro`;
@@ -140,7 +157,7 @@ export async function createCheckoutOrderAction(formData: FormData) {
   try {
     assertRateLimit(`checkout:${ip}`, { limit: 15, windowMs: 60_000 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Aguarde alguns instantes e tente novamente.";
+    const message = getFriendlyErrorMessage(error, "Aguarde alguns instantes e tente novamente.");
     redirect(
       eventSlug && hasSelectedTickets(formData, lotIds)
         ? buildCheckoutReturnUrl(formData, eventSlug, message)
@@ -155,6 +172,9 @@ export async function createCheckoutOrderAction(formData: FormData) {
     buyerEmail: String(formData.get("buyerEmail") ?? "").trim(),
     buyerDocument: String(formData.get("buyerDocument") ?? "").trim(),
     buyerPhone: String(formData.get("buyerPhone") ?? "").trim() || undefined,
+    buyerPostalCode: String(formData.get("buyerPostalCode") ?? "").trim(),
+    buyerCity: String(formData.get("buyerCity") ?? "").trim(),
+    buyerState: String(formData.get("buyerState") ?? "").trim() || undefined,
     churchName: String(formData.get("churchName") ?? "").trim() || undefined,
     couponCode: String(formData.get("coupon") ?? "").trim() || undefined,
     utmSource: String(formData.get("utmSource") ?? "").trim() || undefined,
@@ -171,6 +191,7 @@ export async function createCheckoutOrderAction(formData: FormData) {
     hotelGuests: parseHotelGuests(formData, lotIds),
     items: lotIds.map((lotId) => ({
       lotId,
+      lotOptionId: String(formData.get(`lotOption_${lotId}`) ?? "").trim() || undefined,
       quantity: Number(formData.get(`quantity_${lotId}`) ?? 0)
     }))
   });
@@ -192,7 +213,7 @@ export async function createCheckoutOrderAction(formData: FormData) {
     const organizationContext = await getCurrentOrganizationContext();
     order = await createCheckoutOrder(parsed.data, organizationContext.organization.id);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Não foi possível criar o pedido. Tente novamente.";
+    const message = getFriendlyErrorMessage(error, "Não foi possível criar o pedido. Tente novamente.");
     redirect(buildCheckoutReturnUrl(formData, eventSlug || parsed.data.eventSlug, message));
   }
 

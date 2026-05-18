@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { CopyButton } from "@/components/forms/CopyButton";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { countEventPageVisits } from "@/features/analytics/page-visit.service";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { duplicateEventAction, updateEventStatusAction } from "@/features/events/event.actions";
@@ -320,9 +321,13 @@ export default async function EventManagementPage({ params, searchParams }: Even
   const leads = event.leads;
   const totalLeads = event._count.leads;
   const soldTickets = capacity.sold;
+  const paidTicketQuantity = paidOrders.reduce(
+    (sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0),
+    0
+  );
   const activeLots = event.lots.filter((lot) => lot.status === "ACTIVE").length;
   const availableTickets = Math.max(capacity.total - capacity.sold - capacity.reserved, 0);
-  const averageTicketInCents = paidOrders.length > 0 ? Math.round(revenueInCents / paidOrders.length) : 0;
+  const averageTicketInCents = paidTicketQuantity > 0 ? Math.round(revenueInCents / paidTicketQuantity) : 0;
   const conversionRate = percentage(paidOrders.length, totalLeads);
   const daysUntilEvent = getDaysUntil(event.startsAt);
   const viewsToThankYou = leads.filter((lead) => lead.thankYouViewedAt).length;
@@ -367,9 +372,9 @@ export default async function EventManagementPage({ params, searchParams }: Even
       icon: "money" as const
     },
     {
-      label: "Ticket médio",
+      label: "Ticket médio por ingresso",
       value: formatCurrency(averageTicketInCents),
-      note: "Média das compras aprovadas",
+      note: "Média por ingresso vendido",
       icon: "chart" as const
     },
     {
@@ -399,7 +404,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
       headerVariant="minimal"
       hideSidebarIntro
     >
-      {typeof query.eventError === "string" ? <div className="errorBox spacedSection">{query.eventError}</div> : null}
+      {typeof query.eventError === "string" ? <ErrorNotice message={query.eventError} className="spacedSection" /> : null}
       {query.eventSaved === "1" ? <div className="successBox spacedSection">Evento atualizado com sucesso.</div> : null}
 
       <section className="eventOverviewShell">

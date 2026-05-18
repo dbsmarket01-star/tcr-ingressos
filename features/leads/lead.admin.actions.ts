@@ -12,6 +12,7 @@ import { getCompanySettingsByOrganizationId } from "@/features/settings/company-
 import { processLeadEmailCampaignInBackground } from "@/features/leads/lead-email-campaign-processor.service";
 import { savePublicImageUpload } from "@/features/uploads/local-upload.service";
 import { listEventLeadsForBroadcast, reconcileInvalidLeadEmailCampaigns } from "@/features/leads/lead.service";
+import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 
 function splitIntoBatches<T>(items: T[], size: number) {
   const batches: T[][] = [];
@@ -153,7 +154,7 @@ export async function sendLeadBroadcastAction(formData: FormData) {
   } catch (error) {
     redirect(
       `/admin/events/${eventId}/leads?error=${encodeURIComponent(
-        error instanceof Error ? error.message : "Não foi possível salvar a imagem do e-mail."
+        getFriendlyErrorMessage(error, "Não foi possível salvar a imagem do e-mail.")
       )}`
     );
   }

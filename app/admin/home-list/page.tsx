@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HomeListStatus } from "@prisma/client";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { PrintButton } from "@/components/forms/PrintButton";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { updateHomeListEntryAction } from "@/features/hospitality/home-list.actions";
 import { getHomeListFilterOptions, listHomeListEntries } from "@/features/hospitality/home-list.service";
@@ -74,7 +75,7 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
       description="Hospedagem por evento e hotel, gerada automaticamente após pagamento aprovado."
     >
       {saved ? <div className="successBox spacedSection">Registro atualizado com sucesso.</div> : null}
-      {error ? <div className="errorBox spacedSection">{error}</div> : null}
+      {error ? <ErrorNotice message={error} className="spacedSection" /> : null}
 
       <section className="card homeListToolbar">
         <form className="homeListFilters" method="get">
@@ -225,7 +226,7 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
                   </label>
                   <label className="field">
                     <span>CPF</span>
-                    <input name="guest1Document" defaultValue={entry.guest1Document} required />
+                    <input name="guest1Document" defaultValue={entry.guest1Document} placeholder="123.456.789-43" required />
                   </label>
                   <label className="field">
                     <span>Data de nascimento</span>
@@ -237,7 +238,7 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
                   </label>
                   <label className="field">
                     <span>Telefone</span>
-                    <input name="guest1Phone" defaultValue={entry.guest1Phone} required />
+                    <input name="guest1Phone" defaultValue={entry.guest1Phone} placeholder="1194444-2222" required />
                   </label>
                 </section>
                 <section>
@@ -248,7 +249,7 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
                   </label>
                   <label className="field">
                     <span>CPF</span>
-                    <input name="guest2Document" defaultValue={entry.guest2Document} required />
+                    <input name="guest2Document" defaultValue={entry.guest2Document} placeholder="123.456.789-43" required />
                   </label>
                   <label className="field">
                     <span>Data de nascimento</span>

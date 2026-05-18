@@ -12,6 +12,10 @@ function formatDate(value?: Date | null) {
   return value ? formatDateTime(value) : "";
 }
 
+function formatLotDisplayName(lotName: string, optionLabel?: string | null) {
+  return optionLabel ? `${lotName} - ${optionLabel}` : lotName;
+}
+
 export async function GET(request: Request) {
   const admin = await requirePermission("TICKETS");
   const url = new URL(request.url);
@@ -41,7 +45,7 @@ export async function GET(request: Request) {
     ticket.code,
     ticket.status,
     ticket.event.title,
-    ticket.lot.name,
+    formatLotDisplayName(ticket.lot.name, ticket.lotOption?.label),
     ticket.order.code,
     ticket.order.customer.name,
     ticket.order.customer.email,

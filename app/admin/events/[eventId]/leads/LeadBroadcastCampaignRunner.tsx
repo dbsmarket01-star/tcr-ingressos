@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { getFriendlyError } from "@/lib/friendly-error";
 
 type CampaignState = {
   id: string;
@@ -42,6 +43,8 @@ function getStatusLabel(status: string) {
 export function LeadBroadcastCampaignRunner({ initialCampaign }: LeadBroadcastCampaignRunnerProps) {
   const [campaign, setCampaign] = useState(initialCampaign);
   const [requestError, setRequestError] = useState<string | null>(null);
+  const displayError = campaign.lastError || requestError;
+  const friendlyError = displayError ? getFriendlyError(displayError) : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -176,8 +179,14 @@ export function LeadBroadcastCampaignRunner({ initialCampaign }: LeadBroadcastCa
           <strong>{progressPercentage}%</strong>
         </div>
       </div>
-      {campaign.lastError || requestError ? (
-        <div className="errorBox inlineFeedbackBox">{campaign.lastError || requestError}</div>
+      {friendlyError ? (
+        <div className="errorNotice inlineFeedbackBox" role="alert">
+          <span aria-hidden="true">!</span>
+          <div>
+            <strong>{friendlyError.title}</strong>
+            <p>{friendlyError.message}</p>
+          </div>
+        </div>
       ) : null}
       {campaign.status === "COMPLETED" || campaign.status === "COMPLETED_WITH_ERRORS" ? (
         <div className="successBox inlineFeedbackBox">

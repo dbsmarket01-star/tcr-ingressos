@@ -1,0 +1,10 @@
+.git
+.vercel
+node_modules
+.next
+tmp
+tmp-deriveddata-macos
+mobile
+guerra-web
+*.tsbuildinfo
+.DS_Store

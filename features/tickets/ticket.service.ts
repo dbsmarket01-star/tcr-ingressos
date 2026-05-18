@@ -19,6 +19,7 @@ export async function getTicketByCode(code: string, organizationId?: string | nu
     include: {
       event: true,
       lot: true,
+      lotOption: true,
       order: {
         include: {
           customer: true

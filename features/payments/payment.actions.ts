@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { assertRateLimit } from "@/features/security/rate-limit";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { resendTicketsEmailByOrderCode } from "@/features/support/support.service";
+import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 import { creditCardPaymentSchema } from "./credit-card.schema";
 import {
   approvePaymentByOrderCode,
@@ -84,7 +85,7 @@ export async function startPaymentAction(formData: FormData) {
     checkoutUrl = payment.checkoutUrl;
     revalidatePath(`/pedido/${orderCode}`);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Não foi possível iniciar o pagamento.";
+    const message = getFriendlyErrorMessage(error, "Não foi possível iniciar o pagamento.");
     redirect(paymentErrorRedirectPath(orderCode, message, "pix"));
   }
 
@@ -133,7 +134,7 @@ export async function syncAsaasPaymentAction(formData: FormData) {
     revalidatePath("/admin/orders");
     revalidatePath("/admin/tickets");
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Não foi possível verificar o pagamento.";
+    const message = getFriendlyErrorMessage(error, "Não foi possível verificar o pagamento.");
     redirect(paymentErrorRedirectPath(orderCode, message, "pix"));
   }
 
@@ -174,7 +175,7 @@ export async function payWithCreditCardAction(formData: FormData) {
     revalidatePath("/admin/orders");
     revalidatePath("/admin/tickets");
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Não foi possível pagar com cartão.";
+    const message = getFriendlyErrorMessage(error, "Não foi possível pagar com cartão.");
     redirect(paymentErrorRedirectPath(parsed.data.orderCode, message, "card"));
   }
 
@@ -198,7 +199,7 @@ export async function resendApprovedTicketsEmailAction(formData: FormData) {
     revalidatePath(`/pedido/${orderCode}`);
     redirectPath = ticketEmailRedirectPath(orderCode, "sent", `Ingressos reenviados para ${result.email}.`);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Não foi possível reenviar os ingressos por e-mail.";
+    const message = getFriendlyErrorMessage(error, "Não foi possível reenviar os ingressos por e-mail.");
     redirectPath = ticketEmailRedirectPath(orderCode, "error", message);
   }
 

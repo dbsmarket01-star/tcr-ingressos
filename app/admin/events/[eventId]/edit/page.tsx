@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { ImageUploadField } from "@/components/forms/ImageUploadField";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { updateEventAction } from "@/features/events/event.actions";
 import { getEventForManagement } from "@/features/events/event.service";
@@ -15,13 +16,16 @@ type EditEventPageProps = {
   params: Promise<{
     eventId: string;
   }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function EditEventPage({ params }: EditEventPageProps) {
+export default async function EditEventPage({ params, searchParams }: EditEventPageProps) {
   const admin = await requirePermission("EVENTS");
   const { eventId } = await params;
+  const query = searchParams ? await searchParams : {};
   await requireEventAccess(eventId);
   const event = await getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin));
+  const error = typeof query.error === "string" ? query.error : null;
 
   if (!event) {
     notFound();
@@ -67,6 +71,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
       description="Atualize primeiro o essencial do evento e deixe os blocos avançados recolhidos."
     >
       <form action={updateEventAction} className="card form wideForm">
+        {error ? <ErrorNotice message={error} /> : null}
         <input type="hidden" name="eventId" value={event.id} />
         <input type="hidden" name="currentBannerUrl" value={event.bannerUrl ?? ""} />
         <input type="hidden" name="currentEventMapImageUrl" value={event.eventMapImageUrl ?? ""} />
@@ -171,6 +176,15 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           </div>
           <div className="grid twoColumns">
             <label className="field">
+              <span>Abertura dos portões</span>
+              <input
+                name="doorsOpenAt"
+                type="datetime-local"
+                defaultValue={formatDateTimeInput(event.doorsOpenAt)}
+              />
+              <small>Opcional. Use quando a entrada abre antes do início.</small>
+            </label>
+            <label className="field">
               <span>Início do evento</span>
               <input
                 name="startsAt"
@@ -179,6 +193,8 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
                 required
               />
             </label>
+          </div>
+          <div className="grid twoColumns">
             <label className="field">
               <span>Fim do evento</span>
               <input
@@ -195,6 +211,11 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
           <label className="field">
             <span>Endereço</span>
             <input name="venueAddress" defaultValue={event.venueAddress} required />
+          </label>
+          <label className="field">
+            <span>Link do Google Maps</span>
+            <input name="googleMapsUrl" defaultValue={event.googleMapsUrl ?? ""} placeholder="https://maps.google.com/..." />
+            <small>Opcional. Quando preenchido, mostra “Como chegar ao evento” na página pública.</small>
           </label>
           <div className="grid twoColumns">
             <label className="field">

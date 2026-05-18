@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 import { platformLeadSchema } from "./platform-lead.schema";
 import { createOrUpdatePlatformLead } from "./platform-lead.service";
 
@@ -51,7 +52,7 @@ export async function createPlatformLeadAction(formData: FormData) {
     }
   } catch (error) {
     redirect(
-      `/?error=${encodeURIComponent(error instanceof Error ? error.message : "Não foi possível registrar seu interesse agora.")}#quero-minha-bilheteria`
+      `/?error=${encodeURIComponent(getFriendlyErrorMessage(error, "Não foi possível registrar seu interesse agora."))}#quero-minha-bilheteria`
     );
   }
 

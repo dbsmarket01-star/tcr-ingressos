@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { loginAction } from "@/features/auth/auth.actions";
 import { getCurrentAdmin } from "@/features/auth/auth.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
@@ -57,9 +58,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </div>
           ) : null}
 
-          {hasError ? (
-            <div className="errorBox">E-mail ou senha inválidos. Confira os dados e tente novamente.</div>
-          ) : null}
+          {hasError ? <ErrorNotice message="E-mail ou senha inválidos. Confira os dados e tente novamente." /> : null}
 
           {wasReset ? (
             <div className="successBox">Senha redefinida com sucesso. Entre com a nova senha.</div>

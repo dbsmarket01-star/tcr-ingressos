@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
 import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getBuyerProfile } from "@/features/customer-auth/google-buyer.service";
 import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrganization } from "@/features/events/event.service";
 import { createCheckoutOrderAction } from "@/features/orders/order.actions";
@@ -14,6 +15,7 @@ import { getCompanySettingsByOrganizationId } from "@/features/settings/company-
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { getPublicEventBranding } from "@/lib/event-branding";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { BuyerLocationFields } from "../BuyerLocationFields";
 import { MetaTrackingFields } from "../MetaTrackingFields";
 
 export const dynamic = "force-dynamic";
@@ -63,6 +65,24 @@ function parseQuantity(value: string | string[] | undefined) {
   return Math.floor(parsed);
 }
 
+function getAvailableTypeOptions<T extends { status: string; soldQuantity: number; reservedQuantity: number }>(options: T[]) {
+  return options.filter((option) => option.status === "ACTIVE" && option.soldQuantity + option.reservedQuantity === 0);
+}
+
+function getAvailableLotQuantity(lot: {
+  hasTypeOptions: boolean;
+  totalQuantity: number;
+  soldQuantity: number;
+  reservedQuantity: number;
+  typeOptions: Array<{ status: string; soldQuantity: number; reservedQuantity: number }>;
+}) {
+  if (lot.hasTypeOptions) {
+    return getAvailableTypeOptions(lot.typeOptions).length;
+  }
+
+  return Math.max(lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity, 0);
+}
+
 export async function generateMetadata({ params }: Pick<CheckoutPageProps, "params">): Promise<Metadata> {
   const { slug } = await params;
   const organizationContext = await getCurrentOrganizationContext();
@@ -100,7 +120,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
   const activeLots = event.lots.filter((lot) => {
     const startsOk = !lot.salesStartsAt || lot.salesStartsAt <= now;
     const endsOk = !lot.salesEndsAt || lot.salesEndsAt >= now;
-    const hasStock = lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity > 0;
+    const hasStock = getAvailableLotQuantity(lot) > 0;
     return startsOk && endsOk && hasStock;
   });
   const requestedLotIds = new Set(allParams(query.lotId).map((lotId) => lotId.trim()).filter(Boolean));
@@ -109,10 +129,14 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
       return [];
     }
 
-    const available = lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity;
+    const available = getAvailableLotQuantity(lot);
     const maxQuantity = Math.max(0, Math.min(lot.maxPerOrder, available));
-    const requestedQuantity = parseQuantity(query[`quantity_${lot.id}`]);
-    const quantity = Math.min(Math.max(requestedQuantity, 0), maxQuantity);
+    const selectedTypeOptionId = firstParam(query[`lotOption_${lot.id}`])?.trim() || "";
+    const selectedTypeOption = lot.hasTypeOptions
+      ? getAvailableTypeOptions(lot.typeOptions).find((option) => option.id === selectedTypeOptionId) || null
+      : null;
+    const requestedQuantity = lot.hasTypeOptions ? (selectedTypeOption ? 1 : 0) : parseQuantity(query[`quantity_${lot.id}`]);
+    const quantity = lot.hasTypeOptions ? requestedQuantity : Math.min(Math.max(requestedQuantity, 0), maxQuantity);
 
     if (quantity <= 0) {
       return [];
@@ -123,6 +147,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
 
     return [{
       lot,
+      lotOption: selectedTypeOption,
       quantity,
       serviceFeeInCents,
       subtotalInCents,
@@ -137,6 +162,10 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
   const checkoutError = typeof query.checkoutError === "string" ? query.checkoutError : null;
   const tracking = getTrackingParamsFromSearch(query, `/evento/${event.slug}`);
   const totalQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
+  const totalQrCodes = selectedItems.reduce(
+    (sum, item) => sum + item.quantity * Math.max(item.lot.admissionsPerUnit, 1),
+    0
+  );
   const hotelItems = selectedItems.filter((item) => item.lot.hasHotel);
   const asksChurchName = selectedItems.some((item) => item.lot.churchQuestionEnabled);
   const ticketsTotalInCents = selectedItems.reduce((sum, item) => sum + item.subtotalInCents, 0);
@@ -191,10 +220,14 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                     <strong>
                       {item.quantity}x {item.lot.name}
                     </strong>
+                    {item.lotOption ? <span>{item.lotOption.label}</span> : null}
                     <span>
                       {formatCurrency(item.lot.priceInCents)}
                       {item.serviceFeeInCents > 0 ? ` + ${formatCurrency(item.serviceFeeInCents)} taxa` : ""}
                     </span>
+                    {item.lot.admissionsPerUnit > 1 ? (
+                      <small>{item.quantity * item.lot.admissionsPerUnit} QR Codes individuais inclusos</small>
+                    ) : null}
                   </div>
                   <strong>{formatCurrency(item.totalInCents)}</strong>
                 </div>
@@ -242,13 +275,13 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
               <span className="checkoutStepEyebrow">Etapa 2 de 2</span>
               <h2>Dados do comprador</h2>
               <p>
-                Informe os dados de quem receberá {totalQuantity > 1 ? "os ingressos" : "o ingresso"}. Você poderá
+                Informe os dados de quem receberá {totalQrCodes > 1 ? "os QR Codes" : totalQuantity > 1 ? "os ingressos" : "o ingresso"}. Você poderá
                 revisar o pedido antes do pagamento.
               </p>
             </div>
 
             <form id="checkoutRegistrationForm" action={createCheckoutOrderAction} className="form checkoutRegistrationForm">
-              {checkoutError ? <div className="errorBox">{checkoutError}</div> : null}
+              <ErrorNotice message={checkoutError} />
               <input type="hidden" name="eventId" value={event.id} />
               <input type="hidden" name="eventSlug" value={event.slug} />
               <input type="hidden" name="utmSource" value={tracking.utmSource ?? ""} />
@@ -261,6 +294,9 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
               {selectedItems.map((item) => (
                 <div key={item.lot.id}>
                   <input type="hidden" name="lotId" value={item.lot.id} />
+                  {item.lotOption ? (
+                    <input type="hidden" name={`lotOption_${item.lot.id}`} value={item.lotOption.id} />
+                  ) : null}
                   <input type="hidden" name={`quantity_${item.lot.id}`} value={item.quantity} />
                 </div>
               ))}
@@ -305,6 +341,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                     name="buyerDocument"
                     autoComplete="off"
                     inputMode="numeric"
+                    placeholder="123.456.789-43"
                     required
                   />
                 </label>
@@ -316,9 +353,15 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                     autoComplete="tel"
                     inputMode="tel"
                     defaultValue={buyerProfile?.phone || ""}
+                    placeholder="1194444-2222"
                   />
                   <small>Usado apenas para suporte do pedido, caso seja necessário.</small>
                 </label>
+                <BuyerLocationFields
+                  defaultCity={firstParam(query.buyerCity) || ""}
+                  defaultPostalCode={firstParam(query.buyerPostalCode) || ""}
+                  defaultState={firstParam(query.buyerState) || ""}
+                />
                 {asksChurchName ? (
                   <label className="field">
                     <span>Você é de alguma igreja? Qual? <small>(opcional)</small></span>
@@ -371,7 +414,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                                 </label>
                                 <label className="field">
                                   <span>CPF</span>
-                                  <input name={`${prefix}_guest1Document`} inputMode="numeric" required />
+                                  <input name={`${prefix}_guest1Document`} inputMode="numeric" placeholder="123.456.789-43" required />
                                 </label>
                                 <label className="field">
                                   <span>Data de nascimento</span>
@@ -393,6 +436,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                                     type="tel"
                                     inputMode="tel"
                                     defaultValue={buyerProfile?.phone || ""}
+                                    placeholder="1194444-2222"
                                     required
                                   />
                                 </label>
@@ -405,7 +449,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                                 </label>
                                 <label className="field">
                                   <span>CPF</span>
-                                  <input name={`${prefix}_guest2Document`} inputMode="numeric" required />
+                                  <input name={`${prefix}_guest2Document`} inputMode="numeric" placeholder="123.456.789-43" required />
                                 </label>
                                 <label className="field">
                                   <span>Data de nascimento</span>

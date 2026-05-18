@@ -35,7 +35,58 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
     notFound();
   }
 
-  const buttonText = "ENTRAR AGORA NO GRUPO E GARANTIR 30% OFF";
+  const hasCustomThankYouCopy = Boolean(
+    event.leadCaptureThankYouTitle || event.leadCaptureThankYouDescription || event.leadCaptureThankYouButtonText
+  );
+  const buttonText = event.leadCaptureThankYouButtonText || "ENTRAR AGORA NO GRUPO E GARANTIR 30% OFF";
+  const headlinePrefix = hasCustomThankYouCopy ? "Cadastro confirmado" : "FALTA SÓ 1 PASSO PARA";
+  const headlineHighlight = hasCustomThankYouCopy
+    ? event.title
+    : "GARANTIR SEU DESCONTO!";
+  const subheadline =
+    event.leadCaptureThankYouDescription || "Seu cadastro foi concluído com sucesso.";
+  const warningTitle = hasCustomThankYouCopy ? "PRÓXIMO PASSO:" : "ATENÇÃO:";
+  const warningText = hasCustomThankYouCopy
+    ? "Fique atento ao e-mail e telefone cadastrados para receber os próximos avisos oficiais."
+    : "Se você sair desta página, pode perder o acesso ao grupo.";
+  const warningSupportText = hasCustomThankYouCopy
+    ? "Quando o grupo oficial estiver disponível, entre pelo botão desta página."
+    : "Entre agora e garanta sua participação.";
+  const thankYouBenefits = hasCustomThankYouCopy
+    ? [
+        {
+          icon: "1",
+          title: "Lista oficial",
+          description: "Seu cadastro foi salvo para a Elo Conference Campinas."
+        },
+        {
+          icon: "2",
+          title: "Avisos antecipados",
+          description: "Você receberá as próximas informações nos dados informados."
+        },
+        {
+          icon: "3",
+          title: "Prioridade",
+          description: "Acompanhe a abertura dos ingressos e condições oficiais."
+        }
+      ]
+    : [
+        {
+          icon: "%",
+          title: "Receba até 30% de desconto",
+          description: "Desconto exclusivo para membros do grupo oficial."
+        },
+        {
+          icon: "◔",
+          title: "Acesso antecipado aos ingressos",
+          description: "Seja o primeiro a garantir o seu ingresso."
+        },
+        {
+          icon: "★",
+          title: "Prioridade antes da abertura oficial",
+          description: "Tenha prioridade e não fique de fora."
+        }
+      ];
   const leadEventId = typeof query.leid === "string" ? query.leid : null;
   const leadId = typeof query.lead === "string" ? query.lead : null;
   const tracking = getTrackingParamsFromSearch(query, `/lista/${event.slug}/obrigado`);
@@ -96,48 +147,32 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
           ✓
         </div>
         <h1 className="leadThankYouHeadline">
-          <span>FALTA SÓ 1 PASSO PARA</span>
-          <strong>GARANTIR SEU DESCONTO!</strong>
+          <span>{headlinePrefix}</span>
+          <strong>{headlineHighlight}</strong>
         </h1>
-        <p className="leadThankYouSubheadline">Seu cadastro foi concluído com sucesso.</p>
+        <p className="leadThankYouSubheadline">{subheadline}</p>
         <div className="leadThankYouWarning">
           <span className="leadThankYouWarningIcon" aria-hidden="true">
             ⚠️
           </span>
           <div>
-            <strong>ATENÇÃO:</strong> Se você sair desta página, pode perder o acesso ao grupo.
+            <strong>{warningTitle}</strong> {warningText}
             <br />
-            <span>Entre agora e garanta sua participação.</span>
+            <span>{warningSupportText}</span>
           </div>
         </div>
         <div className="leadThankYouBenefits">
-          <article>
-            <span className="leadThankYouBenefitIcon" aria-hidden="true">
-              %
-            </span>
-            <div>
-              <strong>Receba até 30% de desconto</strong>
-              <small>Desconto exclusivo para membros do grupo oficial.</small>
-            </div>
-          </article>
-          <article>
-            <span className="leadThankYouBenefitIcon" aria-hidden="true">
-              ◔
-            </span>
-            <div>
-              <strong>Acesso antecipado aos ingressos</strong>
-              <small>Seja o primeiro a garantir o seu ingresso.</small>
-            </div>
-          </article>
-          <article>
-            <span className="leadThankYouBenefitIcon" aria-hidden="true">
-              ★
-            </span>
-            <div>
-              <strong>Prioridade antes da abertura oficial</strong>
-              <small>Tenha prioridade e não fique de fora.</small>
-            </div>
-          </article>
+          {thankYouBenefits.map((benefit) => (
+            <article key={benefit.title}>
+              <span className="leadThankYouBenefitIcon" aria-hidden="true">
+                {benefit.icon}
+              </span>
+              <div>
+                <strong>{benefit.title}</strong>
+                <small>{benefit.description}</small>
+              </div>
+            </article>
+          ))}
         </div>
         {event.leadCaptureWhatsappGroupUrl ? (
           <WhatsAppGroupRedirect
@@ -149,12 +184,16 @@ export default async function LeadCaptureThankYouPage({ params, searchParams }: 
         ) : (
           <div className="leadThankYouAction">
             <div className="infoBox">
-              Adicione o link do grupo de WhatsApp na captação do evento para liberar este último passo.
+              {hasCustomThankYouCopy
+                ? "Cadastro recebido. Você receberá os próximos avisos no e-mail e telefone informados."
+                : "Adicione o link do grupo de WhatsApp na captação do evento para liberar este último passo."}
             </div>
           </div>
         )}
         <small className="leadThankYouClosing">
-          🔒 O grupo pode ser fechado a qualquer momento após atingir o limite de vagas.
+          {hasCustomThankYouCopy
+            ? "Fique atento aos próximos comunicados oficiais da Elo Conference."
+            : "🔒 O grupo pode ser fechado a qualquer momento após atingir o limite de vagas."}
         </small>
       </section>
     </main>

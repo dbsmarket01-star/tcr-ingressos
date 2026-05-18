@@ -1,0 +1,1 @@
+ALTER TABLE "Event" ADD COLUMN "doorsOpenAt" TIMESTAMP(3);

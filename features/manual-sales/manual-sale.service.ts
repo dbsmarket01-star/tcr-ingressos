@@ -1,4 +1,4 @@
-import { OrderStatus, PaymentProvider, PaymentStatus, Prisma } from "@prisma/client";
+import { OrderStatus, PaymentProvider, PaymentStatus, Prisma, TicketLotOptionStatus } from "@prisma/client";
 import { createAuditLog } from "@/features/audit/audit.service";
 import { createHomeListEntriesForApprovedOrder } from "@/features/hospitality/home-list.service";
 import { prisma } from "@/lib/prisma";
@@ -22,6 +22,7 @@ export type ManualSaleHotelGuestInput = {
 export type ManualSaleInput = {
   eventId: string;
   lotId: string;
+  lotOptionId?: string | null;
   quantity: number;
   buyerName: string;
   buyerEmail: string;
@@ -148,8 +149,20 @@ export async function listManualSaleOptions(organizationId: string, allowedEvent
           soldQuantity: true,
           reservedQuantity: true,
           hasHotel: true,
+          hasTypeOptions: true,
+          admissionsPerUnit: true,
           hotelId: true,
           churchQuestionEnabled: true,
+          typeOptions: {
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+            select: {
+              id: true,
+              label: true,
+              status: true,
+              soldQuantity: true,
+              reservedQuantity: true
+            }
+          },
           hotel: {
             select: {
               id: true,
@@ -203,6 +216,7 @@ export async function createManualSale(
           eventId: event.id
         },
         include: {
+          typeOptions: true,
           hotel: {
             select: {
               id: true,
@@ -218,7 +232,39 @@ export async function createManualSale(
         throw new Error("Ingresso/lote nao encontrado para este evento.");
       }
 
-      const available = lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity;
+      let lotOptionId: string | null = null;
+      let lotOptionLabel: string | null = null;
+
+      if (lot.hasTypeOptions) {
+        if (quantity !== 1) {
+          throw new Error("Ingressos com tipos/camarotes permitem apenas 1 unidade por venda manual.");
+        }
+
+        if (!input.lotOptionId) {
+          throw new Error("Selecione o tipo/camarote vendido.");
+        }
+
+        const lotOption = lot.typeOptions.find((option) => option.id === input.lotOptionId);
+
+        if (!lotOption || lotOption.status !== TicketLotOptionStatus.ACTIVE) {
+          throw new Error("Tipo/camarote nao encontrado ou pausado.");
+        }
+
+        if (lotOption.soldQuantity + lotOption.reservedQuantity >= 1) {
+          throw new Error("Este tipo/camarote ja foi reservado ou vendido.");
+        }
+
+        lotOptionId = lotOption.id;
+        lotOptionLabel = lotOption.label;
+      }
+
+      const available = lot.hasTypeOptions
+        ? lot.typeOptions.filter(
+            (option) =>
+              option.status === TicketLotOptionStatus.ACTIVE &&
+              option.soldQuantity + option.reservedQuantity < 1
+          ).length
+        : lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity;
 
       if (available < quantity) {
         throw new Error(`Este lote tem apenas ${Math.max(available, 0)} ingresso(s) disponivel(is).`);
@@ -256,6 +302,27 @@ export async function createManualSale(
 
       if (updatedRows !== 1) {
         throw new Error("Nao foi possivel reservar estoque para a venda manual.");
+      }
+
+      if (lotOptionId) {
+        const updatedOptionRows = await tx.ticketLotOption.updateMany({
+          where: {
+            id: lotOptionId,
+            lotId: lot.id,
+            status: TicketLotOptionStatus.ACTIVE,
+            soldQuantity: 0,
+            reservedQuantity: 0
+          },
+          data: {
+            soldQuantity: {
+              increment: 1
+            }
+          }
+        });
+
+        if (updatedOptionRows.count !== 1) {
+          throw new Error("Nao foi possivel reservar este tipo/camarote.");
+        }
       }
 
       const customer =
@@ -317,7 +384,9 @@ export async function createManualSale(
             create: [
               {
                 lotId: lot.id,
+                lotOptionId,
                 quantity,
+                admissionsPerUnit: Math.max(lot.admissionsPerUnit, 1),
                 unitPriceInCents,
                 serviceFeeBps: 0,
                 serviceFeeInCents,
@@ -361,7 +430,9 @@ export async function createManualSale(
         throw new Error("Nao foi possivel criar o item da venda manual.");
       }
 
-      for (let index = 0; index < quantity; index += 1) {
+      const ticketsToIssue = quantity * Math.max(lot.admissionsPerUnit, 1);
+
+      for (let index = 0; index < ticketsToIssue; index += 1) {
         await tx.ticket.create({
           data: {
             code: createTicketCode(),
@@ -370,6 +441,7 @@ export async function createManualSale(
             orderItemId: orderItem.id,
             eventId: event.id,
             lotId: lot.id,
+            lotOptionId,
             status: "ACTIVE",
             issuedAt: paidAt
           }
@@ -401,6 +473,7 @@ export async function createManualSale(
       return {
         orderCode: order.code,
         eventSlug: event.slug,
+        lotOptionLabel,
         homeListEntriesCreated
       };
     },
