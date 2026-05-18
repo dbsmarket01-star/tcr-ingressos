@@ -181,11 +181,16 @@ function createInitialLayout(initialValue?: string | null): EventMapLayout {
 }
 
 function blockStyle(block: EventMapBlock, layout: EventMapLayout) {
+  const textLength = Math.max(block.label.length, 6);
+  const readableSize = Math.min(22, Math.max(8, Math.min(block.height * 0.28, (block.width / textLength) * 1.7)));
+
   return {
     "--map-block-color": block.color,
+    "--map-block-font-size": `${readableSize}px`,
     height: `${(block.height / layout.height) * 100}%`,
     left: `${(block.x / layout.width) * 100}%`,
     top: `${(block.y / layout.height) * 100}%`,
+    transform: `rotate(${block.rotation ?? 0}deg)`,
     width: `${(block.width / layout.width) * 100}%`
   } as CSSProperties;
 }
@@ -228,7 +233,8 @@ export function EventMapEditor({ initialValue, mapSources = [] }: EventMapEditor
       x: Math.max(20, 80 + layout.blocks.length * 20) % 760,
       y: Math.max(20, 90 + layout.blocks.length * 28) % 520,
       width: preset.width,
-      height: preset.height
+      height: preset.height,
+      rotation: 0
     };
 
     setLayout((current) => ({ ...current, blocks: [...current.blocks, block] }));
@@ -410,13 +416,13 @@ export function EventMapEditor({ initialValue, mapSources = [] }: EventMapEditor
             {previewMode ? "Editar mapa" : "Visualizar mapa"}
           </button>
           <button className="secondaryButton smallButton" onClick={duplicateSelectedBlock} type="button" disabled={!selectedBlock}>
-            Duplicar bloco
+            Duplicar
           </button>
           <button className="secondaryButton smallButton" onClick={clearMap} type="button">
-            Limpar mapa
+            Limpar
           </button>
           <button className="button smallButton" type="submit">
-            Salvar mapa
+            Salvar
           </button>
         </div>
 
@@ -493,6 +499,32 @@ export function EventMapEditor({ initialValue, mapSources = [] }: EventMapEditor
                 <span>Altura</span>
                 <input type="number" value={selectedBlock.height} onChange={(event) => updateBlock(selectedBlock.id, { height: Number(event.target.value) })} />
               </label>
+              <label>
+                <span>Rotação</span>
+                <input type="number" value={selectedBlock.rotation ?? 0} onChange={(event) => updateBlock(selectedBlock.id, { rotation: Number(event.target.value) })} />
+              </label>
+            </div>
+            <label>
+              <span>Girar bloco</span>
+              <input
+                max={180}
+                min={-180}
+                step={1}
+                type="range"
+                value={selectedBlock.rotation ?? 0}
+                onChange={(event) => updateBlock(selectedBlock.id, { rotation: Number(event.target.value) })}
+              />
+            </label>
+            <div className="eventMapEditorQuickActions">
+              <button className="secondaryButton smallButton" onClick={() => updateBlock(selectedBlock.id, { rotation: 0 })} type="button">
+                0°
+              </button>
+              <button className="secondaryButton smallButton" onClick={() => updateBlock(selectedBlock.id, { rotation: -90 })} type="button">
+                -90°
+              </button>
+              <button className="secondaryButton smallButton" onClick={() => updateBlock(selectedBlock.id, { rotation: 90 })} type="button">
+                90°
+              </button>
             </div>
             <label>
               <span>Lugares estimados</span>

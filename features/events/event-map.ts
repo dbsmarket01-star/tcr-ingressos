@@ -11,6 +11,7 @@ export type EventMapBlock = {
   y: number;
   width: number;
   height: number;
+  rotation?: number;
   seats?: number;
   description?: string;
 };
@@ -71,6 +72,7 @@ function normalizeBlock(block: unknown, index: number): EventMapBlock | null {
     y: clampNumber(row.y, 0, 1000, 60),
     width: clampNumber(row.width, 40, 1000, 220),
     height: clampNumber(row.height, 28, 1000, 90),
+    rotation: clampNumber(row.rotation, -180, 180, 0),
     ...(seats !== undefined ? { seats } : {}),
     ...(description ? { description } : {})
   };

@@ -17,11 +17,16 @@ const kindLabels: Record<string, string> = {
 };
 
 function buildBlockStyle(block: EventMapLayout["blocks"][number], layout: EventMapLayout) {
+  const textLength = Math.max(block.label.length, 6);
+  const readableSize = Math.min(34, Math.max(10, Math.min(block.height * 0.32, (block.width / textLength) * 1.85)));
+
   return {
     "--map-block-color": block.color,
+    "--map-block-font-size": `${readableSize}px`,
     height: `${(block.height / layout.height) * 100}%`,
     left: `${(block.x / layout.width) * 100}%`,
     top: `${(block.y / layout.height) * 100}%`,
+    transform: `rotate(${block.rotation ?? 0}deg)`,
     width: `${(block.width / layout.width) * 100}%`
   } as CSSProperties;
 }

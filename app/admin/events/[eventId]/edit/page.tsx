@@ -773,6 +773,12 @@ export default async function EditEventPage({ params, searchParams }: EditEventP
               cropFieldName="eventMapCrop"
             />
           </div>
+          {event.eventMapImageUrl ? (
+            <label className="field checkboxField removeMapImageField">
+              <input name="removeEventMapImage" type="checkbox" />
+              <span>Excluir imagem antiga do mapa e deixar apenas o mapa modular, se ele estiver configurado</span>
+            </label>
+          ) : null}
           <div className="mediaSizingGuide">
             <div>
               <span>Mapa de setores</span>

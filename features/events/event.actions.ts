@@ -234,6 +234,7 @@ export async function updateEventAction(formData: FormData) {
   let mapUploadUrl: string | null = null;
   let seoUploadUrl: string | null = null;
   let leadHeroUploadUrl: string | null = null;
+  const shouldRemoveEventMapImage = String(formData.get("removeEventMapImage") ?? "") === "on";
 
   try {
     bannerUploadUrl = await savePublicImageUpload(formData.get("bannerFile") as File | null, `events/${slug}/banner`);
@@ -265,10 +266,12 @@ export async function updateEventAction(formData: FormData) {
     bannerPosition: String(formData.get("bannerPosition") ?? "center center"),
     bannerCrop: String(formData.get("bannerCrop") ?? "").trim() || undefined,
     eventMapImageUrl:
-      mapUploadUrl ||
-      String(formData.get("eventMapImageUrl") ?? "").trim() ||
-      String(formData.get("currentEventMapImageUrl") ?? "").trim(),
-    eventMapCrop: String(formData.get("eventMapCrop") ?? "").trim() || undefined,
+      shouldRemoveEventMapImage
+        ? undefined
+        : mapUploadUrl ||
+          String(formData.get("eventMapImageUrl") ?? "").trim() ||
+          String(formData.get("currentEventMapImageUrl") ?? "").trim(),
+    eventMapCrop: shouldRemoveEventMapImage ? undefined : String(formData.get("eventMapCrop") ?? "").trim() || undefined,
     eventMapTemplate: String(formData.get("eventMapTemplate") ?? "AUTO"),
     eventMapNotes: String(formData.get("eventMapNotes") ?? "").trim() || undefined,
     eventMapLayout: parseEventMapLayoutFormValue(formData.get("eventMapLayout")),

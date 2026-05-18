@@ -9430,6 +9430,7 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   position: absolute;
   text-align: center;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  transform-origin: center;
   z-index: 1;
 }
 
@@ -9446,12 +9447,16 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 }
 
 .eventModularMapBlockItem span {
-  display: block;
-  font-size: clamp(13px, 2vw, 34px);
+  display: -webkit-box;
+  font-size: var(--map-block-font-size, 18px);
   font-weight: 950;
   line-height: 1;
+  max-width: 100%;
+  overflow: hidden;
   overflow-wrap: anywhere;
   text-transform: uppercase;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .eventModularMapBlockItem small {
@@ -9502,7 +9507,7 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   border-radius: 18px;
   display: grid;
   gap: 14px;
-  grid-template-columns: minmax(150px, 0.75fr) minmax(380px, 2.2fr) minmax(210px, 0.95fr);
+  grid-template-columns: minmax(190px, 0.75fr) minmax(420px, 2.2fr);
   padding: 14px;
 }
 
@@ -9517,6 +9522,23 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   padding: 14px;
 }
 
+.eventMapEditorInspector {
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.eventMapEditorInspector > strong,
+.eventMapEditorInspector > p,
+.eventMapEditorInspector > textarea,
+.eventMapEditorInspector > .dangerButton {
+  grid-column: 1 / -1;
+}
+
+.eventMapEditorInspector > label:has(textarea),
+.eventMapEditorInspector > .eventMapEditorNumberGrid {
+  grid-column: span 2;
+}
+
 .eventMapEditorPalette > strong,
 .eventMapEditorInspector > strong {
   color: #111827;
@@ -9528,7 +9550,7 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 }
 
 .eventMapTemplateGrid {
-  max-height: 260px;
+  max-height: 330px;
   overflow: auto;
   padding-right: 2px;
 }
@@ -9552,8 +9574,9 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 .eventMapEditorPalette .eventMapTemplateButton {
   align-items: start;
   display: grid;
-  gap: 3px;
-  min-height: 64px;
+  gap: 5px;
+  min-height: 74px;
+  white-space: normal;
 }
 
 .eventMapTemplateButton span {
@@ -9564,7 +9587,8 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   color: #64748b;
   font-size: 11px;
   font-weight: 750;
-  line-height: 1.25;
+  line-height: 1.28;
+  overflow-wrap: anywhere;
 }
 
 .eventMapEditorPalette i {
@@ -9634,6 +9658,12 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.eventMapEditorToolbar > button,
+.eventMapEditorCopy .smallButton {
+  min-width: 0;
+  white-space: nowrap;
 }
 
 .eventMapEditorCopy {
@@ -9716,6 +9746,7 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   position: absolute;
   text-align: center;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.32);
+  transform-origin: center;
   user-select: none;
   z-index: 2;
 }
@@ -9735,11 +9766,16 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 }
 
 .eventMapEditorBlock span {
-  font-size: clamp(11px, 1.55vw, 22px);
+  display: -webkit-box;
+  font-size: var(--map-block-font-size, 14px);
   font-weight: 950;
   line-height: 1;
+  max-width: 100%;
+  overflow: hidden;
   overflow-wrap: anywhere;
   text-transform: uppercase;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .eventMapEditorBlock small {
@@ -9794,6 +9830,21 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   display: grid;
   gap: 8px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.eventMapEditorQuickActions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.removeMapImageField {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 14px;
+  color: #9a3412;
+  margin-top: 12px;
+  padding: 12px;
 }
 
 .dangerButton {
