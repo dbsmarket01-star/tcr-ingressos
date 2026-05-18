@@ -1334,7 +1334,7 @@
 
 @media (max-width: 640px) {
   .homePage .tcrCarouselRail {
-    grid-auto-columns: 78% !important;
+    grid-auto-columns: minmax(0, calc((100% - 12px) / 2)) !important;
   }
 
   .homePage .tcrEventCard {
@@ -21800,11 +21800,39 @@ small,
 
   .homePage .tcrCarouselRail,
   .tcrCarouselRail {
-    grid-auto-columns: 100% !important;
+    gap: 12px !important;
+    grid-auto-columns: minmax(0, calc((100% - 12px) / 2)) !important;
     margin: 0 !important;
     overflow-x: auto !important;
     padding: 4px 0 8px !important;
     scroll-padding-inline: 0 !important;
+  }
+
+  .homePage .tcrEventCardBody {
+    gap: 7px !important;
+    padding: 10px !important;
+  }
+
+  .homePage .tcrEventCardBody small,
+  .homePage .tcrEventCardLocation {
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+  }
+
+  .homePage .tcrEventCardBody h3 {
+    font-size: 14px !important;
+    line-height: 1.12 !important;
+  }
+
+  .homePage .tcrEventCardBody strong {
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+  }
+
+  .homePage .tcrEventCardButton {
+    font-size: 12px !important;
+    min-height: 36px !important;
+    padding: 0 8px !important;
   }
 
   .homePage .tcrCarouselArrow,
