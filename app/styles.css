@@ -9399,11 +9399,56 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   grid-template-columns: minmax(0, 1fr) auto;
   min-height: 116px;
   padding: 12px 10px 12px 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ticketPickerCard.hasTicketHighlight {
+  border-color: color-mix(in srgb, var(--ticket-highlight-color) 28%, #d8dee5 72%);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--ticket-highlight-color) 14%, transparent);
+}
+
+.ticketPickerCard.hasTicketHighlight::before {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ticket-highlight-color) 74%, #ffffff 26%),
+      var(--ticket-highlight-color),
+      color-mix(in srgb, var(--ticket-highlight-color) 78%, #111827 22%)
+    );
+  bottom: 0;
+  content: "";
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 5px;
+}
+
+.ticketPickerCard.hasTicketHighlight::after {
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--ticket-highlight-color) 10%, transparent),
+      transparent 42%
+    );
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
 }
 
 .ticketPickerCard.recommendedLot {
   border-color: #d8dee5;
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
+}
+
+.ticketPickerCard.hasTicketHighlight.recommendedLot {
+  border-color: color-mix(in srgb, var(--ticket-highlight-color) 30%, #d8dee5 70%);
+}
+
+.ticketPickerCard.hasTicketHighlight > * {
+  position: relative;
+  z-index: 1;
 }
 
 .ticketPickerInfo {
@@ -11270,13 +11315,13 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .formSectionTone::before {
-  border-radius: 999px;
+  border-radius: 8px 0 0 8px;
   content: "";
-  height: 4px;
-  left: 18px;
+  bottom: 14px;
+  left: 0;
   position: absolute;
-  top: 18px;
-  width: 52px;
+  top: 14px;
+  width: 4px;
 }
 
 .tonePrimary::before {
@@ -11309,7 +11354,6 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   display: flex;
   gap: 18px;
   justify-content: space-between;
-  padding-top: 12px;
 }
 
 .formSectionHeader > div {
@@ -13918,6 +13962,17 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.lotHighlightSwatch {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.72);
+  display: inline-block;
+  height: 12px;
+  margin-right: 8px;
+  vertical-align: -1px;
+  width: 12px;
 }
 
 .lotTableActions .inlineForm {

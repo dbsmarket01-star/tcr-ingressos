@@ -18,6 +18,15 @@ type EditLotPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
+const ticketHighlightColorOptions = [
+  { label: "Sem destaque", value: "" },
+  { label: "Ouro", value: "#d7a629" },
+  { label: "Prata", value: "#8f9aa6" },
+  { label: "Roxo", value: "#7c3aed" },
+  { label: "Azul", value: "#2563eb" },
+  { label: "Verde", value: "#28734f" }
+];
+
 export default async function EditLotPage({ params, searchParams }: EditLotPageProps) {
   const admin = await requirePermission("EVENTS");
   const { eventId, lotId } = await params;
@@ -52,6 +61,17 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
           <label className="field">
             <span>Descrição</span>
             <input name="description" defaultValue={lot.description ?? ""} />
+          </label>
+          <label className="field">
+            <span>Destaque visual do ingresso</span>
+            <select name="highlightColor" defaultValue={lot.highlightColor ?? ""}>
+              {ticketHighlightColorOptions.map((option) => (
+                <option value={option.value} key={option.value || "none"}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <small>Opcional. Adiciona um traço discreto na lateral do ingresso na página pública.</small>
           </label>
           <div className="formSection compactFormSection">
             <div className="formSectionHeader">

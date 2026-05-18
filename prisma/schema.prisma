@@ -673,6 +673,7 @@ model TicketLot {
   hotelId                         String?
   name                            String
   description                     String?
+  highlightColor                  String?
   hasHotel                        Boolean   @default(false)
   churchQuestionEnabled           Boolean   @default(false)
   hasTypeOptions                  Boolean   @default(false)

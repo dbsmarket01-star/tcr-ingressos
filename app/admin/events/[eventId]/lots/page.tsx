@@ -35,6 +35,15 @@ const lotStatusTone = {
   CLOSED: "canceled"
 } as const;
 
+const ticketHighlightColorOptions = [
+  { label: "Sem destaque", value: "" },
+  { label: "Ouro", value: "#d7a629" },
+  { label: "Prata", value: "#8f9aa6" },
+  { label: "Roxo", value: "#7c3aed" },
+  { label: "Azul", value: "#2563eb" },
+  { label: "Verde", value: "#28734f" }
+];
+
 function formatPixDiscount(lot: { pixDiscountPercentBps: number; pixDiscountFixedInCents: number }) {
   if (lot.pixDiscountFixedInCents > 0) {
     return `${formatCurrency(lot.pixDiscountFixedInCents)} no Pix`;
@@ -155,6 +164,13 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
                     return (
                       <tr key={lot.id}>
                         <td>
+                          {lot.highlightColor ? (
+                            <span
+                              aria-label="Cor de destaque configurada"
+                              className="lotHighlightSwatch"
+                              style={{ background: lot.highlightColor }}
+                            />
+                          ) : null}
                           <strong>{lot.name}</strong>
                           {lot.description ? <br /> : null}
                           {lot.description ? <small className="muted">{lot.description}</small> : null}
@@ -246,6 +262,17 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
             <label className="field">
               <span>Descrição</span>
               <input name="description" placeholder="Opcional" />
+            </label>
+            <label className="field">
+              <span>Destaque visual do ingresso</span>
+              <select name="highlightColor" defaultValue="">
+                {ticketHighlightColorOptions.map((option) => (
+                  <option value={option.value} key={option.value || "none"}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <small>Opcional. Adiciona um traço discreto na lateral do ingresso na página pública.</small>
             </label>
             <div className="formSection compactFormSection">
               <div className="formSectionHeader">

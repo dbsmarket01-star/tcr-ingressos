@@ -60,6 +60,10 @@ function parsePixDiscount(formData: FormData) {
   };
 }
 
+function parseHighlightColor(formData: FormData) {
+  return String(formData.get("highlightColor") ?? "").trim() || undefined;
+}
+
 export async function createTicketLotAction(formData: FormData) {
   await requirePermission("EVENTS");
   const eventId = String(formData.get("eventId") ?? "").trim();
@@ -70,6 +74,7 @@ export async function createTicketLotAction(formData: FormData) {
     eventId,
     name: String(formData.get("name") ?? "").trim(),
     description: String(formData.get("description") ?? "").trim() || undefined,
+    highlightColor: parseHighlightColor(formData),
     churchQuestionEnabled: String(formData.get("churchQuestionEnabled") ?? "false") === "true",
     hasTypeOptions: String(formData.get("hasTypeOptions") ?? "false") === "true",
     admissionsPerUnit: Number(formData.get("admissionsPerUnit") ?? 1),
@@ -205,6 +210,7 @@ export async function updateTicketLotAction(formData: FormData) {
     eventId,
     name: String(formData.get("name") ?? "").trim(),
     description: String(formData.get("description") ?? "").trim() || undefined,
+    highlightColor: parseHighlightColor(formData),
     churchQuestionEnabled: String(formData.get("churchQuestionEnabled") ?? "false") === "true",
     hasTypeOptions: String(formData.get("hasTypeOptions") ?? "false") === "true",
     admissionsPerUnit: Number(formData.get("admissionsPerUnit") ?? 1),

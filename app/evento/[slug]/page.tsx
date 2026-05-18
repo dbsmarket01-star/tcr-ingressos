@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Script from "next/script";
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { notFound } from "next/navigation";
 import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
 import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
@@ -36,6 +37,10 @@ type EventDirectionsInput = {
   venueAddress: string;
   city: string;
   state: string;
+};
+
+type TicketCardStyle = CSSProperties & {
+  "--ticket-highlight-color"?: string;
 };
 
 function normalizeGoogleMapsUrl(value?: string | null) {
@@ -110,6 +115,16 @@ function buildEventDirections(event: EventDirectionsInput) {
 
 function getAvailableTypeOptions<T extends { status: string; soldQuantity: number; reservedQuantity: number }>(options: T[]) {
   return options.filter((option) => option.status === "ACTIVE" && option.soldQuantity + option.reservedQuantity === 0);
+}
+
+function getTicketHighlightStyle(color?: string | null): TicketCardStyle | undefined {
+  if (!color || !/^#[0-9a-fA-F]{6}$/.test(color)) {
+    return undefined;
+  }
+
+  return {
+    "--ticket-highlight-color": color
+  };
 }
 
 function getAvailableLotQuantity(lot: {
@@ -374,9 +389,14 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                     : false;
                   const isHighlighted = lot.id === highlightedLotId;
                   const maxQuantity = Math.max(0, Math.min(lot.maxPerOrder, available));
+                  const highlightStyle = getTicketHighlightStyle(lot.highlightColor);
 
                   return (
-                    <article className={`ticketPickerCard ${isHighlighted ? "recommendedLot" : ""}`} key={lot.id}>
+                    <article
+                      className={`ticketPickerCard ${isHighlighted ? "recommendedLot" : ""} ${highlightStyle ? "hasTicketHighlight" : ""}`}
+                      key={lot.id}
+                      style={highlightStyle}
+                    >
                       <div className="ticketPickerInfo">
                         <strong className="ticketPickerTitle">{lot.name}</strong>
                         <p className="ticketPickerPrice">
