@@ -193,11 +193,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const ctaText = event.conversionCtaText || "Garantir minha vaga";
   const highlightedLotId = event.highlightedLotId || activeLots[0]?.id;
   const eventLead = event.subtitle?.trim() || "";
-  const lowestTotalInCents = activeLots.reduce((lowest, lot) => {
-    const serviceFeeInCents = calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps);
-    const total = lot.priceInCents + serviceFeeInCents;
-    return lowest === 0 || total < lowest ? total : lowest;
-  }, 0);
   const hasServiceFees = activeLots.some(
     (lot) => calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps) > 0
   );
@@ -455,15 +450,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             />
           </div>
         </section>
-      ) : null}
-      {activeLots.length > 0 ? (
-        <a className="mobileCheckoutBar" href="#ingressos">
-          <span>
-            {activeLots.length} opções
-            {lowestTotalInCents > 0 ? ` • desde ${formatCurrency(lowestTotalInCents)}` : ""}
-          </span>
-          <strong>Escolher ingressos</strong>
-        </a>
       ) : null}
       <PublicSiteFooter brandName={organizationContext.brandName} settings={publicSocialSettings} />
       {event.supportWhatsappUrl ? <WhatsappFloatingButton href={event.supportWhatsappUrl} /> : null}

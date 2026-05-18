@@ -9226,10 +9226,6 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   line-height: 1.2;
 }
 
-.mobileCheckoutBar {
-  display: none;
-}
-
 .whatsappFloatingButton {
   background: #25d366;
   border-radius: 999px;
@@ -18199,13 +18195,13 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 
   .publicGrid {
     gap: 14px;
-    padding-bottom: 108px;
+    padding-bottom: 24px;
     padding-top: 12px;
   }
 
   .eventDirectionsBlock {
     border-radius: 16px;
-    margin-bottom: 110px;
+    margin-bottom: 24px;
     margin-top: 14px;
   }
 
@@ -18497,51 +18493,8 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
     margin: 0;
   }
 
-  .mobileCheckoutBar {
-    align-items: center;
-    background: #0d2b24;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 14px 14px 0 0;
-    bottom: 0;
-    box-shadow: 0 -12px 28px rgba(13, 43, 36, 0.24);
-    color: white;
-    display: flex;
-    gap: 12px;
-    justify-content: space-between;
-    left: 0;
-    padding: 14px 18px;
-    position: fixed;
-    right: 0;
-    text-decoration: none;
-    z-index: 30;
-  }
-
-  .mobileCheckoutBar span {
-    color: rgba(255, 255, 255, 0.78);
-    font-size: 12px;
-    font-weight: 800;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .mobileCheckoutBar strong {
-    background: var(--brand);
-    border-radius: 999px;
-    color: white;
-    flex: 0 0 auto;
-    font-size: 13px;
-    max-width: 50%;
-    overflow: hidden;
-    padding: 10px 12px;
-    text-align: center;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   .whatsappFloatingButton {
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 110px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
     height: 52px;
     right: 14px;
     width: 52px;
@@ -18906,16 +18859,8 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
     padding: 12px;
   }
 
-  .mobileCheckoutBar {
-    padding: 12px 14px;
-  }
-
-  .mobileCheckoutBar strong {
-    max-width: 48%;
-  }
-
   .whatsappFloatingButton {
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 104px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
     right: 12px;
     height: 50px;
     width: 50px;
