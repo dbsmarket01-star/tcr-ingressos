@@ -9378,7 +9378,8 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 
 .eventModularMapFrame {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.025)),
     #071014;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 18px;
@@ -9392,17 +9393,18 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   margin: 0 auto;
   min-width: 760px;
   position: relative;
-  transform: perspective(1200px) rotateX(4deg);
+  transform: perspective(1400px) rotateX(5deg);
   transform-origin: center top;
 }
 
 .eventModularMapFloor {
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    radial-gradient(circle at top, rgba(var(--brand-rgb), 0.18), transparent 42%),
-    linear-gradient(180deg, #16242c, #0c141a);
-  background-size: 42px 42px, 42px 42px, auto, auto;
+    radial-gradient(ellipse at 50% 10%, rgba(79, 125, 240, 0.16), transparent 42%),
+    radial-gradient(ellipse at 50% 92%, rgba(0, 0, 0, 0.42), transparent 54%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, #17262e 0%, #0e1b22 52%, #081116 100%);
+  background-size: auto, auto, 44px 44px, 44px 44px, auto;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 22px;
   box-shadow: inset 0 -18px 36px rgba(0, 0, 0, 0.28);
@@ -9414,25 +9416,50 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 .eventModularMapBlockItem {
   align-items: center;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--map-block-color) 92%, #ffffff 8%), var(--map-block-color));
-  border: 1px solid color-mix(in srgb, var(--map-block-color) 76%, #ffffff 24%);
-  border-radius: 14px;
+    linear-gradient(180deg, color-mix(in srgb, var(--map-block-color) 84%, #ffffff 16%), var(--map-block-color) 58%, color-mix(in srgb, var(--map-block-color) 80%, #000000 20%));
+  border: 1px solid color-mix(in srgb, var(--map-block-color) 58%, #ffffff 42%);
+  border-radius: 11px;
   box-shadow:
-    0 13px 0 color-mix(in srgb, var(--map-block-color) 66%, #000000 34%),
-    0 22px 34px rgba(0, 0, 0, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+    0 8px 0 color-mix(in srgb, var(--map-block-color) 58%, #000000 42%),
+    0 18px 28px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    inset 0 -16px 22px rgba(0, 0, 0, 0.12);
   color: #ffffff;
   display: flex;
-  font-family: "Arial Black", "Inter", system-ui, sans-serif;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
   flex-direction: column;
   gap: 4px;
   justify-content: center;
   padding: 8px;
   position: absolute;
   text-align: center;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.34);
   transform-origin: center;
   z-index: 1;
+}
+
+.eventModularMapBlockItem::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 38%);
+  border-radius: inherit;
+  content: "";
+  inset: 1px 1px auto;
+  height: 38%;
+  pointer-events: none;
+  position: absolute;
+}
+
+.eventModularMapBlockItem.is-sector {
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.11) 0 1px, transparent 1px 17px),
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0 1px, transparent 1px 17px),
+    linear-gradient(180deg, color-mix(in srgb, var(--map-block-color) 86%, #ffffff 14%), var(--map-block-color) 58%, color-mix(in srgb, var(--map-block-color) 78%, #000000 22%));
+}
+
+.eventModularMapBlockItem.is-stage {
+  background:
+    radial-gradient(circle at 50% 8%, rgba(255, 255, 255, 0.16), transparent 34%),
+    linear-gradient(180deg, #3a3f46, #1f242b 62%, #12161b);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .eventModularMapBlockItem.is-text,
@@ -9444,7 +9471,10 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 }
 
 .eventModularMapBlockItem.is-box {
-  border-radius: 10px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--map-block-color) 88%, #ffffff 12%), var(--map-block-color) 62%, color-mix(in srgb, var(--map-block-color) 76%, #000000 24%));
+  border-color: color-mix(in srgb, var(--map-block-color) 48%, #ffffff 52%);
+  border-radius: 8px;
 }
 
 .eventModularMapBlockItem.is-empty {
@@ -9454,8 +9484,8 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 .eventModularMapBlockItem span {
   display: -webkit-box;
   font-size: var(--map-block-font-size, 18px);
-  font-weight: 900;
-  line-height: 0.98;
+  font-weight: 850;
+  line-height: 1.02;
   max-width: 100%;
   overflow: hidden;
   overflow-wrap: anywhere;
@@ -9731,10 +9761,12 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 }
 
 .eventMapEditorCanvas {
-  background: #081116;
-  border: 1px solid #d7e5df;
+  background: #071014;
+  border: 1px solid #cdded8;
   border-radius: 18px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 18px 36px rgba(15, 23, 42, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   isolation: isolate;
   overflow: hidden;
   position: relative;
@@ -9747,11 +9779,12 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 
 .eventMapEditorFloor {
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    radial-gradient(circle at top, rgba(var(--brand-rgb), 0.2), transparent 42%),
-    linear-gradient(180deg, #172832, #0b151c);
-  background-size: 32px 32px, 32px 32px, auto, auto;
+    radial-gradient(ellipse at 50% 12%, rgba(79, 125, 240, 0.16), transparent 42%),
+    radial-gradient(ellipse at 50% 92%, rgba(0, 0, 0, 0.4), transparent 54%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, #17262e 0%, #0d1b22 52%, #081116 100%);
+  background-size: auto, auto, 32px 32px, 32px 32px, auto;
   inset: 0;
   position: absolute;
 }
@@ -9774,39 +9807,66 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   background:
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.13) 0 1px, transparent 1px 14px),
     repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.08) 0 1px, transparent 1px 14px),
-    linear-gradient(180deg, color-mix(in srgb, var(--map-block-color) 90%, #ffffff 10%), var(--map-block-color));
-  border: 1px solid color-mix(in srgb, var(--map-block-color) 68%, #ffffff 32%);
-  border-radius: 12px;
+    linear-gradient(180deg, color-mix(in srgb, var(--map-block-color) 84%, #ffffff 16%), var(--map-block-color) 58%, color-mix(in srgb, var(--map-block-color) 80%, #000000 20%));
+  border: 1px solid color-mix(in srgb, var(--map-block-color) 58%, #ffffff 42%);
+  border-radius: 11px;
   box-shadow:
-    0 9px 0 color-mix(in srgb, var(--map-block-color) 62%, #000000 38%),
-    0 18px 26px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    0 7px 0 color-mix(in srgb, var(--map-block-color) 58%, #000000 42%),
+    0 16px 26px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    inset 0 -14px 20px rgba(0, 0, 0, 0.12);
   color: #ffffff;
   cursor: grab;
   display: flex;
-  font-family: "Arial Black", "Inter", system-ui, sans-serif;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
   flex-direction: column;
   gap: 3px;
   justify-content: center;
   padding: 6px;
   position: absolute;
   text-align: center;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.32);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.34);
   transform-origin: center;
   user-select: none;
   z-index: 2;
 }
 
-.eventMapEditorBlock.is-stage,
+.eventMapEditorBlock::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 38%);
+  border-radius: inherit;
+  content: "";
+  inset: 1px 1px auto;
+  height: 38%;
+  pointer-events: none;
+  position: absolute;
+}
+
+.eventMapEditorBlock.is-sector {
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.11) 0 1px, transparent 1px 14px),
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0 1px, transparent 1px 14px),
+    linear-gradient(180deg, color-mix(in srgb, var(--map-block-color) 86%, #ffffff 14%), var(--map-block-color) 58%, color-mix(in srgb, var(--map-block-color) 78%, #000000 22%));
+}
+
+.eventMapEditorBlock.is-stage {
+  background:
+    radial-gradient(circle at 50% 8%, rgba(255, 255, 255, 0.16), transparent 34%),
+    linear-gradient(180deg, #3a3f46, #1f242b 62%, #12161b);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 .eventMapEditorBlock.is-aisle,
 .eventMapEditorBlock.is-empty,
 .eventMapEditorBlock.is-text {
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--map-block-color) 90%, #ffffff 10%), var(--map-block-color));
+    linear-gradient(180deg, color-mix(in srgb, var(--map-block-color) 84%, #ffffff 16%), var(--map-block-color) 62%, color-mix(in srgb, var(--map-block-color) 80%, #000000 20%));
 }
 
 .eventMapEditorBlock.is-box {
-  border-radius: 10px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--map-block-color) 88%, #ffffff 12%), var(--map-block-color) 62%, color-mix(in srgb, var(--map-block-color) 76%, #000000 24%));
+  border-color: color-mix(in srgb, var(--map-block-color) 48%, #ffffff 52%);
+  border-radius: 8px;
 }
 
 .eventMapEditorBlock.isSelected {
@@ -9818,8 +9878,8 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 .eventMapEditorBlock span {
   display: -webkit-box;
   font-size: var(--map-block-font-size, 14px);
-  font-weight: 900;
-  line-height: 0.98;
+  font-weight: 850;
+  line-height: 1.02;
   max-width: 100%;
   overflow: hidden;
   overflow-wrap: anywhere;
