@@ -391,7 +391,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                   const availableOptions = lot.hasTypeOptions ? getAvailableTypeOptions(lot.typeOptions) : [];
                   const descriptionTopics = lot.descriptionAsList ? getTicketDescriptionTopics(lot.description) : [];
                   const isLowStock = available <= 25;
-                  const serviceFeeInCents = calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps);
+                  const hasLotServiceFee = calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps) > 0;
                   const lotEndsSoon = lot.salesEndsAt
                     ? lot.salesEndsAt.getTime() - Date.now() <= 24 * 60 * 60 * 1000
                     : false;
@@ -409,7 +409,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                         <strong className="ticketPickerTitle">{lot.name}</strong>
                         <p className="ticketPickerPrice">
                           {formatCurrency(lot.priceInCents)}
-                          {serviceFeeInCents > 0 ? <span> (+{formatCurrency(serviceFeeInCents)} taxa)</span> : null}
+                          {hasLotServiceFee ? <span> (+ taxas)</span> : null}
                         </p>
                         {descriptionTopics.length > 0 ? (
                           <ul className="ticketDescriptionList">
