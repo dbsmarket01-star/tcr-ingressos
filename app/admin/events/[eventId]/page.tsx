@@ -514,6 +514,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
               <summary>Ações</summary>
               <div>
                 <Link href={`/admin/events/${event.id}/edit`}>Editar evento</Link>
+                <Link href={`/admin/events/${event.id}/edit#mapa-convencional`}>Mapa convencional</Link>
                 <form action={duplicateEventAction}>
                   <input type="hidden" name="eventId" value={event.id} />
                   <button type="submit">Duplicar evento</button>
@@ -529,9 +530,9 @@ export default async function EventManagementPage({ params, searchParams }: Even
         <nav className="eventOverviewTabs" aria-label="Seções do evento">
           <span className="isActive">Visão geral</span>
           <Link href={`/admin/events/${event.id}/lots`}>Ingressos e lotes</Link>
+          <Link href={`/admin/events/${event.id}/edit#mapa-convencional`}>Mapa convencional</Link>
           <Link href={event.leadCaptureEnabled ? `/admin/events/${event.id}/leads` : `/admin/events/${event.id}/edit`}>Captação</Link>
           <Link href={`/admin/finance?eventId=${event.id}`}>Financeiro</Link>
-          <Link href={getPublicEventUrl(event.slug, event.organization)} target="_blank">Divulgação</Link>
           <Link href="/admin/check-in">Check-in</Link>
           <Link href={`/admin/events/${event.id}/edit`}>Configurações</Link>
         </nav>

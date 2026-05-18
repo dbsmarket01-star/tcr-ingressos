@@ -21,6 +21,45 @@ type EditEventPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
+type ManagedEvent = NonNullable<Awaited<ReturnType<typeof getEventForManagement>>>;
+
+function HiddenInput({ name, value }: { name: string; value?: string | null }) {
+  return <input type="hidden" name={name} value={value ?? ""} />;
+}
+
+function PreserveRemovedEventSettings({ event }: { event: ManagedEvent }) {
+  return (
+    <>
+      <HiddenInput name="leadCaptureEnabled" value={event.leadCaptureEnabled ? "on" : ""} />
+      <HiddenInput name="leadCaptureHeadline" value={event.leadCaptureHeadline} />
+      <HiddenInput name="leadCaptureDescription" value={event.leadCaptureDescription} />
+      <HiddenInput name="leadCaptureOfferText" value={event.leadCaptureOfferText} />
+      <HiddenInput name="leadCaptureCtaText" value={event.leadCaptureCtaText} />
+      <HiddenInput name="leadCaptureBadgeText" value={event.leadCaptureBadgeText} />
+      <HiddenInput name="leadCaptureHeroSupportText" value={event.leadCaptureHeroSupportText} />
+      <HiddenInput name="leadCaptureBenefitsText" value={event.leadCaptureBenefitsText} />
+      <HiddenInput name="leadCaptureFormIntroEyebrow" value={event.leadCaptureFormIntroEyebrow} />
+      <HiddenInput name="leadCaptureFormIntroTitle" value={event.leadCaptureFormIntroTitle} />
+      <HiddenInput name="leadCaptureFormIntroDescription" value={event.leadCaptureFormIntroDescription} />
+      <HiddenInput name="leadCaptureFormTimingText" value={event.leadCaptureFormTimingText} />
+      <HiddenInput name="leadCaptureBonusText" value={event.leadCaptureBonusText} />
+      <HiddenInput name="leadCaptureProofText" value={event.leadCaptureProofText} />
+      <HiddenInput name="leadCaptureFooterStatsText" value={event.leadCaptureFooterStatsText} />
+      <HiddenInput name="leadCaptureHeroImageUrl" value={event.leadCaptureHeroImageUrl} />
+      <HiddenInput name="leadCaptureHeroCrop" value={event.leadCaptureHeroCrop} />
+      <HiddenInput name="leadCaptureVenueGallery" value={event.leadCaptureVenueGallery} />
+      <HiddenInput name="leadCaptureVideoUrl" value={event.leadCaptureVideoUrl} />
+      <HiddenInput name="leadCaptureWhatsappGroupUrl" value={event.leadCaptureWhatsappGroupUrl} />
+      <HiddenInput name="leadCaptureThankYouTitle" value={event.leadCaptureThankYouTitle} />
+      <HiddenInput name="leadCaptureThankYouDescription" value={event.leadCaptureThankYouDescription} />
+      <HiddenInput name="leadCaptureThankYouButtonText" value={event.leadCaptureThankYouButtonText} />
+      <HiddenInput name="autoLeadCaptureEmailEnabled" value={event.autoLeadCaptureEmailEnabled !== false ? "on" : ""} />
+      <HiddenInput name="autoPurchaseApprovedEmailEnabled" value={event.autoPurchaseApprovedEmailEnabled !== false ? "on" : ""} />
+      <HiddenInput name="autoPendingPaymentEmailEnabled" value={event.autoPendingPaymentEmailEnabled !== false ? "on" : ""} />
+    </>
+  );
+}
+
 export default async function EditEventPage({ params, searchParams }: EditEventPageProps) {
   const admin = await requirePermission("EVENTS");
   const { eventId } = await params;
@@ -82,20 +121,21 @@ export default async function EditEventPage({ params, searchParams }: EditEventP
         <input type="hidden" name="currentBannerUrl" value={event.bannerUrl ?? ""} />
         <input type="hidden" name="currentEventMapImageUrl" value={event.eventMapImageUrl ?? ""} />
         <input type="hidden" name="currentLeadCaptureHeroImageUrl" value={event.leadCaptureHeroImageUrl ?? ""} />
+        <PreserveRemovedEventSettings event={event} />
 
         <section className="adminPanelHero compact">
           <div>
             <span className="sectionEyebrow">Operação do evento</span>
             <h2>Edite com uma visão mais limpa do todo</h2>
-            <p className="muted">Reorganizamos os blocos para você revisar publicação, comercial, captação e mapa com menos poluição visual.</p>
+            <p className="muted">Configurações essenciais, venda, mapa convencional, tracking e SEO em blocos mais claros.</p>
           </div>
           <div className="formFlowBar" aria-label="Etapas do evento">
             <span className="isCurrent">Resumo</span>
-            <span>Identidade</span>
-            <span>Agenda</span>
-            <span>Comercial</span>
-            <span>Captação</span>
-            <span>Mapa</span>
+            <span>Dados</span>
+            <span>Data e local</span>
+            <span>Venda</span>
+            <span>Mapa convencional</span>
+            <span>SEO</span>
           </div>
         </section>
 
@@ -143,6 +183,16 @@ export default async function EditEventPage({ params, searchParams }: EditEventP
           <label className="field">
             <span>Descrição</span>
             <textarea name="description" rows={5} defaultValue={event.description} placeholder="Opcional. Descreva o evento se quiser exibir esse bloco na página pública." />
+          </label>
+          <label className="field">
+            <span>Informações importantes</span>
+            <textarea
+              name="importantInfo"
+              rows={5}
+              defaultValue={event.importantInfo ?? ""}
+              placeholder="Classificação, duração, regras de entrada, doação solidária e observações essenciais."
+            />
+            <small>Esse conteúdo aparece na página pública abaixo da descrição do evento.</small>
           </label>
           <div className="mediaUploadGrid">
             <ImageUploadField
@@ -238,26 +288,10 @@ export default async function EditEventPage({ params, searchParams }: EditEventP
         <div className="formSection formSectionTone toneSales">
           <div className="formSectionHeader">
             <div>
-              <span className="sectionEyebrow">Comercial e rastreamento</span>
-              <h2>Venda e tracking</h2>
+              <span className="sectionEyebrow">Comercial</span>
+              <h2>Venda e publicação</h2>
             </div>
-            <p className="muted">Janela de venda, suporte e publicação. Tracking fica recolhido para não embaralhar a operação principal.</p>
-          </div>
-          <div className="channelFocusGrid">
-            <div className="channelFocusCard salesFocusCard">
-              <span className="channelFocusEyebrow">Venda de ingressos</span>
-              <strong>Essa frente cuida do que o público compra e do que a operação precisa para atender.</strong>
-              <small>Janela de venda, publicação, suporte ao comprador e rastreamento da campanha ficam organizados aqui.</small>
-            </div>
-            <div className="channelFocusChecklist">
-              <span className="channelFocusEyebrow">Checklist desta frente</span>
-              <ul>
-                <li>Venda abriu e fecha no período certo</li>
-                <li>Página publicada ou ainda em rascunho</li>
-                <li>WhatsApp de suporte configurado</li>
-                <li>Tracking ativo quando houver mídia</li>
-              </ul>
-            </div>
+            <p className="muted">Janela de venda, status público, cupons e suporte ao comprador ficam juntos aqui.</p>
           </div>
           <div className="grid twoColumns">
             <label className="field">
@@ -277,10 +311,6 @@ export default async function EditEventPage({ params, searchParams }: EditEventP
               />
             </label>
           </div>
-          <label className="field">
-            <span>Informações importantes</span>
-            <textarea name="importantInfo" rows={4} defaultValue={event.importantInfo ?? ""} />
-          </label>
           <label className="field">
             <span>WhatsApp de suporte</span>
             <input
@@ -312,15 +342,17 @@ export default async function EditEventPage({ params, searchParams }: EditEventP
               <code> /lista/{event.slug}</code>.
             </small>
           </label>
-          <details className="advancedSection adminInlineDetails">
-            <summary className="formSectionSummary">
-              <div>
-                <span className="sectionEyebrow">Opcional</span>
-                <h2>Tracking e campanhas</h2>
-                <p className="muted">Abra este bloco quando o evento já estiver pronto para tráfego.</p>
-              </div>
-            </summary>
-            <div className="grid twoColumns">
+        </div>
+
+        <details className="formSection advancedSection formSectionTone toneSummary">
+          <summary className="formSectionSummary">
+            <div>
+              <span className="sectionEyebrow">Comercial e rastreamento</span>
+              <h2>Tracking e campanhas</h2>
+              <p className="muted">Pixel, CAPI e GTM ficam separados da venda para não confundir a operação.</p>
+            </div>
+          </summary>
+          <div className="grid twoColumns">
               <label className="field">
                 <span>Meta Pixel ID</span>
                 <input
@@ -384,10 +416,9 @@ export default async function EditEventPage({ params, searchParams }: EditEventP
                 <small>Quando Pixel ID e token estiverem preenchidos juntos, a venda aprovada sobe também pelo backend.</small>
               </div>
             </div>
-          </details>
-        </div>
+        </details>
 
-        <details className="formSection advancedSection formSectionTone toneLead">
+        <details className="formSection advancedSection formSectionTone toneLead" hidden>
           <summary className="formSectionSummary">
             <div>
               <span className="sectionEyebrow">Pré-lançamento</span>
@@ -657,7 +688,7 @@ export default async function EditEventPage({ params, searchParams }: EditEventP
           </div>
         </details>
 
-        <details className="formSection advancedSection formSectionTone toneSummary">
+        <details className="formSection advancedSection formSectionTone toneSummary" hidden>
           <summary className="formSectionSummary">
             <div>
               <span className="sectionEyebrow">Comunicação do evento</span>
@@ -714,20 +745,16 @@ export default async function EditEventPage({ params, searchParams }: EditEventP
           </div>
         </details>
 
-        <details className="formSection advancedSection formSectionTone toneMap">
-          <summary className="formSectionSummary">
-            <div>
-              <span className="sectionEyebrow">Opcional</span>
-              <h2>Mapa e setores</h2>
-              <p className="muted">Abra apenas se este evento realmente precisar de mapa visual.</p>
-            </div>
-          </summary>
+        <div className="formSection formSectionTone toneMap" id="mapa-convencional">
           <div className="formSectionHeader">
-            <div />
-            <p className="muted">Deixe o mapa e os setores mais fáceis de entender antes de abrir a venda para o público.</p>
+            <div>
+              <span className="sectionEyebrow">Mapa do evento</span>
+              <h2>Mapa convencional</h2>
+            </div>
+            <p className="muted">Monte o mapa visual do evento com blocos modulares ou mantenha uma imagem pronta como fallback antes de abrir a venda.</p>
           </div>
           <p className="muted">
-            Monte um mapa modular arrastando blocos ou mantenha uma imagem própria como fallback. Não há cadeira numerada nesta etapa.
+            Monte um mapa modular arrastando blocos ou mantenha uma imagem própria como fallback.
           </p>
           <EventMapEditor
             initialValue={eventMapLayoutToFormValue(event.eventMapLayout)}
@@ -738,8 +765,8 @@ export default async function EditEventPage({ params, searchParams }: EditEventP
             }))}
           />
           <label className="field">
-              <span>Modelo do mapa</span>
-              <select name="eventMapTemplate" defaultValue={event.eventMapTemplate}>
+            <span>Modelo do mapa</span>
+            <select name="eventMapTemplate" defaultValue={event.eventMapTemplate}>
               <option value="AUTO">Automático pelos lotes</option>
               <option value="AUDITORIUM">Auditório</option>
               <option value="THEATER">Teatro</option>
@@ -791,7 +818,7 @@ export default async function EditEventPage({ params, searchParams }: EditEventP
               <p>Agora você consegue simular o enquadramento final antes de salvar, em vez de descobrir o problema só na página pública.</p>
             </div>
           </div>
-        </details>
+        </div>
 
         <details className="formSection advancedSection formSectionTone toneConversion">
           <summary className="formSectionSummary">
