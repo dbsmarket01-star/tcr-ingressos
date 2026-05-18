@@ -495,12 +495,6 @@ export default async function Home({ searchParams }: HomePageProps) {
             )}
           </Link>
 
-          <nav className="tcrPremiumNav" aria-label="Navegação principal">
-            <a href="#eventos">Eventos</a>
-            <a href="#como-funciona">Como funciona</a>
-            <a href="#ajuda">Ajuda</a>
-          </nav>
-
           <form action="#eventos" className="tcrPremiumHeaderSearch" role="search">
             <SearchIcon />
             <input aria-label="Buscar eventos, artistas ou locais" defaultValue={searchQuery} name="q" placeholder="Buscar eventos, artistas ou locais" type="search" />
@@ -513,16 +507,6 @@ export default async function Home({ searchParams }: HomePageProps) {
             </Link>
           </div>
 
-          <details className="tcrPremiumMobileMenu">
-            <summary aria-label="Abrir menu">
-              <MenuIcon />
-            </summary>
-            <div className="tcrPremiumMobilePanel">
-              <a href="#eventos">Eventos</a>
-              <a href="#como-funciona">Como funciona</a>
-              <a href="#ajuda">Ajuda</a>
-            </div>
-          </details>
         </header>
 
         <div className="tcrPremiumHeroInner">
