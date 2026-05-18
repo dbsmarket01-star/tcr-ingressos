@@ -229,6 +229,13 @@ export async function updateEventAction(formData: FormData) {
 
   await requireEventAccess(eventId);
 
+  const requestedRedirectTo = String(formData.get("redirectTo") ?? "").trim();
+  const redirectTo = requestedRedirectTo.startsWith(`/admin/events/${eventId}`)
+    ? requestedRedirectTo
+    : `/admin/events/${eventId}`;
+  const errorRedirectTo = redirectTo.startsWith(`/admin/events/${eventId}/map`)
+    ? `/admin/events/${eventId}/map`
+    : `/admin/events/${eventId}/edit`;
   const slug = slugify(rawSlug || title);
   let bannerUploadUrl: string | null = null;
   let mapUploadUrl: string | null = null;
@@ -242,7 +249,7 @@ export async function updateEventAction(formData: FormData) {
     seoUploadUrl = await savePublicImageUpload(formData.get("seoImageFile") as File | null, `events/${slug}/seo`);
     leadHeroUploadUrl = await savePublicImageUpload(formData.get("leadCaptureHeroFile") as File | null, `events/${slug}/lead-hero`);
   } catch (error) {
-    redirect(`/admin/events/${eventId}/edit?error=${encodeURIComponent(getFriendlyErrorMessage(error, "Não foi possível salvar a imagem."))}`);
+    redirect(`${errorRedirectTo}?error=${encodeURIComponent(getFriendlyErrorMessage(error, "Não foi possível salvar a imagem."))}`);
   }
 
   const parsed = eventDraftSchema.safeParse({
@@ -323,7 +330,7 @@ export async function updateEventAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect(`/admin/events/${eventId}/edit?error=${encodeURIComponent(validationMessage(parsed.error))}`);
+    redirect(`${errorRedirectTo}?error=${encodeURIComponent(validationMessage(parsed.error))}`);
   }
 
   await updateEvent(eventId, {
@@ -344,7 +351,7 @@ export async function updateEventAction(formData: FormData) {
   revalidatePath(`/evento/${parsed.data.slug}/checkout`);
   revalidatePath(`/lista/${parsed.data.slug}`);
   revalidatePath(`/lista/${parsed.data.slug}/obrigado`);
-  redirect(`/admin/events/${eventId}`);
+  redirect(redirectTo);
 }
 
 export async function updateEventStatusAction(formData: FormData) {
