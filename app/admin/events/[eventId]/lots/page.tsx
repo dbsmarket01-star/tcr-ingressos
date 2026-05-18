@@ -142,7 +142,7 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
 
           {event.lots.length > 0 ? (
             <div className="adminTableWrap">
-              <table className="table operationalTable">
+              <table className="table operationalTable eventLotsTable">
                 <thead>
                   <tr>
                     <th>Ingresso</th>
@@ -163,17 +163,24 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
 
                     return (
                       <tr key={lot.id}>
-                        <td>
-                          {lot.highlightColor ? (
-                            <span
-                              aria-label="Cor de destaque configurada"
-                              className="lotHighlightSwatch"
-                              style={{ background: lot.highlightColor }}
-                            />
-                          ) : null}
-                          <strong>{lot.name}</strong>
-                          {lot.description ? <br /> : null}
-                          {lot.description ? <small className="muted">{lot.description}</small> : null}
+                        <td className="lotInfoCell">
+                          <div className="lotInfoHeader">
+                            {lot.highlightColor ? (
+                              <span
+                                aria-label="Cor de destaque configurada"
+                                className="lotHighlightSwatch"
+                                style={{ background: lot.highlightColor }}
+                              />
+                            ) : null}
+                            <strong>{lot.name}</strong>
+                          </div>
+                          {lot.description ? (
+                            <p className="lotDescriptionPreview" title={lot.description}>
+                              {lot.description}
+                            </p>
+                          ) : (
+                            <span className="lotDescriptionEmpty">Sem descrição</span>
+                          )}
                         </td>
                         <td>
                           <span className={`status ${lotStatusTone[lot.status]}`}>

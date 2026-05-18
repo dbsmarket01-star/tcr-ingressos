@@ -12135,6 +12135,10 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   min-width: 920px;
 }
 
+.eventLotsTable {
+  min-width: 1160px;
+}
+
 .ordersTable {
   min-width: 1320px;
 }
@@ -12164,6 +12168,18 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 
 .operationalTable tbody td {
   line-height: 1.45;
+}
+
+.eventLotsTable th:first-child,
+.eventLotsTable td:first-child {
+  width: 36%;
+}
+
+.eventLotsTable th:nth-child(8),
+.eventLotsTable td:nth-child(8),
+.eventLotsTable th:nth-child(9),
+.eventLotsTable td:nth-child(9) {
+  width: 12%;
 }
 
 .adminPanelBlock {
@@ -16170,13 +16186,50 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   gap: 8px;
 }
 
+.lotInfoCell {
+  min-width: 340px;
+}
+
+.lotInfoHeader {
+  align-items: flex-start;
+  display: flex;
+  gap: 8px;
+}
+
+.lotInfoHeader strong {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.lotDescriptionPreview {
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  color: var(--muted);
+  display: -webkit-box;
+  font-size: 13px;
+  line-height: 1.48;
+  margin: 7px 0 0;
+  max-width: 440px;
+  overflow: hidden;
+  white-space: pre-line;
+}
+
+.lotDescriptionEmpty {
+  color: #9aa6b2;
+  display: inline-block;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
 .lotHighlightSwatch {
   border: 1px solid rgba(15, 23, 42, 0.12);
   border-radius: 999px;
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.72);
   display: inline-block;
+  flex: 0 0 auto;
   height: 12px;
-  margin-right: 8px;
+  margin-top: 3px;
   vertical-align: -1px;
   width: 12px;
 }
