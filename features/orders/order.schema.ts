@@ -12,6 +12,7 @@ export const checkoutOrderSchema = z.object({
   }),
   buyerCity: z.string().min(2),
   buyerState: z.string().max(2).optional(),
+  buyerNeighborhood: z.string().max(100).optional(),
   churchName: z.string().max(120).optional(),
   couponCode: z.string().optional(),
   utmSource: z.string().optional(),

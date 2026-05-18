@@ -359,6 +359,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                 </label>
                 <BuyerLocationFields
                   defaultCity={firstParam(query.buyerCity) || ""}
+                  defaultNeighborhood={firstParam(query.buyerNeighborhood) || ""}
                   defaultPostalCode={firstParam(query.buyerPostalCode) || ""}
                   defaultState={firstParam(query.buyerState) || ""}
                 />

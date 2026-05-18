@@ -180,6 +180,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
   const buyerCity = compactText(input.buyerCity).slice(0, 100);
   const buyerState = compactState(input.buyerState);
   const buyerPostalCode = onlyDigits(input.buyerPostalCode).slice(0, 8);
+  const buyerNeighborhood = compactText(input.buyerNeighborhood).slice(0, 100);
   const reservationMinutes = await getOrderReservationMinutes(organizationId || undefined).catch(
     () => FALLBACK_ORDER_RESERVATION_MINUTES
   );
@@ -219,7 +220,8 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
               phone: input.buyerPhone || existingCustomer.phone,
               city: buyerCity || existingCustomer.city,
               state: buyerState || existingCustomer.state,
-              postalCode: buyerPostalCode || existingCustomer.postalCode
+              postalCode: buyerPostalCode || existingCustomer.postalCode,
+              neighborhood: buyerNeighborhood || existingCustomer.neighborhood
             }
           })
         : await tx.customer.create({
@@ -230,7 +232,8 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
               phone: input.buyerPhone || null,
               city: buyerCity || null,
               state: buyerState,
-              postalCode: buyerPostalCode || null
+              postalCode: buyerPostalCode || null,
+              neighborhood: buyerNeighborhood || null
             }
           });
 
@@ -433,6 +436,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           buyerCity: buyerCity || null,
           buyerState,
           buyerPostalCode: buyerPostalCode || null,
+          buyerNeighborhood: buyerNeighborhood || null,
           expiresAt,
           utmSource: input.utmSource || null,
           utmMedium: input.utmMedium || null,

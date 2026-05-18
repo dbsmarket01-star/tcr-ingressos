@@ -6,10 +6,12 @@ type BuyerLocationFieldsProps = {
   defaultPostalCode?: string;
   defaultCity?: string;
   defaultState?: string;
+  defaultNeighborhood?: string;
 };
 
 type ViaCepResponse = {
   erro?: boolean;
+  bairro?: string;
   localidade?: string;
   uf?: string;
 };
@@ -31,11 +33,13 @@ function formatPostalCode(value: string) {
 export function BuyerLocationFields({
   defaultPostalCode = "",
   defaultCity = "",
-  defaultState = ""
+  defaultState = "",
+  defaultNeighborhood = ""
 }: BuyerLocationFieldsProps) {
   const [postalCode, setPostalCode] = useState(formatPostalCode(defaultPostalCode));
   const [city, setCity] = useState(defaultCity);
   const [state, setState] = useState(defaultState);
+  const [neighborhood, setNeighborhood] = useState(defaultNeighborhood);
   const [lookupStatus, setLookupStatus] = useState<"idle" | "loading" | "found" | "not-found">("idle");
   const postalDigits = useMemo(() => onlyDigits(postalCode), [postalCode]);
 
@@ -63,6 +67,7 @@ export function BuyerLocationFields({
 
         setCity(data.localidade);
         setState(data.uf || "");
+        setNeighborhood(data.bairro || "");
         setLookupStatus("found");
       })
       .catch(() => {
@@ -91,10 +96,10 @@ export function BuyerLocationFields({
         />
         <small>
           {lookupStatus === "loading"
-            ? "Buscando cidade..."
+            ? "Buscando cidade e bairro..."
             : lookupStatus === "found"
-              ? "Cidade preenchida automaticamente."
-              : "Usado apenas para identificar a cidade da compra."}
+              ? "Cidade e bairro preenchidos automaticamente quando disponíveis."
+              : "Usado apenas para identificar a cidade e o bairro da compra."}
         </small>
       </label>
 
@@ -110,6 +115,18 @@ export function BuyerLocationFields({
         />
         <input name="buyerState" type="hidden" value={state} />
         <small>{state ? `UF: ${state}` : "Se o CEP não preencher, informe a cidade manualmente."}</small>
+      </label>
+
+      <label className="field">
+        <span>Bairro</span>
+        <input
+          autoComplete="address-level3"
+          name="buyerNeighborhood"
+          onChange={(event) => setNeighborhood(event.target.value)}
+          placeholder="Ex: Xerém"
+          value={neighborhood}
+        />
+        <small>{neighborhood ? "Bairro preenchido pelo CEP. Você pode ajustar se necessário." : "Se o CEP não preencher, informe o bairro manualmente."}</small>
       </label>
     </div>
   );

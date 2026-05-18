@@ -127,6 +127,7 @@ function buildCheckoutReturnUrl(formData: FormData, eventSlug: string, message: 
   addQueryParam(params, "buyerPostalCode", formData.get("buyerPostalCode"));
   addQueryParam(params, "buyerCity", formData.get("buyerCity"));
   addQueryParam(params, "buyerState", formData.get("buyerState"));
+  addQueryParam(params, "buyerNeighborhood", formData.get("buyerNeighborhood"));
 
   lotIds.forEach((lotId) => {
     const quantity = String(formData.get(`quantity_${lotId}`) ?? "0").trim();
@@ -175,6 +176,7 @@ export async function createCheckoutOrderAction(formData: FormData) {
     buyerPostalCode: String(formData.get("buyerPostalCode") ?? "").trim(),
     buyerCity: String(formData.get("buyerCity") ?? "").trim(),
     buyerState: String(formData.get("buyerState") ?? "").trim() || undefined,
+    buyerNeighborhood: String(formData.get("buyerNeighborhood") ?? "").trim() || undefined,
     churchName: String(formData.get("churchName") ?? "").trim() || undefined,
     couponCode: String(formData.get("coupon") ?? "").trim() || undefined,
     utmSource: String(formData.get("utmSource") ?? "").trim() || undefined,

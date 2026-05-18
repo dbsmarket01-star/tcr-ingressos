@@ -756,6 +756,7 @@ model Customer {
   city       String?
   state      String?
   postalCode String?
+  neighborhood String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -803,6 +804,7 @@ model Order {
   buyerCity                      String?
   buyerState                     String?
   buyerPostalCode                String?
+  buyerNeighborhood              String?
   expiresAt                      DateTime?
   expiredEmailSentAt             DateTime?
   ticketsEmailSentAt             DateTime?

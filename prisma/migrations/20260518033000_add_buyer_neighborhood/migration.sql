@@ -1,0 +1,5 @@
+ALTER TABLE "Customer"
+ADD COLUMN IF NOT EXISTS "neighborhood" TEXT;
+
+ALTER TABLE "Order"
+ADD COLUMN IF NOT EXISTS "buyerNeighborhood" TEXT;

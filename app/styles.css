@@ -12555,7 +12555,7 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 .buyerLocationGrid {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 @media (max-width: 900px) {
