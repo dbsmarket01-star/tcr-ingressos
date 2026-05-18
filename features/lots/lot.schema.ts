@@ -52,6 +52,7 @@ export const ticketLotSchema = z.object({
   highlightColor: z
     .union([z.literal(""), z.string().regex(/^#[0-9a-fA-F]{6}$/, "Escolha uma cor de destaque válida.")])
     .optional(),
+  descriptionAsList: z.boolean().default(false),
   hasHotel: z.boolean().default(false),
   churchQuestionEnabled: z.boolean().default(false),
   hasTypeOptions: z.boolean().default(false),

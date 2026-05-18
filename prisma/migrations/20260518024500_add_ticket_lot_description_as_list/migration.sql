@@ -1,0 +1,2 @@
+ALTER TABLE "TicketLot"
+ADD COLUMN IF NOT EXISTS "descriptionAsList" BOOLEAN NOT NULL DEFAULT false;

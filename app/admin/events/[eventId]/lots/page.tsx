@@ -261,7 +261,16 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
             </div>
             <label className="field">
               <span>Descrição</span>
-              <input name="description" placeholder="Opcional" />
+              <textarea
+                name="description"
+                placeholder={"Ex:\nSetor de cadeiras\nPor ordem de chegada\nSetor em frente ao palco\nUm ingresso para esse evento"}
+                rows={5}
+              />
+              <small>Opcional. Para usar tópicos, coloque uma informação por linha.</small>
+            </label>
+            <label className="checkboxField">
+              <input name="descriptionAsList" type="checkbox" value="true" />
+              <span>Mostrar a descrição como lista de tópicos na página pública.</span>
             </label>
             <label className="field">
               <span>Destaque visual do ingresso</span>

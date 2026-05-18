@@ -60,7 +60,22 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
           </label>
           <label className="field">
             <span>Descrição</span>
-            <input name="description" defaultValue={lot.description ?? ""} />
+            <textarea
+              name="description"
+              defaultValue={lot.description ?? ""}
+              placeholder={"Ex:\nSetor de cadeiras\nPor ordem de chegada\nSetor em frente ao palco\nUm ingresso para esse evento"}
+              rows={5}
+            />
+            <small>Opcional. Para usar tópicos, coloque uma informação por linha.</small>
+          </label>
+          <label className="checkboxField">
+            <input
+              name="descriptionAsList"
+              type="checkbox"
+              value="true"
+              defaultChecked={lot.descriptionAsList}
+            />
+            <span>Mostrar a descrição como lista de tópicos na página pública.</span>
           </label>
           <label className="field">
             <span>Destaque visual do ingresso</span>

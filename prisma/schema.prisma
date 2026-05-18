@@ -674,6 +674,7 @@ model TicketLot {
   name                            String
   description                     String?
   highlightColor                  String?
+  descriptionAsList               Boolean   @default(false)
   hasHotel                        Boolean   @default(false)
   churchQuestionEnabled           Boolean   @default(false)
   hasTypeOptions                  Boolean   @default(false)

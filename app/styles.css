@@ -9504,6 +9504,34 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   white-space: pre-line;
 }
 
+.ticketDescriptionList {
+  color: #667085;
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ticketDescriptionList li {
+  font-size: 12px;
+  font-style: italic;
+  line-height: 1.25;
+  padding-left: 13px;
+  position: relative;
+}
+
+.ticketDescriptionList li::before {
+  background: color-mix(in srgb, var(--ticket-highlight-color, var(--brand, #28734f)) 72%, #667085 28%);
+  border-radius: 999px;
+  content: "";
+  height: 5px;
+  left: 0;
+  position: absolute;
+  top: 5px;
+  width: 5px;
+}
+
 .ticketPickerUrgency {
   color: #b42318 !important;
   font-weight: 800;

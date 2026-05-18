@@ -127,6 +127,13 @@ function getTicketHighlightStyle(color?: string | null): TicketCardStyle | undef
   };
 }
 
+function getTicketDescriptionTopics(description?: string | null) {
+  return String(description ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
 function getAvailableLotQuantity(lot: {
   hasTypeOptions: boolean;
   totalQuantity: number;
@@ -382,6 +389,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                 {activeLots.map((lot) => {
                   const available = getAvailableLotQuantity(lot);
                   const availableOptions = lot.hasTypeOptions ? getAvailableTypeOptions(lot.typeOptions) : [];
+                  const descriptionTopics = lot.descriptionAsList ? getTicketDescriptionTopics(lot.description) : [];
                   const isLowStock = available <= 25;
                   const serviceFeeInCents = calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps);
                   const lotEndsSoon = lot.salesEndsAt
@@ -403,7 +411,15 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                           {formatCurrency(lot.priceInCents)}
                           {serviceFeeInCents > 0 ? <span> (+{formatCurrency(serviceFeeInCents)} taxa)</span> : null}
                         </p>
-                        {lot.description ? <small>{lot.description}</small> : null}
+                        {descriptionTopics.length > 0 ? (
+                          <ul className="ticketDescriptionList">
+                            {descriptionTopics.map((topic) => (
+                              <li key={topic}>{topic}</li>
+                            ))}
+                          </ul>
+                        ) : lot.description ? (
+                          <small>{lot.description}</small>
+                        ) : null}
                         {lot.admissionsPerUnit > 1 ? (
                           <small className="ticketPickerAdmissionNote">
                             Cada compra gera {lot.admissionsPerUnit} QR Codes individuais.
