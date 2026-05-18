@@ -14,6 +14,7 @@ type HomePageProps = {
   searchParams?: Promise<{
     success?: string;
     error?: string;
+    q?: string;
   }>;
 };
 
@@ -54,15 +55,6 @@ function MenuIcon() {
       <path d="M4 7H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
       <path d="M4 12H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
       <path d="M4 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function PinIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
-      <path d="M12 20C12 20 18 14.6 18 10.2C18 6.78 15.31 4 12 4C8.69 4 6 6.78 6 10.2C6 14.6 12 20 12 20Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-      <circle cx="12" cy="10.2" r="2.35" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   );
 }
@@ -470,7 +462,16 @@ export default async function Home({ searchParams }: HomePageProps) {
     );
   }
 
-  const events = await listCachedPublishedEventShowcase(6, organizationContext.organization.id);
+  const searchQuery = typeof query.q === "string" ? query.q.trim() : "";
+  const normalizedSearchQuery = searchQuery.toLocaleLowerCase("pt-BR");
+  const allEvents = await listCachedPublishedEventShowcase(12, organizationContext.organization.id);
+  const events = normalizedSearchQuery
+    ? allEvents.filter((event) =>
+        [event.title, event.venueName, event.city, event.state]
+          .filter(Boolean)
+          .some((value) => value.toLocaleLowerCase("pt-BR").includes(normalizedSearchQuery))
+      )
+    : allEvents.slice(0, 6);
   const companySettings = await getCompanySettingsByOrganizationId(organizationContext.organization.id);
   const publicSocialSettings = companySettings as typeof companySettings & {
     instagramUrl?: string | null;
@@ -502,7 +503,7 @@ export default async function Home({ searchParams }: HomePageProps) {
 
           <form action="#eventos" className="tcrPremiumHeaderSearch" role="search">
             <SearchIcon />
-            <input aria-label="Buscar eventos, artistas ou locais" name="q" placeholder="Buscar eventos, artistas ou locais" type="search" />
+            <input aria-label="Buscar eventos, artistas ou locais" defaultValue={searchQuery} name="q" placeholder="Buscar eventos, artistas ou locais" type="search" />
           </form>
 
           <div className="tcrPremiumActions">
@@ -536,16 +537,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           <form action="#eventos" className="tcrPremiumMobileSearch" role="search">
             <label>
               <SearchIcon />
-              <input aria-label="Buscar eventos, artistas ou locais" name="q" placeholder="Buscar eventos, artistas ou locais" type="search" />
-            </label>
-            <label>
-              <PinIcon />
-              <select aria-label="Cidade">
-                <option>Todas as cidades</option>
-                <option>São Paulo, SP</option>
-                <option>Porto Alegre, RS</option>
-                <option>Santa Maria, RS</option>
-              </select>
+              <input aria-label="Buscar eventos, artistas ou locais" defaultValue={searchQuery} name="q" placeholder="Buscar eventos, artistas ou locais" type="search" />
             </label>
             <button className="button" type="submit">
               Buscar eventos

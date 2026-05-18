@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 type ShowcaseEvent = {
   id: string;
@@ -69,7 +69,7 @@ export function HomeEventCarousel({ events }: HomeEventCarouselProps) {
   const railRef = useRef<HTMLDivElement | null>(null);
   const hasCarouselControls = events.length > 1;
 
-  const scrollRail = (direction: "prev" | "next") => {
+  const scrollRail = useCallback((direction: "prev" | "next") => {
     const rail = railRef.current;
 
     if (!rail) {
@@ -104,7 +104,19 @@ export function HomeEventCarousel({ events }: HomeEventCarouselProps) {
       left: target,
       behavior: "smooth"
     });
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!hasCarouselControls) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      scrollRail("next");
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [hasCarouselControls, scrollRail]);
 
   if (events.length === 0) {
     return (
