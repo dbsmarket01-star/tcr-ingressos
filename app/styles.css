@@ -6911,6 +6911,145 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   line-height: 1;
 }
 
+.eventOverviewDemographicGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.eventOverviewDemographicColumn {
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid #e5eeea;
+  border-radius: 18px;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 16px;
+}
+
+.eventOverviewDemographicLead {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.eventOverviewDemographicLead > div {
+  display: grid;
+  gap: 4px;
+}
+
+.eventOverviewDemographicLead span {
+  color: #516072;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.eventOverviewDemographicLead strong {
+  color: #111827;
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1;
+}
+
+.eventOverviewDemographicLead small {
+  color: #64748b;
+  max-width: 220px;
+  text-align: right;
+}
+
+.eventOverviewDemographicLists {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.eventOverviewDemographicLists h3 {
+  color: #111827;
+  font-size: 15px;
+  margin: 0 0 10px;
+}
+
+.eventOverviewDemographicList {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.eventOverviewDemographicList li {
+  background: #f8fbf9;
+  border: 1px solid #e5eeea;
+  border-radius: 14px;
+  display: grid;
+  gap: 8px;
+  overflow: hidden;
+  padding: 12px;
+}
+
+.eventOverviewDemographicList li > div {
+  align-items: flex-start;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.eventOverviewDemographicList span {
+  color: #1f2937;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.eventOverviewDemographicList small {
+  color: #64748b;
+  flex: 0 0 auto;
+  font-size: 12px;
+  text-align: right;
+}
+
+.eventOverviewDemographicList strong {
+  color: var(--brand);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.eventOverviewDemographicList i {
+  background: linear-gradient(90deg, var(--brand), rgba(var(--brand-rgb), 0.32));
+  border-radius: 999px;
+  display: block;
+  height: 6px;
+  max-width: 100%;
+}
+
+.eventOverviewDemographicEmpty {
+  background: #f8fbf9;
+  border: 1px dashed #dce9e4;
+  border-radius: 14px;
+  color: #64748b;
+  margin: 0;
+  padding: 14px;
+}
+
+.eventOverviewDemographicFooter {
+  border-top: 1px solid #e5eeea;
+  color: #64748b;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 14px;
+}
+
+.eventOverviewDemographicFooter span {
+  background: #edf7f1;
+  border-radius: 999px;
+  color: #315645;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 10px;
+}
+
 .eventOverviewQuickActions {
   display: grid;
   gap: 14px;
@@ -7029,6 +7168,7 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   .eventOverviewSignalCard,
   .eventOverviewChartsGrid,
   .eventOverviewDualGrid,
+  .eventOverviewDemographicGrid,
   .eventOverviewMiniGrid {
     grid-template-columns: 1fr;
   }
@@ -7077,10 +7217,21 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   .eventOverviewTabs,
   .eventOverviewQuickActions,
   .eventOverviewMiniGrid,
+  .eventOverviewDemographicLists,
   .eventOverviewKpiGrid,
   .eventOverviewFunnelMeta,
   .eventOverviewSignalStats {
     grid-template-columns: 1fr;
+  }
+
+  .eventOverviewDemographicLead {
+    align-items: flex-start;
+    display: grid;
+  }
+
+  .eventOverviewDemographicLead small {
+    max-width: none;
+    text-align: left;
   }
 
   .eventOverviewHeroMain {

@@ -83,6 +83,8 @@ describe("order reservation concurrency", () => {
         buyerName: "Buyer",
         buyerEmail: "buyer@example.com",
         buyerDocument: "123",
+        buyerPostalCode: "25250-000",
+        buyerCity: "Duque de Caxias",
         buyerPhone: undefined,
         couponCode: undefined,
         items: [
@@ -167,6 +169,8 @@ describe("order reservation concurrency", () => {
         buyerName: "Buyer",
         buyerEmail: "buyer@example.com",
         buyerDocument: "52998224725",
+        buyerPostalCode: "25250-000",
+        buyerCity: "Duque de Caxias",
         buyerPhone: "11999999999",
         couponCode: undefined,
         items: [

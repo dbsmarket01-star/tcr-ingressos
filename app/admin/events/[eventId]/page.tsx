@@ -6,7 +6,7 @@ import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { countEventPageVisits } from "@/features/analytics/page-visit.service";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { duplicateEventAction, updateEventStatusAction } from "@/features/events/event.actions";
-import { getEventCapacity, getEventForManagement, getEventRevenueInCents } from "@/features/events/event.service";
+import { getEventCapacity, getEventForManagement, getEventOrderDemographics, getEventRevenueInCents } from "@/features/events/event.service";
 import { getLeadOriginBucket } from "@/features/tracking/tracking";
 import { formatCurrency } from "@/lib/format";
 import { getPublicEventUrl } from "@/lib/public-url";
@@ -161,6 +161,77 @@ function summarizeLeadOrigins(
     .slice(0, 4);
 }
 
+type DemographicSummary = Awaited<ReturnType<typeof getEventOrderDemographics>>["paid"];
+
+function EventDemographicColumn({
+  title,
+  description,
+  summary
+}: {
+  title: string;
+  description: string;
+  summary: DemographicSummary;
+}) {
+  return (
+    <article className="eventOverviewDemographicColumn">
+      <div className="eventOverviewDemographicLead">
+        <div>
+          <span>{title}</span>
+          <strong>{summary.total}</strong>
+        </div>
+        <small>{description}</small>
+      </div>
+
+      <div className="eventOverviewDemographicLists">
+        <div>
+          <h3>Cidades</h3>
+          {summary.cities.length === 0 ? (
+            <p className="eventOverviewDemographicEmpty">Sem cidade registrada ainda.</p>
+          ) : (
+            <ul className="eventOverviewDemographicList">
+              {summary.cities.map((item) => (
+                <li key={item.label}>
+                  <div>
+                    <span>{item.label}</span>
+                    <small>{item.count} pedido(s)</small>
+                  </div>
+                  <strong>{item.rate.toFixed(0)}%</strong>
+                  <i style={{ width: `${Math.max(item.rate, 4)}%` }} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div>
+          <h3>Bairros</h3>
+          {summary.neighborhoods.length === 0 ? (
+            <p className="eventOverviewDemographicEmpty">Sem bairro registrado ainda.</p>
+          ) : (
+            <ul className="eventOverviewDemographicList">
+              {summary.neighborhoods.map((item) => (
+                <li key={item.label}>
+                  <div>
+                    <span>{item.label}</span>
+                    <small>{item.count} pedido(s)</small>
+                  </div>
+                  <strong>{item.rate.toFixed(0)}%</strong>
+                  <i style={{ width: `${Math.max(item.rate, 4)}%` }} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      <div className="eventOverviewDemographicFooter">
+        <span>{summary.withCity} com cidade</span>
+        <span>{summary.withNeighborhood} com bairro</span>
+      </div>
+    </article>
+  );
+}
+
 function DashboardIcon({
   kind
 }: {
@@ -305,10 +376,11 @@ export default async function EventManagementPage({ params, searchParams }: Even
   const { eventId } = await params;
   await requireEventAccess(eventId);
   const query = searchParams ? await searchParams : {};
-  const [event, leadCaptureVisits, publicEventVisits] = await Promise.all([
+  const [event, leadCaptureVisits, publicEventVisits, orderDemographics] = await Promise.all([
     getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin)),
     countEventPageVisits(eventId, "LEAD_CAPTURE"),
-    countEventPageVisits(eventId, "PUBLIC_EVENT")
+    countEventPageVisits(eventId, "PUBLIC_EVENT"),
+    getEventOrderDemographics(eventId, admin.organizationId!, getAdminAllowedEventIds(admin))
   ]);
 
   if (!event) {
@@ -504,6 +576,29 @@ export default async function EventManagementPage({ params, searchParams }: Even
               <span>Disponíveis agora</span>
               <strong>{availableTickets}</strong>
             </div>
+          </div>
+        </section>
+
+        <section className="eventOverviewPanel">
+          <div className="eventOverviewPanelHeader">
+            <div>
+              <h2>Dados demográficos</h2>
+              <p>Cidade e bairro informados no checkout para orientar campanhas e mídia local.</p>
+            </div>
+            <span className="eventOverviewPill">Marketing</span>
+          </div>
+
+          <div className="eventOverviewDemographicGrid">
+            <EventDemographicColumn
+              title="Compraram"
+              description="Pedidos pagos e aprovados"
+              summary={orderDemographics.paid}
+            />
+            <EventDemographicColumn
+              title="Pendentes"
+              description="Pedidos iniciados que ainda não concluíram o pagamento"
+              summary={orderDemographics.pending}
+            />
           </div>
         </section>
 

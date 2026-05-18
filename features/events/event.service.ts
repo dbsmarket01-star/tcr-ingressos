@@ -1,4 +1,4 @@
-import { EventStatus, Prisma } from "@prisma/client";
+import { EventStatus, OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 import { getDefaultOrganizationId } from "@/features/organizations/organization.service";
 import { prisma } from "@/lib/prisma";
@@ -287,6 +287,119 @@ export async function getEventForManagement(
       }
     }
   });
+}
+
+type DemographicOrder = {
+  status: OrderStatus;
+  buyerCity: string | null;
+  buyerState: string | null;
+  buyerNeighborhood: string | null;
+  payment: {
+    status: PaymentStatus;
+  } | null;
+};
+
+function cleanLocationPart(value: string | null | undefined) {
+  return value?.trim().replace(/\s+/g, " ") || "";
+}
+
+function buildCityLabel(order: DemographicOrder) {
+  const city = cleanLocationPart(order.buyerCity);
+  const state = cleanLocationPart(order.buyerState).toUpperCase();
+
+  if (!city) {
+    return "";
+  }
+
+  return state ? `${city}/${state}` : city;
+}
+
+function buildNeighborhoodLabel(order: DemographicOrder) {
+  const neighborhood = cleanLocationPart(order.buyerNeighborhood);
+  const cityLabel = buildCityLabel(order);
+
+  if (!neighborhood) {
+    return "";
+  }
+
+  return cityLabel ? `${neighborhood} - ${cityLabel}` : neighborhood;
+}
+
+function summarizeDemographicRows(orders: DemographicOrder[], getLabel: (order: DemographicOrder) => string, limit = 8) {
+  const buckets = new Map<string, number>();
+
+  for (const order of orders) {
+    const label = getLabel(order);
+    if (!label) continue;
+    buckets.set(label, (buckets.get(label) ?? 0) + 1);
+  }
+
+  const locatedTotal = Array.from(buckets.values()).reduce((sum, count) => sum + count, 0);
+
+  return {
+    locatedTotal,
+    rows: Array.from(buckets.entries())
+      .map(([label, count]) => ({
+        label,
+        count,
+        rate: locatedTotal > 0 ? Number(((count / locatedTotal) * 100).toFixed(2)) : 0
+      }))
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "pt-BR"))
+      .slice(0, limit)
+  };
+}
+
+function summarizeOrderDemographics(orders: DemographicOrder[]) {
+  const cities = summarizeDemographicRows(orders, buildCityLabel);
+  const neighborhoods = summarizeDemographicRows(orders, buildNeighborhoodLabel);
+
+  return {
+    total: orders.length,
+    withCity: cities.locatedTotal,
+    withNeighborhood: neighborhoods.locatedTotal,
+    cities: cities.rows,
+    neighborhoods: neighborhoods.rows
+  };
+}
+
+export async function getEventOrderDemographics(
+  eventId: string,
+  organizationId: string,
+  allowedEventIds?: string[] | null
+) {
+  const orders = await prisma.order.findMany({
+    where: {
+      eventId,
+      event: {
+        organizationId,
+        ...(allowedEventIds ? { id: { in: allowedEventIds } } : {})
+      },
+      status: {
+        in: [OrderStatus.PAID, OrderStatus.PENDING_PAYMENT]
+      }
+    },
+    select: {
+      status: true,
+      buyerCity: true,
+      buyerState: true,
+      buyerNeighborhood: true,
+      payment: {
+        select: {
+          status: true
+        }
+      }
+    }
+  });
+
+  const paidOrders = orders.filter(
+    (order) => order.status === OrderStatus.PAID && order.payment?.status === PaymentStatus.APPROVED
+  );
+  const pendingOrders = orders.filter((order) => order.status === OrderStatus.PENDING_PAYMENT);
+
+  return {
+    paid: summarizeOrderDemographics(paidOrders),
+    pending: summarizeOrderDemographics(pendingOrders)
+  };
 }
 
 export async function getPublicEventBySlug(slug: string, organizationId: string) {
