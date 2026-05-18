@@ -15,7 +15,7 @@ type EventMapEditorProps = {
 
 type DragState = {
   id: string;
-  mode: "move" | "resize";
+  mode: "move" | "resize" | "resize-width" | "resize-height";
   startClientX: number;
   startClientY: number;
   startBlock: EventMapBlock;
@@ -160,6 +160,13 @@ const sectorColorOptions = [
   { label: "Verde", color: "#16a34a" }
 ];
 
+const selectedBlockColorOptions = [
+  ...sectorColorOptions,
+  { label: "Azul camarote", color: "#1428ff" },
+  { label: "Vermelho", color: "#dc2626" },
+  { label: "Teal", color: "#0f766e" }
+];
+
 function makeBlockId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
@@ -222,11 +229,34 @@ export function EventMapEditor({ initialValue, mapSources = [] }: EventMapEditor
   const selectedBlock = layout.blocks.find((block) => block.id === selectedId) ?? layout.blocks[0] ?? null;
   const storedValue = useMemo(() => toStoredLayout(layout), [layout]);
 
+  function normalizeBlockPatch(block: EventMapBlock, patch: Partial<EventMapBlock>): EventMapBlock {
+    const width = Math.min(layout.width, Math.max(40, Math.round(Number(patch.width ?? block.width))));
+    const height = Math.min(layout.height, Math.max(28, Math.round(Number(patch.height ?? block.height))));
+    const x = Math.min(layout.width - width, Math.max(0, Math.round(Number(patch.x ?? block.x))));
+    const y = Math.min(layout.height - height, Math.max(0, Math.round(Number(patch.y ?? block.y))));
+
+    return {
+      ...block,
+      ...patch,
+      x,
+      y,
+      width,
+      height,
+      rotation: Math.min(180, Math.max(-180, Math.round(Number(patch.rotation ?? block.rotation ?? 0))))
+    };
+  }
+
   function updateBlock(id: string, patch: Partial<EventMapBlock>) {
     setLayout((current) => ({
       ...current,
-      blocks: current.blocks.map((block) => block.id === id ? { ...block, ...patch } : block)
+      blocks: current.blocks.map((block) => block.id === id ? normalizeBlockPatch(block, patch) : block)
     }));
+  }
+
+  function adjustSelectedBlock(patch: Partial<Pick<EventMapBlock, "width" | "height" | "x" | "y">>) {
+    if (!selectedBlock) return;
+
+    updateBlock(selectedBlock.id, patch);
   }
 
   function addBlock(preset: typeof blockPresets[number]) {
@@ -357,14 +387,29 @@ export function EventMapEditor({ initialValue, mapSources = [] }: EventMapEditor
       return;
     }
 
+    if (dragState.mode === "resize-width") {
+      updateBlock(dragState.id, {
+        width: Math.round(Math.min(layout.width - dragState.startBlock.x, Math.max(40, dragState.startBlock.width + dx)))
+      });
+      return;
+    }
+
+    if (dragState.mode === "resize-height") {
+      updateBlock(dragState.id, {
+        height: Math.round(Math.min(layout.height - dragState.startBlock.y, Math.max(28, dragState.startBlock.height + dy)))
+      });
+      return;
+    }
+
     updateBlock(dragState.id, {
       width: Math.round(Math.min(layout.width - dragState.startBlock.x, Math.max(40, dragState.startBlock.width + dx))),
       height: Math.round(Math.min(layout.height - dragState.startBlock.y, Math.max(28, dragState.startBlock.height + dy)))
     });
   }
 
-  function startDrag(event: PointerEvent<HTMLElement>, block: EventMapBlock, mode: "move" | "resize") {
+  function startDrag(event: PointerEvent<HTMLElement>, block: EventMapBlock, mode: DragState["mode"]) {
     event.preventDefault();
+    event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
     setSelectedId(block.id);
     setPreviewMode(false);
@@ -505,12 +550,26 @@ export function EventMapEditor({ initialValue, mapSources = [] }: EventMapEditor
               <span>{block.label}</span>
               {block.seats ? <small>{block.seats.toLocaleString("pt-BR")} lugares</small> : null}
               {!previewMode ? (
-                <button
-                  aria-label={`Redimensionar ${block.label}`}
-                  className="eventMapEditorResize"
-                  onPointerDown={(event) => startDrag(event, block, "resize")}
-                  type="button"
-                />
+                <>
+                  <button
+                    aria-label={`Ajustar largura de ${block.label}`}
+                    className="eventMapEditorResize eventMapEditorResizeWidth"
+                    onPointerDown={(event) => startDrag(event, block, "resize-width")}
+                    type="button"
+                  />
+                  <button
+                    aria-label={`Ajustar altura de ${block.label}`}
+                    className="eventMapEditorResize eventMapEditorResizeHeight"
+                    onPointerDown={(event) => startDrag(event, block, "resize-height")}
+                    type="button"
+                  />
+                  <button
+                    aria-label={`Redimensionar ${block.label}`}
+                    className="eventMapEditorResize eventMapEditorResizeCorner"
+                    onPointerDown={(event) => startDrag(event, block, "resize")}
+                    type="button"
+                  />
+                </>
               ) : null}
             </div>
           ))}
@@ -540,6 +599,58 @@ export function EventMapEditor({ initialValue, mapSources = [] }: EventMapEditor
               <span>Cor</span>
               <input type="color" value={selectedBlock.color} onChange={(event) => updateBlock(selectedBlock.id, { color: event.target.value })} />
             </label>
+            <div className="eventMapInspectorColors" aria-label="Cores rápidas do bloco selecionado">
+              {selectedBlockColorOptions.map((option) => (
+                <button
+                  aria-label={`Aplicar cor ${option.label}`}
+                  className={selectedBlock.color === option.color ? "isSelected" : ""}
+                  key={`${option.label}-${option.color}`}
+                  onClick={() => updateBlock(selectedBlock.id, { color: option.color })}
+                  style={{ background: option.color }}
+                  title={option.label}
+                  type="button"
+                />
+              ))}
+            </div>
+            <div className="eventMapEditorSizePanel">
+              <strong>Ajuste rápido do tamanho</strong>
+              <div className="eventMapEditorSizeActions">
+                <button className="secondaryButton smallButton" onClick={() => adjustSelectedBlock({ width: selectedBlock.width - 40 })} type="button">
+                  Menos largo
+                </button>
+                <button className="secondaryButton smallButton" onClick={() => adjustSelectedBlock({ width: selectedBlock.width + 40 })} type="button">
+                  Mais largo
+                </button>
+                <button className="secondaryButton smallButton" onClick={() => adjustSelectedBlock({ height: selectedBlock.height - 25 })} type="button">
+                  Mais fino
+                </button>
+                <button className="secondaryButton smallButton" onClick={() => adjustSelectedBlock({ height: selectedBlock.height + 25 })} type="button">
+                  Mais grosso
+                </button>
+              </div>
+              <label>
+                <span>Largura visual</span>
+                <input
+                  max={layout.width}
+                  min={40}
+                  onChange={(event) => updateBlock(selectedBlock.id, { width: Number(event.target.value) })}
+                  step={10}
+                  type="range"
+                  value={selectedBlock.width}
+                />
+              </label>
+              <label>
+                <span>Altura visual</span>
+                <input
+                  max={layout.height}
+                  min={28}
+                  onChange={(event) => updateBlock(selectedBlock.id, { height: Number(event.target.value) })}
+                  step={10}
+                  type="range"
+                  value={selectedBlock.height}
+                />
+              </label>
+            </div>
             <div className="eventMapEditorNumberGrid">
               <label>
                 <span>X</span>

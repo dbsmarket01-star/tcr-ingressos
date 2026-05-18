@@ -9570,13 +9570,37 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 }
 
 .eventMapEditorInspector > label:has(textarea),
-.eventMapEditorInspector > .eventMapEditorNumberGrid {
+.eventMapEditorInspector > .eventMapEditorNumberGrid,
+.eventMapEditorInspector > .eventMapEditorSizePanel {
   grid-column: span 2;
 }
 
 .eventMapEditorPalette > strong,
 .eventMapEditorInspector > strong {
   color: #111827;
+}
+
+.eventMapInspectorColors {
+  align-content: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.eventMapInspectorColors button {
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.16);
+  cursor: pointer;
+  height: 28px;
+  padding: 0;
+  width: 28px;
+}
+
+.eventMapInspectorColors button.isSelected {
+  box-shadow:
+    0 0 0 2px rgba(var(--brand-rgb), 0.32),
+    0 4px 10px rgba(15, 23, 42, 0.18);
 }
 
 .eventMapEditorPalette > div {
@@ -9898,13 +9922,28 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   background: #ffffff;
   border: 2px solid var(--map-block-color);
   border-radius: 999px;
-  bottom: -7px;
-  cursor: nwse-resize;
   height: 18px;
   padding: 0;
   position: absolute;
-  right: -7px;
   width: 18px;
+}
+
+.eventMapEditorResizeWidth {
+  cursor: ew-resize;
+  right: -9px;
+  top: calc(50% - 9px);
+}
+
+.eventMapEditorResizeHeight {
+  bottom: -9px;
+  cursor: ns-resize;
+  left: calc(50% - 9px);
+}
+
+.eventMapEditorResizeCorner {
+  bottom: -9px;
+  cursor: nwse-resize;
+  right: -9px;
 }
 
 .eventMapEditorInspector label {
@@ -9940,6 +9979,37 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   display: grid;
   gap: 8px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.eventMapEditorSizePanel {
+  background: #f8fbf9;
+  border: 1px solid #dce9e4;
+  border-radius: 14px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.eventMapEditorSizePanel > strong {
+  color: #111827;
+  font-size: 13px;
+}
+
+.eventMapEditorSizeActions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.eventMapEditorSizeActions .smallButton {
+  min-width: 0;
+}
+
+.eventMapEditorSizePanel input[type="range"],
+.eventMapEditorInspector input[type="range"] {
+  accent-color: rgb(var(--brand-rgb));
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .eventMapEditorQuickActions {
