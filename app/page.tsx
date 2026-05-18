@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createPlatformLeadAction } from "@/features/platform-leads/platform-lead.actions";
 import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
 import { HomeEventCarousel } from "@/components/public/HomeEventCarousel";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { listCachedPublishedEventShowcase } from "@/features/events/event.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
@@ -425,8 +426,10 @@ export default async function Home({ searchParams }: HomePageProps) {
           </div>
 
           <form action={createPlatformLeadAction} className="ingressaasLeadForm">
-            {platformLeadMessage ? (
-              <div className={`formFeedback ${platformLeadMessage.tone === "error" ? "error" : "success"}`}>
+            {platformLeadMessage?.tone === "error" ? (
+              <ErrorNotice message={platformLeadMessage.text} className="formFeedback" />
+            ) : platformLeadMessage ? (
+              <div className="formFeedback success">
                 {platformLeadMessage.text}
               </div>
             ) : null}
