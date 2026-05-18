@@ -5,7 +5,8 @@ type FooterInfoTitleField =
   | "footerPrivacyTitle"
   | "footerHelpTitle"
   | "footerFaqTitle"
-  | "footerContactTitle";
+  | "footerContactTitle"
+  | "footerCancellationPolicyTitle";
 
 type FooterInfoContentField =
   | "footerAboutContent"
@@ -14,7 +15,8 @@ type FooterInfoContentField =
   | "footerPrivacyContent"
   | "footerHelpContent"
   | "footerFaqContent"
-  | "footerContactContent";
+  | "footerContactContent"
+  | "footerCancellationPolicyContent";
 
 export type FooterInfoItem = {
   key: string;
@@ -81,6 +83,13 @@ export const footerInfoSections = [
         label: "Contato",
         titleField: "footerContactTitle",
         contentField: "footerContactContent"
+      },
+      {
+        key: "cancellationPolicy",
+        slug: "politica-de-cancelamento",
+        label: "Política de cancelamento",
+        titleField: "footerCancellationPolicyTitle",
+        contentField: "footerCancellationPolicyContent"
       }
     ]
   }

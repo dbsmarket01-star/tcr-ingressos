@@ -138,6 +138,8 @@ export async function updateCompanySettingsAction(formData: FormData) {
     footerFaqContent: readOptionalText(formData, "footerFaqContent"),
     footerContactTitle: readOptionalText(formData, "footerContactTitle"),
     footerContactContent: readOptionalText(formData, "footerContactContent"),
+    footerCancellationPolicyTitle: readOptionalText(formData, "footerCancellationPolicyTitle"),
+    footerCancellationPolicyContent: readOptionalText(formData, "footerCancellationPolicyContent"),
     defaultCurrency: String(formData.get("defaultCurrency") ?? "BRL"),
     platformFeePercent: normalizeDecimal(formData.get("platformFeePercent")),
     orderReservationMinutes: String(formData.get("orderReservationMinutes") ?? "120"),

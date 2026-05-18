@@ -25,6 +25,8 @@ export const companySettingsSchema = z.object({
   footerFaqContent: z.string().trim().max(10000).optional(),
   footerContactTitle: z.string().trim().max(80).optional(),
   footerContactContent: z.string().trim().max(10000).optional(),
+  footerCancellationPolicyTitle: z.string().trim().max(80).optional(),
+  footerCancellationPolicyContent: z.string().trim().max(10000).optional(),
   defaultCurrency: z.string().trim().min(3).max(3).default("BRL"),
   platformFeePercent: z.coerce.number().min(0).max(30).default(0),
   orderReservationMinutes: z.coerce.number().int().min(15).max(1440).default(120),

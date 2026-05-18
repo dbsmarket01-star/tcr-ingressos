@@ -156,7 +156,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             </div>
             <p className="muted">
               Esses textos alimentam os botões do rodapé público da bilheteria: Sobre nós, Como funciona,
-              Termos, Privacidade, Central de ajuda, Dúvidas frequentes e Contato.
+              Termos, Privacidade, Central de ajuda, Dúvidas frequentes, Contato e Política de cancelamento.
             </p>
           </div>
           <label className="field">
