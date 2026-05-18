@@ -4,12 +4,14 @@ import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { notFound } from "next/navigation";
 import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
+import { SeatMapTicketSelector } from "@/components/public/SeatMapTicketSelector";
 import { EventMapView } from "@/components/public/EventMapView";
 import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrganization } from "@/features/events/event.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
+import { getPublicSeatMapForEvent } from "@/features/seat-maps/seat-map.service";
 import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import { buildEventSeo } from "@/features/seo/event-seo";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
@@ -212,6 +214,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   }
 
   const now = new Date();
+  const seatMapLayout = await getPublicSeatMapForEvent(event.id);
+  const hasNumberedSeatMap = Boolean(seatMapLayout);
   const activeLots = event.lots.filter((lot) => {
     const startsOk = !lot.salesStartsAt || lot.salesStartsAt <= now;
     const endsOk = !lot.salesEndsAt || lot.salesEndsAt >= now;
@@ -348,7 +352,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         </div>
       </section>
 
-      <section className="container publicGrid">
+      <section className={`container publicGrid ${hasNumberedSeatMap ? "hasNumberedSeatMap" : ""}`}>
         <article className="publicContent">
           {descriptionParagraphs.length > 0 ? (
             <section className="eventInfoBlock eventDescriptionBlock">
@@ -374,9 +378,9 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             </section>
           ) : null}
 
-          {event.eventMapLayout ? (
+          {!hasNumberedSeatMap && event.eventMapLayout ? (
             <EventMapView layout={event.eventMapLayout} notes={event.eventMapNotes} />
-          ) : event.eventMapImageUrl ? (
+          ) : !hasNumberedSeatMap && event.eventMapImageUrl ? (
             <section className="contentBlock eventMapBlock">
               <h2>Mapa do evento</h2>
               <div className={`eventMapImageFrame ${mapCrop ? "hasCrop" : ""}`}>
@@ -396,15 +400,22 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         </article>
 
         <aside className="purchasePanel" id="ingressos">
-          <div className="purchaseStickyLabel">
-            <span>Ingressos disponíveis</span>
-            <strong>Selecione seus ingressos</strong>
-          </div>
+          {!hasNumberedSeatMap ? (
+            <div className="purchaseStickyLabel">
+              <span>Ingressos disponíveis</span>
+              <strong>Selecione seus ingressos</strong>
+            </div>
+          ) : null}
 
           {activeLots.length === 0 ? (
             <div className="empty">Nenhum ingresso disponível no momento.</div>
           ) : (
-            <form action={`/evento/${event.slug}/checkout`} className="form" method="get" noValidate>
+            <form
+              action={`/evento/${event.slug}/checkout`}
+              className={`form ${hasNumberedSeatMap ? "numberedSeatCheckoutForm" : ""}`}
+              method="get"
+              noValidate
+            >
               <ErrorNotice message={checkoutError} />
               <input type="hidden" name="utm_source" value={tracking.utmSource ?? ""} />
               <input type="hidden" name="utm_medium" value={tracking.utmMedium ?? ""} />
@@ -414,6 +425,9 @@ export default async function EventPage({ params, searchParams }: EventPageProps
               <input type="hidden" name="ref" value={tracking.referrer ?? ""} />
               <input type="hidden" name="landingPage" value={tracking.landingPage ?? ""} />
               {typeof query.fbclid === "string" ? <input type="hidden" name="fbclid" value={query.fbclid} /> : null}
+              {seatMapLayout ? (
+                <SeatMapTicketSelector layout={seatMapLayout} maxSelection={8} />
+              ) : (
               <div className="ticketPickerList">
                 {activeLots.map((lot) => {
                   const available = getAvailableLotQuantity(lot);
@@ -481,8 +495,9 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                   );
                 })}
               </div>
+              )}
 
-              <CheckoutEstimator lots={checkoutEstimatorLots} />
+              {!seatMapLayout ? <CheckoutEstimator lots={checkoutEstimatorLots} /> : null}
 
               <AddToCartButton />
               <p className="checkoutFootnote">

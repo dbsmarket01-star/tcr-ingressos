@@ -4,6 +4,7 @@ import { calculateCouponDiscountInCents, getValidCouponForEvent } from "@/featur
 import { createPublicOrderUrl, sendOrderExpiredEmail } from "@/features/email/email.service";
 import { updateHomeListStatusForOrder } from "@/features/hospitality/home-list.service";
 import { calculatePixDiscountInCents, calculateServiceFeeInCents } from "@/features/pricing/pricing";
+import { releaseSeatReservationsForOrder, releaseSoldSeatsForOrder, reserveSeatsForOrderItem } from "@/features/seat-maps/seat-map.service";
 import { getOrderReservationMinutes } from "@/features/settings/company-settings.service";
 import { sendCartAbandonmentWhatsApp } from "@/features/whatsapp/whatsapp.service";
 import { isValidCpf, onlyDocumentDigits } from "@/lib/document-validation";
@@ -240,6 +241,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
       const orderItems: Array<{
         lotId: string;
         lotOptionId?: string | null;
+        seatIds: string[];
         quantity: number;
         unitPriceInCents: number;
         serviceFeeBps: number;
@@ -300,6 +302,12 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           throw new Error(`Quantidade invalida para ${lot.name}.`);
         }
 
+        const selectedSeatIds = Array.from(new Set(item.seatIds ?? []));
+
+        if (selectedSeatIds.length > 0 && selectedSeatIds.length !== item.quantity) {
+          throw new Error(`A quantidade de assentos selecionados nao confere com ${lot.name}.`);
+        }
+
         let lotOption: { id: string; label: string } | null = null;
 
         if (lot.hasTypeOptions) {
@@ -348,6 +356,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
         orderItems.push({
           lotId: lot.id,
           lotOptionId: lotOption?.id || null,
+          seatIds: selectedSeatIds,
           quantity: item.quantity,
           unitPriceInCents: lot.priceInCents,
           serviceFeeBps: lot.serviceFeeBps,
@@ -502,9 +511,31 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
         }
       });
 
-      if (hotelGuestsToCreate.length > 0) {
-        const orderItemsByLotId = new Map(order.items.map((item) => [item.lotId, item.id]));
+      const orderItemsByLotId = new Map(order.items.map((item) => [item.lotId, item.id]));
 
+      for (const item of orderItems) {
+        if (item.seatIds.length === 0) {
+          continue;
+        }
+
+        const orderItemId = orderItemsByLotId.get(item.lotId);
+
+        if (!orderItemId) {
+          throw new Error("Não foi possível vincular os assentos ao item do pedido.");
+        }
+
+        await reserveSeatsForOrderItem({
+          tx,
+          eventId: event.id,
+          orderId: order.id,
+          orderItemId,
+          lotId: item.lotId,
+          seatIds: item.seatIds,
+          expiresAt
+        });
+      }
+
+      if (hotelGuestsToCreate.length > 0) {
         await tx.orderHotelGuest.createMany({
           data: hotelGuestsToCreate.map((guest) => {
             const orderItemId = orderItemsByLotId.get(guest.lotId);
@@ -648,6 +679,7 @@ export async function expirePendingOrders(options?: {
         }
 
         await updateHomeListStatusForOrder(tx, order.id, HomeListStatus.CANCELED);
+        await releaseSeatReservationsForOrder(tx, order.id, now);
 
         return { expired: true, released };
       },
@@ -873,6 +905,7 @@ export async function expirePendingOrderByCode(code: string, organizationId?: st
       }
 
       await updateHomeListStatusForOrder(tx, order.id, HomeListStatus.CANCELED);
+      await releaseSeatReservationsForOrder(tx, order.id, new Date());
 
       return {
         expiredCount: 1,
@@ -981,6 +1014,7 @@ export async function cancelPendingOrderByCode(
       }
 
       await updateHomeListStatusForOrder(tx, order.id, HomeListStatus.CANCELED);
+      await releaseSeatReservationsForOrder(tx, order.id, new Date());
 
       return {
         canceled: true,
@@ -1120,6 +1154,7 @@ export async function refundPaidOrderByCode(
       });
 
       await updateHomeListStatusForOrder(tx, order.id, HomeListStatus.CANCELED);
+      await releaseSoldSeatsForOrder(tx, order.id);
 
       return {
         refunded: true,

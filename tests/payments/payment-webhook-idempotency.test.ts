@@ -12,6 +12,16 @@ const prismaMock = {
     update: vi.fn(),
     updateMany: vi.fn()
   },
+  seatReservation: {
+    findMany: vi.fn(),
+    updateMany: vi.fn()
+  },
+  seat: {
+    updateMany: vi.fn()
+  },
+  orderSeat: {
+    findMany: vi.fn()
+  },
   ticket: {
     updateMany: vi.fn(),
     create: vi.fn()
@@ -95,6 +105,7 @@ describe("payment webhook idempotency", () => {
           name: "Buyer"
         },
         items: [],
+        orderSeats: [],
         event: {
           title: "Evento",
           startsAt: new Date("2026-01-01T20:00:00.000Z"),
@@ -173,6 +184,7 @@ describe("payment webhook idempotency", () => {
           name: "Buyer"
         },
         items: [],
+        orderSeats: [],
         event: {
           title: "Evento",
           startsAt: new Date("2026-01-01T20:00:00.000Z"),
@@ -249,6 +261,7 @@ describe("payment webhook idempotency", () => {
             quantity: 1
           }
         ],
+        orderSeats: [],
         event: {
           title: "A2 Imergidos Gramado",
           startsAt: new Date("2026-08-28T18:00:00.000Z"),
@@ -270,6 +283,7 @@ describe("payment webhook idempotency", () => {
     );
     prismaMock.payment.findFirst.mockResolvedValue(pendingPayment);
     prismaMock.payment.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.seatReservation.findMany.mockResolvedValue([]);
     prismaMock.$executeRaw.mockResolvedValue(1);
     prismaMock.ticket.create.mockResolvedValue({
       code: "TICKET-1",

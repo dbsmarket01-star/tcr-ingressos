@@ -42,6 +42,12 @@ export const adminNavItems: AdminNavItem[] = [
     area: "EVENTS"
   },
   {
+    href: "/admin/seat-maps",
+    label: "Mapas numerados",
+    description: "Mesas, cadeiras e assentos marcados",
+    area: "EVENTS"
+  },
+  {
     href: "/admin/crm",
     label: "Kanban",
     description: "Kanban de leads, pedidos e recuperacao",
@@ -201,7 +207,7 @@ export const adminNavGroups: AdminNavGroup[] = [
     description: "Eventos, vendas pagas e pedidos gerados",
     defaultOpen: true,
     items: adminNavItems.filter((item) =>
-      ["/admin/events", "/admin/finance", "/admin/orders", "/admin/manual-sales", "/admin/home-list"].includes(item.href)
+      ["/admin/events", "/admin/seat-maps", "/admin/finance", "/admin/orders", "/admin/manual-sales", "/admin/home-list"].includes(item.href)
     )
   },
   {

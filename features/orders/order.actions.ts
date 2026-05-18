@@ -139,6 +139,12 @@ function buildCheckoutReturnUrl(formData: FormData, eventSlug: string, message: 
     if (lotOptionId) {
       params.set(`lotOption_${lotId}`, lotOptionId);
     }
+
+    formData.getAll(`seatId_${lotId}`).map(String).forEach((seatId) => {
+      if (seatId.trim()) {
+        params.append(`seatId_${lotId}`, seatId.trim());
+      }
+    });
   });
 
   return `/evento/${eventSlug}/checkout?${params.toString()}#cadastro`;
@@ -194,6 +200,7 @@ export async function createCheckoutOrderAction(formData: FormData) {
     items: lotIds.map((lotId) => ({
       lotId,
       lotOptionId: String(formData.get(`lotOption_${lotId}`) ?? "").trim() || undefined,
+      seatIds: formData.getAll(`seatId_${lotId}`).map(String).map((seatId) => seatId.trim()).filter(Boolean),
       quantity: Number(formData.get(`quantity_${lotId}`) ?? 0)
     }))
   });

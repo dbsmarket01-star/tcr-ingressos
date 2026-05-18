@@ -31,6 +31,7 @@ export const checkoutOrderSchema = z.object({
       z.object({
         lotId: z.string().min(1),
         lotOptionId: z.string().optional(),
+        seatIds: z.array(z.string().min(1)).optional(),
         quantity: z.number().int().min(0)
       })
     )

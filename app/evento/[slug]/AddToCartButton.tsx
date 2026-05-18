@@ -15,7 +15,6 @@ export function AddToCartButton() {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const inputs = Array.from(document.querySelectorAll<HTMLInputElement>('input[name^="quantity_"]'));
     const form = buttonRef.current?.form;
 
     function updateSelectedQuantity() {
@@ -34,20 +33,21 @@ export function AddToCartButton() {
     }
 
     updateSelectedQuantity();
-    inputs.forEach((input) => {
-      input.addEventListener("input", updateSelectedQuantity);
-      input.addEventListener("change", updateSelectedQuantity);
-    });
+    form?.addEventListener("input", updateSelectedQuantity);
+    form?.addEventListener("change", updateSelectedQuantity);
     form?.addEventListener("submit", handleSubmit);
+    window.addEventListener("seatmap-selection-change", updateSelectedQuantity);
     window.addEventListener("pageshow", resetSubmitting);
+    const observer = form ? new MutationObserver(updateSelectedQuantity) : null;
+    observer?.observe(form as HTMLFormElement, { childList: true, subtree: true });
 
     return () => {
-      inputs.forEach((input) => {
-        input.removeEventListener("input", updateSelectedQuantity);
-        input.removeEventListener("change", updateSelectedQuantity);
-      });
+      form?.removeEventListener("input", updateSelectedQuantity);
+      form?.removeEventListener("change", updateSelectedQuantity);
       form?.removeEventListener("submit", handleSubmit);
+      window.removeEventListener("seatmap-selection-change", updateSelectedQuantity);
       window.removeEventListener("pageshow", resetSubmitting);
+      observer?.disconnect();
     };
   }, []);
 

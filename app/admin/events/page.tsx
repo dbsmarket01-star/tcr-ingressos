@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { duplicateEventAction } from "@/features/events/event.actions";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
@@ -15,6 +16,7 @@ type EventsPageProps = {
     status?: string;
     date?: string;
     city?: string;
+    error?: string;
     page?: string;
     pageSize?: string;
   }>;
@@ -105,6 +107,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const selectedStatus = params.status?.trim() || "all";
   const selectedDate = params.date?.trim() || "all";
   const selectedCity = params.city?.trim() || "all";
+  const pageError = typeof params.error === "string" ? params.error : "";
   const page = Math.max(1, Number(params.page || "1") || 1);
   const pageSize = Math.min(20, Math.max(5, Number(params.pageSize || "5") || 5));
 
@@ -142,6 +145,8 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       description="Visualize e gerencie todos os seus eventos em um só lugar."
     >
       <section className="eventsIndexShell">
+        {pageError ? <ErrorNotice message={pageError} /> : null}
+
         <section className="eventsIndexPanel">
           <div className="eventsIndexToolbar">
             <div>

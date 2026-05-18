@@ -44,6 +44,7 @@ describe("order reservation concurrency", () => {
           email: "buyer@example.com",
           document: "123"
         })),
+        update: vi.fn(async (input) => ({ id: "customer_1", ...input.data })),
         create: vi.fn()
       },
       ticketLot: {
@@ -123,6 +124,7 @@ describe("order reservation concurrency", () => {
           email: "buyer@example.com",
           document: "52998224725"
         })),
+        update: vi.fn(async (input) => ({ id: "customer_1", ...input.data })),
         create: vi.fn()
       },
       ticketLot: {

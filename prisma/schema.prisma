@@ -77,6 +77,28 @@ enum TicketStatus {
   INVALID
 }
 
+enum SeatMapKind {
+  THEATER
+  ARENA
+  OVAL
+  RESTAURANT
+  CUSTOM
+}
+
+enum SeatStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+  BLOCKED
+  ACCESSIBLE
+}
+
+enum SeatTableShape {
+  ROUND
+  SQUARE
+  RECTANGLE
+}
+
 enum CheckInStatus {
   APPROVED
   ALREADY_USED
@@ -470,6 +492,9 @@ model Event {
   orders              Order[]
   tickets             Ticket[]
   checkIns            CheckIn[]
+  seatMaps            SeatMap[]
+  seatSections        SeatSection[]
+  seats               Seat[]
   coupons             Coupon[]
   homeListEntries     HomeListEntry[]
   presaleChecks       EventPresaleCheck[]
@@ -707,6 +732,8 @@ model TicketLot {
   homeListEntries  HomeListEntry[]
   tickets          Ticket[]
   typeOptions      TicketLotOption[]
+  seatSections     SeatSection[]
+  seats            Seat[]
 
   @@index([eventId, status, sortOrder])
   @@index([hotelId])
@@ -751,17 +778,17 @@ model Hotel {
 }
 
 model Customer {
-  id         String   @id @default(cuid())
-  name       String
-  email      String
-  document   String?
-  phone      String?
-  city       String?
-  state      String?
-  postalCode String?
+  id           String   @id @default(cuid())
+  name         String
+  email        String
+  document     String?
+  phone        String?
+  city         String?
+  state        String?
+  postalCode   String?
   neighborhood String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   orders       Order[]
   participants Participant[]
@@ -842,6 +869,8 @@ model Order {
   items            OrderItem[]
   payment          Payment?
   tickets          Ticket[]
+  seatReservations SeatReservation[]
+  orderSeats       OrderSeat[]
   orderHotelGuests OrderHotelGuest[]
   homeListEntries  HomeListEntry[]
 
@@ -900,12 +929,14 @@ model OrderItem {
   totalInCents                    Int
   createdAt                       DateTime @default(now())
 
-  order           Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  lot             TicketLot         @relation(fields: [lotId], references: [id], onDelete: Restrict)
-  lotOption       TicketLotOption?  @relation(fields: [lotOptionId], references: [id], onDelete: Restrict)
-  tickets         Ticket[]
-  hotelGuests     OrderHotelGuest[]
-  homeListEntries HomeListEntry[]
+  order            Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  lot              TicketLot         @relation(fields: [lotId], references: [id], onDelete: Restrict)
+  lotOption        TicketLotOption?  @relation(fields: [lotOptionId], references: [id], onDelete: Restrict)
+  tickets          Ticket[]
+  orderSeats       OrderSeat[]
+  seatReservations SeatReservation[]
+  hotelGuests      OrderHotelGuest[]
+  homeListEntries  HomeListEntry[]
 
   @@index([orderId])
   @@index([lotId])
@@ -1016,24 +1047,147 @@ model Ticket {
   eventId       String
   lotId         String
   lotOptionId   String?
+  seatId        String?
   participantId String?
   status        TicketStatus @default(ACTIVE)
   issuedAt      DateTime     @default(now())
   usedAt        DateTime?
   canceledAt    DateTime?
 
-  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderItem   OrderItem    @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
-  event       Event        @relation(fields: [eventId], references: [id], onDelete: Restrict)
-  lot         TicketLot    @relation(fields: [lotId], references: [id], onDelete: Restrict)
+  order       Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem   OrderItem        @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  event       Event            @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  lot         TicketLot        @relation(fields: [lotId], references: [id], onDelete: Restrict)
   lotOption   TicketLotOption? @relation(fields: [lotOptionId], references: [id], onDelete: Restrict)
-  participant Participant? @relation(fields: [participantId], references: [id], onDelete: SetNull)
+  seat        Seat?            @relation(fields: [seatId], references: [id], onDelete: SetNull)
+  participant Participant?     @relation(fields: [participantId], references: [id], onDelete: SetNull)
   checkIns    CheckIn[]
 
   @@index([eventId, status])
   @@index([orderId])
   @@index([lotId])
   @@index([lotOptionId])
+  @@index([seatId])
+}
+
+model SeatMap {
+  id                 String      @id @default(cuid())
+  eventId            String
+  name               String
+  kind               SeatMapKind @default(CUSTOM)
+  width              Int         @default(1200)
+  height             Int         @default(800)
+  isActive           Boolean     @default(true)
+  backgroundImageUrl String?
+  notes              String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  event    Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sections SeatSection[]
+  seats    Seat[]
+
+  @@index([eventId, isActive])
+}
+
+model SeatSection {
+  id           String   @id @default(cuid())
+  seatMapId    String
+  eventId      String
+  ticketLotId  String?
+  name         String
+  color        String   @default("#d4a017")
+  priceInCents Int?
+  description  String?
+  priority     Int      @default(0)
+  x            Int      @default(0)
+  y            Int      @default(0)
+  width        Int      @default(300)
+  height       Int      @default(180)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  seatMap   SeatMap    @relation(fields: [seatMapId], references: [id], onDelete: Cascade)
+  event     Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  ticketLot TicketLot? @relation(fields: [ticketLotId], references: [id], onDelete: SetNull)
+  seats     Seat[]
+
+  @@index([seatMapId, priority])
+  @@index([eventId])
+  @@index([ticketLotId])
+}
+
+model Seat {
+  id            String          @id @default(cuid())
+  seatMapId     String
+  sectionId     String
+  eventId       String
+  ticketLotId   String?
+  publicCode    String
+  label         String
+  rowLabel      String?
+  seatNumber    String
+  tableId       String?
+  tableLabel    String?
+  tableShape    SeatTableShape?
+  x             Int
+  y             Int
+  radius        Int             @default(9)
+  priceInCents  Int?
+  status        SeatStatus      @default(AVAILABLE)
+  isAccessible  Boolean         @default(false)
+  blockedReason String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  seatMap      SeatMap           @relation(fields: [seatMapId], references: [id], onDelete: Cascade)
+  section      SeatSection       @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  event        Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  ticketLot    TicketLot?        @relation(fields: [ticketLotId], references: [id], onDelete: SetNull)
+  reservations SeatReservation[]
+  orderSeats   OrderSeat[]
+  tickets      Ticket[]
+
+  @@unique([eventId, publicCode])
+  @@index([seatMapId, status])
+  @@index([sectionId, status])
+  @@index([ticketLotId])
+}
+
+model SeatReservation {
+  id          String    @id @default(cuid())
+  seatId      String
+  orderId     String
+  orderItemId String
+  expiresAt   DateTime
+  releasedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  seat      Seat      @relation(fields: [seatId], references: [id], onDelete: Cascade)
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@unique([seatId, orderId])
+  @@index([orderId])
+  @@index([orderItemId])
+  @@index([expiresAt, releasedAt])
+}
+
+model OrderSeat {
+  id           String   @id @default(cuid())
+  orderId      String
+  orderItemId  String
+  seatId       String
+  priceInCents Int
+  createdAt    DateTime @default(now())
+
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  seat      Seat      @relation(fields: [seatId], references: [id], onDelete: Restrict)
+
+  @@unique([seatId])
+  @@index([orderId])
+  @@index([orderItemId])
 }
 
 model CheckIn {

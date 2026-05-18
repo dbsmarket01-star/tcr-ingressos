@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { normalizeSeatMapLayout } from "@/features/seat-maps/seat-map";
 
 export type EventMapBlockKind = "STAGE" | "SECTOR" | "BOX" | "AISLE" | "ACCESSIBLE" | "EMPTY" | "TEXT";
 
@@ -109,11 +110,24 @@ export function normalizeEventMapLayout(value: unknown): EventMapLayout | null {
 }
 
 export function parseEventMapLayoutFormValue(value: FormDataEntryValue | null): Prisma.InputJsonValue | typeof Prisma.JsonNull {
-  const normalized = normalizeEventMapLayout(typeof value === "string" ? value : "");
+  const rawValue = typeof value === "string" ? value : "";
+  const normalizedSeatMap = normalizeSeatMapLayout(rawValue);
+
+  if (normalizedSeatMap) {
+    return normalizedSeatMap as unknown as Prisma.InputJsonValue;
+  }
+
+  const normalized = normalizeEventMapLayout(rawValue);
   return normalized ? normalized as unknown as Prisma.InputJsonValue : Prisma.JsonNull;
 }
 
 export function eventMapLayoutToFormValue(value: unknown) {
+  const normalizedSeatMap = normalizeSeatMapLayout(value);
+
+  if (normalizedSeatMap) {
+    return JSON.stringify(normalizedSeatMap);
+  }
+
   const normalized = normalizeEventMapLayout(value);
   return normalized ? JSON.stringify(normalized) : "";
 }

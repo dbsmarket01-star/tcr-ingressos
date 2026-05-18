@@ -14,6 +14,7 @@ import { getCreditCardInstallmentLimitForEvent } from "@/lib/payment-installment
 import { trackMetaPurchaseForPaidOrder } from "@/features/tracking/meta-conversions.service";
 import { createQrCodeToken, createTicketCode } from "@/features/tickets/ticket-code";
 import { sendPurchaseApprovedWhatsApp, type PurchaseApprovedWhatsAppInput } from "@/features/whatsapp/whatsapp.service";
+import { confirmSeatReservationsForOrder, releaseSeatReservationsForOrder, releaseSoldSeatsForOrder } from "@/features/seat-maps/seat-map.service";
 import { buildAsaasSplitsForOrder } from "./asaas-split.service";
 import { getAsaasProvider, getPaymentProvider } from "./payment-provider";
 import type { PaymentOrganizationContext } from "./payment-organization-config";
@@ -985,6 +986,20 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
               purchaseApprovedWhatsAppSentAt: true,
               customer: true,
               items: true,
+              orderSeats: {
+                select: {
+                  orderItemId: true,
+                  seatId: true,
+                  seat: {
+                    select: {
+                      label: true,
+                      rowLabel: true,
+                      seatNumber: true,
+                      tableLabel: true
+                    }
+                  }
+                }
+              },
               event: {
                 select: {
                   title: true,
@@ -1014,6 +1029,14 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
                   lotOption: {
                     select: {
                       label: true
+                    }
+                  },
+                  seat: {
+                    select: {
+                      label: true,
+                      rowLabel: true,
+                      seatNumber: true,
+                      tableLabel: true
                     }
                   }
                 }
@@ -1219,13 +1242,17 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           }
         }
 
+        await confirmSeatReservationsForOrder(tx, payment.orderId);
+
         let generatedTickets: Array<{ code: string; lotName: string }> = [];
 
         if (payment.order.tickets.length === 0) {
           for (const item of payment.order.items) {
             const ticketsToIssue = item.quantity * Math.max(item.admissionsPerUnit ?? 1, 1);
+            const reservedSeats = payment.order.orderSeats.filter((orderSeat) => orderSeat.orderItemId === item.id);
 
             for (let index = 0; index < ticketsToIssue; index += 1) {
+              const orderSeat = reservedSeats[index] ?? null;
               const ticket = await tx.ticket.create({
                 data: {
                   code: createTicketCode(),
@@ -1235,6 +1262,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
                   eventId: payment.order.eventId,
                   lotId: item.lotId,
                   lotOptionId: item.lotOptionId || null,
+                  seatId: orderSeat?.seatId || null,
                   status: "ACTIVE"
                 },
                 include: {
@@ -1250,16 +1278,31 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
                   }
                 }
               });
+              const seatLabel = orderSeat?.seat
+                ? [
+                    orderSeat.seat.tableLabel ? `Mesa ${orderSeat.seat.tableLabel}` : null,
+                    orderSeat.seat.rowLabel ? `Fila ${orderSeat.seat.rowLabel}` : null,
+                    `Lugar ${orderSeat.seat.seatNumber}`
+                  ].filter(Boolean).join(" - ")
+                : null;
               generatedTickets.push({
                 code: ticket.code,
-                lotName: formatLotNameWithOption(ticket.lot.name, ticket.lotOption?.label)
+                lotName: seatLabel
+                  ? `${formatLotNameWithOption(ticket.lot.name, ticket.lotOption?.label)} - ${seatLabel}`
+                  : formatLotNameWithOption(ticket.lot.name, ticket.lotOption?.label)
               });
             }
           }
         } else {
           generatedTickets = payment.order.tickets.map((ticket) => ({
             code: ticket.code,
-            lotName: formatLotNameWithOption(ticket.lot.name, ticket.lotOption?.label)
+            lotName: ticket.seat
+              ? `${formatLotNameWithOption(ticket.lot.name, ticket.lotOption?.label)} - ${[
+                  ticket.seat.tableLabel ? `Mesa ${ticket.seat.tableLabel}` : null,
+                  ticket.seat.rowLabel ? `Fila ${ticket.seat.rowLabel}` : null,
+                  `Lugar ${ticket.seat.seatNumber}`
+                ].filter(Boolean).join(" - ")}`
+              : formatLotNameWithOption(ticket.lot.name, ticket.lotOption?.label)
           }));
         }
 
@@ -1371,6 +1414,8 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         });
 
         await updateHomeListStatusForOrder(tx, payment.orderId, HomeListStatus.CANCELED);
+        await releaseSoldSeatsForOrder(tx, payment.orderId);
+        await releaseSeatReservationsForOrder(tx, payment.orderId, new Date());
 
         const updatedPayment = await tx.payment.findUniqueOrThrow({
           where: { id: payment.id }
@@ -1438,6 +1483,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         }
 
         await updateHomeListStatusForOrder(tx, payment.orderId, HomeListStatus.CANCELED);
+        await releaseSeatReservationsForOrder(tx, payment.orderId, new Date());
 
         const updatedPayment = await tx.payment.findUniqueOrThrow({
           where: { id: payment.id }

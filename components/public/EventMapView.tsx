@@ -1,5 +1,7 @@
 import type { CSSProperties } from "react";
+import { InteractiveSeatMap } from "@/components/public/InteractiveSeatMap";
 import { normalizeEventMapLayout, type EventMapLayout } from "@/features/events/event-map";
+import { normalizeSeatMapLayout } from "@/features/seat-maps/seat-map";
 
 type EventMapViewProps = {
   layout: unknown;
@@ -35,6 +37,17 @@ function buildBlockStyle(block: EventMapLayout["blocks"][number], layout: EventM
 }
 
 export function EventMapView({ layout: rawLayout, notes }: EventMapViewProps) {
+  const seatMapLayout = normalizeSeatMapLayout(rawLayout);
+
+  if (seatMapLayout) {
+    return (
+      <>
+        <InteractiveSeatMap layout={seatMapLayout} />
+        {notes ? <p className="mapNotes">{notes}</p> : null}
+      </>
+    );
+  }
+
   const layout = normalizeEventMapLayout(rawLayout);
 
   if (!layout) {

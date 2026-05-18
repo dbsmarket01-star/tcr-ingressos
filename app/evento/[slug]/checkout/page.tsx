@@ -131,11 +131,16 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
 
     const available = getAvailableLotQuantity(lot);
     const maxQuantity = Math.max(0, Math.min(lot.maxPerOrder, available));
+    const selectedSeatIds = allParams(query[`seatId_${lot.id}`]).map((seatId) => seatId.trim()).filter(Boolean);
     const selectedTypeOptionId = firstParam(query[`lotOption_${lot.id}`])?.trim() || "";
     const selectedTypeOption = lot.hasTypeOptions
       ? getAvailableTypeOptions(lot.typeOptions).find((option) => option.id === selectedTypeOptionId) || null
       : null;
-    const requestedQuantity = lot.hasTypeOptions ? (selectedTypeOption ? 1 : 0) : parseQuantity(query[`quantity_${lot.id}`]);
+    const requestedQuantity = selectedSeatIds.length > 0
+      ? selectedSeatIds.length
+      : lot.hasTypeOptions
+        ? (selectedTypeOption ? 1 : 0)
+        : parseQuantity(query[`quantity_${lot.id}`]);
     const quantity = lot.hasTypeOptions ? requestedQuantity : Math.min(Math.max(requestedQuantity, 0), maxQuantity);
 
     if (quantity <= 0) {
@@ -150,6 +155,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
       lotOption: selectedTypeOption,
       quantity,
       serviceFeeInCents,
+      seatIds: selectedSeatIds,
       subtotalInCents,
       totalInCents: subtotalInCents + serviceFeeInCents
     }];
@@ -221,6 +227,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                       {item.quantity}x {item.lot.name}
                     </strong>
                     {item.lotOption ? <span>{item.lotOption.label}</span> : null}
+                    {item.seatIds.length > 0 ? <span>{item.seatIds.length} lugar(es) numerado(s)</span> : null}
                     <span>
                       {formatCurrency(item.lot.priceInCents)}
                       {item.serviceFeeInCents > 0 ? ` + ${formatCurrency(item.serviceFeeInCents)} taxa` : ""}
@@ -298,6 +305,9 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                     <input type="hidden" name={`lotOption_${item.lot.id}`} value={item.lotOption.id} />
                   ) : null}
                   <input type="hidden" name={`quantity_${item.lot.id}`} value={item.quantity} />
+                  {item.seatIds.map((seatId) => (
+                    <input key={seatId} type="hidden" name={`seatId_${item.lot.id}`} value={seatId} />
+                  ))}
                 </div>
               ))}
               <MetaTrackingFields />
