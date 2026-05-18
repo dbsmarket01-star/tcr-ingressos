@@ -1,6 +1,6 @@
-type FriendlyErrorKind = "not-found" | "validation" | "auth" | "conflict" | "network" | "payment" | "generic";
+export type FriendlyErrorKind = "not-found" | "validation" | "auth" | "conflict" | "network" | "payment" | "generic";
 
-type FriendlyError = {
+export type FriendlyError = {
   kind: FriendlyErrorKind;
   title: string;
   message: string;
@@ -22,16 +22,34 @@ function stripTechnicalNoise(message: string) {
   return message
     .replace(/NEXT_HTTP_ERROR_FALLBACK;404/gi, "Not Found")
     .replace(/NEXT_NOT_FOUND/gi, "Not Found")
+    .replace(/404:\s*/gi, "")
+    .replace(/\b404\b/gi, "Not Found")
     .replace(/PrismaClientKnownRequestError/gi, "")
+    .replace(/PrismaClientValidationError/gi, "")
+    .replace(/PrismaClientInitializationError/gi, "")
     .replace(/Error:/gi, "")
     .trim();
 }
 
+function normalizeForMatching(message: string) {
+  return message
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function hasAny(value: string, terms: string[]) {
+  return terms.some((term) => value.includes(term));
+}
+
 export function getFriendlyError(input: unknown, fallbackMessage = "Não foi possível concluir esta ação. Tente novamente em instantes."): FriendlyError {
   const rawMessage = stripTechnicalNoise(normalizeRawError(input));
-  const lower = rawMessage.toLowerCase();
+  const normalized = normalizeForMatching(rawMessage);
 
-  if (!rawMessage || lower === "next_redirect") {
+  if (!rawMessage || normalized === "next redirect") {
     return {
       kind: "generic",
       title: "Não foi possível concluir",
@@ -40,28 +58,29 @@ export function getFriendlyError(input: unknown, fallbackMessage = "Não foi pos
   }
 
   if (
-    lower === "not found" ||
-    lower === "not-found" ||
-    lower.includes("not found") ||
-    lower.includes("not-found") ||
-    lower.includes("nao encontrado") ||
-    lower.includes("não encontrado") ||
-    lower.includes("não encontramos") ||
-    lower.includes("nao encontramos") ||
-    lower.includes("p2025")
+    normalized === "not found" ||
+    hasAny(normalized, [
+      "not found",
+      "nao encontrado",
+      "nao encontrada",
+      "nao encontramos",
+      "registro inexistente",
+      "pagina inexistente",
+      "page not found",
+      "resource not found",
+      "p2025"
+    ])
   ) {
     return {
       kind: "not-found",
-      title: "Página ou registro não encontrado",
-      message: "Não encontramos o que você procura. Verifique se o link está correto ou volte para a tela anterior."
+      title: "Página não encontrada",
+      message:
+        "Não encontramos o que você procura. O link pode estar incorreto, a função pode não existir para esta operação ou o registro pode ter sido removido."
     };
   }
 
   if (
-    lower.includes("email invalid") ||
-    lower.includes("invalid email") ||
-    lower.includes("e-mail invalido") ||
-    lower.includes("e-mail inválido")
+    hasAny(normalized, ["email invalid", "invalid email", "e mail invalido", "email invalido"])
   ) {
     return {
       kind: "validation",
@@ -70,7 +89,7 @@ export function getFriendlyError(input: unknown, fallbackMessage = "Não foi pos
     };
   }
 
-  if (lower.includes("invalid") || lower.includes("inválid") || lower.includes("invalido")) {
+  if (hasAny(normalized, ["invalid", "invalido", "dados invalidos", "campo obrigatorio", "required"])) {
     return {
       kind: "validation",
       title: "Informação inválida",
@@ -78,7 +97,7 @@ export function getFriendlyError(input: unknown, fallbackMessage = "Não foi pos
     };
   }
 
-  if (lower.includes("unauthorized") || lower.includes("forbidden") || lower.includes("não autorizado") || lower.includes("nao autorizado")) {
+  if (hasAny(normalized, ["unauthorized", "forbidden", "nao autorizado", "nao autenticado", "sem permissao", "sessao expirada"])) {
     return {
       kind: "auth",
       title: "Acesso não autorizado",
@@ -86,7 +105,7 @@ export function getFriendlyError(input: unknown, fallbackMessage = "Não foi pos
     };
   }
 
-  if (lower.includes("unique constraint") || lower.includes("já está em uso") || lower.includes("ja esta em uso") || lower.includes("já existe")) {
+  if (hasAny(normalized, ["unique constraint", "ja esta em uso", "ja existe", "duplicado", "duplicate"])) {
     return {
       kind: "conflict",
       title: "Cadastro já existente",
@@ -94,7 +113,7 @@ export function getFriendlyError(input: unknown, fallbackMessage = "Não foi pos
     };
   }
 
-  if (lower.includes("fetch failed") || lower.includes("timeout") || lower.includes("econn") || lower.includes("network")) {
+  if (hasAny(normalized, ["fetch failed", "timeout", "econn", "network", "connection", "conexao"])) {
     return {
       kind: "network",
       title: "Falha de conexão",
@@ -102,7 +121,7 @@ export function getFriendlyError(input: unknown, fallbackMessage = "Não foi pos
     };
   }
 
-  if (lower.includes("pagamento") || lower.includes("asaas") || lower.includes("cartão") || lower.includes("cartao") || lower.includes("pix")) {
+  if (hasAny(normalized, ["pagamento", "asaas", "cartao", "pix", "mercado pago"])) {
     return {
       kind: "payment",
       title: "Pagamento não concluído",

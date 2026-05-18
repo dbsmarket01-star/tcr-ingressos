@@ -13175,10 +13175,10 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .errorBox {
-  background: #fff0f2;
-  border: 1px solid #f1bbc4;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
   border-radius: 8px;
-  color: #8f1830;
+  color: #7c2d12;
   padding: 14px;
 }
 
@@ -13186,6 +13186,7 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   align-items: flex-start;
   background: #fff7ed;
   border: 1px solid #fed7aa;
+  border-left: 5px solid #f97316;
   border-radius: 14px;
   box-shadow: 0 16px 36px rgba(154, 52, 18, 0.08);
   color: #7c2d12;
@@ -13222,6 +13223,27 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   font-size: 14px;
   line-height: 1.45;
   margin: 0;
+}
+
+.errorNotice-not-found {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  border-left-color: var(--brand, #28734f);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+  color: #334155;
+}
+
+.errorNotice-not-found > span {
+  background: rgba(var(--brand-rgb, 40, 115, 79), 0.1);
+  color: var(--brand, #28734f);
+}
+
+.errorNotice-not-found strong {
+  color: #0f172a;
+}
+
+.errorNotice-not-found p {
+  color: #475569;
 }
 
 .notFoundShell {
@@ -13280,6 +13302,35 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   line-height: 1.55;
   margin: 0;
   max-width: 58ch;
+}
+
+.notFoundHelp {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.notFoundHelp span {
+  color: #475569;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  padding-left: 18px;
+  position: relative;
+}
+
+.notFoundHelp span::before {
+  background: var(--brand, #28734f);
+  border-radius: 999px;
+  content: "";
+  height: 6px;
+  left: 2px;
+  position: absolute;
+  top: 7px;
+  width: 6px;
 }
 
 .notFoundActions {
@@ -19638,9 +19689,10 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .formFeedback.error {
-  background: #fff1f0;
-  border: 1px solid #f3c3c0;
-  color: #8c2d2a;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-left: 5px solid #f97316;
+  color: #7c2d12;
 }
 
 .platformMarketingClosing {

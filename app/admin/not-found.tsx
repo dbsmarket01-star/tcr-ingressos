@@ -9,6 +9,11 @@ export default function AdminNotFoundPage() {
         <p>
           A função pode não existir para esta operação, o link pode estar incorreto ou o registro pode ter sido removido.
         </p>
+        <div className="notFoundHelp">
+          <span>Volte pelo menu lateral se estava acessando uma área do painel.</span>
+          <span>Confira se o evento, pedido ou ingresso ainda existe nesta bilheteria.</span>
+          <span>Se a função deveria aparecer, verifique as permissões do usuário logado.</span>
+        </div>
         <div className="notFoundActions">
           <Link className="button" href="/admin">
             Voltar ao dashboard

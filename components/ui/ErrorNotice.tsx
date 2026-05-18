@@ -14,8 +14,8 @@ export function ErrorNotice({ message, title, className }: ErrorNoticeProps) {
   const friendlyError = getFriendlyError(message);
 
   return (
-    <div className={["errorNotice", className].filter(Boolean).join(" ")} role="alert">
-      <span aria-hidden="true">!</span>
+    <div className={["errorNotice", `errorNotice-${friendlyError.kind}`, className].filter(Boolean).join(" ")} role="alert">
+      <span aria-hidden="true">{friendlyError.kind === "not-found" ? "?" : "!"}</span>
       <div>
         <strong>{title || friendlyError.title}</strong>
         <p>{friendlyError.message}</p>
