@@ -18,7 +18,10 @@ const kindLabels: Record<string, string> = {
 
 function buildBlockStyle(block: EventMapLayout["blocks"][number], layout: EventMapLayout) {
   const textLength = Math.max(block.label.length, 6);
-  const readableSize = Math.min(34, Math.max(10, Math.min(block.height * 0.32, (block.width / textLength) * 1.85)));
+  const isCompactBox = block.kind === "BOX" && /^\d{1,3}$/.test(block.label);
+  const readableSize = isCompactBox
+    ? Math.min(20, Math.max(10, Math.min(block.height * 0.48, (block.width / textLength) * 1.85)))
+    : Math.min(30, Math.max(9, Math.min(block.height * 0.27, (block.width / textLength) * 1.5)));
 
   return {
     "--map-block-color": block.color,

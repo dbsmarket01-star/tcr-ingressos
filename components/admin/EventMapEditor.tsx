@@ -90,10 +90,10 @@ const mapTemplates: MapTemplate[] = [
     description: "Piso central com camarotes nas laterais.",
     blocks: [
       { kind: "STAGE", label: "Palco", color: "#20242a", x: 330, y: 52, width: 540, height: 110 },
-      { kind: "BOX", label: "Camarote esquerdo", color: "#7c3aed", x: 55, y: 220, width: 185, height: 330 },
+      { kind: "BOX", label: "Camarote", color: "#7c3aed", x: 55, y: 220, width: 185, height: 330 },
       { kind: "SECTOR", label: "Pista Premium", color: "#d4a017", x: 285, y: 225, width: 630, height: 170 },
       { kind: "SECTOR", label: "Pista", color: "#9ca3af", x: 285, y: 455, width: 630, height: 190 },
-      { kind: "BOX", label: "Camarote direito", color: "#7c3aed", x: 960, y: 220, width: 185, height: 330 },
+      { kind: "BOX", label: "Camarote", color: "#7c3aed", x: 960, y: 220, width: 185, height: 330 },
       { kind: "TEXT", label: "Acesso principal", color: "#111827", x: 420, y: 710, width: 360, height: 55 }
     ]
   },
@@ -103,8 +103,8 @@ const mapTemplates: MapTemplate[] = [
     description: "Setores em frente ao palco e camarotes laterais.",
     blocks: [
       { kind: "STAGE", label: "Palco", color: "#20242a", x: 330, y: 52, width: 540, height: 110 },
-      { kind: "BOX", label: "Camarote A", color: "#7c3aed", x: 70, y: 235, width: 170, height: 140 },
-      { kind: "BOX", label: "Camarote B", color: "#7c3aed", x: 960, y: 235, width: 170, height: 140 },
+      { kind: "BOX", label: "Camarote", color: "#7c3aed", x: 70, y: 235, width: 170, height: 140 },
+      { kind: "BOX", label: "Camarote", color: "#7c3aed", x: 960, y: 235, width: 170, height: 140 },
       { kind: "SECTOR", label: "Setor Black", color: "#111827", x: 285, y: 220, width: 630, height: 135 },
       { kind: "SECTOR", label: "Setor Ouro", color: "#d4a017", x: 235, y: 405, width: 730, height: 145 },
       { kind: "SECTOR", label: "Setor Bronze", color: "#b45309", x: 190, y: 585, width: 820, height: 135 },
@@ -129,9 +129,9 @@ const mapTemplates: MapTemplate[] = [
     description: "Camarotes laterais com mezanino ao fundo.",
     blocks: [
       { kind: "STAGE", label: "Palco", color: "#20242a", x: 330, y: 52, width: 540, height: 110 },
-      { kind: "BOX", label: "Camarote esquerdo", color: "#7c3aed", x: 75, y: 220, width: 175, height: 260 },
+      { kind: "BOX", label: "Camarote", color: "#7c3aed", x: 75, y: 220, width: 175, height: 260 },
       { kind: "SECTOR", label: "Área Premium", color: "#38bdf8", x: 290, y: 225, width: 620, height: 175 },
-      { kind: "BOX", label: "Camarote direito", color: "#7c3aed", x: 950, y: 220, width: 175, height: 260 },
+      { kind: "BOX", label: "Camarote", color: "#7c3aed", x: 950, y: 220, width: 175, height: 260 },
       { kind: "SECTOR", label: "Mezanino", color: "#0f766e", x: 250, y: 520, width: 700, height: 120 },
       { kind: "TEXT", label: "Acesso principal", color: "#111827", x: 420, y: 720, width: 360, height: 50 }
     ]
@@ -182,7 +182,10 @@ function createInitialLayout(initialValue?: string | null): EventMapLayout {
 
 function blockStyle(block: EventMapBlock, layout: EventMapLayout) {
   const textLength = Math.max(block.label.length, 6);
-  const readableSize = Math.min(22, Math.max(8, Math.min(block.height * 0.28, (block.width / textLength) * 1.7)));
+  const isCompactBox = block.kind === "BOX" && /^\d{1,3}$/.test(block.label);
+  const readableSize = isCompactBox
+    ? Math.min(18, Math.max(10, Math.min(block.height * 0.46, (block.width / textLength) * 1.75)))
+    : Math.min(19, Math.max(7, Math.min(block.height * 0.24, (block.width / textLength) * 1.38)));
 
   return {
     "--map-block-color": block.color,
@@ -210,6 +213,9 @@ export function EventMapEditor({ initialValue, mapSources = [] }: EventMapEditor
   const [selectedId, setSelectedId] = useState(() => layout.blocks[0]?.id ?? "");
   const [customSectorLabel, setCustomSectorLabel] = useState("Novo setor");
   const [customSectorColor, setCustomSectorColor] = useState("#d4a017");
+  const [miniBoxStart, setMiniBoxStart] = useState(1);
+  const [miniBoxCount, setMiniBoxCount] = useState(10);
+  const [miniBoxDirection, setMiniBoxDirection] = useState<"horizontal" | "vertical">("horizontal");
   const [sourceEventId, setSourceEventId] = useState(mapSources[0]?.id ?? "");
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
@@ -257,6 +263,37 @@ export function EventMapEditor({ initialValue, mapSources = [] }: EventMapEditor
       width: 520,
       height: 150
     });
+  }
+
+  function addNumberedBoxes() {
+    const total = Math.min(60, Math.max(1, Math.round(miniBoxCount)));
+    const start = Math.max(1, Math.round(miniBoxStart));
+    const width = 50;
+    const height = 36;
+    const gap = 6;
+    const baseX = 70;
+    const baseY = miniBoxDirection === "horizontal" ? 690 : 165;
+    const perLine = miniBoxDirection === "horizontal" ? 18 : 12;
+    const blocks = Array.from({ length: total }, (_, index): EventMapBlock => {
+      const line = Math.floor(index / perLine);
+      const slot = index % perLine;
+
+      return {
+        id: makeBlockId(),
+        kind: "BOX",
+        label: String(start + index),
+        color: "#1428ff",
+        x: miniBoxDirection === "horizontal" ? baseX + slot * (width + gap) : baseX + line * (width + gap),
+        y: miniBoxDirection === "horizontal" ? baseY - line * (height + gap) : baseY + slot * (height + gap),
+        width,
+        height,
+        rotation: 0
+      };
+    });
+
+    setLayout((current) => ({ ...current, blocks: [...current.blocks, ...blocks] }));
+    setSelectedId(blocks[0]?.id ?? "");
+    setPreviewMode(false);
   }
 
   function duplicateSelectedBlock() {
@@ -384,6 +421,27 @@ export function EventMapEditor({ initialValue, mapSources = [] }: EventMapEditor
           </div>
           <button className="button smallButton" onClick={addCustomSector} type="button">
             Adicionar setor
+          </button>
+        </div>
+
+        <strong>Camarotes numerados</strong>
+        <div className="eventMapNumberedBoxes">
+          <div className="eventMapMiniInputGrid">
+            <label>
+              <span>Início</span>
+              <input min={1} onChange={(event) => setMiniBoxStart(Number(event.target.value))} type="number" value={miniBoxStart} />
+            </label>
+            <label>
+              <span>Qtd.</span>
+              <input max={60} min={1} onChange={(event) => setMiniBoxCount(Number(event.target.value))} type="number" value={miniBoxCount} />
+            </label>
+          </div>
+          <select value={miniBoxDirection} onChange={(event) => setMiniBoxDirection(event.target.value as "horizontal" | "vertical")}>
+            <option value="horizontal">Linha horizontal</option>
+            <option value="vertical">Coluna vertical</option>
+          </select>
+          <button className="secondaryButton smallButton" onClick={addNumberedBoxes} type="button">
+            Adicionar camarotes
           </button>
         </div>
 
