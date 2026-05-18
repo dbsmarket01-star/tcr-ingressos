@@ -5004,6 +5004,11 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   overflow-wrap: break-word;
 }
 
+.ticketLookupOrderLinks {
+  display: grid;
+  gap: 10px;
+}
+
 .ticketLookupDivider {
   align-items: center;
   display: flex;

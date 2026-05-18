@@ -44,6 +44,7 @@ function groupOrdersByEvent(orders: EmailLookupOrder[]) {
     string,
     {
       event: EmailLookupOrder["event"];
+      orders: EmailLookupOrder[];
       orderCount: number;
       ticketCount: number;
       totalInCents: number;
@@ -54,6 +55,7 @@ function groupOrdersByEvent(orders: EmailLookupOrder[]) {
     const current = groups.get(order.event.id);
 
     if (current) {
+      current.orders.push(order);
       current.orderCount += 1;
       current.ticketCount += order.tickets.length;
       current.totalInCents += order.totalInCents;
@@ -62,6 +64,7 @@ function groupOrdersByEvent(orders: EmailLookupOrder[]) {
 
     groups.set(order.event.id, {
       event: order.event,
+      orders: [order],
       orderCount: 1,
       ticketCount: order.tickets.length,
       totalInCents: order.totalInCents
@@ -164,6 +167,7 @@ export default async function TicketLookupPage({ searchParams }: TicketLookupPag
                   const place = [group.event.venueName, `${group.event.city}, ${group.event.state}`]
                     .filter(Boolean)
                     .join(" • ");
+                  const primaryOrder = group.orders[0];
 
                   return (
                     <article className="ticketLookupEventCard" key={group.event.id}>
@@ -190,11 +194,25 @@ export default async function TicketLookupPage({ searchParams }: TicketLookupPag
                         </div>
                       </dl>
 
+                      {group.orders.length === 1 && primaryOrder ? (
+                        <Link className="button fullButton" href={`/pedido/${primaryOrder.code}`}>
+                          Acessar meus ingressos
+                        </Link>
+                      ) : (
+                        <div className="ticketLookupOrderLinks" aria-label={`Pedidos de ${group.event.title}`}>
+                          {group.orders.map((order) => (
+                            <Link className="button fullButton" href={`/pedido/${order.code}`} key={order.id}>
+                              Acessar pedido {order.code}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+
                       <form action={resendPublicAccessByEmailAction}>
                         <input name="email" type="hidden" value={lookupEmail} />
                         <input name="eventId" type="hidden" value={group.event.id} />
-                        <button className="button fullButton" type="submit">
-                          Receber ingressos deste evento
+                        <button className="secondaryButton fullButton" type="submit">
+                          Reenviar por e-mail
                         </button>
                       </form>
                     </article>
