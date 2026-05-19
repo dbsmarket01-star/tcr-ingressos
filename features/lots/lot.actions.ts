@@ -64,6 +64,11 @@ function parseHighlightColor(formData: FormData) {
   return String(formData.get("highlightColor") ?? "").trim() || undefined;
 }
 
+function parseSaleBadge(formData: FormData) {
+  const value = String(formData.get("saleBadge") ?? "NONE").trim();
+  return value === "SOLD_OUT" || value === "LOW_STOCK" ? value : "NONE";
+}
+
 export async function createTicketLotAction(formData: FormData) {
   await requirePermission("EVENTS");
   const eventId = String(formData.get("eventId") ?? "").trim();
@@ -75,6 +80,7 @@ export async function createTicketLotAction(formData: FormData) {
     name: String(formData.get("name") ?? "").trim(),
     description: String(formData.get("description") ?? "").trim() || undefined,
     highlightColor: parseHighlightColor(formData),
+    saleBadge: parseSaleBadge(formData),
     descriptionAsList: String(formData.get("descriptionAsList") ?? "false") === "true",
     churchQuestionEnabled: String(formData.get("churchQuestionEnabled") ?? "false") === "true",
     hasTypeOptions: String(formData.get("hasTypeOptions") ?? "false") === "true",
@@ -104,7 +110,7 @@ export async function createTicketLotAction(formData: FormData) {
   try {
     await createTicketLot({
       ...parsed.data,
-      status: status === "ACTIVE" ? LotStatus.ACTIVE : LotStatus.DRAFT
+      status: parsed.data.saleBadge === "SOLD_OUT" ? LotStatus.SOLD_OUT : status === "ACTIVE" ? LotStatus.ACTIVE : LotStatus.DRAFT
     });
   } catch (error) {
     redirect(`/admin/events/${eventId}/lots?lotError=${encodeURIComponent(lotErrorMessage(error, "Não foi possível salvar o lote."))}`);
@@ -129,7 +135,7 @@ export async function updateTicketLotStatusAction(formData: FormData) {
 
   await requireEventAccess(eventId);
 
-  if (status !== "ACTIVE" && status !== "PAUSED" && status !== "CLOSED" && status !== "DRAFT") {
+  if (status !== "ACTIVE" && status !== "PAUSED" && status !== "CLOSED" && status !== "DRAFT" && status !== "SOLD_OUT") {
     redirect(`/admin/events/${eventId}/lots?lotError=${encodeURIComponent("Status inválido para este lote.")}`);
   }
 
@@ -212,6 +218,7 @@ export async function updateTicketLotAction(formData: FormData) {
     name: String(formData.get("name") ?? "").trim(),
     description: String(formData.get("description") ?? "").trim() || undefined,
     highlightColor: parseHighlightColor(formData),
+    saleBadge: parseSaleBadge(formData),
     descriptionAsList: String(formData.get("descriptionAsList") ?? "false") === "true",
     churchQuestionEnabled: String(formData.get("churchQuestionEnabled") ?? "false") === "true",
     hasTypeOptions: String(formData.get("hasTypeOptions") ?? "false") === "true",
@@ -240,7 +247,8 @@ export async function updateTicketLotAction(formData: FormData) {
     status !== LotStatus.ACTIVE &&
     status !== LotStatus.PAUSED &&
     status !== LotStatus.CLOSED &&
-    status !== LotStatus.DRAFT
+    status !== LotStatus.DRAFT &&
+    status !== LotStatus.SOLD_OUT
   ) {
     redirect(`/admin/events/${eventId}/lots/${lotId}/edit?error=${encodeURIComponent("Status inválido para este lote.")}`);
   }
@@ -248,7 +256,7 @@ export async function updateTicketLotAction(formData: FormData) {
   try {
     await updateTicketLot(lotId, {
       ...parsed.data,
-      status: status as LotStatus
+      status: parsed.data.saleBadge === "SOLD_OUT" ? LotStatus.SOLD_OUT : status as LotStatus
     });
   } catch (error) {
     redirect(`/admin/events/${eventId}/lots/${lotId}/edit?error=${encodeURIComponent(lotErrorMessage(error, "Não foi possível atualizar o ingresso."))}`);

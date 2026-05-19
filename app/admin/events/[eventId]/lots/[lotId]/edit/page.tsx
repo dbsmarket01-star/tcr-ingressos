@@ -27,6 +27,12 @@ const ticketHighlightColorOptions = [
   { label: "Verde", value: "#28734f" }
 ];
 
+const ticketSaleBadgeOptions = [
+  { label: "Sem tarja", value: "NONE" },
+  { label: "Esgotado", value: "SOLD_OUT" },
+  { label: "Últimos ingressos", value: "LOW_STOCK" }
+];
+
 export default async function EditLotPage({ params, searchParams }: EditLotPageProps) {
   const admin = await requirePermission("EVENTS");
   const { eventId, lotId } = await params;
@@ -87,6 +93,17 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
               ))}
             </select>
             <small>Opcional. Adiciona um traço discreto na lateral do ingresso na página pública.</small>
+          </label>
+          <label className="field">
+            <span>Tarja comercial</span>
+            <select name="saleBadge" defaultValue={lot.saleBadge ?? "NONE"}>
+              {ticketSaleBadgeOptions.map((option) => (
+                <option value={option.value} key={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <small>“Esgotado” bloqueia compra e mantém o ingresso visível com tarja vermelha.</small>
           </label>
           <div className="formSection compactFormSection">
             <div className="formSectionHeader">
@@ -278,6 +295,7 @@ export default async function EditLotPage({ params, searchParams }: EditLotPageP
             <select name="status" defaultValue={lot.status}>
               <option value="DRAFT">Rascunho</option>
               <option value="ACTIVE">Ativo</option>
+              <option value="SOLD_OUT">Esgotado</option>
               <option value="PAUSED">Pausado</option>
               <option value="CLOSED">Encerrado</option>
             </select>

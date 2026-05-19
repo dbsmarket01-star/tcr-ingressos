@@ -165,6 +165,34 @@ function getAvailableLotQuantity(lot: {
   return Math.max(lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity, 0);
 }
 
+function getLotSaleBadge(lot: {
+  saleBadge?: string | null;
+  status: string;
+  hasTypeOptions: boolean;
+  totalQuantity: number;
+  soldQuantity: number;
+  reservedQuantity: number;
+  typeOptions: Array<{ status: string; soldQuantity: number; reservedQuantity: number }>;
+}) {
+  const available = getAvailableLotQuantity(lot);
+
+  if (lot.saleBadge === "SOLD_OUT" || lot.status === "SOLD_OUT" || available <= 0) {
+    return {
+      label: "Esgotado",
+      tone: "soldOut" as const
+    };
+  }
+
+  if (lot.saleBadge === "LOW_STOCK") {
+    return {
+      label: "Últimos ingressos",
+      tone: "lowStock" as const
+    };
+  }
+
+  return null;
+}
+
 export async function generateMetadata({ params }: Pick<EventPageProps, "params">): Promise<Metadata> {
   const { slug } = await params;
   const organizationContext = await getCurrentOrganizationContext();
@@ -216,11 +244,14 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const now = new Date();
   const seatMapLayout = await getPublicSeatMapForEvent(event.id);
   const hasNumberedSeatMap = Boolean(seatMapLayout);
-  const activeLots = event.lots.filter((lot) => {
+  const visibleLots = event.lots.filter((lot) => {
     const startsOk = !lot.salesStartsAt || lot.salesStartsAt <= now;
     const endsOk = !lot.salesEndsAt || lot.salesEndsAt >= now;
+    return startsOk && endsOk;
+  });
+  const purchasableLots = visibleLots.filter((lot) => {
     const hasStock = getAvailableLotQuantity(lot) > 0;
-    return startsOk && endsOk && hasStock;
+    return lot.status === "ACTIVE" && lot.saleBadge !== "SOLD_OUT" && hasStock;
   });
 
   const checkoutError = typeof query.checkoutError === "string" ? query.checkoutError : null;
@@ -232,12 +263,12 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const publicBannerCrop = bannerCrop;
   const mapCrop = parseImageCrop(event.eventMapCrop);
   const ctaText = event.conversionCtaText || "Garantir minha vaga";
-  const highlightedLotId = event.highlightedLotId || activeLots[0]?.id;
+  const highlightedLotId = event.highlightedLotId || purchasableLots[0]?.id;
   const eventLead = event.subtitle?.trim() || "";
-  const hasServiceFees = activeLots.some(
+  const hasServiceFees = purchasableLots.some(
     (lot) => calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps) > 0
   );
-  const checkoutEstimatorLots = activeLots.map((lot) => ({
+  const checkoutEstimatorLots = purchasableLots.map((lot) => ({
     id: lot.id,
     name: lot.name,
     totalWithFeeInCents: lot.priceInCents + calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps)
@@ -407,7 +438,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             </div>
           ) : null}
 
-          {activeLots.length === 0 ? (
+          {visibleLots.length === 0 ? (
             <div className="empty">Nenhum ingresso disponível no momento.</div>
           ) : (
             <form
@@ -429,11 +460,13 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                 <SeatMapTicketSelector layout={seatMapLayout} maxSelection={8} />
               ) : (
               <div className="ticketPickerList">
-                {activeLots.map((lot) => {
+                {visibleLots.map((lot) => {
                   const available = getAvailableLotQuantity(lot);
                   const availableOptions = lot.hasTypeOptions ? getAvailableTypeOptions(lot.typeOptions) : [];
                   const descriptionTopics = lot.descriptionAsList ? getTicketDescriptionTopics(lot.description) : [];
                   const isLowStock = available <= 25;
+                  const saleBadge = getLotSaleBadge(lot);
+                  const isSoldOut = saleBadge?.tone === "soldOut";
                   const hasLotServiceFee = calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps) > 0;
                   const lotEndsSoon = lot.salesEndsAt
                     ? lot.salesEndsAt.getTime() - Date.now() <= 24 * 60 * 60 * 1000
@@ -444,12 +477,19 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
                   return (
                     <article
-                      className={`ticketPickerCard ${isHighlighted ? "recommendedLot" : ""} ${highlightStyle ? "hasTicketHighlight" : ""}`}
+                      className={`ticketPickerCard ${isHighlighted ? "recommendedLot" : ""} ${highlightStyle ? "hasTicketHighlight" : ""} ${isSoldOut ? "isSoldOut" : ""}`}
                       key={lot.id}
                       style={highlightStyle}
                     >
                       <div className="ticketPickerInfo">
-                        <strong className="ticketPickerTitle">{lot.name}</strong>
+                        <div className="ticketPickerTitleRow">
+                          <strong className="ticketPickerTitle">{lot.name}</strong>
+                          {saleBadge ? (
+                            <span className={`ticketSaleBadge ${saleBadge.tone}`}>
+                              {saleBadge.label}
+                            </span>
+                          ) : null}
+                        </div>
                         <p className="ticketPickerPrice">
                           {formatCurrency(lot.priceInCents)}
                           {hasLotServiceFee ? <span> (+ taxas)</span> : null}
@@ -468,13 +508,17 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                             Cada compra gera {lot.admissionsPerUnit} QR Codes individuais.
                           </small>
                         ) : null}
-                        {isLowStock || lotEndsSoon ? (
+                        {!isSoldOut && (isLowStock || lotEndsSoon) ? (
                           <small className="ticketPickerUrgency">
                             {isLowStock ? `Últimos ${available} ingressos` : "Lote vira em breve"}
                           </small>
                         ) : null}
                       </div>
-                      {lot.hasTypeOptions ? (
+                      {isSoldOut ? (
+                        <div className="ticketSoldOutControl" aria-label={`${lot.name} esgotado`}>
+                          Indisponível
+                        </div>
+                      ) : lot.hasTypeOptions ? (
                         <TicketTypeSelector
                           label={lot.name}
                           lotId={lot.id}
@@ -497,13 +541,21 @@ export default async function EventPage({ params, searchParams }: EventPageProps
               </div>
               )}
 
-              {!seatMapLayout ? <CheckoutEstimator lots={checkoutEstimatorLots} /> : null}
+              {!seatMapLayout && purchasableLots.length > 0 ? <CheckoutEstimator lots={checkoutEstimatorLots} /> : null}
 
-              <AddToCartButton />
-              <p className="checkoutFootnote">
-                Você informará seus dados e concluirá o pedido na próxima etapa.
-              </p>
-              {hasServiceFees ? <FeeExplanationButton /> : null}
+              {purchasableLots.length > 0 ? (
+                <>
+                  <AddToCartButton />
+                  <p className="checkoutFootnote">
+                    Você informará seus dados e concluirá o pedido na próxima etapa.
+                  </p>
+                  {hasServiceFees ? <FeeExplanationButton /> : null}
+                </>
+              ) : (
+                <p className="checkoutFootnote">
+                  Todos os ingressos visíveis estão esgotados no momento.
+                </p>
+              )}
             </form>
           )}
         </aside>

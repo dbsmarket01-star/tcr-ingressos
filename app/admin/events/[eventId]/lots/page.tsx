@@ -44,6 +44,12 @@ const ticketHighlightColorOptions = [
   { label: "Verde", value: "#28734f" }
 ];
 
+const ticketSaleBadgeOptions = [
+  { label: "Sem tarja", value: "NONE" },
+  { label: "Esgotado", value: "SOLD_OUT" },
+  { label: "Últimos ingressos", value: "LOW_STOCK" }
+];
+
 function formatPixDiscount(lot: { pixDiscountPercentBps: number; pixDiscountFixedInCents: number }) {
   if (lot.pixDiscountFixedInCents > 0) {
     return `${formatCurrency(lot.pixDiscountFixedInCents)} no Pix`;
@@ -65,10 +71,10 @@ function getLotStatusAction(status: keyof typeof lotStatusLabels) {
     };
   }
 
-  if (status === "PAUSED" || status === "DRAFT" || status === "CLOSED") {
+  if (status === "PAUSED" || status === "DRAFT" || status === "CLOSED" || status === "SOLD_OUT") {
     return {
       nextStatus: "ACTIVE",
-      label: status === "CLOSED" ? "Reabrir" : "Ativar",
+      label: status === "CLOSED" || status === "SOLD_OUT" ? "Reabrir" : "Ativar",
       title: "Ativar ingresso no site"
     };
   }
@@ -289,6 +295,17 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
                 ))}
               </select>
               <small>Opcional. Adiciona um traço discreto na lateral do ingresso na página pública.</small>
+            </label>
+            <label className="field">
+              <span>Tarja comercial</span>
+              <select name="saleBadge" defaultValue="NONE">
+                {ticketSaleBadgeOptions.map((option) => (
+                  <option value={option.value} key={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <small>“Esgotado” bloqueia compra e mantém o ingresso visível com tarja vermelha.</small>
             </label>
             <div className="formSection compactFormSection">
               <div className="formSectionHeader">

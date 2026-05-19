@@ -178,6 +178,7 @@ export async function createTicketLot(input: TicketLotInput & { status: LotStatu
         name: input.name,
         description: input.description || null,
         highlightColor: input.highlightColor || null,
+        saleBadge: input.saleBadge,
         descriptionAsList: input.descriptionAsList,
         hasHotel: input.hasHotel,
         churchQuestionEnabled: input.churchQuestionEnabled,
@@ -208,7 +209,11 @@ export async function createTicketLot(input: TicketLotInput & { status: LotStatu
 export async function updateTicketLotStatus(lotId: string, status: LotStatus) {
   return prisma.ticketLot.update({
     where: { id: lotId },
-    data: { status }
+    data: {
+      status,
+      ...(status === LotStatus.SOLD_OUT ? { saleBadge: "SOLD_OUT" } : {}),
+      ...(status === LotStatus.ACTIVE ? { saleBadge: "NONE" } : {})
+    }
   });
 }
 
@@ -289,6 +294,7 @@ export async function updateTicketLot(lotId: string, input: TicketLotInput & { s
         name: input.name,
         description: input.description || null,
         highlightColor: input.highlightColor || null,
+        saleBadge: input.saleBadge,
         descriptionAsList: input.descriptionAsList,
         hasHotel: input.hasHotel,
         churchQuestionEnabled: input.churchQuestionEnabled,

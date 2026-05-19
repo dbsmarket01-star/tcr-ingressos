@@ -121,7 +121,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
     const startsOk = !lot.salesStartsAt || lot.salesStartsAt <= now;
     const endsOk = !lot.salesEndsAt || lot.salesEndsAt >= now;
     const hasStock = getAvailableLotQuantity(lot) > 0;
-    return startsOk && endsOk && hasStock;
+    return lot.status === "ACTIVE" && lot.saleBadge !== "SOLD_OUT" && startsOk && endsOk && hasStock;
   });
   const requestedLotIds = new Set(allParams(query.lotId).map((lotId) => lotId.trim()).filter(Boolean));
   const selectedItems = activeLots.flatMap((lot) => {

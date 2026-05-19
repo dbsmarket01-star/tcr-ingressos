@@ -2,6 +2,7 @@ import { z } from "zod";
 import { MIN_PAYABLE_AMOUNT_IN_CENTS } from "@/features/pricing/pricing";
 
 const minimumTicketPriceMessage = "O preço do ingresso precisa ser de pelo menos R$ 10,00 para ser aceito pelo Asaas.";
+export const ticketLotSaleBadgeSchema = z.enum(["NONE", "SOLD_OUT", "LOW_STOCK"]);
 
 function validatePixDiscount(
   data: { priceInCents?: number; serviceFeeBps?: number; pixDiscountPercentBps: number; pixDiscountFixedInCents: number },
@@ -52,6 +53,7 @@ export const ticketLotSchema = z.object({
   highlightColor: z
     .union([z.literal(""), z.string().regex(/^#[0-9a-fA-F]{6}$/, "Escolha uma cor de destaque válida.")])
     .optional(),
+  saleBadge: ticketLotSaleBadgeSchema.default("NONE"),
   descriptionAsList: z.boolean().default(false),
   hasHotel: z.boolean().default(false),
   churchQuestionEnabled: z.boolean().default(false),

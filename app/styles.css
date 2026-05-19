@@ -11569,6 +11569,16 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
 }
 
+.ticketPickerCard.isSoldOut {
+  background: #fffafa;
+  border-color: rgba(185, 28, 28, 0.22);
+}
+
+.ticketPickerCard.isSoldOut .ticketPickerPrice,
+.ticketPickerCard.isSoldOut .ticketPickerTitle {
+  color: #7f1d1d;
+}
+
 .ticketPickerCard.hasTicketHighlight.recommendedLot {
   border-color: color-mix(in srgb, var(--ticket-highlight-color) 30%, #d8dee5 70%);
 }
@@ -11584,12 +11594,42 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   min-width: 0;
 }
 
+.ticketPickerTitleRow {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
 .ticketPickerTitle {
   color: #101828;
   font-size: 15px;
   letter-spacing: 0;
   line-height: 1.18;
   text-transform: uppercase;
+}
+
+.ticketSaleBadge {
+  border-radius: 999px;
+  color: #ffffff;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 6px 9px;
+  text-transform: uppercase;
+}
+
+.ticketSaleBadge.soldOut {
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+  box-shadow: 0 8px 18px rgba(185, 28, 28, 0.16);
+}
+
+.ticketSaleBadge.lowStock {
+  background: linear-gradient(135deg, #f97316, #c2410c);
+  box-shadow: 0 8px 18px rgba(234, 88, 12, 0.16);
 }
 
 .ticketPickerPrice {
@@ -11711,6 +11751,22 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   min-height: 40px;
   padding: 0 36px 0 12px;
   width: 100%;
+}
+
+.ticketSoldOutControl {
+  align-items: center;
+  background: #fee2e2;
+  border: 1px solid rgba(185, 28, 28, 0.22);
+  border-radius: 8px;
+  color: #991b1b;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 950;
+  justify-content: center;
+  min-height: 40px;
+  min-width: 112px;
+  padding: 0 12px;
+  text-transform: uppercase;
 }
 
 .ticketQuantityButton {

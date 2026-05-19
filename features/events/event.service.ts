@@ -79,7 +79,9 @@ export async function listPublishedEventShowcase(organizationId: string, limit =
       bannerUrl: true,
       lots: {
         where: {
-          status: "ACTIVE"
+          status: {
+            in: ["ACTIVE", "SOLD_OUT"]
+          }
         },
         orderBy: {
           priceInCents: "asc"
@@ -699,6 +701,9 @@ export async function duplicateEvent(eventId: string) {
           hotelId: lot.hotelId,
           name: lot.name,
           description: lot.description,
+          highlightColor: lot.highlightColor,
+          saleBadge: lot.saleBadge,
+          descriptionAsList: lot.descriptionAsList,
           hasHotel: lot.hasHotel,
           churchQuestionEnabled: lot.churchQuestionEnabled,
           hasTypeOptions: lot.hasTypeOptions,

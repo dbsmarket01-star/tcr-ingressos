@@ -282,7 +282,10 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           where: {
             id: item.lotId,
             eventId: event.id,
-            status: "ACTIVE"
+            status: "ACTIVE",
+            saleBadge: {
+              not: "SOLD_OUT"
+            }
           },
           include: {
             hotel: {
