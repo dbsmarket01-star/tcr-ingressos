@@ -439,7 +439,9 @@ export async function getPublicEventBySlug(slug: string, organizationId: string)
     include: {
       lots: {
         where: {
-          status: "ACTIVE"
+          status: {
+            in: ["ACTIVE", "SOLD_OUT"]
+          }
         },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
         include: {
