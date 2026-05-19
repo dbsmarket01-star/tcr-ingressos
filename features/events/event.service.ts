@@ -494,7 +494,7 @@ function normalizeCachedEventDates<T>(event: T): T {
   return normalized as T;
 }
 
-const getCachedPublicEventBySlugRaw = unstable_cache(getPublicEventBySlug, ["public-event"], {
+const getCachedPublicEventBySlugRaw = unstable_cache(getPublicEventBySlug, ["public-event-v2"], {
   revalidate: 10
 });
 
