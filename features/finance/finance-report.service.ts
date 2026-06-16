@@ -474,6 +474,10 @@ export async function getFinanceReport(
     byMethod: Array.from(byMethod.values()).sort((a, b) => b.grossInCents - a.grossInCents),
     bySource: Array.from(bySource.values()).sort((a, b) => b.grossInCents - a.grossInCents),
     bySplitWallet: Array.from(bySplitWallet.values()).sort((a, b) => b.totalInCents - a.totalInCents),
+    paidOrders: paidOrders.map((order) => ({
+      ...order,
+      splitSummary: summarizeAsaasSplit(order.payment?.rawPayload)
+    })),
     recentPaidOrders: paidOrders.slice(0, 12).map((order) => ({
       ...order,
       splitSummary: summarizeAsaasSplit(order.payment?.rawPayload)

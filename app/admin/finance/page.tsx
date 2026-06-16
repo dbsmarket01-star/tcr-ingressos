@@ -136,6 +136,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
         <article className="card metric">
           <span className="muted">Ingressos emitidos</span>
           <strong>{report.totals.ticketsIssued}</strong>
+          <small>Unidades emitidas nas vendas pagas</small>
         </article>
       </section>
 
@@ -143,10 +144,13 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
         <div className="sectionHeader inlineHeader">
           <div>
             <h2>Vendas pagas no período</h2>
-            <p className="muted">Aqui entram apenas vendas confirmadas, com horário, comprador, evento e itens vendidos.</p>
+            <p className="muted">
+              Mostrando todas as {report.totals.paidOrders} venda(s) confirmada(s) do período filtrado. Ingressos emitidos
+              podem ser maiores quando uma venda gera mais de uma unidade.
+            </p>
           </div>
         </div>
-        {report.recentPaidOrders.length === 0 ? (
+        {report.paidOrders.length === 0 ? (
           <div className="empty">Nenhuma venda paga encontrada nesse recorte.</div>
         ) : (
           <div className="tableScroll">
@@ -162,7 +166,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                 </tr>
               </thead>
               <tbody>
-                {report.recentPaidOrders.map((order) => (
+                {report.paidOrders.map((order) => (
                   <tr key={order.id}>
                     <td>{formatDateTime(order.paidAt ?? order.createdAt)}</td>
                     <td>

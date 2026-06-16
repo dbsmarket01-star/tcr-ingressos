@@ -90,9 +90,9 @@ export async function GET(request: Request) {
       formatMoney(row.grossInCents)
     ]),
     [],
-    ["Pagamentos confirmados recentes"],
+    ["Historico financeiro completo no periodo"],
     ["Pedido", "Cliente", "Email", "Evento", "Pago em", "Origem", "Desconto", "Split", "Total"],
-    ...report.recentPaidOrders.map((order) => [
+    ...report.paidOrders.map((order) => [
       order.code,
       order.customer.name,
       order.customer.email,

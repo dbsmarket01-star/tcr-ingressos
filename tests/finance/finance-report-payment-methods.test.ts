@@ -124,4 +124,41 @@ describe("finance report payment methods", () => {
     expect(prismaMock.order.findMany.mock.calls[0]?.[0].where.event).toEqual({ organizationId: "org_a2" });
     expect(prismaMock.order.findMany.mock.calls[1]?.[0].where.event).toEqual({ organizationId: "org_a2" });
   });
+
+  it("keeps the complete paid order history available for the filtered period", async () => {
+    const paidOrders = Array.from({ length: 13 }, (_, index) => paidOrder({
+      id: `order_${index + 1}`,
+      code: `ING-${index + 1}`,
+      paidAt: new Date(`2026-05-${String(index + 1).padStart(2, "0")}T12:05:00.000Z`),
+      payment: {
+        provider: "ASAAS",
+        status: "APPROVED",
+        pixQrCodePayload: "000201",
+        rawPayload: {
+          payment: {
+            id: `pay_${index + 1}`,
+            billingType: "PIX",
+            netValue: 25
+          }
+        }
+      }
+    }));
+
+    prismaMock.order.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce(paidOrders);
+
+    const { getFinanceReport } = await import("@/features/finance/finance-report.service");
+    const report = await getFinanceReport(
+      {
+        startDate: "2026-05-01",
+        endDate: "2026-05-31"
+      },
+      "org_a2"
+    );
+
+    expect(report.totals.paidOrders).toBe(13);
+    expect(report.paidOrders).toHaveLength(13);
+    expect(report.recentPaidOrders).toHaveLength(12);
+  });
 });
