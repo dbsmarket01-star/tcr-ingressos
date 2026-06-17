@@ -3,12 +3,23 @@ import { prisma } from "@/lib/prisma";
 import type { CouponInput } from "./coupon.schema";
 
 export function normalizeCouponCode(code: string) {
-  return code.trim().toUpperCase().replace(/\s+/g, "");
+  return code.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+export type CouponDiscountItem = {
+  quantity: number;
+  totalInCents: number;
+  serviceFeeInCents: number;
+};
+
+export function calculateCouponEligibleAmountInCents(subtotalInCents: number, serviceFeeInCents: number) {
+  return Math.max(subtotalInCents + serviceFeeInCents, 0);
 }
 
 export function calculateCouponDiscountInCents(
   coupon: Pick<Prisma.CouponGetPayload<Record<string, never>>, "type" | "percentage" | "amountInCents">,
-  eligibleAmountInCents: number
+  eligibleAmountInCents: number,
+  items: CouponDiscountItem[] = []
 ) {
   if (eligibleAmountInCents <= 0) {
     return 0;
@@ -19,6 +30,26 @@ export function calculateCouponDiscountInCents(
       eligibleAmountInCents,
       Math.round(eligibleAmountInCents * ((coupon.percentage ?? 0) / 100))
     );
+  }
+
+  if (coupon.type === CouponType.FINAL_UNIT_PRICE) {
+    const finalUnitPriceInCents = coupon.amountInCents ?? 0;
+
+    if (finalUnitPriceInCents <= 0) {
+      return 0;
+    }
+
+    const discountInCents = items.reduce((sum, item) => {
+      if (item.quantity <= 0) {
+        return sum;
+      }
+
+      const currentItemTotalInCents = item.totalInCents + item.serviceFeeInCents;
+      const desiredItemTotalInCents = finalUnitPriceInCents * item.quantity;
+      return sum + Math.max(currentItemTotalInCents - desiredItemTotalInCents, 0);
+    }, 0);
+
+    return Math.min(eligibleAmountInCents, discountInCents);
   }
 
   return Math.min(eligibleAmountInCents, coupon.amountInCents ?? 0);
@@ -32,7 +63,10 @@ export async function createCoupon(input: CouponInput) {
       type: input.type,
       status: input.status,
       percentage: input.type === CouponType.PERCENTAGE ? input.percentage ?? 0 : null,
-      amountInCents: input.type === CouponType.FIXED_AMOUNT ? input.amountInCents ?? 0 : null,
+      amountInCents:
+        input.type === CouponType.FIXED_AMOUNT || input.type === CouponType.FINAL_UNIT_PRICE
+          ? input.amountInCents ?? 0
+          : null,
       maxRedemptions: input.maxRedemptions || null,
       startsAt: input.startsAt || null,
       endsAt: input.endsAt || null

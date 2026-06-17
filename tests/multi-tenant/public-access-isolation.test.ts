@@ -15,6 +15,7 @@ vi.mock("@/lib/prisma", () => ({
 
 vi.mock("@/features/coupons/coupon.service", () => ({
   calculateCouponDiscountInCents: vi.fn(() => 0),
+  calculateCouponEligibleAmountInCents: vi.fn((subtotalInCents: number, serviceFeeInCents: number) => subtotalInCents + serviceFeeInCents),
   getValidCouponForEvent: vi.fn(async () => null)
 }));
 

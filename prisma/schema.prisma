@@ -109,6 +109,7 @@ enum CheckInStatus {
 enum CouponType {
   PERCENTAGE
   FIXED_AMOUNT
+  FINAL_UNIT_PRICE
 }
 
 enum CouponStatus {

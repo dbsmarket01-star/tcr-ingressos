@@ -34,7 +34,10 @@ export async function createCouponAction(formData: FormData) {
     type,
     status: String(formData.get("status") ?? CouponStatus.ACTIVE),
     percentage: type === CouponType.PERCENTAGE ? Math.round(parsePercentageToBps(formData.get("percentage")) / 100) : undefined,
-    amountInCents: type === CouponType.FIXED_AMOUNT ? Math.round(fixedAmount * 100) : undefined,
+    amountInCents:
+      type === CouponType.FIXED_AMOUNT || type === CouponType.FINAL_UNIT_PRICE
+        ? Math.round(fixedAmount * 100)
+        : undefined,
     maxRedemptions: Number(formData.get("maxRedemptions") ?? 0) || undefined,
     startsAt: optionalDate(formData.get("startsAt")),
     endsAt: optionalDate(formData.get("endsAt"))

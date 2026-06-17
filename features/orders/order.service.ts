@@ -1,6 +1,10 @@
 import { EventStatus, HomeListStatus, OrderStatus, PaymentProvider, PaymentStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { calculateCouponDiscountInCents, getValidCouponForEvent } from "@/features/coupons/coupon.service";
+import {
+  calculateCouponDiscountInCents,
+  calculateCouponEligibleAmountInCents,
+  getValidCouponForEvent
+} from "@/features/coupons/coupon.service";
 import { createPublicOrderUrl, sendOrderExpiredEmail } from "@/features/email/email.service";
 import { updateHomeListStatusForOrder } from "@/features/hospitality/home-list.service";
 import { calculatePixDiscountInCents, calculateServiceFeeInCents } from "@/features/pricing/pricing";
@@ -406,7 +410,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
 
       const subtotalInCents = orderItems.reduce((sum, item) => sum + item.totalInCents, 0);
       const serviceFeeInCents = orderItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
-      const amountBeforeDiscountInCents = subtotalInCents + serviceFeeInCents;
+      const amountBeforeDiscountInCents = calculateCouponEligibleAmountInCents(subtotalInCents, serviceFeeInCents);
       if (input.couponCode && !event.couponsEnabled) {
         throw new Error("Este evento não aceita cupom de desconto.");
       }
@@ -414,7 +418,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
         ? await getValidCouponForEvent(tx, event.id, input.couponCode)
         : null;
       const discountInCents = coupon
-        ? calculateCouponDiscountInCents(coupon, amountBeforeDiscountInCents)
+        ? calculateCouponDiscountInCents(coupon, amountBeforeDiscountInCents, orderItems)
         : 0;
       const pixDiscountInCents = orderItems.reduce(
         (sum, item) =>
