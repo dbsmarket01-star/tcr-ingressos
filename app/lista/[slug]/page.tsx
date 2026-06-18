@@ -135,7 +135,6 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
   const formattedDate = formatDateTime(event.startsAt);
   const [datePart, timePartRaw] = formattedDate.split(", ");
   const timePart = timePartRaw || "";
-  const hasHorizontalLeadHero = event.slug === "fernandinho-santo-andre-2026";
 
   const defaultBenefits: LeadPairBlock[] =
     benefits.length > 0
@@ -219,7 +218,7 @@ export default async function LeadCapturePage({ params, searchParams }: LeadCapt
         </header>
 
         <div className="leadPremiumCanvas">
-          <section className={hasHorizontalLeadHero ? "leadPremiumHero hasHorizontalLeadHero" : "leadPremiumHero"}>
+          <section className="leadPremiumHero">
             <div className="leadPremiumHeroImageWrap">
               <img
                 alt={headline}

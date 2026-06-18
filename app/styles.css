@@ -18402,55 +18402,28 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 .leadPremiumHero {
   align-items: center;
   display: grid;
-  gap: 40px;
-  grid-template-columns: minmax(420px, 0.92fr) minmax(0, 1.08fr);
+  gap: 22px;
+  grid-template-columns: minmax(0, 1fr);
   padding: 12px 0 0;
 }
 
 .leadPremiumHeroImageWrap {
-  background: rgba(var(--brand-rgb), 0.08);
-  border: 1px solid rgba(var(--brand-rgb), 0.14);
-  border-radius: 34px;
-  box-shadow: 0 22px 60px rgba(var(--brand-rgb), 0.12);
-  min-height: 0;
-  overflow: hidden;
-  place-self: end start;
-}
-
-.leadPremiumHeroImageWrap img {
-  aspect-ratio: 0.8;
-  display: block;
-  object-fit: cover;
-  width: 100%;
-}
-
-.leadPremiumHero.hasHorizontalLeadHero {
-  gap: 22px;
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.leadPremiumHero.hasHorizontalLeadHero .leadPremiumHeroImageWrap {
   background: #ffffff;
   border: 1px solid rgba(var(--brand-rgb), 0.14);
+  border-radius: 34px;
   box-shadow: 0 22px 54px rgba(var(--brand-rgb), 0.12);
+  min-height: 0;
+  overflow: hidden;
   place-self: stretch;
   width: 100%;
 }
 
-.leadPremiumHero.hasHorizontalLeadHero .leadPremiumHeroImageWrap img {
+.leadPremiumHeroImageWrap img {
   aspect-ratio: 2 / 1;
   background: #ffffff;
+  display: block;
   object-fit: contain;
-}
-
-.leadPremiumHero.hasHorizontalLeadHero .leadPremiumHeroCopy {
-  justify-self: center;
-  max-width: 980px;
-}
-
-.leadPremiumHero.hasHorizontalLeadHero .leadPremiumHeroCopy h1 {
-  font-size: clamp(42px, 5vw, 72px);
-  max-width: 18ch;
+  width: 100%;
 }
 
 .leadPremiumHeroCopy {
@@ -18459,6 +18432,8 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   gap: 18px;
   padding-bottom: 10px;
   justify-items: center;
+  justify-self: center;
+  max-width: 980px;
   text-align: center;
   width: 100%;
 }
@@ -18481,10 +18456,10 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 
 .leadPremiumHeroCopy h1 {
   color: var(--ink);
-  font-size: clamp(56px, 6vw, 86px);
-  line-height: 0.92;
+  font-size: clamp(42px, 5vw, 72px);
+  line-height: 0.98;
   margin: 0;
-  max-width: 13ch;
+  max-width: 18ch;
   text-align: center;
   text-wrap: balance;
 }
@@ -18723,10 +18698,6 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   }
 
   .leadPremiumHeroImageWrap img {
-    aspect-ratio: 16 / 11;
-  }
-
-  .leadPremiumHero.hasHorizontalLeadHero .leadPremiumHeroImageWrap img {
     aspect-ratio: 2 / 1;
   }
 
@@ -18780,10 +18751,6 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   }
 
   .leadPremiumHeroImageWrap img {
-    aspect-ratio: 1.14;
-  }
-
-  .leadPremiumHero.hasHorizontalLeadHero .leadPremiumHeroImageWrap img {
     aspect-ratio: 2 / 1;
   }
 
@@ -18800,9 +18767,9 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   }
 
   .leadPremiumHeroCopy h1 {
-    font-size: 28px;
-    line-height: 0.95;
-    max-width: 11.5ch;
+    font-size: clamp(28px, 9vw, 38px);
+    line-height: 1.02;
+    max-width: 100%;
   }
 
   .leadPremiumHeroSupport {
