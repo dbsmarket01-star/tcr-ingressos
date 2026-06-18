@@ -18370,19 +18370,23 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .leadCapturePremiumShell {
-  background: #f4f8f6;
+  background:
+    radial-gradient(circle at top left, rgba(var(--brand-rgb), 0.1), transparent 34%),
+    linear-gradient(180deg, #f7faf8 0%, #ffffff 48%, #f3f8f5 100%);
 }
 
 .leadPremiumStage {
   background:
-    radial-gradient(circle at top left, rgba(14, 73, 60, 0.35), transparent 30%),
-    linear-gradient(180deg, #03140f 0%, #07231d 100%);
+    radial-gradient(circle at 18% 0%, rgba(var(--brand-rgb), 0.14), transparent 32%),
+    radial-gradient(circle at 92% 12%, rgba(var(--brand-rgb), 0.09), transparent 34%),
+    linear-gradient(180deg, rgba(var(--brand-rgb), 0.08) 0%, #ffffff 76%);
   padding-bottom: 36px;
 }
 
 .leadCapturePremiumShell .topbar {
-  background: transparent;
-  box-shadow: none;
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid rgba(var(--brand-rgb), 0.1);
+  box-shadow: 0 14px 34px rgba(var(--brand-rgb), 0.08);
   min-height: 74px;
   padding: 0 24px;
 }
@@ -18404,7 +18408,10 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .leadPremiumHeroImageWrap {
+  background: rgba(var(--brand-rgb), 0.08);
+  border: 1px solid rgba(var(--brand-rgb), 0.14);
   border-radius: 34px;
+  box-shadow: 0 22px 60px rgba(var(--brand-rgb), 0.12);
   min-height: 0;
   overflow: hidden;
   place-self: end start;
@@ -18423,16 +18430,16 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .leadPremiumHero.hasHorizontalLeadHero .leadPremiumHeroImageWrap {
-  background: #16091e;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.26);
+  background: #ffffff;
+  border: 1px solid rgba(var(--brand-rgb), 0.14);
+  box-shadow: 0 22px 54px rgba(var(--brand-rgb), 0.12);
   place-self: stretch;
   width: 100%;
 }
 
 .leadPremiumHero.hasHorizontalLeadHero .leadPremiumHeroImageWrap img {
   aspect-ratio: 2 / 1;
-  background: #16091e;
+  background: #ffffff;
   object-fit: contain;
 }
 
@@ -18447,7 +18454,7 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .leadPremiumHeroCopy {
-  color: #fff;
+  color: var(--ink);
   display: grid;
   gap: 18px;
   padding-bottom: 10px;
@@ -18458,9 +18465,11 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 
 .leadPremiumBadge {
   align-items: center;
-  background: linear-gradient(180deg, #ffc94a, #f6b51a);
+  background: linear-gradient(180deg, #ffffff, rgba(var(--brand-rgb), 0.08));
+  border: 1px solid rgba(var(--brand-rgb), 0.18);
   border-radius: 999px;
-  color: #101819;
+  box-shadow: 0 12px 24px rgba(var(--brand-rgb), 0.1);
+  color: var(--brand-dark);
   display: inline-flex;
   font-size: 15px;
   font-weight: 900;
@@ -18471,7 +18480,7 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .leadPremiumHeroCopy h1 {
-  color: #fff;
+  color: var(--ink);
   font-size: clamp(56px, 6vw, 86px);
   line-height: 0.92;
   margin: 0;
@@ -18481,7 +18490,7 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .leadPremiumHeroSupport {
-  color: rgba(255, 255, 255, 0.9);
+  color: #365249;
   font-size: clamp(24px, 2.5vw, 42px);
   line-height: 1.18;
   margin: 0;
@@ -18493,7 +18502,7 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 .leadPremiumHeroCopy h1 strong,
 .leadPremiumHeroSupport strong,
 .leadPremiumFormIntro h2 strong {
-  color: #12b15a;
+  color: var(--brand-dark);
 }
 
 .leadPremiumMetaRow {
@@ -18504,35 +18513,37 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .leadPremiumMetaItem {
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(var(--brand-rgb), 0.14);
+  border-radius: 18px;
   display: grid;
   gap: 6px;
   min-width: 0;
-  padding-left: 18px;
+  padding: 16px 18px;
 }
 
 .leadPremiumMetaItem:first-child {
-  border-left: 0;
-  padding-left: 0;
+  border-left: 1px solid rgba(var(--brand-rgb), 0.14);
+  padding-left: 18px;
 }
 
 .leadPremiumMetaItem strong {
-  color: #fff;
+  color: var(--ink);
   font-size: 20px;
   text-wrap: balance;
 }
 
 .leadPremiumMetaItem span {
-  color: rgba(255, 255, 255, 0.7);
+  color: #5f736c;
   font-size: 14px;
   text-wrap: pretty;
 }
 
 .leadPremiumBenefits {
-  background: linear-gradient(180deg, rgba(2, 46, 37, 0.96), rgba(1, 36, 28, 0.98));
-  border: 1px solid rgba(37, 184, 102, 0.25);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(var(--brand-rgb), 0.14);
   border-radius: 30px;
-  box-shadow: 0 24px 46px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 18px 42px rgba(var(--brand-rgb), 0.1);
   display: grid;
   gap: 14px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -18543,7 +18554,7 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .leadPremiumBenefit {
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 1px solid rgba(var(--brand-rgb), 0.14);
   display: grid;
   gap: 6px;
   min-width: 0;
@@ -18556,13 +18567,13 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .leadPremiumBenefit strong {
-  color: #92df6a;
+  color: var(--brand-dark);
   font-size: 16px;
   text-wrap: balance;
 }
 
 .leadPremiumBenefit p {
-  color: rgba(255, 255, 255, 0.9);
+  color: #365249;
   font-size: 14px;
   line-height: 1.55;
   margin: 0;
@@ -18654,9 +18665,9 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .leadPremiumCtaButton.button.fullButton {
-  background: linear-gradient(180deg, #0f8e4e, #0b7b43);
+  background: linear-gradient(180deg, var(--brand), var(--brand-dark));
   border-radius: 16px;
-  box-shadow: 0 18px 34px rgba(15, 142, 78, 0.2);
+  box-shadow: 0 18px 34px rgba(var(--brand-rgb), 0.22);
   font-size: 18px;
   min-height: 62px;
 }
@@ -18668,15 +18679,17 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .leadPremiumFooterStats {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(var(--brand-rgb), 0.12);
+  border-radius: 24px;
   display: grid;
   gap: 18px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  padding: 14px 8px 4px;
+  padding: 18px 22px;
 }
 
 .leadPremiumFooterStat {
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 1px solid rgba(var(--brand-rgb), 0.14);
   display: grid;
   gap: 8px;
   min-width: 0;
@@ -18689,12 +18702,12 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .leadPremiumFooterStat strong {
-  color: #9ae46a;
+  color: var(--brand-dark);
   font-size: 20px;
 }
 
 .leadPremiumFooterStat span {
-  color: rgba(255, 255, 255, 0.9);
+  color: #365249;
   font-size: 15px;
   line-height: 1.45;
 }
@@ -18805,16 +18818,14 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   }
 
   .leadPremiumMetaItem {
-    border-left: 1px solid rgba(255, 255, 255, 0.12);
-    border-top: 0;
+    border: 1px solid rgba(var(--brand-rgb), 0.14);
     min-width: 0;
-    padding-left: 10px;
-    padding-top: 0;
+    padding: 9px 10px;
   }
 
   .leadPremiumMetaItem:first-child {
-    border-left: 0;
-    padding-left: 0;
+    border-left: 1px solid rgba(var(--brand-rgb), 0.14);
+    padding-left: 10px;
   }
 
   .leadPremiumMetaItem strong {
@@ -18836,7 +18847,7 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   }
 
   .leadPremiumBenefit {
-    border-left: 1px solid rgba(255, 255, 255, 0.12);
+    border-left: 1px solid rgba(var(--brand-rgb), 0.14);
     gap: 4px;
     padding-left: 7px;
   }
@@ -18916,16 +18927,16 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   }
 
   .leadPremiumFooterStat {
-    background: rgba(4, 38, 31, 0.88);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(var(--brand-rgb), 0.12);
+    border-left: 1px solid rgba(var(--brand-rgb), 0.12);
     border-radius: 14px;
     gap: 4px;
     padding: 10px 12px;
   }
 
   .leadPremiumFooterStat:first-child {
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 1px solid rgba(var(--brand-rgb), 0.12);
     padding-left: 12px;
   }
 
