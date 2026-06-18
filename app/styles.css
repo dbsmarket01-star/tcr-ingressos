@@ -18417,6 +18417,35 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   width: 100%;
 }
 
+.leadPremiumHero.hasHorizontalLeadHero {
+  gap: 22px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.leadPremiumHero.hasHorizontalLeadHero .leadPremiumHeroImageWrap {
+  background: #16091e;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.26);
+  place-self: stretch;
+  width: 100%;
+}
+
+.leadPremiumHero.hasHorizontalLeadHero .leadPremiumHeroImageWrap img {
+  aspect-ratio: 2 / 1;
+  background: #16091e;
+  object-fit: contain;
+}
+
+.leadPremiumHero.hasHorizontalLeadHero .leadPremiumHeroCopy {
+  justify-self: center;
+  max-width: 980px;
+}
+
+.leadPremiumHero.hasHorizontalLeadHero .leadPremiumHeroCopy h1 {
+  font-size: clamp(42px, 5vw, 72px);
+  max-width: 18ch;
+}
+
 .leadPremiumHeroCopy {
   color: #fff;
   display: grid;
@@ -18684,6 +18713,10 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
     aspect-ratio: 16 / 11;
   }
 
+  .leadPremiumHero.hasHorizontalLeadHero .leadPremiumHeroImageWrap img {
+    aspect-ratio: 2 / 1;
+  }
+
   .leadPremiumHeroCopy h1,
   .leadPremiumHeroSupport {
     max-width: none;
@@ -18735,6 +18768,10 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 
   .leadPremiumHeroImageWrap img {
     aspect-ratio: 1.14;
+  }
+
+  .leadPremiumHero.hasHorizontalLeadHero .leadPremiumHeroImageWrap img {
+    aspect-ratio: 2 / 1;
   }
 
   .leadPremiumHeroCopy {
