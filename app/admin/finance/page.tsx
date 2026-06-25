@@ -40,11 +40,13 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
   const organizationContext = await getCurrentOrganizationContext();
   const params = await searchParams;
   const report = await getFinanceReport(params, admin.organizationId, getAdminAllowedEventIds(admin));
-  const exportHref = `/admin/finance/export?${new URLSearchParams({
+  const exportParams = new URLSearchParams({
     ...(report.filters.eventId ? { eventId: report.filters.eventId } : {}),
     ...(report.filters.startDate ? { startDate: report.filters.startDate } : {}),
     ...(report.filters.endDate ? { endDate: report.filters.endDate } : {})
-  }).toString()}`;
+  }).toString();
+  const exportHref = `/admin/finance/export?${exportParams}`;
+  const exportPdfHref = `/admin/finance/export/pdf?${exportParams}`;
 
   return (
     <AdminShell
@@ -109,6 +111,9 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
           </Link>
           <Link className="button" href={exportHref}>
             Exportar CSV
+          </Link>
+          <Link className="secondaryButton" href={exportPdfHref}>
+            Exportar PDF
           </Link>
         </form>
       </section>
