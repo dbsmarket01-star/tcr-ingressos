@@ -116,52 +116,34 @@ function drawHeader(commands: string[], page: number, totalPages: number, report
   commands.push(text(754, 570, `Pagina ${page}/${totalPages}`, { size: 8.5, font: "F2", color: "0.870 0.960 0.925 rg" }));
 }
 
-function drawSummary(commands: string[], report: FinanceReport) {
-  const cards = [
-    ["Vendas pagas", report.totals.paidOrders],
-    ["Ingressos emitidos", report.totals.ticketsIssued],
-    ["Faturamento pago", formatCurrency(report.totals.grossRevenueInCents)],
-    ["Liquido aproximado", formatCurrency(report.totals.netRevenueInCents)]
-  ];
-
-  cards.forEach(([label, value], index) => {
-    const x = 32 + index * 196;
-    commands.push(fillRect(x, 492, 180, 32, "0.944 0.969 0.961 rg"));
-    commands.push(strokeRect(x, 492, 180, 32, "0.800 0.870 0.850 RG", 0.5));
-    commands.push(text(x + 10, 512, label, { size: 6.8, font: "F2", color: "0.247 0.329 0.306 rg", max: 24 }));
-    commands.push(text(x + 10, 499, value, { size: 10, font: "F2", max: 28 }));
-  });
-}
-
 function drawTableHeader(commands: string[], y: number) {
   commands.push(fillRect(28, y - 18, 786, 24, "0.944 0.969 0.961 rg"));
   commands.push(text(38, y - 9, "Pago em", { size: 7.2, font: "F2", color: "0.247 0.329 0.306 rg" }));
-  commands.push(text(118, y - 9, "Comprador", { size: 7.2, font: "F2", color: "0.247 0.329 0.306 rg" }));
-  commands.push(text(274, y - 9, "Evento", { size: 7.2, font: "F2", color: "0.247 0.329 0.306 rg" }));
-  commands.push(text(424, y - 9, "Ingresso", { size: 7.2, font: "F2", color: "0.247 0.329 0.306 rg" }));
-  commands.push(text(600, y - 9, "Pedido", { size: 7.2, font: "F2", color: "0.247 0.329 0.306 rg" }));
-  commands.push(text(700, y - 9, "Total", { size: 7.2, font: "F2", color: "0.247 0.329 0.306 rg" }));
+  commands.push(text(122, y - 9, "Nome completo", { size: 7.2, font: "F2", color: "0.247 0.329 0.306 rg" }));
+  commands.push(text(292, y - 9, "Evento", { size: 7.2, font: "F2", color: "0.247 0.329 0.306 rg" }));
+  commands.push(text(452, y - 9, "Ingresso", { size: 7.2, font: "F2", color: "0.247 0.329 0.306 rg" }));
+  commands.push(text(672, y - 9, "Valor", { size: 7.2, font: "F2", color: "0.247 0.329 0.306 rg" }));
+  commands.push(text(742, y - 9, "Pedido", { size: 7.2, font: "F2", color: "0.247 0.329 0.306 rg" }));
 }
 
 function drawOrderRow(commands: string[], order: PaidOrder, y: number, index: number) {
   const rowColor = index % 2 === 0 ? "1 1 1 rg" : "0.988 0.995 0.992 rg";
-  const eventLines = wrapText(order.event.title, 31).slice(0, 2);
-  const ticketLines = wrapText(formatOrderTickets(order), 38).slice(0, 2);
+  const eventLines = wrapText(order.event.title, 34).slice(0, 2);
+  const ticketLines = wrapText(formatOrderTickets(order), 46).slice(0, 2);
 
   commands.push(fillRect(28, y - 38, 786, 40, rowColor));
   commands.push(strokeRect(28, y - 38, 786, 40, "0.858 0.902 0.890 RG", 0.35));
   commands.push(text(38, y - 10, formatDateTime(order.paidAt ?? order.createdAt), { size: 6.7, max: 20 }));
-  commands.push(text(118, y - 8, order.customer.name, { size: 7.2, font: "F2", max: 34 }));
-  commands.push(text(118, y - 19, order.customer.email, { size: 6.5, max: 38 }));
-  commands.push(text(118, y - 30, order.customer.phone || "", { size: 6.5, max: 28 }));
+  commands.push(text(122, y - 8, order.customer.name, { size: 7.3, font: "F2", max: 38 }));
+  commands.push(text(122, y - 20, order.customer.email, { size: 6.4, max: 42 }));
   eventLines.forEach((line, lineIndex) => {
-    commands.push(text(274, y - 8 - lineIndex * 10, line, { size: lineIndex === 0 ? 7.2 : 6.5, font: lineIndex === 0 ? "F2" : "F1", max: 34 }));
+    commands.push(text(292, y - 8 - lineIndex * 10, line, { size: lineIndex === 0 ? 7.2 : 6.5, font: lineIndex === 0 ? "F2" : "F1", max: 36 }));
   });
   ticketLines.forEach((line, lineIndex) => {
-    commands.push(text(424, y - 8 - lineIndex * 10, line, { size: lineIndex === 0 ? 7.1 : 6.5, font: lineIndex === 0 ? "F2" : "F1", max: 42 }));
+    commands.push(text(452, y - 8 - lineIndex * 10, line, { size: lineIndex === 0 ? 7.1 : 6.5, font: lineIndex === 0 ? "F2" : "F1", max: 48 }));
   });
-  commands.push(text(600, y - 10, order.code, { size: 7.2, font: "F2", max: 24 }));
-  commands.push(text(700, y - 10, formatCurrency(order.totalInCents), { size: 7.4, font: "F2", max: 18 }));
+  commands.push(text(672, y - 10, formatCurrency(order.totalInCents), { size: 7.4, font: "F2", max: 18 }));
+  commands.push(text(742, y - 10, order.code, { size: 7.2, font: "F2", max: 18 }));
 }
 
 function buildFinanceBuyersPdf(report: FinanceReport) {
@@ -183,14 +165,19 @@ function buildFinanceBuyersPdf(report: FinanceReport) {
   const pages = chunks.map((chunk, pageIndex) => {
     const commands: string[] = [];
     drawHeader(commands, pageIndex + 1, chunks.length, report, eventName);
+    commands.push(
+      text(32, 518, `${orders.length} venda(s) paga(s) | ${report.totals.ticketsIssued} ingresso(s) emitido(s)`, {
+        size: 9,
+        font: "F2"
+      })
+    );
 
     if (pageIndex === 0) {
-      drawSummary(commands, report);
-      drawTableHeader(commands, 462);
-      chunk.forEach((order, index) => drawOrderRow(commands, order, 426 - index * 42, index));
+      drawTableHeader(commands, 486);
+      chunk.forEach((order, index) => drawOrderRow(commands, order, 450 - index * 42, index));
     } else {
-      drawTableHeader(commands, 510);
-      chunk.forEach((order, index) => drawOrderRow(commands, order, 474 - index * 42, index));
+      drawTableHeader(commands, 486);
+      chunk.forEach((order, index) => drawOrderRow(commands, order, 450 - index * 42, index));
     }
 
     if (orders.length === 0) {
