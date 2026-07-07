@@ -16056,7 +16056,7 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 .supportDeskActionGrid {
   display: grid;
   gap: 18px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
 }
 
 .supportDeskActionGrid form {
@@ -16110,6 +16110,11 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 .supportEmailSendAction::before,
 .supportCopyEmailAction::before {
   content: "@";
+}
+
+.supportPdfDownloadAction::before {
+  content: "PDF";
+  font-size: 9px;
 }
 
 .supportCopyPhoneAction::before {

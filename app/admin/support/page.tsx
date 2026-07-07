@@ -6,6 +6,7 @@ import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth
 import { resendPendingPaymentEmailAction, resendTicketsEmailAction } from "@/features/support/support.actions";
 import { searchSupportOrders } from "@/features/support/support.service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { getPublicOrderUrl } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -110,6 +111,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
           ) : (
             orders.map((order) => {
               const whatsappHref = toWhatsappHref(order.customer.phone);
+              const orderPdfHref = `${getPublicOrderUrl(order.code, order.event.organization)}/pdf`;
 
               return (
                 <article className="supportDeskOrderCard" key={order.id}>
@@ -202,6 +204,20 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
                           Reenviar ingresso por e-mail
                         </button>
                       </form>
+                      {order.tickets.length > 0 ? (
+                        <a
+                          className="supportQuickAction supportPdfDownloadAction"
+                          href={orderPdfHref}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                        >
+                          Baixar PDF dos ingressos
+                        </a>
+                      ) : (
+                        <span className="supportQuickAction supportPdfDownloadAction isDisabled">
+                          PDF indisponível
+                        </span>
+                      )}
                       <CopyButton
                         className="supportQuickAction supportCopyEmailAction"
                         label="Copiar e-mail"
