@@ -8,16 +8,26 @@ export const dynamic = "force-dynamic";
 
 type CrmPageProps = {
   searchParams?: Promise<{
+    endDate?: string;
     eventId?: string;
     search?: string;
+    startDate?: string;
   }>;
 };
 
-function buildFilterHref(params: { eventId?: string; search?: string }) {
+function buildFilterHref(params: { endDate?: string; eventId?: string; search?: string; startDate?: string }) {
   const searchParams = new URLSearchParams();
 
   if (params.eventId) {
     searchParams.set("eventId", params.eventId);
+  }
+
+  if (params.startDate) {
+    searchParams.set("startDate", params.startDate);
+  }
+
+  if (params.endDate) {
+    searchParams.set("endDate", params.endDate);
   }
 
   if (params.search) {
@@ -256,7 +266,7 @@ export default async function CrmPage({ searchParams }: CrmPageProps) {
         </section>
 
         <section className="crmFilterBar" aria-label="Filtros do Kanban">
-          <form className="crmFilterForm">
+          <form action="/admin/crm" className="crmFilterForm" method="get">
             <label>
               <span>Buscar</span>
               <div className="crmInputWithIcon">
@@ -276,14 +286,12 @@ export default async function CrmPage({ searchParams }: CrmPageProps) {
               </select>
             </label>
             <label>
-              <span>Periodo</span>
-              <input name="period" defaultValue="01/05/2026 - 31/05/2026" />
+              <span>Inicio</span>
+              <input name="startDate" type="date" defaultValue={params.startDate || ""} />
             </label>
             <label>
-              <span>Responsavel</span>
-              <select name="responsible" defaultValue="">
-                <option value="">Todos</option>
-              </select>
+              <span>Fim</span>
+              <input name="endDate" type="date" defaultValue={params.endDate || ""} />
             </label>
             <button className="crmPrimaryButton" type="submit">
               Atualizar Kanban

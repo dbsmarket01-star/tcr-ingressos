@@ -6,8 +6,10 @@ type EventScope = string[] | null | undefined;
 const MINIMUM_KANBAN_ORDER_AMOUNT_IN_CENTS = 5000;
 
 export type CommercialKanbanFilters = {
+  endDate?: string;
   eventId?: string;
   search?: string;
+  startDate?: string;
 };
 
 export type CommercialKanbanStage =
@@ -177,6 +179,65 @@ function normalizeSearch(value?: string) {
   return search || undefined;
 }
 
+function parseDateBoundary(value: string | undefined, boundary: "start" | "end") {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return undefined;
+  }
+
+  const suffix = boundary === "start" ? "T00:00:00.000-03:00" : "T23:59:59.999-03:00";
+  const date = new Date(`${value}${suffix}`);
+
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+function buildDateRangeFilter(filters: CommercialKanbanFilters): Prisma.DateTimeFilter | undefined {
+  const startDate = parseDateBoundary(filters.startDate, "start");
+  const endDate = parseDateBoundary(filters.endDate, "end");
+
+  if (!startDate && !endDate) {
+    return undefined;
+  }
+
+  return {
+    ...(startDate ? { gte: startDate } : {}),
+    ...(endDate ? { lte: endDate } : {})
+  };
+}
+
+function buildOrderActivityDateWhere(filters: CommercialKanbanFilters): Prisma.OrderWhereInput {
+  const dateRange = buildDateRangeFilter(filters);
+
+  if (!dateRange) {
+    return {};
+  }
+
+  return {
+    OR: [
+      { createdAt: dateRange },
+      { paidAt: dateRange },
+      { ticketsEmailSentAt: dateRange },
+      { ticketsEmailDeliveredAt: dateRange },
+      { canceledAt: dateRange }
+    ]
+  };
+}
+
+function buildLeadActivityDateWhere(filters: CommercialKanbanFilters): Prisma.EventLeadWhereInput {
+  const dateRange = buildDateRangeFilter(filters);
+
+  if (!dateRange) {
+    return {};
+  }
+
+  return {
+    OR: [
+      { createdAt: dateRange },
+      { thankYouViewedAt: dateRange },
+      { whatsappClickedAt: dateRange }
+    ]
+  };
+}
+
 function normalizePhoneForWhatsapp(phone?: string | null) {
   if (!phone) {
     return null;
@@ -335,6 +396,21 @@ function buildOrderWhere(
   options: { enforceMinimumAmount?: boolean } = { enforceMinimumAmount: true }
 ): Prisma.OrderWhereInput {
   const search = normalizeSearch(filters.search);
+  const activityDateWhere = buildOrderActivityDateWhere(filters);
+  const searchWhere: Prisma.OrderWhereInput = search
+    ? {
+        OR: [
+          { code: { contains: search, mode: "insensitive" } },
+          { churchName: { contains: search, mode: "insensitive" } },
+          { customer: { name: { contains: search, mode: "insensitive" } } },
+          { customer: { email: { contains: search, mode: "insensitive" } } },
+          { customer: { phone: { contains: search, mode: "insensitive" } } },
+          { customer: { document: { contains: search, mode: "insensitive" } } },
+          { event: { title: { contains: search, mode: "insensitive" } } }
+        ]
+      }
+    : {};
+  const combinedFilters = [activityDateWhere, searchWhere].filter((filter) => Object.keys(filter).length > 0);
 
   return {
     event: buildEventScopeWhere(organizationId, allowedEventIds),
@@ -356,19 +432,7 @@ function buildOrderWhere(
             gte: MINIMUM_KANBAN_ORDER_AMOUNT_IN_CENTS
           }
         }),
-    ...(search
-      ? {
-          OR: [
-            { code: { contains: search, mode: "insensitive" } },
-            { churchName: { contains: search, mode: "insensitive" } },
-            { customer: { name: { contains: search, mode: "insensitive" } } },
-            { customer: { email: { contains: search, mode: "insensitive" } } },
-            { customer: { phone: { contains: search, mode: "insensitive" } } },
-            { customer: { document: { contains: search, mode: "insensitive" } } },
-            { event: { title: { contains: search, mode: "insensitive" } } }
-          ]
-        }
-      : {})
+    ...(combinedFilters.length ? { AND: combinedFilters } : {})
   };
 }
 
@@ -378,21 +442,24 @@ function buildLeadWhere(
   allowedEventIds?: EventScope
 ): Prisma.EventLeadWhereInput {
   const search = normalizeSearch(filters.search);
+  const activityDateWhere = buildLeadActivityDateWhere(filters);
+  const searchWhere: Prisma.EventLeadWhereInput = search
+    ? {
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } },
+          { phone: { contains: search, mode: "insensitive" } },
+          { municipality: { contains: search, mode: "insensitive" } },
+          { event: { title: { contains: search, mode: "insensitive" } } }
+        ]
+      }
+    : {};
+  const combinedFilters = [activityDateWhere, searchWhere].filter((filter) => Object.keys(filter).length > 0);
 
   return {
     event: buildEventScopeWhere(organizationId, allowedEventIds),
     ...(filters.eventId ? { eventId: filters.eventId } : {}),
-    ...(search
-      ? {
-          OR: [
-            { name: { contains: search, mode: "insensitive" } },
-            { email: { contains: search, mode: "insensitive" } },
-            { phone: { contains: search, mode: "insensitive" } },
-            { municipality: { contains: search, mode: "insensitive" } },
-            { event: { title: { contains: search, mode: "insensitive" } } }
-          ]
-        }
-      : {})
+    ...(combinedFilters.length ? { AND: combinedFilters } : {})
   };
 }
 
