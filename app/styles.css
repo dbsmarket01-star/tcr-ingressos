@@ -1991,6 +1991,75 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   border-color: #c8d3dd;
 }
 
+:where(
+  button,
+  a.button,
+  a.secondaryButton,
+  a[class*="Button"],
+  a[class*="button"],
+  [role="button"]
+) {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition:
+    background 0.16s ease,
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    color 0.16s ease,
+    filter 0.16s ease,
+    opacity 0.16s ease,
+    transform 0.12s ease;
+}
+
+:where(
+  button,
+  a.button,
+  a.secondaryButton,
+  a[class*="Button"],
+  a[class*="button"],
+  [role="button"]
+):where(:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):not(.isDisabled)) {
+  cursor: pointer;
+}
+
+:where(
+  button,
+  a.button,
+  a.secondaryButton,
+  a[class*="Button"],
+  a[class*="button"],
+  [role="button"]
+):where(:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):not(.isDisabled)):active {
+  filter: brightness(0.97) saturate(1.04);
+  transform: translateY(1px) scale(0.985);
+}
+
+:where(
+  button,
+  a.button,
+  a.secondaryButton,
+  a[class*="Button"],
+  a[class*="button"],
+  [role="button"]
+):focus-visible {
+  outline: 3px solid rgba(var(--brand-rgb), 0.28);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(
+    button,
+    a.button,
+    a.secondaryButton,
+    a[class*="Button"],
+    a[class*="button"],
+    [role="button"]
+  ) {
+    transition-duration: 0.01ms;
+  }
+}
+
 .buttonSpinner {
   animation: spin 0.72s linear infinite;
   border: 2px solid rgba(255, 255, 255, 0.45);
