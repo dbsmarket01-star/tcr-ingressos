@@ -12307,6 +12307,18 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   width: 12%;
 }
 
+.eventLotsHeaderActions {
+  align-items: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.eventLotsHeaderActions p {
+  text-align: right;
+}
+
 .adminPanelBlock {
   border-color: #dce6ea;
   box-shadow: 0 14px 28px rgba(18, 36, 48, 0.04);

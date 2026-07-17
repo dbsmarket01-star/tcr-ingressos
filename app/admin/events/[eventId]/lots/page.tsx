@@ -141,9 +141,14 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
               <span className="sectionEyebrow">Ingressos</span>
               <h2>Lotes cadastrados</h2>
             </div>
-            <p className="muted">
-              Aqui ficam apenas os dados de ingresso: preço, quantidade, status, Pix, taxas, parcelamento e hotelaria.
-            </p>
+            <div className="eventLotsHeaderActions">
+              <p className="muted">
+                Aqui ficam apenas os dados de ingresso: preço, quantidade, status, Pix, taxas, parcelamento e hotelaria.
+              </p>
+              <Link className="button smallButton" href={`/admin/events/${event.id}/lots/export/pdf`}>
+                Baixar relatório PDF
+              </Link>
+            </div>
           </div>
 
           {event.lots.length > 0 ? (
