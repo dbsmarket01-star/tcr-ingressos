@@ -6611,6 +6611,120 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   padding-bottom: 12px;
 }
 
+.eventSectionNav {
+  border-bottom: 1px solid #dfeae6;
+  padding: 0 0 18px;
+}
+
+.eventSectionNavGrid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.eventSectionCard,
+.eventSectionActiveCard,
+.eventSectionBackButton {
+  text-decoration: none;
+}
+
+.eventSectionCard,
+.eventSectionActiveCard {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #dbe7e2;
+  border-radius: 8px;
+  color: #1f2937;
+  display: flex;
+  gap: 12px;
+  min-height: 74px;
+  padding: 12px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.eventSectionCard:hover {
+  border-color: rgba(var(--brand-rgb), 0.42);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+.eventSectionCard.isActive,
+.eventSectionActiveCard {
+  background:
+    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.18), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(241, 250, 246, 0.98));
+  border-color: rgba(var(--brand-rgb), 0.32);
+  box-shadow: inset 4px 0 0 var(--brand), 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.eventSectionIcon {
+  align-items: center;
+  background: rgba(var(--brand-rgb), 0.1);
+  border: 1px solid rgba(var(--brand-rgb), 0.18);
+  border-radius: 8px;
+  color: var(--brand);
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+
+.eventSectionIcon svg {
+  height: 20px;
+  width: 20px;
+}
+
+.eventSectionCard strong,
+.eventSectionActiveCard strong {
+  color: #111827;
+  display: block;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.eventSectionCard small,
+.eventSectionActiveCard small {
+  color: #64748b;
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-top: 3px;
+}
+
+.eventSectionNavCompact {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.eventSectionNavCompact .eventSectionActiveCard {
+  max-width: 360px;
+  min-height: 62px;
+  width: 100%;
+}
+
+.eventSectionBackButton {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #dbe7e2;
+  border-radius: 8px;
+  color: #1f2937;
+  display: inline-flex;
+  font-weight: 800;
+  min-height: 44px;
+  padding: 0 14px;
+}
+
+.eventSectionBackButton::before {
+  content: "<";
+  font-size: 20px;
+  line-height: 1;
+  margin-right: 8px;
+}
+
 .eventOverviewKpiGrid {
   display: grid;
   gap: 16px;
@@ -7284,6 +7398,7 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 
   .eventOverviewHeroMain,
   .eventOverviewTabs,
+  .eventSectionNavGrid,
   .eventOverviewQuickActions,
   .eventOverviewMiniGrid,
   .eventOverviewDemographicLists,
@@ -7319,6 +7434,15 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 
   .eventOverviewTabs .isActive {
     padding-bottom: 8px;
+  }
+
+  .eventSectionNavCompact {
+    align-items: stretch;
+    display: grid;
+  }
+
+  .eventSectionNavCompact .eventSectionActiveCard {
+    max-width: none;
   }
 
   .eventOverviewPanelHeader {

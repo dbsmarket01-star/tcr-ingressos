@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { EventSectionNav } from "@/components/admin/EventSectionNav";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { getEventForManagement } from "@/features/events/event.service";
@@ -114,12 +115,7 @@ export default async function SeatMapAdminPage({ params, searchParams }: SeatMap
           </div>
         </section>
 
-        <nav className="eventOverviewTabs" aria-label="Seções do evento">
-          <Link href={`/admin/events/${event.id}`}>Visão geral</Link>
-          <Link href={`/admin/events/${event.id}/lots`}>Ingressos e lotes</Link>
-          <span className="isActive">Mapa numerado</span>
-          <Link href={`/admin/events/${event.id}/edit`}>Configurações</Link>
-        </nav>
+        <EventSectionNav active="seat-map" event={event} />
 
         <form action={applyNumberedSeatMapAction} className="eventOverviewPanel numberedSeatWizard">
           <input type="hidden" name="eventId" value={event.id} />

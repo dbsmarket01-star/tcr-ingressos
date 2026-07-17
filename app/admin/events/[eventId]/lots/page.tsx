@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { EventSectionNav } from "@/components/admin/EventSectionNav";
 import { HotelLotFields } from "@/components/forms/HotelLotFields";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
@@ -8,7 +9,6 @@ import { getEventForManagement } from "@/features/events/event.service";
 import { listHotelsForOrganization } from "@/features/hospitality/hotel.service";
 import { createTicketLotAction, updateTicketLotStatusAction } from "@/features/lots/lot.actions";
 import { formatCurrency } from "@/lib/format";
-import { getPublicEventUrl } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
 
@@ -125,15 +125,7 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
           <strong>Ingressos e lotes</strong>
         </div>
 
-        <nav className="eventOverviewTabs" aria-label="Seções do evento">
-          <Link href={`/admin/events/${event.id}`}>Visão geral</Link>
-          <span className="isActive">Ingressos e lotes</span>
-          <Link href={event.leadCaptureEnabled ? `/admin/events/${event.id}/leads` : `/admin/events/${event.id}/edit`}>Captação</Link>
-          <Link href={`/admin/finance?eventId=${event.id}`}>Financeiro</Link>
-          <Link href={getPublicEventUrl(event.slug, event.organization)} target="_blank">Divulgação</Link>
-          <Link href="/admin/check-in">Check-in</Link>
-          <Link href={`/admin/events/${event.id}/edit`}>Configurações</Link>
-        </nav>
+        <EventSectionNav active="lots" event={event} />
 
         <section className="eventLotsReportBanner">
           <div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { EventSectionNav } from "@/components/admin/EventSectionNav";
 import { CopyButton } from "@/components/forms/CopyButton";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { countEventPageVisits } from "@/features/analytics/page-visit.service";
@@ -528,16 +529,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
           </div>
         </section>
 
-        <nav className="eventOverviewTabs" aria-label="Seções do evento">
-          <span className="isActive">Visão geral</span>
-          <Link href={`/admin/events/${event.id}/lots`}>Ingressos e lotes</Link>
-          <Link href={`/admin/events/${event.id}/seat-map`}>Mapa numerado</Link>
-          <Link href={`/admin/events/${event.id}/map`}>Mapa convencional</Link>
-          <Link href={event.leadCaptureEnabled ? `/admin/events/${event.id}/leads` : `/admin/events/${event.id}/edit`}>Captação</Link>
-          <Link href={`/admin/finance?eventId=${event.id}`}>Financeiro</Link>
-          <Link href="/admin/check-in">Check-in</Link>
-          <Link href={`/admin/events/${event.id}/edit`}>Configurações</Link>
-        </nav>
+        <EventSectionNav active="overview" event={event} />
 
         <section className="eventOverviewKpiGrid">
           {quickStats.map((item) => (
