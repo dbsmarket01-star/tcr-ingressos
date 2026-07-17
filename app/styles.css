@@ -21239,13 +21239,23 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   }
 
   .publicHeroMedia {
-    aspect-ratio: var(--event-banner-ratio);
+    aspect-ratio: auto;
     border: 0;
     border-radius: 0;
     margin-top: 0;
     min-height: auto;
     max-width: none;
     padding: 0;
+  }
+
+  .publicHeroImage,
+  .publicHeroImage.croppedImage {
+    height: auto;
+    max-height: none;
+    object-fit: contain;
+    object-position: center center !important;
+    transform: none !important;
+    width: 100%;
   }
 
   .publicHeroInner {
