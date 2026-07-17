@@ -2,13 +2,25 @@
 
 import { useState } from "react";
 
-export function FeeExplanationButton() {
+type FeeExplanationButtonProps = {
+  variant?: "link" | "icon";
+};
+
+const feeExplanationText =
+  "As taxas aplicadas à compra referem-se aos serviços do sistema responsável pelo processamento do pagamento, geração e separação do pedido, além da proteção dos seus dados pessoais e bancários contra fraudes.";
+
+export function FeeExplanationButton({ variant = "link" }: FeeExplanationButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
-      <button className="checkoutFeeHint" type="button" onClick={() => setIsOpen(true)}>
-        ⓘ Entenda nossa taxa
+      <button
+        aria-label="Entenda as taxas aplicadas"
+        className={variant === "icon" ? "checkoutFeeInfoButton" : "checkoutFeeHint"}
+        type="button"
+        onClick={() => setIsOpen(true)}
+      >
+        {variant === "icon" ? "i" : "ⓘ Entenda nossa taxa"}
       </button>
       {isOpen ? (
         <div className="feeExplanationBackdrop" role="presentation" onClick={() => setIsOpen(false)}>
@@ -22,10 +34,8 @@ export function FeeExplanationButton() {
             <button className="feeExplanationClose" type="button" aria-label="Fechar" onClick={() => setIsOpen(false)}>
               ×
             </button>
-            <h3 id="fee-explanation-title">Entenda nossa taxa</h3>
-            <p>
-              Taxas referentes ao sistema que gera os ingressos e protege seus dados bancários e pessoais ao realizar a compra.
-            </p>
+            <h3 id="fee-explanation-title">Informação!</h3>
+            <p>{feeExplanationText}</p>
           </div>
         </div>
       ) : null}

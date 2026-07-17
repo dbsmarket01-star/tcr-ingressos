@@ -16,6 +16,7 @@ import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { getPublicEventBranding } from "@/lib/event-branding";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { BuyerLocationFields } from "../BuyerLocationFields";
+import { FeeExplanationButton } from "../FeeExplanationButton";
 import { MetaTrackingFields } from "../MetaTrackingFields";
 
 export const dynamic = "force-dynamic";
@@ -246,7 +247,10 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                 <strong>{formatCurrency(ticketsTotalInCents)}</strong>
               </div>
               <div>
-                <span>Taxas</span>
+                <span className="checkoutFeeTotalLabel">
+                  Taxas aplicadas
+                  <FeeExplanationButton variant="icon" />
+                </span>
                 <strong>{formatCurrency(serviceFeeTotalInCents)}</strong>
               </div>
               <div>
