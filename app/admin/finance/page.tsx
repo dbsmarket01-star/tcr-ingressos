@@ -13,6 +13,7 @@ type FinancePageProps = {
     eventId?: string;
     lotId?: string;
     paymentMethod?: string;
+    salesPage?: string;
     startDate?: string;
     endDate?: string;
   }>;
@@ -79,12 +80,30 @@ function buildQuery(filters: Record<string, string>) {
   return new URLSearchParams(Object.fromEntries(Object.entries(filters).filter(([, value]) => Boolean(value)))).toString();
 }
 
+function parsePage(value?: string) {
+  const page = Number(value);
+
+  return Number.isInteger(page) && page > 0 ? page : 1;
+}
+
 export default async function FinancePage({ searchParams }: FinancePageProps) {
   const admin = await requirePermission("FINANCE");
   const organizationContext = await getCurrentOrganizationContext();
   const params = await searchParams;
   const report = await getFinanceReport(params, admin.organizationId, getAdminAllowedEventIds(admin));
   const selectedLot = report.lots.find((lot) => lot.id === report.filters.lotId);
+  const salesPageSize = 10;
+  const totalSalesPages = Math.max(1, Math.ceil(report.paidOrders.length / salesPageSize));
+  const requestedSalesPage = parsePage(params.salesPage);
+  const salesPage = Math.min(requestedSalesPage, totalSalesPages);
+  const paginatedPaidOrders = report.paidOrders.slice((salesPage - 1) * salesPageSize, salesPage * salesPageSize);
+  const pageQuery = {
+    eventId: report.filters.eventId,
+    lotId: report.filters.lotId,
+    paymentMethod: report.filters.paymentMethod,
+    startDate: report.filters.startDate,
+    endDate: report.filters.endDate
+  };
   const exportParams = buildQuery({
     eventId: report.filters.eventId,
     lotId: report.filters.lotId,
@@ -262,7 +281,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
               <h2>Historico de vendas recente</h2>
             </div>
           </div>
-          {report.recentPaidOrders.length === 0 ? (
+          {paginatedPaidOrders.length === 0 ? (
             <div className="empty">Nenhuma venda confirmada nesse recorte.</div>
           ) : (
             <div className="tableScroll">
@@ -280,13 +299,16 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {report.recentPaidOrders.slice(0, 5).map((order) => (
+                  {paginatedPaidOrders.map((order) => (
                     <tr key={order.id}>
                       <td>
                         <Link href={`/admin/orders/${order.code}`}>{order.code.replace(/^ING-/, "")}</Link>
                       </td>
                       <td>{formatDateTime(order.paidAt ?? order.createdAt)}</td>
-                      <td>{order.customer.name}</td>
+                      <td className="financeDashboardBuyerCell">
+                        <strong>{order.customer.name}</strong>
+                        <span>{order.customer.email}</span>
+                      </td>
                       <td>{order.event.title}</td>
                       <td>
                         {Array.from(new Set(order.items.map((item) => item.lot.name))).join(", ")}
@@ -302,11 +324,30 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
               </table>
             </div>
           )}
-          <div className="financeDashboardPanelAction">
-            <Link className="secondaryButton smallButton" href="/admin/orders">
-              Ver todos os pedidos <span aria-hidden="true">{"->"}</span>
-            </Link>
-          </div>
+          {report.paidOrders.length > salesPageSize ? (
+            <nav className="financeSalesPagination" aria-label="Paginas do historico de vendas">
+              <span>
+                Mostrando {(salesPage - 1) * salesPageSize + 1}-{Math.min(salesPage * salesPageSize, report.paidOrders.length)} de {report.paidOrders.length}
+              </span>
+              <div>
+                {Array.from({ length: totalSalesPages }, (_, index) => {
+                  const page = index + 1;
+                  const href = `/admin/finance?${buildQuery({ ...pageQuery, salesPage: String(page) })}`;
+
+                  return (
+                    <Link
+                      aria-current={page === salesPage ? "page" : undefined}
+                      className={page === salesPage ? "is-active" : ""}
+                      href={href}
+                      key={page}
+                    >
+                      {page}
+                    </Link>
+                  );
+                })}
+              </div>
+            </nav>
+          ) : null}
         </article>
 
         <article className="card financeDashboardPanel">

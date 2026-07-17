@@ -16812,10 +16812,48 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   font-size: 10px;
 }
 
+.financeDashboardTable thead th,
+.financeDashboardEventTable thead th {
+  background: linear-gradient(180deg, rgba(5, 95, 70, 0.1), rgba(5, 95, 70, 0.055));
+  border-bottom-color: rgba(5, 95, 70, 0.2);
+  color: #24463f;
+}
+
 .financeDashboardTable td,
 .financeDashboardEventTable td {
   font-size: 12px;
   vertical-align: middle;
+}
+
+.financeDashboardTable tbody tr:nth-child(even),
+.financeDashboardEventTable tbody tr:nth-child(even) {
+  background: rgba(6, 95, 70, 0.025);
+}
+
+.financeDashboardTable tbody tr:hover,
+.financeDashboardEventTable tbody tr:hover {
+  background: rgba(6, 95, 70, 0.055);
+}
+
+.financeDashboardBuyerCell {
+  background: linear-gradient(90deg, rgba(5, 95, 70, 0.08), rgba(5, 95, 70, 0.025));
+  border-left: 3px solid rgba(5, 95, 70, 0.28);
+}
+
+.financeDashboardBuyerCell strong,
+.financeDashboardBuyerCell span {
+  display: block;
+}
+
+.financeDashboardBuyerCell strong {
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.financeDashboardBuyerCell span {
+  color: #53657d;
+  font-size: 11px;
+  margin-top: 3px;
 }
 
 .financeDashboardPanelAction {
@@ -16826,6 +16864,50 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 
 .financeDashboardPanelAction .secondaryButton {
   min-width: 190px;
+}
+
+.financeSalesPagination {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.financeSalesPagination span {
+  color: #53657d;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.financeSalesPagination div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.financeSalesPagination a {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  height: 34px;
+  justify-content: center;
+  min-width: 34px;
+  padding: 0 9px;
+}
+
+.financeSalesPagination a.is-active {
+  background: var(--admin-primary, #065f46);
+  border-color: var(--admin-primary, #065f46);
+  color: #fff;
 }
 
 .financePaymentPanel {
@@ -17026,6 +17108,15 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 
   .financeSourceRow {
     grid-template-columns: 1fr;
+  }
+
+  .financeSalesPagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .financeSalesPagination div {
+    justify-content: flex-start;
   }
 
   .financeSourceRow strong,
