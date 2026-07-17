@@ -228,10 +228,13 @@ async function sendPurchaseApprovedWhatsAppSafely(orderId: string, payload: Purc
       });
     })
     .catch((error) => {
-      console.error("[WhatsApp] Falha ao enviar compra aprovada", {
+      const normalizedError = normalizeEmailError(error);
+      const log = /WhatsApp Business API nao configurada/i.test(normalizedError) ? console.warn : console.error;
+
+      log("[WhatsApp] Falha ao enviar compra aprovada", {
         orderId,
         orderCode: payload.orderCode,
-        error: normalizeEmailError(error)
+        error: normalizedError
       });
     });
 }

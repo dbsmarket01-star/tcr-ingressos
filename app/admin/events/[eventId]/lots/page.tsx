@@ -135,6 +135,19 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
           <Link href={`/admin/events/${event.id}/edit`}>Configurações</Link>
         </nav>
 
+        <section className="eventLotsReportBanner">
+          <div>
+            <span className="sectionEyebrow">Relatório do evento</span>
+            <h2>Resumo de ingressos vendidos</h2>
+            <p className="muted">
+              Baixe o PDF com quantidade, valor de ingresso, taxas, cupons, estornos, chargebacks e total por ingresso/tipo.
+            </p>
+          </div>
+          <Link className="button" href={`/admin/events/${event.id}/lots/export/pdf`}>
+            Baixar relatório PDF
+          </Link>
+        </section>
+
         <section className="card form wideForm">
           <div className="formSectionHeader">
             <div>

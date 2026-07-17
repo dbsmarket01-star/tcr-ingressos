@@ -12319,6 +12319,29 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   text-align: right;
 }
 
+.eventLotsReportBanner {
+  align-items: center;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(238, 249, 243, 0.9));
+  border: 1px solid #dbe9e2;
+  border-radius: 18px;
+  box-shadow: 0 18px 36px rgba(15, 54, 38, 0.06);
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin: 18px 0;
+  padding: 18px;
+}
+
+.eventLotsReportBanner h2,
+.eventLotsReportBanner p {
+  margin: 0;
+}
+
+.eventLotsReportBanner > div {
+  display: grid;
+  gap: 5px;
+}
+
 .adminPanelBlock {
   border-color: #dce6ea;
   box-shadow: 0 14px 28px rgba(18, 36, 48, 0.04);
