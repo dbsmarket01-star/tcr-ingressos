@@ -38,9 +38,6 @@ export async function GET(request: Request) {
     ["Taxas recebidas", formatMoney(report.totals.serviceFeeInCents)],
     ["Juros de cartao", formatMoney(report.totals.cardInterestInCents)],
     ["Descontos", formatMoney(report.totals.discountInCents)],
-    ["Split enviado", formatMoney(report.totals.splitTotalInCents)],
-    ["Pedidos com split", report.totals.splitPaymentsCount],
-    ["Cobertura split (%)", report.totals.splitCoverage],
     ["Pedidos pagos", report.totals.paidOrders],
     ["Pedidos pendentes", report.totals.pendingOrders],
     ["Cancelados/expirados", report.totals.canceledOrders],
@@ -57,21 +54,13 @@ export async function GET(request: Request) {
       formatMoney(row.discountInCents)
     ]),
     [],
-    ["Split Asaas por carteira"],
-    ["Carteira", "Status Asaas", "Ocorrencias", "Total previsto"],
-    ...report.bySplitWallet.map((row) => [
-      row.walletLabel,
-      row.status,
-      row.count,
-      formatMoney(row.totalInCents)
-    ]),
-    [],
     ["Por evento"],
-    ["Evento", "Pedidos pagos", "Ingressos", "Taxas recebidas", "Juros", "Descontos", "Bruto"],
+    ["Evento", "Pedidos pagos", "Ingressos", "Venda de ingressos", "Taxas recebidas", "Juros", "Descontos", "Bruto"],
     ...report.byEvent.map((row) => [
       row.title,
       row.count,
       row.tickets,
+      formatMoney(row.ticketSubtotalInCents),
       formatMoney(row.serviceFeeInCents),
       formatMoney(row.cardInterestInCents),
       formatMoney(row.discountInCents),
@@ -79,7 +68,7 @@ export async function GET(request: Request) {
     ]),
     [],
     ["Por origem"],
-    ["Origem", "Pedidos", "Ingressos", "Taxas recebidas", "Juros", "Descontos", "Bruto"],
+    ["Origem", "Pedidos", "Venda de ingressos", "Taxas recebidas", "Juros", "Descontos", "Bruto"],
     ...report.bySource.map((row) => [
       row.source,
       row.count,
@@ -91,7 +80,7 @@ export async function GET(request: Request) {
     ]),
     [],
     ["Historico financeiro completo no periodo"],
-    ["Pedido", "Cliente", "Email", "Evento", "Pago em", "Origem", "Desconto", "Split", "Total"],
+    ["Pedido", "Cliente", "Email", "Evento", "Pago em", "Origem", "Desconto", "Total"],
     ...report.paidOrders.map((order) => [
       order.code,
       order.customer.name,
@@ -100,7 +89,6 @@ export async function GET(request: Request) {
       formatDate(order.paidAt),
       [order.utmSource, order.utmMedium].filter(Boolean).join(" / ") || "Direto",
       formatMoney(order.discountInCents),
-      formatMoney(order.splitSummary.totalInCents),
       formatMoney(order.totalInCents)
     ])
   ];

@@ -127,6 +127,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
         <article className="card metric">
           <span className="muted">Faturamento pago</span>
           <strong>{formatCurrency(report.totals.grossRevenueInCents)}</strong>
+          <small>Total pago pelo cliente: ingressos + taxas + juros - descontos</small>
         </article>
         <article className="card metric">
           <span className="muted">Venda de ingressos</span>
@@ -221,18 +222,6 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
             <span>Descontos concedidos</span>
             <strong>{formatCurrency(report.totals.discountInCents)}</strong>
           </div>
-          <div>
-            <span>Split automático</span>
-            <strong>{formatCurrency(report.totals.splitTotalInCents)}</strong>
-          </div>
-          <div>
-            <span>Pedidos com split</span>
-            <strong>{report.totals.splitPaymentsCount} pedido(s)</strong>
-          </div>
-          <div>
-            <span>Cobertura do split</span>
-            <strong>{report.totals.splitCoverage}% dos pagos</strong>
-          </div>
         </div>
       </section>
 
@@ -300,42 +289,6 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
 
       <section className="card spacedSection">
         <div className="sectionHeader inlineHeader">
-          <h2>Split Asaas por carteira</h2>
-        </div>
-        {report.bySplitWallet.length === 0 ? (
-            <div className="empty">Nenhum split retornado pelo provedor no período.</div>
-        ) : (
-          <div className="tableScroll">
-            <table className="table financeTable">
-              <thead>
-                <tr>
-                  <th>Carteira</th>
-                  <th>Status no Asaas</th>
-                  <th>Ocorrencias</th>
-                  <th>Total previsto</th>
-                </tr>
-              </thead>
-              <tbody>
-                {report.bySplitWallet.map((row) => (
-                  <tr key={`${row.walletId}:${row.status}`}>
-                    <td>{row.walletLabel}</td>
-                    <td>{row.status}</td>
-                    <td>{row.count}</td>
-                    <td>{formatCurrency(row.totalInCents)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        <p className="muted">
-          Esta leitura vem do retorno do Asaas salvo no pagamento. O status financeiro final ainda depende do processamento
-          e da compensação dentro do próprio Asaas.
-        </p>
-      </section>
-
-      <section className="card spacedSection">
-        <div className="sectionHeader inlineHeader">
           <h2>Faturamento por evento</h2>
         </div>
         {report.byEvent.length === 0 ? (
@@ -348,6 +301,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                 <th>Evento</th>
                 <th>Pedidos pagos</th>
                 <th>Ingressos</th>
+                <th>Venda de ingressos</th>
                 <th>Taxas recebidas</th>
                 <th>Juros</th>
                 <th>Descontos</th>
@@ -360,6 +314,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                   <td>{row.title}</td>
                   <td>{row.count}</td>
                   <td>{row.tickets}</td>
+                  <td>{formatCurrency(row.ticketSubtotalInCents)}</td>
                   <td>{formatCurrency(row.serviceFeeInCents)}</td>
                   <td>{formatCurrency(row.cardInterestInCents)}</td>
                   <td>{formatCurrency(row.discountInCents)}</td>
@@ -385,7 +340,7 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
               <tr>
                 <th>Origem</th>
                 <th>Pedidos</th>
-                <th>Ingressos</th>
+                <th>Venda de ingressos</th>
                 <th>Taxas recebidas</th>
                 <th>Juros</th>
                 <th>Descontos</th>
@@ -428,7 +383,6 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                 <th>Status</th>
                 <th>Origem</th>
                 <th>Desconto</th>
-                <th>Split</th>
                 <th>Total</th>
               </tr>
             </thead>
@@ -452,19 +406,6 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
                   </td>
                   <td>{order.utmSource || order.utmMedium ? `${order.utmSource ?? "-"} / ${order.utmMedium ?? "-"}` : "Direto"}</td>
                   <td>{formatCurrency(order.discountInCents)}</td>
-                  <td>
-                    {order.splitSummary.entries.length > 0 ? (
-                      <>
-                        {formatCurrency(order.splitSummary.totalInCents)}
-                        <br />
-                        <span className="muted">
-                          {order.splitSummary.entries.map((entry) => `${entry.walletLabel} ${entry.status}`).join(", ")}
-                        </span>
-                      </>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
                   <td>{formatCurrency(order.totalInCents)}</td>
                 </tr>
               ))}

@@ -2,6 +2,7 @@ import { OrderStatus, PaymentProvider, PaymentStatus, Prisma } from "@prisma/cli
 import { prisma } from "@/lib/prisma";
 import { getSourceLabel } from "@/features/tracking/tracking";
 import { summarizeAsaasSplit } from "@/features/payments/split-report.service";
+import { getReportPeriod } from "@/features/reports/report-period";
 
 type FinanceReportFilters = {
   eventId?: string;
@@ -32,32 +33,6 @@ function buildScopedEventWhere(
   }
 
   return where;
-}
-
-function parseStartDate(value?: string) {
-  if (!value) {
-    const date = new Date();
-    date.setDate(date.getDate() - 30);
-    date.setHours(0, 0, 0, 0);
-    return date;
-  }
-
-  return new Date(`${value}T00:00:00-03:00`);
-}
-
-function parseEndDate(value?: string) {
-  if (!value) {
-    const date = new Date();
-    date.setHours(23, 59, 59, 999);
-    return date;
-  }
-
-  return new Date(`${value}T23:59:59.999-03:00`);
-}
-
-function formatDateInput(value: Date) {
-  const offsetInMs = value.getTimezoneOffset() * 60 * 1000;
-  return new Date(value.getTime() - offsetInMs).toISOString().slice(0, 10);
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -163,8 +138,13 @@ export async function getFinanceReport(
   organizationId: string,
   allowedEventIds?: EventScope
 ) {
-  const startDate = parseStartDate(filters.startDate);
-  const endDate = parseEndDate(filters.endDate);
+  const period = getReportPeriod({
+    defaultDaysBack: 30,
+    endDate: filters.endDate,
+    startDate: filters.startDate
+  });
+  const startDate = period.start;
+  const endDate = period.end;
   const eventId = filters.eventId || undefined;
   const eventsWhere = buildScopedEventWhere(organizationId, allowedEventIds);
   const ordersEventWhere = buildScopedEventWhere(organizationId, allowedEventIds, eventId);
@@ -442,8 +422,8 @@ export async function getFinanceReport(
   return {
     filters: {
       eventId: eventId ?? "",
-      startDate: formatDateInput(startDate),
-      endDate: formatDateInput(endDate)
+      startDate: period.startDateInput,
+      endDate: period.endDateInput
     },
     events,
     totals: {

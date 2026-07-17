@@ -1,5 +1,6 @@
 import { EventPageVisitType, EventStatus, OrderStatus, PaymentProvider, type Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { formatReportDateInput, getReportPeriod } from "@/features/reports/report-period";
 
 type DashboardFilters = {
   startDate?: string;
@@ -17,32 +18,6 @@ function buildDashboardEventWhere(organizationId: string, allowedEventIds?: Even
     },
     ...(allowedEventIds ? { id: { in: allowedEventIds } } : {})
   };
-}
-
-function parseStartDate(value?: string) {
-  if (!value) {
-    const date = new Date();
-    date.setDate(date.getDate() - 6);
-    date.setHours(0, 0, 0, 0);
-    return date;
-  }
-
-  return new Date(`${value}T00:00:00-03:00`);
-}
-
-function parseEndDate(value?: string) {
-  if (!value) {
-    const date = new Date();
-    date.setHours(23, 59, 59, 999);
-    return date;
-  }
-
-  return new Date(`${value}T23:59:59.999-03:00`);
-}
-
-function formatDateInput(value: Date) {
-  const offsetInMs = value.getTimezoneOffset() * 60 * 1000;
-  return new Date(value.getTime() - offsetInMs).toISOString().slice(0, 10);
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -115,7 +90,7 @@ function changePercent(current: number, previous: number) {
 }
 
 function formatDayKey(value: Date) {
-  return formatDateInput(value);
+  return formatReportDateInput(value);
 }
 
 function formatBrazilDateKey(value: Date) {
@@ -225,8 +200,13 @@ export async function getDashboardMetrics(
   organizationId: string,
   allowedEventIds?: EventScope
 ) {
-  const periodStart = parseStartDate(filters.startDate);
-  const periodEnd = parseEndDate(filters.endDate);
+  const period = getReportPeriod({
+    defaultDaysBack: 6,
+    endDate: filters.endDate,
+    startDate: filters.startDate
+  });
+  const periodStart = period.start;
+  const periodEnd = period.end;
   const periodMs = periodEnd.getTime() - periodStart.getTime() + 1;
   const previousPeriodEnd = new Date(periodStart.getTime() - 1);
   const previousPeriodStart = new Date(periodStart.getTime() - periodMs);
@@ -704,8 +684,8 @@ export async function getDashboardMetrics(
 
   return {
     period: {
-      startDate: formatDateInput(periodStart),
-      endDate: formatDateInput(periodEnd)
+      startDate: period.startDateInput,
+      endDate: period.endDateInput
     },
     kpis: {
       revenueInCents: currentRevenueInCents,
