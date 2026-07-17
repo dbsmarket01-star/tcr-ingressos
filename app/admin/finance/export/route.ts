@@ -22,6 +22,8 @@ export async function GET(request: Request) {
   const report = await getFinanceReport(
     {
       eventId: url.searchParams.get("eventId") || undefined,
+      lotId: url.searchParams.get("lotId") || undefined,
+      paymentMethod: url.searchParams.get("paymentMethod") || undefined,
       startDate: url.searchParams.get("startDate") || undefined,
       endDate: url.searchParams.get("endDate") || undefined
     },

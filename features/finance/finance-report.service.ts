@@ -6,6 +6,8 @@ import { getReportPeriod } from "@/features/reports/report-period";
 
 type FinanceReportFilters = {
   eventId?: string;
+  lotId?: string;
+  paymentMethod?: string;
   startDate?: string;
   endDate?: string;
 };
@@ -13,6 +15,12 @@ type FinanceReportFilters = {
 type EventScope = string[] | null | undefined;
 
 type PaymentMethod = "PIX" | "CREDIT_CARD" | "SIMULATED" | "OTHER";
+
+const paymentMethods = new Set<PaymentMethod>(["PIX", "CREDIT_CARD", "SIMULATED", "OTHER"]);
+
+function normalizePaymentMethod(value?: string): PaymentMethod | undefined {
+  return value && paymentMethods.has(value as PaymentMethod) ? value as PaymentMethod : undefined;
+}
 
 function buildScopedEventWhere(
   organizationId: string,
@@ -146,10 +154,13 @@ export async function getFinanceReport(
   const startDate = period.start;
   const endDate = period.end;
   const eventId = filters.eventId || undefined;
+  const lotId = filters.lotId || undefined;
+  const paymentMethod = normalizePaymentMethod(filters.paymentMethod);
   const eventsWhere = buildScopedEventWhere(organizationId, allowedEventIds);
   const ordersEventWhere = buildScopedEventWhere(organizationId, allowedEventIds, eventId);
+  const orderItemsWhere = lotId ? { items: { some: { lotId } } } : {};
 
-  const [events, ordersInPeriod, paidOrders] = await Promise.all([
+  const [events, lots, ordersInPeriod, paidOrdersRaw] = await Promise.all([
     prisma.event.findMany({
       where: eventsWhere,
       orderBy: [{ startsAt: "desc" }, { title: "asc" }],
@@ -158,9 +169,26 @@ export async function getFinanceReport(
         title: true
       }
     }),
+    prisma.ticketLot.findMany({
+      where: {
+        event: ordersEventWhere
+      },
+      orderBy: [{ event: { startsAt: "desc" } }, { sortOrder: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        event: {
+          select: {
+            id: true,
+            title: true
+          }
+        }
+      }
+    }),
     prisma.order.findMany({
       where: {
         event: ordersEventWhere,
+        ...orderItemsWhere,
         createdAt: {
           gte: startDate,
           lte: endDate
@@ -191,6 +219,7 @@ export async function getFinanceReport(
       where: {
         status: OrderStatus.PAID,
         event: ordersEventWhere,
+        ...orderItemsWhere,
         paidAt: {
           gte: startDate,
           lte: endDate
@@ -223,6 +252,14 @@ export async function getFinanceReport(
       }
     })
   ]);
+
+  const paidOrders = paymentMethod
+    ? paidOrdersRaw.filter((order) => extractBillingType(
+      order.payment?.rawPayload,
+      order.payment?.provider ?? PaymentProvider.SIMULATED,
+      Boolean(order.payment?.pixQrCodePayload)
+    ) === paymentMethod)
+    : paidOrdersRaw;
 
   const statusCounts = Object.fromEntries(
     Object.values(OrderStatus).map((status) => [
@@ -422,10 +459,13 @@ export async function getFinanceReport(
   return {
     filters: {
       eventId: eventId ?? "",
+      lotId: lotId ?? "",
+      paymentMethod: paymentMethod ?? "",
       startDate: period.startDateInput,
       endDate: period.endDateInput
     },
     events,
+    lots,
     totals: {
       grossRevenueInCents,
       netRevenueInCents,

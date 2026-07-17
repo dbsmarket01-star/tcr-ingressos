@@ -4,6 +4,9 @@ const prismaMock = {
   event: {
     findMany: vi.fn()
   },
+  ticketLot: {
+    findMany: vi.fn()
+  },
   order: {
     findMany: vi.fn()
   }
@@ -56,6 +59,7 @@ describe("finance report payment methods", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     prismaMock.event.findMany.mockResolvedValue([]);
+    prismaMock.ticketLot.findMany.mockResolvedValue([]);
   });
 
   it("keeps Pix and credit card revenue separated in financial reports", async () => {
@@ -121,8 +125,61 @@ describe("finance report payment methods", () => {
     expect(prismaMock.event.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { organizationId: "org_a2" }
     }));
+    expect(prismaMock.ticketLot.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { event: { organizationId: "org_a2" } }
+    }));
     expect(prismaMock.order.findMany.mock.calls[0]?.[0].where.event).toEqual({ organizationId: "org_a2" });
     expect(prismaMock.order.findMany.mock.calls[1]?.[0].where.event).toEqual({ organizationId: "org_a2" });
+  });
+
+  it("applies lot and payment method filters without changing tenant scope", async () => {
+    prismaMock.order.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        paidOrder({
+          id: "order_pix",
+          code: "ING-PIX",
+          totalInCents: 2925,
+          items: [{ lotId: "lot_1", lot: { id: "lot_1", name: "Cadeira Ouro" }, lotOption: null }],
+          payment: {
+            provider: "ASAAS",
+            status: "APPROVED",
+            pixQrCodePayload: "000201",
+            rawPayload: { payment: { billingType: "PIX" } }
+          }
+        }),
+        paidOrder({
+          id: "order_card",
+          code: "ING-CARD",
+          totalInCents: 5850,
+          items: [{ lotId: "lot_1", lot: { id: "lot_1", name: "Cadeira Ouro" }, lotOption: null }],
+          payment: {
+            provider: "ASAAS",
+            status: "APPROVED",
+            pixQrCodePayload: null,
+            rawPayload: { billingType: "CREDIT_CARD" }
+          }
+        })
+      ]);
+
+    const { getFinanceReport } = await import("@/features/finance/finance-report.service");
+    const report = await getFinanceReport(
+      {
+        lotId: "lot_1",
+        paymentMethod: "PIX",
+        startDate: "2026-05-01",
+        endDate: "2026-05-31"
+      },
+      "org_a2"
+    );
+
+    expect(report.filters.lotId).toBe("lot_1");
+    expect(report.filters.paymentMethod).toBe("PIX");
+    expect(report.totals.paidOrders).toBe(1);
+    expect(report.byMethod).toHaveLength(1);
+    expect(report.byMethod[0]?.method).toBe("PIX");
+    expect(prismaMock.order.findMany.mock.calls[0]?.[0].where.items).toEqual({ some: { lotId: "lot_1" } });
+    expect(prismaMock.order.findMany.mock.calls[1]?.[0].where.items).toEqual({ some: { lotId: "lot_1" } });
   });
 
   it("keeps the complete paid order history available for the filtered period", async () => {

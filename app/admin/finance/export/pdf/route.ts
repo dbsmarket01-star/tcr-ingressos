@@ -84,17 +84,22 @@ function drawHeader(commands: string[], report: FinanceReport, page: number, tot
 }
 
 function drawMetric(commands: string[], x: number, y: number, label: string, value: string) {
-  commands.push(fillRect(x, y - 44, 184, 56, "0.972 0.988 0.982 rg"));
-  commands.push(strokeRect(x, y - 44, 184, 56, "0.788 0.871 0.843 RG", 0.6));
+  commands.push(fillRect(x, y - 44, 148, 56, "0.972 0.988 0.982 rg"));
+  commands.push(strokeRect(x, y - 44, 148, 56, "0.788 0.871 0.843 RG", 0.6));
   commands.push(text(x + 12, y - 10, label, { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg", max: 32 }));
   commands.push(text(x + 12, y - 30, value, { size: 13, font: "F2", max: 28 }));
 }
 
 function drawSummary(commands: string[], report: FinanceReport) {
-  drawMetric(commands, 32, 502, "Total pago pelo cliente", formatCurrency(report.totals.grossRevenueInCents));
-  drawMetric(commands, 226, 502, "Venda de ingressos", formatCurrency(report.totals.ticketSubtotalInCents));
-  drawMetric(commands, 420, 502, "Taxas recebidas", formatCurrency(report.totals.serviceFeeInCents));
-  drawMetric(commands, 614, 502, "Ingressos emitidos", report.totals.ticketsIssued.toLocaleString("pt-BR"));
+  const averageTicketInCents = report.totals.paidOrders > 0
+    ? Math.round(report.totals.grossRevenueInCents / report.totals.paidOrders)
+    : 0;
+
+  drawMetric(commands, 32, 502, "Vendas confirmadas", report.totals.paidOrders.toLocaleString("pt-BR"));
+  drawMetric(commands, 190, 502, "Faturamento bruto", formatCurrency(report.totals.grossRevenueInCents));
+  drawMetric(commands, 348, 502, "Ticket medio", formatCurrency(averageTicketInCents));
+  drawMetric(commands, 506, 502, "Ingressos vendidos", report.totals.ticketsIssued.toLocaleString("pt-BR"));
+  drawMetric(commands, 664, 502, "Taxas recebidas", formatCurrency(report.totals.serviceFeeInCents));
 }
 
 function drawTableHeader(commands: string[], y: number) {
@@ -175,6 +180,8 @@ export async function GET(request: Request) {
   const report = await getFinanceReport(
     {
       eventId: url.searchParams.get("eventId") || undefined,
+      lotId: url.searchParams.get("lotId") || undefined,
+      paymentMethod: url.searchParams.get("paymentMethod") || undefined,
       startDate: url.searchParams.get("startDate") || undefined,
       endDate: url.searchParams.get("endDate") || undefined
     },
