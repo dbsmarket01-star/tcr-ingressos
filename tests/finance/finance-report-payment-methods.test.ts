@@ -141,6 +141,7 @@ describe("finance report payment methods", () => {
           code: "ING-PIX",
           totalInCents: 2925,
           items: [{ lotId: "lot_1", lot: { id: "lot_1", name: "Cadeira Ouro" }, lotOption: null }],
+          tickets: [{ id: "ticket_pix", lotId: "lot_1", status: "ACTIVE" }],
           payment: {
             provider: "ASAAS",
             status: "APPROVED",
@@ -153,6 +154,7 @@ describe("finance report payment methods", () => {
           code: "ING-CARD",
           totalInCents: 5850,
           items: [{ lotId: "lot_1", lot: { id: "lot_1", name: "Cadeira Ouro" }, lotOption: null }],
+          tickets: [{ id: "ticket_card", lotId: "lot_1", status: "ACTIVE" }],
           payment: {
             provider: "ASAAS",
             status: "APPROVED",
@@ -180,6 +182,69 @@ describe("finance report payment methods", () => {
     expect(report.byMethod[0]?.method).toBe("PIX");
     expect(prismaMock.order.findMany.mock.calls[0]?.[0].where.items).toEqual({ some: { lotId: "lot_1" } });
     expect(prismaMock.order.findMany.mock.calls[1]?.[0].where.items).toEqual({ some: { lotId: "lot_1" } });
+  });
+
+  it("uses only the selected lot values when the area filter is applied", async () => {
+    prismaMock.order.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        paidOrder({
+          id: "order_mixed",
+          code: "ING-MIXED",
+          subtotalInCents: 30000,
+          serviceFeeInCents: 3000,
+          discountInCents: 3300,
+          totalInCents: 29700,
+          items: [
+            {
+              lotId: "lot_ouro",
+              lot: { id: "lot_ouro", name: "Cadeira Ouro" },
+              lotOption: null,
+              quantity: 1,
+              totalInCents: 10000,
+              serviceFeeInCents: 1000
+            },
+            {
+              lotId: "lot_prata",
+              lot: { id: "lot_prata", name: "Cadeira Prata" },
+              lotOption: null,
+              quantity: 2,
+              totalInCents: 20000,
+              serviceFeeInCents: 2000
+            }
+          ],
+          tickets: [
+            { id: "ticket_ouro", lotId: "lot_ouro", status: "ACTIVE" },
+            { id: "ticket_prata_1", lotId: "lot_prata", status: "ACTIVE" },
+            { id: "ticket_prata_2", lotId: "lot_prata", status: "ACTIVE" }
+          ],
+          payment: {
+            provider: "ASAAS",
+            status: "APPROVED",
+            pixQrCodePayload: "000201",
+            rawPayload: { payment: { billingType: "PIX", netValue: 290 } }
+          }
+        })
+      ]);
+
+    const { getFinanceReport } = await import("@/features/finance/finance-report.service");
+    const report = await getFinanceReport(
+      {
+        lotId: "lot_ouro",
+        startDate: "2026-05-01",
+        endDate: "2026-05-31"
+      },
+      "org_a2"
+    );
+
+    expect(report.totals.paidOrders).toBe(1);
+    expect(report.totals.ticketSubtotalInCents).toBe(10000);
+    expect(report.totals.serviceFeeInCents).toBe(1000);
+    expect(report.totals.discountInCents).toBe(1100);
+    expect(report.totals.grossRevenueInCents).toBe(9900);
+    expect(report.totals.ticketsIssued).toBe(1);
+    expect(report.paidOrders[0]?.totalInCents).toBe(9900);
+    expect(report.paidOrders[0]?.items).toHaveLength(1);
   });
 
   it("keeps the complete paid order history available for the filtered period", async () => {

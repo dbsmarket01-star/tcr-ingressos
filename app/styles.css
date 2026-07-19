@@ -16816,7 +16816,7 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   align-items: end;
   display: grid;
   gap: 16px;
-  grid-template-columns: minmax(250px, 1.1fr) minmax(220px, 1fr) minmax(220px, 1fr) minmax(190px, 0.85fr) auto auto auto;
+  grid-template-columns: minmax(280px, 1.2fr) minmax(220px, 1fr) minmax(220px, 1fr) minmax(190px, 0.9fr);
 }
 
 .financeDateRangeInputs {
@@ -16862,6 +16862,8 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .financePdfButton {
+  justify-self: end;
+  min-width: 178px;
   padding-inline: 18px;
 }
 
@@ -16923,9 +16925,10 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 .financeKpiCard strong {
   color: var(--admin-primary, #065f46);
   display: block;
-  font-size: clamp(22px, 2.1vw, 28px);
+  font-size: clamp(20px, 1.65vw, 27px);
   line-height: 1.08;
   margin-top: 8px;
+  overflow-wrap: anywhere;
 }
 
 .financeKpiCard p {
@@ -17232,6 +17235,25 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 .financeSourceRow i {
   display: block;
   height: 100%;
+}
+
+@media (min-width: 761px) {
+  .financeDashboardFilterForm .financeIconButton,
+  .financeDashboardFilterForm .financePdfButton {
+    grid-row: 2;
+  }
+
+  .financeDashboardFilterForm .financeResetButton {
+    grid-column: 2;
+  }
+
+  .financeDashboardFilterForm .financeSubmitButton {
+    grid-column: 3;
+  }
+
+  .financeDashboardFilterForm .financePdfButton {
+    grid-column: 4;
+  }
 }
 
 @media (max-width: 1380px) {

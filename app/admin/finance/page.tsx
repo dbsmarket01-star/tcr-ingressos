@@ -206,11 +206,11 @@ export default async function FinancePage({ searchParams }: FinancePageProps) {
               ))}
             </select>
           </label>
-          <Link className="secondaryButton financeIconButton" href="/admin/finance">
+          <Link className="secondaryButton financeIconButton financeResetButton" href="/admin/finance">
             <FinanceIcon name="filter" />
             Filtros
           </Link>
-          <button className="button financeIconButton" type="submit">
+          <button className="button financeIconButton financeSubmitButton" type="submit">
             <FinanceIcon name="search" />
             Filtrar
           </button>

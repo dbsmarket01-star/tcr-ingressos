@@ -141,6 +141,14 @@ function addBreakdownToMap<
   row.discountInCents += discountInCents;
 }
 
+function allocateAmountByShare(totalInCents: number, selectedInCents: number, baseInCents: number) {
+  if (totalInCents <= 0 || selectedInCents <= 0 || baseInCents <= 0) {
+    return 0;
+  }
+
+  return Math.min(totalInCents, Math.round((totalInCents * selectedInCents) / baseInCents));
+}
+
 export async function getFinanceReport(
   filters: FinanceReportFilters,
   organizationId: string,
@@ -207,6 +215,7 @@ export async function getFinanceReport(
         tickets: {
           select: {
             id: true,
+            lotId: true,
             status: true
           }
         }
@@ -243,6 +252,7 @@ export async function getFinanceReport(
         tickets: {
           select: {
             id: true,
+            lotId: true,
             status: true
           }
         }
@@ -336,21 +346,55 @@ export async function getFinanceReport(
   let splitTotalInCents = 0;
   let splitPaymentsCount = 0;
   let netValueKnownCount = 0;
+  const scopedPaidOrders: Array<(typeof paidOrders)[number] & { splitSummary: ReturnType<typeof summarizeAsaasSplit> }> = [];
 
   for (const order of paidOrders) {
-    const gross = order.totalInCents;
-    const orderTicketSubtotal = order.subtotalInCents;
-    const orderServiceFee = order.serviceFeeInCents;
-    const orderCardInterest = order.cardInterestInCents;
-    const orderDiscount = order.discountInCents;
+    const scopedItems = lotId ? order.items.filter((item) => item.lotId === lotId) : order.items;
+
+    if (lotId && scopedItems.length === 0) {
+      continue;
+    }
+
+    const scopedTickets = lotId ? order.tickets.filter((ticket) => ticket.lotId === lotId) : order.tickets;
+    const scopedSubtotal = scopedItems.reduce((sum, item) => sum + item.totalInCents, 0);
+    const scopedServiceFee = scopedItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
+    const orderBaseForAllocation = order.subtotalInCents + order.serviceFeeInCents;
+    const scopedBaseForAllocation = scopedSubtotal + scopedServiceFee;
+    const scopedDiscount = lotId
+      ? allocateAmountByShare(order.discountInCents, scopedBaseForAllocation, orderBaseForAllocation)
+      : order.discountInCents;
+    const scopedCardInterest = lotId
+      ? allocateAmountByShare(order.cardInterestInCents, scopedBaseForAllocation, orderBaseForAllocation)
+      : order.cardInterestInCents;
+    const gross = lotId
+      ? Math.max(scopedSubtotal + scopedServiceFee + scopedCardInterest - scopedDiscount, 0)
+      : order.totalInCents;
+    const orderTicketSubtotal = lotId ? scopedSubtotal : order.subtotalInCents;
+    const orderServiceFee = lotId ? scopedServiceFee : order.serviceFeeInCents;
+    const orderCardInterest = scopedCardInterest;
+    const orderDiscount = scopedDiscount;
     const netFromProvider = extractNetValueInCents(order.payment?.rawPayload);
     const splitSummary = summarizeAsaasSplit(order.payment?.rawPayload);
-    const net = netFromProvider ?? gross;
+    const net = lotId && netFromProvider !== null
+      ? allocateAmountByShare(netFromProvider, gross, order.totalInCents)
+      : netFromProvider ?? gross;
     const method = extractBillingType(
       order.payment?.rawPayload,
       order.payment?.provider ?? PaymentProvider.SIMULATED,
       Boolean(order.payment?.pixQrCodePayload)
     );
+
+    scopedPaidOrders.push({
+      ...order,
+      subtotalInCents: orderTicketSubtotal,
+      serviceFeeInCents: orderServiceFee,
+      cardInterestInCents: orderCardInterest,
+      discountInCents: orderDiscount,
+      totalInCents: gross,
+      items: scopedItems,
+      tickets: scopedTickets,
+      splitSummary
+    });
 
     grossRevenueInCents += gross;
     netRevenueInCents += net;
@@ -398,7 +442,7 @@ export async function getFinanceReport(
 
     const eventRow = byEvent.get(order.event.id);
     if (eventRow) {
-      eventRow.tickets += order.tickets.length;
+      eventRow.tickets += scopedTickets.length;
       addBreakdownToMap(eventRow, orderTicketSubtotal, orderServiceFee, orderCardInterest, orderDiscount);
     }
 
@@ -483,25 +527,19 @@ export async function getFinanceReport(
         (statusCounts.CANCELED ?? 0) + (statusCounts.EXPIRED ?? 0) + (statusCounts.REFUNDED ?? 0),
       approvedPayments: paymentStatusCounts.APPROVED ?? 0,
       failedPayments: (paymentStatusCounts.FAILED ?? 0) + (paymentStatusCounts.CANCELED ?? 0),
-      ticketsIssued: paidOrders.reduce((sum, order) => sum + order.tickets.length, 0),
-      netValueCoverage: paidOrders.length > 0 ? Math.round((netValueKnownCount / paidOrders.length) * 100) : 0,
+      ticketsIssued: scopedPaidOrders.reduce((sum, order) => sum + order.tickets.length, 0),
+      netValueCoverage: scopedPaidOrders.length > 0 ? Math.round((netValueKnownCount / scopedPaidOrders.length) * 100) : 0,
       splitTotalInCents,
       splitPaymentsCount,
-      splitCoverage: paidOrders.length > 0 ? Math.round((splitPaymentsCount / paidOrders.length) * 100) : 0,
+      splitCoverage: scopedPaidOrders.length > 0 ? Math.round((splitPaymentsCount / scopedPaidOrders.length) * 100) : 0,
       platformAfterSplitInCents: Math.max(netRevenueInCents - splitTotalInCents, 0)
     },
     byEvent: Array.from(byEvent.values()).sort((a, b) => b.grossInCents - a.grossInCents),
     byMethod: Array.from(byMethod.values()).sort((a, b) => b.grossInCents - a.grossInCents),
     bySource: Array.from(bySource.values()).sort((a, b) => b.grossInCents - a.grossInCents),
     bySplitWallet: Array.from(bySplitWallet.values()).sort((a, b) => b.totalInCents - a.totalInCents),
-    paidOrders: paidOrders.map((order) => ({
-      ...order,
-      splitSummary: summarizeAsaasSplit(order.payment?.rawPayload)
-    })),
-    recentPaidOrders: paidOrders.slice(0, 12).map((order) => ({
-      ...order,
-      splitSummary: summarizeAsaasSplit(order.payment?.rawPayload)
-    })),
+    paidOrders: scopedPaidOrders,
+    recentPaidOrders: scopedPaidOrders.slice(0, 12),
     recentOrders: ordersInPeriod.slice(0, 12)
   };
 }
