@@ -21,6 +21,8 @@ type HomeEventCarouselProps = {
   events: ShowcaseEvent[];
 };
 
+const carouselAutoRotationMs = 3000;
+
 function PinIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
@@ -113,7 +115,7 @@ export function HomeEventCarousel({ events }: HomeEventCarouselProps) {
 
     const intervalId = window.setInterval(() => {
       scrollRail("next");
-    }, 1000);
+    }, carouselAutoRotationMs);
 
     return () => window.clearInterval(intervalId);
   }, [hasCarouselControls, scrollRail]);
