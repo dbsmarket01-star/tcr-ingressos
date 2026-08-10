@@ -5,11 +5,12 @@ import { SubmitButton } from "@/components/forms/SubmitButton";
 import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
 import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
+import { calculateCouponDiscountInCents, getValidCouponPreviewForEvent } from "@/features/coupons/coupon.service";
 import { getBuyerProfile } from "@/features/customer-auth/google-buyer.service";
 import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrganization } from "@/features/events/event.service";
 import { createCheckoutOrderAction } from "@/features/orders/order.actions";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
-import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
+import { allocateDiscountAcrossTotals, calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import { buildEventSeo } from "@/features/seo/event-seo";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
@@ -54,6 +55,25 @@ function buildCheckoutPath(slug: string, query: Record<string, string | string[]
 
   const queryString = params.toString();
   return `/evento/${slug}/checkout${queryString ? `?${queryString}` : ""}#cadastro`;
+}
+
+function getCheckoutQueryFields(query: Record<string, string | string[] | undefined>) {
+  const ignoredKeys = new Set(["checkoutError", "coupon"]);
+  const fields: Array<{ key: string; value: string }> = [];
+
+  for (const [key, value] of Object.entries(query)) {
+    if (ignoredKeys.has(key)) {
+      continue;
+    }
+
+    allParams(value).forEach((entry) => {
+      if (entry) {
+        fields.push({ key, value: entry });
+      }
+    });
+  }
+
+  return fields;
 }
 
 function parseQuantity(value: string | string[] | undefined) {
@@ -178,6 +198,43 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
   const ticketsTotalInCents = selectedItems.reduce((sum, item) => sum + item.subtotalInCents, 0);
   const serviceFeeTotalInCents = selectedItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
   const orderTotalInCents = selectedItems.reduce((sum, item) => sum + item.totalInCents, 0);
+  const requestedCouponCode = firstParam(query.coupon)?.trim() || "";
+  let couponPreview:
+    | {
+        code: string;
+        discountInCents: number;
+        percentage: number | null;
+        totalInCents: number;
+        type: string;
+      }
+    | null = null;
+  let couponPreviewError: string | null = null;
+
+  if (event.couponsEnabled && requestedCouponCode) {
+    try {
+      const coupon = await getValidCouponPreviewForEvent(event.id, requestedCouponCode);
+      const discountInCents = coupon
+        ? calculateCouponDiscountInCents(coupon, orderTotalInCents, selectedItems)
+        : 0;
+
+      couponPreview = {
+        code: coupon?.code || requestedCouponCode,
+        discountInCents,
+        percentage: coupon?.type === "PERCENTAGE" ? coupon.percentage ?? 0 : null,
+        type: coupon?.type || "",
+        totalInCents: Math.max(orderTotalInCents - discountInCents, 0)
+      };
+    } catch {
+      couponPreviewError = "Cupom inválido ou indisponível.";
+    }
+  }
+
+  const checkoutQueryFields = getCheckoutQueryFields(query);
+  const checkoutDiscountAllocation = allocateDiscountAcrossTotals(
+    ticketsTotalInCents,
+    serviceFeeTotalInCents,
+    couponPreview?.discountInCents ?? 0
+  );
   const currentCheckoutPath = buildCheckoutPath(event.slug, query);
   const landingPage = firstParam(query.landingPage) || tracking.landingPage;
   const publicSocialSettings = companySettings as typeof companySettings & {
@@ -244,36 +301,54 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
             <div className="checkoutCartTotal">
               <div>
                 <span>Ingressos</span>
-                <strong>{formatCurrency(ticketsTotalInCents)}</strong>
+                <strong>{formatCurrency(couponPreview ? checkoutDiscountAllocation.netSubtotalInCents : ticketsTotalInCents)}</strong>
               </div>
               <div>
                 <span className="checkoutFeeTotalLabel">
                   Taxas aplicadas
                   <FeeExplanationButton variant="icon" />
                 </span>
-                <strong>{formatCurrency(serviceFeeTotalInCents)}</strong>
+                <strong>{formatCurrency(couponPreview ? checkoutDiscountAllocation.netServiceFeeInCents : serviceFeeTotalInCents)}</strong>
               </div>
               <div>
                 <span>Total</span>
-                <strong>{formatCurrency(orderTotalInCents)}</strong>
+                <strong>{formatCurrency(couponPreview ? couponPreview.totalInCents : orderTotalInCents)}</strong>
               </div>
             </div>
             {event.couponsEnabled ? (
               <div className="checkoutCartCoupon">
                 <div>
                   <span className="checkoutCartCouponLabel">Cupom de desconto</span>
-                  <p>Digite o código e o desconto será validado ao continuar.</p>
+                  <p>Digite o código e clique em aplicar para ver o desconto no resumo.</p>
                 </div>
-                <label className="checkoutCartCouponField">
-                  <span>Código do cupom</span>
-                  <input
-                    form="checkoutRegistrationForm"
-                    name="coupon"
-                    placeholder="Ex: PROMO10"
-                    autoCapitalize="characters"
-                    autoComplete="off"
-                  />
-                </label>
+                <form action={`/evento/${event.slug}/checkout`} className="checkoutCartCouponApplyForm" method="GET">
+                  {checkoutQueryFields.map((field, index) => (
+                    <input key={`${field.key}-${index}`} type="hidden" name={field.key} value={field.value} />
+                  ))}
+                  <label className="checkoutCartCouponField">
+                    <span>Código do cupom</span>
+                    <input
+                      name="coupon"
+                      placeholder="Ex: PROMO10"
+                      defaultValue={requestedCouponCode}
+                      autoCapitalize="characters"
+                      autoComplete="off"
+                    />
+                  </label>
+                  <button className="button checkoutCartCouponButton" type="submit">Aplicar cupom</button>
+                </form>
+                {couponPreview ? (
+                  <div className="checkoutCouponApplied">
+                    <div>
+                      <span>
+                        Cupom {couponPreview.code} aplicado: desconto de {formatCurrency(couponPreview.discountInCents)}.
+                      </span>
+                      <small>Total atualizado: {formatCurrency(couponPreview.totalInCents)}</small>
+                    </div>
+                    <strong>- {formatCurrency(couponPreview.discountInCents)}</strong>
+                  </div>
+                ) : null}
+                {couponPreviewError ? <div className="checkoutCouponError">{couponPreviewError}</div> : null}
               </div>
             ) : null}
             <Link className="secondaryButton fullButton" href={`/evento/${event.slug}#ingressos`}>
@@ -302,6 +377,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
               <input type="hidden" name="utmTerm" value={tracking.utmTerm ?? ""} />
               <input type="hidden" name="referrer" value={tracking.referrer ?? ""} />
               <input type="hidden" name="landingPage" value={landingPage ?? ""} />
+              {couponPreview ? <input type="hidden" name="coupon" value={couponPreview.code} /> : null}
               {selectedItems.map((item) => (
                 <div key={item.lot.id}>
                   <input type="hidden" name="lotId" value={item.lot.id} />

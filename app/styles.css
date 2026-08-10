@@ -14931,6 +14931,57 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   outline: none;
 }
 
+.checkoutCartCouponApplyForm {
+  display: grid;
+  gap: 10px;
+}
+
+.checkoutCartCouponButton {
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+  min-height: 44px;
+  padding-left: 16px;
+  padding-right: 16px;
+  white-space: nowrap;
+}
+
+.checkoutCouponApplied,
+.checkoutCouponError {
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.35;
+  padding: 10px 12px;
+}
+
+.checkoutCouponApplied {
+  align-items: center;
+  background: #e9fbf0;
+  border: 1px solid #a8dfbd;
+  color: #176b38;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.checkoutCouponApplied div {
+  display: grid;
+  gap: 3px;
+}
+
+.checkoutCouponApplied small {
+  color: #0f5d30;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.checkoutCouponError {
+  background: #fff3eb;
+  border: 1px solid #f5c49b;
+  color: #8a3b12;
+}
+
 .checkoutStepEyebrow {
   color: var(--brand-dark);
   font-size: 12px;

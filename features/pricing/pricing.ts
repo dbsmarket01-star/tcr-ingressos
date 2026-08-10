@@ -7,6 +7,29 @@ export function calculateServiceFeeInCents(priceInCents: number, quantity: numbe
   return Math.round(priceInCents * quantity * (serviceFeeBps / 10000));
 }
 
+export function allocateDiscountAcrossTotals(
+  subtotalInCents: number,
+  serviceFeeInCents: number,
+  discountInCents: number
+) {
+  const cappedDiscountInCents = Math.min(
+    Math.max(discountInCents, 0),
+    Math.max(subtotalInCents + serviceFeeInCents, 0)
+  );
+  const subtotalDiscountInCents = Math.min(subtotalInCents, cappedDiscountInCents);
+  const serviceFeeDiscountInCents = Math.min(
+    serviceFeeInCents,
+    cappedDiscountInCents - subtotalDiscountInCents
+  );
+
+  return {
+    netSubtotalInCents: subtotalInCents - subtotalDiscountInCents,
+    netServiceFeeInCents: serviceFeeInCents - serviceFeeDiscountInCents,
+    serviceFeeDiscountInCents,
+    subtotalDiscountInCents
+  };
+}
+
 export function capDiscountToPayableAmount(amountInCents: number, discountInCents: number) {
   if (amountInCents <= MIN_PAYABLE_AMOUNT_IN_CENTS) {
     return 0;

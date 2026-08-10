@@ -120,3 +120,39 @@ export async function getValidCouponForEvent(tx: Prisma.TransactionClient, event
 
   return coupon;
 }
+
+export async function getValidCouponPreviewForEvent(eventId: string, code?: string) {
+  const normalizedCode = normalizeCouponCode(code || "");
+
+  if (!normalizedCode) {
+    return null;
+  }
+
+  const now = new Date();
+  const coupon = await prisma.coupon.findUnique({
+    where: {
+      eventId_code: {
+        eventId,
+        code: normalizedCode
+      }
+    }
+  });
+
+  if (!coupon || coupon.status !== CouponStatus.ACTIVE) {
+    throw new Error("Cupom invalido ou indisponivel.");
+  }
+
+  if (coupon.startsAt && coupon.startsAt > now) {
+    throw new Error("Cupom ainda nao esta disponivel.");
+  }
+
+  if (coupon.endsAt && coupon.endsAt < now) {
+    throw new Error("Cupom expirado.");
+  }
+
+  if (coupon.maxRedemptions && coupon.redeemedCount >= coupon.maxRedemptions) {
+    throw new Error("Cupom esgotado.");
+  }
+
+  return coupon;
+}
