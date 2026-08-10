@@ -1,0 +1,1 @@
+ALTER TYPE "MarketingTrackingEventType" ADD VALUE IF NOT EXISTS 'HEATMAP_SIGNAL';

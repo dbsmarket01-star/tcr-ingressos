@@ -1,0 +1,2 @@
+ALTER TABLE "Event"
+ADD COLUMN IF NOT EXISTS "hiddenFromShowcase" BOOLEAN NOT NULL DEFAULT false;
