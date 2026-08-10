@@ -169,3 +169,34 @@ O proximo passo seguro e criar uma branch/clone limpo a partir de `origin/main`,
 `chore: reconcile applied prisma migrations`
 
 Depois disso, seguimos para a classificacao dos arquivos soltos por modulo.
+
+## Protecoes adicionadas
+
+Para reduzir a chance de o problema voltar:
+
+- O `.gitignore` deve bloquear arquivos locais duplicados como `page 2.tsx`, `route 2.ts`, `tsconfig 2.tsbuildinfo`, caches temporarios e copias locais.
+- O comando `npm run repo:check-hygiene` deve avisar quando arquivos locais suspeitos forem encontrados.
+- O comando `npm run db:check-migrations` deve ser usado antes de qualquer deploy que envolva Prisma ou banco.
+- Esse comando compara a tabela `_prisma_migrations` com os arquivos em `prisma/migrations` e falha quando encontra migracao aplicada no banco sem arquivo correspondente, checksum alterado, rollback ou migracao com log de falha.
+- O comando `npm run release:check` consolida as validacoes antes de publicar.
+
+Regra operacional: nenhum deploy deve ser feito se `npm run db:check-migrations` apontar divergencia.
+
+Ver tambem: `docs/politica-deploy-e-higiene.md`.
+
+## Pendencias encontradas na validacao
+
+### Dependencias com alerta de seguranca
+
+`npm audit --omit=dev` apontou vulnerabilidades de producao envolvendo principalmente `next`, `postcss`, `sharp`, `nanoid`, `uuid` e dependencias transitivas do `resend`.
+
+Nao foi executado `npm audit fix --force`, porque ele sugere troca de versoes fora do intervalo atual e pode alterar comportamento de producao. A correcao deve ser feita em uma tarefa propria, com upgrade controlado e regressao completa de checkout, admin, webhooks e paginas publicas.
+
+### Aviso de build Turbopack
+
+O build passou, mas emitiu aviso sobre rastreamento amplo vindo de:
+
+- `features/apple-local-dns/apple-local-dns-status.service.ts`
+- `app/api/apple/local-dns/status/route.ts`
+
+Esse aviso nao impediu o build, mas indica codigo auxiliar que deve ser revisado para reduzir ruido e risco em builds futuros.

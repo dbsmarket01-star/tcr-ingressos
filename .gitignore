@@ -7,6 +7,17 @@ data/*.local.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.tsbuildinfo
+tmp
+tmp-*
+tmp-*/
+
+# Local duplicate files accidentally created by Finder/iCloud/manual copies.
+# These files caused confusion because fixes can be made in the copy instead
+# of the file that Next.js actually uses.
+**/* 2.*
+**/* 3.*
+**/* copy.*
 **/.dart_tool
 **/.flutter-plugins
 **/.flutter-plugins-dependencies

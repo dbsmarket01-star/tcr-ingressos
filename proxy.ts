@@ -110,13 +110,7 @@ export function proxy(request: NextRequest) {
       request.cookies.get("ingresaas_admin_session")?.value || request.cookies.get("tcr_admin_session")?.value
     );
 
-    return withInternalHeaders(
-      NextResponse.rewrite(new URL(hasAdminSession ? "/admin" : "/login", request.url), {
-        request: {
-          headers: requestHeaders
-        }
-      })
-    );
+    return withInternalHeaders(NextResponse.redirect(new URL(hasAdminSession ? "/admin" : "/login", request.url)));
   }
 
   if (isAdminHost && (isInternalPath(pathname) || isAllowedAdminHostAsset(pathname))) {

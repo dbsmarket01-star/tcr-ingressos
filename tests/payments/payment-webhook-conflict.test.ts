@@ -17,6 +17,16 @@ const prismaMock = {
     updateMany: vi.fn(),
     create: vi.fn()
   },
+  seatReservation: {
+    findMany: vi.fn(async () => []),
+    updateMany: vi.fn()
+  },
+  orderSeat: {
+    findMany: vi.fn(async () => [])
+  },
+  seat: {
+    updateMany: vi.fn()
+  },
   coupon: {
     update: vi.fn()
   },
@@ -116,7 +126,8 @@ describe("payment webhook conflict handling", () => {
             primaryColor: "#0f5f8c"
           }
         },
-        tickets: []
+        tickets: [],
+        orderSeats: []
       }
     };
 
