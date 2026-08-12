@@ -314,20 +314,6 @@ function paymentMethodLabel(payment?: {
   };
 }
 
-function buildExportHref(params: OrderSearchParams) {
-  const query = new URLSearchParams({
-    ...(params.eventId ? { eventId: params.eventId } : {}),
-    ...(params.status ? { status: params.status } : {}),
-    ...(params.search ? { search: params.search } : {}),
-    ...(params.startDate ? { startDate: params.startDate } : {}),
-    ...(params.endDate ? { endDate: params.endDate } : {}),
-    ...(params.city ? { city: params.city } : {}),
-    ...(params.state ? { state: params.state } : {})
-  });
-
-  return `/admin/orders/export?${query.toString()}`;
-}
-
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const admin = await requirePermission("ORDERS");
   const params = searchParams ? await searchParams : {};
@@ -344,7 +330,6 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const stateOptions = Array.from(new Set(events.map((event) => event.state).filter(Boolean))).sort((left, right) =>
     left.localeCompare(right, "pt-BR")
   );
-  const exportHref = buildExportHref(params);
 
   return (
     <AdminShell
@@ -491,9 +476,9 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               <Link className="ordersSecondaryButton" href="/admin/orders">
                 Limpar filtros
               </Link>
-              <Link className="ordersSecondaryButton ordersExportButton" href={exportHref}>
+              <button className="ordersSecondaryButton ordersExportButton" type="submit" formAction="/admin/orders/export">
                 Exportar PDF
-              </Link>
+              </button>
             </div>
           </form>
         </section>
