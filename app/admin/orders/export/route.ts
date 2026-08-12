@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { listOrdersForCsvExport } from "@/features/orders/order.admin.service";
+import { calculateCardInterestInCents } from "@/features/pricing/pricing";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +38,108 @@ function extractPaymentPayload(rawPayload: unknown) {
   const root = asRecord(rawPayload);
   const nestedPayment = asRecord(root?.payment);
   return nestedPayment ?? root;
+}
+
+function extractInstallmentCount(rawPayload: unknown) {
+  const payload = extractPaymentPayload(rawPayload);
+  const installment = asRecord(payload?.installment);
+  const creditCard = asRecord(payload?.creditCard);
+  const candidates = [
+    payload?.installmentCount,
+    payload?.installments,
+    installment?.installmentCount,
+    creditCard?.installmentCount
+  ];
+
+  for (const candidate of candidates) {
+    const parsed = typeof candidate === "string" ? Number(candidate) : candidate;
+    if (typeof parsed === "number" && Number.isInteger(parsed) && parsed > 1) {
+      return parsed;
+    }
+  }
+
+  const description = typeof payload?.description === "string" ? payload.description : "";
+  const descriptionMatch = description.match(/parcela\s+\d+\s+de\s+(\d+)/i);
+  if (descriptionMatch) {
+    const parsed = Number(descriptionMatch[1]);
+    if (Number.isInteger(parsed) && parsed > 1) {
+      return parsed;
+    }
+  }
+
+  return null;
+}
+
+function isCreditCardPayment(rawPayload: unknown) {
+  const payload = extractPaymentPayload(rawPayload);
+  return payload?.billingType === "CREDIT_CARD";
+}
+
+function inferInstallmentCountFromInterest(order: OrderExportRow) {
+  if (order.cardInterestInCents <= 0) {
+    return null;
+  }
+
+  for (let installments = 2; installments <= 12; installments += 1) {
+    const expectedInterestInCents = order.items.reduce(
+      (sum, item) =>
+        sum +
+        calculateCardInterestInCents(
+          item.totalInCents + item.serviceFeeInCents,
+          installments,
+          item.cardInterestBpsPerInstallment,
+          item.cardInterestStartsAtInstallment
+        ),
+      0
+    );
+
+    if (expectedInterestInCents === order.cardInterestInCents) {
+      return installments;
+    }
+  }
+
+  return null;
+}
+
+function pluralizeTicket(quantity: number) {
+  return quantity === 1 ? "ing." : "ings.";
+}
+
+function getOrderTicketLines(order: OrderExportRow) {
+  const groupedItems = new Map<string, { label: string; quantity: number; admissions: number }>();
+
+  order.items.forEach((item) => {
+    const label = item.lotOption?.label ? `${item.lot.name} - ${item.lotOption.label}` : item.lot.name;
+    const previous = groupedItems.get(label) ?? { label, quantity: 0, admissions: 0 };
+    const admissionsPerUnit = Math.max(item.admissionsPerUnit ?? 1, 1);
+
+    groupedItems.set(label, {
+      label,
+      quantity: previous.quantity + item.quantity,
+      admissions: previous.admissions + item.quantity * admissionsPerUnit
+    });
+  });
+
+  return Array.from(groupedItems.values()).map((item) => {
+    const qrLabel = item.admissions !== item.quantity ? ` (${item.admissions} QR)` : "";
+    return `${item.quantity} ${pluralizeTicket(item.quantity)} ${item.label}${qrLabel}`;
+  });
+}
+
+function getOrderFeeLines(order: OrderExportRow) {
+  const lines = [`Tx. bilheteria: ${formatCurrency(order.serviceFeeInCents)}`];
+  const isCreditCard = isCreditCardPayment(order.payment?.rawPayload);
+  const installmentCount = extractInstallmentCount(order.payment?.rawPayload) ?? inferInstallmentCountFromInterest(order);
+
+  if (isCreditCard) {
+    lines.push(`Parcelamento: ${installmentCount ?? 1}x`);
+  }
+
+  if (order.cardInterestInCents > 0) {
+    lines.push(`Juros cartao: ${formatCurrency(order.cardInterestInCents)}`);
+  }
+
+  return lines;
 }
 
 function findCardLast4(value: unknown, depth = 0): string | null {
@@ -211,35 +314,45 @@ function drawHeader(commands: string[], page: number, totalPages: number, filter
 function drawTableHeader(commands: string[], y: number) {
   commands.push(fillRect(28, y - 18, 786, 24, "0.944 0.969 0.961 rg"));
   commands.push(text(38, y - 9, "Pedido", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
-  commands.push(text(122, y - 9, "Cliente", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
-  commands.push(text(268, y - 9, "Evento", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
-  commands.push(text(405, y - 9, "Cidade", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
-  commands.push(text(488, y - 9, "Data", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
-  commands.push(text(565, y - 9, "Valor", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
-  commands.push(text(630, y - 9, "Status", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
-  commands.push(text(716, y - 9, "Pagamento", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
+  commands.push(text(112, y - 9, "Cliente", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
+  commands.push(text(238, y - 9, "Evento", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
+  commands.push(text(346, y - 9, "Ingresso", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
+  commands.push(text(462, y - 9, "Cidade", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
+  commands.push(text(518, y - 9, "Data", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
+  commands.push(text(574, y - 9, "Valor ing.", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
+  commands.push(text(638, y - 9, "Taxas", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
+  commands.push(text(708, y - 9, "Status", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
+  commands.push(text(758, y - 9, "Pagto.", { size: 7.4, font: "F2", color: "0.247 0.329 0.306 rg" }));
 }
 
 function drawOrderRow(commands: string[], order: OrderExportRow, y: number, index: number) {
   const rowColor = index % 2 === 0 ? "1 1 1 rg" : "0.988 0.995 0.992 rg";
   const city = `${order.event.city}/${order.event.state}`;
   const clientLines = [order.customer.name, order.customer.email, order.customer.phone || "Telefone não informado"];
-  const eventLines = wrapText(order.event.title, 30).slice(0, 2);
+  const eventLines = wrapText(order.event.title, 23).slice(0, 2);
+  const ticketLines = getOrderTicketLines(order).flatMap((line) => wrapText(line, 24)).slice(0, 3);
+  const feeLines = getOrderFeeLines(order);
 
-  commands.push(fillRect(28, y - 38, 786, 40, rowColor));
-  commands.push(strokeRect(28, y - 38, 786, 40, "0.858 0.902 0.890 RG", 0.35));
+  commands.push(fillRect(28, y - 44, 786, 46, rowColor));
+  commands.push(strokeRect(28, y - 44, 786, 46, "0.858 0.902 0.890 RG", 0.35));
   commands.push(text(38, y - 10, order.code, { size: 7, font: "F2", max: 20 }));
   clientLines.forEach((line, lineIndex) => {
-    commands.push(text(122, y - 8 - lineIndex * 10, line, { size: lineIndex === 0 ? 7.2 : 6.5, font: lineIndex === 0 ? "F2" : "F1", max: 34 }));
+    commands.push(text(112, y - 8 - lineIndex * 10, line, { size: lineIndex === 0 ? 7 : 6.2, font: lineIndex === 0 ? "F2" : "F1", max: 29 }));
   });
   eventLines.forEach((line, lineIndex) => {
-    commands.push(text(268, y - 8 - lineIndex * 10, line, { size: lineIndex === 0 ? 7.2 : 6.5, font: lineIndex === 0 ? "F2" : "F1", max: 32 }));
+    commands.push(text(238, y - 8 - lineIndex * 10, line, { size: lineIndex === 0 ? 7 : 6.2, font: lineIndex === 0 ? "F2" : "F1", max: 24 }));
   });
-  commands.push(text(405, y - 10, city, { size: 7, max: 22 }));
-  commands.push(text(488, y - 10, formatDateTime(order.createdAt), { size: 7, max: 20 }));
-  commands.push(text(565, y - 10, formatCurrency(order.totalInCents), { size: 7.4, font: "F2", max: 18 }));
-  commands.push(text(630, y - 10, orderStatusLabels[order.status] ?? order.status, { size: 7.4, font: "F2", max: 20 }));
-  commands.push(text(716, y - 10, paymentMethodLabel(order), { size: 7.1, max: 24 }));
+  ticketLines.forEach((line, lineIndex) => {
+    commands.push(text(346, y - 8 - lineIndex * 9, line, { size: 6.2, font: lineIndex === 0 ? "F2" : "F1", max: 24 }));
+  });
+  commands.push(text(462, y - 10, city, { size: 6.5, max: 14 }));
+  commands.push(text(518, y - 10, formatDateTime(order.createdAt), { size: 6.4, max: 15 }));
+  commands.push(text(574, y - 10, formatCurrency(order.subtotalInCents), { size: 7, font: "F2", max: 16 }));
+  feeLines.forEach((line, lineIndex) => {
+    commands.push(text(638, y - 8 - lineIndex * 9, line, { size: 6, font: lineIndex === 0 ? "F2" : "F1", max: 18 }));
+  });
+  commands.push(text(708, y - 10, orderStatusLabels[order.status] ?? order.status, { size: 7, font: "F2", max: 12 }));
+  commands.push(text(758, y - 10, paymentMethodLabel(order), { size: 6.5, max: 15 }));
 }
 
 function buildFiltersLabel(url: URL) {
@@ -252,7 +365,7 @@ function buildFiltersLabel(url: URL) {
 }
 
 function buildOrdersPdf(orders: OrderExportRow[], filtersLabel: string) {
-  const rowsPerPage = 11;
+  const rowsPerPage = 9;
   const chunks: OrderExportRow[][] = [];
 
   for (let index = 0; index < orders.length; index += rowsPerPage) {
@@ -270,7 +383,7 @@ function buildOrdersPdf(orders: OrderExportRow[], filtersLabel: string) {
     drawTableHeader(commands, 488);
 
     chunk.forEach((order, index) => {
-      drawOrderRow(commands, order, 452 - index * 42, index);
+      drawOrderRow(commands, order, 452 - index * 48, index);
     });
 
     return commands.join("\n");

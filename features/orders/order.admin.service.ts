@@ -190,9 +190,11 @@ export async function getOrdersSummary(
       where: paidWhere,
       _sum: {
         totalInCents: true,
+        subtotalInCents: true,
         serviceFeeInCents: true,
         cardInterestInCents: true,
-        discountInCents: true
+        discountInCents: true,
+        pixDiscountInCents: true
       }
     })
   ]);
@@ -212,9 +214,11 @@ export async function getOrdersSummary(
     pendingOrders: countByStatus.PENDING_PAYMENT ?? 0,
     canceledOrders: (countByStatus.CANCELED ?? 0) + (countByStatus.EXPIRED ?? 0) + (countByStatus.REFUNDED ?? 0),
     totalInCents: totals._sum.totalInCents ?? 0,
+    subtotalInCents: totals._sum.subtotalInCents ?? 0,
     serviceFeeInCents: totals._sum.serviceFeeInCents ?? 0,
     cardInterestInCents: totals._sum.cardInterestInCents ?? 0,
-    discountInCents: totals._sum.discountInCents ?? 0
+    discountInCents: totals._sum.discountInCents ?? 0,
+    pixDiscountInCents: totals._sum.pixDiscountInCents ?? 0
   };
 }
 

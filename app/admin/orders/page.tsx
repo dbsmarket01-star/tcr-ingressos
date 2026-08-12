@@ -6,6 +6,7 @@ import {
   listAdminOrders,
   listOrderFilterEventsForOrganization
 } from "@/features/orders/order.admin.service";
+import { calculateCardInterestInCents } from "@/features/pricing/pricing";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -63,6 +64,155 @@ function extractPaymentPayload(rawPayload: unknown) {
   const root = asRecord(rawPayload);
   const nestedPayment = asRecord(root?.payment);
   return nestedPayment ?? root;
+}
+
+function extractInstallmentCount(rawPayload: unknown) {
+  const payload = extractPaymentPayload(rawPayload);
+  const installment = asRecord(payload?.installment);
+  const creditCard = asRecord(payload?.creditCard);
+  const candidates = [
+    payload?.installmentCount,
+    payload?.installments,
+    installment?.installmentCount,
+    creditCard?.installmentCount
+  ];
+
+  for (const candidate of candidates) {
+    const parsed = typeof candidate === "string" ? Number(candidate) : candidate;
+    if (typeof parsed === "number" && Number.isInteger(parsed) && parsed > 1) {
+      return parsed;
+    }
+  }
+
+  const description = typeof payload?.description === "string" ? payload.description : "";
+  const descriptionMatch = description.match(/parcela\s+\d+\s+de\s+(\d+)/i);
+  if (descriptionMatch) {
+    const parsed = Number(descriptionMatch[1]);
+    if (Number.isInteger(parsed) && parsed > 1) {
+      return parsed;
+    }
+  }
+
+  return null;
+}
+
+function isCreditCardPayment(rawPayload: unknown) {
+  const payload = extractPaymentPayload(rawPayload);
+  return payload?.billingType === "CREDIT_CARD";
+}
+
+function inferInstallmentCountFromInterest(order: {
+  cardInterestInCents: number;
+  items: Array<{
+    totalInCents: number;
+    serviceFeeInCents: number;
+    cardInterestBpsPerInstallment: number;
+    cardInterestStartsAtInstallment: number;
+  }>;
+}) {
+  if (order.cardInterestInCents <= 0) {
+    return null;
+  }
+
+  for (let installments = 2; installments <= 12; installments += 1) {
+    const expectedInterestInCents = order.items.reduce(
+      (sum, item) =>
+        sum +
+        calculateCardInterestInCents(
+          item.totalInCents + item.serviceFeeInCents,
+          installments,
+          item.cardInterestBpsPerInstallment,
+          item.cardInterestStartsAtInstallment
+        ),
+      0
+    );
+
+    if (expectedInterestInCents === order.cardInterestInCents) {
+      return installments;
+    }
+  }
+
+  return null;
+}
+
+function pluralizeTicket(quantity: number) {
+  return quantity === 1 ? "ingresso" : "ingressos";
+}
+
+function getOrderTicketLines(order: {
+  items: Array<{
+    quantity: number;
+    admissionsPerUnit?: number | null;
+    lot: { name: string };
+    lotOption?: { label: string } | null;
+  }>;
+}) {
+  const groupedItems = new Map<string, { label: string; quantity: number; admissions: number }>();
+
+  order.items.forEach((item) => {
+    const label = item.lotOption?.label ? `${item.lot.name} - ${item.lotOption.label}` : item.lot.name;
+    const previous = groupedItems.get(label) ?? { label, quantity: 0, admissions: 0 };
+    const admissionsPerUnit = Math.max(item.admissionsPerUnit ?? 1, 1);
+
+    groupedItems.set(label, {
+      label,
+      quantity: previous.quantity + item.quantity,
+      admissions: previous.admissions + item.quantity * admissionsPerUnit
+    });
+  });
+
+  return Array.from(groupedItems.values());
+}
+
+function getOrderFeeLines(order: {
+  serviceFeeInCents: number;
+  cardInterestInCents: number;
+  payment?: { rawPayload?: unknown } | null;
+  items: Array<{
+    totalInCents: number;
+    serviceFeeInCents: number;
+    cardInterestBpsPerInstallment: number;
+    cardInterestStartsAtInstallment: number;
+  }>;
+}) {
+  const lines = [{ label: "Taxa bilheteria", value: formatCurrency(order.serviceFeeInCents) }];
+  const isCreditCard = isCreditCardPayment(order.payment?.rawPayload);
+  const installmentCount = extractInstallmentCount(order.payment?.rawPayload) ?? inferInstallmentCountFromInterest(order);
+
+  if (isCreditCard) {
+    lines.push({ label: "Parcelamento cartão", value: `${installmentCount ?? 1}x` });
+  }
+
+  if (order.cardInterestInCents > 0) {
+    lines.push({ label: "Juros cartão", value: formatCurrency(order.cardInterestInCents) });
+  }
+
+  return lines;
+}
+
+function getOrderFinancialBreakdown(order: {
+  subtotalInCents: number;
+  serviceFeeInCents: number;
+  cardInterestInCents: number;
+  payment?: { rawPayload?: unknown } | null;
+  items: Array<{
+    quantity: number;
+    admissionsPerUnit?: number | null;
+    totalInCents: number;
+    serviceFeeInCents: number;
+    cardInterestBpsPerInstallment: number;
+    cardInterestStartsAtInstallment: number;
+    lot: { name: string };
+    lotOption?: { label: string } | null;
+  }>;
+}) {
+  return {
+    ticketSubtotalInCents: order.subtotalInCents,
+    serviceFeeInCents: order.serviceFeeInCents,
+    cardInterestInCents: order.cardInterestInCents,
+    ticketLines: getOrderTicketLines(order),
+    feeLines: getOrderFeeLines(order)
+  };
 }
 
 function findCardLast4(value: unknown, depth = 0): string | null {
@@ -243,6 +393,30 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               <small>Valor bruto pago</small>
             </div>
           </article>
+          <article className="ordersSummaryCard">
+            <span className="ordersMetricIcon ordersMetricIconRevenue">R$</span>
+            <div>
+              <span>Ingressos</span>
+              <strong>{formatCurrency(summary.subtotalInCents)}</strong>
+              <small>Valor base dos ingressos</small>
+            </div>
+          </article>
+          <article className="ordersSummaryCard">
+            <span className="ordersMetricIcon ordersMetricIconPaid">%</span>
+            <div>
+              <span>Taxa bilheteria</span>
+              <strong>{formatCurrency(summary.serviceFeeInCents)}</strong>
+              <small>Taxa de serviço configurada</small>
+            </div>
+          </article>
+          <article className="ordersSummaryCard">
+            <span className="ordersMetricIcon ordersMetricIconPending">CC</span>
+            <div>
+              <span>Juros cartão</span>
+              <strong>{formatCurrency(summary.cardInterestInCents)}</strong>
+              <small>Acréscimo de parcelamento</small>
+            </div>
+          </article>
         </div>
 
         <section className="ordersFilterPanel" aria-label="Filtros de pedidos">
@@ -342,9 +516,11 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                     <th>Pedido</th>
                     <th>Cliente</th>
                     <th>Evento</th>
+                    <th>Ingressos</th>
                     <th>Cidade</th>
                     <th>Data do pedido</th>
-                    <th>Total</th>
+                    <th>Valor vendido</th>
+                    <th>Taxas</th>
                     <th>Status</th>
                     <th>Pagamento</th>
                   </tr>
@@ -352,6 +528,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 <tbody>
                   {orders.map((order) => {
                     const payment = paymentMethodLabel(order.payment);
+                    const breakdown = getOrderFinancialBreakdown(order);
 
                     return (
                       <tr key={order.id}>
@@ -367,12 +544,34 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                           <strong>{order.event.title}</strong>
                           <span>{order.event.venueName}</span>
                         </td>
+                        <td className="ordersTicketItemsCell">
+                          {breakdown.ticketLines.map((item) => (
+                            <span key={item.label}>
+                              <strong>
+                                {item.quantity} {pluralizeTicket(item.quantity)}
+                              </strong>{" "}
+                              {item.label}
+                              {item.admissions !== item.quantity ? ` (${item.admissions} QR Codes)` : ""}
+                            </span>
+                          ))}
+                        </td>
                         <td className="ordersCityCell">
                           <strong>{order.event.city}</strong>
                           <span>{order.event.state}</span>
                         </td>
                         <td className="ordersDateCell">{formatDateTime(order.createdAt)}</td>
-                        <td className="ordersValueCell">{formatCurrency(order.totalInCents)}</td>
+                        <td className="ordersValueCell">
+                          <strong>{formatCurrency(breakdown.ticketSubtotalInCents)}</strong>
+                          <span>Somente ingressos</span>
+                        </td>
+                        <td className="ordersFeesCell">
+                          {breakdown.feeLines.map((fee) => (
+                            <span key={fee.label}>
+                              <strong>{fee.label}</strong>
+                              {fee.value}
+                            </span>
+                          ))}
+                        </td>
                         <td>
                           <span className={`ordersStatusBadge ${orderStatusClasses[order.status] ?? "neutral"}`}>
                             {orderStatusLabels[order.status] ?? order.status}

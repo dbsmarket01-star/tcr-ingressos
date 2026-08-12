@@ -26443,7 +26443,7 @@ small,
 .ordersDeskTable {
   border-collapse: separate;
   border-spacing: 0;
-  min-width: 1180px;
+  min-width: 1660px;
   width: 100%;
 }
 
@@ -26490,9 +26490,11 @@ small,
 
 .ordersCustomerCell,
 .ordersEventCell,
+.ordersTicketItemsCell,
 .ordersCityCell,
+.ordersFeesCell,
 .ordersPaymentCell {
-  min-width: 180px;
+  min-width: 160px;
 }
 
 .ordersCustomerCell strong,
@@ -26520,6 +26522,68 @@ small,
 .ordersValueCell {
   color: #0f172a;
   font-weight: 900;
+}
+
+.ordersValueCell strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.ordersValueCell span {
+  color: #64748b;
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  margin-top: 3px;
+}
+
+.ordersTicketItemsCell {
+  min-width: 230px;
+}
+
+.ordersTicketItemsCell span {
+  color: #334155;
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.ordersTicketItemsCell span:first-child {
+  margin-top: 0;
+}
+
+.ordersTicketItemsCell strong {
+  color: #0f513f;
+  font-weight: 950;
+}
+
+.ordersFeesCell {
+  min-width: 190px;
+}
+
+.ordersFeesCell span {
+  color: #334155;
+  display: block;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.35;
+  margin-top: 5px;
+}
+
+.ordersFeesCell span:first-child {
+  margin-top: 0;
+}
+
+.ordersFeesCell strong {
+  color: #64748b;
+  display: block;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .ordersStatusBadge {
