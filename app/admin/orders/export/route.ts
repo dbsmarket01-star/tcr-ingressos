@@ -50,6 +50,8 @@ const paymentBucketColors: Record<PaymentBucket, string> = {
   other: "0.647 0.263 0.847 rg"
 };
 
+const paymentChartBuckets: PaymentBucket[] = ["card", "pix"];
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (value && typeof value === "object" && !Array.isArray(value)) {
     return value as Record<string, unknown>;
@@ -228,9 +230,9 @@ function drawHeader(commands: string[], page: number, totalPages: number, filter
   commands.push(text(754, 570, `Pagina ${page}/${totalPages}`, { size: 8.5, font: "F2", color: "0.870 0.960 0.925 rg" }));
 }
 
-function drawMetric(commands: string[], x: number, y: number, title: string, value: string, detail: string) {
-  commands.push(fillRect(x, y, 150, 54, "0.973 0.984 0.980 rg"));
-  commands.push(strokeRect(x, y, 150, 54, "0.858 0.902 0.890 RG", 0.45));
+function drawMetric(commands: string[], x: number, y: number, title: string, value: string, detail: string, width = 150) {
+  commands.push(fillRect(x, y, width, 54, "0.973 0.984 0.980 rg"));
+  commands.push(strokeRect(x, y, width, 54, "0.858 0.902 0.890 RG", 0.45));
   commands.push(text(x + 12, y + 34, title, { size: 7.4, font: "F2", color: "0.396 0.455 0.545 rg", max: 30 }));
   commands.push(text(x + 12, y + 17, value, { size: 12, font: "F2", color: "0.067 0.094 0.153 rg", max: 28 }));
   commands.push(text(x + 12, y + 6, detail, { size: 6.8, font: "F2", color: "0.396 0.455 0.545 rg", max: 34 }));
@@ -252,31 +254,30 @@ function drawPieSlice(commands: string[], cx: number, cy: number, radius: number
 }
 
 function drawPaymentPie(commands: string[], breakdown: Record<PaymentBucket, { count: number; amountInCents: number }>, x: number, y: number) {
-  const entries = (Object.keys(paymentBucketLabels) as PaymentBucket[])
+  const entries = paymentChartBuckets
     .map((bucket) => ({ bucket, ...breakdown[bucket] }))
     .filter((entry) => entry.count > 0);
   const totalCount = entries.reduce((sum, entry) => sum + entry.count, 0);
 
-  commands.push(text(x, y + 82, "Meios de pagamento", { size: 10.5, font: "F2" }));
+  commands.push(text(x, y + 82, "Cartao x Pix", { size: 10.5, font: "F2" }));
 
   if (totalCount === 0) {
-    commands.push(text(x, y + 56, "Sem pedidos no filtro.", { size: 8, color: "0.396 0.455 0.545 rg" }));
+    commands.push(text(x, y + 56, "Sem vendas em cartao ou Pix.", { size: 8, color: "0.396 0.455 0.545 rg", max: 42 }));
     return;
   }
 
   let currentAngle = -Math.PI / 2;
   entries.forEach((entry) => {
     const nextAngle = currentAngle + (entry.count / totalCount) * Math.PI * 2;
-    drawPieSlice(commands, x + 44, y + 37, 34, currentAngle, nextAngle, paymentBucketColors[entry.bucket]);
+    drawPieSlice(commands, x + 36, y + 38, 30, currentAngle, nextAngle, paymentBucketColors[entry.bucket]);
     currentAngle = nextAngle;
   });
 
   entries.forEach((entry, index) => {
     const percent = Math.round((entry.count / totalCount) * 100);
-    const legendY = y + 62 - index * 13;
-    commands.push(fillRect(x + 96, legendY - 2, 8, 8, paymentBucketColors[entry.bucket]));
-    commands.push(text(x + 110, legendY - 1, `${paymentBucketLabels[entry.bucket]}: ${percent}% (${entry.count})`, { size: 7.3, font: "F2", max: 35 }));
-    commands.push(text(x + 110, legendY - 10, formatCurrency(entry.amountInCents), { size: 6.7, color: "0.396 0.455 0.545 rg", max: 28 }));
+    const legendY = y + 50 - index * 16;
+    commands.push(fillRect(x + 82, legendY - 2, 8, 8, paymentBucketColors[entry.bucket]));
+    commands.push(text(x + 96, legendY - 1, `${paymentBucketLabels[entry.bucket]}: ${entry.count} vendas (${percent}%)`, { size: 7.2, font: "F2", max: 38 }));
   });
 }
 
@@ -377,11 +378,11 @@ function buildOrdersPdf(orders: OrderExportRow[], filtersLabel: string) {
     drawHeader(commands, pageIndex + 1, chunks.length, filtersLabel);
 
     if (pageIndex === 0) {
-      drawMetric(commands, 32, 466, "Pedidos", String(totals.orderCount), "no filtro");
-      drawMetric(commands, 194, 466, "Ingressos", String(totals.ticketCount), "por evento");
-      drawMetric(commands, 356, 466, "Valor ingressos", formatCurrency(totals.ticketValueInCents), "sem taxas");
-      drawMetric(commands, 518, 466, "Taxa bilheteria", formatCurrency(totals.serviceFeeInCents), "taxa paga");
-      drawPaymentPie(commands, paymentBreakdown, 660, 432);
+      drawMetric(commands, 32, 466, "Pedidos", String(totals.orderCount), "no filtro", 130);
+      drawMetric(commands, 174, 466, "Ingressos", String(totals.ticketCount), "por evento", 130);
+      drawMetric(commands, 316, 466, "Valor ingressos", formatCurrency(totals.ticketValueInCents), "sem taxas", 130);
+      drawMetric(commands, 458, 466, "Taxa bilheteria", formatCurrency(totals.serviceFeeInCents), "taxa paga", 130);
+      drawPaymentPie(commands, paymentBreakdown, 620, 432);
       drawTableHeader(commands, 386);
 
       chunk.forEach((row, index) => {
