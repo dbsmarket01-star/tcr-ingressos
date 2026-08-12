@@ -2,6 +2,10 @@ node_modules
 .next
 out
 dist
+.DS_Store
+*.tsbuildinfo
+tmp/
+tmp-deriveddata-macos/
 .env*
 data/*.local.json
 npm-debug.log*
