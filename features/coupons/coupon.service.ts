@@ -21,13 +21,17 @@ export function calculateCouponEligibleAmountInCents(subtotalInCents: number, se
   return Math.max(subtotalInCents + serviceFeeInCents, 0);
 }
 
+function isNoHotelOnlyCoupon(code: string) {
+  return code.startsWith("SEMHOTEL") || code === "FERNANDA";
+}
+
 export function calculateCouponDiscountInCents(
   coupon: Pick<Prisma.CouponGetPayload<Record<string, never>>, "code" | "type" | "percentage" | "amountInCents">,
   eligibleAmountInCents: number,
   items: CouponDiscountItem[] = []
 ) {
   const couponCode = normalizeCouponCode(coupon.code ?? "");
-  const eligibleItems = couponCode.startsWith("SEMHOTEL")
+  const eligibleItems = isNoHotelOnlyCoupon(couponCode)
     ? items.filter((item) => item.hasHotel === false || item.lot?.hasHotel === false || /sem hospedagem/i.test(item.lot?.name ?? ""))
     : items;
   const scopedEligibleAmountInCents =
