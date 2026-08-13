@@ -6859,30 +6859,79 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 .eventOverviewKpiGrid {
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .eventOverviewKpiCard {
   background: rgba(255, 255, 255, 0.98);
   border: 1px solid #dce9e4;
-  border-radius: 20px;
+  border-radius: 18px;
   box-shadow: 0 18px 36px rgba(22, 32, 42, 0.045);
-  display: grid;
-  gap: 8px;
+  display: flex;
+  gap: 13px;
+  min-height: 132px;
   min-width: 0;
+  overflow: hidden;
   padding: 18px;
+  position: relative;
+}
+
+.eventOverviewKpiCard::before {
+  background: var(--event-kpi-accent, var(--brand));
+  content: "";
+  inset: 0 auto 0 0;
+  opacity: 0.9;
+  position: absolute;
+  width: 4px;
+}
+
+.eventOverviewKpiCard.is-revenue {
+  --event-kpi-accent: var(--brand);
+  background: linear-gradient(135deg, rgba(var(--brand-rgb), 0.08), rgba(255, 255, 255, 0.98) 46%);
+}
+
+.eventOverviewKpiCard.is-ticket-sales,
+.eventOverviewKpiCard.is-average,
+.eventOverviewKpiCard.is-inventory,
+.eventOverviewKpiCard.is-tickets {
+  --event-kpi-accent: #d9a441;
+}
+
+.eventOverviewKpiCard.is-service-fee {
+  --event-kpi-accent: #dc2626;
+}
+
+.eventOverviewKpiCard.is-card-fee {
+  --event-kpi-accent: #60a5fa;
+}
+
+.eventOverviewKpiCard.is-orders,
+.eventOverviewKpiCard.is-conversion {
+  --event-kpi-accent: #2f7dd3;
+}
+
+.eventOverviewKpiCard.is-audience,
+.eventOverviewKpiCard.is-traffic {
+  --event-kpi-accent: #7c3aed;
+}
+
+.eventOverviewKpiCopy {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
 }
 
 .eventOverviewKpiIcon,
 .eventOverviewQuickIcon {
   align-items: center;
   background:
-    radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.24), transparent 35%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--event-kpi-accent, var(--brand)) 24%, transparent), transparent 35%),
     linear-gradient(135deg, #f3fbf7, #e8f4ef);
-  border: 1px solid rgba(var(--brand-rgb), 0.12);
+  border: 1px solid color-mix(in srgb, var(--event-kpi-accent, var(--brand)) 18%, transparent);
   border-radius: 999px;
-  color: var(--brand);
+  color: var(--event-kpi-accent, var(--brand));
   display: inline-flex;
+  flex: 0 0 auto;
   height: 42px;
   justify-content: center;
   width: 42px;
@@ -6899,12 +6948,13 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   color: #516072;
   font-size: 12px;
   font-weight: 800;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
 .eventOverviewKpiCard strong {
   color: #111827;
-  font-size: clamp(18px, 1.5vw, 32px);
+  font-size: clamp(20px, 1.45vw, 30px);
   line-height: 1.05;
   overflow-wrap: anywhere;
 }
@@ -7011,16 +7061,21 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 18px;
+  gap: 10px;
 }
 
 .eventOverviewChartLegend span {
   align-items: center;
-  color: #475569;
+  background: #f8fbf9;
+  border: 1px solid #dce9e4;
+  border-radius: 999px;
+  color: #374151;
   display: inline-flex;
   gap: 8px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
+  min-height: 34px;
+  padding: 0 11px;
 }
 
 .eventOverviewChartLegend i {
@@ -7523,6 +7578,84 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 .eventOverviewCompactTable td,
 .eventOverviewCompactTable th {
   white-space: nowrap;
+}
+
+.eventOverviewOrdersTable td {
+  vertical-align: middle;
+}
+
+.eventOverviewOrdersTable td:nth-child(3) {
+  color: #334155;
+  font-weight: 700;
+  max-width: 260px;
+  white-space: normal;
+}
+
+.eventOverviewMoneyValue {
+  border-radius: 999px;
+  display: inline-flex;
+  font-weight: 900;
+  padding: 7px 10px;
+  white-space: nowrap;
+}
+
+.eventOverviewMoneyValue.is-ticket {
+  background: #fff8e1;
+  color: #8a5b00;
+}
+
+.eventOverviewMoneyValue.is-total {
+  background: #e8f7ef;
+  color: #076247;
+}
+
+.eventOverviewFeeStack {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.eventOverviewFeePill,
+.eventOverviewPaymentPill {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.eventOverviewFeePill i {
+  border-radius: 999px;
+  display: inline-block;
+  height: 7px;
+  width: 7px;
+}
+
+.eventOverviewFeePill.is-service {
+  background: #feecec;
+  color: #991b1b;
+}
+
+.eventOverviewFeePill.is-service i {
+  background: #dc2626;
+}
+
+.eventOverviewFeePill.is-card {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.eventOverviewFeePill.is-card i {
+  background: #60a5fa;
+}
+
+.eventOverviewPaymentPill {
+  background: #f1f5f9;
+  color: #334155;
 }
 
 .eventOverviewMiniGrid {

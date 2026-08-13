@@ -503,67 +503,78 @@ export default async function EventManagementPage({ params, searchParams }: Even
       label: "Vendidos / total",
       value: `${soldTickets} / ${capacity.total}`,
       note: `${progress.toFixed(2).replace(".", ",")}% vendido`,
-      icon: "ticket" as const
+      icon: "ticket" as const,
+      tone: "inventory" as const
     },
     {
       label: "Faturamento pago",
       value: formatCurrency(revenueInCents),
       note: "Total pago pelo cliente",
-      icon: "money" as const
+      icon: "money" as const,
+      tone: "revenue" as const
     },
     {
       label: "Venda de ingressos",
       value: formatCurrency(ticketSalesInCents),
       note: "Somente ingressos",
-      icon: "ticket" as const
+      icon: "ticket" as const,
+      tone: "ticket-sales" as const
     },
     {
       label: "Taxa bilheteria",
       value: formatCurrency(serviceFeesInCents),
       note: "Taxa da plataforma",
-      icon: "target" as const
+      icon: "target" as const,
+      tone: "service-fee" as const
     },
     {
       label: "Taxas do cartão",
       value: formatCurrency(cardInterestInCents),
       note: "Juros/parcelamento",
-      icon: "target" as const
+      icon: "target" as const,
+      tone: "card-fee" as const
     },
     {
       label: "Pedidos pagos",
       value: String(paidOrders.length),
       note: "Compras aprovadas",
-      icon: "money" as const
+      icon: "money" as const,
+      tone: "orders" as const
     },
     {
       label: "Ingressos pagos",
       value: String(paidTicketQuantity),
       note: "Unidades vendidas",
-      icon: "ticket" as const
+      icon: "ticket" as const,
+      tone: "tickets" as const
     },
     {
       label: "Ticket médio por ingresso",
       value: formatCurrency(averageTicketInCents),
       note: "Ingressos / unidades pagas",
-      icon: "chart" as const
+      icon: "chart" as const,
+      tone: "average" as const
     },
     {
       label: "Conversão",
       value: formatPercentage(conversionRate),
       note: "Pedidos pagos sobre leads",
-      icon: "target" as const
+      icon: "target" as const,
+      tone: "conversion" as const
     },
     {
       label: "Leads captados",
       value: String(totalLeads),
       note: `${leadCaptureVisits} visita(s) na landing`,
-      icon: "users" as const
+      icon: "users" as const,
+      tone: "audience" as const
     },
     {
       label: "Visitas ao site",
       value: String(event.leadCaptureEnabled ? leadCaptureVisits : publicEventVisits),
       note: event.leadCaptureEnabled ? "Landing de captação" : "Página pública do evento",
-      icon: "calendar" as const
+      icon: "calendar" as const,
+      tone: "traffic" as const
     }
   ];
 
@@ -630,13 +641,15 @@ export default async function EventManagementPage({ params, searchParams }: Even
 
         <section className="eventOverviewKpiGrid">
           {quickStats.map((item) => (
-            <article className="eventOverviewKpiCard" key={item.label}>
+            <article className={`eventOverviewKpiCard is-${item.tone}`} key={item.label}>
               <span className="eventOverviewKpiIcon">
                 <DashboardIcon kind={item.icon} />
               </span>
-              <span className="eventOverviewKpiLabel">{item.label}</span>
-              <strong>{item.value}</strong>
-              <small>{item.note}</small>
+              <div className="eventOverviewKpiCopy">
+                <span className="eventOverviewKpiLabel">{item.label}</span>
+                <strong>{item.value}</strong>
+                <small>{item.note}</small>
+              </div>
             </article>
           ))}
         </section>
@@ -704,7 +717,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
               <span className="eventOverviewPill">Últimos 30 dias</span>
             </div>
 
-            <div className="eventOverviewChartLegend">
+            <div className="eventOverviewChartLegend" aria-label="Legenda financeira do gráfico">
               <span><i className="isRevenue" /> Total pago</span>
               <span><i className="isTicketSales" /> Venda de ingressos</span>
               <span><i className="isServiceFees" /> Taxa bilheteria</span>
@@ -943,7 +956,8 @@ export default async function EventManagementPage({ params, searchParams }: Even
             {recentOrders.length === 0 ? (
               <div className="empty">Nenhuma compra aprovada ainda.</div>
             ) : (
-              <table className="table eventOverviewCompactTable">
+              <div className="tableScroll wideTableScroll">
+              <table className="table eventOverviewCompactTable eventOverviewOrdersTable">
                 <thead>
                   <tr>
                     <th>Pedido</th>
@@ -963,17 +977,30 @@ export default async function EventManagementPage({ params, searchParams }: Even
                       <td>{order.customer.name}</td>
                       <td>{formatOrderTicketSummary(order) || "-"}</td>
                       <td>{formatEventDate(order.paidAt ?? order.createdAt)}</td>
-                      <td>{formatCurrency(order.subtotalInCents)}</td>
+                      <td><strong className="eventOverviewMoneyValue is-ticket">{formatCurrency(order.subtotalInCents)}</strong></td>
                       <td>
-                        <span>Bilheteria: {formatCurrency(order.serviceFeeInCents)}</span>
-                        {order.cardInterestInCents > 0 ? <small>Cartao: {formatCurrency(order.cardInterestInCents)}</small> : null}
+                        <span className="eventOverviewFeeStack">
+                          <span className="eventOverviewFeePill is-service">
+                            <i /> Bilheteria {formatCurrency(order.serviceFeeInCents)}
+                          </span>
+                          {order.cardInterestInCents > 0 ? (
+                            <span className="eventOverviewFeePill is-card">
+                              <i /> Cartao {formatCurrency(order.cardInterestInCents)}
+                            </span>
+                          ) : null}
+                        </span>
                       </td>
-                      <td>{formatCurrency(order.totalInCents)}</td>
-                      <td>{order.payment?.provider === "ASAAS" ? "Pix/Asaas" : order.payment?.provider ?? "-"}</td>
+                      <td><strong className="eventOverviewMoneyValue is-total">{formatCurrency(order.totalInCents)}</strong></td>
+                      <td>
+                        <span className="eventOverviewPaymentPill">
+                          {order.payment?.provider === "ASAAS" ? "Pix/Asaas" : order.payment?.provider ?? "-"}
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </article>
         </section>
