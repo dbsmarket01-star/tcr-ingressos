@@ -751,13 +751,29 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                       type="button"
                     >
                       <span className="dashboardGeneralChartTooltip">
-                        <strong>{item.label}</strong>
-                        <small>{item.salesCount} pedido(s) pago(s)</small>
-                        <small>{item.paidTicketQuantity} ingresso(s) pago(s)</small>
-                        <small>Total pago: {formatCurrency(item.revenueInCents)}</small>
-                        <small>Ingressos: {formatCurrency(item.ticketSalesInCents)}</small>
-                        <small>Taxa bilheteria: {formatCurrency(item.serviceFeesInCents)}</small>
-                        <small>Taxas cartão: {formatCurrency(item.cardInterestInCents)}</small>
+                        <strong className="dashboardGeneralChartTooltipTitle">{item.label}</strong>
+                        <span className="dashboardGeneralChartTooltipCounts">
+                          <small>{item.salesCount} pedido(s) pago(s)</small>
+                          <small>{item.paidTicketQuantity} ingresso(s) pago(s)</small>
+                        </span>
+                        <span className="dashboardGeneralChartTooltipRows">
+                          <span className="dashboardGeneralChartTooltipRow is-revenue">
+                            <span><i />Total pago</span>
+                            <b>{formatCurrency(item.revenueInCents)}</b>
+                          </span>
+                          <span className="dashboardGeneralChartTooltipRow is-ticket-sales">
+                            <span><i />Ingressos</span>
+                            <b>{formatCurrency(item.ticketSalesInCents)}</b>
+                          </span>
+                          <span className="dashboardGeneralChartTooltipRow is-service-fees">
+                            <span><i />Taxa bilheteria</span>
+                            <b>{formatCurrency(item.serviceFeesInCents)}</b>
+                          </span>
+                          <span className="dashboardGeneralChartTooltipRow is-card-fees">
+                            <span><i />Taxas cartão</span>
+                            <b>{formatCurrency(item.cardInterestInCents)}</b>
+                          </span>
+                        </span>
                       </span>
                     </button>
                   ))}
