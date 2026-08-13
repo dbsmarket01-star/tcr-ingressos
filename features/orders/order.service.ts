@@ -254,6 +254,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
         pixDiscountFixedInCents: number;
         cardInterestBpsPerInstallment: number;
         cardInterestStartsAtInstallment: number;
+        hasHotel: boolean;
         admissionsPerUnit: number;
         totalInCents: number;
       }> = [];
@@ -372,6 +373,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           pixDiscountFixedInCents: lot.pixDiscountFixedInCents,
           cardInterestBpsPerInstallment: lot.cardInterestBpsPerInstallment,
           cardInterestStartsAtInstallment: lot.cardInterestStartsAtInstallment,
+          hasHotel: lot.hasHotel,
           admissionsPerUnit: Math.max(lot.admissionsPerUnit, 1),
           totalInCents: lot.priceInCents * item.quantity
         });

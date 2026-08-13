@@ -7,6 +7,11 @@ export function normalizeCouponCode(code: string) {
 }
 
 export type CouponDiscountItem = {
+  hasHotel?: boolean;
+  lot?: {
+    hasHotel?: boolean;
+    name?: string | null;
+  };
   quantity: number;
   totalInCents: number;
   serviceFeeInCents: number;
@@ -17,18 +22,27 @@ export function calculateCouponEligibleAmountInCents(subtotalInCents: number, se
 }
 
 export function calculateCouponDiscountInCents(
-  coupon: Pick<Prisma.CouponGetPayload<Record<string, never>>, "type" | "percentage" | "amountInCents">,
+  coupon: Pick<Prisma.CouponGetPayload<Record<string, never>>, "code" | "type" | "percentage" | "amountInCents">,
   eligibleAmountInCents: number,
   items: CouponDiscountItem[] = []
 ) {
+  const couponCode = normalizeCouponCode(coupon.code ?? "");
+  const eligibleItems = couponCode.startsWith("SEMHOTEL")
+    ? items.filter((item) => item.hasHotel === false || item.lot?.hasHotel === false || /sem hospedagem/i.test(item.lot?.name ?? ""))
+    : items;
+  const scopedEligibleAmountInCents =
+    eligibleItems.length > 0
+      ? eligibleItems.reduce((sum, item) => sum + item.totalInCents + item.serviceFeeInCents, 0)
+      : eligibleAmountInCents;
+
   if (eligibleAmountInCents <= 0) {
     return 0;
   }
 
   if (coupon.type === CouponType.PERCENTAGE) {
     return Math.min(
-      eligibleAmountInCents,
-      Math.round(eligibleAmountInCents * ((coupon.percentage ?? 0) / 100))
+      scopedEligibleAmountInCents,
+      Math.round(scopedEligibleAmountInCents * ((coupon.percentage ?? 0) / 100))
     );
   }
 
@@ -39,7 +53,7 @@ export function calculateCouponDiscountInCents(
       return 0;
     }
 
-    const discountInCents = items.reduce((sum, item) => {
+    const discountInCents = eligibleItems.reduce((sum, item) => {
       if (item.quantity <= 0) {
         return sum;
       }
@@ -49,10 +63,10 @@ export function calculateCouponDiscountInCents(
       return sum + Math.max(currentItemTotalInCents - desiredItemTotalInCents, 0);
     }, 0);
 
-    return Math.min(eligibleAmountInCents, discountInCents);
+    return Math.min(scopedEligibleAmountInCents, discountInCents);
   }
 
-  return Math.min(eligibleAmountInCents, coupon.amountInCents ?? 0);
+  return Math.min(scopedEligibleAmountInCents, coupon.amountInCents ?? 0);
 }
 
 export async function createCoupon(input: CouponInput) {
