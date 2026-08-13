@@ -132,6 +132,7 @@ type PaidOrderLite = {
   customerId: string;
   subtotalInCents: number;
   serviceFeeInCents: number;
+  cardInterestInCents: number;
   totalInCents: number;
   paidAt: Date | null;
   createdAt: Date;
@@ -500,10 +501,12 @@ export async function getDashboardMetrics(
   const previousTicketSalesInCents = previousPaidOrders.reduce((sum, order) => sum + order.subtotalInCents, 0);
   const currentServiceFeesInCents = currentPaidOrders.reduce((sum, order) => sum + order.serviceFeeInCents, 0);
   const previousServiceFeesInCents = previousPaidOrders.reduce((sum, order) => sum + order.serviceFeeInCents, 0);
+  const currentCardInterestInCents = currentPaidOrders.reduce((sum, order) => sum + order.cardInterestInCents, 0);
+  const previousCardInterestInCents = previousPaidOrders.reduce((sum, order) => sum + order.cardInterestInCents, 0);
   const currentPaidTicketQuantity = getPaidTicketQuantity(currentPaidOrders as PaidOrderLite[]);
   const previousPaidTicketQuantity = getPaidTicketQuantity(previousPaidOrders as PaidOrderLite[]);
-  const currentAverageTicket = currentPaidTicketQuantity > 0 ? Math.round(currentRevenueInCents / currentPaidTicketQuantity) : 0;
-  const previousAverageTicket = previousPaidTicketQuantity > 0 ? Math.round(previousRevenueInCents / previousPaidTicketQuantity) : 0;
+  const currentAverageTicket = currentPaidTicketQuantity > 0 ? Math.round(currentTicketSalesInCents / currentPaidTicketQuantity) : 0;
+  const previousAverageTicket = previousPaidTicketQuantity > 0 ? Math.round(previousTicketSalesInCents / previousPaidTicketQuantity) : 0;
 
   const currentCustomerBreakdown = computeCustomerBreakdown(
     currentPaidOrders as PaidOrderLite[],
@@ -539,7 +542,11 @@ export async function getDashboardMetrics(
   >();
 
   const dailySalesMap = new Map<string, number>();
+  const dailyTicketSalesMap = new Map<string, number>();
+  const dailyServiceFeeMap = new Map<string, number>();
+  const dailyCardInterestMap = new Map<string, number>();
   const dailySalesCountMap = new Map<string, number>();
+  const dailyPaidTicketCountMap = new Map<string, number>();
   const topCitiesMap = new Map<string, { label: string; count: number }>();
   const paymentMethodTotals = {
     pix: { revenueInCents: 0, count: 0 },
@@ -551,7 +558,11 @@ export async function getDashboardMetrics(
     const paidAt = order.paidAt ?? order.createdAt;
     const dayKey = formatDayKey(paidAt);
     dailySalesMap.set(dayKey, (dailySalesMap.get(dayKey) ?? 0) + order.totalInCents);
+    dailyTicketSalesMap.set(dayKey, (dailyTicketSalesMap.get(dayKey) ?? 0) + order.subtotalInCents);
+    dailyServiceFeeMap.set(dayKey, (dailyServiceFeeMap.get(dayKey) ?? 0) + order.serviceFeeInCents);
+    dailyCardInterestMap.set(dayKey, (dailyCardInterestMap.get(dayKey) ?? 0) + order.cardInterestInCents);
     dailySalesCountMap.set(dayKey, (dailySalesCountMap.get(dayKey) ?? 0) + 1);
+    dailyPaidTicketCountMap.set(dayKey, (dailyPaidTicketCountMap.get(dayKey) ?? 0) + getPaidTicketQuantity([order]));
 
     const eventPerformance = eventPerformanceMap.get(order.event.id) ?? {
       id: order.event.id,
@@ -626,9 +637,16 @@ export async function getDashboardMetrics(
     date: day.key,
     label: day.label,
     revenueInCents: dailySalesMap.get(day.key) ?? 0,
+    ticketSalesInCents: dailyTicketSalesMap.get(day.key) ?? 0,
+    serviceFeesInCents: dailyServiceFeeMap.get(day.key) ?? 0,
+    cardInterestInCents: dailyCardInterestMap.get(day.key) ?? 0,
+    paidTicketQuantity: dailyPaidTicketCountMap.get(day.key) ?? 0,
     salesCount: dailySalesCountMap.get(day.key) ?? 0
   }));
-  const maxDailyRevenueInCents = Math.max(...salesByDay.map((item) => item.revenueInCents), 0);
+  const maxDailyRevenueInCents = Math.max(
+    ...salesByDay.flatMap((item) => [item.revenueInCents, item.ticketSalesInCents, item.serviceFeesInCents]),
+    0
+  );
 
   const totalPaymentRevenueInCents =
     paymentMethodTotals.pix.revenueInCents +
@@ -694,8 +712,12 @@ export async function getDashboardMetrics(
       ticketSalesChangePercent: changePercent(currentTicketSalesInCents, previousTicketSalesInCents),
       serviceFeesInCents: currentServiceFeesInCents,
       serviceFeesChangePercent: changePercent(currentServiceFeesInCents, previousServiceFeesInCents),
+      cardInterestInCents: currentCardInterestInCents,
+      cardInterestChangePercent: changePercent(currentCardInterestInCents, previousCardInterestInCents),
       paidOrders: currentPaidOrders.length,
       paidOrdersChangePercent: changePercent(currentPaidOrders.length, previousPaidOrders.length),
+      paidTickets: currentPaidTicketQuantity,
+      paidTicketsChangePercent: changePercent(currentPaidTicketQuantity, previousPaidTicketQuantity),
       averageTicketInCents: currentAverageTicket,
       averageTicketChangePercent: changePercent(currentAverageTicket, previousAverageTicket),
       newCustomers: currentCustomerBreakdown.newCustomers,

@@ -109,7 +109,13 @@ function humanizePaymentMethod(method: "PIX" | "CREDIT_CARD" | "SIMULATED" | "OT
 }
 
 function buildSalesChart(
-  series: Array<{ label: string; revenueInCents: number; salesCount: number }>,
+  series: Array<{
+    label: string;
+    revenueInCents: number;
+    ticketSalesInCents: number;
+    serviceFeesInCents: number;
+    salesCount: number;
+  }>,
   maxRevenueInCents: number
 ) {
   const width = 640;
@@ -124,19 +130,26 @@ function buildSalesChart(
 
   const points = series.map((item, index) => {
     const x = paddingLeft + (usableWidth * index) / Math.max(1, series.length - 1);
-    const y = paddingTop + usableHeight - (item.revenueInCents / safeMax) * usableHeight;
-    return { ...item, x, y };
+    const revenueY = paddingTop + usableHeight - (item.revenueInCents / safeMax) * usableHeight;
+    const ticketSalesY = paddingTop + usableHeight - (item.ticketSalesInCents / safeMax) * usableHeight;
+    const serviceFeesY = paddingTop + usableHeight - (item.serviceFeesInCents / safeMax) * usableHeight;
+    return { ...item, x, revenueY, ticketSalesY, serviceFeesY };
   });
 
-  const linePath = points
-    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`)
-    .join(" ");
+  const buildLinePath = (key: "revenueY" | "ticketSalesY" | "serviceFeesY") =>
+    points
+      .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point[key].toFixed(1)}`)
+      .join(" ");
+
+  const revenueLinePath = buildLinePath("revenueY");
+  const ticketSalesLinePath = buildLinePath("ticketSalesY");
+  const serviceFeesLinePath = buildLinePath("serviceFeesY");
 
   const areaPath = points.length
-    ? `${linePath} L ${points[points.length - 1].x.toFixed(1)} ${(height - paddingBottom).toFixed(1)} L ${points[0].x.toFixed(1)} ${(height - paddingBottom).toFixed(1)} Z`
+    ? `${revenueLinePath} L ${points[points.length - 1].x.toFixed(1)} ${(height - paddingBottom).toFixed(1)} L ${points[0].x.toFixed(1)} ${(height - paddingBottom).toFixed(1)} Z`
     : "";
 
-  return { width, height, paddingBottom, points, linePath, areaPath };
+  return { width, height, paddingBottom, points, revenueLinePath, ticketSalesLinePath, serviceFeesLinePath, areaPath };
 }
 
 function buildXAxisDisplayLabels(series: Array<{ label: string }>) {
@@ -556,15 +569,27 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       icon: "ticket" as const
     },
     {
-      label: "Taxas recebidas",
+      label: "Taxa bilheteria",
       value: formatCurrency(dashboard.kpis.serviceFeesInCents),
       delta: formatKpiDelta(dashboard.kpis.serviceFeesChangePercent),
       icon: "percent" as const
     },
     {
-      label: "Vendas realizadas",
+      label: "Taxas do cartão",
+      value: formatCurrency(dashboard.kpis.cardInterestInCents),
+      delta: formatKpiDelta(dashboard.kpis.cardInterestChangePercent),
+      icon: "percent" as const
+    },
+    {
+      label: "Pedidos pagos",
       value: dashboard.kpis.paidOrders,
       delta: formatKpiDelta(dashboard.kpis.paidOrdersChangePercent),
+      icon: "ticket" as const
+    },
+    {
+      label: "Ingressos pagos",
+      value: dashboard.kpis.paidTickets,
+      delta: formatKpiDelta(dashboard.kpis.paidTicketsChangePercent),
       icon: "ticket" as const
     },
     {
@@ -698,26 +723,41 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     return <line className="dashboardGeneralGridLine" key={ratio} x1="26" x2="622" y1={y} y2={y} />;
                   })}
                   <path className="dashboardGeneralAreaPath" d={salesChart.areaPath} />
-                  <path className="dashboardGeneralLinePath" d={salesChart.linePath} />
+                  <path className="dashboardGeneralLinePath is-revenue" d={salesChart.revenueLinePath} />
+                  <path className="dashboardGeneralLinePath is-ticket-sales" d={salesChart.ticketSalesLinePath} />
+                  <path className="dashboardGeneralLinePath is-service-fees" d={salesChart.serviceFeesLinePath} />
                   {salesChart.points.map((point, index) => (
-                    <circle className="dashboardGeneralLinePoint" cx={point.x} cy={point.y} key={`${point.label}-${index}`} r="5.5" />
+                    <g key={`${point.label}-${index}`}>
+                      <circle className="dashboardGeneralLinePoint is-revenue" cx={point.x} cy={point.revenueY} r="5.2" />
+                      <circle className="dashboardGeneralLinePoint is-ticket-sales" cx={point.x} cy={point.ticketSalesY} r="4.6" />
+                      <circle className="dashboardGeneralLinePoint is-service-fees" cx={point.x} cy={point.serviceFeesY} r="4.2" />
+                    </g>
                   ))}
                 </svg>
+                <div className="dashboardGeneralChartLegend" aria-hidden="true">
+                  <span><i className="is-revenue" />Total pago</span>
+                  <span><i className="is-ticket-sales" />Venda de ingressos</span>
+                  <span><i className="is-service-fees" />Taxa bilheteria</span>
+                </div>
                 <div
                   className="dashboardGeneralChartHotspots"
                   style={{ gridTemplateColumns: `repeat(${Math.max(dashboard.salesByDay.length, 1)}, minmax(0, 1fr))` }}
                 >
                   {dashboard.salesByDay.map((item, index) => (
                     <button
-                      aria-label={`${item.label}: ${item.salesCount} venda(s), ${formatCurrency(item.revenueInCents)}`}
+                      aria-label={`${item.label}: ${item.salesCount} pedido(s), ${formatCurrency(item.revenueInCents)} total pago`}
                       className="dashboardGeneralChartHotspot"
                       key={`${item.date}-${index}-hotspot`}
                       type="button"
                     >
                       <span className="dashboardGeneralChartTooltip">
                         <strong>{item.label}</strong>
-                        <small>{item.salesCount} venda(s) faturada(s)</small>
-                        <small>{formatCurrency(item.revenueInCents)}</small>
+                        <small>{item.salesCount} pedido(s) pago(s)</small>
+                        <small>{item.paidTicketQuantity} ingresso(s) pago(s)</small>
+                        <small>Total pago: {formatCurrency(item.revenueInCents)}</small>
+                        <small>Ingressos: {formatCurrency(item.ticketSalesInCents)}</small>
+                        <small>Taxa bilheteria: {formatCurrency(item.serviceFeesInCents)}</small>
+                        <small>Taxas cartão: {formatCurrency(item.cardInterestInCents)}</small>
                       </span>
                     </button>
                   ))}

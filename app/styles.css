@@ -5931,6 +5931,44 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   z-index: 2;
 }
 
+.dashboardGeneralChartLegend {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  justify-content: center;
+  min-width: 0;
+}
+
+.dashboardGeneralChartLegend span {
+  align-items: center;
+  color: #374151;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 800;
+  gap: 7px;
+  line-height: 1.2;
+}
+
+.dashboardGeneralChartLegend i {
+  border-radius: 999px;
+  display: inline-block;
+  height: 9px;
+  width: 9px;
+}
+
+.dashboardGeneralChartLegend i.is-revenue {
+  background: var(--brand);
+}
+
+.dashboardGeneralChartLegend i.is-ticket-sales {
+  background: #d9a441;
+}
+
+.dashboardGeneralChartLegend i.is-service-fees {
+  background: #dc2626;
+}
+
 .dashboardGeneralChartTooltip strong,
 .dashboardGeneralChartTooltip small {
   margin: 0;
@@ -5967,14 +6005,38 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 
 .dashboardGeneralLinePath {
   fill: none;
-  stroke: var(--brand);
   stroke-width: 3;
+}
+
+.dashboardGeneralLinePath.is-revenue {
+  stroke: var(--brand);
+}
+
+.dashboardGeneralLinePath.is-ticket-sales {
+  stroke: #d9a441;
+}
+
+.dashboardGeneralLinePath.is-service-fees {
+  stroke: #dc2626;
+  stroke-width: 2.5;
 }
 
 .dashboardGeneralLinePoint {
   fill: white;
-  stroke: var(--brand);
   stroke-width: 3;
+}
+
+.dashboardGeneralLinePoint.is-revenue {
+  stroke: var(--brand);
+}
+
+.dashboardGeneralLinePoint.is-ticket-sales {
+  stroke: #d9a441;
+}
+
+.dashboardGeneralLinePoint.is-service-fees {
+  stroke: #dc2626;
+  stroke-width: 2.6;
 }
 
 .dashboardGeneralXAxis {
