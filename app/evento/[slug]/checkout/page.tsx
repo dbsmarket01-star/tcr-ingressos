@@ -214,7 +214,14 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
     try {
       const coupon = await getValidCouponPreviewForEvent(event.id, requestedCouponCode);
       const discountInCents = coupon
-        ? calculateCouponDiscountInCents(coupon, orderTotalInCents, selectedItems)
+        ? calculateCouponDiscountInCents(
+            coupon,
+            orderTotalInCents,
+            selectedItems.map((item) => ({
+              ...item,
+              totalInCents: item.subtotalInCents
+            }))
+          )
         : 0;
 
       couponPreview = {
