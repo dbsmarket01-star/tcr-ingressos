@@ -7,6 +7,7 @@ describe("coupon discount calculation", () => {
     expect(
       calculateCouponDiscountInCents(
         {
+          code: "TESTE",
           type: CouponType.PERCENTAGE,
           percentage: 10,
           amountInCents: null
@@ -20,6 +21,7 @@ describe("coupon discount calculation", () => {
     expect(
       calculateCouponDiscountInCents(
         {
+          code: "TESTE",
           type: CouponType.FIXED_AMOUNT,
           percentage: null,
           amountInCents: 29700
@@ -33,6 +35,7 @@ describe("coupon discount calculation", () => {
     expect(
       calculateCouponDiscountInCents(
         {
+          code: "TESTE",
           type: CouponType.FINAL_UNIT_PRICE,
           percentage: null,
           amountInCents: 250000
@@ -53,6 +56,7 @@ describe("coupon discount calculation", () => {
     expect(
       calculateCouponDiscountInCents(
         {
+          code: "TESTE",
           type: CouponType.FINAL_UNIT_PRICE,
           percentage: null,
           amountInCents: 300000

@@ -7,7 +7,7 @@ import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { countEventPageVisits } from "@/features/analytics/page-visit.service";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { duplicateEventAction, updateEventStatusAction } from "@/features/events/event.actions";
-import { getEventCapacity, getEventForManagement, getEventOrderDemographics, getEventRevenueInCents } from "@/features/events/event.service";
+import { getEventCapacity, getEventForManagement, getEventOrderDemographics } from "@/features/events/event.service";
 import { getLeadOriginBucket } from "@/features/tracking/tracking";
 import { formatCurrency } from "@/lib/format";
 import { getPublicEventUrl } from "@/lib/public-url";
@@ -72,8 +72,51 @@ function getDaysUntil(startsAt: Date) {
   return Math.max(0, Math.ceil((midnightEvent - midnightNow) / 86400000));
 }
 
+function formatBrazilDateKey(value: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(value);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function getOrderTicketQuantity(order: {
+  items: Array<{ quantity: number }>;
+}) {
+  return order.items.reduce((sum, item) => sum + item.quantity, 0);
+}
+
+function formatOrderTicketSummary(order: {
+  items: Array<{
+    quantity: number;
+    lot: { name: string };
+    lotOption?: { label: string | null } | null;
+  }>;
+}) {
+  const groupedItems = new Map<string, number>();
+
+  order.items.forEach((item) => {
+    const label = item.lotOption?.label ? `${item.lot.name} - ${item.lotOption.label}` : item.lot.name;
+    groupedItems.set(label, (groupedItems.get(label) ?? 0) + item.quantity);
+  });
+
+  return Array.from(groupedItems.entries())
+    .map(([label, quantity]) => `${quantity} ${quantity === 1 ? "ingresso" : "ingressos"} ${label}`)
+    .join(", ");
+}
+
 function buildDailySeries(
-  orders: Array<{ paidAt: Date | null; totalInCents: number }>,
+  orders: Array<{
+    paidAt: Date | null;
+    totalInCents: number;
+    subtotalInCents: number;
+    serviceFeeInCents: number;
+    cardInterestInCents: number;
+    items: Array<{ quantity: number }>;
+  }>,
   days = 30
 ) {
   const end = new Date();
@@ -85,7 +128,7 @@ function buildDailySeries(
   const rows = Array.from({ length: days }, (_, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
-    const key = date.toISOString().slice(0, 10);
+    const key = formatBrazilDateKey(date);
     return {
       key,
       date,
@@ -95,6 +138,10 @@ function buildDailySeries(
         timeZone: "America/Sao_Paulo"
       }).format(date),
       revenueInCents: 0,
+      ticketSalesInCents: 0,
+      serviceFeesInCents: 0,
+      cardInterestInCents: 0,
+      paidTicketQuantity: 0,
       salesCount: 0
     };
   });
@@ -104,24 +151,28 @@ function buildDailySeries(
   for (const order of orders) {
     const paidAt = order.paidAt ?? null;
     if (!paidAt) continue;
-    const key = paidAt.toISOString().slice(0, 10);
+    const key = formatBrazilDateKey(paidAt);
     const index = indexByKey.get(key);
     if (index === undefined) continue;
     rows[index].salesCount += 1;
     rows[index].revenueInCents += order.totalInCents;
+    rows[index].ticketSalesInCents += order.subtotalInCents;
+    rows[index].serviceFeesInCents += order.serviceFeeInCents;
+    rows[index].cardInterestInCents += order.cardInterestInCents;
+    rows[index].paidTicketQuantity += getOrderTicketQuantity(order);
   }
 
   return rows;
 }
 
-function buildSeriesPath(values: number[], width: number, height: number) {
+function buildSeriesPath(values: number[], width: number, height: number, maxValueOverride?: number) {
   const paddingLeft = 18;
   const paddingRight = 18;
   const paddingTop = 16;
   const paddingBottom = 24;
   const usableWidth = width - paddingLeft - paddingRight;
   const usableHeight = height - paddingTop - paddingBottom;
-  const maxValue = Math.max(...values, 1);
+  const maxValue = Math.max(maxValueOverride ?? Math.max(...values, 1), 1);
 
   const points = values.map((value, index) => {
     const x = paddingLeft + (usableWidth * index) / Math.max(1, values.length - 1);
@@ -389,18 +440,18 @@ export default async function EventManagementPage({ params, searchParams }: Even
   }
 
   const capacity = getEventCapacity(event);
-  const revenueInCents = getEventRevenueInCents(event);
   const paidOrders = event.orders;
   const leads = event.leads;
   const totalLeads = event._count.leads;
   const soldTickets = capacity.sold;
-  const paidTicketQuantity = paidOrders.reduce(
-    (sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0),
-    0
-  );
+  const revenueInCents = paidOrders.reduce((sum, order) => sum + order.totalInCents, 0);
+  const ticketSalesInCents = paidOrders.reduce((sum, order) => sum + order.subtotalInCents, 0);
+  const serviceFeesInCents = paidOrders.reduce((sum, order) => sum + order.serviceFeeInCents, 0);
+  const cardInterestInCents = paidOrders.reduce((sum, order) => sum + order.cardInterestInCents, 0);
+  const paidTicketQuantity = paidOrders.reduce((sum, order) => sum + getOrderTicketQuantity(order), 0);
   const activeLots = event.lots.filter((lot) => lot.status === "ACTIVE").length;
   const availableTickets = Math.max(capacity.total - capacity.sold - capacity.reserved, 0);
-  const averageTicketInCents = paidTicketQuantity > 0 ? Math.round(revenueInCents / paidTicketQuantity) : 0;
+  const averageTicketInCents = paidTicketQuantity > 0 ? Math.round(ticketSalesInCents / paidTicketQuantity) : 0;
   const conversionRate = percentage(paidOrders.length, totalLeads);
   const daysUntilEvent = getDaysUntil(event.startsAt);
   const viewsToThankYou = leads.filter((lead) => lead.thankYouViewedAt).length;
@@ -413,19 +464,35 @@ export default async function EventManagementPage({ params, searchParams }: Even
   const salesSeries = buildDailySeries(
     paidOrders.map((order) => ({
       paidAt: order.paidAt,
-      totalInCents: order.totalInCents
+      totalInCents: order.totalInCents,
+      subtotalInCents: order.subtotalInCents,
+      serviceFeeInCents: order.serviceFeeInCents,
+      cardInterestInCents: order.cardInterestInCents,
+      items: order.items
     })),
     30
+  );
+  const maxDailyAmountInCents = Math.max(
+    ...salesSeries.flatMap((item) => [item.revenueInCents, item.ticketSalesInCents, item.serviceFeesInCents]),
+    0
   );
   const revenuePath = buildSeriesPath(
     salesSeries.map((item) => item.revenueInCents),
     700,
-    300
+    300,
+    maxDailyAmountInCents
   );
-  const salesPath = buildSeriesPath(
-    salesSeries.map((item) => item.salesCount),
+  const ticketSalesPath = buildSeriesPath(
+    salesSeries.map((item) => item.ticketSalesInCents),
     700,
-    300
+    300,
+    maxDailyAmountInCents
+  );
+  const serviceFeesPath = buildSeriesPath(
+    salesSeries.map((item) => item.serviceFeesInCents),
+    700,
+    300,
+    maxDailyAmountInCents
   );
   const originBreakdown = summarizeLeadOrigins(leads, Math.max(totalLeads, 1));
   const activeCoupons = event.coupons.filter((coupon) => coupon.status === "ACTIVE").slice(0, 5);
@@ -439,15 +506,45 @@ export default async function EventManagementPage({ params, searchParams }: Even
       icon: "ticket" as const
     },
     {
-      label: "Faturamento",
+      label: "Faturamento pago",
       value: formatCurrency(revenueInCents),
-      note: `${paidOrders.length} venda(s) pagas`,
+      note: "Total pago pelo cliente",
       icon: "money" as const
+    },
+    {
+      label: "Venda de ingressos",
+      value: formatCurrency(ticketSalesInCents),
+      note: "Somente ingressos",
+      icon: "ticket" as const
+    },
+    {
+      label: "Taxa bilheteria",
+      value: formatCurrency(serviceFeesInCents),
+      note: "Taxa da plataforma",
+      icon: "target" as const
+    },
+    {
+      label: "Taxas do cartão",
+      value: formatCurrency(cardInterestInCents),
+      note: "Juros/parcelamento",
+      icon: "target" as const
+    },
+    {
+      label: "Pedidos pagos",
+      value: String(paidOrders.length),
+      note: "Compras aprovadas",
+      icon: "money" as const
+    },
+    {
+      label: "Ingressos pagos",
+      value: String(paidTicketQuantity),
+      note: "Unidades vendidas",
+      icon: "ticket" as const
     },
     {
       label: "Ticket médio por ingresso",
       value: formatCurrency(averageTicketInCents),
-      note: "Média por ingresso vendido",
+      note: "Ingressos / unidades pagas",
       icon: "chart" as const
     },
     {
@@ -608,8 +705,9 @@ export default async function EventManagementPage({ params, searchParams }: Even
             </div>
 
             <div className="eventOverviewChartLegend">
-              <span><i className="isSales" /> Vendas</span>
-              <span><i className="isRevenue" /> Faturamento (R$)</span>
+              <span><i className="isRevenue" /> Total pago</span>
+              <span><i className="isTicketSales" /> Venda de ingressos</span>
+              <span><i className="isServiceFees" /> Taxa bilheteria</span>
             </div>
 
             <div className="eventOverviewChartWrap">
@@ -620,9 +718,16 @@ export default async function EventManagementPage({ params, searchParams }: Even
                 })}
                 <path className="eventOverviewAreaPath" d={revenuePath.areaPath} />
                 <path className="eventOverviewRevenuePath" d={revenuePath.linePath} />
-                <path className="eventOverviewSalesPath" d={salesPath.linePath} />
+                <path className="eventOverviewTicketSalesPath" d={ticketSalesPath.linePath} />
+                <path className="eventOverviewServiceFeesPath" d={serviceFeesPath.linePath} />
                 {revenuePath.points.map((point, index) => (
                   <circle className="eventOverviewRevenuePoint" cx={point.x} cy={point.y} key={`revenue-${index}`} r="4.5" />
+                ))}
+                {ticketSalesPath.points.map((point, index) => (
+                  <circle className="eventOverviewTicketSalesPoint" cx={point.x} cy={point.y} key={`ticket-sales-${index}`} r="4" />
+                ))}
+                {serviceFeesPath.points.map((point, index) => (
+                  <circle className="eventOverviewServiceFeesPoint" cx={point.x} cy={point.y} key={`service-fee-${index}`} r="3.8" />
                 ))}
               </svg>
               <div
@@ -631,15 +736,35 @@ export default async function EventManagementPage({ params, searchParams }: Even
               >
                 {salesSeries.map((item, index) => (
                   <button
-                    aria-label={`${item.label}: ${item.salesCount} ingresso(s) faturado(s), ${formatCurrency(item.revenueInCents)}`}
+                    aria-label={`${item.label}: ${item.salesCount} pedido(s), ${item.paidTicketQuantity} ingresso(s), ${formatCurrency(item.revenueInCents)} total pago`}
                     className="eventOverviewChartHotspot"
                     key={`hotspot-${item.key}-${index}`}
                     type="button"
                   >
                     <span className="eventOverviewChartTooltip">
-                      <strong>{item.label}</strong>
-                      <small>{item.salesCount} ingresso(s) faturado(s)</small>
-                      <small>{formatCurrency(item.revenueInCents)}</small>
+                      <strong className="eventOverviewChartTooltipTitle">{item.label}</strong>
+                      <span className="eventOverviewChartTooltipCounts">
+                        <small>{item.salesCount} pedido(s) pago(s)</small>
+                        <small>{item.paidTicketQuantity} ingresso(s) pago(s)</small>
+                      </span>
+                      <span className="eventOverviewChartTooltipRows">
+                        <span className="eventOverviewChartTooltipRow is-revenue">
+                          <span><i />Total pago</span>
+                          <b>{formatCurrency(item.revenueInCents)}</b>
+                        </span>
+                        <span className="eventOverviewChartTooltipRow is-ticket-sales">
+                          <span><i />Ingressos</span>
+                          <b>{formatCurrency(item.ticketSalesInCents)}</b>
+                        </span>
+                        <span className="eventOverviewChartTooltipRow is-service-fees">
+                          <span><i />Taxa bilheteria</span>
+                          <b>{formatCurrency(item.serviceFeesInCents)}</b>
+                        </span>
+                        <span className="eventOverviewChartTooltipRow is-card-fees">
+                          <span><i />Taxas cartão</span>
+                          <b>{formatCurrency(item.cardInterestInCents)}</b>
+                        </span>
+                      </span>
                     </span>
                   </button>
                 ))}
@@ -823,8 +948,11 @@ export default async function EventManagementPage({ params, searchParams }: Even
                   <tr>
                     <th>Pedido</th>
                     <th>Nome</th>
+                    <th>Ingressos</th>
                     <th>Data</th>
-                    <th>Valor</th>
+                    <th>Valor ingressos</th>
+                    <th>Taxas</th>
+                    <th>Total pago</th>
                     <th>Pagamento</th>
                   </tr>
                 </thead>
@@ -833,7 +961,13 @@ export default async function EventManagementPage({ params, searchParams }: Even
                     <tr key={order.code}>
                       <td>{order.code}</td>
                       <td>{order.customer.name}</td>
+                      <td>{formatOrderTicketSummary(order) || "-"}</td>
                       <td>{formatEventDate(order.paidAt ?? order.createdAt)}</td>
+                      <td>{formatCurrency(order.subtotalInCents)}</td>
+                      <td>
+                        <span>Bilheteria: {formatCurrency(order.serviceFeeInCents)}</span>
+                        {order.cardInterestInCents > 0 ? <small>Cartao: {formatCurrency(order.cardInterestInCents)}</small> : null}
+                      </td>
                       <td>{formatCurrency(order.totalInCents)}</td>
                       <td>{order.payment?.provider === "ASAAS" ? "Pix/Asaas" : order.payment?.provider ?? "-"}</td>
                     </tr>

@@ -258,6 +258,9 @@ export async function getEventForManagement(
           paidAt: true,
           status: true,
           totalInCents: true,
+          subtotalInCents: true,
+          serviceFeeInCents: true,
+          cardInterestInCents: true,
           customer: {
             select: {
               name: true,
@@ -270,6 +273,11 @@ export async function getEventForManagement(
               lot: {
                 select: {
                   name: true
+                }
+              },
+              lotOption: {
+                select: {
+                  label: true
                 }
               }
             }
