@@ -330,6 +330,28 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const stateOptions = Array.from(new Set(events.map((event) => event.state).filter(Boolean))).sort((left, right) =>
     left.localeCompare(right, "pt-BR")
   );
+  const isPendingReport = params.status === "PENDING_PAYMENT";
+  const financialCopy = isPendingReport
+    ? {
+        totalTitle: "Oportunidade total",
+        totalDetail: "Valor potencial pendente",
+        subtotalTitle: "Ingressos potenciais",
+        subtotalDetail: "Base dos ingressos pendentes",
+        serviceFeeTitle: "Taxa bilheteria potencial",
+        serviceFeeDetail: "Taxa prevista se pagar",
+        cardInterestTitle: "Juros cartão potencial",
+        cardInterestDetail: "Parcelamento previsto"
+      }
+    : {
+        totalTitle: "Faturamento total",
+        totalDetail: "Valor bruto pago",
+        subtotalTitle: "Ingressos",
+        subtotalDetail: "Valor base dos ingressos",
+        serviceFeeTitle: "Taxa bilheteria",
+        serviceFeeDetail: "Taxa de serviço configurada",
+        cardInterestTitle: "Juros cartão",
+        cardInterestDetail: "Acréscimo de parcelamento"
+      };
 
   return (
     <AdminShell
@@ -373,33 +395,33 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           <article className="ordersSummaryCard">
             <span className="ordersMetricIcon ordersMetricIconRevenue">$</span>
             <div>
-              <span>Faturamento total</span>
+              <span>{financialCopy.totalTitle}</span>
               <strong>{formatCurrency(summary.totalInCents)}</strong>
-              <small>Valor bruto pago</small>
+              <small>{financialCopy.totalDetail}</small>
             </div>
           </article>
           <article className="ordersSummaryCard">
             <span className="ordersMetricIcon ordersMetricIconRevenue">R$</span>
             <div>
-              <span>Ingressos</span>
+              <span>{financialCopy.subtotalTitle}</span>
               <strong>{formatCurrency(summary.subtotalInCents)}</strong>
-              <small>Valor base dos ingressos</small>
+              <small>{financialCopy.subtotalDetail}</small>
             </div>
           </article>
           <article className="ordersSummaryCard">
             <span className="ordersMetricIcon ordersMetricIconPaid">%</span>
             <div>
-              <span>Taxa bilheteria</span>
+              <span>{financialCopy.serviceFeeTitle}</span>
               <strong>{formatCurrency(summary.serviceFeeInCents)}</strong>
-              <small>Taxa de serviço configurada</small>
+              <small>{financialCopy.serviceFeeDetail}</small>
             </div>
           </article>
           <article className="ordersSummaryCard">
             <span className="ordersMetricIcon ordersMetricIconPending">CC</span>
             <div>
-              <span>Juros cartão</span>
+              <span>{financialCopy.cardInterestTitle}</span>
               <strong>{formatCurrency(summary.cardInterestInCents)}</strong>
-              <small>Acréscimo de parcelamento</small>
+              <small>{financialCopy.cardInterestDetail}</small>
             </div>
           </article>
         </div>

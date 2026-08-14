@@ -223,9 +223,9 @@ function wrapText(value: unknown, maxChars: number) {
   return lines.length > 0 ? lines : [""];
 }
 
-function drawHeader(commands: string[], page: number, totalPages: number, filtersLabel: string) {
+function drawHeader(commands: string[], page: number, totalPages: number, filtersLabel: string, title: string) {
   commands.push(fillRect(0, 540, 842, 55, "0.000 0.290 0.235 rg"));
-  commands.push(text(32, 570, "Relatorio de pedidos por evento", { size: 17, font: "F2", color: "1 1 1 rg" }));
+  commands.push(text(32, 570, title, { size: 17, font: "F2", color: "1 1 1 rg" }));
   commands.push(text(32, 552, filtersLabel, { size: 8.5, color: "0.870 0.960 0.925 rg", max: 150 }));
   commands.push(text(754, 570, `Pagina ${page}/${totalPages}`, { size: 8.5, font: "F2", color: "0.870 0.960 0.925 rg" }));
 }
@@ -358,10 +358,27 @@ function buildPdfFromPages(pages: string[]) {
   return Buffer.from(pdf, "utf8");
 }
 
-function buildOrdersPdf(orders: OrderExportRow[], filtersLabel: string) {
+function buildOrdersPdf(orders: OrderExportRow[], filtersLabel: string, filters: AdminOrderFilters) {
   const eventRows = buildEventRows(orders);
   const totals = buildTotals(eventRows);
   const paymentBreakdown = buildPaymentBreakdown(orders);
+  const isPendingReport = filters.status === "PENDING_PAYMENT";
+  const reportTitle = isPendingReport
+    ? "Relatorio de oportunidades pendentes por evento"
+    : "Relatorio de pedidos por evento";
+  const metricsCopy = isPendingReport
+    ? {
+        ordersDetail: "pendentes reais",
+        ticketsDetail: "potenciais",
+        ticketValueDetail: "potencial sem taxas",
+        serviceFeeDetail: "taxa potencial"
+      }
+    : {
+        ordersDetail: "no filtro",
+        ticketsDetail: "por evento",
+        ticketValueDetail: "sem taxas",
+        serviceFeeDetail: "taxa paga"
+      };
   const rowsPerPage = 10;
   const chunks: EventReportRow[][] = [];
 
@@ -375,13 +392,13 @@ function buildOrdersPdf(orders: OrderExportRow[], filtersLabel: string) {
 
   const pages = chunks.map((chunk, pageIndex) => {
     const commands: string[] = [];
-    drawHeader(commands, pageIndex + 1, chunks.length, filtersLabel);
+    drawHeader(commands, pageIndex + 1, chunks.length, filtersLabel, reportTitle);
 
     if (pageIndex === 0) {
-      drawMetric(commands, 32, 466, "Pedidos", String(totals.orderCount), "no filtro", 130);
-      drawMetric(commands, 174, 466, "Ingressos", String(totals.ticketCount), "por evento", 130);
-      drawMetric(commands, 316, 466, "Valor ingressos", formatCurrency(totals.ticketValueInCents), "sem taxas", 130);
-      drawMetric(commands, 458, 466, "Taxa bilheteria", formatCurrency(totals.serviceFeeInCents), "taxa paga", 130);
+      drawMetric(commands, 32, 466, "Pedidos", String(totals.orderCount), metricsCopy.ordersDetail, 130);
+      drawMetric(commands, 174, 466, "Ingressos", String(totals.ticketCount), metricsCopy.ticketsDetail, 130);
+      drawMetric(commands, 316, 466, "Valor ingressos", formatCurrency(totals.ticketValueInCents), metricsCopy.ticketValueDetail, 130);
+      drawMetric(commands, 458, 466, "Taxa bilheteria", formatCurrency(totals.serviceFeeInCents), metricsCopy.serviceFeeDetail, 130);
       drawPaymentPie(commands, paymentBreakdown, 620, 432);
       drawTableHeader(commands, 386);
 
@@ -420,12 +437,14 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const filters = getFiltersFromUrl(url);
   const orders = await listOrdersForCsvExport(filters, admin.organizationId, getAdminAllowedEventIds(admin));
-  const pdf = buildOrdersPdf(orders, buildFiltersLabel(url));
+  const pdf = buildOrdersPdf(orders, buildFiltersLabel(url), filters);
+  const filenamePrefix =
+    filters.status === "PENDING_PAYMENT" ? "relatorio-oportunidades-pendentes" : "relatorio-pedidos-eventos";
 
   return new NextResponse(pdf, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="relatorio-pedidos-eventos-${new Date().toISOString().slice(0, 10)}.pdf"`
+      "Content-Disposition": `attachment; filename="${filenamePrefix}-${new Date().toISOString().slice(0, 10)}.pdf"`
     }
   });
 }

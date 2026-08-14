@@ -98,6 +98,87 @@ describe("admin operational tenant isolation", () => {
     );
   });
 
+  it("excludes pending order attempts after the customer paid for the same event", async () => {
+    const { getOrdersSummary, listAdminOrders } = await import("@/features/orders/order.admin.service");
+
+    prismaMock.order.findMany
+      .mockResolvedValueOnce([
+        { id: "pending_converted", customerId: "customer_1", eventId: "event_1" },
+        { id: "pending_open", customerId: "customer_2", eventId: "event_1" }
+      ])
+      .mockResolvedValueOnce([{ customerId: "customer_1", eventId: "event_1" }]);
+    prismaMock.order.groupBy.mockResolvedValue([{ status: "PENDING_PAYMENT", _count: { _all: 1 } }]);
+    prismaMock.order.aggregate.mockResolvedValue({
+      _sum: {
+        totalInCents: 27580,
+        subtotalInCents: 27580,
+        serviceFeeInCents: 4827,
+        cardInterestInCents: 0,
+        discountInCents: 0,
+        pixDiscountInCents: 0
+      }
+    });
+
+    const summary = await getOrdersSummary({ status: "PENDING_PAYMENT" }, "org_a2", null);
+
+    expect(summary.totalOrders).toBe(1);
+    expect(summary.pendingOrders).toBe(1);
+    expect(summary.totalInCents).toBe(27580);
+    expect(summary.serviceFeeInCents).toBe(4827);
+    expect(prismaMock.order.groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: "PENDING_PAYMENT",
+          id: {
+            notIn: ["pending_converted"]
+          }
+        })
+      })
+    );
+    expect(prismaMock.order.aggregate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: "PENDING_PAYMENT",
+          id: {
+            notIn: ["pending_converted"]
+          }
+        })
+      })
+    );
+
+    vi.clearAllMocks();
+    mockEmptyResults();
+    prismaMock.order.findMany
+      .mockResolvedValueOnce([
+        { id: "pending_converted", customerId: "customer_1", eventId: "event_1" },
+        { id: "pending_open", customerId: "customer_2", eventId: "event_1" }
+      ])
+      .mockResolvedValueOnce([{ customerId: "customer_1", eventId: "event_1" }])
+      .mockResolvedValueOnce([{ id: "pending_open" }]);
+    prismaMock.order.count.mockResolvedValue(1);
+
+    await listAdminOrders({ status: "PENDING_PAYMENT" }, "org_a2", null);
+
+    expect(prismaMock.order.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: "PENDING_PAYMENT",
+          id: {
+            notIn: ["pending_converted"]
+          }
+        })
+      })
+    );
+    expect(prismaMock.order.count).toHaveBeenCalledWith({
+      where: expect.objectContaining({
+        status: "PENDING_PAYMENT",
+        id: {
+          notIn: ["pending_converted"]
+        }
+      })
+    });
+  });
+
   it("scopes admin tickets to the current organization", async () => {
     const { listAdminTickets, listTicketFilterEvents } = await import("@/features/tickets/ticket.admin.service");
 

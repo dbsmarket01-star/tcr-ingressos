@@ -92,6 +92,70 @@ function buildOrderWhere(
   };
 }
 
+function mergeOrderIdExclusion(where: Prisma.OrderWhereInput, excludedIds: string[]) {
+  if (excludedIds.length === 0) {
+    return where;
+  }
+
+  return {
+    ...where,
+    id: {
+      notIn: excludedIds
+    }
+  };
+}
+
+async function buildReportOrderWhere(
+  filters: AdminOrderFilters,
+  organizationId: string,
+  allowedEventIds?: EventScope
+) {
+  const where = buildOrderWhere(filters, organizationId, allowedEventIds);
+  const requestedStatus = parseStatus(filters.status);
+
+  if (requestedStatus !== OrderStatus.PENDING_PAYMENT) {
+    return where;
+  }
+
+  const pendingOrders = await prisma.order.findMany({
+    where,
+    select: {
+      id: true,
+      customerId: true,
+      eventId: true
+    }
+  });
+
+  if (pendingOrders.length === 0) {
+    return where;
+  }
+
+  const customerIds = Array.from(new Set(pendingOrders.map((order) => order.customerId)));
+  const eventIds = Array.from(new Set(pendingOrders.map((order) => order.eventId)));
+  const paidOrders = await prisma.order.findMany({
+    where: {
+      status: OrderStatus.PAID,
+      customerId: {
+        in: customerIds
+      },
+      eventId: {
+        in: eventIds
+      },
+      event: buildOrderEventWhere(organizationId, allowedEventIds)
+    },
+    select: {
+      customerId: true,
+      eventId: true
+    }
+  });
+  const paidKeys = new Set(paidOrders.map((order) => `${order.customerId}:${order.eventId}`));
+  const convertedPendingIds = pendingOrders
+    .filter((order) => paidKeys.has(`${order.customerId}:${order.eventId}`))
+    .map((order) => order.id);
+
+  return mergeOrderIdExclusion(where, convertedPendingIds);
+}
+
 export async function listOrderFilterEvents() {
   return prisma.event.findMany({
     orderBy: [{ startsAt: "desc" }, { title: "asc" }],
@@ -135,7 +199,7 @@ export async function listAdminOrders(
 ) {
   await expirePendingOrders({ limit: 100, organizationId, allowedEventIds });
 
-  const where = buildOrderWhere(filters, organizationId, allowedEventIds);
+  const where = await buildReportOrderWhere(filters, organizationId, allowedEventIds);
 
   const [orders, totalCount] = await Promise.all([
     prisma.order.findMany({
@@ -169,14 +233,17 @@ export async function getOrdersSummary(
 ) {
   await expirePendingOrders({ limit: 100, organizationId, allowedEventIds });
 
-  const where = buildOrderWhere(filters, organizationId, allowedEventIds);
+  const where = await buildReportOrderWhere(filters, organizationId, allowedEventIds);
   const requestedStatus = parseStatus(filters.status);
-  const paidWhere: Prisma.OrderWhereInput = {
-    ...where,
-    ...(requestedStatus && requestedStatus !== OrderStatus.PAID
-      ? { id: { in: [] } }
-      : { status: OrderStatus.PAID })
-  };
+  const financialWhere: Prisma.OrderWhereInput =
+    requestedStatus === OrderStatus.PENDING_PAYMENT
+      ? where
+      : {
+          ...where,
+          ...(requestedStatus && requestedStatus !== OrderStatus.PAID
+            ? { id: { in: [] } }
+            : { status: OrderStatus.PAID })
+        };
 
   const [statusGroups, totals] = await Promise.all([
     prisma.order.groupBy({
@@ -187,7 +254,7 @@ export async function getOrdersSummary(
       }
     }),
     prisma.order.aggregate({
-      where: paidWhere,
+      where: financialWhere,
       _sum: {
         totalInCents: true,
         subtotalInCents: true,
@@ -230,7 +297,7 @@ export async function listOrdersForCsvExport(
   await expirePendingOrders({ limit: 500, organizationId, allowedEventIds });
 
   return prisma.order.findMany({
-    where: buildOrderWhere(filters, organizationId, allowedEventIds),
+    where: await buildReportOrderWhere(filters, organizationId, allowedEventIds),
     orderBy: {
       createdAt: "desc"
     },
