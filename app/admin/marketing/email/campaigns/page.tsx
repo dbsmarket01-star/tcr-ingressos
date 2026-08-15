@@ -84,7 +84,7 @@ function getMessage(params: Awaited<MarketingEmailPageProps["searchParams"]>) {
     return {
       tone: "success" as const,
       title: "Conteúdo salvo",
-      text: "Assunto, mensagem e chamada foram salvos para esta campanha."
+      text: "Assunto, mensagem, imagem e chamada foram salvos para esta campanha."
     };
   }
 
@@ -92,18 +92,18 @@ function getMessage(params: Awaited<MarketingEmailPageProps["searchParams"]>) {
     return {
       tone: "success" as const,
       title: "Campanha criada",
-      text: "Agora importe a lista externa e configure o conteúdo do e-mail."
+      text: "Agora monte o e-mail, envie um teste e depois importe a lista externa para o disparo."
     };
   }
 
   return null;
 }
 
-function formatStatusClass(status: string) {
-  if (status === "COMPLETED") return "published";
-  if (status === "FAILED" || status === "COMPLETED_WITH_ERRORS") return "danger";
+function statusToneClass(status: string) {
+  if (status === "COMPLETED") return "paid";
+  if (status === "FAILED" || status === "COMPLETED_WITH_ERRORS") return "canceled";
   if (status === "QUEUED" || status === "PROCESSING") return "pending";
-  return "draft";
+  return "neutral";
 }
 
 export default async function MarketingEmailPage({ searchParams }: MarketingEmailPageProps) {
@@ -116,305 +116,382 @@ export default async function MarketingEmailPage({ searchParams }: MarketingEmai
     ? await getMarketingEmailCampaign(admin.organizationId, selectedCampaignId)
     : null;
   const message = getMessage(params);
+  const totals = campaigns.reduce(
+    (acc, campaign) => {
+      acc.recipients += campaign.metrics.recipients;
+      acc.sent += campaign.metrics.sent;
+      acc.failed += campaign.metrics.failed;
+      acc.opens += campaign.metrics.opens;
+      acc.clicks += campaign.metrics.clicks;
+
+      return acc;
+    },
+    { clicks: 0, failed: 0, opens: 0, recipients: 0, sent: 0 }
+  );
 
   return (
     <AdminShell
-      title="Disparos de e-mail"
-      description="Crie campanhas externas independentes ou use as listas de leads dos eventos."
+      title="Campanhas de e-mail"
+      description="Crie campanhas externas independentes, envie testes, importe listas e acompanhe entregas."
     >
-      <div className="spacedSection">
-        <Link className="secondaryButton smallButton" href="/admin/marketing/email">
-          Voltar para opções de e-mail
-        </Link>
-      </div>
+      <section className="emailCampaignDeskPage">
+        <div className="emailCampaignTopActions">
+          <Link className="ordersSecondaryButton" href="/admin/marketing/email">
+            Voltar para opções
+          </Link>
+          <Link className="ordersSecondaryButton" href="/admin/marketing/email/events">
+            Campanhas por evento
+          </Link>
+        </div>
 
-      <section className="operationCommandStrip spacedSection" aria-label="Campanhas externas de e-mail">
-        <article className="operationCommandCard">
-          <span className="eyebrow">Marketing</span>
-          <h2>Campanhas externas da {organizationContext.brandName}.</h2>
-          <p>
-            Importe uma lista própria, valide os contatos e envie e-mails sem misturar com leads captados nas páginas dos eventos.
-          </p>
-        </article>
-        <form action={createMarketingEmailCampaignAction} className="operationCommandActions">
-          <label className="field">
-            <span>Nome da campanha</span>
-            <input name="name" placeholder="Ex.: Lista fria Claudio Duarte agosto" required minLength={3} />
-          </label>
-          <SubmitButton className="button smallButton" pendingText="Criando...">
-            Criar campanha nova
-          </SubmitButton>
-        </form>
-      </section>
+        {message ? (
+          <section className={`noticeCard notice-${message.tone}`}>
+            <strong>{message.title}</strong>
+            <p>{message.text}</p>
+          </section>
+        ) : null}
 
-      {message ? (
-        <section className={`noticeCard notice-${message.tone} spacedSection`}>
-          <strong>{message.title}</strong>
-          <p>{message.text}</p>
-        </section>
-      ) : null}
-
-      <section className="adminTwoColumnGrid">
-        <aside className="card adminPanelBlock">
-          <div className="sectionHeader inlineHeader">
+        <section className="ordersSummaryGrid" aria-label="Resumo das campanhas externas">
+          <article className="ordersSummaryCard">
+            <span className="ordersMetricIcon ordersMetricIconTotal">C</span>
             <div>
-              <h2>Campanhas externas</h2>
-              <p className="muted">Não dependem de evento publicado.</p>
+              <span>Campanhas criadas</span>
+              <strong>{campaigns.length}</strong>
+              <small>Fluxo independente de eventos</small>
+            </div>
+          </article>
+          <article className="ordersSummaryCard">
+            <span className="ordersMetricIcon ordersMetricIconRevenue">@</span>
+            <div>
+              <span>Contatos importados</span>
+              <strong>{totals.recipients}</strong>
+              <small>Somente listas externas</small>
+            </div>
+          </article>
+          <article className="ordersSummaryCard">
+            <span className="ordersMetricIcon ordersMetricIconPaid">OK</span>
+            <div>
+              <span>E-mails enviados</span>
+              <strong>{totals.sent}</strong>
+              <small>Entregas registradas</small>
+            </div>
+          </article>
+          <article className="ordersSummaryCard">
+            <span className="ordersMetricIcon ordersMetricIconPending">!</span>
+            <div>
+              <span>Falhas</span>
+              <strong>{totals.failed}</strong>
+              <small>Revisar antes de reenvios</small>
+            </div>
+          </article>
+          <article className="ordersSummaryCard">
+            <span className="ordersMetricIcon ordersMetricIconRevenue">IR</span>
+            <div>
+              <span>Aberturas / cliques</span>
+              <strong>{totals.opens} / {totals.clicks}</strong>
+              <small>Interações rastreadas</small>
+            </div>
+          </article>
+        </section>
+
+        <section className="ordersFilterPanel emailCampaignCreatePanel" aria-label="Criar campanha externa">
+          <div className="ordersFilterHeader">
+            <span>+</span>
+            <div>
+              <h2>Criar campanha nova</h2>
+              <p>Comece do zero, sem depender de evento publicado ou lista de landing page.</p>
             </div>
           </div>
-          {campaigns.length === 0 ? (
-            <div className="empty">Nenhuma campanha criada ainda.</div>
-          ) : (
-            <div className="leadInsightList campaignInsightList">
-              {campaigns.map((campaign) => (
-                <Link
-                  className={`campaignInsightRow ${campaign.id === selectedCampaign?.id ? "is-active" : ""}`}
-                  href={`/admin/marketing/email?campaignId=${campaign.id}`}
-                  key={campaign.id}
-                >
-                  <div className="campaignInsightCopy">
-                    <div className="campaignInsightTitleRow">
+          <form action={createMarketingEmailCampaignAction} className="emailCampaignCreateForm">
+            <label className="field">
+              <span>Nome da campanha</span>
+              <input name="name" placeholder="Ex.: Convite Fernandinho Santo André" required minLength={3} />
+            </label>
+            <SubmitButton className="ordersPrimaryButton" pendingText="Criando campanha...">
+              Criar campanha nova
+            </SubmitButton>
+          </form>
+        </section>
+
+        <section className="emailCampaignWorkspace">
+          <aside className="ordersTablePanel emailCampaignListPanel">
+            <div className="ordersTableHeader">
+              <div>
+                <h2>Todas as campanhas</h2>
+                <p>Selecione uma campanha para editar conteúdo, testar ou enviar.</p>
+              </div>
+            </div>
+            {campaigns.length === 0 ? (
+              <div className="ordersEmptyState">Nenhuma campanha criada ainda.</div>
+            ) : (
+              <div className="emailCampaignList">
+                {campaigns.map((campaign) => (
+                  <Link
+                    className={`emailCampaignListItem ${campaign.id === selectedCampaign?.id ? "is-active" : ""}`}
+                    href={`/admin/marketing/email/campaigns?campaignId=${campaign.id}`}
+                    key={campaign.id}
+                  >
+                    <div className="emailCampaignListHeader">
                       <strong>{campaign.name}</strong>
-                      <span className={`status ${formatStatusClass(campaign.status)}`}>
+                      <span className={`ordersStatusBadge ${statusToneClass(campaign.status)}`}>
                         {getMarketingEmailStatusLabel(campaign.status)}
                       </span>
                     </div>
-                    <span>{formatDateTime(campaign.createdAt)}</span>
-                  </div>
-                  <div className="campaignInsightStats">
-                    <span>{campaign.metrics.recipients} contato(s)</span>
-                    <span>{campaign.metrics.sent} enviado(s)</span>
-                    <span>{campaign.metrics.failed} falha(s)</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </aside>
-
-        <main className="stackForm">
-          {!selectedCampaign ? (
-            <section className="card adminPanelBlock">
-              <div className="empty">Crie uma campanha nova para começar.</div>
-            </section>
-          ) : (
-            <>
-              <section className="card adminPanelBlock">
-                <div className="sectionHeader inlineHeader">
-                  <div>
-                    <h2>{selectedCampaign.name}</h2>
-                    <p className="muted">
-                      Status: {getMarketingEmailStatusLabel(selectedCampaign.status)}
-                      {selectedCampaign.importedAt ? ` · Lista importada em ${formatDateTime(selectedCampaign.importedAt)}` : ""}
-                    </p>
-                  </div>
-                  <span className={`status ${formatStatusClass(selectedCampaign.status)}`}>
-                    {getMarketingEmailStatusLabel(selectedCampaign.status)}
-                  </span>
-                </div>
-                {selectedCampaign.lastError ? (
-                  <div className="noticeCard notice-danger">
-                    <strong>Última falha</strong>
-                    <p>{selectedCampaign.lastError}</p>
-                  </div>
-                ) : null}
-                <div className="campaignSummaryGrid">
-                  <article className="campaignSummaryCard">
-                    <span>Pendentes</span>
-                    <strong>{selectedCampaign.metrics.pending + selectedCampaign.metrics.processing}</strong>
-                  </article>
-                  <article className="campaignSummaryCard">
-                    <span>Enviados</span>
-                    <strong>{selectedCampaign.metrics.sent}</strong>
-                  </article>
-                  <article className="campaignSummaryCard campaignSummaryCardWarning">
-                    <span>Falhas</span>
-                    <strong>{selectedCampaign.metrics.failed}</strong>
-                  </article>
-                  <article className="campaignSummaryCard">
-                    <span>Aberturas</span>
-                    <strong>{selectedCampaign.metrics.opens}</strong>
-                  </article>
-                  <article className="campaignSummaryCard">
-                    <span>Cliques</span>
-                    <strong>{selectedCampaign.metrics.clicks}</strong>
-                  </article>
-                </div>
-              </section>
-
-              <section className="card adminPanelBlock" id="importar-lista">
-                <div className="sectionHeader inlineHeader">
-                  <div>
-                    <h2>1. Importar lista externa</h2>
-                    <p className="muted">CSV com ponto e vírgula ou texto colado do Excel/Google Sheets.</p>
-                  </div>
-                </div>
-                <form action={importMarketingEmailContactsAction} className="stackForm">
-                  <input type="hidden" name="campaignId" value={selectedCampaign.id} />
-                  <label className="field">
-                    <span>Arquivo CSV</span>
-                    <input name="contactListFile" type="file" accept=".csv,.txt,text/csv,text/plain" />
-                  </label>
-                  <label className="field">
-                    <span>Ou cole a lista</span>
-                    <textarea
-                      name="contactListText"
-                      rows={7}
-                      placeholder={`Nome completo;E-mail;Telefone\nAdriana Oliveira da Silva;Drycapereira18@yahoo.com.br;+55 (11) 96207-6614`}
-                    />
-                  </label>
-                  <SubmitButton className="button smallButton" pendingText="Importando lista...">
-                    Importar e validar lista
-                  </SubmitButton>
-                </form>
-                {selectedCampaign.importedAt ? (
-                  <div className="campaignSummaryGrid">
-                    <article className="campaignSummaryCard">
-                      <span>Reconhecidos</span>
-                      <strong>{selectedCampaign.importRecognized}</strong>
-                    </article>
-                    <article className="campaignSummaryCard">
-                      <span>Ignorados</span>
-                      <strong>{selectedCampaign.importIgnored}</strong>
-                    </article>
-                    <article className="campaignSummaryCard campaignSummaryCardWarning">
-                      <span>Inválidos</span>
-                      <strong>{selectedCampaign.importInvalidEmails}</strong>
-                    </article>
-                    <article className="campaignSummaryCard">
-                      <span>Duplicados</span>
-                      <strong>{selectedCampaign.importDuplicates}</strong>
-                    </article>
-                  </div>
-                ) : null}
-              </section>
-
-              <section className="card adminPanelBlock" id="conteudo">
-                <div className="sectionHeader inlineHeader">
-                  <div>
-                    <h2>2. Conteúdo do e-mail</h2>
-                    <p className="muted">Assunto, mensagem, botão e link de destino da campanha.</p>
-                  </div>
-                </div>
-                <form action={saveMarketingEmailContentAction} className="stackForm">
-                  <input type="hidden" name="campaignId" value={selectedCampaign.id} />
-                  <label className="field">
-                    <span>Assunto</span>
-                    <input name="subject" defaultValue={selectedCampaign.subject ?? ""} placeholder="Ex.: Convite especial para você" required />
-                  </label>
-                  <label className="field">
-                    <span>Mensagem</span>
-                    <textarea
-                      name="body"
-                      rows={8}
-                      defaultValue={selectedCampaign.body ?? ""}
-                      placeholder="Escreva a mensagem que será enviada para a lista."
-                      required
-                    />
-                  </label>
-                  <div className="formGrid twoColumns">
-                    <label className="field">
-                      <span>Texto do botão</span>
-                      <input name="ctaLabel" defaultValue={selectedCampaign.ctaLabel ?? ""} placeholder="Quero participar" />
-                    </label>
-                    <label className="field">
-                      <span>Link de destino</span>
-                      <input name="destinationUrl" defaultValue={selectedCampaign.destinationUrl ?? ""} placeholder="https://..." required />
-                    </label>
-                  </div>
-                  <ImageUploadField
-                    aspect="share"
-                    applyMode="manual"
-                    cropFieldName="imageCrop"
-                    currentCropValue={selectedCampaign.imageCrop}
-                    currentImageUrl={selectedCampaign.imageUrl}
-                    includeImageMetaFields
-                    emptyText="Nenhuma imagem selecionada"
-                    label="Imagem opcional"
-                    name="imageFile"
-                    recommendedSize="1200 x 630 px"
-                    usageHint="Use um banner horizontal e ajuste o recorte com zoom, topo, base e laterais antes de salvar."
-                  />
-                  <SubmitButton className="button smallButton" pendingText="Salvando conteúdo...">
-                    Salvar conteúdo
-                  </SubmitButton>
-                </form>
-              </section>
-
-              <section className="card adminPanelBlock" id="envio">
-                <div className="sectionHeader inlineHeader">
-                  <div>
-                    <h2>3. Teste e envio</h2>
-                    <p className="muted">Envie um teste antes de disparar para toda a lista importada.</p>
-                  </div>
-                </div>
-                <div className="formGrid twoColumns">
-                  <form action={sendMarketingEmailTestAction} className="stackForm">
-                    <input type="hidden" name="campaignId" value={selectedCampaign.id} />
-                    <label className="field">
-                      <span>E-mail de teste</span>
-                      <input name="testEmail" type="email" placeholder="voce@empresa.com.br" required />
-                    </label>
-                    <SubmitButton className="secondaryButton smallButton" pendingText="Enviando teste...">
-                      Enviar teste
-                    </SubmitButton>
-                  </form>
-                  <form action={sendMarketingEmailCampaignAction} className="stackForm">
-                    <input type="hidden" name="campaignId" value={selectedCampaign.id} />
-                    <div className="leadBroadcastFilterCard">
-                      <strong>{selectedCampaign.metrics.recipients} contato(s) importado(s)</strong>
-                      <p className="muted">O envio usa apenas esta lista externa, sem misturar com leads de eventos.</p>
+                    <span className="emailCampaignDate">Criada em {formatDateTime(campaign.createdAt)}</span>
+                    <div className="emailCampaignListStats">
+                      <span>{campaign.metrics.recipients} contato(s)</span>
+                      <span>{campaign.metrics.sent} enviado(s)</span>
+                      <span>{campaign.metrics.failed} falha(s)</span>
                     </div>
-                    <SubmitButton className="button smallButton" pendingText="Enviando campanha...">
+                  </Link>
+                ))}
+              </div>
+            )}
+          </aside>
+
+          <main className="emailCampaignMain">
+            {!selectedCampaign ? (
+              <section className="ordersTablePanel">
+                <div className="ordersEmptyState">Crie ou selecione uma campanha para começar.</div>
+              </section>
+            ) : (
+              <>
+                <section className="ordersTablePanel emailCampaignSelectedHeader">
+                  <div className="emailCampaignSelectedTop">
+                    <div>
+                      <span className="eyebrow">Campanha selecionada</span>
+                      <h2>{selectedCampaign.name}</h2>
+                      <p>
+                        Status: {getMarketingEmailStatusLabel(selectedCampaign.status)}
+                        {selectedCampaign.importedAt ? ` · Lista importada em ${formatDateTime(selectedCampaign.importedAt)}` : ""}
+                      </p>
+                    </div>
+                    <span className={`ordersStatusBadge ${statusToneClass(selectedCampaign.status)}`}>
+                      {getMarketingEmailStatusLabel(selectedCampaign.status)}
+                    </span>
+                  </div>
+                  {selectedCampaign.lastError ? (
+                    <div className="noticeCard notice-danger">
+                      <strong>Última falha</strong>
+                      <p>{selectedCampaign.lastError}</p>
+                    </div>
+                  ) : null}
+                  <div className="emailCampaignSelectedStats">
+                    <article>
+                      <span>Pendentes</span>
+                      <strong>{selectedCampaign.metrics.pending + selectedCampaign.metrics.processing}</strong>
+                    </article>
+                    <article>
+                      <span>Enviados</span>
+                      <strong>{selectedCampaign.metrics.sent}</strong>
+                    </article>
+                    <article>
+                      <span>Falhas</span>
+                      <strong>{selectedCampaign.metrics.failed}</strong>
+                    </article>
+                    <article>
+                      <span>Aberturas</span>
+                      <strong>{selectedCampaign.metrics.opens}</strong>
+                    </article>
+                    <article>
+                      <span>Cliques</span>
+                      <strong>{selectedCampaign.metrics.clicks}</strong>
+                    </article>
+                  </div>
+                </section>
+
+                <section className="ordersFilterPanel emailCampaignComposerPanel" id="conteudo">
+                  <div className="ordersFilterHeader">
+                    <span>1</span>
+                    <div>
+                      <h2>Mensagem e teste</h2>
+                      <p>Monte o e-mail e envie um teste antes de subir ou disparar qualquer lista.</p>
+                    </div>
+                  </div>
+                  <div className="emailCampaignComposerGrid">
+                    <form action={saveMarketingEmailContentAction} className="emailCampaignComposerFields">
+                      <input type="hidden" name="campaignId" value={selectedCampaign.id} />
+                      <label className="field">
+                        <span>Assunto</span>
+                        <input
+                          name="subject"
+                          defaultValue={selectedCampaign.subject ?? ""}
+                          placeholder="Ex.: Convite especial para você"
+                          required
+                        />
+                      </label>
+                      <label className="field">
+                        <span>Mensagem</span>
+                        <textarea
+                          name="body"
+                          rows={8}
+                          defaultValue={selectedCampaign.body ?? ""}
+                          placeholder="Escreva a mensagem que será enviada para a lista."
+                          required
+                        />
+                      </label>
+                      <div className="emailCampaignFieldGrid">
+                        <label className="field">
+                          <span>Texto do botão</span>
+                          <input name="ctaLabel" defaultValue={selectedCampaign.ctaLabel ?? ""} placeholder="Quero participar" />
+                        </label>
+                        <label className="field">
+                          <span>Link de destino</span>
+                          <input name="destinationUrl" defaultValue={selectedCampaign.destinationUrl ?? ""} placeholder="https://..." required />
+                        </label>
+                      </div>
+                      <ImageUploadField
+                        aspect="share"
+                        applyMode="manual"
+                        cropFieldName="imageCrop"
+                        currentCropValue={selectedCampaign.imageCrop}
+                        currentImageUrl={selectedCampaign.imageUrl}
+                        includeImageMetaFields
+                        emptyText="Nenhuma imagem selecionada"
+                        label="Imagem opcional"
+                        name="imageFile"
+                        recommendedSize="1200 x 630 px"
+                        usageHint="Use um banner horizontal e ajuste o recorte com zoom, topo, base e laterais antes de salvar."
+                      />
+                      <div className="emailCampaignActions">
+                        <SubmitButton className="ordersPrimaryButton" pendingText="Salvando conteúdo...">
+                          Salvar conteúdo
+                        </SubmitButton>
+                      </div>
+                    </form>
+
+                    <form action={sendMarketingEmailTestAction} className="emailCampaignTestBox">
+                      <input type="hidden" name="campaignId" value={selectedCampaign.id} />
+                      <div>
+                        <strong>Enviar teste</strong>
+                        <p>Use seu próprio e-mail para conferir assunto, texto, imagem e botão antes do disparo.</p>
+                      </div>
+                      <label className="field">
+                        <span>E-mail de teste</span>
+                        <input name="testEmail" type="email" placeholder="dbsmarket01@gmail.com" required />
+                      </label>
+                      <SubmitButton className="ordersSecondaryButton" pendingText="Enviando teste...">
+                        Enviar teste agora
+                      </SubmitButton>
+                    </form>
+                  </div>
+                </section>
+
+                <section className="ordersFilterPanel" id="importar-lista">
+                  <div className="ordersFilterHeader">
+                    <span>2</span>
+                    <div>
+                      <h2>Importar lista externa</h2>
+                      <p>CSV com ponto e vírgula, UTF-8 ou Latin-1, ou texto colado do Excel/Google Sheets.</p>
+                    </div>
+                  </div>
+                  <form action={importMarketingEmailContactsAction} className="emailCampaignImportGrid">
+                    <input type="hidden" name="campaignId" value={selectedCampaign.id} />
+                    <label className="field">
+                      <span>Arquivo CSV</span>
+                      <input name="contactListFile" type="file" accept=".csv,.txt,text/csv,text/plain" />
+                    </label>
+                    <label className="field emailCampaignPasteField">
+                      <span>Ou cole a lista</span>
+                      <textarea
+                        name="contactListText"
+                        rows={7}
+                        placeholder={`Nome completo;E-mail;Telefone\nAdriana Oliveira da Silva;Drycapereira18@yahoo.com.br;+55 (11) 96207-6614`}
+                      />
+                    </label>
+                    <div className="emailCampaignActions emailCampaignImportActions">
+                      <SubmitButton className="ordersPrimaryButton" pendingText="Importando lista...">
+                        Importar e validar lista
+                      </SubmitButton>
+                    </div>
+                  </form>
+                  {selectedCampaign.importedAt ? (
+                    <div className="emailCampaignImportSummary">
+                      <article>
+                        <span>Reconhecidos</span>
+                        <strong>{selectedCampaign.importRecognized}</strong>
+                      </article>
+                      <article>
+                        <span>Ignorados</span>
+                        <strong>{selectedCampaign.importIgnored}</strong>
+                      </article>
+                      <article>
+                        <span>Inválidos</span>
+                        <strong>{selectedCampaign.importInvalidEmails}</strong>
+                      </article>
+                      <article>
+                        <span>Duplicados</span>
+                        <strong>{selectedCampaign.importDuplicates}</strong>
+                      </article>
+                    </div>
+                  ) : null}
+                </section>
+
+                <section className="ordersFilterPanel" id="envio">
+                  <div className="ordersFilterHeader">
+                    <span>3</span>
+                    <div>
+                      <h2>Enviar campanha</h2>
+                      <p>O envio usa somente os contatos importados nesta campanha externa.</p>
+                    </div>
+                  </div>
+                  <form action={sendMarketingEmailCampaignAction} className="emailCampaignSendBox">
+                    <input type="hidden" name="campaignId" value={selectedCampaign.id} />
+                    <div>
+                      <strong>{selectedCampaign.metrics.recipients} contato(s) importado(s)</strong>
+                      <p>
+                        Pendentes: {selectedCampaign.metrics.pending} · Enviados: {selectedCampaign.metrics.sent} · Falhas: {selectedCampaign.metrics.failed}
+                      </p>
+                    </div>
+                    <SubmitButton className="ordersPrimaryButton" pendingText="Enviando campanha...">
                       Enviar campanha
                     </SubmitButton>
                   </form>
-                </div>
-              </section>
+                </section>
 
-              <section className="card adminPanelBlock">
-                <div className="sectionHeader inlineHeader">
-                  <div>
-                    <h2>Contatos da campanha</h2>
-                    <p className="muted">Prévia dos primeiros contatos importados.</p>
+                <section className="ordersTablePanel">
+                  <div className="ordersTableHeader">
+                    <div>
+                      <h2>Contatos da campanha</h2>
+                      <p>Prévia dos primeiros contatos importados.</p>
+                    </div>
                   </div>
-                </div>
-                {selectedCampaign.recipients.length === 0 ? (
-                  <div className="empty">Nenhum contato importado ainda.</div>
-                ) : (
-                  <div className="tableScroll wideTableScroll adminTableWrap">
-                    <table className="table operationalTable">
-                      <thead>
-                        <tr>
-                          <th>Nome</th>
-                          <th>E-mail</th>
-                          <th>Telefone</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedCampaign.recipients.map((recipient) => (
-                          <tr key={recipient.id}>
-                            <td>{recipient.name}</td>
-                            <td>{recipient.email}</td>
-                            <td>{recipient.phone || "-"}</td>
-                            <td>
-                              <span className={`status ${recipient.status === "SENT" ? "published" : recipient.status === "FAILED" ? "danger" : "pending"}`}>
-                                {recipient.status}
-                              </span>
-                            </td>
+                  {selectedCampaign.recipients.length === 0 ? (
+                    <div className="ordersEmptyState">Nenhum contato importado ainda.</div>
+                  ) : (
+                    <div className="ordersTableWrap">
+                      <table className="ordersDeskTable emailCampaignRecipientsTable">
+                        <thead>
+                          <tr>
+                            <th>Nome</th>
+                            <th>E-mail</th>
+                            <th>Telefone</th>
+                            <th>Status</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </section>
-            </>
-          )}
-        </main>
+                        </thead>
+                        <tbody>
+                          {selectedCampaign.recipients.map((recipient) => (
+                            <tr key={recipient.id}>
+                              <td>{recipient.name}</td>
+                              <td>{recipient.email}</td>
+                              <td>{recipient.phone || "-"}</td>
+                              <td>
+                                <span className={`ordersStatusBadge ${statusToneClass(recipient.status)}`}>
+                                  {recipient.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </section>
+              </>
+            )}
+          </main>
+        </section>
       </section>
-
     </AdminShell>
   );
 }

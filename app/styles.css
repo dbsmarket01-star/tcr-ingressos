@@ -26996,6 +26996,246 @@ small,
   text-align: center;
 }
 
+.emailCampaignDeskPage {
+  display: grid;
+  gap: 18px;
+}
+
+.emailCampaignTopActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.emailCampaignCreatePanel .ordersFilterHeader p,
+.emailCampaignComposerPanel .ordersFilterHeader p,
+.emailCampaignSelectedHeader p,
+.emailCampaignTestBox p,
+.emailCampaignSendBox p {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 5px 0 0;
+}
+
+.emailCampaignCreateForm {
+  align-items: end;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(260px, 1fr) auto;
+}
+
+.emailCampaignWorkspace {
+  align-items: start;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(300px, 0.82fr) minmax(0, 2fr);
+}
+
+.emailCampaignListPanel {
+  position: sticky;
+  top: 18px;
+}
+
+.emailCampaignList {
+  display: grid;
+  gap: 10px;
+}
+
+.emailCampaignListItem {
+  background: linear-gradient(180deg, #ffffff, #f8fbfa);
+  border: 1px solid #dfe7ea;
+  border-radius: 14px;
+  color: #111827;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  text-decoration: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.emailCampaignListItem:hover,
+.emailCampaignListItem.is-active {
+  border-color: rgba(0, 89, 63, 0.32);
+  box-shadow: 0 16px 32px rgba(0, 89, 63, 0.08);
+  transform: translateY(-1px);
+}
+
+.emailCampaignListHeader {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.emailCampaignListHeader strong {
+  font-size: 15px;
+  font-weight: 950;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.emailCampaignListHeader .ordersStatusBadge {
+  font-size: 11px;
+  min-height: 28px;
+  min-width: 0;
+  padding: 0 9px;
+}
+
+.emailCampaignDate {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.emailCampaignListStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.emailCampaignListStats span {
+  background: #eef7f2;
+  border: 1px solid #d8ede3;
+  border-radius: 999px;
+  color: #0f513f;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 5px 8px;
+}
+
+.emailCampaignMain {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.emailCampaignSelectedHeader {
+  display: grid;
+  gap: 18px;
+}
+
+.emailCampaignSelectedTop {
+  align-items: flex-start;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+}
+
+.emailCampaignSelectedTop h2 {
+  color: #111827;
+  font-size: 28px;
+  line-height: 1.05;
+  margin: 7px 0 0;
+}
+
+.emailCampaignSelectedStats,
+.emailCampaignImportSummary {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.emailCampaignSelectedStats article,
+.emailCampaignImportSummary article {
+  background: #f8fbfa;
+  border: 1px solid #dfe7ea;
+  border-radius: 12px;
+  padding: 13px;
+}
+
+.emailCampaignSelectedStats span,
+.emailCampaignImportSummary span {
+  color: #64748b;
+  display: block;
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.emailCampaignSelectedStats strong,
+.emailCampaignImportSummary strong {
+  color: #0f513f;
+  display: block;
+  font-size: 26px;
+  line-height: 1.1;
+  margin-top: 6px;
+}
+
+.emailCampaignComposerGrid {
+  align-items: start;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.75fr);
+}
+
+.emailCampaignComposerFields,
+.emailCampaignTestBox {
+  display: grid;
+  gap: 14px;
+}
+
+.emailCampaignFieldGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+}
+
+.emailCampaignTestBox {
+  background: linear-gradient(180deg, #f8fbfa, #eef7f2);
+  border: 1px solid #d8ede3;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.emailCampaignTestBox strong,
+.emailCampaignSendBox strong {
+  color: #111827;
+  display: block;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.emailCampaignActions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.emailCampaignImportGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(230px, 0.8fr) minmax(0, 1.2fr);
+}
+
+.emailCampaignPasteField {
+  grid-row: span 2;
+}
+
+.emailCampaignImportActions {
+  align-self: end;
+}
+
+.emailCampaignImportSummary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 16px;
+}
+
+.emailCampaignSendBox {
+  align-items: center;
+  background: #f8fbfa;
+  border: 1px solid #dfe7ea;
+  border-radius: 14px;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.emailCampaignRecipientsTable {
+  min-width: 760px;
+}
+
 @media (max-width: 1320px) {
   .ordersSummaryGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -27003,6 +27243,15 @@ small,
 
   .ordersFilterGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .emailCampaignWorkspace,
+  .emailCampaignComposerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .emailCampaignListPanel {
+    position: static;
   }
 }
 
@@ -27029,6 +27278,24 @@ small,
   .ordersTablePanel {
     border-radius: 14px;
     padding: 16px;
+  }
+
+  .emailCampaignCreateForm,
+  .emailCampaignFieldGrid,
+  .emailCampaignImportGrid,
+  .emailCampaignImportSummary,
+  .emailCampaignSelectedStats {
+    grid-template-columns: 1fr;
+  }
+
+  .emailCampaignSelectedTop,
+  .emailCampaignSendBox {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .emailCampaignSelectedTop .ordersStatusBadge {
+    width: 100%;
   }
 }
 
