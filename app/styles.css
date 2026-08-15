@@ -26764,6 +26764,14 @@ small,
   color: #fff;
 }
 
+.ordersPrimaryButton:disabled {
+  background: #cfd9d5;
+  border-color: #c3cfca;
+  box-shadow: none;
+  color: #ffffff;
+  cursor: not-allowed;
+}
+
 .ordersSecondaryButton {
   background: #fff;
   border: 1px solid #dce5ea;
@@ -27230,6 +27238,11 @@ small,
   gap: 18px;
   justify-content: space-between;
   padding: 16px;
+}
+
+.emailCampaignSendWarning {
+  color: #b45309 !important;
+  font-weight: 900 !important;
 }
 
 .emailCampaignRecipientsTable {

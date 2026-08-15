@@ -185,43 +185,87 @@ export async function getMarketingEmailCampaigns(organizationId: string) {
 }
 
 export async function getMarketingEmailCampaign(organizationId: string, campaignId: string) {
-  const campaign = await prisma.marketingEmailCampaign.findFirst({
-    where: {
-      id: campaignId,
-      organizationId
-    },
-    include: {
-      recipients: {
-        orderBy: {
-          createdAt: "asc"
+  const [campaign, recipientGroups, opens, clicks, recipientCount] = await Promise.all([
+    prisma.marketingEmailCampaign.findFirst({
+      where: {
+        id: campaignId,
+        organizationId
+      },
+      include: {
+        recipients: {
+          orderBy: {
+            createdAt: "asc"
+          },
+          take: 25
         },
-        take: 25
+      }
+    }),
+    prisma.marketingEmailRecipient.groupBy({
+      by: ["status"],
+      where: {
+        campaignId
       },
       _count: {
-        select: {
-          clicks: true,
-          opens: true,
-          recipients: true
-        }
+        _all: true
       }
-    }
-  });
+    }),
+    prisma.marketingEmailCampaignOpen.count({
+      where: {
+        campaignId
+      }
+    }),
+    prisma.marketingEmailCampaignClick.count({
+      where: {
+        campaignId
+      }
+    }),
+    prisma.marketingEmailRecipient.count({
+      where: {
+        campaignId
+      }
+    })
+  ]);
 
   if (!campaign) {
     return null;
   }
 
-  const counts = getRecipientCounts(campaign.recipients);
+  const counts = recipientGroups.reduce(
+    (totals, group) => {
+      const count = group._count._all;
+
+      if (group.status === "SENT") {
+        totals.sent += count;
+      } else if (group.status === "FAILED") {
+        totals.failed += count;
+      } else if (group.status === "PROCESSING") {
+        totals.processing += count;
+      } else if (group.status === "UNSUBSCRIBED") {
+        totals.unsubscribed += count;
+      } else {
+        totals.pending += count;
+      }
+
+      return totals;
+    },
+    {
+      failed: 0,
+      pending: 0,
+      processing: 0,
+      sent: 0,
+      unsubscribed: 0
+    }
+  );
 
   return {
     ...campaign,
     metrics: {
-      clicks: campaign._count.clicks,
+      clicks,
       failed: counts.failed,
-      opens: campaign._count.opens,
+      opens,
       pending: counts.pending,
       processing: counts.processing,
-      recipients: campaign._count.recipients,
+      recipients: recipientCount,
       sent: counts.sent,
       unsubscribed: counts.unsubscribed
     }

@@ -116,6 +116,11 @@ export default async function MarketingEmailPage({ searchParams }: MarketingEmai
     ? await getMarketingEmailCampaign(admin.organizationId, selectedCampaignId)
     : null;
   const message = getMessage(params);
+  const selectedCampaignHasContent = Boolean(
+    selectedCampaign?.subject && selectedCampaign.body && selectedCampaign.destinationUrl
+  );
+  const selectedCampaignHasRecipients = Boolean(selectedCampaign && selectedCampaign.metrics.recipients > 0);
+  const selectedCampaignCanSend = selectedCampaignHasContent && selectedCampaignHasRecipients;
   const totals = campaigns.reduce(
     (acc, campaign) => {
       acc.recipients += campaign.metrics.recipients;
@@ -442,10 +447,23 @@ export default async function MarketingEmailPage({ searchParams }: MarketingEmai
                       <p>
                         Pendentes: {selectedCampaign.metrics.pending} · Enviados: {selectedCampaign.metrics.sent} · Falhas: {selectedCampaign.metrics.failed}
                       </p>
+                      {!selectedCampaignCanSend ? (
+                        <p className="emailCampaignSendWarning">
+                          {!selectedCampaignHasContent
+                            ? "Salve assunto, mensagem e link de destino antes de enviar."
+                            : "Importe uma lista com e-mails válidos antes de enviar."}
+                        </p>
+                      ) : null}
                     </div>
-                    <SubmitButton className="ordersPrimaryButton" pendingText="Enviando campanha...">
-                      Enviar campanha
-                    </SubmitButton>
+                    {selectedCampaignCanSend ? (
+                      <SubmitButton className="ordersPrimaryButton" pendingText="Enviando campanha...">
+                        Enviar campanha
+                      </SubmitButton>
+                    ) : (
+                      <button className="ordersPrimaryButton" disabled type="button">
+                        Enviar campanha
+                      </button>
+                    )}
                   </form>
                 </section>
 
