@@ -1,0 +1,4 @@
+ALTER TABLE "MarketingEmailCampaign"
+  ADD COLUMN IF NOT EXISTS "imageCrop" TEXT,
+  ADD COLUMN IF NOT EXISTS "imageWidth" INTEGER,
+  ADD COLUMN IF NOT EXISTS "imageHeight" INTEGER;

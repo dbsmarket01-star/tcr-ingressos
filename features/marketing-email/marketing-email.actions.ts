@@ -190,6 +190,9 @@ export async function saveMarketingEmailContentAction(formData: FormData) {
   const body = String(formData.get("body") ?? "").trim();
   const ctaLabel = String(formData.get("ctaLabel") ?? "").trim();
   const destinationUrl = normalizeDestinationUrl(String(formData.get("destinationUrl") ?? ""));
+  const imageCrop = String(formData.get("imageCrop") ?? "").trim() || null;
+  const imageWidth = Number(formData.get("imageFileWidth") ?? 0) || null;
+  const imageHeight = Number(formData.get("imageFileHeight") ?? 0) || null;
 
   if (!campaignId) {
     redirect(marketingEmailUrl(undefined, { error: "Campanha não informada." }));
@@ -238,7 +241,10 @@ export async function saveMarketingEmailContentAction(formData: FormData) {
       body,
       ctaLabel: ctaLabel || null,
       destinationUrl,
+      imageCrop,
+      imageHeight,
       imageUrl,
+      imageWidth,
       lastError: null,
       status: recipientCount > 0 ? "READY" : "DRAFT",
       subject
@@ -282,7 +288,10 @@ export async function sendMarketingEmailTestAction(formData: FormData) {
       name: "Teste",
       subject: campaign.subject,
       body: campaign.body,
+      imageCrop: campaign.imageCrop,
+      imageHeight: campaign.imageHeight,
       imageUrl: campaign.imageUrl,
+      imageWidth: campaign.imageWidth,
       publicBaseUrl: organizationContext.publicBaseUrl,
       brandLogoUrl: organizationContext.brandLogoUrl,
       brandName: organizationContext.brandName,

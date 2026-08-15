@@ -689,6 +689,9 @@ model MarketingEmailCampaign {
   subject             String?
   body                String?
   imageUrl            String?
+  imageCrop           String?
+  imageWidth          Int?
+  imageHeight         Int?
   ctaLabel            String?
   destinationUrl      String?
   status              MarketingEmailCampaignStatus @default(DRAFT)

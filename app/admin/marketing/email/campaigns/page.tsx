@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { ImageUploadField } from "@/components/forms/ImageUploadField";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { requirePermission } from "@/features/auth/auth.service";
 import {
@@ -321,13 +322,19 @@ export default async function MarketingEmailPage({ searchParams }: MarketingEmai
                       <input name="destinationUrl" defaultValue={selectedCampaign.destinationUrl ?? ""} placeholder="https://..." required />
                     </label>
                   </div>
-                  <label className="field">
-                    <span>Imagem opcional</span>
-                    <input name="imageFile" type="file" accept="image/*" />
-                  </label>
-                  {selectedCampaign.imageUrl ? (
-                    <p className="muted">Imagem atual salva para esta campanha.</p>
-                  ) : null}
+                  <ImageUploadField
+                    aspect="share"
+                    applyMode="manual"
+                    cropFieldName="imageCrop"
+                    currentCropValue={selectedCampaign.imageCrop}
+                    currentImageUrl={selectedCampaign.imageUrl}
+                    includeImageMetaFields
+                    emptyText="Nenhuma imagem selecionada"
+                    label="Imagem opcional"
+                    name="imageFile"
+                    recommendedSize="1200 x 630 px"
+                    usageHint="Use um banner horizontal e ajuste o recorte com zoom, topo, base e laterais antes de salvar."
+                  />
                   <SubmitButton className="button smallButton" pendingText="Salvando conteúdo...">
                     Salvar conteúdo
                   </SubmitButton>
