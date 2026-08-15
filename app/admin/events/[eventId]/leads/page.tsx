@@ -6,7 +6,7 @@ import { ImageUploadField } from "@/components/forms/ImageUploadField";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { countEventPageVisits } from "@/features/analytics/page-visit.service";
-import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
+import { canAccessArea, getAdminAllowedEventIds, requireAdmin, requireEventAccess } from "@/features/auth/auth.service";
 import { getEventForManagement } from "@/features/events/event.service";
 import {
   deleteLeadBroadcastTemplateAction,
@@ -105,7 +105,12 @@ function compactCampaignReasons(reasons: Array<{ message: string; count: number 
 }
 
 export default async function EventLeadsPage({ params, searchParams }: EventLeadsPageProps) {
-  const admin = await requirePermission("EVENTS");
+  const admin = await requireAdmin();
+
+  if (!canAccessArea(admin.role, "MARKETING") && !canAccessArea(admin.role, "EVENTS")) {
+    notFound();
+  }
+
   const emptySearchParams: Record<string, string | string[] | undefined> = {};
   const [{ eventId }, query] = await Promise.all([params, searchParams ? searchParams : Promise.resolve(emptySearchParams)]);
   await requireEventAccess(eventId);
@@ -238,7 +243,6 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
             <strong>{whatsappClicks}</strong>
           </div>
         </div>
-        {sendError ? <ErrorNotice message={sendError} /> : null}
       </section>
 
       <section className="card spacedSection" id="lead-import">
@@ -318,7 +322,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
             {sendScope ? <small className="feedbackScopeText">{sendScope}</small> : null}
           </div>
         ) : null}
-        {sendError ? <ErrorNotice message={sendError} className="inlineFeedbackBox" /> : null}
+        {sendError ? <ErrorNotice message={sendError} title="Não foi possível enviar o e-mail" className="inlineFeedbackBox" /> : null}
         {templateSaved ? <div className="successBox inlineFeedbackBox">Modelo salvo com sucesso.</div> : null}
         {templateDeleted ? <div className="successBox inlineFeedbackBox">Modelo apagado com sucesso.</div> : null}
         {templateError ? <ErrorNotice message={templateError} className="inlineFeedbackBox" /> : null}

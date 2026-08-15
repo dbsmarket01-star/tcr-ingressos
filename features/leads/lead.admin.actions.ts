@@ -4,7 +4,14 @@ import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getPublicBaseUrl } from "@/lib/public-url";
 import { redirect } from "next/navigation";
-import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
+import {
+  canAccessArea,
+  getAdminAllowedEventIds,
+  requireAdmin,
+  requireEventAccess,
+  requirePermission,
+  type CurrentAdmin
+} from "@/features/auth/auth.service";
 import { sendLeadBroadcastEmail } from "@/features/email/email.service";
 import { getEventForManagement } from "@/features/events/event.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
@@ -46,6 +53,27 @@ function normalizeDestinationUrl(value: string, fallbackUrl?: string | null) {
   }
 
   return `https://${text}`;
+}
+
+async function requireLeadMarketingAccess() {
+  const admin = await requireAdmin();
+
+  if (!canAccessArea(admin.role, "MARKETING") && !canAccessArea(admin.role, "EVENTS")) {
+    redirect("/admin");
+  }
+
+  return admin;
+}
+
+async function getManagedEventOrRedirect(eventId: string, admin: CurrentAdmin, anchor: "lead-broadcast" | "lead-import") {
+  await requireEventAccess(eventId);
+  const event = await getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin));
+
+  if (!event) {
+    redirect(`/admin/events/${eventId}/leads?error=${encodeURIComponent("Evento não encontrado.")}#${anchor}`);
+  }
+
+  return event;
 }
 
 function normalizeBodySignature(value: string) {
@@ -283,7 +311,7 @@ function buildScopeSummary({
 }
 
 export async function sendLeadBroadcastAction(formData: FormData) {
-  const admin = await requirePermission("EVENTS");
+  const admin = await requireLeadMarketingAccess();
   const organizationContext = await getCurrentOrganizationContext();
   const eventId = String(formData.get("eventId") ?? "").trim();
   const subject = String(formData.get("subject") ?? "").trim();
@@ -304,13 +332,7 @@ export async function sendLeadBroadcastAction(formData: FormData) {
     redirect("/admin/events?error=Evento%20nao%20informado.");
   }
 
-  await requireEventAccess(eventId);
-
-  const event = await getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin));
-
-  if (!event) {
-    redirect(`/admin/events/${eventId}/leads?error=${encodeURIComponent("Evento não encontrado.")}`);
-  }
+  const event = await getManagedEventOrRedirect(eventId, admin, "lead-broadcast");
 
   if (subject.length < 4 || body.length < 12) {
     redirect(`/admin/events/${eventId}/leads?error=${encodeURIComponent("Preencha assunto e mensagem com um conteúdo mais completo.")}`);
@@ -487,7 +509,27 @@ export async function sendLeadBroadcastAction(formData: FormData) {
   }
 
   after(async () => {
-    await processLeadEmailCampaignInBackground(campaign.id);
+    try {
+      await processLeadEmailCampaignInBackground(campaign.id);
+    } catch (error) {
+      console.error("[lead-email] Falha no processamento em segundo plano", {
+        campaignId: campaign.id,
+        error
+      });
+      await prisma.leadEmailCampaign.updateMany({
+        where: {
+          id: campaign.id,
+          status: {
+            in: ["QUEUED", "PROCESSING"]
+          }
+        },
+        data: {
+          status: "FAILED",
+          completedAt: new Date(),
+          lastError: getFriendlyErrorMessage(error, "Falha ao processar disparo de e-mail.")
+        }
+      });
+    }
   });
 
   redirect(
@@ -496,7 +538,7 @@ export async function sendLeadBroadcastAction(formData: FormData) {
 }
 
 export async function importLeadListAction(formData: FormData) {
-  const admin = await requirePermission("EVENTS");
+  const admin = await requireLeadMarketingAccess();
   const eventId = String(formData.get("eventId") ?? "").trim();
   const listName = normalizeImportedLeadListName(String(formData.get("importListName") ?? ""));
   const pastedList = String(formData.get("leadListText") ?? "").trim();
@@ -506,12 +548,7 @@ export async function importLeadListAction(formData: FormData) {
     redirect("/admin/events?error=Evento%20nao%20informado.");
   }
 
-  await requireEventAccess(eventId);
-  const event = await getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin));
-
-  if (!event) {
-    redirect(`/admin/events/${eventId}/leads?error=${encodeURIComponent("Evento não encontrado.")}#lead-import`);
-  }
+  const event = await getManagedEventOrRedirect(eventId, admin, "lead-import");
 
   if (listName.length < 3) {
     redirect(
