@@ -11,7 +11,13 @@ import { getCurrentOrganizationContext } from "@/features/organizations/organiza
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { processLeadEmailCampaignInBackground } from "@/features/leads/lead-email-campaign-processor.service";
 import { savePublicImageUpload } from "@/features/uploads/local-upload.service";
-import { listEventLeadsForBroadcast, reconcileInvalidLeadEmailCampaigns } from "@/features/leads/lead.service";
+import {
+  IMPORTED_LEAD_MEDIUM,
+  IMPORTED_LEAD_SOURCE,
+  listEventLeadsForBroadcast,
+  normalizeImportedLeadListName,
+  reconcileInvalidLeadEmailCampaigns
+} from "@/features/leads/lead.service";
 import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 
 function splitIntoBatches<T>(items: T[], size: number) {
@@ -65,17 +71,90 @@ function normalizeEmailAddress(value: string) {
   return value.trim().toLowerCase();
 }
 
+function sanitizeImportedPhone(value?: string) {
+  const digits = (value ?? "").replace(/\D/g, "");
+
+  if (!digits) {
+    return null;
+  }
+
+  if (digits.startsWith("00") && digits.length > 4) {
+    return digits.slice(2);
+  }
+
+  if (digits.length <= 11) {
+    return `55${digits}`;
+  }
+
+  return digits;
+}
+
+function parseImportedLeadRows(rawText: string) {
+  const rows = rawText
+    .split(/\r?\n/)
+    .map((row) => row.trim())
+    .filter(Boolean);
+  const parsedRows: Array<{ name: string; email: string; phone?: string | null; municipality?: string | null }> = [];
+  const invalidRows: string[] = [];
+  const seenEmails = new Set<string>();
+
+  for (const [index, row] of rows.entries()) {
+    const columns = row
+      .split(/[;,]/)
+      .map((column) => column.trim().replace(/^"|"$/g, ""));
+    const emailColumnIndex = columns.findIndex((column) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(column));
+
+    if (emailColumnIndex === -1) {
+      invalidRows.push(`linha ${index + 1}`);
+      continue;
+    }
+
+    const email = normalizeEmailAddress(columns[emailColumnIndex]);
+
+    if (seenEmails.has(email)) {
+      continue;
+    }
+
+    seenEmails.add(email);
+
+    const name = columns[emailColumnIndex === 0 ? 1 : 0] || email.split("@")[0] || "Contato importado";
+    const phone = columns.find((column, columnIndex) => columnIndex !== emailColumnIndex && column.replace(/\D/g, "").length >= 8);
+    const municipality = columns.find(
+      (column, columnIndex) =>
+        columnIndex !== emailColumnIndex &&
+        column !== name &&
+        column !== phone &&
+        column.length >= 2 &&
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(column)
+    );
+
+    parsedRows.push({
+      name: name.trim().replace(/\s+/g, " ").slice(0, 160),
+      email,
+      phone: sanitizeImportedPhone(phone),
+      municipality: municipality?.trim().replace(/\s+/g, " ").slice(0, 120) || null
+    });
+  }
+
+  return {
+    rows: parsedRows,
+    invalidRows
+  };
+}
+
 function buildScopeSummary({
   testRecipientEmail,
   municipalities,
   dateFrom,
   dateTo,
+  importedListName,
   count
 }: {
   testRecipientEmail?: string | null;
   municipalities: string[];
   dateFrom?: string;
   dateTo?: string;
+  importedListName?: string | null;
   count: number;
 }) {
   if (testRecipientEmail) {
@@ -94,6 +173,10 @@ function buildScopeSummary({
 
   if (municipalities.length > 0) {
     fragments.push(`município(s): ${municipalities.join(", ")}`);
+  }
+
+  if (importedListName) {
+    fragments.push(`lista importada: ${importedListName}`);
   }
 
   if (fragments.length === 1) {
@@ -118,6 +201,7 @@ export async function sendLeadBroadcastAction(formData: FormData) {
   const dateFrom = String(formData.get("dateFrom") ?? "").trim();
   const dateTo = String(formData.get("dateTo") ?? "").trim();
   const municipalities = parseMunicipalityFilters(String(formData.get("municipalities") ?? ""));
+  const importedListName = normalizeImportedLeadListName(String(formData.get("importedListName") ?? ""));
   const testRecipientEmail = normalizeEmailAddress(String(formData.get("testRecipientEmail") ?? ""));
 
   if (!eventId) {
@@ -162,7 +246,8 @@ export async function sendLeadBroadcastAction(formData: FormData) {
   const leads = await listEventLeadsForBroadcast(event.id, {
     dateFrom: parseBrazilDateStart(dateFrom),
     dateTo: parseBrazilDateEnd(dateTo),
-    municipalities
+    municipalities,
+    importedListName
   });
   const companySettings = await getCompanySettingsByOrganizationId(admin.organizationId!);
   const normalizedDestinationUrl = normalizeDestinationUrl(destinationUrl, event.leadCaptureWhatsappGroupUrl);
@@ -179,6 +264,7 @@ export async function sendLeadBroadcastAction(formData: FormData) {
     municipalities,
     dateFrom,
     dateTo,
+    importedListName,
     count: leads.length
   });
 
@@ -219,7 +305,7 @@ export async function sendLeadBroadcastAction(formData: FormData) {
     );
   }
 
-  const hasScopedFilters = Boolean(dateFrom || dateTo || municipalities.length > 0);
+  const hasScopedFilters = Boolean(dateFrom || dateTo || municipalities.length > 0 || importedListName);
   await reconcileInvalidLeadEmailCampaigns(event.id);
   const activeCampaign = await prisma.leadEmailCampaign.findFirst({
     where: {
@@ -310,6 +396,118 @@ export async function sendLeadBroadcastAction(formData: FormData) {
 
   redirect(
     `/admin/events/${eventId}/leads?queued=${campaign.id}&scope=${encodeURIComponent(scopeSummary)}#lead-broadcast`
+  );
+}
+
+export async function importLeadListAction(formData: FormData) {
+  const admin = await requirePermission("EVENTS");
+  const eventId = String(formData.get("eventId") ?? "").trim();
+  const listName = normalizeImportedLeadListName(String(formData.get("importListName") ?? ""));
+  const pastedList = String(formData.get("leadListText") ?? "").trim();
+  const file = formData.get("leadListFile");
+
+  if (!eventId) {
+    redirect("/admin/events?error=Evento%20nao%20informado.");
+  }
+
+  await requireEventAccess(eventId);
+  const event = await getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin));
+
+  if (!event) {
+    redirect(`/admin/events/${eventId}/leads?error=${encodeURIComponent("Evento não encontrado.")}#lead-import`);
+  }
+
+  if (listName.length < 3) {
+    redirect(
+      `/admin/events/${eventId}/leads?importError=${encodeURIComponent(
+        "Dê um nome para a lista importada. Ex.: Lista anuncio agosto."
+      )}#lead-import`
+    );
+  }
+
+  const fileText = file instanceof File && file.size > 0 ? await file.text() : "";
+  const rawText = [pastedList, fileText].filter(Boolean).join("\n");
+
+  if (!rawText.trim()) {
+    redirect(
+      `/admin/events/${eventId}/leads?importError=${encodeURIComponent(
+        "Cole os contatos ou selecione um arquivo CSV/TXT para importar."
+      )}#lead-import`
+    );
+  }
+
+  const { rows, invalidRows } = parseImportedLeadRows(rawText);
+
+  if (rows.length === 0) {
+    redirect(
+      `/admin/events/${eventId}/leads?importError=${encodeURIComponent(
+        "Nenhum e-mail válido foi encontrado na lista enviada."
+      )}#lead-import`
+    );
+  }
+
+  if (rows.length > 5000) {
+    redirect(
+      `/admin/events/${eventId}/leads?importError=${encodeURIComponent(
+        "Importe no máximo 5.000 contatos por vez para manter o disparo seguro."
+      )}#lead-import`
+    );
+  }
+
+  let created = 0;
+  let updated = 0;
+
+  for (const row of rows) {
+    const existing = await prisma.eventLead.findUnique({
+      where: {
+        eventId_email: {
+          eventId: event.id,
+          email: row.email
+        }
+      },
+      select: {
+        id: true
+      }
+    });
+
+    await prisma.eventLead.upsert({
+      where: {
+        eventId_email: {
+          eventId: event.id,
+          email: row.email
+        }
+      },
+      update: {
+        name: row.name,
+        phone: row.phone,
+        municipality: row.municipality,
+        utmSource: IMPORTED_LEAD_SOURCE,
+        utmMedium: IMPORTED_LEAD_MEDIUM,
+        utmCampaign: listName,
+        landingPage: "importacao-manual"
+      },
+      create: {
+        eventId: event.id,
+        name: row.name,
+        email: row.email,
+        phone: row.phone,
+        municipality: row.municipality,
+        utmSource: IMPORTED_LEAD_SOURCE,
+        utmMedium: IMPORTED_LEAD_MEDIUM,
+        utmCampaign: listName,
+        landingPage: "importacao-manual"
+      }
+    });
+
+    if (existing) {
+      updated += 1;
+    } else {
+      created += 1;
+    }
+  }
+
+  redirect(
+    `/admin/events/${eventId}/leads?imported=1&importList=${encodeURIComponent(listName)}&importCreated=${created}&importUpdated=${updated}&importInvalid=${invalidRows.length}#lead-import`
   );
 }
 

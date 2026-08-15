@@ -43,9 +43,9 @@ export default async function MarketingEmailPage() {
       <section className="operationCommandStrip spacedSection" aria-label="Disparos de e-mail">
         <article className="operationCommandCard">
           <span className="eyebrow">Marketing e vendas</span>
-          <h2>Campanhas por evento da {organizationContext.brandName}.</h2>
+          <h2>Crie campanhas por evento da {organizationContext.brandName}.</h2>
           <p>
-            Cada evento mantém sua propria lista de leads, historico de disparos e metricas de entrega.
+            Escolha um evento, clique em criar campanha nova, importe uma lista externa e dispare somente para esses contatos.
           </p>
         </article>
         <div className="operationCommandActions">
@@ -62,7 +62,7 @@ export default async function MarketingEmailPage() {
         <div className="sectionHeader inlineHeader">
           <div>
             <h2>Eventos com disparo de e-mail</h2>
-            <p className="muted">Escolha o evento e abra a area de leads para preparar ou revisar uma campanha.</p>
+            <p className="muted">Escolha qual evento/marca será usado no e-mail e importe a lista externa da campanha.</p>
           </div>
         </div>
         {events.length === 0 ? (
@@ -77,7 +77,7 @@ export default async function MarketingEmailPage() {
                   <th>Local</th>
                   <th>Leads</th>
                   <th>Campanhas</th>
-                  <th>Ação</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -91,9 +91,14 @@ export default async function MarketingEmailPage() {
                     <td>{event._count.leads}</td>
                     <td>{event._count.leadEmailCampaigns}</td>
                     <td>
-                      <Link className="button smallButton" href={`/admin/events/${event.id}/leads`}>
-                        Abrir leads
-                      </Link>
+                      <div className="tableActions">
+                        <Link className="button smallButton" href={`/admin/events/${event.id}/leads#lead-import`}>
+                          Criar campanha nova
+                        </Link>
+                        <Link className="secondaryButton smallButton" href={`/admin/events/${event.id}/leads`}>
+                          Ver campanhas
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}

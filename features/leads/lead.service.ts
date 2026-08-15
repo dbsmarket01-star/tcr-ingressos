@@ -11,6 +11,8 @@ import { normalizeMunicipalityKey } from "./lead-normalization";
 
 const LEAD_CAPTURE_LIMIT_WINDOW_MINUTES = 10;
 const LEAD_CAPTURE_MAX_ATTEMPTS_PER_IP = 18;
+export const IMPORTED_LEAD_SOURCE = "lista-importada";
+export const IMPORTED_LEAD_MEDIUM = "importacao-manual";
 
 function sanitizePhone(value?: string) {
   const digits = (value ?? "").replace(/\D/g, "");
@@ -37,6 +39,10 @@ function sanitizeMunicipality(value?: string) {
 
 function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
+}
+
+export function normalizeImportedLeadListName(value: string) {
+  return value.trim().replace(/\s+/g, " ").slice(0, 120);
 }
 
 function hashIp(value: string) {
@@ -281,17 +287,26 @@ type LeadBroadcastFilters = {
   dateFrom?: Date | null;
   dateTo?: Date | null;
   municipalities?: string[];
+  importedListName?: string | null;
 };
 
 export async function listEventLeadsForBroadcast(eventId: string, filters: LeadBroadcastFilters = {}) {
   const municipalityKeys = (filters.municipalities ?? [])
     .map((value) => normalizeMunicipalityKey(value))
     .filter((value, index, array) => value !== "nao-informado" && array.indexOf(value) === index);
+  const importedListName = normalizeImportedLeadListName(filters.importedListName ?? "");
 
   const leads = await prisma.eventLead.findMany({
     where: {
       eventId,
       emailOptOutAt: null,
+      ...(importedListName
+        ? {
+            utmSource: IMPORTED_LEAD_SOURCE,
+            utmMedium: IMPORTED_LEAD_MEDIUM,
+            utmCampaign: importedListName
+          }
+        : {}),
       createdAt:
         filters.dateFrom || filters.dateTo
           ? {
@@ -310,6 +325,56 @@ export async function listEventLeadsForBroadcast(eventId: string, filters: LeadB
   }
 
   return leads.filter((lead) => municipalityKeys.includes(normalizeMunicipalityKey(lead.municipality)));
+}
+
+export async function listImportedLeadLists(eventId: string) {
+  const importedLeads = await prisma.eventLead.findMany({
+    where: {
+      eventId,
+      utmSource: IMPORTED_LEAD_SOURCE,
+      utmMedium: IMPORTED_LEAD_MEDIUM,
+      utmCampaign: {
+        not: null
+      }
+    },
+    select: {
+      utmCampaign: true,
+      createdAt: true
+    },
+    orderBy: {
+      createdAt: "desc"
+    }
+  });
+  const lists = new Map<string, { name: string; count: number; lastImportedAt: Date }>();
+
+  for (const lead of importedLeads) {
+    const name = normalizeImportedLeadListName(lead.utmCampaign ?? "");
+
+    if (!name) {
+      continue;
+    }
+
+    const existing = lists.get(name);
+
+    if (!existing) {
+      lists.set(name, {
+        name,
+        count: 1,
+        lastImportedAt: lead.createdAt
+      });
+      continue;
+    }
+
+    existing.count += 1;
+
+    if (lead.createdAt > existing.lastImportedAt) {
+      existing.lastImportedAt = lead.createdAt;
+    }
+  }
+
+  return Array.from(lists.values()).sort(
+    (left, right) => right.lastImportedAt.getTime() - left.lastImportedAt.getTime() || left.name.localeCompare(right.name)
+  );
 }
 
 export async function unsubscribeEventLeadFromCampaignEmails(campaignId: string, leadId: string) {

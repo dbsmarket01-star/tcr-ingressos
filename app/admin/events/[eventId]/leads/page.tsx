@@ -9,6 +9,7 @@ import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "
 import { getEventForManagement } from "@/features/events/event.service";
 import {
   deleteLeadBroadcastTemplateAction,
+  importLeadListAction,
   saveLeadBroadcastTemplateAction,
   sendLeadBroadcastAction
 } from "@/features/leads/lead.admin.actions";
@@ -16,6 +17,7 @@ import { getMunicipalityRanking } from "@/features/leads/lead-normalization";
 import {
   getActiveLeadEmailCampaign,
   listEventLeads,
+  listImportedLeadLists,
   listLeadEmailCampaignSummaries,
   listLeadEmailTemplates
 } from "@/features/leads/lead.service";
@@ -112,13 +114,14 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
     notFound();
   }
 
-  const [leads, emailCampaigns, leadCaptureVisits, companySettings, savedTemplates, activeCampaign] = await Promise.all([
+  const [leads, emailCampaigns, leadCaptureVisits, companySettings, savedTemplates, activeCampaign, importedLeadLists] = await Promise.all([
     listEventLeads(event.id),
     listLeadEmailCampaignSummaries(event.id),
     countEventPageVisits(event.id, "LEAD_CAPTURE"),
     getCompanySettingsByOrganizationId(admin.organizationId!),
     listLeadEmailTemplates(event.id),
-    getActiveLeadEmailCampaign(event.id)
+    getActiveLeadEmailCampaign(event.id),
+    listImportedLeadLists(event.id)
   ]);
   const organizationContext = await getCurrentOrganizationContext();
   const leadsWithPhone = leads.filter((lead) => Boolean(lead.phone)).length;
@@ -136,6 +139,12 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
   const templateSaved = typeof query.templateSaved === "string" ? query.templateSaved : null;
   const templateDeleted = typeof query.templateDeleted === "string" ? query.templateDeleted : null;
   const templateError = typeof query.templateError === "string" ? query.templateError : null;
+  const importSuccess = typeof query.imported === "string" ? query.imported : null;
+  const importError = typeof query.importError === "string" ? query.importError : null;
+  const importList = typeof query.importList === "string" ? query.importList : null;
+  const importCreated = typeof query.importCreated === "string" ? Number(query.importCreated) || 0 : 0;
+  const importUpdated = typeof query.importUpdated === "string" ? Number(query.importUpdated) || 0 : 0;
+  const importInvalid = typeof query.importInvalid === "string" ? Number(query.importInvalid) || 0 : 0;
   const municipalityRanking = getMunicipalityRanking(leads.map((lead) => lead.municipality));
   const originRanking = Array.from(
     leads.reduce((acc, lead) => {
@@ -228,6 +237,56 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
         {sendError ? <ErrorNotice message={sendError} /> : null}
       </section>
 
+      <section className="card spacedSection" id="lead-import">
+        <div className="sectionHeader">
+          <div>
+            <h2>Criar campanha nova</h2>
+            <p className="muted">Importe uma lista externa, de outro evento ou público, para disparar e-mail por este evento.</p>
+          </div>
+        </div>
+        {importSuccess ? (
+          <div className="successBox inlineFeedbackBox">
+            Lista {importList ? <strong>{importList}</strong> : "importada"} pronta para disparo: {importCreated} novo(s), {importUpdated} atualizado(s).
+            {importInvalid > 0 ? <small className="feedbackScopeText">{importInvalid} linha(s) ignorada(s) por não conter e-mail válido.</small> : null}
+          </div>
+        ) : null}
+        {importError ? <ErrorNotice message={importError} className="inlineFeedbackBox" /> : null}
+        <form action={importLeadListAction} className="stackForm">
+          <input type="hidden" name="eventId" value={event.id} />
+          <div className="grid twoColumnGrid">
+            <label className="field">
+              <span>Nome da campanha/lista</span>
+              <input name="importListName" placeholder="Ex.: Campanha tráfego agosto" required />
+            </label>
+            <label className="field">
+              <span>Arquivo CSV/TXT</span>
+              <input name="leadListFile" type="file" accept=".csv,.txt,text/csv,text/plain" />
+            </label>
+          </div>
+          <label className="field">
+            <span>Colar contatos</span>
+            <textarea
+              name="leadListText"
+              rows={6}
+              placeholder={`Nome;email;telefone;cidade\nMaria Silva;maria@email.com;11999999999;Santo André\nJoão Souza;joao@email.com;11988888888;São Paulo`}
+            />
+          </label>
+          <div className="infoBox inlineFeedbackBox">
+            O sistema aceita lista externa com colunas separadas por ponto e vírgula ou vírgula. Precisa ter pelo menos um e-mail válido por linha.
+          </div>
+          <div className="actionRow">
+            <button className="button smallButton" type="submit">
+              Criar campanha e importar lista
+            </button>
+            {importedLeadLists.length > 0 ? (
+              <small className="muted">
+                Listas disponíveis: {importedLeadLists.map((list) => `${list.name} (${list.count})`).join(", ")}.
+              </small>
+            ) : null}
+          </div>
+        </form>
+      </section>
+
       <section className="card spacedSection" id="lead-broadcast">
         <div className="sectionHeader">
           <div>
@@ -236,7 +295,7 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
           </div>
         </div>
         <div className="infoBox inlineFeedbackBox">
-          Para enviar para <strong>toda a lista</strong>, deixe <strong>Data inicial</strong>, <strong>Data final</strong>, <strong>Municípios</strong> e <strong>E-mail de teste individual</strong> em branco.
+          Para enviar para <strong>toda a lista</strong>, deixe <strong>Lista importada</strong>, <strong>Data inicial</strong>, <strong>Data final</strong>, <strong>Municípios</strong> e <strong>E-mail de teste individual</strong> em branco.
         </div>
         {queuedCampaignId ? (
           <div className="infoBox inlineFeedbackBox">
@@ -352,6 +411,17 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
                   <strong>Quem vai receber</strong>
                   <small>Sem filtro, o disparo vai para toda a lista. Para um dia só, repita a mesma data no início e no fim.</small>
                 </div>
+                <label className="field">
+                  <span>Lista importada</span>
+                  <select name="importedListName" defaultValue="">
+                    <option value="">Todos os leads do evento</option>
+                    {importedLeadLists.map((list) => (
+                      <option key={list.name} value={list.name}>
+                        {list.name} ({list.count})
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <div className="grid twoColumnGrid">
                   <label className="field">
                     <span>Data inicial</span>
