@@ -89,6 +89,63 @@ function sanitizeImportedPhone(value?: string) {
   return digits;
 }
 
+function splitImportedColumns(row: string) {
+  const delimiter = row.includes("\t") ? "\t" : (row.match(/;/g)?.length ?? 0) >= (row.match(/,/g)?.length ?? 0) ? ";" : ",";
+  const columns: string[] = [];
+  let current = "";
+  let insideQuotes = false;
+
+  for (const char of row) {
+    if (char === '"') {
+      insideQuotes = !insideQuotes;
+      continue;
+    }
+
+    if (char === delimiter && !insideQuotes) {
+      columns.push(current.trim());
+      current = "";
+      continue;
+    }
+
+    current += char;
+  }
+
+  columns.push(current.trim());
+
+  return columns.map((column) => column.replace(/^"|"$/g, "").trim());
+}
+
+function normalizeImportedHeader(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+function getImportedHeaderIndexes(columns: string[]) {
+  const normalized = columns.map(normalizeImportedHeader);
+  const email = normalized.findIndex((column) => column === "email" || column === "e-mail" || column === "correioeletronico");
+  const name = normalized.findIndex((column) => ["nome", "nomecompleto", "cliente", "contato"].includes(column));
+  const phone = normalized.findIndex((column) => ["telefone", "celular", "whatsapp", "fone"].includes(column));
+  const municipality = normalized.findIndex((column) => ["cidade", "municipio", "localidade"].includes(column));
+
+  if (email === -1) {
+    return null;
+  }
+
+  return {
+    email,
+    name: name === -1 ? null : name,
+    phone: phone === -1 ? null : phone,
+    municipality: municipality === -1 ? null : municipality
+  };
+}
+
+function getIndexedColumn(columns: string[], index?: number | null) {
+  return typeof index === "number" && index >= 0 ? columns[index]?.trim() || "" : "";
+}
+
 function parseImportedLeadRows(rawText: string) {
   const rows = rawText
     .split(/\r?\n/)
@@ -98,12 +155,20 @@ function parseImportedLeadRows(rawText: string) {
   const invalidRows: string[] = [];
   const seenEmails = new Set<string>();
   let duplicateRows = 0;
+  let headerIndexes: ReturnType<typeof getImportedHeaderIndexes> = null;
 
   for (const [index, row] of rows.entries()) {
-    const columns = row
-      .split(/[;,\t]/)
-      .map((column) => column.trim().replace(/^"|"$/g, ""));
-    const emailColumnIndex = columns.findIndex((column) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(column));
+    const columns = splitImportedColumns(row);
+
+    if (index === 0) {
+      headerIndexes = getImportedHeaderIndexes(columns);
+
+      if (headerIndexes) {
+        continue;
+      }
+    }
+
+    const emailColumnIndex = headerIndexes?.email ?? columns.findIndex((column) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(column));
 
     if (emailColumnIndex === -1) {
       invalidRows.push(`linha ${index + 1}`);
@@ -112,6 +177,11 @@ function parseImportedLeadRows(rawText: string) {
 
     const email = normalizeEmailAddress(columns[emailColumnIndex]);
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      invalidRows.push(`linha ${index + 1}`);
+      continue;
+    }
+
     if (seenEmails.has(email)) {
       duplicateRows += 1;
       continue;
@@ -119,16 +189,24 @@ function parseImportedLeadRows(rawText: string) {
 
     seenEmails.add(email);
 
-    const name = columns[emailColumnIndex === 0 ? 1 : 0] || email.split("@")[0] || "Contato importado";
-    const phone = columns.find((column, columnIndex) => columnIndex !== emailColumnIndex && column.replace(/\D/g, "").length >= 8);
-    const municipality = columns.find(
-      (column, columnIndex) =>
-        columnIndex !== emailColumnIndex &&
-        column !== name &&
-        column !== phone &&
-        column.length >= 2 &&
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(column)
-    );
+    const name =
+      getIndexedColumn(columns, headerIndexes?.name) ||
+      columns[emailColumnIndex === 0 ? 1 : 0] ||
+      email.split("@")[0] ||
+      "Contato importado";
+    const phone =
+      getIndexedColumn(columns, headerIndexes?.phone) ||
+      columns.find((column, columnIndex) => columnIndex !== emailColumnIndex && column.replace(/\D/g, "").length >= 8);
+    const municipality =
+      getIndexedColumn(columns, headerIndexes?.municipality) ||
+      columns.find(
+        (column, columnIndex) =>
+          columnIndex !== emailColumnIndex &&
+          column !== name &&
+          column !== phone &&
+          column.length >= 2 &&
+          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(column)
+      );
 
     parsedRows.push({
       name: name.trim().replace(/\s+/g, " ").slice(0, 160),
@@ -144,6 +222,20 @@ function parseImportedLeadRows(rawText: string) {
     duplicateRows,
     totalRows: rows.length
   };
+}
+
+async function readImportedLeadFileText(file: FormDataEntryValue | null) {
+  if (!file || typeof file !== "object" || !("size" in file) || !("arrayBuffer" in file) || typeof file.arrayBuffer !== "function" || file.size <= 0) {
+    return "";
+  }
+
+  const buffer = await file.arrayBuffer();
+
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(buffer).replace(/^\uFEFF/, "");
+  } catch {
+    return new TextDecoder("latin1").decode(buffer).replace(/^\uFEFF/, "");
+  }
 }
 
 function buildScopeSummary({
@@ -429,10 +521,7 @@ export async function importLeadListAction(formData: FormData) {
     );
   }
 
-  const fileText =
-    file && typeof file === "object" && "size" in file && "text" in file && typeof file.text === "function" && file.size > 0
-      ? await file.text()
-      : "";
+  const fileText = await readImportedLeadFileText(file);
   const rawText = [pastedList, fileText].filter(Boolean).join("\n");
 
   if (!rawText.trim()) {
