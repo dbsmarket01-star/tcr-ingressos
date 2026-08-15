@@ -97,10 +97,11 @@ function parseImportedLeadRows(rawText: string) {
   const parsedRows: Array<{ name: string; email: string; phone?: string | null; municipality?: string | null }> = [];
   const invalidRows: string[] = [];
   const seenEmails = new Set<string>();
+  let duplicateRows = 0;
 
   for (const [index, row] of rows.entries()) {
     const columns = row
-      .split(/[;,]/)
+      .split(/[;,\t]/)
       .map((column) => column.trim().replace(/^"|"$/g, ""));
     const emailColumnIndex = columns.findIndex((column) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(column));
 
@@ -112,6 +113,7 @@ function parseImportedLeadRows(rawText: string) {
     const email = normalizeEmailAddress(columns[emailColumnIndex]);
 
     if (seenEmails.has(email)) {
+      duplicateRows += 1;
       continue;
     }
 
@@ -138,7 +140,9 @@ function parseImportedLeadRows(rawText: string) {
 
   return {
     rows: parsedRows,
-    invalidRows
+    invalidRows,
+    duplicateRows,
+    totalRows: rows.length
   };
 }
 
@@ -425,7 +429,10 @@ export async function importLeadListAction(formData: FormData) {
     );
   }
 
-  const fileText = file instanceof File && file.size > 0 ? await file.text() : "";
+  const fileText =
+    file && typeof file === "object" && "size" in file && "text" in file && typeof file.text === "function" && file.size > 0
+      ? await file.text()
+      : "";
   const rawText = [pastedList, fileText].filter(Boolean).join("\n");
 
   if (!rawText.trim()) {
@@ -436,7 +443,7 @@ export async function importLeadListAction(formData: FormData) {
     );
   }
 
-  const { rows, invalidRows } = parseImportedLeadRows(rawText);
+  const { rows, invalidRows, duplicateRows, totalRows } = parseImportedLeadRows(rawText);
 
   if (rows.length === 0) {
     redirect(
@@ -507,7 +514,7 @@ export async function importLeadListAction(formData: FormData) {
   }
 
   redirect(
-    `/admin/events/${eventId}/leads?imported=1&importList=${encodeURIComponent(listName)}&importCreated=${created}&importUpdated=${updated}&importInvalid=${invalidRows.length}#lead-import`
+    `/admin/events/${eventId}/leads?imported=1&importList=${encodeURIComponent(listName)}&importRecognized=${rows.length}&importCreated=${created}&importUpdated=${updated}&importInvalid=${invalidRows.length}&importDuplicate=${duplicateRows}&importTotal=${totalRows}#lead-import`
   );
 }
 

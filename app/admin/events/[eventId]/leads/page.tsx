@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { CopyButton } from "@/components/forms/CopyButton";
 import { ImageUploadField } from "@/components/forms/ImageUploadField";
+import { SubmitButton } from "@/components/forms/SubmitButton";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { countEventPageVisits } from "@/features/analytics/page-visit.service";
 import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
@@ -142,9 +143,12 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
   const importSuccess = typeof query.imported === "string" ? query.imported : null;
   const importError = typeof query.importError === "string" ? query.importError : null;
   const importList = typeof query.importList === "string" ? query.importList : null;
+  const importRecognized = typeof query.importRecognized === "string" ? Number(query.importRecognized) || 0 : 0;
   const importCreated = typeof query.importCreated === "string" ? Number(query.importCreated) || 0 : 0;
   const importUpdated = typeof query.importUpdated === "string" ? Number(query.importUpdated) || 0 : 0;
   const importInvalid = typeof query.importInvalid === "string" ? Number(query.importInvalid) || 0 : 0;
+  const importDuplicate = typeof query.importDuplicate === "string" ? Number(query.importDuplicate) || 0 : 0;
+  const importTotal = typeof query.importTotal === "string" ? Number(query.importTotal) || 0 : 0;
   const municipalityRanking = getMunicipalityRanking(leads.map((lead) => lead.municipality));
   const originRanking = Array.from(
     leads.reduce((acc, lead) => {
@@ -246,12 +250,17 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
         </div>
         {importSuccess ? (
           <div className="successBox inlineFeedbackBox">
-            Lista {importList ? <strong>{importList}</strong> : "importada"} pronta para disparo: {importCreated} novo(s), {importUpdated} atualizado(s).
-            {importInvalid > 0 ? <small className="feedbackScopeText">{importInvalid} linha(s) ignorada(s) por não conter e-mail válido.</small> : null}
+            <strong>Lista carregada perfeitamente.</strong>
+            <span>
+              {importList ? <> Campanha/lista: <strong>{importList}</strong>.</> : null} {importRecognized} contato(s) reconhecido(s), {importCreated} novo(s) e {importUpdated} atualizado(s).
+            </span>
+            <small className="feedbackScopeText">
+              Total lido: {importTotal || importRecognized + importInvalid + importDuplicate}. Não reconhecidos: {importInvalid}. Duplicados na própria lista: {importDuplicate}.
+            </small>
           </div>
         ) : null}
         {importError ? <ErrorNotice message={importError} className="inlineFeedbackBox" /> : null}
-        <form action={importLeadListAction} className="stackForm">
+        <form action={importLeadListAction} className="stackForm" encType="multipart/form-data">
           <input type="hidden" name="eventId" value={event.id} />
           <div className="grid twoColumnGrid">
             <label className="field">
@@ -275,9 +284,9 @@ export default async function EventLeadsPage({ params, searchParams }: EventLead
             O sistema aceita lista externa com colunas separadas por ponto e vírgula ou vírgula. Precisa ter pelo menos um e-mail válido por linha.
           </div>
           <div className="actionRow">
-            <button className="button smallButton" type="submit">
+            <SubmitButton className="button smallButton" pendingText="Importando lista...">
               Criar campanha e importar lista
-            </button>
+            </SubmitButton>
             {importedLeadLists.length > 0 ? (
               <small className="muted">
                 Listas disponíveis: {importedLeadLists.map((list) => `${list.name} (${list.count})`).join(", ")}.
