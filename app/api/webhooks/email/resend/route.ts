@@ -4,6 +4,7 @@ import {
   syncLeadEmailCampaignCounts,
   translateLeadEmailProviderReason
 } from "@/features/leads/lead-email-campaign-metrics.service";
+import { syncMarketingEmailCampaignCounts } from "@/features/marketing-email/marketing-email.service";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -146,6 +147,7 @@ export async function POST(request: Request) {
     }
   });
   let leadRecipientMatched = 0;
+  let marketingRecipientMatched = 0;
 
   if (leadRecipient) {
     leadRecipientMatched = 1;
@@ -197,11 +199,73 @@ export async function POST(request: Request) {
     await syncLeadEmailCampaignCounts(leadRecipient.campaignId);
   }
 
+  const marketingRecipient = await prisma.marketingEmailRecipient.findFirst({
+    where: {
+      providerMessageId: providerId
+    },
+    select: {
+      campaignId: true,
+      id: true,
+      status: true
+    }
+  });
+
+  if (marketingRecipient) {
+    marketingRecipientMatched = 1;
+
+    if (status === "opened" || status === "clicked") {
+      await prisma.marketingEmailCampaignOpen
+        .create({
+          data: {
+            campaignId: marketingRecipient.campaignId,
+            recipientId: marketingRecipient.id
+          }
+        })
+        .catch(() => null);
+    }
+
+    if (status === "clicked") {
+      await prisma.marketingEmailCampaignClick
+        .create({
+          data: {
+            campaignId: marketingRecipient.campaignId,
+            recipientId: marketingRecipient.id
+          }
+        })
+        .catch(() => null);
+    }
+
+    if (isLeadEmailProviderFailureStatus(status)) {
+      await prisma.marketingEmailRecipient.update({
+        where: {
+          id: marketingRecipient.id
+        },
+        data: {
+          errorMessage: translatedFailureReason || `Entrega marcada como ${status} pelo Resend.`,
+          status: "FAILED"
+        }
+      });
+    } else if (marketingRecipient.status !== "FAILED" && marketingRecipient.status !== "UNSUBSCRIBED") {
+      await prisma.marketingEmailRecipient.update({
+        where: {
+          id: marketingRecipient.id
+        },
+        data: {
+          errorMessage: status === "delivery_delayed" ? "Entrega atrasada pelo provedor." : null,
+          status: "SENT"
+        }
+      });
+    }
+
+    await syncMarketingEmailCampaignCounts(marketingRecipient.campaignId);
+  }
+
   return webhookResponse({
     received: true,
-    matched: updateResult.count + leadRecipientMatched,
+    matched: updateResult.count + leadRecipientMatched + marketingRecipientMatched,
     orderMatched: updateResult.count,
     leadRecipientMatched,
+    marketingRecipientMatched,
     status
   });
 }

@@ -138,6 +138,24 @@ enum LeadEmailCampaignRecipientStatus {
   FAILED
 }
 
+enum MarketingEmailCampaignStatus {
+  DRAFT
+  READY
+  QUEUED
+  PROCESSING
+  COMPLETED
+  COMPLETED_WITH_ERRORS
+  FAILED
+}
+
+enum MarketingEmailRecipientStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+  UNSUBSCRIBED
+}
+
 enum WhatsAppMessageType {
   PURCHASE_APPROVED
   CART_ABANDONMENT
@@ -291,12 +309,13 @@ model Organization {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  adminUsers        AdminUser[]
-  companySettings   CompanySettings[]
-  events            Event[]
-  hotels            Hotel[]
-  homeListEntries   HomeListEntry[]
-  paymentSplitRules PaymentSplitRule[]
+  adminUsers              AdminUser[]
+  companySettings         CompanySettings[]
+  events                  Event[]
+  hotels                  Hotel[]
+  homeListEntries         HomeListEntry[]
+  marketingEmailCampaigns MarketingEmailCampaign[]
+  paymentSplitRules       PaymentSplitRule[]
 
   @@index([isActive])
 }
@@ -660,6 +679,93 @@ model LeadCaptureAttempt {
 
   @@index([eventId, ipHash, createdAt])
   @@index([createdAt])
+}
+
+model MarketingEmailCampaign {
+  id                  String                       @id @default(cuid())
+  organizationId      String
+  createdById         String?
+  name                String
+  subject             String?
+  body                String?
+  imageUrl            String?
+  ctaLabel            String?
+  destinationUrl      String?
+  status              MarketingEmailCampaignStatus @default(DRAFT)
+  importTotalRows     Int                          @default(0)
+  importRecognized    Int                          @default(0)
+  importIgnored       Int                          @default(0)
+  importInvalidEmails Int                          @default(0)
+  importDuplicates    Int                          @default(0)
+  totalCount          Int                          @default(0)
+  sentCount           Int                          @default(0)
+  failedCount         Int                          @default(0)
+  processingStartedAt DateTime?
+  completedAt         DateTime?
+  lastError           String?
+  importedAt          DateTime?
+  createdAt           DateTime                     @default(now())
+  updatedAt           DateTime                     @updatedAt
+
+  organization Organization                  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  recipients   MarketingEmailRecipient[]
+  clicks       MarketingEmailCampaignClick[]
+  opens        MarketingEmailCampaignOpen[]
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, status, createdAt])
+}
+
+model MarketingEmailRecipient {
+  id                String                        @id @default(cuid())
+  campaignId        String
+  name              String
+  email             String
+  phone             String?
+  status            MarketingEmailRecipientStatus @default(PENDING)
+  errorMessage      String?
+  providerMessageId String?
+  sentAt            DateTime?
+  emailOptOutAt     DateTime?
+  createdAt         DateTime                      @default(now())
+  updatedAt         DateTime                      @updatedAt
+
+  campaign MarketingEmailCampaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  clicks   MarketingEmailCampaignClick[]
+  opens    MarketingEmailCampaignOpen[]
+
+  @@unique([campaignId, email])
+  @@index([campaignId, status, createdAt])
+  @@index([email])
+  @@index([providerMessageId])
+}
+
+model MarketingEmailCampaignClick {
+  id          String   @id @default(cuid())
+  campaignId  String
+  recipientId String
+  createdAt   DateTime @default(now())
+
+  campaign  MarketingEmailCampaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  recipient MarketingEmailRecipient @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, recipientId])
+  @@index([campaignId, createdAt])
+  @@index([recipientId])
+}
+
+model MarketingEmailCampaignOpen {
+  id          String   @id @default(cuid())
+  campaignId  String
+  recipientId String
+  createdAt   DateTime @default(now())
+
+  campaign  MarketingEmailCampaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  recipient MarketingEmailRecipient @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, recipientId])
+  @@index([campaignId, createdAt])
+  @@index([recipientId])
 }
 
 model PlatformLead {
