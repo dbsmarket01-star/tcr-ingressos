@@ -56,7 +56,7 @@ function marketingEmailUrl(campaignId?: string, params?: Record<string, string |
 
   const query = search.toString();
 
-  return `/admin/marketing/email${query ? `?${query}` : ""}`;
+  return `/admin/marketing/email/campaigns${query ? `?${query}` : ""}`;
 }
 
 async function requireOwnedCampaign(campaignId: string, organizationId: string) {
