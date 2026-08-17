@@ -31,11 +31,59 @@ function parseEndDate(value?: string) {
 }
 
 function parseStatus(value?: string) {
-  if (!value || !Object.values(OrderStatus).includes(value as OrderStatus)) {
+  const normalizedValue = value?.trim().toUpperCase();
+
+  if (!normalizedValue || normalizedValue === "ALL" || !Object.values(OrderStatus).includes(normalizedValue as OrderStatus)) {
     return undefined;
   }
 
-  return value as OrderStatus;
+  return normalizedValue as OrderStatus;
+}
+
+function buildDateRangeWhere(startDate?: Date, endDate?: Date) {
+  return {
+    ...(startDate ? { gte: startDate } : {}),
+    ...(endDate ? { lte: endDate } : {})
+  };
+}
+
+function buildOrderDateWhere(
+  startDate: Date | undefined,
+  endDate: Date | undefined,
+  status: OrderStatus | undefined
+): Prisma.OrderWhereInput {
+  if (!startDate && !endDate) {
+    return {};
+  }
+
+  const dateRange = buildDateRangeWhere(startDate, endDate);
+
+  if (status === OrderStatus.PAID) {
+    return {
+      paidAt: dateRange
+    };
+  }
+
+  if (status) {
+    return {
+      createdAt: dateRange
+    };
+  }
+
+  return {
+    OR: [
+      {
+        status: OrderStatus.PAID,
+        paidAt: dateRange
+      },
+      {
+        status: {
+          not: OrderStatus.PAID
+        },
+        createdAt: dateRange
+      }
+    ]
+  };
 }
 
 function buildOrderEventWhere(organizationId: string, allowedEventIds?: EventScope): Prisma.EventWhereInput {
@@ -57,6 +105,21 @@ function buildOrderWhere(
   const endDate = parseEndDate(filters.endDate);
   const status = parseStatus(filters.status);
   const search = filters.search?.trim();
+  const dateWhere = buildOrderDateWhere(startDate, endDate, status);
+  const searchWhere: Prisma.OrderWhereInput = search
+    ? {
+        OR: [
+          { code: { contains: search, mode: "insensitive" } },
+          { couponCode: { contains: search, mode: "insensitive" } },
+          { customer: { name: { contains: search, mode: "insensitive" } } },
+          { customer: { email: { contains: search, mode: "insensitive" } } },
+          { customer: { phone: { contains: search, mode: "insensitive" } } },
+          { customer: { document: { contains: search, mode: "insensitive" } } },
+          { churchName: { contains: search, mode: "insensitive" } },
+          { event: { title: { contains: search, mode: "insensitive" } } }
+        ]
+      }
+    : {};
   const eventWhere: Prisma.EventWhereInput = {
     ...buildOrderEventWhere(organizationId, allowedEventIds),
     ...(filters.city ? { city: filters.city } : {}),
@@ -67,28 +130,9 @@ function buildOrderWhere(
     event: eventWhere,
     ...(filters.eventId ? { eventId: filters.eventId } : {}),
     ...(status ? { status } : {}),
-    ...(startDate || endDate
-      ? {
-          createdAt: {
-            ...(startDate ? { gte: startDate } : {}),
-            ...(endDate ? { lte: endDate } : {})
-          }
-        }
-      : {}),
-    ...(search
-      ? {
-          OR: [
-            { code: { contains: search, mode: "insensitive" } },
-            { couponCode: { contains: search, mode: "insensitive" } },
-            { customer: { name: { contains: search, mode: "insensitive" } } },
-            { customer: { email: { contains: search, mode: "insensitive" } } },
-            { customer: { phone: { contains: search, mode: "insensitive" } } },
-            { customer: { document: { contains: search, mode: "insensitive" } } },
-            { churchName: { contains: search, mode: "insensitive" } },
-            { event: { title: { contains: search, mode: "insensitive" } } }
-          ]
-        }
-      : {})
+    ...((startDate || endDate) && search ? { AND: [dateWhere, searchWhere] } : {}),
+    ...((startDate || endDate) && !search ? dateWhere : {}),
+    ...(search && !startDate && !endDate ? searchWhere : {})
   };
 }
 

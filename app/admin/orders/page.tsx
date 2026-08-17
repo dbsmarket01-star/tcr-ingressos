@@ -52,6 +52,79 @@ type OrdersPageProps = {
   searchParams?: Promise<OrderSearchParams>;
 };
 
+type DateRangePreset = {
+  label: string;
+  startDate: string;
+  endDate: string;
+};
+
+function getSaoPauloDateParts(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(date);
+
+  return {
+    year: Number(parts.find((part) => part.type === "year")?.value),
+    month: Number(parts.find((part) => part.type === "month")?.value),
+    day: Number(parts.find((part) => part.type === "day")?.value)
+  };
+}
+
+function formatDateInput(year: number, month: number, day: number) {
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function getDateRangePresets(): DateRangePreset[] {
+  const now = new Date();
+  const today = getSaoPauloDateParts(now);
+  const yesterday = getSaoPauloDateParts(new Date(now.getTime() - 24 * 60 * 60 * 1000));
+  const previousMonth = today.month === 1 ? 12 : today.month - 1;
+  const previousMonthYear = today.month === 1 ? today.year - 1 : today.year;
+  const previousMonthLastDay = new Date(Date.UTC(previousMonthYear, previousMonth, 0)).getUTCDate();
+  const todayValue = formatDateInput(today.year, today.month, today.day);
+
+  return [
+    {
+      label: "Hoje",
+      startDate: todayValue,
+      endDate: todayValue
+    },
+    {
+      label: "Ontem",
+      startDate: formatDateInput(yesterday.year, yesterday.month, yesterday.day),
+      endDate: formatDateInput(yesterday.year, yesterday.month, yesterday.day)
+    },
+    {
+      label: "Este mês",
+      startDate: formatDateInput(today.year, today.month, 1),
+      endDate: todayValue
+    },
+    {
+      label: "Mês passado",
+      startDate: formatDateInput(previousMonthYear, previousMonth, 1),
+      endDate: formatDateInput(previousMonthYear, previousMonth, previousMonthLastDay)
+    }
+  ];
+}
+
+function buildOrdersPresetHref(params: OrderSearchParams, preset: DateRangePreset) {
+  const nextParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value && key !== "startDate" && key !== "endDate") {
+      nextParams.set(key, value);
+    }
+  });
+
+  nextParams.set("startDate", preset.startDate);
+  nextParams.set("endDate", preset.endDate);
+
+  return `/admin/orders?${nextParams.toString()}`;
+}
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (value && typeof value === "object" && !Array.isArray(value)) {
     return value as Record<string, unknown>;
@@ -318,6 +391,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const admin = await requirePermission("ORDERS");
   const params = searchParams ? await searchParams : {};
   const allowedEventIds = getAdminAllowedEventIds(admin);
+  const dateRangePresets = getDateRangePresets();
   const [{ orders, totalCount }, events, summary] = await Promise.all([
     listAdminOrders(params, admin.organizationId, allowedEventIds),
     listOrderFilterEventsForOrganization(admin.organizationId, allowedEventIds),
@@ -439,6 +513,22 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                   <input type="date" name="startDate" defaultValue={params.startDate || ""} aria-label="Data inicial" />
                   <input type="date" name="endDate" defaultValue={params.endDate || ""} aria-label="Data final" />
                 </div>
+                <div className="ordersQuickDateFilters" aria-label="Atalhos de período">
+                  {dateRangePresets.map((preset) => {
+                    const isActive = params.startDate === preset.startDate && params.endDate === preset.endDate;
+
+                    return (
+                      <Link
+                        aria-current={isActive ? "page" : undefined}
+                        className={`ordersQuickDateButton ${isActive ? "isActive" : ""}`}
+                        href={buildOrdersPresetHref(params, preset)}
+                        key={preset.label}
+                      >
+                        {preset.label}
+                      </Link>
+                    );
+                  })}
+                </div>
               </label>
               <label className="field">
                 <span>Evento</span>
@@ -525,7 +615,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                     <th>Evento</th>
                     <th>Ingressos</th>
                     <th>Cidade</th>
-                    <th>Data do pedido</th>
+                    <th>Data de referência</th>
                     <th>Valor vendido</th>
                     <th>Taxas</th>
                     <th>Status</th>
@@ -536,6 +626,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                   {orders.map((order) => {
                     const payment = paymentMethodLabel(order.payment);
                     const breakdown = getOrderFinancialBreakdown(order);
+                    const referenceDate = order.status === "PAID" && order.paidAt ? order.paidAt : order.createdAt;
 
                     return (
                       <tr key={order.id}>
@@ -566,7 +657,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                           <strong>{order.event.city}</strong>
                           <span>{order.event.state}</span>
                         </td>
-                        <td className="ordersDateCell">{formatDateTime(order.createdAt)}</td>
+                        <td className="ordersDateCell">{formatDateTime(referenceDate)}</td>
                         <td className="ordersValueCell">
                           <strong>{formatCurrency(breakdown.ticketSubtotalInCents)}</strong>
                           <span>Somente ingressos</span>
