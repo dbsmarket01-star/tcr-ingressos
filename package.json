@@ -5,10 +5,11 @@
   "scripts": {
     "postinstall": "prisma generate",
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "npm run test:payment-safety && prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
+    "test:payment-safety": "node ./node_modules/vitest/vitest.mjs run tests/payments/payment-fee-calculator.test.ts tests/payments/asaas-split-calculation.test.ts tests/payments/asaas-pix-provider.test.ts tests/payments/payment-pricing-guards.test.ts",
     "test:watch": "vitest",
     "dns:apple-local": "tsx scripts/apple_local_dns_server.ts",
     "db:generate": "prisma generate",

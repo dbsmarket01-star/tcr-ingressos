@@ -7,14 +7,17 @@ import {
 } from "@/features/coupons/coupon.service";
 import { createPublicOrderUrl, sendOrderExpiredEmail } from "@/features/email/email.service";
 import { updateHomeListStatusForOrder } from "@/features/hospitality/home-list.service";
+import { getHotelRoomsPerUnit } from "@/features/hospitality/hotel-lot-rules";
 import { calculatePixDiscountInCents, calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import { releaseSeatReservationsForOrder, releaseSoldSeatsForOrder, reserveSeatsForOrderItem } from "@/features/seat-maps/seat-map.service";
 import { getOrderReservationMinutes } from "@/features/settings/company-settings.service";
+import { calculateAsaasSplitsForOrder, sumAsaasSplitsInCents } from "@/features/payments/asaas-split.service";
 import { sendCartAbandonmentWhatsApp } from "@/features/whatsapp/whatsapp.service";
 import { isValidCpf, onlyDocumentDigits } from "@/lib/document-validation";
 import type { CheckoutOrderInput } from "./order.schema";
 
 const FALLBACK_ORDER_RESERVATION_MINUTES = 120;
+const DEFAULT_CART_ABANDONMENT_DELAY_SECONDS = 10 * 60;
 type CheckoutHotelGuestInput = NonNullable<CheckoutOrderInput["hotelGuests"]>[number];
 
 export function createOrderCode() {
@@ -28,6 +31,42 @@ function compactText(value?: string | null) {
 
 function onlyDigits(value?: string | null) {
   return String(value ?? "").replace(/\D/g, "");
+}
+
+function getCartAbandonmentDelayMs() {
+  const rawValue =
+    process.env.WHATSAPP_CART_ABANDONMENT_FIRST_DELAY_SECONDS ||
+    process.env.CART_ABANDONMENT_FIRST_DELAY_SECONDS;
+  const seconds = Number(rawValue);
+
+  if (!rawValue || !Number.isFinite(seconds) || seconds <= 0) {
+    return DEFAULT_CART_ABANDONMENT_DELAY_SECONDS * 1000;
+  }
+
+  return Math.max(30, Math.floor(seconds)) * 1000;
+}
+
+function formatCartAbandonmentSummary(
+  items: Array<{
+    quantity: number;
+    lot: {
+      name: string;
+    };
+    lotOption?: {
+      label: string;
+    } | null;
+  }>
+) {
+  const totalTickets = items.reduce((sum, item) => sum + item.quantity, 0);
+  const firstItem = items[0];
+  const quantityLabel = `${String(totalTickets).padStart(2, "0")} ${totalTickets === 1 ? "ingresso" : "ingressos"}`;
+
+  if (!firstItem) {
+    return quantityLabel;
+  }
+
+  const sector = firstItem.lotOption?.label || firstItem.lot.name;
+  return `${quantityLabel} no setor ${sector}`;
 }
 
 function compactState(value?: string | null) {
@@ -201,6 +240,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
         },
         select: {
           id: true,
+          organizationId: true,
           couponsEnabled: true
         }
       });
@@ -389,7 +429,9 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
 
           const guestsForLot = hotelGuestsByLot.get(lot.id);
 
-          for (let guestIndex = 1; guestIndex <= item.quantity; guestIndex += 1) {
+          const hotelRoomCount = item.quantity * getHotelRoomsPerUnit(lot);
+
+          for (let guestIndex = 1; guestIndex <= hotelRoomCount; guestIndex += 1) {
             const guest = guestsForLot?.get(guestIndex);
             const context = `${lot.name} - hospedagem ${guestIndex}`;
 
@@ -411,8 +453,9 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
       }
 
       const subtotalInCents = orderItems.reduce((sum, item) => sum + item.totalInCents, 0);
-      const serviceFeeInCents = orderItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
-      const amountBeforeDiscountInCents = calculateCouponEligibleAmountInCents(subtotalInCents, serviceFeeInCents);
+      let serviceFeeInCents = orderItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
+      const configuredServiceFeeInCents = serviceFeeInCents;
+      const couponEligibleAmountInCents = calculateCouponEligibleAmountInCents(subtotalInCents, 0);
       if (input.couponCode && !event.couponsEnabled) {
         throw new Error("Este evento não aceita cupom de desconto.");
       }
@@ -420,20 +463,37 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
         ? await getValidCouponForEvent(tx, event.id, input.couponCode)
         : null;
       const discountInCents = coupon
-        ? calculateCouponDiscountInCents(coupon, amountBeforeDiscountInCents, orderItems)
+        ? calculateCouponDiscountInCents(coupon, couponEligibleAmountInCents, orderItems)
         : 0;
+      const [splitRules, feeSettings] = await Promise.all([
+        tx.paymentSplitRule.findMany({
+          where: { organizationId: event.organizationId, isActive: true },
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
+        }),
+        tx.companySettings.findUnique({
+          where: { organizationId: event.organizationId },
+          select: { pixTransactionFeeInCents: true }
+        })
+      ]);
+      const checkoutSplits = calculateAsaasSplitsForOrder(orderItems, splitRules, { discountInCents });
+      const fixedOrderFeeInCents = feeSettings?.pixTransactionFeeInCents ?? 200;
+      serviceFeeInCents = Math.max(configuredServiceFeeInCents, sumAsaasSplitsInCents(checkoutSplits)) + fixedOrderFeeInCents;
+      const originalItemServiceFeeInCents = orderItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
+      if (orderItems[0]) {
+        orderItems[0].serviceFeeInCents += serviceFeeInCents - originalItemServiceFeeInCents;
+      }
       const pixDiscountInCents = orderItems.reduce(
         (sum, item) =>
           sum +
           calculatePixDiscountInCents(
-            item.totalInCents + item.serviceFeeInCents,
+            item.totalInCents,
             item.quantity,
             item.pixDiscountPercentBps,
             item.pixDiscountFixedInCents
           ),
         0
       );
-      const totalInCents = Math.max(amountBeforeDiscountInCents - discountInCents, 0);
+      const totalInCents = Math.max(subtotalInCents + serviceFeeInCents - discountInCents, 0);
       const expiresAt = new Date(Date.now() + reservationMinutes * 60 * 1000);
 
       const order = await tx.order.create({
@@ -719,15 +779,16 @@ export async function sendCartAbandonmentReminders(options?: {
 }) {
   const now = options?.now ?? new Date();
   const limit = Math.min(Math.max(options?.limit ?? 100, 1), 500);
-  const minExpiresAt = new Date(now.getTime() + 5 * 60 * 1000);
-  const maxExpiresAt = new Date(now.getTime() + 15 * 60 * 1000);
+  const minimumCreatedAt = new Date(now.getTime() - getCartAbandonmentDelayMs());
   const orders = await prisma.order.findMany({
     where: {
       status: OrderStatus.PENDING_PAYMENT,
       cartAbandonmentSentAt: null,
+      createdAt: {
+        lte: minimumCreatedAt
+      },
       expiresAt: {
-        gte: minExpiresAt,
-        lte: maxExpiresAt
+        gt: now
       },
       ...(options?.organizationId
         ? {
@@ -741,10 +802,25 @@ export async function sendCartAbandonmentReminders(options?: {
         : {})
     },
     orderBy: {
-      expiresAt: "asc"
+      createdAt: "asc"
     },
     take: limit,
     include: {
+      items: {
+        select: {
+          quantity: true,
+          lot: {
+            select: {
+              name: true
+            }
+          },
+          lotOption: {
+            select: {
+              label: true
+            }
+          }
+        }
+      },
       customer: {
         select: {
           name: true,
@@ -771,6 +847,12 @@ export async function sendCartAbandonmentReminders(options?: {
   let skipped = 0;
   let failed = 0;
 
+  function shouldStopRetryingCartAbandonment(error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+
+    return message.includes("API access blocked") || message.includes("WhatsApp Business API nao configurada");
+  }
+
   for (const order of orders) {
     if (!order.customer.phone || !order.expiresAt) {
       skipped += 1;
@@ -778,18 +860,7 @@ export async function sendCartAbandonmentReminders(options?: {
     }
 
     try {
-      await sendCartAbandonmentWhatsApp({
-        buyerName: order.customer.name,
-        buyerPhone: order.customer.phone,
-        eventTitle: order.event.title,
-        orderUrl: createPublicOrderUrl(order.code, order.event.organization),
-        expiresAt: order.expiresAt,
-        organizationId: order.event.organization?.id,
-        eventId: order.eventId,
-        orderId: order.id
-      });
-
-      await prisma.order.updateMany({
+      const claimed = await prisma.order.updateMany({
         where: {
           id: order.id,
           cartAbandonmentSentAt: null
@@ -799,9 +870,39 @@ export async function sendCartAbandonmentReminders(options?: {
         }
       });
 
+      if (claimed.count === 0) {
+        skipped += 1;
+        continue;
+      }
+
+      await sendCartAbandonmentWhatsApp({
+        buyerName: order.customer.name,
+        buyerPhone: order.customer.phone,
+        eventTitle: order.event.title,
+        cartSummary: formatCartAbandonmentSummary(order.items),
+        orderCode: order.code,
+        orderUrl: createPublicOrderUrl(order.code, order.event.organization),
+        expiresAt: order.expiresAt,
+        organizationId: order.event.organization?.id,
+        eventId: order.eventId,
+        orderId: order.id
+      });
+
       sent += 1;
     } catch (error) {
       failed += 1;
+
+      if (!shouldStopRetryingCartAbandonment(error)) {
+        await prisma.order.updateMany({
+          where: {
+            id: order.id
+          },
+          data: {
+            cartAbandonmentSentAt: null
+          }
+        });
+      }
+
       console.error("[WhatsApp] Falha ao enviar abandono de carrinho", {
         orderId: order.id,
         orderCode: order.code,

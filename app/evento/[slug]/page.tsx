@@ -11,7 +11,10 @@ import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrganization } from "@/features/events/event.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
+import { listPaymentSplitRules } from "@/features/settings/split-settings.service";
+import { calculateAsaasSplitsForOrder, sumAsaasSplitsInCents } from "@/features/payments/asaas-split.service";
 import { getPublicSeatMapForEvent } from "@/features/seat-maps/seat-map.service";
+import { shouldHideWhenSoldOut } from "@/features/hospitality/hotel-lot-rules";
 import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import { buildEventSeo } from "@/features/seo/event-seo";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
@@ -232,9 +235,10 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const { slug } = await params;
   const query = searchParams ? await searchParams : {};
   const organizationContext = await getCurrentOrganizationContext();
-  const [event, companySettings] = await Promise.all([
+  const [event, companySettings, splitRules] = await Promise.all([
     getCachedPublicEventBySlugInOrganization(slug, organizationContext.organization.id),
-    getCompanySettingsByOrganizationId(organizationContext.organization.id)
+    getCompanySettingsByOrganizationId(organizationContext.organization.id),
+    listPaymentSplitRules(organizationContext.organization.id)
   ]);
 
   if (!event) {
@@ -247,6 +251,13 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const visibleLots = event.lots.filter((lot) => {
     const startsOk = !lot.salesStartsAt || lot.salesStartsAt <= now;
     const endsOk = !lot.salesEndsAt || lot.salesEndsAt >= now;
+    const hasStock = getAvailableLotQuantity(lot) > 0;
+    const isSoldOut = lot.saleBadge === "SOLD_OUT" || lot.status === "SOLD_OUT" || !hasStock;
+
+    if (shouldHideWhenSoldOut(lot) && isSoldOut) {
+      return false;
+    }
+
     return startsOk && endsOk;
   });
   const purchasableLots = visibleLots.filter((lot) => {
@@ -271,7 +282,14 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const checkoutEstimatorLots = purchasableLots.map((lot) => ({
     id: lot.id,
     name: lot.name,
-    totalWithFeeInCents: lot.priceInCents + calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps)
+    totalWithFeeInCents:
+      lot.priceInCents +
+      Math.max(
+        calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps),
+        sumAsaasSplitsInCents(
+          calculateAsaasSplitsForOrder([{ quantity: 1, totalInCents: lot.priceInCents }], splitRules)
+        )
+      )
   }));
   const publicSocialSettings = companySettings as typeof companySettings & {
     instagramUrl?: string | null;
@@ -541,7 +559,12 @@ export default async function EventPage({ params, searchParams }: EventPageProps
               </div>
               )}
 
-              {!seatMapLayout && purchasableLots.length > 0 ? <CheckoutEstimator lots={checkoutEstimatorLots} /> : null}
+              {!seatMapLayout && purchasableLots.length > 0 ? (
+                <CheckoutEstimator
+                  fixedOrderFeeInCents={companySettings.pixTransactionFeeInCents}
+                  lots={checkoutEstimatorLots}
+                />
+              ) : null}
 
               {purchasableLots.length > 0 ? (
                 <>

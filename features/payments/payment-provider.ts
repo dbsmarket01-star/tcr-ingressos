@@ -103,6 +103,7 @@ export type AsaasSplit = {
   walletId: string;
   fixedValue?: number;
   percentualValue?: number;
+  totalFixedValue?: number;
 };
 
 function decimalEnv(value?: string) {

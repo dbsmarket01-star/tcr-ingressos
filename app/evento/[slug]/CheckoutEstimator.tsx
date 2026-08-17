@@ -9,6 +9,7 @@ type CheckoutEstimatorLot = {
 };
 
 type CheckoutEstimatorProps = {
+  fixedOrderFeeInCents: number;
   lots: CheckoutEstimatorLot[];
 };
 
@@ -19,7 +20,7 @@ function formatCurrency(valueInCents: number) {
   }).format(valueInCents / 100);
 }
 
-export function CheckoutEstimator({ lots }: CheckoutEstimatorProps) {
+export function CheckoutEstimator({ fixedOrderFeeInCents, lots }: CheckoutEstimatorProps) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const lotMap = useMemo(() => new Map(lots.map((lot) => [lot.id, lot])), [lots]);
 
@@ -54,10 +55,13 @@ export function CheckoutEstimator({ lots }: CheckoutEstimatorProps) {
   }, [lots]);
 
   const selectedQuantity = Object.values(quantities).reduce((sum, quantity) => sum + quantity, 0);
-  const estimatedTotalInCents = Object.entries(quantities).reduce((sum, [lotId, quantity]) => {
+  const selectedTicketsTotalInCents = Object.entries(quantities).reduce((sum, [lotId, quantity]) => {
     const lot = lotMap.get(lotId);
     return sum + (lot?.totalWithFeeInCents ?? 0) * quantity;
   }, 0);
+  const estimatedTotalInCents = selectedQuantity > 0
+    ? selectedTicketsTotalInCents + Math.max(fixedOrderFeeInCents, 0)
+    : 0;
   const selectedLots = Object.entries(quantities)
     .filter(([, quantity]) => quantity > 0)
     .map(([lotId, quantity]) => {

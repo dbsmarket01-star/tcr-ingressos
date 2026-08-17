@@ -209,8 +209,22 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             defaultValue={percentFromBps(companySettings.platformFeeBps)}
             required
           />
-          <small>Referência administrativa. As taxas efetivas continuam configuradas por lote/ingresso.</small>
+          <small>Padrão aplicado automaticamente aos novos ingressos. Pode ser personalizado por ingresso.</small>
         </label>
+        <div className="grid threeColumns">
+          <label className="field">
+            <span>Custo Pix por transação (R$)</span>
+            <input name="pixTransactionFee" type="number" min="0" step="0.01" defaultValue={(companySettings.pixTransactionFeeInCents / 100).toFixed(2)} required />
+          </label>
+          <label className="field">
+            <span>Cartão à vista (%)</span>
+            <input name="cardBaseFeePercent" type="number" min="0" step="0.01" defaultValue={(companySettings.cardBaseFeeBps / 100).toFixed(2)} required />
+          </label>
+          <label className="field">
+            <span>Adicional por parcela (%)</span>
+            <input name="cardAdditionalInstallmentFeePercent" type="number" min="0" step="0.01" defaultValue={(companySettings.cardAdditionalInstallmentFeeBps / 100).toFixed(2)} required />
+          </label>
+        </div>
         <div className="grid twoColumns">
           <label className="field">
             <span>Reserva interna do pedido (minutos)</span>

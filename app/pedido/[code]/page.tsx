@@ -17,11 +17,18 @@ import {
 } from "@/features/payments/payment.actions";
 import {
   MIN_CARD_INSTALLMENT_AMOUNT_IN_CENTS,
-  calculateCardInterestInCents,
   capDiscountToPayableAmount
 } from "@/features/pricing/pricing";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { getCreditCardInstallmentLimitForEvent } from "@/lib/payment-installments";
+import { getCompanySettings } from "@/features/settings/company-settings.service";
+import { listPaymentSplitRules } from "@/features/settings/split-settings.service";
+import { calculateAsaasSplitsForOrder, sumAsaasSplitsInCents } from "@/features/payments/asaas-split.service";
+import {
+  calculateCardChargeInCents,
+  calculateNetTicketAmountInCents,
+  calculatePixChargeInCents
+} from "@/features/payments/payment-fee-calculator";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
@@ -72,6 +79,11 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
     notFound();
   }
 
+  const [feeSettings, splitRules] = await Promise.all([
+    getCompanySettings(order.event.organizationId),
+    listPaymentSplitRules(order.event.organizationId)
+  ]);
+
   const paymentError = typeof query.paymentError === "string" ? query.paymentError : null;
   const paymentErrorMethod = query.paymentMethod === "pix" ? "pix" : "card";
   const ticketEmailStatus = query.ticketEmail === "sent" || query.ticketEmail === "error" ? query.ticketEmail : null;
@@ -81,26 +93,34 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
   const isAsaasCheckout =
     process.env.PAYMENT_PROVIDER === "ASAAS" || order.payment?.provider === "ASAAS";
   const baseTotalInCents = order.subtotalInCents + order.serviceFeeInCents - order.discountInCents;
-  const pixDiscountInCents = capDiscountToPayableAmount(baseTotalInCents, order.pixDiscountInCents);
-  const pixTotalInCents = Math.max(baseTotalInCents - pixDiscountInCents, 0);
+  const pixDiscountInCents = capDiscountToPayableAmount(Math.max(order.subtotalInCents - order.discountInCents, 0), order.pixDiscountInCents);
+  const pixTicketDiscountInCents = order.discountInCents + pixDiscountInCents;
+  const pixSplits = calculateAsaasSplitsForOrder(order.items, splitRules, { discountInCents: pixTicketDiscountInCents });
+  const pixNetTicketInCents = calculateNetTicketAmountInCents(order.subtotalInCents, pixTicketDiscountInCents);
+  const pixSplitTotalInCents = sumAsaasSplitsInCents(pixSplits);
+  const configuredPixFeeWithoutFixedInCents = Math.max(
+    order.serviceFeeInCents - feeSettings.pixTransactionFeeInCents,
+    pixSplitTotalInCents
+  );
+  const pixTotalInCents = calculatePixChargeInCents(pixNetTicketInCents, configuredPixFeeWithoutFixedInCents, feeSettings);
   const maxCreditCardInstallments = getCreditCardInstallmentLimitForEvent(order.event);
   const hasPixPayload = Boolean(order.payment?.pixQrCodePayload);
   const shouldOpenCreditCard = Boolean(paymentError && paymentErrorMethod === "card");
   const shouldOpenPix = Boolean(hasPixPayload || paymentErrorMethod === "pix" || !paymentError);
   const installmentOptions = Array.from({ length: maxCreditCardInstallments }, (_, index) => index + 1)
     .map((installment) => {
-      const interestInCents = order.items.reduce(
-        (sum, item) =>
-          sum +
-          calculateCardInterestInCents(
-            item.totalInCents + item.serviceFeeInCents,
-            installment,
-            item.cardInterestBpsPerInstallment,
-            item.cardInterestStartsAtInstallment
-          ),
-        0
+      const cardSplits = calculateAsaasSplitsForOrder(order.items, splitRules, {
+        discountInCents: order.discountInCents,
+        installments: installment
+      });
+      const netTicketInCents = calculateNetTicketAmountInCents(order.subtotalInCents, order.discountInCents);
+      const splitTotalInCents = sumAsaasSplitsInCents(cardSplits);
+      const configuredCardFeeInCents = Math.max(
+        order.serviceFeeInCents - feeSettings.pixTransactionFeeInCents,
+        splitTotalInCents
       );
-      const totalWithInterestInCents = baseTotalInCents + interestInCents;
+      const totalWithInterestInCents = calculateCardChargeInCents(netTicketInCents, configuredCardFeeInCents, installment, feeSettings);
+      const interestInCents = Math.max(totalWithInterestInCents - netTicketInCents - configuredCardFeeInCents, 0);
 
       return {
         installment,
@@ -494,14 +514,12 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                             {installmentOptions.map((option) => (
                               <option key={option.installment} value={option.installment}>
                                 {option.installment}x de {formatCurrency(option.installmentValueInCents)}
-                                {option.interestInCents > 0
-                                  ? ` - + ${formatCurrency(option.interestInCents)} juros`
-                                  : " - sem juros"}
+                                {option.interestInCents > 0 ? " - juros" : " - sem juros"}
                               </option>
                             ))}
                           </select>
                           <small>
-                            Os juros aparecem apenas quando a parcela configurada para este ingresso exigir acréscimo.
+                            O valor de cada parcela já inclui os juros aplicáveis.
                           </small>
                         </label>
                       </div>

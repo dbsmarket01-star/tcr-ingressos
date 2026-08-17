@@ -8,11 +8,14 @@ import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { calculateCouponDiscountInCents, getValidCouponPreviewForEvent } from "@/features/coupons/coupon.service";
 import { getBuyerProfile } from "@/features/customer-auth/google-buyer.service";
 import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrganization } from "@/features/events/event.service";
+import { getHotelRoomsPerUnit } from "@/features/hospitality/hotel-lot-rules";
 import { createCheckoutOrderAction } from "@/features/orders/order.actions";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { allocateDiscountAcrossTotals, calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import { buildEventSeo } from "@/features/seo/event-seo";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
+import { listPaymentSplitRules } from "@/features/settings/split-settings.service";
+import { calculateAsaasSplitsForOrder, sumAsaasSplitsInCents } from "@/features/payments/asaas-split.service";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { getPublicEventBranding } from "@/lib/event-branding";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -127,10 +130,11 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
   const { slug } = await params;
   const query = searchParams ? await searchParams : {};
   const organizationContext = await getCurrentOrganizationContext();
-  const [event, buyerProfile, companySettings] = await Promise.all([
+  const [event, buyerProfile, companySettings, splitRules] = await Promise.all([
     getCachedPublicEventBySlugInOrganization(slug, organizationContext.organization.id),
     getBuyerProfile(),
-    getCompanySettingsByOrganizationId(organizationContext.organization.id)
+    getCompanySettingsByOrganizationId(organizationContext.organization.id),
+    listPaymentSplitRules(organizationContext.organization.id)
   ]);
 
   if (!event) {
@@ -196,8 +200,10 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
   const hotelItems = selectedItems.filter((item) => item.lot.hasHotel);
   const asksChurchName = selectedItems.some((item) => item.lot.churchQuestionEnabled);
   const ticketsTotalInCents = selectedItems.reduce((sum, item) => sum + item.subtotalInCents, 0);
-  const serviceFeeTotalInCents = selectedItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
-  const orderTotalInCents = selectedItems.reduce((sum, item) => sum + item.totalInCents, 0);
+  const initialCheckoutSplits = calculateAsaasSplitsForOrder(selectedItems.map((item) => ({ quantity: item.quantity, totalInCents: item.subtotalInCents })), splitRules);
+  const configuredServiceFeeTotalInCents = selectedItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
+  const serviceFeeTotalInCents = Math.max(configuredServiceFeeTotalInCents, sumAsaasSplitsInCents(initialCheckoutSplits)) + companySettings.pixTransactionFeeInCents;
+  const orderTotalInCents = ticketsTotalInCents + serviceFeeTotalInCents;
   const requestedCouponCode = firstParam(query.coupon)?.trim() || "";
   let couponPreview:
     | {
@@ -242,6 +248,16 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
     serviceFeeTotalInCents,
     couponPreview?.discountInCents ?? 0
   );
+  const discountedCheckoutSplits = calculateAsaasSplitsForOrder(
+    selectedItems.map((item) => ({ quantity: item.quantity, totalInCents: item.subtotalInCents })),
+    splitRules,
+    { discountInCents: couponPreview?.discountInCents ?? 0 }
+  );
+  const displayedServiceFeeInCents = Math.max(configuredServiceFeeTotalInCents, sumAsaasSplitsInCents(discountedCheckoutSplits)) + companySettings.pixTransactionFeeInCents;
+  if (couponPreview) {
+    couponPreview.totalInCents = Math.max(ticketsTotalInCents - couponPreview.discountInCents + displayedServiceFeeInCents, 0);
+  }
+  const displayedFeeAdjustmentInCents = displayedServiceFeeInCents - selectedItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
   const currentCheckoutPath = buildCheckoutPath(event.slug, query);
   const landingPage = firstParam(query.landingPage) || tracking.landingPage;
   const publicSocialSettings = companySettings as typeof companySettings & {
@@ -285,7 +301,9 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
               </div>
             </div>
             <div className="checkoutCartItems">
-              {selectedItems.map((item) => (
+              {selectedItems.map((item, index) => {
+                const displayedItemFeeInCents = item.serviceFeeInCents + (index === 0 ? displayedFeeAdjustmentInCents : 0);
+                return (
                 <div className="checkoutCartItem" key={item.lot.id}>
                   <div>
                     <strong>
@@ -295,15 +313,16 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                     {item.seatIds.length > 0 ? <span>{item.seatIds.length} lugar(es) numerado(s)</span> : null}
                     <span>
                       {formatCurrency(item.lot.priceInCents)}
-                      {item.serviceFeeInCents > 0 ? ` + ${formatCurrency(item.serviceFeeInCents)} taxa` : ""}
+                      {displayedItemFeeInCents > 0 ? ` + ${formatCurrency(displayedItemFeeInCents)} taxa` : ""}
                     </span>
                     {item.lot.admissionsPerUnit > 1 ? (
                       <small>{item.quantity * item.lot.admissionsPerUnit} QR Codes individuais inclusos</small>
                     ) : null}
                   </div>
-                  <strong>{formatCurrency(item.totalInCents)}</strong>
+                  <strong>{formatCurrency(item.subtotalInCents + displayedItemFeeInCents)}</strong>
                 </div>
-              ))}
+                );
+              })}
             </div>
             <div className="checkoutCartTotal">
               <div>
@@ -315,7 +334,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                   Taxas aplicadas
                   <FeeExplanationButton variant="icon" />
                 </span>
-                <strong>{formatCurrency(couponPreview ? checkoutDiscountAllocation.netServiceFeeInCents : serviceFeeTotalInCents)}</strong>
+                <strong>{formatCurrency(displayedServiceFeeInCents)}</strong>
               </div>
               <div>
                 <span>Total</span>
@@ -392,6 +411,13 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                     <input type="hidden" name={`lotOption_${item.lot.id}`} value={item.lotOption.id} />
                   ) : null}
                   <input type="hidden" name={`quantity_${item.lot.id}`} value={item.quantity} />
+                  {item.lot.hasHotel ? (
+                    <input
+                      type="hidden"
+                      name={`hotelRoomCount_${item.lot.id}`}
+                      value={item.quantity * getHotelRoomsPerUnit(item.lot)}
+                    />
+                  ) : null}
                   {item.seatIds.map((seatId) => (
                     <input key={seatId} type="hidden" name={`seatId_${item.lot.id}`} value={seatId} />
                   ))}
@@ -495,7 +521,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                           </span>
                         ) : null}
                       </div>
-                      {Array.from({ length: item.quantity }, (_, index) => {
+                      {Array.from({ length: item.quantity * getHotelRoomsPerUnit(item.lot) }, (_, index) => {
                         const guestIndex = index + 1;
                         const prefix = `hotelGuest_${item.lot.id}_${guestIndex}`;
 

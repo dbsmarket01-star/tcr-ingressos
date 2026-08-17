@@ -13,9 +13,14 @@ import {
 import { getCreditCardInstallmentLimitForEvent } from "@/lib/payment-installments";
 import { trackMetaPurchaseForPaidOrder } from "@/features/tracking/meta-conversions.service";
 import { createQrCodeToken, createTicketCode } from "@/features/tickets/ticket-code";
-import { sendPurchaseApprovedWhatsApp, type PurchaseApprovedWhatsAppInput } from "@/features/whatsapp/whatsapp.service";
 import { confirmSeatReservationsForOrder, releaseSeatReservationsForOrder, releaseSoldSeatsForOrder } from "@/features/seat-maps/seat-map.service";
-import { buildAsaasSplitsForOrder } from "./asaas-split.service";
+import { buildAsaasSplitsForOrder, sumAsaasSplitsInCents } from "./asaas-split.service";
+import { getCompanySettings } from "@/features/settings/company-settings.service";
+import {
+  calculateCardChargeInCents,
+  calculateNetTicketAmountInCents,
+  calculatePixChargeInCents
+} from "./payment-fee-calculator";
 import { getAsaasProvider, getPaymentProvider } from "./payment-provider";
 import type { PaymentOrganizationContext } from "./payment-organization-config";
 import type { CreditCardPaymentInput as CreditCardFormInput } from "./credit-card.schema";
@@ -48,8 +53,6 @@ type TicketEmailPayload = {
     url: string;
   }>;
 };
-
-type PurchaseApprovedWhatsAppPayload = PurchaseApprovedWhatsAppInput;
 
 const paymentOrganizationSelect = {
   id: true,
@@ -211,34 +214,6 @@ async function sendTicketsEmailSafely(orderId: string, email: TicketEmailPayload
   }
 }
 
-async function sendPurchaseApprovedWhatsAppSafely(orderId: string, payload: PurchaseApprovedWhatsAppPayload | null) {
-  if (!payload) {
-    return;
-  }
-
-  await sendPurchaseApprovedWhatsApp(payload)
-    .then(async () => {
-      await prisma.order.update({
-        where: {
-          id: orderId
-        },
-        data: {
-          purchaseApprovedWhatsAppSentAt: new Date()
-        }
-      });
-    })
-    .catch((error) => {
-      const normalizedError = normalizeEmailError(error);
-      const log = /WhatsApp Business API nao configurada/i.test(normalizedError) ? console.warn : console.error;
-
-      log("[WhatsApp] Falha ao enviar compra aprovada", {
-        orderId,
-        orderCode: payload.orderCode,
-        error: normalizedError
-      });
-    });
-}
-
 function mapAsaasPaymentStatus(status?: string) {
   const normalizedStatus = status?.trim().toUpperCase();
 
@@ -389,19 +364,32 @@ export async function startPaymentForOrder(orderCode: string) {
     throw new Error("Pedido nao encontrado.");
   }
 
-  const baseTotalInCents = order.subtotalInCents + order.serviceFeeInCents - order.discountInCents;
-  const pixDiscountInCents = capDiscountToPayableAmount(baseTotalInCents, order.pixDiscountInCents);
-  const pixTotalInCents = Math.max(baseTotalInCents - pixDiscountInCents, 0);
+  const discountableTicketTotalInCents = Math.max(order.subtotalInCents - order.discountInCents, 0);
+  const pixDiscountInCents = capDiscountToPayableAmount(discountableTicketTotalInCents, order.pixDiscountInCents);
+  const totalTicketDiscountInCents = order.discountInCents + pixDiscountInCents;
+  const split = await buildAsaasSplitsForOrder(order.items, order.event.organizationId, {
+    discountInCents: totalTicketDiscountInCents
+  });
+  const feeSettings = await getCompanySettings(order.event.organizationId);
+  const netTicketAmountInCents = calculateNetTicketAmountInCents(order.subtotalInCents, totalTicketDiscountInCents);
+  const splitTotalInCents = sumAsaasSplitsInCents(split);
+  const configuredPixFeeWithoutFixedInCents = Math.max(
+    order.serviceFeeInCents - feeSettings.pixTransactionFeeInCents,
+    splitTotalInCents
+  );
+  const pixTotalInCents = calculatePixChargeInCents(netTicketAmountInCents, configuredPixFeeWithoutFixedInCents, feeSettings);
+  const serviceFeeInCents = configuredPixFeeWithoutFixedInCents + feeSettings.pixTransactionFeeInCents;
 
   if (pixTotalInCents < MIN_PIX_PAYMENT_AMOUNT_IN_CENTS) {
     throw new Error("Não foi possível gerar Pix: o valor mínimo aceito é R$ 10,00. Revise o preço ou desconto Pix do ingresso.");
   }
 
-  if (order.cardInterestInCents > 0 || order.totalInCents !== pixTotalInCents || order.pixDiscountInCents !== pixDiscountInCents) {
+  if (order.cardInterestInCents > 0 || order.totalInCents !== pixTotalInCents || order.pixDiscountInCents !== pixDiscountInCents || order.serviceFeeInCents !== serviceFeeInCents) {
     order = await prisma.order.update({
       where: { id: order.id },
       data: {
         cardInterestInCents: 0,
+        serviceFeeInCents,
         pixDiscountInCents,
         totalInCents: pixTotalInCents,
         payment: {
@@ -456,7 +444,6 @@ export async function startPaymentForOrder(orderCode: string) {
   }
 
   const provider = getPaymentProvider(order.event.organization);
-  const split = await buildAsaasSplitsForOrder(order.items, order.event.organizationId);
   const intent = await provider.createPaymentIntent({
     orderId: order.id,
     orderCode: order.code,
@@ -880,19 +867,24 @@ export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & {
     throw new Error(`Este evento permite parcelamento em até ${maxInstallments}x.`);
   }
 
-  const baseTotalInCents = order.subtotalInCents + order.serviceFeeInCents - order.discountInCents;
-  const cardInterestInCents = order.items.reduce(
-    (sum, item) =>
-      sum +
-      calculateCardInterestInCents(
-        item.totalInCents + item.serviceFeeInCents,
-        input.installments,
-        item.cardInterestBpsPerInstallment,
-        item.cardInterestStartsAtInstallment
-      ),
-    0
+  const split = await buildAsaasSplitsForOrder(order.items, order.event.organizationId, {
+    discountInCents: order.discountInCents,
+    installments: input.installments
+  });
+  const feeSettings = await getCompanySettings(order.event.organizationId);
+  const netTicketAmountInCents = calculateNetTicketAmountInCents(order.subtotalInCents, order.discountInCents);
+  const splitTotalInCents = sumAsaasSplitsInCents(split);
+  const configuredCardFeeInCents = Math.max(
+    order.serviceFeeInCents - feeSettings.pixTransactionFeeInCents,
+    splitTotalInCents
   );
-  const cardTotalInCents = baseTotalInCents + cardInterestInCents;
+  const cardTotalInCents = calculateCardChargeInCents(
+    netTicketAmountInCents,
+    configuredCardFeeInCents,
+    input.installments,
+    feeSettings
+  );
+  const cardInterestInCents = Math.max(cardTotalInCents - netTicketAmountInCents - configuredCardFeeInCents, 0);
 
   if (cardTotalInCents < MIN_CARD_PAYMENT_AMOUNT_IN_CENTS) {
     throw new Error("Não foi possível cobrar cartão: o valor mínimo aceito é R$ 5,00. Revise o valor do ingresso.");
@@ -903,7 +895,6 @@ export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & {
   }
 
   const asaas = getAsaasProvider(order.event.organization);
-  const split = await buildAsaasSplitsForOrder(order.items, order.event.organizationId);
   const intent = await asaas.createCreditCardPayment({
     orderId: order.id,
     orderCode: order.code,
@@ -942,7 +933,9 @@ export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & {
       rawPayload: intent.rawPayload as Prisma.InputJsonValue,
       order: {
         update: {
+          serviceFeeInCents: configuredCardFeeInCents,
           cardInterestInCents,
+          pixDiscountInCents: 0,
           totalInCents: cardTotalInCents
         }
       }
@@ -1082,23 +1075,6 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         };
       };
 
-      const buildApprovedWhatsApp = () => {
-        if (payment.order.purchaseApprovedWhatsAppSentAt || !payment.order.customer.phone) {
-          return null;
-        }
-
-        return {
-          buyerName: payment.order.customer.name,
-          buyerPhone: payment.order.customer.phone,
-          eventTitle: payment.order.event.title,
-          orderCode: payment.order.code,
-          orderUrl: createPublicOrderUrl(payment.order.code, payment.order.event.organization),
-          organizationId: payment.order.event.organization?.id,
-          eventId: payment.order.eventId,
-          orderId: payment.order.id
-        };
-      };
-
       if (
         (payment.status === PaymentStatus.APPROVED || payment.order.status === OrderStatus.PAID) &&
         payload.status !== "REFUNDED"
@@ -1112,7 +1088,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           }))
         );
 
-        return { payment, orderId: payment.orderId, email: approvedTicketsEmail, whatsapp: buildApprovedWhatsApp() };
+        return { payment, orderId: payment.orderId, email: approvedTicketsEmail };
       }
 
       if (
@@ -1349,8 +1325,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         return {
           payment: updatedPayment,
           orderId: payment.orderId,
-          email: buildApprovedTicketsEmail(generatedTickets),
-          whatsapp: buildApprovedWhatsApp()
+          email: buildApprovedTicketsEmail(generatedTickets)
         };
       }
 
@@ -1505,7 +1480,6 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
   );
 
   await sendTicketsEmailSafely(result.orderId, result.email);
-  await sendPurchaseApprovedWhatsAppSafely(result.orderId, result.whatsapp);
 
   try {
     await trackMetaPurchaseForPaidOrder(result.orderId);

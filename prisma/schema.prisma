@@ -405,6 +405,9 @@ model CompanySettings {
   footerCancellationPolicyContent String?
   defaultCurrency                 String   @default("BRL")
   platformFeeBps                  Int      @default(1000)
+  pixTransactionFeeInCents       Int      @default(200)
+  cardBaseFeeBps                 Int      @default(400)
+  cardAdditionalInstallmentFeeBps Int     @default(300)
   orderReservationMinutes         Int      @default(120)
   cardPendingReservationMinutes   Int      @default(30)
   createdAt                       DateTime @default(now())

@@ -36,7 +36,7 @@ export function calculateCouponDiscountInCents(
     : items;
   const scopedEligibleAmountInCents =
     eligibleItems.length > 0
-      ? eligibleItems.reduce((sum, item) => sum + item.totalInCents + item.serviceFeeInCents, 0)
+      ? eligibleItems.reduce((sum, item) => sum + item.totalInCents, 0)
       : eligibleAmountInCents;
 
   if (eligibleAmountInCents <= 0) {
@@ -62,7 +62,7 @@ export function calculateCouponDiscountInCents(
         return sum;
       }
 
-      const currentItemTotalInCents = item.totalInCents + item.serviceFeeInCents;
+      const currentItemTotalInCents = item.totalInCents;
       const desiredItemTotalInCents = finalUnitPriceInCents * item.quantity;
       return sum + Math.max(currentItemTotalInCents - desiredItemTotalInCents, 0);
     }, 0);

@@ -142,6 +142,9 @@ export async function updateCompanySettingsAction(formData: FormData) {
     footerCancellationPolicyContent: readOptionalText(formData, "footerCancellationPolicyContent"),
     defaultCurrency: String(formData.get("defaultCurrency") ?? "BRL"),
     platformFeePercent: normalizeDecimal(formData.get("platformFeePercent")),
+    pixTransactionFee: normalizeDecimal(formData.get("pixTransactionFee")),
+    cardBaseFeePercent: normalizeDecimal(formData.get("cardBaseFeePercent")),
+    cardAdditionalInstallmentFeePercent: normalizeDecimal(formData.get("cardAdditionalInstallmentFeePercent")),
     orderReservationMinutes: String(formData.get("orderReservationMinutes") ?? "120"),
     cardPendingReservationMinutes: String(formData.get("cardPendingReservationMinutes") ?? "30")
   });

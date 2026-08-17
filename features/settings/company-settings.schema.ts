@@ -29,6 +29,9 @@ export const companySettingsSchema = z.object({
   footerCancellationPolicyContent: z.string().trim().max(10000).optional(),
   defaultCurrency: z.string().trim().min(3).max(3).default("BRL"),
   platformFeePercent: z.coerce.number().min(0).max(30).default(0),
+  pixTransactionFee: z.coerce.number().min(0).max(100).default(2),
+  cardBaseFeePercent: z.coerce.number().min(0).max(30).default(4),
+  cardAdditionalInstallmentFeePercent: z.coerce.number().min(0).max(30).default(3),
   orderReservationMinutes: z.coerce.number().int().min(15).max(1440).default(120),
   cardPendingReservationMinutes: z.coerce.number().int().min(5).max(240).default(30)
 });

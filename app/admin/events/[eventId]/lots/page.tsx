@@ -8,6 +8,7 @@ import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "
 import { getEventForManagement } from "@/features/events/event.service";
 import { listHotelsForOrganization } from "@/features/hospitality/hotel.service";
 import { createTicketLotAction, updateTicketLotStatusAction } from "@/features/lots/lot.actions";
+import { getCompanySettings } from "@/features/settings/company-settings.service";
 import { formatCurrency } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -88,9 +89,10 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
   const query = searchParams ? await searchParams : {};
   await requireEventAccess(eventId);
 
-  const [event, hotels] = await Promise.all([
+  const [event, hotels, companySettings] = await Promise.all([
     getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin)),
-    listHotelsForOrganization(admin.organizationId!)
+    listHotelsForOrganization(admin.organizationId!),
+    getCompanySettings(admin.organizationId!)
   ]);
 
   if (!event) {
@@ -386,7 +388,8 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
             <div className="grid twoColumns">
               <label className="field">
                 <span>Taxa sobre ingresso (%)</span>
-                <input name="serviceFeePercent" type="number" min="0" max="30" step="0.01" defaultValue="0" required />
+                <input name="serviceFeePercent" type="number" min="0" max="30" step="0.01" defaultValue={(companySettings.platformFeeBps / 100).toFixed(2)} required />
+                <small>Padrão da organização; pode ser personalizado para este ingresso.</small>
               </label>
               <label className="field">
                 <span>Desconto no Pix</span>
@@ -410,7 +413,7 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
             <div className="grid twoColumns">
               <label className="field">
                 <span>Juros do cartão por parcela (%)</span>
-                <input name="cardInterestPercentPerInstallment" type="number" min="0" max="10" step="0.01" defaultValue="0" required />
+                <input name="cardInterestPercentPerInstallment" type="number" min="0" max="10" step="0.01" defaultValue={(companySettings.cardAdditionalInstallmentFeeBps / 100).toFixed(2)} required />
               </label>
               <label className="field">
                 <span>Cobrar juros a partir da parcela</span>

@@ -5,14 +5,11 @@ import type { AsaasSplit } from "./payment-provider";
 
 type OrderItemForSplit = {
   quantity: number;
+  totalInCents: number;
 };
 
 function moneyFromCents(valueInCents: number) {
   return Number((valueInCents / 100).toFixed(2));
-}
-
-function percentageFromBps(valueInBps: number) {
-  return Number((valueInBps / 100).toFixed(2));
 }
 
 function fixedValueForRule(type: SplitRuleType, fixedValueInCents: number | null, ticketQuantity: number) {
@@ -33,9 +30,9 @@ function fixedValueForRule(type: SplitRuleType, fixedValueInCents: number | null
 
 export async function buildAsaasSplitsForOrder(
   items: OrderItemForSplit[],
-  organizationId?: string | null
+  organizationId?: string | null,
+  options?: { discountInCents?: number; installments?: number }
 ): Promise<AsaasSplit[] | undefined> {
-  const ticketQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
   const resolvedOrganizationId = organizationId || (await getDefaultOrganizationId());
   const rules = await prisma.paymentSplitRule.findMany({
     where: {
@@ -45,22 +42,50 @@ export async function buildAsaasSplitsForOrder(
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
   });
 
-  const splits = rules
-    .map((rule) => {
-      const fixedValue = fixedValueForRule(rule.type, rule.fixedValueInCents, ticketQuantity);
-      const percentualValue = rule.type === "PERCENTAGE" && rule.percentageBps ? percentageFromBps(rule.percentageBps) : undefined;
+  return calculateAsaasSplitsForOrder(items, rules, options);
+}
 
-      if (fixedValue === undefined && percentualValue === undefined) {
+export function calculateAsaasSplitsForOrder(
+  items: OrderItemForSplit[],
+  rules: Array<{
+    walletId: string;
+    type: SplitRuleType;
+    percentageBps: number | null;
+    fixedValueInCents: number | null;
+  }>,
+  options?: { discountInCents?: number; installments?: number }
+) {
+  const ticketQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+  const ticketSubtotalInCents = items.reduce((sum, item) => sum + item.totalInCents, 0);
+  const netTicketAmountInCents = Math.max(ticketSubtotalInCents - Math.max(options?.discountInCents ?? 0, 0), 0);
+  const splits = rules
+    .map((rule): AsaasSplit | null => {
+      const fixedValue = fixedValueForRule(rule.type, rule.fixedValueInCents, ticketQuantity);
+      const percentageFixedValueInCents =
+        rule.type === "PERCENTAGE" && rule.percentageBps
+          ? Math.round(netTicketAmountInCents * (rule.percentageBps / 10000))
+          : undefined;
+      const fixedValueInCents = fixedValue === undefined ? percentageFixedValueInCents : Math.round(fixedValue * 100);
+
+      if (fixedValueInCents === undefined || fixedValueInCents <= 0) {
         return null;
       }
 
       return {
         walletId: rule.walletId,
-        ...(fixedValue !== undefined ? { fixedValue } : {}),
-        ...(percentualValue !== undefined ? { percentualValue } : {})
+        ...(options?.installments && options.installments > 1
+          ? { totalFixedValue: moneyFromCents(fixedValueInCents) }
+          : { fixedValue: moneyFromCents(fixedValueInCents) })
       };
     })
     .filter((split): split is AsaasSplit => Boolean(split));
 
   return splits.length > 0 ? splits : undefined;
+}
+
+export function sumAsaasSplitsInCents(splits?: AsaasSplit[]) {
+  return (splits ?? []).reduce(
+    (sum, split) => sum + Math.round((split.totalFixedValue ?? split.fixedValue ?? 0) * 100),
+    0
+  );
 }

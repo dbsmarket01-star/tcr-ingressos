@@ -55,6 +55,9 @@ async function createCompanySettingsForOrganization(organizationId: string) {
       footerCancellationPolicyContent: null,
       defaultCurrency: "BRL",
       platformFeeBps: 0,
+      pixTransactionFeeInCents: 200,
+      cardBaseFeeBps: 400,
+      cardAdditionalInstallmentFeeBps: 300,
       orderReservationMinutes: 120,
       cardPendingReservationMinutes: 30
     }
@@ -134,6 +137,9 @@ export async function updateCompanySettings(input: CompanySettingsInput, organiz
         footerCancellationPolicyContent: input.footerCancellationPolicyContent || null,
         defaultCurrency: input.defaultCurrency.toUpperCase(),
         platformFeeBps: Math.round(input.platformFeePercent * 100),
+        pixTransactionFeeInCents: Math.round(input.pixTransactionFee * 100),
+        cardBaseFeeBps: Math.round(input.cardBaseFeePercent * 100),
+        cardAdditionalInstallmentFeeBps: Math.round(input.cardAdditionalInstallmentFeePercent * 100),
         orderReservationMinutes: input.orderReservationMinutes,
         cardPendingReservationMinutes: input.cardPendingReservationMinutes
       }
@@ -172,6 +178,9 @@ export async function updateCompanySettings(input: CompanySettingsInput, organiz
       footerCancellationPolicyContent: input.footerCancellationPolicyContent || null,
       defaultCurrency: input.defaultCurrency.toUpperCase(),
       platformFeeBps: Math.round(input.platformFeePercent * 100),
+      pixTransactionFeeInCents: Math.round(input.pixTransactionFee * 100),
+      cardBaseFeeBps: Math.round(input.cardBaseFeePercent * 100),
+      cardAdditionalInstallmentFeeBps: Math.round(input.cardAdditionalInstallmentFeePercent * 100),
       orderReservationMinutes: input.orderReservationMinutes,
       cardPendingReservationMinutes: input.cardPendingReservationMinutes
     }
