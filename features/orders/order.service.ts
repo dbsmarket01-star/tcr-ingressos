@@ -879,8 +879,6 @@ export async function sendCartAbandonmentReminders(options?: {
         buyerName: order.customer.name,
         buyerPhone: order.customer.phone,
         eventTitle: order.event.title,
-        cartSummary: formatCartAbandonmentSummary(order.items),
-        orderCode: order.code,
         orderUrl: createPublicOrderUrl(order.code, order.event.organization),
         expiresAt: order.expiresAt,
         organizationId: order.event.organization?.id,
