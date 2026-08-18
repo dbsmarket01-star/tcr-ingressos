@@ -10,9 +10,9 @@ export function roundPublicPriceUpInCents(valueInCents: number) {
     return 0;
   }
 
-  const wholeReaisInCents = Math.floor(safeValueInCents / 100) * 100;
-  const currentEndingInCents = wholeReaisInCents + PUBLIC_PRICE_ENDING_IN_CENTS;
-  return safeValueInCents <= currentEndingInCents ? currentEndingInCents : currentEndingInCents + 100;
+  const previousPublicPriceInCents = Math.ceil(safeValueInCents / 50) * 50;
+  const wholeReaisInCents = Math.floor(previousPublicPriceInCents / 100) * 100;
+  return wholeReaisInCents + PUBLIC_PRICE_ENDING_IN_CENTS;
 }
 
 export function calculateServiceFeeInCents(priceInCents: number, quantity: number, serviceFeeBps: number) {

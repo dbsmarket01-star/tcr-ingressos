@@ -19,9 +19,9 @@ function roundPublicPriceUpInCents(valueInCents: number) {
     return 0;
   }
 
-  const wholeReaisInCents = Math.floor(safeValueInCents / 100) * 100;
-  const currentEndingInCents = wholeReaisInCents + 90;
-  return safeValueInCents <= currentEndingInCents ? currentEndingInCents : currentEndingInCents + 100;
+  const previousPublicPriceInCents = Math.ceil(safeValueInCents / 50) * 50;
+  const wholeReaisInCents = Math.floor(previousPublicPriceInCents / 100) * 100;
+  return wholeReaisInCents + 90;
 }
 
 function formatCurrency(valueInCents: number) {
