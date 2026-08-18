@@ -12064,6 +12064,53 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   gap: 10px;
 }
 
+.zeroFeeCampaign,
+.zeroFeeCheckoutMessage {
+  display: grid;
+  gap: 2px;
+  border: 1px solid rgba(18, 126, 82, 0.24);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, rgba(225, 250, 239, 0.96), rgba(244, 255, 249, 0.96));
+  color: #0b6944;
+}
+
+.zeroFeeCampaign {
+  margin-bottom: 12px;
+}
+
+.zeroFeeCampaign strong,
+.zeroFeeCheckoutMessage strong {
+  font-size: 0.9rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.zeroFeeCampaign span,
+.zeroFeeCheckoutMessage span {
+  color: #315f4c;
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.zeroFeeBadge {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 3px 7px;
+  background: #0d7b50;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.055em;
+  line-height: 1.2;
+}
+
+.zeroFeeCheckoutMessage {
+  margin-top: 10px;
+}
+
 .ticketPickerCard {
   align-items: center;
   background: #ffffff;

@@ -292,6 +292,10 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
             <div className="checkoutCartHeader">
               <span className="eyebrow">Seu carrinho</span>
               <h1>{event.title}</h1>
+              <div className="zeroFeeCheckoutMessage">
+                <strong>Taxa zero</strong>
+                <span>Este é o preço final no Pix. Nenhuma taxa será acrescentada no checkout.</span>
+              </div>
               <div className="checkoutCartMeta" aria-label="Data e local do evento">
                 <span>{formatDateTime(event.startsAt)}</span>
                 <span>

@@ -85,7 +85,7 @@ export function CheckoutEstimator({ fixedOrderFeeInCents, lots }: CheckoutEstima
         <strong>{selectedQuantity} ingresso(s)</strong>
       </div>
       <div>
-        <span>Preço final</span>
+        <span>Preço final • taxa zero</span>
         <strong>{formatCurrency(estimatedTotalInCents)}</strong>
       </div>
       <p>{selectedLots.length > 0 ? selectedLots.join(" + ") : "Escolha a quantidade de ingressos para continuar."}</p>

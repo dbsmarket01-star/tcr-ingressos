@@ -458,6 +458,11 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             </div>
           ) : null}
 
+          <div className="zeroFeeCampaign" role="note">
+            <strong>Taxa zero</strong>
+            <span>O preço exibido já é o valor final no Pix.</span>
+          </div>
+
           {visibleLots.length === 0 ? (
             <div className="empty">Nenhum ingresso disponível no momento.</div>
           ) : (
@@ -503,6 +508,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                       <div className="ticketPickerInfo">
                         <div className="ticketPickerTitleRow">
                           <strong className="ticketPickerTitle">{lot.name}</strong>
+                          {!isSoldOut ? <span className="zeroFeeBadge">SEM TAXA</span> : null}
                           {saleBadge ? (
                             <span className={`ticketSaleBadge ${saleBadge.tone}`}>
                               {saleBadge.label}
