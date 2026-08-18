@@ -14,7 +14,14 @@ type CheckoutEstimatorProps = {
 };
 
 function roundPublicPriceUpInCents(valueInCents: number) {
-  return Math.ceil(Math.max(valueInCents, 0) / 50) * 50;
+  const safeValueInCents = Math.max(Math.round(valueInCents), 0);
+  if (safeValueInCents === 0) {
+    return 0;
+  }
+
+  const wholeReaisInCents = Math.floor(safeValueInCents / 100) * 100;
+  const currentEndingInCents = wholeReaisInCents + 90;
+  return safeValueInCents <= currentEndingInCents ? currentEndingInCents : currentEndingInCents + 100;
 }
 
 function formatCurrency(valueInCents: number) {

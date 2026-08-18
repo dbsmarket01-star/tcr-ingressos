@@ -3,12 +3,13 @@ import { roundPublicPriceUpInCents } from "@/features/pricing/pricing";
 
 describe("public price rounding", () => {
   it.each([
-    [11703, 11750],
-    [11720, 11750],
-    [11750, 11750],
-    [11770, 11800],
-    [11799, 11800]
-  ])("rounds %i cents upward to %i cents", (input, expected) => {
+    [11703, 11790],
+    [11750, 11790],
+    [11790, 11790],
+    [11791, 11890],
+    [22300, 22390],
+    [22399, 22490]
+  ])("rounds %i cents upward to a price ending in 90 cents: %i", (input, expected) => {
     expect(roundPublicPriceUpInCents(input)).toBe(expected);
   });
 
