@@ -460,7 +460,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
           <div className="zeroFeeCampaign" role="note">
             <strong>Taxa zero</strong>
-            <span>O preço exibido já é o valor final no Pix.</span>
+            <span>Aproveite seus ingressos com taxa zero.</span>
           </div>
 
           {visibleLots.length === 0 ? (
