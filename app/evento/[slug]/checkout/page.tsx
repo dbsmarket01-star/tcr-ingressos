@@ -11,7 +11,7 @@ import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrga
 import { getHotelRoomsPerUnit } from "@/features/hospitality/hotel-lot-rules";
 import { createCheckoutOrderAction } from "@/features/orders/order.actions";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
-import { allocateDiscountAcrossTotals, calculateServiceFeeInCents } from "@/features/pricing/pricing";
+import { calculateServiceFeeInCents, roundPublicPriceUpInCents } from "@/features/pricing/pricing";
 import { buildEventSeo } from "@/features/seo/event-seo";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { listPaymentSplitRules } from "@/features/settings/split-settings.service";
@@ -20,7 +20,6 @@ import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { getPublicEventBranding } from "@/lib/event-branding";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { BuyerLocationFields } from "../BuyerLocationFields";
-import { FeeExplanationButton } from "../FeeExplanationButton";
 import { MetaTrackingFields } from "../MetaTrackingFields";
 
 export const dynamic = "force-dynamic";
@@ -202,8 +201,9 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
   const ticketsTotalInCents = selectedItems.reduce((sum, item) => sum + item.subtotalInCents, 0);
   const initialCheckoutSplits = calculateAsaasSplitsForOrder(selectedItems.map((item) => ({ quantity: item.quantity, totalInCents: item.subtotalInCents })), splitRules);
   const configuredServiceFeeTotalInCents = selectedItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
-  const serviceFeeTotalInCents = Math.max(configuredServiceFeeTotalInCents, sumAsaasSplitsInCents(initialCheckoutSplits)) + companySettings.pixTransactionFeeInCents;
-  const orderTotalInCents = ticketsTotalInCents + serviceFeeTotalInCents;
+  const unroundedServiceFeeTotalInCents = Math.max(configuredServiceFeeTotalInCents, sumAsaasSplitsInCents(initialCheckoutSplits)) + companySettings.pixTransactionFeeInCents;
+  const orderTotalInCents = roundPublicPriceUpInCents(ticketsTotalInCents + unroundedServiceFeeTotalInCents);
+  const serviceFeeTotalInCents = orderTotalInCents - ticketsTotalInCents;
   const requestedCouponCode = firstParam(query.coupon)?.trim() || "";
   let couponPreview:
     | {
@@ -243,19 +243,18 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
   }
 
   const checkoutQueryFields = getCheckoutQueryFields(query);
-  const checkoutDiscountAllocation = allocateDiscountAcrossTotals(
-    ticketsTotalInCents,
-    serviceFeeTotalInCents,
-    couponPreview?.discountInCents ?? 0
-  );
   const discountedCheckoutSplits = calculateAsaasSplitsForOrder(
     selectedItems.map((item) => ({ quantity: item.quantity, totalInCents: item.subtotalInCents })),
     splitRules,
     { discountInCents: couponPreview?.discountInCents ?? 0 }
   );
-  const displayedServiceFeeInCents = Math.max(configuredServiceFeeTotalInCents, sumAsaasSplitsInCents(discountedCheckoutSplits)) + companySettings.pixTransactionFeeInCents;
+  const unroundedDisplayedServiceFeeInCents = Math.max(configuredServiceFeeTotalInCents, sumAsaasSplitsInCents(discountedCheckoutSplits)) + companySettings.pixTransactionFeeInCents;
+  const displayedTotalInCents = roundPublicPriceUpInCents(
+    ticketsTotalInCents - (couponPreview?.discountInCents ?? 0) + unroundedDisplayedServiceFeeInCents
+  );
+  const displayedServiceFeeInCents = displayedTotalInCents - ticketsTotalInCents + (couponPreview?.discountInCents ?? 0);
   if (couponPreview) {
-    couponPreview.totalInCents = Math.max(ticketsTotalInCents - couponPreview.discountInCents + displayedServiceFeeInCents, 0);
+    couponPreview.totalInCents = displayedTotalInCents;
   }
   const displayedFeeAdjustmentInCents = displayedServiceFeeInCents - selectedItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
   const currentCheckoutPath = buildCheckoutPath(event.slug, query);
@@ -312,8 +311,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                     {item.lotOption ? <span>{item.lotOption.label}</span> : null}
                     {item.seatIds.length > 0 ? <span>{item.seatIds.length} lugar(es) numerado(s)</span> : null}
                     <span>
-                      {formatCurrency(item.lot.priceInCents)}
-                      {displayedItemFeeInCents > 0 ? ` + ${formatCurrency(displayedItemFeeInCents)} taxa` : ""}
+                      Preço final
                     </span>
                     {item.lot.admissionsPerUnit > 1 ? (
                       <small>{item.quantity * item.lot.admissionsPerUnit} QR Codes individuais inclusos</small>
@@ -325,20 +323,15 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
               })}
             </div>
             <div className="checkoutCartTotal">
+              {couponPreview ? (
+                <div>
+                  <span>Desconto</span>
+                  <strong>- {formatCurrency(couponPreview.discountInCents)}</strong>
+                </div>
+              ) : null}
               <div>
-                <span>Ingressos</span>
-                <strong>{formatCurrency(couponPreview ? checkoutDiscountAllocation.netSubtotalInCents : ticketsTotalInCents)}</strong>
-              </div>
-              <div>
-                <span className="checkoutFeeTotalLabel">
-                  Taxas aplicadas
-                  <FeeExplanationButton variant="icon" />
-                </span>
-                <strong>{formatCurrency(displayedServiceFeeInCents)}</strong>
-              </div>
-              <div>
-                <span>Total</span>
-                <strong>{formatCurrency(couponPreview ? couponPreview.totalInCents : orderTotalInCents)}</strong>
+                <span>Preço final</span>
+                <strong>{formatCurrency(couponPreview ? couponPreview.totalInCents : displayedTotalInCents)}</strong>
               </div>
             </div>
             {event.couponsEnabled ? (

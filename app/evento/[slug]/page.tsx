@@ -15,7 +15,7 @@ import { listPaymentSplitRules } from "@/features/settings/split-settings.servic
 import { calculateAsaasSplitsForOrder, sumAsaasSplitsInCents } from "@/features/payments/asaas-split.service";
 import { getPublicSeatMapForEvent } from "@/features/seat-maps/seat-map.service";
 import { shouldHideWhenSoldOut } from "@/features/hospitality/hotel-lot-rules";
-import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
+import { calculateServiceFeeInCents, roundPublicPriceUpInCents } from "@/features/pricing/pricing";
 import { buildEventSeo } from "@/features/seo/event-seo";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -25,7 +25,6 @@ import { CheckoutEstimator } from "./CheckoutEstimator";
 import { TicketQuantityStepper } from "./TicketQuantityStepper";
 import { TicketTypeSelector } from "./TicketTypeSelector";
 import { AddToCartButton } from "./AddToCartButton";
-import { FeeExplanationButton } from "./FeeExplanationButton";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
@@ -276,9 +275,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const ctaText = event.conversionCtaText || "Garantir minha vaga";
   const highlightedLotId = event.highlightedLotId || purchasableLots[0]?.id;
   const eventLead = event.subtitle?.trim() || "";
-  const hasServiceFees = purchasableLots.some(
-    (lot) => calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps) > 0
-  );
   const checkoutEstimatorLots = purchasableLots.map((lot) => ({
     id: lot.id,
     name: lot.name,
@@ -291,6 +287,12 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         )
       )
   }));
+  const advertisedLotPriceById = new Map(
+    checkoutEstimatorLots.map((lot) => [
+      lot.id,
+      roundPublicPriceUpInCents(lot.totalWithFeeInCents + companySettings.pixTransactionFeeInCents)
+    ])
+  );
   const publicSocialSettings = companySettings as typeof companySettings & {
     instagramUrl?: string | null;
     facebookUrl?: string | null;
@@ -485,7 +487,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                   const isLowStock = available <= 25;
                   const saleBadge = getLotSaleBadge(lot);
                   const isSoldOut = saleBadge?.tone === "soldOut";
-                  const hasLotServiceFee = calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps) > 0;
                   const lotEndsSoon = lot.salesEndsAt
                     ? lot.salesEndsAt.getTime() - Date.now() <= 24 * 60 * 60 * 1000
                     : false;
@@ -509,8 +510,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                           ) : null}
                         </div>
                         <p className="ticketPickerPrice">
-                          {formatCurrency(lot.priceInCents)}
-                          {hasLotServiceFee ? <span> (+ taxas)</span> : null}
+                          {formatCurrency(advertisedLotPriceById.get(lot.id) ?? lot.priceInCents)}
                         </p>
                         {descriptionTopics.length > 0 ? (
                           <ul className="ticketDescriptionList">
@@ -572,7 +572,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                   <p className="checkoutFootnote">
                     Você informará seus dados e concluirá o pedido na próxima etapa.
                   </p>
-                  {hasServiceFees ? <FeeExplanationButton /> : null}
                 </>
               ) : (
                 <p className="checkoutFootnote">

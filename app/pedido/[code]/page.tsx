@@ -289,8 +289,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                   <div>
                     <strong>{formatLotDisplayName(item.lot.name, item.lotOption?.label)}</strong>
                     <span>
-                      {item.quantity}x {formatCurrency(item.unitPriceInCents)}
-                      {item.serviceFeeInCents > 0 ? ` + ${formatCurrency(item.serviceFeeInCents)} taxa` : ""}
+                      {item.quantity}x • preço final
                     </span>
                   </div>
                   <strong>{formatCurrency(item.totalInCents + item.serviceFeeInCents)}</strong>
@@ -326,14 +325,6 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
               <strong>{order.event.title}</strong>
               <small>{eventHeroDate}</small>
             </div>
-            <div className="summaryLine">
-              <span>Ingressos</span>
-              <strong>{formatCurrency(order.subtotalInCents)}</strong>
-            </div>
-            <div className="summaryLine">
-              <span>Taxas e impostos</span>
-              <strong>{formatCurrency(order.serviceFeeInCents)}</strong>
-            </div>
             {order.discountInCents > 0 ? (
               <div className="summaryLine">
                 <span>Desconto</span>
@@ -350,7 +341,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
               </div>
             ) : null}
             <div className="summaryLine totalLine">
-              <span>Total</span>
+              <span>Preço final</span>
               <strong>{formatCurrency(order.totalInCents)}</strong>
             </div>
             <p className="summarySupportText">

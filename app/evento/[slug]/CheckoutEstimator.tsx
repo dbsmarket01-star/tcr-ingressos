@@ -13,6 +13,10 @@ type CheckoutEstimatorProps = {
   lots: CheckoutEstimatorLot[];
 };
 
+function roundPublicPriceUpInCents(valueInCents: number) {
+  return Math.ceil(Math.max(valueInCents, 0) / 50) * 50;
+}
+
 function formatCurrency(valueInCents: number) {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -60,7 +64,7 @@ export function CheckoutEstimator({ fixedOrderFeeInCents, lots }: CheckoutEstima
     return sum + (lot?.totalWithFeeInCents ?? 0) * quantity;
   }, 0);
   const estimatedTotalInCents = selectedQuantity > 0
-    ? selectedTicketsTotalInCents + Math.max(fixedOrderFeeInCents, 0)
+    ? roundPublicPriceUpInCents(selectedTicketsTotalInCents + Math.max(fixedOrderFeeInCents, 0))
     : 0;
   const selectedLots = Object.entries(quantities)
     .filter(([, quantity]) => quantity > 0)
@@ -81,7 +85,7 @@ export function CheckoutEstimator({ fixedOrderFeeInCents, lots }: CheckoutEstima
         <strong>{selectedQuantity} ingresso(s)</strong>
       </div>
       <div>
-        <span>Total estimado</span>
+        <span>Preço final</span>
         <strong>{formatCurrency(estimatedTotalInCents)}</strong>
       </div>
       <p>{selectedLots.length > 0 ? selectedLots.join(" + ") : "Escolha a quantidade de ingressos para continuar."}</p>

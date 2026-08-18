@@ -8,7 +8,7 @@ import {
 import { createPublicOrderUrl, sendOrderExpiredEmail } from "@/features/email/email.service";
 import { updateHomeListStatusForOrder } from "@/features/hospitality/home-list.service";
 import { getHotelRoomsPerUnit } from "@/features/hospitality/hotel-lot-rules";
-import { calculatePixDiscountInCents, calculateServiceFeeInCents } from "@/features/pricing/pricing";
+import { calculatePixDiscountInCents, calculateServiceFeeInCents, roundPublicPriceUpInCents } from "@/features/pricing/pricing";
 import { releaseSeatReservationsForOrder, releaseSoldSeatsForOrder, reserveSeatsForOrderItem } from "@/features/seat-maps/seat-map.service";
 import { getOrderReservationMinutes } from "@/features/settings/company-settings.service";
 import { calculateAsaasSplitsForOrder, sumAsaasSplitsInCents } from "@/features/payments/asaas-split.service";
@@ -477,7 +477,9 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
       ]);
       const checkoutSplits = calculateAsaasSplitsForOrder(orderItems, splitRules, { discountInCents });
       const fixedOrderFeeInCents = feeSettings?.pixTransactionFeeInCents ?? 200;
-      serviceFeeInCents = Math.max(configuredServiceFeeInCents, sumAsaasSplitsInCents(checkoutSplits)) + fixedOrderFeeInCents;
+      const unroundedServiceFeeInCents = Math.max(configuredServiceFeeInCents, sumAsaasSplitsInCents(checkoutSplits)) + fixedOrderFeeInCents;
+      const roundedTotalInCents = roundPublicPriceUpInCents(subtotalInCents + unroundedServiceFeeInCents - discountInCents);
+      serviceFeeInCents = roundedTotalInCents - subtotalInCents + discountInCents;
       const originalItemServiceFeeInCents = orderItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
       if (orderItems[0]) {
         orderItems[0].serviceFeeInCents += serviceFeeInCents - originalItemServiceFeeInCents;
@@ -493,7 +495,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           ),
         0
       );
-      const totalInCents = Math.max(subtotalInCents + serviceFeeInCents - discountInCents, 0);
+      const totalInCents = roundedTotalInCents;
       const expiresAt = new Date(Date.now() + reservationMinutes * 60 * 1000);
 
       const order = await tx.order.create({

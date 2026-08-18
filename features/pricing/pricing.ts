@@ -2,6 +2,12 @@ export const MIN_PIX_PAYMENT_AMOUNT_IN_CENTS = 1000;
 export const MIN_CARD_PAYMENT_AMOUNT_IN_CENTS = 500;
 export const MIN_CARD_INSTALLMENT_AMOUNT_IN_CENTS = 500;
 export const MIN_PAYABLE_AMOUNT_IN_CENTS = MIN_PIX_PAYMENT_AMOUNT_IN_CENTS;
+export const PUBLIC_PRICE_ROUNDING_INCREMENT_IN_CENTS = 50;
+
+export function roundPublicPriceUpInCents(valueInCents: number) {
+  const safeValueInCents = Math.max(Math.round(valueInCents), 0);
+  return Math.ceil(safeValueInCents / PUBLIC_PRICE_ROUNDING_INCREMENT_IN_CENTS) * PUBLIC_PRICE_ROUNDING_INCREMENT_IN_CENTS;
+}
 
 export function calculateServiceFeeInCents(priceInCents: number, quantity: number, serviceFeeBps: number) {
   return Math.round(priceInCents * quantity * (serviceFeeBps / 10000));
