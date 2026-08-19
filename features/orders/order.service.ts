@@ -8,7 +8,13 @@ import {
 import { createPublicOrderUrl, sendOrderExpiredEmail } from "@/features/email/email.service";
 import { updateHomeListStatusForOrder } from "@/features/hospitality/home-list.service";
 import { getHotelRoomsPerUnit } from "@/features/hospitality/hotel-lot-rules";
-import { calculatePixDiscountInCents, calculateServiceFeeInCents, roundPublicPriceUpInCents } from "@/features/pricing/pricing";
+import { calculatePixDiscountInCents, calculateServiceFeeInCents } from "@/features/pricing/pricing";
+import {
+  finalizeOrganizationPublicPriceInCents,
+  getEffectiveFixedOrderFeeInCents,
+  getEffectiveServiceFeeBps,
+  isFeeFreeOrganization
+} from "@/features/pricing/organization-pricing-policy";
 import { releaseSeatReservationsForOrder, releaseSoldSeatsForOrder, reserveSeatsForOrderItem } from "@/features/seat-maps/seat-map.service";
 import { getOrderReservationMinutes } from "@/features/settings/company-settings.service";
 import { calculateAsaasSplitsForOrder, sumAsaasSplitsInCents } from "@/features/payments/asaas-split.service";
@@ -241,6 +247,11 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
         select: {
           id: true,
           organizationId: true,
+          organization: {
+            select: {
+              slug: true
+            }
+          },
           couponsEnabled: true
         }
       });
@@ -395,10 +406,14 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           throw new Error(`Ingressos insuficientes para ${lot.name}.`);
         }
 
+        const effectiveServiceFeeBps = getEffectiveServiceFeeBps(
+          event.organization?.slug,
+          lot.serviceFeeBps
+        );
         const serviceFeeInCents = calculateServiceFeeInCents(
           lot.priceInCents,
           item.quantity,
-          lot.serviceFeeBps
+          effectiveServiceFeeBps
         );
 
         orderItems.push({
@@ -407,7 +422,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           seatIds: selectedSeatIds,
           quantity: item.quantity,
           unitPriceInCents: lot.priceInCents,
-          serviceFeeBps: lot.serviceFeeBps,
+          serviceFeeBps: effectiveServiceFeeBps,
           serviceFeeInCents,
           pixDiscountPercentBps: lot.pixDiscountPercentBps,
           pixDiscountFixedInCents: lot.pixDiscountFixedInCents,
@@ -475,10 +490,21 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           select: { pixTransactionFeeInCents: true }
         })
       ]);
-      const checkoutSplits = calculateAsaasSplitsForOrder(orderItems, splitRules, { discountInCents });
-      const fixedOrderFeeInCents = feeSettings?.pixTransactionFeeInCents ?? 200;
+      const isFeeFree = isFeeFreeOrganization(event.organization?.slug);
+      const checkoutSplits = calculateAsaasSplitsForOrder(
+        orderItems,
+        isFeeFree ? [] : splitRules,
+        { discountInCents }
+      );
+      const fixedOrderFeeInCents = getEffectiveFixedOrderFeeInCents(
+        event.organization?.slug,
+        feeSettings?.pixTransactionFeeInCents ?? 200
+      );
       const unroundedServiceFeeInCents = Math.max(configuredServiceFeeInCents, sumAsaasSplitsInCents(checkoutSplits)) + fixedOrderFeeInCents;
-      const roundedTotalInCents = roundPublicPriceUpInCents(subtotalInCents + unroundedServiceFeeInCents - discountInCents);
+      const roundedTotalInCents = finalizeOrganizationPublicPriceInCents(
+        event.organization?.slug,
+        subtotalInCents + unroundedServiceFeeInCents - discountInCents
+      );
       serviceFeeInCents = roundedTotalInCents - subtotalInCents + discountInCents;
       const originalItemServiceFeeInCents = orderItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
       if (orderItems[0]) {
@@ -1350,6 +1376,7 @@ export async function getOrderByCode(code: string, organizationId?: string | nul
         include: {
           organization: {
             select: {
+              slug: true,
               name: true,
               publicDomain: true,
               primaryColor: true

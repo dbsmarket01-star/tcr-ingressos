@@ -11,7 +11,13 @@ import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrga
 import { getHotelRoomsPerUnit } from "@/features/hospitality/hotel-lot-rules";
 import { createCheckoutOrderAction } from "@/features/orders/order.actions";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
-import { calculateServiceFeeInCents, roundPublicPriceUpInCents } from "@/features/pricing/pricing";
+import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
+import {
+  finalizeOrganizationPublicPriceInCents,
+  getEffectiveFixedOrderFeeInCents,
+  getEffectiveServiceFeeBps,
+  isFeeFreeOrganization
+} from "@/features/pricing/organization-pricing-policy";
 import { buildEventSeo } from "@/features/seo/event-seo";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { listPaymentSplitRules } from "@/features/settings/split-settings.service";
@@ -140,6 +146,14 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
     notFound();
   }
 
+  const organizationSlug = organizationContext.organization.slug;
+  const isFeeFree = isFeeFreeOrganization(organizationSlug);
+  const effectiveFixedOrderFeeInCents = getEffectiveFixedOrderFeeInCents(
+    organizationSlug,
+    companySettings.pixTransactionFeeInCents
+  );
+  const effectiveSplitRules = isFeeFree ? [] : splitRules;
+
   const now = new Date();
   const activeLots = event.lots.filter((lot) => {
     const startsOk = !lot.salesStartsAt || lot.salesStartsAt <= now;
@@ -171,7 +185,11 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
       return [];
     }
 
-    const serviceFeeInCents = calculateServiceFeeInCents(lot.priceInCents, quantity, lot.serviceFeeBps);
+    const serviceFeeInCents = calculateServiceFeeInCents(
+      lot.priceInCents,
+      quantity,
+      getEffectiveServiceFeeBps(organizationSlug, lot.serviceFeeBps)
+    );
     const subtotalInCents = lot.priceInCents * quantity;
 
     return [{
@@ -199,10 +217,13 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
   const hotelItems = selectedItems.filter((item) => item.lot.hasHotel);
   const asksChurchName = selectedItems.some((item) => item.lot.churchQuestionEnabled);
   const ticketsTotalInCents = selectedItems.reduce((sum, item) => sum + item.subtotalInCents, 0);
-  const initialCheckoutSplits = calculateAsaasSplitsForOrder(selectedItems.map((item) => ({ quantity: item.quantity, totalInCents: item.subtotalInCents })), splitRules);
+  const initialCheckoutSplits = calculateAsaasSplitsForOrder(selectedItems.map((item) => ({ quantity: item.quantity, totalInCents: item.subtotalInCents })), effectiveSplitRules);
   const configuredServiceFeeTotalInCents = selectedItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
-  const unroundedServiceFeeTotalInCents = Math.max(configuredServiceFeeTotalInCents, sumAsaasSplitsInCents(initialCheckoutSplits)) + companySettings.pixTransactionFeeInCents;
-  const orderTotalInCents = roundPublicPriceUpInCents(ticketsTotalInCents + unroundedServiceFeeTotalInCents);
+  const unroundedServiceFeeTotalInCents = Math.max(configuredServiceFeeTotalInCents, sumAsaasSplitsInCents(initialCheckoutSplits)) + effectiveFixedOrderFeeInCents;
+  const orderTotalInCents = finalizeOrganizationPublicPriceInCents(
+    organizationSlug,
+    ticketsTotalInCents + unroundedServiceFeeTotalInCents
+  );
   const serviceFeeTotalInCents = orderTotalInCents - ticketsTotalInCents;
   const requestedCouponCode = firstParam(query.coupon)?.trim() || "";
   let couponPreview:
@@ -245,11 +266,12 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
   const checkoutQueryFields = getCheckoutQueryFields(query);
   const discountedCheckoutSplits = calculateAsaasSplitsForOrder(
     selectedItems.map((item) => ({ quantity: item.quantity, totalInCents: item.subtotalInCents })),
-    splitRules,
+    effectiveSplitRules,
     { discountInCents: couponPreview?.discountInCents ?? 0 }
   );
-  const unroundedDisplayedServiceFeeInCents = Math.max(configuredServiceFeeTotalInCents, sumAsaasSplitsInCents(discountedCheckoutSplits)) + companySettings.pixTransactionFeeInCents;
-  const displayedTotalInCents = roundPublicPriceUpInCents(
+  const unroundedDisplayedServiceFeeInCents = Math.max(configuredServiceFeeTotalInCents, sumAsaasSplitsInCents(discountedCheckoutSplits)) + effectiveFixedOrderFeeInCents;
+  const displayedTotalInCents = finalizeOrganizationPublicPriceInCents(
+    organizationSlug,
     ticketsTotalInCents - (couponPreview?.discountInCents ?? 0) + unroundedDisplayedServiceFeeInCents
   );
   const displayedServiceFeeInCents = displayedTotalInCents - ticketsTotalInCents + (couponPreview?.discountInCents ?? 0);

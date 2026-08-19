@@ -29,6 +29,10 @@ import {
   calculateNetTicketAmountInCents,
   calculatePixChargeInCents
 } from "@/features/payments/payment-fee-calculator";
+import {
+  getEffectivePaymentFeeSettings,
+  isFeeFreeOrganization
+} from "@/features/pricing/organization-pricing-policy";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
@@ -79,10 +83,14 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
     notFound();
   }
 
-  const [feeSettings, splitRules] = await Promise.all([
+  const [storedFeeSettings, storedSplitRules] = await Promise.all([
     getCompanySettings(order.event.organizationId),
     listPaymentSplitRules(order.event.organizationId)
   ]);
+  const isFeeFree = isFeeFreeOrganization(order.event.organization.slug);
+  const feeSettings = getEffectivePaymentFeeSettings(order.event.organization.slug, storedFeeSettings);
+  const splitRules = isFeeFree ? [] : storedSplitRules;
+  const effectiveOrderServiceFeeInCents = isFeeFree ? 0 : order.serviceFeeInCents;
 
   const paymentError = typeof query.paymentError === "string" ? query.paymentError : null;
   const paymentErrorMethod = query.paymentMethod === "pix" ? "pix" : "card";
@@ -92,14 +100,14 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
     process.env.NODE_ENV !== "production" && process.env.SHOW_PAYMENT_SIMULATOR === "true";
   const isAsaasCheckout =
     process.env.PAYMENT_PROVIDER === "ASAAS" || order.payment?.provider === "ASAAS";
-  const baseTotalInCents = order.subtotalInCents + order.serviceFeeInCents - order.discountInCents;
+  const baseTotalInCents = order.subtotalInCents + effectiveOrderServiceFeeInCents - order.discountInCents;
   const pixDiscountInCents = capDiscountToPayableAmount(Math.max(order.subtotalInCents - order.discountInCents, 0), order.pixDiscountInCents);
   const pixTicketDiscountInCents = order.discountInCents + pixDiscountInCents;
   const pixSplits = calculateAsaasSplitsForOrder(order.items, splitRules, { discountInCents: pixTicketDiscountInCents });
   const pixNetTicketInCents = calculateNetTicketAmountInCents(order.subtotalInCents, pixTicketDiscountInCents);
   const pixSplitTotalInCents = sumAsaasSplitsInCents(pixSplits);
   const configuredPixFeeWithoutFixedInCents = Math.max(
-    order.serviceFeeInCents - feeSettings.pixTransactionFeeInCents,
+    effectiveOrderServiceFeeInCents - feeSettings.pixTransactionFeeInCents,
     pixSplitTotalInCents
   );
   const pixTotalInCents = calculatePixChargeInCents(pixNetTicketInCents, configuredPixFeeWithoutFixedInCents, feeSettings);
@@ -116,7 +124,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
       const netTicketInCents = calculateNetTicketAmountInCents(order.subtotalInCents, order.discountInCents);
       const splitTotalInCents = sumAsaasSplitsInCents(cardSplits);
       const configuredCardFeeInCents = Math.max(
-        order.serviceFeeInCents - feeSettings.pixTransactionFeeInCents,
+        effectiveOrderServiceFeeInCents - feeSettings.pixTransactionFeeInCents,
         splitTotalInCents
       );
       const totalWithInterestInCents = calculateCardChargeInCents(netTicketInCents, configuredCardFeeInCents, installment, feeSettings);
@@ -292,7 +300,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                       {item.quantity}x • preço final
                     </span>
                   </div>
-                  <strong>{formatCurrency(item.totalInCents + item.serviceFeeInCents)}</strong>
+                  <strong>{formatCurrency(item.totalInCents + (isFeeFree ? 0 : item.serviceFeeInCents))}</strong>
                 </div>
               ))}
             </div>
@@ -342,7 +350,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
             ) : null}
             <div className="summaryLine totalLine">
               <span>Preço final</span>
-              <strong>{formatCurrency(order.totalInCents)}</strong>
+              <strong>{formatCurrency(isFeeFree && order.status === "PENDING_PAYMENT" ? baseTotalInCents : order.totalInCents)}</strong>
             </div>
             <p className="summarySupportText">
               <strong>{order.customer.email}</strong>

@@ -15,7 +15,13 @@ import { listPaymentSplitRules } from "@/features/settings/split-settings.servic
 import { calculateAsaasSplitsForOrder, sumAsaasSplitsInCents } from "@/features/payments/asaas-split.service";
 import { getPublicSeatMapForEvent } from "@/features/seat-maps/seat-map.service";
 import { shouldHideWhenSoldOut } from "@/features/hospitality/hotel-lot-rules";
-import { calculateServiceFeeInCents, roundPublicPriceUpInCents } from "@/features/pricing/pricing";
+import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
+import {
+  finalizeOrganizationPublicPriceInCents,
+  getEffectiveFixedOrderFeeInCents,
+  getEffectiveServiceFeeBps,
+  isFeeFreeOrganization
+} from "@/features/pricing/organization-pricing-policy";
 import { buildEventSeo } from "@/features/seo/event-seo";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -273,6 +279,13 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const publicBannerCrop = bannerCrop;
   const mapCrop = parseImageCrop(event.eventMapCrop);
   const ctaText = event.conversionCtaText || "Garantir minha vaga";
+  const organizationSlug = organizationContext.organization.slug;
+  const isFeeFree = isFeeFreeOrganization(organizationSlug);
+  const effectiveFixedOrderFeeInCents = getEffectiveFixedOrderFeeInCents(
+    organizationSlug,
+    companySettings.pixTransactionFeeInCents
+  );
+  const effectiveSplitRules = isFeeFree ? [] : splitRules;
   const highlightedLotId = event.highlightedLotId || purchasableLots[0]?.id;
   const eventLead = event.subtitle?.trim() || "";
   const checkoutEstimatorLots = purchasableLots.map((lot) => ({
@@ -281,16 +294,23 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     totalWithFeeInCents:
       lot.priceInCents +
       Math.max(
-        calculateServiceFeeInCents(lot.priceInCents, 1, lot.serviceFeeBps),
+        calculateServiceFeeInCents(
+          lot.priceInCents,
+          1,
+          getEffectiveServiceFeeBps(organizationSlug, lot.serviceFeeBps)
+        ),
         sumAsaasSplitsInCents(
-          calculateAsaasSplitsForOrder([{ quantity: 1, totalInCents: lot.priceInCents }], splitRules)
+          calculateAsaasSplitsForOrder([{ quantity: 1, totalInCents: lot.priceInCents }], effectiveSplitRules)
         )
       )
   }));
   const advertisedLotPriceById = new Map(
     checkoutEstimatorLots.map((lot) => [
       lot.id,
-      roundPublicPriceUpInCents(lot.totalWithFeeInCents + companySettings.pixTransactionFeeInCents)
+      finalizeOrganizationPublicPriceInCents(
+        organizationSlug,
+        lot.totalWithFeeInCents + effectiveFixedOrderFeeInCents
+      )
     ])
   );
   const publicSocialSettings = companySettings as typeof companySettings & {
@@ -567,8 +587,9 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
               {!seatMapLayout && purchasableLots.length > 0 ? (
                 <CheckoutEstimator
-                  fixedOrderFeeInCents={companySettings.pixTransactionFeeInCents}
+                  fixedOrderFeeInCents={effectiveFixedOrderFeeInCents}
                   lots={checkoutEstimatorLots}
+                  roundToPublicEnding={!isFeeFree}
                 />
               ) : null}
 

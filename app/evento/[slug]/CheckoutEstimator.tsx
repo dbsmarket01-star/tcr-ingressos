@@ -11,6 +11,7 @@ type CheckoutEstimatorLot = {
 type CheckoutEstimatorProps = {
   fixedOrderFeeInCents: number;
   lots: CheckoutEstimatorLot[];
+  roundToPublicEnding?: boolean;
 };
 
 function roundPublicPriceUpInCents(valueInCents: number) {
@@ -31,7 +32,7 @@ function formatCurrency(valueInCents: number) {
   }).format(valueInCents / 100);
 }
 
-export function CheckoutEstimator({ fixedOrderFeeInCents, lots }: CheckoutEstimatorProps) {
+export function CheckoutEstimator({ fixedOrderFeeInCents, lots, roundToPublicEnding = true }: CheckoutEstimatorProps) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const lotMap = useMemo(() => new Map(lots.map((lot) => [lot.id, lot])), [lots]);
 
@@ -70,8 +71,9 @@ export function CheckoutEstimator({ fixedOrderFeeInCents, lots }: CheckoutEstima
     const lot = lotMap.get(lotId);
     return sum + (lot?.totalWithFeeInCents ?? 0) * quantity;
   }, 0);
+  const unroundedEstimatedTotalInCents = selectedTicketsTotalInCents + Math.max(fixedOrderFeeInCents, 0);
   const estimatedTotalInCents = selectedQuantity > 0
-    ? roundPublicPriceUpInCents(selectedTicketsTotalInCents + Math.max(fixedOrderFeeInCents, 0))
+    ? (roundToPublicEnding ? roundPublicPriceUpInCents(unroundedEstimatedTotalInCents) : unroundedEstimatedTotalInCents)
     : 0;
   const selectedLots = Object.entries(quantities)
     .filter(([, quantity]) => quantity > 0)

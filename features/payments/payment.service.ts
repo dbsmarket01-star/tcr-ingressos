@@ -21,6 +21,10 @@ import {
   calculateNetTicketAmountInCents,
   calculatePixChargeInCents
 } from "./payment-fee-calculator";
+import {
+  getEffectivePaymentFeeSettings,
+  isFeeFreeOrganization
+} from "@/features/pricing/organization-pricing-policy";
 import { getAsaasProvider, getPaymentProvider } from "./payment-provider";
 import type { PaymentOrganizationContext } from "./payment-organization-config";
 import type { CreditCardPaymentInput as CreditCardFormInput } from "./credit-card.schema";
@@ -367,16 +371,18 @@ export async function startPaymentForOrder(orderCode: string) {
   const discountableTicketTotalInCents = Math.max(order.subtotalInCents - order.discountInCents, 0);
   const pixDiscountInCents = capDiscountToPayableAmount(discountableTicketTotalInCents, order.pixDiscountInCents);
   const totalTicketDiscountInCents = order.discountInCents + pixDiscountInCents;
-  const split = await buildAsaasSplitsForOrder(order.items, order.event.organizationId, {
+  const isFeeFree = isFeeFreeOrganization(order.event.organization.slug);
+  const calculatedSplit = await buildAsaasSplitsForOrder(order.items, order.event.organizationId, {
     discountInCents: totalTicketDiscountInCents
   });
-  const feeSettings = await getCompanySettings(order.event.organizationId);
+  const split = isFeeFree ? [] : calculatedSplit;
+  const storedFeeSettings = await getCompanySettings(order.event.organizationId);
+  const feeSettings = getEffectivePaymentFeeSettings(order.event.organization.slug, storedFeeSettings);
   const netTicketAmountInCents = calculateNetTicketAmountInCents(order.subtotalInCents, totalTicketDiscountInCents);
   const splitTotalInCents = sumAsaasSplitsInCents(split);
-  const configuredPixFeeWithoutFixedInCents = Math.max(
-    order.serviceFeeInCents - feeSettings.pixTransactionFeeInCents,
-    splitTotalInCents
-  );
+  const configuredPixFeeWithoutFixedInCents = isFeeFree
+    ? 0
+    : Math.max(order.serviceFeeInCents - feeSettings.pixTransactionFeeInCents, splitTotalInCents);
   const pixTotalInCents = calculatePixChargeInCents(netTicketAmountInCents, configuredPixFeeWithoutFixedInCents, feeSettings);
   const serviceFeeInCents = configuredPixFeeWithoutFixedInCents + feeSettings.pixTransactionFeeInCents;
 
@@ -867,17 +873,19 @@ export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & {
     throw new Error(`Este evento permite parcelamento em até ${maxInstallments}x.`);
   }
 
-  const split = await buildAsaasSplitsForOrder(order.items, order.event.organizationId, {
+  const isFeeFree = isFeeFreeOrganization(order.event.organization.slug);
+  const calculatedSplit = await buildAsaasSplitsForOrder(order.items, order.event.organizationId, {
     discountInCents: order.discountInCents,
     installments: input.installments
   });
-  const feeSettings = await getCompanySettings(order.event.organizationId);
+  const split = isFeeFree ? [] : calculatedSplit;
+  const storedFeeSettings = await getCompanySettings(order.event.organizationId);
+  const feeSettings = getEffectivePaymentFeeSettings(order.event.organization.slug, storedFeeSettings);
   const netTicketAmountInCents = calculateNetTicketAmountInCents(order.subtotalInCents, order.discountInCents);
   const splitTotalInCents = sumAsaasSplitsInCents(split);
-  const configuredCardFeeInCents = Math.max(
-    order.serviceFeeInCents - feeSettings.pixTransactionFeeInCents,
-    splitTotalInCents
-  );
+  const configuredCardFeeInCents = isFeeFree
+    ? 0
+    : Math.max(order.serviceFeeInCents - feeSettings.pixTransactionFeeInCents, splitTotalInCents);
   const cardTotalInCents = calculateCardChargeInCents(
     netTicketAmountInCents,
     configuredCardFeeInCents,
