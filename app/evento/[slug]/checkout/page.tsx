@@ -153,7 +153,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
     organizationSlug,
     companySettings.pixTransactionFeeInCents
   );
-  const effectiveSplitRules = isFeeFree ? [] : splitRules;
+  const effectiveSplitRules = isFeeFree ? [] : splitRules.filter((rule) => rule.isActive);
 
   const now = new Date();
   const activeLots = event.lots.filter((lot) => {

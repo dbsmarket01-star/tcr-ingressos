@@ -285,7 +285,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     organizationSlug,
     companySettings.pixTransactionFeeInCents
   );
-  const effectiveSplitRules = isFeeFree ? [] : splitRules;
+  const effectiveSplitRules = isFeeFree ? [] : splitRules.filter((rule) => rule.isActive);
   const highlightedLotId = event.highlightedLotId || purchasableLots[0]?.id;
   const eventLead = event.subtitle?.trim() || "";
   const checkoutEstimatorLots = purchasableLots.map((lot) => ({
