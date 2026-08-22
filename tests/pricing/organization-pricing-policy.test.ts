@@ -24,10 +24,10 @@ describe("organization pricing policy", () => {
     });
   });
 
-  it("preserves TCR pricing and rounding", () => {
+  it("keeps TCR configured fees without changing the exact total", () => {
     expect(isFeeFreeOrganization("tcr-ingressos")).toBe(false);
-    expect(getEffectiveServiceFeeBps("tcr-ingressos", 1750)).toBe(1750);
-    expect(getEffectiveFixedOrderFeeInCents("tcr-ingressos", 200)).toBe(200);
-    expect(finalizeOrganizationPublicPriceInCents("tcr-ingressos", 117_03)).toBe(117_90);
+    expect(getEffectiveServiceFeeBps("tcr-ingressos", 750)).toBe(750);
+    expect(getEffectiveFixedOrderFeeInCents("tcr-ingressos", 0)).toBe(0);
+    expect(finalizeOrganizationPublicPriceInCents("tcr-ingressos", 105_24)).toBe(105_24);
   });
 });

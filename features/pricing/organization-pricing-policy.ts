@@ -1,5 +1,3 @@
-import { roundPublicPriceUpInCents } from "./pricing";
-
 const A2_IMERGIDOS_ORGANIZATION_SLUG = "a2-imergidos";
 
 export function isFeeFreeOrganization(organizationSlug?: string | null) {
@@ -18,13 +16,10 @@ export function getEffectiveFixedOrderFeeInCents(
 }
 
 export function finalizeOrganizationPublicPriceInCents(
-  organizationSlug: string | null | undefined,
+  _organizationSlug: string | null | undefined,
   valueInCents: number
 ) {
-  const safeValueInCents = Math.max(Math.round(valueInCents), 0);
-  return isFeeFreeOrganization(organizationSlug)
-    ? safeValueInCents
-    : roundPublicPriceUpInCents(safeValueInCents);
+  return Math.max(Math.round(valueInCents), 0);
 }
 
 export function getEffectivePaymentFeeSettings<T extends {

@@ -27,6 +27,7 @@ import { getPublicEventBranding } from "@/lib/event-branding";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { BuyerLocationFields } from "../BuyerLocationFields";
 import { MetaTrackingFields } from "../MetaTrackingFields";
+import { FeeExplanationButton } from "../FeeExplanationButton";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
@@ -314,10 +315,12 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
             <div className="checkoutCartHeader">
               <span className="eyebrow">Seu carrinho</span>
               <h1>{event.title}</h1>
-              <div className="zeroFeeCheckoutMessage">
-                <strong>Taxa zero</strong>
-                <span>Este é o preço final no Pix. Nenhuma taxa será acrescentada no checkout.</span>
-              </div>
+              {isFeeFree ? (
+                <div className="zeroFeeCheckoutMessage">
+                  <strong>Taxa zero</strong>
+                  <span>Este é o preço final no Pix. Nenhuma taxa será acrescentada no checkout.</span>
+                </div>
+              ) : null}
               <div className="checkoutCartMeta" aria-label="Data e local do evento">
                 <span>{formatDateTime(event.startsAt)}</span>
                 <span>
@@ -337,7 +340,8 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                     {item.lotOption ? <span>{item.lotOption.label}</span> : null}
                     {item.seatIds.length > 0 ? <span>{item.seatIds.length} lugar(es) numerado(s)</span> : null}
                     <span>
-                      Preço final
+                      {formatCurrency(item.subtotalInCents)}
+                      {displayedItemFeeInCents > 0 ? ` + ${formatCurrency(displayedItemFeeInCents)} taxa` : ""}
                     </span>
                     {item.lot.admissionsPerUnit > 1 ? (
                       <small>{item.quantity * item.lot.admissionsPerUnit} QR Codes individuais inclusos</small>
@@ -349,6 +353,19 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
               })}
             </div>
             <div className="checkoutCartTotal">
+              <div>
+                <span>Ingressos</span>
+                <strong>{formatCurrency(ticketsTotalInCents)}</strong>
+              </div>
+              {displayedServiceFeeInCents > 0 ? (
+                <div>
+                  <span className="checkoutFeeTotalLabel">
+                    Taxa de bilheteria
+                    <FeeExplanationButton variant="icon" />
+                  </span>
+                  <strong>{formatCurrency(displayedServiceFeeInCents)}</strong>
+                </div>
+              ) : null}
               {couponPreview ? (
                 <div>
                   <span>Desconto</span>
@@ -356,7 +373,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                 </div>
               ) : null}
               <div>
-                <span>Preço final</span>
+                <span>Total</span>
                 <strong>{formatCurrency(couponPreview ? couponPreview.totalInCents : displayedTotalInCents)}</strong>
               </div>
             </div>

@@ -11,19 +11,8 @@ type CheckoutEstimatorLot = {
 type CheckoutEstimatorProps = {
   fixedOrderFeeInCents: number;
   lots: CheckoutEstimatorLot[];
-  roundToPublicEnding?: boolean;
+  feeFree?: boolean;
 };
-
-function roundPublicPriceUpInCents(valueInCents: number) {
-  const safeValueInCents = Math.max(Math.round(valueInCents), 0);
-  if (safeValueInCents === 0) {
-    return 0;
-  }
-
-  const previousPublicPriceInCents = Math.ceil(safeValueInCents / 50) * 50;
-  const wholeReaisInCents = Math.floor(previousPublicPriceInCents / 100) * 100;
-  return wholeReaisInCents + 90;
-}
 
 function formatCurrency(valueInCents: number) {
   return new Intl.NumberFormat("pt-BR", {
@@ -32,7 +21,7 @@ function formatCurrency(valueInCents: number) {
   }).format(valueInCents / 100);
 }
 
-export function CheckoutEstimator({ fixedOrderFeeInCents, lots, roundToPublicEnding = true }: CheckoutEstimatorProps) {
+export function CheckoutEstimator({ fixedOrderFeeInCents, lots, feeFree = false }: CheckoutEstimatorProps) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const lotMap = useMemo(() => new Map(lots.map((lot) => [lot.id, lot])), [lots]);
 
@@ -72,9 +61,7 @@ export function CheckoutEstimator({ fixedOrderFeeInCents, lots, roundToPublicEnd
     return sum + (lot?.totalWithFeeInCents ?? 0) * quantity;
   }, 0);
   const unroundedEstimatedTotalInCents = selectedTicketsTotalInCents + Math.max(fixedOrderFeeInCents, 0);
-  const estimatedTotalInCents = selectedQuantity > 0
-    ? (roundToPublicEnding ? roundPublicPriceUpInCents(unroundedEstimatedTotalInCents) : unroundedEstimatedTotalInCents)
-    : 0;
+  const estimatedTotalInCents = selectedQuantity > 0 ? unroundedEstimatedTotalInCents : 0;
   const selectedLots = Object.entries(quantities)
     .filter(([, quantity]) => quantity > 0)
     .map(([lotId, quantity]) => {
@@ -94,7 +81,7 @@ export function CheckoutEstimator({ fixedOrderFeeInCents, lots, roundToPublicEnd
         <strong>{selectedQuantity} ingresso(s)</strong>
       </div>
       <div>
-        <span>Preço final • taxa zero</span>
+        <span>{feeFree ? "Preço final • taxa zero" : "Total estimado"}</span>
         <strong>{formatCurrency(estimatedTotalInCents)}</strong>
       </div>
       <p>{selectedLots.length > 0 ? selectedLots.join(" + ") : "Escolha a quantidade de ingressos para continuar."}</p>

@@ -17,7 +17,6 @@ import { getPublicSeatMapForEvent } from "@/features/seat-maps/seat-map.service"
 import { shouldHideWhenSoldOut } from "@/features/hospitality/hotel-lot-rules";
 import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import {
-  finalizeOrganizationPublicPriceInCents,
   getEffectiveFixedOrderFeeInCents,
   getEffectiveServiceFeeBps,
   isFeeFreeOrganization
@@ -31,6 +30,7 @@ import { CheckoutEstimator } from "./CheckoutEstimator";
 import { TicketQuantityStepper } from "./TicketQuantityStepper";
 import { TicketTypeSelector } from "./TicketTypeSelector";
 import { AddToCartButton } from "./AddToCartButton";
+import { FeeExplanationButton } from "./FeeExplanationButton";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
@@ -304,14 +304,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         )
       )
   }));
-  const advertisedLotPriceById = new Map(
-    checkoutEstimatorLots.map((lot) => [
-      lot.id,
-      finalizeOrganizationPublicPriceInCents(
-        organizationSlug,
-        lot.totalWithFeeInCents + effectiveFixedOrderFeeInCents
-      )
-    ])
+  const hasServiceFees = checkoutEstimatorLots.some(
+    (lot) => lot.totalWithFeeInCents > (purchasableLots.find((candidate) => candidate.id === lot.id)?.priceInCents ?? 0)
   );
   const publicSocialSettings = companySettings as typeof companySettings & {
     instagramUrl?: string | null;
@@ -478,10 +472,12 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             </div>
           ) : null}
 
-          <div className="zeroFeeCampaign" role="note">
-            <strong>Taxa zero</strong>
-            <span>Aproveite seus ingressos com taxa zero.</span>
-          </div>
+          {isFeeFree ? (
+            <div className="zeroFeeCampaign" role="note">
+              <strong>Taxa zero</strong>
+              <span>Aproveite seus ingressos com taxa zero.</span>
+            </div>
+          ) : null}
 
           {visibleLots.length === 0 ? (
             <div className="empty">Nenhum ingresso disponível no momento.</div>
@@ -512,6 +508,11 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                   const isLowStock = available <= 25;
                   const saleBadge = getLotSaleBadge(lot);
                   const isSoldOut = saleBadge?.tone === "soldOut";
+                  const hasLotServiceFee = calculateServiceFeeInCents(
+                    lot.priceInCents,
+                    1,
+                    getEffectiveServiceFeeBps(organizationSlug, lot.serviceFeeBps)
+                  ) > 0;
                   const lotEndsSoon = lot.salesEndsAt
                     ? lot.salesEndsAt.getTime() - Date.now() <= 24 * 60 * 60 * 1000
                     : false;
@@ -528,7 +529,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                       <div className="ticketPickerInfo">
                         <div className="ticketPickerTitleRow">
                           <strong className="ticketPickerTitle">{lot.name}</strong>
-                          {!isSoldOut ? <span className="zeroFeeBadge">SEM TAXA</span> : null}
+                          {!isSoldOut && isFeeFree ? <span className="zeroFeeBadge">SEM TAXA</span> : null}
                           {saleBadge ? (
                             <span className={`ticketSaleBadge ${saleBadge.tone}`}>
                               {saleBadge.label}
@@ -536,7 +537,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                           ) : null}
                         </div>
                         <p className="ticketPickerPrice">
-                          {formatCurrency(advertisedLotPriceById.get(lot.id) ?? lot.priceInCents)}
+                          {formatCurrency(lot.priceInCents)}
+                          {hasLotServiceFee ? <span> (+ taxas)</span> : null}
                         </p>
                         {descriptionTopics.length > 0 ? (
                           <ul className="ticketDescriptionList">
@@ -589,7 +591,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                 <CheckoutEstimator
                   fixedOrderFeeInCents={effectiveFixedOrderFeeInCents}
                   lots={checkoutEstimatorLots}
-                  roundToPublicEnding={!isFeeFree}
+                  feeFree={isFeeFree}
                 />
               ) : null}
 
@@ -599,6 +601,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                   <p className="checkoutFootnote">
                     Você informará seus dados e concluirá o pedido na próxima etapa.
                   </p>
+                  {hasServiceFees ? <FeeExplanationButton /> : null}
                 </>
               ) : (
                 <p className="checkoutFootnote">
