@@ -7,6 +7,22 @@ export function formatCurrency(valueInCents: number) {
   }).format(valueInCents / 100);
 }
 
+export function formatCpf(value?: string | null) {
+  const normalizedValue = value?.trim();
+
+  if (!normalizedValue) {
+    return "Não informado";
+  }
+
+  const digits = normalizedValue.replace(/\D/g, "");
+
+  if (digits.length !== 11) {
+    return normalizedValue;
+  }
+
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+}
+
 export function formatDateTime(value: string | Date) {
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",

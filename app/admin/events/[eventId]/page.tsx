@@ -9,7 +9,7 @@ import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "
 import { duplicateEventAction, updateEventStatusAction } from "@/features/events/event.actions";
 import { getEventCapacity, getEventForManagement, getEventOrderDemographics } from "@/features/events/event.service";
 import { getLeadOriginBucket } from "@/features/tracking/tracking";
-import { formatCurrency } from "@/lib/format";
+import { formatCpf, formatCurrency } from "@/lib/format";
 import { getPublicEventUrl } from "@/lib/public-url";
 
 export const dynamic = "force-dynamic";
@@ -961,7 +961,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
                 <thead>
                   <tr>
                     <th>Pedido</th>
-                    <th>Nome</th>
+                    <th>Comprador</th>
                     <th>Ingressos</th>
                     <th>Data</th>
                     <th>Valor ingressos</th>
@@ -974,7 +974,11 @@ export default async function EventManagementPage({ params, searchParams }: Even
                   {recentOrders.map((order) => (
                     <tr key={order.code}>
                       <td>{order.code}</td>
-                      <td>{order.customer.name}</td>
+                      <td>
+                        <strong>{order.customer.name}</strong>
+                        <br />
+                        <small>CPF: {formatCpf(order.customer.document)}</small>
+                      </td>
                       <td>{formatOrderTicketSummary(order) || "-"}</td>
                       <td>{formatEventDate(order.paidAt ?? order.createdAt)}</td>
                       <td><strong className="eventOverviewMoneyValue is-ticket">{formatCurrency(order.subtotalInCents)}</strong></td>

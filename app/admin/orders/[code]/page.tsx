@@ -6,7 +6,7 @@ import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth
 import { getAdminOrderDetail } from "@/features/orders/order-detail.service";
 import { refundPaidOrderAction } from "@/features/orders/order.admin.actions";
 import { getPublicOrderUrl, getPublicTicketUrl } from "@/lib/public-url";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCpf, formatCurrency, formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -141,8 +141,8 @@ export default async function AdminOrderDetailPage({ params, searchParams }: Adm
               <strong>{order.customer.phone || "-"}</strong>
             </div>
             <div>
-              <span>Documento</span>
-              <strong>{order.customer.document || "-"}</strong>
+              <span>CPF</span>
+              <strong>{formatCpf(order.customer.document)}</strong>
             </div>
             <div>
               <span>Igreja</span>

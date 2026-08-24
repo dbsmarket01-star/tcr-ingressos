@@ -7,7 +7,7 @@ import {
   listOrderFilterEventsForOrganization
 } from "@/features/orders/order.admin.service";
 import { calculateCardInterestInCents } from "@/features/pricing/pricing";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCpf, formatCurrency, formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -637,6 +637,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                           <strong>{order.customer.name}</strong>
                           <span>{order.customer.email}</span>
                           <span>{order.customer.phone || "Telefone não informado"}</span>
+                          <span>CPF: {formatCpf(order.customer.document)}</span>
                         </td>
                         <td className="ordersEventCell">
                           <strong>{order.event.title}</strong>

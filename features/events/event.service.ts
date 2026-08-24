@@ -264,7 +264,8 @@ export async function getEventForManagement(
           customer: {
             select: {
               name: true,
-              email: true
+              email: true,
+              document: true
             }
           },
           items: {
