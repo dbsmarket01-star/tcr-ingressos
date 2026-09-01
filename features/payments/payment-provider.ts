@@ -145,6 +145,42 @@ function getAsaasSplits() {
   return splits.length > 0 ? splits : undefined;
 }
 
+function parseAsaasResponsePayload<T>(text: string) {
+  if (!text.trim()) {
+    return {} as T & { errors?: Array<{ description?: string }> };
+  }
+
+  try {
+    return JSON.parse(text) as T & { errors?: Array<{ description?: string }> };
+  } catch {
+    return {
+      errors: [{ description: "O Asaas retornou uma resposta em formato inválido. Tente novamente em instantes." }]
+    } as T & { errors?: Array<{ description?: string }> };
+  }
+}
+
+function normalizeAsaasBrazilianPhone(value?: string | null) {
+  if (!value) {
+    return undefined;
+  }
+
+  let digits = value.replace(/\D/g, "").replace(/^0+/, "");
+
+  if (digits.startsWith("55") && (digits.length === 12 || digits.length === 13)) {
+    digits = digits.slice(2);
+  }
+
+  if (!digits) {
+    return undefined;
+  }
+
+  if (digits.length < 10 || digits.length > 11) {
+    throw new Error("Telefone inválido. Informe um telefone com DDD, sem código do país. Exemplo: 11999999999.");
+  }
+
+  return digits;
+}
+
 export class MercadoPagoCheckoutProProvider implements PaymentProvider {
   private readonly accessToken: string;
   private readonly appUrl: string;
@@ -265,7 +301,7 @@ export class AsaasPaymentProvider implements PaymentProvider {
       }
     });
 
-    const payload = (await response.json()) as T & { errors?: Array<{ description?: string }> };
+    const payload = parseAsaasResponsePayload<T>(await response.text());
 
     if (!response.ok) {
       const message = payload.errors?.map((error) => error.description).filter(Boolean).join(" ");
@@ -286,7 +322,7 @@ export class AsaasPaymentProvider implements PaymentProvider {
         name: input.customerName,
         email: input.customerEmail,
         cpfCnpj: input.customerDocument.replace(/\D/g, ""),
-        mobilePhone: input.customerPhone?.replace(/\D/g, "") || undefined,
+        mobilePhone: normalizeAsaasBrazilianPhone(input.customerPhone),
         externalReference: input.orderCode,
         notificationDisabled: true
       })
@@ -364,7 +400,7 @@ export class AsaasPaymentProvider implements PaymentProvider {
     const dueDate = new Date();
     const sanitizedCardNumber = input.number.replace(/\D/g, "");
     const sanitizedCpfCnpj = input.holderCpfCnpj.replace(/\D/g, "");
-    const sanitizedPhone = input.customerPhone?.replace(/\D/g, "");
+    const sanitizedPhone = normalizeAsaasBrazilianPhone(input.customerPhone);
     const paymentValue = input.amountInCents / 100;
     const installmentCount = input.installments > 1 ? input.installments : undefined;
 
