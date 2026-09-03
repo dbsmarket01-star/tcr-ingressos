@@ -57,6 +57,38 @@ export function canUseGlobalPaymentEnv(organization?: PaymentOrganizationContext
   return !organization?.slug || organization.slug === DEFAULT_ORGANIZATION_SLUG;
 }
 
+function getKnownScopedPaymentEnv(baseName: string, suffix: string | null) {
+  if (!suffix) {
+    return undefined;
+  }
+
+  const knownValues: Record<string, Record<string, string | undefined>> = {
+    A2_IMERGIDOS: {
+      PAYMENT_PROVIDER: process.env.PAYMENT_PROVIDER_A2_IMERGIDOS,
+      ASAAS_API_KEY: process.env.ASAAS_API_KEY_A2_IMERGIDOS,
+      ASAAS_API_URL: process.env.ASAAS_API_URL_A2_IMERGIDOS,
+      ASAAS_BILLING_TYPE: process.env.ASAAS_BILLING_TYPE_A2_IMERGIDOS,
+      ASAAS_WEBHOOK_TOKEN: process.env.ASAAS_WEBHOOK_TOKEN_A2_IMERGIDOS
+    },
+    TCR_INGRESSOS: {
+      PAYMENT_PROVIDER: process.env.PAYMENT_PROVIDER_TCR_INGRESSOS,
+      ASAAS_API_KEY: process.env.ASAAS_API_KEY_TCR_INGRESSOS,
+      ASAAS_API_URL: process.env.ASAAS_API_URL_TCR_INGRESSOS,
+      ASAAS_BILLING_TYPE: process.env.ASAAS_BILLING_TYPE_TCR_INGRESSOS,
+      ASAAS_WEBHOOK_TOKEN: process.env.ASAAS_WEBHOOK_TOKEN_TCR_INGRESSOS
+    },
+    ELO_CONFERENCE_GLOBAL: {
+      PAYMENT_PROVIDER: process.env.PAYMENT_PROVIDER_ELO_CONFERENCE_GLOBAL,
+      ASAAS_API_KEY: process.env.ASAAS_API_KEY_ELO_CONFERENCE_GLOBAL,
+      ASAAS_API_URL: process.env.ASAAS_API_URL_ELO_CONFERENCE_GLOBAL,
+      ASAAS_BILLING_TYPE: process.env.ASAAS_BILLING_TYPE_ELO_CONFERENCE_GLOBAL,
+      ASAAS_WEBHOOK_TOKEN: process.env.ASAAS_WEBHOOK_TOKEN_ELO_CONFERENCE_GLOBAL
+    }
+  };
+
+  return knownValues[suffix]?.[baseName];
+}
+
 export function getScopedPaymentEnv(
   baseName: string,
   organization?: PaymentOrganizationContext | null,
@@ -67,7 +99,7 @@ export function getScopedPaymentEnv(
 ): ScopedEnvValue {
   const suffix = getPaymentOrganizationEnvSuffix(organization);
   const scopedName = suffix ? `${baseName}_${suffix}` : baseName;
-  const scopedValue = suffix ? process.env[scopedName] : undefined;
+  const scopedValue = suffix ? getKnownScopedPaymentEnv(baseName, suffix) ?? process.env[scopedName] : undefined;
 
   if (hasValue(scopedValue)) {
     return {
