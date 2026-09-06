@@ -1,5 +1,7 @@
 import { DEFAULT_ORGANIZATION_SLUG } from "@/features/organizations/organization.service";
 
+const A2_IMERGIDOS_ORGANIZATION_SLUG = "a2-imergidos";
+
 export type PaymentOrganizationContext = {
   id?: string | null;
   slug?: string | null;
@@ -55,6 +57,28 @@ export function getPaymentOrganizationEnvSuffix(organization?: PaymentOrganizati
 
 export function canUseGlobalPaymentEnv(organization?: PaymentOrganizationContext | null) {
   return !organization?.slug || organization.slug === DEFAULT_ORGANIZATION_SLUG;
+}
+
+function isA2ImergidosOrganization(organization?: PaymentOrganizationContext | null) {
+  return organization?.slug === A2_IMERGIDOS_ORGANIZATION_SLUG;
+}
+
+function canUseA2ProjectGlobalPaymentEnv(organization?: PaymentOrganizationContext | null) {
+  return isA2ImergidosOrganization(organization);
+}
+
+function describeScopedEnvPresence(baseName: string, suffix: string | null, allowGlobalFallback: boolean) {
+  const scopedName = suffix ? `${baseName}_${suffix}` : baseName;
+  const knownScopedValue = suffix ? getKnownScopedPaymentEnv(baseName, suffix) : undefined;
+  const dynamicScopedValue = suffix ? process.env[scopedName] : undefined;
+  const globalValue = allowGlobalFallback ? process.env[baseName] : undefined;
+
+  return {
+    scopedName,
+    hasKnownScopedValue: hasValue(knownScopedValue),
+    hasDynamicScopedValue: hasValue(dynamicScopedValue),
+    hasGlobalValue: hasValue(globalValue)
+  };
 }
 
 function getKnownScopedPaymentEnv(baseName: string, suffix: string | null) {
@@ -137,13 +161,30 @@ export function getPaymentProviderNameForOrganization(organization?: PaymentOrga
 }
 
 export function getAsaasConfigForOrganization(organization?: PaymentOrganizationContext | null): AsaasOrganizationConfig {
-  const allowGlobalApiKey = canUseGlobalPaymentEnv(organization);
+  const allowGlobalApiKey = canUseGlobalPaymentEnv(organization) || canUseA2ProjectGlobalPaymentEnv(organization);
+  const allowGlobalSplit = canUseGlobalPaymentEnv(organization);
   const apiKey = getScopedPaymentEnv("ASAAS_API_KEY", organization, {
     allowGlobalFallback: allowGlobalApiKey
   });
 
   if (!apiKey.value) {
     const operationName = organization?.name || organization?.slug || "operacao";
+    const suffix = getPaymentOrganizationEnvSuffix(organization);
+
+    console.error("[payments:asaas-config-missing]", {
+      organizationId: organization?.id || null,
+      organizationSlug: organization?.slug || null,
+      organizationName: organization?.name || null,
+      suffix,
+      apiKey: describeScopedEnvPresence("ASAAS_API_KEY", suffix, allowGlobalApiKey),
+      apiUrl: describeScopedEnvPresence("ASAAS_API_URL", suffix, true),
+      billingType: describeScopedEnvPresence("ASAAS_BILLING_TYPE", suffix, true),
+      provider: describeScopedEnvPresence("PAYMENT_PROVIDER", suffix, true),
+      vercelEnv: process.env.VERCEL_ENV || null,
+      vercelUrl: process.env.VERCEL_URL || null,
+      projectProductionUrl: process.env.VERCEL_PROJECT_PRODUCTION_URL || null
+    });
+
     throw new Error(`${apiKey.envName} nao configurada para a bilheteria ${operationName}.`);
   }
 
@@ -163,7 +204,7 @@ export function getAsaasConfigForOrganization(organization?: PaymentOrganization
     apiUrlEnvName: apiUrl.envName,
     billingType: billingType.value || "PIX",
     billingTypeEnvName: billingType.envName,
-    allowGlobalAsaasSplit: allowGlobalApiKey,
+    allowGlobalAsaasSplit: allowGlobalSplit,
     organizationEnvSuffix: getPaymentOrganizationEnvSuffix(organization)
   };
 }
@@ -175,7 +216,7 @@ export function getAsaasWebhookTokenForOrganization(organization?: PaymentOrgani
 }
 
 export function getAsaasHealthConfigForOrganization(organization?: PaymentOrganizationContext | null) {
-  const allowGlobalApiKey = canUseGlobalPaymentEnv(organization);
+  const allowGlobalApiKey = canUseGlobalPaymentEnv(organization) || canUseA2ProjectGlobalPaymentEnv(organization);
   const apiKey = getScopedPaymentEnv("ASAAS_API_KEY", organization, {
     allowGlobalFallback: allowGlobalApiKey
   });

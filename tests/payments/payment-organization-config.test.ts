@@ -25,15 +25,38 @@ describe("payment organization config", () => {
     expect(config.allowGlobalAsaasSplit).toBe(false);
   });
 
-  it("does not fall back to the global Asaas API key for non-default bilheterias", () => {
-    vi.stubEnv("ASAAS_API_KEY_A2_IMERGIDOS", "");
+  it("does not fall back to the global Asaas API key for unknown non-default bilheterias", () => {
+    vi.stubEnv("ASAAS_API_KEY_ELO_CONFERENCE_GLOBAL", "");
     vi.stubEnv("ASAAS_API_KEY", "global-secret-key");
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://tcringressos.app.br");
+    vi.stubEnv("APP_URL", "https://tcringressos.app.br");
+    vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "tcringressos.app.br");
+    vi.stubEnv("VERCEL_URL", "tcr-ingressos.vercel.app");
 
     expect(() =>
       getAsaasConfigForOrganization({
-        slug: "a2-imergidos",
-        name: "A2 Imergidos"
+        slug: "elo-conference-global",
+        name: "ELO Conference Global"
       })
-    ).toThrow("ASAAS_API_KEY_A2_IMERGIDOS nao configurada para a bilheteria A2 Imergidos.");
+    ).toThrow("ASAAS_API_KEY_ELO_CONFERENCE_GLOBAL nao configurada para a bilheteria ELO Conference Global.");
+  });
+
+  it("allows the A2 project global Asaas API key when the scoped key is missing", () => {
+    vi.stubEnv("ASAAS_API_KEY_A2_IMERGIDOS", "");
+    vi.stubEnv("ASAAS_API_URL_A2_IMERGIDOS", "");
+    vi.stubEnv("ASAAS_BILLING_TYPE_A2_IMERGIDOS", "");
+    vi.stubEnv("ASAAS_API_KEY", "a2-project-global-key");
+    vi.stubEnv("ASAAS_API_URL", "https://api.asaas.com/v3");
+    vi.stubEnv("ASAAS_BILLING_TYPE", "PIX");
+
+    const config = getAsaasConfigForOrganization({
+      slug: "a2-imergidos",
+      name: "A2 Imergidos"
+    });
+
+    expect(config.accessToken).toBe("a2-project-global-key");
+    expect(config.apiKeyEnvName).toBe("ASAAS_API_KEY");
+    expect(config.allowGlobalAsaasSplit).toBe(false);
+    expect(config.organizationEnvSuffix).toBe("A2_IMERGIDOS");
   });
 });

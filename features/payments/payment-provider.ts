@@ -282,6 +282,7 @@ export class AsaasPaymentProvider implements PaymentProvider {
   private readonly apiUrl: string;
   private readonly accessToken: string;
   private readonly allowGlobalAsaasSplit: boolean;
+  private readonly requestTimeoutMs = 15_000;
 
   constructor(config?: AsaasOrganizationConfig) {
     const resolvedConfig = config || getAsaasConfigForOrganization();
@@ -292,14 +293,30 @@ export class AsaasPaymentProvider implements PaymentProvider {
   }
 
   private async request<T>(path: string, init: RequestInit) {
-    const response = await fetch(`${this.apiUrl}${path}`, {
-      ...init,
-      headers: {
-        access_token: this.accessToken,
-        "Content-Type": "application/json",
-        ...(init.headers || {})
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.requestTimeoutMs);
+
+    let response: Response;
+
+    try {
+      response = await fetch(`${this.apiUrl}${path}`, {
+        ...init,
+        signal: init.signal || controller.signal,
+        headers: {
+          access_token: this.accessToken,
+          "Content-Type": "application/json",
+          ...(init.headers || {})
+        }
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        throw new Error("O Asaas demorou para responder. Tente gerar o Pix novamente em alguns segundos.");
       }
-    });
+
+      throw new Error("Nao foi possivel conectar ao Asaas. Tente gerar o Pix novamente em alguns segundos.");
+    } finally {
+      clearTimeout(timeout);
+    }
 
     const payload = parseAsaasResponsePayload<T>(await response.text());
 

@@ -171,4 +171,19 @@ describe("Asaas payment provider", () => {
     ).rejects.toThrow("Cada parcela no cartão precisa ser de pelo menos R$ 5,00.");
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("returns a clear Asaas connection error when the provider request fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new Error("Connection closed.");
+      })
+    );
+
+    const provider = new AsaasPaymentProvider(config);
+
+    await expect(provider.createPaymentIntent(basePixInput)).rejects.toThrow(
+      "Nao foi possivel conectar ao Asaas. Tente gerar o Pix novamente em alguns segundos."
+    );
+  });
 });

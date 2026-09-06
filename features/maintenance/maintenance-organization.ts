@@ -30,6 +30,21 @@ function addUrlHostCandidate(hosts: Set<string>, value?: string | null) {
   }
 }
 
+function addKnownProjectHostCandidates(hosts: Set<string>) {
+  for (const host of [...hosts]) {
+    if (host === "a2imergidos.com.br" || host === "www.a2imergidos.com.br" || host === "produtor.a2imergidos.com.br" || host.startsWith("a2imergidos-")) {
+      addHostCandidate(hosts, "a2imergidos.com.br");
+      addHostCandidate(hosts, "produtor.a2imergidos.com.br");
+      continue;
+    }
+
+    if (host === "tcringressos.app.br" || host === "www.tcringressos.app.br" || host === "produtor.tcringressos.app.br" || host.startsWith("tcr-ingressos-")) {
+      addHostCandidate(hosts, "tcringressos.app.br");
+      addHostCandidate(hosts, "produtor.tcringressos.app.br");
+    }
+  }
+}
+
 export async function getMaintenanceOrganizationForRequest(request: Request) {
   const hosts = new Set<string>();
   const url = new URL(request.url);
@@ -39,8 +54,12 @@ export async function getMaintenanceOrganizationForRequest(request: Request) {
   addHostCandidate(hosts, request.headers.get("x-original-host"));
   addHostCandidate(hosts, request.headers.get("host"));
   addHostCandidate(hosts, url.host);
-  addUrlHostCandidate(hosts, process.env.NEXT_PUBLIC_APP_URL);
-  addUrlHostCandidate(hosts, process.env.APP_URL);
+  addKnownProjectHostCandidates(hosts);
+
+  if (process.env.NODE_ENV !== "production") {
+    addUrlHostCandidate(hosts, process.env.NEXT_PUBLIC_APP_URL);
+    addUrlHostCandidate(hosts, process.env.APP_URL);
+  }
 
   const hostCandidates = [...hosts];
 
