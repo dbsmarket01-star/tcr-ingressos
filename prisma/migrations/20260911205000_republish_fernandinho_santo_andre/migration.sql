@@ -14,15 +14,16 @@ SET
   "seoImageUrl" = 'https://www.phsis.com.br/files/20/image/20260902165725.png',
   "eventMapImageUrl" = 'https://www.phsis.com.br/files/20/image/20260731094056.png',
   "eventMapNotes" = 'Mapa visual do evento com os setores Pista, Cadeira, Premium, Primeira Fileira e Camarote.',
-  "startsAt" = TIMESTAMP '2026-11-20 21:00:00',
-  "endsAt" = TIMESTAMP '2026-11-20 22:30:00',
+  -- Datas são persistidas em UTC; 00h UTC corresponde a 21h em Brasília.
+  "startsAt" = TIMESTAMP '2026-11-21 00:00:00',
+  "endsAt" = TIMESTAMP '2026-11-21 01:30:00',
   "doorsOpenAt" = NULL,
   "venueName" = 'Clube Atlético Aramaçan',
   "venueAddress" = 'R. São Pedro, 345 - Silveira, Santo André - SP, 09121-390',
   "city" = 'Santo André',
   "state" = 'SP',
   "salesStartsAt" = NOW(),
-  "salesEndsAt" = TIMESTAMP '2026-11-20 21:00:00',
+  "salesEndsAt" = TIMESTAMP '2026-11-21 00:00:00',
   "status" = 'PUBLISHED'
 FROM "Organization" o
 WHERE e."organizationId" = o."id"
