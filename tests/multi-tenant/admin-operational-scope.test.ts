@@ -233,9 +233,7 @@ describe("admin operational tenant isolation", () => {
 
     const eventScope = {
       organizationId: "org_a2",
-      status: {
-        not: "DRAFT"
-      }
+      status: "PUBLISHED"
     };
 
     expect(prismaMock.checkIn.findMany).toHaveBeenCalledWith(

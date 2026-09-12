@@ -212,9 +212,7 @@ export async function listCheckInEvents(organizationId: string, allowedEventIds?
 function buildCheckInEventWhere(organizationId: string, allowedEventIds?: string[] | null): Prisma.EventWhereInput {
   return {
     organizationId,
-    status: {
-      not: EventStatus.DRAFT
-    },
+    status: EventStatus.PUBLISHED,
     ...(allowedEventIds ? { id: { in: allowedEventIds } } : {})
   };
 }

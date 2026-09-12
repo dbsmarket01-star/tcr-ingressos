@@ -71,30 +71,48 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
 
   return (
     <AdminShell
-      title="Check-in"
-      description="Valide QR Codes com rapidez, bloqueie reutilização e mantenha a porta fluindo."
+      title={selectedEvent ? `Check-in — ${selectedEvent.title}` : "Check-in"}
+      description={
+        selectedEvent
+          ? "Painel exclusivo deste evento: acompanhe as entradas e valide os ingressos."
+          : "Selecione o evento para abrir o painel exclusivo de leitura e acompanhamento."
+      }
     >
       <section className="checkInDeskPage">
         <section className="checkInEventSelectCard">
-          <form className="checkInEventSelectForm">
-            <div className="checkInEventSelectCopy">
-              <span>1. Selecione o evento</span>
-              <strong>Escolha o evento do dia para liberar a leitura de QR Codes.</strong>
+          {selectedEvent ? (
+            <div className="checkInEventSelectForm">
+              <div className="checkInEventSelectCopy">
+                <span>Evento selecionado</span>
+                <strong>{selectedEvent.title} — {formatEventOptionDate(selectedEvent.startsAt)}</strong>
+              </div>
+              <div className="checkInSelectRow">
+                <a className="secondaryButton checkInSelectButton" href="/admin/check-in">
+                  Trocar evento
+                </a>
+              </div>
             </div>
-            <div className="checkInSelectRow">
-              <select aria-label="Selecionar evento para check-in" defaultValue={selectedEvent?.id ?? ""} name="eventId">
-                <option value="">Selecione o evento para iniciar o check-in</option>
-                {eventOptions.map((event) => (
-                  <option key={event.id} value={event.id}>
-                    {event.title} - {formatEventOptionDate(event.startsAt)}
-                  </option>
-                ))}
-              </select>
-              <button className="button checkInSelectButton" type="submit">
-                Liberar check-in
-              </button>
-            </div>
-          </form>
+          ) : (
+            <form className="checkInEventSelectForm">
+              <div className="checkInEventSelectCopy">
+                <span>1. Selecione o evento</span>
+                <strong>Os eventos estão organizados pela data, do mais próximo para o mais distante.</strong>
+              </div>
+              <div className="checkInSelectRow">
+                <select aria-label="Selecionar evento para check-in" defaultValue="" name="eventId" required>
+                  <option value="">Selecione o evento para iniciar o check-in</option>
+                  {eventOptions.map((event) => (
+                    <option key={event.id} value={event.id}>
+                      {formatEventOptionDate(event.startsAt)} — {event.title}
+                    </option>
+                  ))}
+                </select>
+                <button className="button checkInSelectButton" type="submit">
+                  Abrir painel do evento
+                </button>
+              </div>
+            </form>
+          )}
           <div className="checkInEventStatusBox">
             <span className="checkInCalendarIcon" aria-hidden="true" />
             <p>
@@ -115,7 +133,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
           </div>
         </section>
 
-        <section className="checkInMetricGrid">
+        {selectedEvent ? <><section className="checkInMetricGrid">
           <article className="checkInMetricCard">
             <span className="checkInMetricIcon checkInMetricGreen">E</span>
             <div>
@@ -152,8 +170,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
 
         <section className="checkInWorkGrid">
           <article className="checkInMainPanel">
-            {selectedEvent ? (
-              <>
+            <>
                 {status ? (
                   <div className={`checkInCurrentResult checkIn${status}`} aria-live="polite">
                     <span>{statusLabels[status]}</span>
@@ -180,19 +197,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
                   </div>
                 ) : null}
                 <CheckInScanner action={validateTicketAction} eventId={selectedEvent.id} eventTitle={selectedEvent.title} />
-              </>
-            ) : (
-              <div className="checkInLockedState">
-                <span className="checkInLockIcon" aria-hidden="true" />
-                <h2>Leitura de QR Code bloqueada</h2>
-                <p>Selecione um evento para liberar a câmera e iniciar a validação.</p>
-                <div className="checkInLockedSteps">
-                  <span>Escolha o evento do dia na seção acima.</span>
-                  <span>Aponte a câmera para o QR Code do ingresso.</span>
-                  <span>Valide a entrada e permita o acesso.</span>
-                </div>
-              </div>
-            )}
+            </>
           </article>
 
           <aside className="checkInRecentPanel">
@@ -225,7 +230,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
               </div>
             )}
           </aside>
-        </section>
+        </section></> : null}
 
         <section className="checkInTipsPanel">
           <h2>Dicas rápidas</h2>
