@@ -1,6 +1,7 @@
 import { EventPageVisitType, EventStatus, OrderStatus, PaymentProvider, type Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { formatReportDateInput, getReportPeriod } from "@/features/reports/report-period";
+import { getAdmissionCount } from "@/features/tickets/admission-count";
 
 type DashboardFilters = {
   startDate?: string;
@@ -154,6 +155,7 @@ type PaidOrderLite = {
   } | null;
   items: Array<{
     quantity: number;
+    admissionsPerUnit: number;
     lot: {
       name: string;
     };
@@ -166,7 +168,7 @@ type PaidOrderLite = {
 
 function getPaidTicketQuantity(orders: PaidOrderLite[]) {
   return orders.reduce((sum, order) => {
-    const itemQuantity = order.items.reduce((itemSum, item) => itemSum + item.quantity, 0);
+    const itemQuantity = getAdmissionCount(order.items);
     return sum + (itemQuantity || order.tickets.length);
   }, 0);
 }
@@ -603,9 +605,18 @@ export async function getDashboardMetrics(
   }
 
   const eventRows = events.map((event) => {
-    const totalCapacity = event.lots.reduce((sum, lot) => sum + lot.totalQuantity, 0);
-    const soldQuantity = event.lots.reduce((sum, lot) => sum + lot.soldQuantity, 0);
-    const reservedQuantity = event.lots.reduce((sum, lot) => sum + lot.reservedQuantity, 0);
+    const totalCapacity = event.lots.reduce(
+      (sum, lot) => sum + lot.totalQuantity * Math.max(lot.admissionsPerUnit, 1),
+      0
+    );
+    const soldQuantity = event.lots.reduce(
+      (sum, lot) => sum + lot.soldQuantity * Math.max(lot.admissionsPerUnit, 1),
+      0
+    );
+    const reservedQuantity = event.lots.reduce(
+      (sum, lot) => sum + lot.reservedQuantity * Math.max(lot.admissionsPerUnit, 1),
+      0
+    );
     const revenueInCents = event.orders.reduce((sum, order) => sum + order.totalInCents, 0);
     const eventTickets = ticketCountByEvent.get(event.id) ?? { active: 0, used: 0 };
     const periodEventPerformance = eventPerformanceMap.get(event.id);

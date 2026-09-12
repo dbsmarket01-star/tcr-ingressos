@@ -1,5 +1,6 @@
 import { OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getAdmissionCount } from "@/features/tickets/admission-count";
 
 type EventScope = string[] | null | undefined;
 
@@ -187,7 +188,7 @@ export async function getEventTicketSalesReport(
       const couponDiscountInCents = discountByItemId.get(item.id) ?? 0;
       const reversedAmountInCents = Math.max(item.totalInCents + item.serviceFeeInCents - couponDiscountInCents, 0);
 
-      row.quantity += item.quantity;
+      row.quantity += getAdmissionCount([item]);
       row.ticketRevenueInCents += item.totalInCents;
       row.serviceFeeInCents += item.serviceFeeInCents;
       row.couponDiscountInCents += couponDiscountInCents;

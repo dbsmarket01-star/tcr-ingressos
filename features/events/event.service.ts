@@ -19,7 +19,8 @@ export async function listEvents(organizationId: string, allowedEventIds?: strin
         select: {
           totalQuantity: true,
           soldQuantity: true,
-          reservedQuantity: true
+          reservedQuantity: true,
+          admissionsPerUnit: true
         }
       },
       organization: {
@@ -271,6 +272,7 @@ export async function getEventForManagement(
           items: {
             select: {
               quantity: true,
+              admissionsPerUnit: true,
               lot: {
                 select: {
                   name: true
@@ -768,11 +770,15 @@ export async function duplicateEvent(eventId: string) {
 
 export function getEventCapacity(event: Pick<EventListItem, "lots">) {
   return event.lots.reduce(
-    (totals, lot) => ({
-      sold: totals.sold + lot.soldQuantity,
-      reserved: totals.reserved + lot.reservedQuantity,
-      total: totals.total + lot.totalQuantity
-    }),
+    (totals, lot) => {
+      const admissionsPerUnit = Math.max(lot.admissionsPerUnit, 1);
+
+      return {
+        sold: totals.sold + lot.soldQuantity * admissionsPerUnit,
+        reserved: totals.reserved + lot.reservedQuantity * admissionsPerUnit,
+        total: totals.total + lot.totalQuantity * admissionsPerUnit
+      };
+    },
     { sold: 0, reserved: 0, total: 0 }
   );
 }

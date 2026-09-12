@@ -82,6 +82,7 @@ export async function getLotSalesReport(
           },
           select: {
             quantity: true,
+            admissionsPerUnit: true,
             unitPriceInCents: true,
             serviceFeeInCents: true,
             totalInCents: true,
@@ -105,6 +106,11 @@ export async function getLotSalesReport(
 
   const rows = lots.map((lot) => {
     const paidQuantity = lot.orderItems.reduce((sum, item) => sum + item.quantity, 0);
+    const paidAdmissions = lot.orderItems.reduce(
+      (sum, item) => sum + item.quantity * Math.max(item.admissionsPerUnit ?? 1, 1),
+      0
+    );
+    const admissionsPerUnit = Math.max(lot.admissionsPerUnit, 1);
     const ticketRevenueInCents = lot.orderItems.reduce((sum, item) => sum + item.totalInCents, 0);
     const serviceFeeInCents = lot.orderItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
     const usedTickets = lot.tickets.filter((ticket) => ticket.status === "USED").length;
@@ -114,7 +120,7 @@ export async function getLotSalesReport(
     const issuedTickets = activeTickets + usedTickets;
     const checkInPercent = issuedTickets > 0 ? Math.round((usedTickets / issuedTickets) * 100) : 0;
     const averageGrossPerSoldTicketInCents =
-      paidQuantity > 0 ? Math.round((ticketRevenueInCents + serviceFeeInCents) / paidQuantity) : 0;
+      paidAdmissions > 0 ? Math.round((ticketRevenueInCents + serviceFeeInCents) / paidAdmissions) : 0;
     const alert = getLotAlert(soldPercent, availableQuantity, lot.reservedQuantity);
 
     return {
@@ -126,11 +132,11 @@ export async function getLotSalesReport(
       name: lot.name,
       status: lot.status,
       priceInCents: lot.priceInCents,
-      totalQuantity: lot.totalQuantity,
-      soldQuantity: paidQuantity,
-      paidQuantity,
-      reservedQuantity: lot.reservedQuantity,
-      availableQuantity,
+      totalQuantity: lot.totalQuantity * admissionsPerUnit,
+      soldQuantity: paidAdmissions,
+      paidQuantity: paidAdmissions,
+      reservedQuantity: lot.reservedQuantity * admissionsPerUnit,
+      availableQuantity: availableQuantity * admissionsPerUnit,
       soldPercent,
       ticketRevenueInCents,
       serviceFeeInCents,

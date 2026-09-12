@@ -11,6 +11,7 @@ import { getEventCapacity, getEventForManagement, getEventOrderDemographics } fr
 import { getLeadOriginBucket } from "@/features/tracking/tracking";
 import { formatCpf, formatCurrency } from "@/lib/format";
 import { getPublicEventUrl } from "@/lib/public-url";
+import { getAdmissionCount } from "@/features/tickets/admission-count";
 
 export const dynamic = "force-dynamic";
 
@@ -84,14 +85,15 @@ function formatBrazilDateKey(value: Date) {
 }
 
 function getOrderTicketQuantity(order: {
-  items: Array<{ quantity: number }>;
+  items: Array<{ quantity: number; admissionsPerUnit?: number | null }>;
 }) {
-  return order.items.reduce((sum, item) => sum + item.quantity, 0);
+  return getAdmissionCount(order.items);
 }
 
 function formatOrderTicketSummary(order: {
   items: Array<{
     quantity: number;
+    admissionsPerUnit?: number | null;
     lot: { name: string };
     lotOption?: { label: string | null } | null;
   }>;
@@ -100,7 +102,7 @@ function formatOrderTicketSummary(order: {
 
   order.items.forEach((item) => {
     const label = item.lotOption?.label ? `${item.lot.name} - ${item.lotOption.label}` : item.lot.name;
-    groupedItems.set(label, (groupedItems.get(label) ?? 0) + item.quantity);
+    groupedItems.set(label, (groupedItems.get(label) ?? 0) + getAdmissionCount([item]));
   });
 
   return Array.from(groupedItems.entries())
@@ -115,7 +117,7 @@ function buildDailySeries(
     subtotalInCents: number;
     serviceFeeInCents: number;
     cardInterestInCents: number;
-    items: Array<{ quantity: number }>;
+    items: Array<{ quantity: number; admissionsPerUnit?: number | null }>;
   }>,
   days = 30
 ) {

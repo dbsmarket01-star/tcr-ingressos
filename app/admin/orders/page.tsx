@@ -647,10 +647,12 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                           {breakdown.ticketLines.map((item) => (
                             <span key={item.label}>
                               <strong>
-                                {item.quantity} {pluralizeTicket(item.quantity)}
+                                {item.admissions} {pluralizeTicket(item.admissions)}
                               </strong>{" "}
                               {item.label}
-                              {item.admissions !== item.quantity ? ` (${item.admissions} QR Codes)` : ""}
+                              {item.admissions !== item.quantity
+                                ? ` (${item.quantity} compra${item.quantity === 1 ? "" : "s"} de ingresso duplo)`
+                                : ""}
                             </span>
                           ))}
                         </td>

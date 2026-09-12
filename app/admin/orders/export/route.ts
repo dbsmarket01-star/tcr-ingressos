@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { listOrdersForCsvExport, type AdminOrderFilters } from "@/features/orders/order.admin.service";
 import { formatCurrency } from "@/lib/format";
+import { getAdmissionCount } from "@/features/tickets/admission-count";
 
 export const dynamic = "force-dynamic";
 
@@ -101,7 +102,7 @@ function paymentBucket(order: OrderExportRow): PaymentBucket {
 }
 
 function getTicketCount(order: OrderExportRow) {
-  return order.items.reduce((sum, item) => sum + item.quantity, 0);
+  return getAdmissionCount(order.items);
 }
 
 function buildEventRows(orders: OrderExportRow[]) {

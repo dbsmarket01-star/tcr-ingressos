@@ -35,6 +35,7 @@ function item(overrides: Record<string, unknown>) {
     lotId: "lot_1",
     lotOptionId: "option_1",
     quantity: 1,
+    admissionsPerUnit: 1,
     unitPriceInCents: 10000,
     totalInCents: 10000,
     serviceFeeInCents: 1000,
@@ -124,5 +125,26 @@ describe("event ticket sales report", () => {
     expect(report).toBeNull();
     expect(prismaMock.event.findFirst).not.toHaveBeenCalled();
     expect(prismaMock.order.findMany).not.toHaveBeenCalled();
+  });
+
+  it("counts a double ticket as two sold admissions", async () => {
+    prismaMock.order.findMany.mockResolvedValue([
+      order({
+        items: [
+          item({
+            quantity: 1,
+            admissionsPerUnit: 2,
+            totalInCents: 15000,
+            serviceFeeInCents: 1000
+          })
+        ]
+      })
+    ]);
+
+    const { getEventTicketSalesReport } = await import("@/features/reports/event-ticket-sales-report.service");
+    const report = await getEventTicketSalesReport("org_tcr", "event_1");
+
+    expect(report?.rows[0].quantity).toBe(2);
+    expect(report?.totals.quantity).toBe(2);
   });
 });
