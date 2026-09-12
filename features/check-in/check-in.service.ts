@@ -96,6 +96,7 @@ export async function validateTicketForCheckIn(
           data: {
             ticketId: ticket.id,
             eventId: ticket.eventId,
+            adminUserId: admin?.id || null,
             status: decision,
             reason: decision === "ALREADY_USED" ? "Ingresso ja utilizado." : "Ingresso invalido.",
             deviceName: deviceName || null
@@ -138,6 +139,7 @@ export async function validateTicketForCheckIn(
           data: {
             ticketId: ticket.id,
             eventId: ticket.eventId,
+            adminUserId: admin?.id || null,
             status: CheckInStatus.ALREADY_USED,
             reason: "Tentativa simultanea ou ingresso ja usado.",
             deviceName: deviceName || null
@@ -162,6 +164,7 @@ export async function validateTicketForCheckIn(
         data: {
           ticketId: ticket.id,
           eventId: ticket.eventId,
+          adminUserId: admin?.id || null,
           status: CheckInStatus.APPROVED,
           deviceName: deviceName || null,
           checkedAt: usedAt

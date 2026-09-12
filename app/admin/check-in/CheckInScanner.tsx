@@ -16,6 +16,10 @@ type BarcodeDetectorConstructor = new (options: {
   formats: string[];
 }) => BarcodeDetectorShape;
 
+type ScannerControls = {
+  stop(): void;
+};
+
 declare global {
   interface Window {
     BarcodeDetector?: BarcodeDetectorConstructor;
@@ -28,6 +32,7 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
   const deviceInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const scannerControlsRef = useRef<ScannerControls | null>(null);
   const scanningRef = useRef(false);
   const [cameraStatus, setCameraStatus] = useState<
     "idle" | "unsupported" | "starting" | "scanning" | "error"
@@ -59,6 +64,8 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
 
   function stopCamera() {
     scanningRef.current = false;
+    scannerControlsRef.current?.stop();
+    scannerControlsRef.current = null;
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
 
@@ -70,13 +77,43 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
   }
 
   async function startCamera() {
-    if (!("BarcodeDetector" in window) || !window.BarcodeDetector) {
-      setCameraStatus("unsupported");
-      return;
-    }
-
     try {
       setCameraStatus("starting");
+
+      if (!("BarcodeDetector" in window) || !window.BarcodeDetector) {
+        await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+
+        if (!videoRef.current) {
+          setCameraStatus("error");
+          return;
+        }
+
+        const { BrowserQRCodeReader } = await import("@zxing/browser");
+        const reader = new BrowserQRCodeReader(undefined, {
+          delayBetweenScanAttempts: 250,
+          delayBetweenScanSuccess: 500
+        });
+
+        scanningRef.current = true;
+        setCameraStatus("scanning");
+        scannerControlsRef.current = await reader.decodeFromConstraints(
+          {
+            video: {
+              facingMode: {
+                ideal: "environment"
+              }
+            },
+            audio: false
+          },
+          videoRef.current,
+          (result) => {
+            if (result && scanningRef.current) {
+              submitCode(result.getText());
+            }
+          }
+        );
+        return;
+      }
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
