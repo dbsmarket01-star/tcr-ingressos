@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { loginAction } from "@/features/auth/auth.actions";
-import { getCurrentAdmin } from "@/features/auth/auth.service";
+import { getAdminLandingPath, getCurrentAdmin } from "@/features/auth/auth.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 
 type LoginPageProps = {
@@ -13,7 +13,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const admin = await getCurrentAdmin();
 
   if (admin) {
-    redirect("/admin");
+    redirect(getAdminLandingPath(admin.role));
   }
 
   const params = searchParams ? await searchParams : {};

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AdminSideNav } from "@/components/admin/AdminSideNav";
 import { logoutAction } from "@/features/auth/auth.actions";
-import { getCurrentAdmin } from "@/features/auth/auth.service";
+import { getAdminLandingPath, getCurrentAdmin } from "@/features/auth/auth.service";
 import { getCurrentOrganizationContext, getOrganizationBrandingById } from "@/features/organizations/organization.service";
 import { getAdminNavGroupsForRole } from "@/lib/navigation";
 
@@ -41,6 +41,7 @@ export async function AdminShell({
     : `${brandName} opera com domínio, equipe e rotina próprios.`;
   const headerActionHref = isPlatformHost ? "/admin/operations" : null;
   const headerActionLabel = isPlatformHost ? "Gerir operações" : null;
+  const adminHomeHref = admin ? getAdminLandingPath(admin.role) : "/admin";
 
   return (
     <main className="adminShell">
@@ -68,7 +69,7 @@ export async function AdminShell({
       </details>
 
       <aside className="sidebar">
-        <Link className="brand sidebarBrand" href="/admin">
+        <Link className="brand sidebarBrand" href={adminHomeHref}>
           {currentOrganizationContext.brandLogoUrl ? (
             <img
               alt={brandName}

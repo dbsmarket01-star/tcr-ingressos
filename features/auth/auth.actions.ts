@@ -10,7 +10,13 @@ import {
 } from "./auth.schema";
 import { createAuditLog } from "@/features/audit/audit.service";
 import { changeAdminPassword, requestAdminPasswordReset, resetAdminPassword } from "./password.service";
-import { clearAdminSession, createAdminSession, findActiveAdminByEmail, requireAdmin } from "./auth.service";
+import {
+  clearAdminSession,
+  createAdminSession,
+  findActiveAdminByEmail,
+  getAdminLandingPath,
+  requireAdmin
+} from "./auth.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 
 export async function loginAction(formData: FormData) {
@@ -38,11 +44,12 @@ export async function loginAction(formData: FormData) {
   }
 
   await createAdminSession(admin);
-  if (organizationContext.isAdminHost) {
+  const landingPath = getAdminLandingPath(admin.role);
+  if (organizationContext.isAdminHost && landingPath === "/admin") {
     redirect("/");
   }
 
-  redirect("/admin");
+  redirect(landingPath);
 }
 
 export async function logoutAction() {

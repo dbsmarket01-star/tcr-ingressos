@@ -264,11 +264,15 @@ export function canAccessArea(role: AdminRole, area: AdminArea) {
   return areaPermissions[area].includes(role);
 }
 
+export function getAdminLandingPath(role: AdminRole) {
+  return role === AdminRole.CHECKIN ? "/admin/check-in" : "/admin";
+}
+
 export async function requirePermission(area: AdminArea) {
   const admin = await requireAdmin();
 
   if (!canAccessArea(admin.role, area)) {
-    redirect("/admin");
+    redirect(getAdminLandingPath(admin.role));
   }
 
   return admin;
