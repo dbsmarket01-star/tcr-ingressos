@@ -3,6 +3,7 @@ import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth
 import { listOrdersForCsvExport, type AdminOrderFilters } from "@/features/orders/order.admin.service";
 import { formatCurrency } from "@/lib/format";
 import { getAdmissionCount } from "@/features/tickets/admission-count";
+import { buildFinanceEventsPdf } from "@/app/admin/finance/export/pdf/route";
 
 export const dynamic = "force-dynamic";
 
@@ -438,7 +439,45 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const filters = getFiltersFromUrl(url);
   const orders = await listOrdersForCsvExport(filters, admin.organizationId, getAdminAllowedEventIds(admin));
-  const pdf = buildOrdersPdf(orders, buildFiltersLabel(url), filters);
+  const eventRows = buildEventRows(orders);
+  const totals = buildTotals(eventRows);
+  const paymentBreakdown = buildPaymentBreakdown(orders);
+  const filterId = "orders-export-filters";
+  const filterSummary = buildFiltersLabel(url).replace(/^Filtros:\s*/, "");
+  const report = {
+    filters: {
+      eventId: filterId,
+      lotId: "",
+      paymentMethod: "",
+      startDate: filters.startDate || "Todos",
+      endDate: filters.endDate || "Todos"
+    },
+    events: [{ id: filterId, title: filterSummary }],
+    lots: [],
+    totals: {
+      paidOrders: totals.orderCount,
+      ticketsIssued: totals.ticketCount,
+      ticketNetInCents: totals.ticketValueInCents,
+      serviceFeeInCents: totals.serviceFeeInCents,
+      cardInterestInCents: totals.cardInterestInCents
+    },
+    byMethod: [
+      { method: "CREDIT_CARD", count: paymentBreakdown.card.count },
+      { method: "PIX", count: paymentBreakdown.pix.count }
+    ],
+    byEvent: eventRows.map((row) => ({
+      id: row.eventId,
+      title: row.eventTitle,
+      venueName: row.venueName,
+      city: row.city,
+      state: row.state,
+      tickets: row.ticketCount,
+      ticketNetInCents: row.ticketValueInCents,
+      serviceFeeInCents: row.serviceFeeInCents,
+      cardInterestInCents: row.cardInterestInCents
+    }))
+  } as unknown as Parameters<typeof buildFinanceEventsPdf>[0];
+  const pdf = buildFinanceEventsPdf(report);
   const filenamePrefix =
     filters.status === "PENDING_PAYMENT" ? "relatorio-oportunidades-pendentes" : "relatorio-pedidos-eventos";
 
