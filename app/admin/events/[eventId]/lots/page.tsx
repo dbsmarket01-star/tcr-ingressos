@@ -8,6 +8,10 @@ import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "
 import { getEventForManagement } from "@/features/events/event.service";
 import { listHotelsForOrganization } from "@/features/hospitality/hotel.service";
 import { createTicketLotAction, updateTicketLotStatusAction } from "@/features/lots/lot.actions";
+import {
+  DEFAULT_ORGANIZATION_SLUG,
+  getOrganizationBrandingById
+} from "@/features/organizations/organization.service";
 import { getCompanySettings } from "@/features/settings/company-settings.service";
 import { formatCurrency } from "@/lib/format";
 
@@ -89,10 +93,11 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
   const query = searchParams ? await searchParams : {};
   await requireEventAccess(eventId);
 
-  const [event, hotels, companySettings] = await Promise.all([
+  const [event, hotels, companySettings, organization] = await Promise.all([
     getEventForManagement(eventId, admin.organizationId!, getAdminAllowedEventIds(admin)),
     listHotelsForOrganization(admin.organizationId!),
-    getCompanySettings(admin.organizationId!)
+    getCompanySettings(admin.organizationId!),
+    getOrganizationBrandingById(admin.organizationId!)
   ]);
 
   if (!event) {
@@ -413,11 +418,11 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
             <div className="grid twoColumns">
               <label className="field">
                 <span>Juros do cartão por parcela (%)</span>
-                <input name="cardInterestPercentPerInstallment" type="number" min="0" max="10" step="0.01" defaultValue={(companySettings.cardAdditionalInstallmentFeeBps / 100).toFixed(2)} required />
+                <input name="cardInterestPercentPerInstallment" type="number" min="0" max="10" step="0.01" defaultValue={organization?.slug === DEFAULT_ORGANIZATION_SLUG ? "4.00" : (companySettings.cardAdditionalInstallmentFeeBps / 100).toFixed(2)} required />
               </label>
               <label className="field">
                 <span>Cobrar juros a partir da parcela</span>
-                <select name="cardInterestStartsAtInstallment" defaultValue="2">
+                <select name="cardInterestStartsAtInstallment" defaultValue={organization?.slug === DEFAULT_ORGANIZATION_SLUG ? "1" : "2"}>
                   {Array.from({ length: 10 }, (_, index) => index + 1).map((installment) => (
                     <option value={installment} key={installment}>
                       {installment}x
