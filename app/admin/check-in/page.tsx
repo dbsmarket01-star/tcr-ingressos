@@ -29,10 +29,24 @@ const statusLabels = {
 };
 
 const statusInstructions = {
-  APPROVED: "Entrada liberada. Pode seguir.",
-  ALREADY_USED: "Bloqueie a entrada e confira o documento/pedido.",
-  INVALID: "Não liberar entrada. Código não encontrado ou inválido.",
-  CANCELED: "Não liberar entrada. Ingresso cancelado."
+  APPROVED: "Pode seguir",
+  ALREADY_USED: "Bloqueie a entrada",
+  INVALID: "Não libere a entrada",
+  CANCELED: "Não libere a entrada"
+};
+
+const statusEyebrows = {
+  APPROVED: "Entrada liberada",
+  ALREADY_USED: "Alerta · QR Code já usado",
+  INVALID: "Alerta · QR Code inválido",
+  CANCELED: "Alerta · Ingresso cancelado"
+};
+
+const statusGuidance = {
+  APPROVED: "Ingresso válido. Libere o acesso.",
+  ALREADY_USED: "Este ingresso já foi validado. Confira o documento ou o pedido.",
+  INVALID: "Código não encontrado. Confira o ingresso antes de tentar novamente.",
+  CANCELED: "Este ingresso está cancelado e não permite acesso."
 };
 
 const emptyStats = {
@@ -71,10 +85,10 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
 
   return (
     <AdminShell
-      title={selectedEvent ? `Check-in — ${selectedEvent.title}` : "Check-in"}
+      title="Check-in"
       description={
         selectedEvent
-          ? "Painel exclusivo deste evento: acompanhe as entradas e valide os ingressos."
+          ? selectedEvent.title
           : "Selecione o evento para abrir o painel exclusivo de leitura e acompanhamento."
       }
     >
@@ -173,15 +187,17 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
             <>
                 {status ? (
                   <div className={`checkInCurrentResult checkIn${status}`} aria-live="polite">
-                    <span>{statusLabels[status]}</span>
-                    <strong>{statusInstructions[status]}</strong>
-                    <p>{result.message}</p>
+                    <div className="checkInResultHeadline">
+                      <span>{statusEyebrows[status]}</span>
+                      <strong>{statusInstructions[status]}</strong>
+                    </div>
+                    <p className="checkInResultMessage">{statusGuidance[status]}</p>
                     {result.ticket ? (
                       <div className="checkInResultSummary">
-                        <span>Ingresso: <strong>{result.ticket}</strong></span>
-                        <span>Comprador: <strong>{result.buyer}</strong></span>
-                        <span>Lote: <strong>{result.lot}</strong></span>
-                        {result.checkedAt ? <span>Horário: <strong>{formatDateTime(new Date(result.checkedAt))}</strong></span> : null}
+                        <span><small>Ingresso</small><strong>{result.ticket}</strong></span>
+                        <span><small>Comprador</small><strong>{result.buyer}</strong></span>
+                        <span><small>Lote</small><strong>{result.lot}</strong></span>
+                        {result.checkedAt ? <span><small>Horário</small><strong>{formatDateTime(new Date(result.checkedAt))}</strong></span> : null}
                       </div>
                     ) : null}
                     <div className="checkInResultActions">

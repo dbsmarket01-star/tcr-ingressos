@@ -18792,7 +18792,7 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 
 .checkInDeskPage {
   display: grid;
-  gap: 22px;
+  gap: 16px;
 }
 
 .checkInEventSelectCard,
@@ -18812,9 +18812,9 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 .checkInEventSelectCard {
   align-items: stretch;
   display: grid;
-  gap: 24px;
+  gap: 20px;
   grid-template-columns: minmax(0, 1.9fr) minmax(300px, 1fr);
-  padding: 28px;
+  padding: 20px;
 }
 
 .checkInEventSelectForm {
@@ -18927,17 +18927,17 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 
 .checkInMetricGrid {
   display: grid;
-  gap: 20px;
+  gap: 12px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .checkInMetricCard {
   align-items: center;
   display: grid;
-  gap: 16px;
+  gap: 12px;
   grid-template-columns: auto minmax(0, 1fr);
-  min-height: 112px;
-  padding: 24px;
+  min-height: 88px;
+  padding: 16px;
 }
 
 .checkInMetricCard div {
@@ -18973,9 +18973,9 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   display: inline-flex;
   font-size: 13px;
   font-weight: 900;
-  height: 50px;
+  height: 42px;
   justify-content: center;
-  width: 50px;
+  width: 42px;
 }
 
 .checkInMetricGreen {
@@ -19101,56 +19101,94 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .checkInCurrentResult {
+  background: #ffffff;
   border: 1px solid #dbe8e2;
   border-radius: 14px;
   display: grid;
-  gap: 10px;
+  gap: 14px;
   margin-bottom: 18px;
-  padding: 18px;
+  overflow: hidden;
+  padding: 0 16px 16px;
 }
 
-.checkInCurrentResult > span {
+.checkInResultHeadline {
+  display: grid;
+  gap: 4px;
+  margin-inline: -16px;
+  padding: 14px 16px;
+}
+
+.checkInResultHeadline > span {
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
-.checkInCurrentResult > strong {
-  font-size: 22px;
+.checkInResultHeadline > strong {
+  font-size: 24px;
   line-height: 1.16;
 }
 
-.checkInCurrentResult p {
+.checkInResultMessage {
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.4;
   margin: 0;
 }
 
 .checkInCurrentResult.checkInAPPROVED {
-  background: #ecfdf5;
   border-color: #a7f3d0;
+  color: #0f172a;
+}
+
+.checkInCurrentResult.checkInAPPROVED .checkInResultHeadline {
+  background: #dff8ec;
   color: #065f46;
 }
 
 .checkInCurrentResult.checkInALREADY_USED,
 .checkInCurrentResult.checkInINVALID,
 .checkInCurrentResult.checkInCANCELED {
-  background: #fff1f2;
   border-color: #fecdd3;
+  color: #0f172a;
+}
+
+.checkInCurrentResult.checkInALREADY_USED .checkInResultHeadline,
+.checkInCurrentResult.checkInINVALID .checkInResultHeadline,
+.checkInCurrentResult.checkInCANCELED .checkInResultHeadline {
+  background: #fff1f2;
   color: #9f1239;
 }
 
 .checkInResultSummary {
-  background: rgba(255, 255, 255, 0.68);
-  border: 1px solid currentColor;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   display: grid;
-  gap: 7px;
-  opacity: 0.9;
+  gap: 10px 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   padding: 12px;
 }
 
 .checkInResultSummary span {
-  font-weight: 700;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.checkInResultSummary small {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.checkInResultSummary strong {
+  color: #172033;
+  font-size: 14px;
+  overflow-wrap: anywhere;
 }
 
 .checkInCurrentResult .checkInResultActions {
@@ -19347,8 +19385,55 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 @media (max-width: 760px) {
+  .adminShell:has(.checkInDeskPage) .adminHeader {
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  .adminShell:has(.checkInDeskPage) .adminHeader h1 {
+    font-size: 25px;
+    margin-bottom: 3px;
+  }
+
+  .adminShell:has(.checkInDeskPage) .adminHeader p {
+    display: -webkit-box;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.3;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .adminShell:has(.checkInDeskPage) .adminHeaderActions {
+    display: flex;
+    flex-wrap: nowrap;
+  }
+
+  .adminShell:has(.checkInDeskPage) .adminHeaderPulse,
+  .adminShell:has(.checkInDeskPage) .adminHeaderActions > .secondaryButton {
+    display: none;
+  }
+
+  .adminShell:has(.checkInDeskPage) .adminUserBadge {
+    flex: 1 1 auto;
+    min-height: 42px;
+    padding: 8px 11px;
+  }
+
+  .adminShell:has(.checkInDeskPage) .adminHeaderActions form {
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  .adminShell:has(.checkInDeskPage) .adminHeaderActions form .secondaryButton {
+    min-height: 42px;
+    padding-inline: 16px;
+    width: auto;
+  }
+
   .checkInDeskPage {
-    gap: 16px;
+    gap: 12px;
   }
 
   .checkInEventSelectCard,
@@ -19356,14 +19441,39 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   .checkInRecentPanel,
   .checkInTipsPanel {
     border-radius: 14px;
-    padding: 18px;
+    padding: 14px;
   }
 
   .checkInSelectRow,
-  .checkInMetricGrid,
   .checkInLockedSteps,
   .checkInTipsGrid {
     grid-template-columns: 1fr;
+  }
+
+  .checkInEventSelectCard {
+    gap: 12px;
+  }
+
+  .checkInEventSelectForm {
+    gap: 12px;
+    padding-bottom: 14px;
+  }
+
+  .checkInEventSelectCopy {
+    gap: 5px;
+  }
+
+  .checkInEventSelectCopy span {
+    font-size: 14px;
+  }
+
+  .checkInEventSelectCopy strong {
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .checkInSelectButton {
+    min-height: 44px;
   }
 
   .checkInSelectButton {
@@ -19371,13 +19481,64 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   }
 
   .checkInEventStatusBox {
-    grid-template-columns: 1fr;
-    justify-items: start;
+    gap: 10px;
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 0;
+  }
+
+  .checkInEventStatusBox p {
+    font-size: 13px;
+  }
+
+  .checkInCalendarIcon {
+    border-radius: 10px;
+    height: 44px;
+    width: 44px;
+  }
+
+  .checkInCalendarIcon::before {
+    height: 20px;
+    width: 25px;
+  }
+
+  .checkInCalendarIcon::after {
+    border-top-width: 2px;
+    height: 10px;
+    top: 18px;
+    width: 25px;
+  }
+
+  .checkInMetricGrid {
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .checkInMetricCard {
-    min-height: 96px;
-    padding: 18px;
+    display: block;
+    min-height: 76px;
+    padding: 11px 12px;
+  }
+
+  .checkInMetricIcon {
+    display: none;
+  }
+
+  .checkInMetricCard div {
+    column-gap: 5px;
+  }
+
+  .checkInMetricCard div > span {
+    font-size: 10px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .checkInMetricCard strong {
+    font-size: 24px;
+  }
+
+  .checkInMetricCard small {
+    font-size: 11px;
   }
 
   .checkInMainPanel,
@@ -19393,10 +19554,47 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
     margin-top: 10px;
   }
 
-  .checkInCurrentResult .checkInResultActions,
+  .checkInCurrentResult .checkInResultActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .checkInCurrentResult .checkInResultActions > :only-child {
+    grid-column: 1 / -1;
+  }
+
   .scannerActions {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .checkInCurrentResult {
+    margin-bottom: 12px;
+  }
+
+  .checkInResultHeadline > strong {
+    font-size: 23px;
+  }
+
+  .checkInResultSummary {
+    grid-template-columns: 1fr;
+  }
+
+  .checkInScannerCard {
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .checkInFormHeader h2 {
+    font-size: 21px;
+  }
+
+  .checkInFormHeader p {
+    display: none;
+  }
+
+  .checkInForm input[name="code"] {
+    font-size: 16px;
   }
 
   .checkInRecentItem {
