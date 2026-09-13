@@ -1,255 +1,34 @@
 import { NextResponse } from "next/server";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { getFinanceReport } from "@/features/finance/finance-report.service";
-import { getOrganizationContextById } from "@/features/organizations/organization.service";
 import { formatCurrency } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
+type Report = Awaited<ReturnType<typeof getFinanceReport>>;
+type Row = Report["byEvent"][number];
+const W=842,H=884, green="0 .31 .22 rg", green2="0 .42 .29 rg", bright=".08 .72 .45 rg", pale=".89 .97 .93 rg", ink=".04 .08 .12 rg", muted=".34 .40 .48 rg", line=".84 .89 .87 RG", white="1 1 1 rg";
 
-type FinanceReport = Awaited<ReturnType<typeof getFinanceReport>>;
-type EventRow = FinanceReport["byEvent"][number];
+function literal(value:unknown){const bytes=Buffer.from(String(value??"").replace(/[–—]/g,"-"),"latin1");let out="";for(const b of bytes){if(b===40||b===41||b===92)out+=`\\${String.fromCharCode(b)}`;else if(b<32||b>126)out+=`\\${b.toString(8).padStart(3,"0")}`;else out+=String.fromCharCode(b)}return out}
+const rect=(x:number,y:number,w:number,h:number,c:string)=>`${c}\n${x} ${y} ${w} ${h} re f`;
+const stroke=(x:number,y:number,w:number,h:number,c=line,l=.6)=>`${c}\n${l} w\n${x} ${y} ${w} ${h} re S`;
+const rule=(x:number,y:number,x2:number,y2:number,c=line,l=.6)=>`${c}\n${l} w\n${x} ${y} m ${x2} ${y2} l S`;
+function txt(x:number,y:number,v:unknown,s=9,b=false,c=ink,max=80){return `${c}\nBT /${b?"F2":"F1"} ${s} Tf ${x} ${y} Td (${literal(v).slice(0,max*4)}) Tj ET`}
+function circle(cx:number,cy:number,r:number,c:string){const k=.5522848*r;return `${c}\n${cx+r} ${cy} m ${cx+r} ${cy+k} ${cx+k} ${cy+r} ${cx} ${cy+r} c ${cx-k} ${cy+r} ${cx-r} ${cy+k} ${cx-r} ${cy} c ${cx-r} ${cy-k} ${cx-k} ${cy-r} ${cx} ${cy-r} c ${cx+k} ${cy-r} ${cx+r} ${cy-k} ${cx+r} ${cy} c f`}
+function wedge(cx:number,cy:number,r:number,start:number,end:number,c:string){const pts=[];for(let a=start;a<=end+.001;a+=Math.max((end-start)/32,.05))pts.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);pts.push([cx+r*Math.cos(end),cy+r*Math.sin(end)]);return `${c}\n${cx} ${cy} m ${pts.map(p=>`${p[0].toFixed(2)} ${p[1].toFixed(2)} l`).join(" ")} h f`}
+function icon(cmd:string[],x:number,y:number,label:string){cmd.push(circle(x,y,17,pale),txt(x-5,y-4,label,14,true,green2,4))}
+function datePt(v:string){const [y,m,d]=v.split("-");return y&&m&&d?`${d}/${m}/${y}`:v}
+function issued(d:Date){return new Intl.DateTimeFormat("pt-BR",{dateStyle:"short",timeStyle:"short",timeZone:"America/Sao_Paulo"}).format(d)}
+function filterLabel(report:Report){const event=report.events.find(e=>e.id===report.filters.eventId)?.title??"Todos os eventos";const lot=report.lots.find(l=>l.id===report.filters.lotId)?.name??"Todos os setores";const method=report.filters.paymentMethod==="PIX"?"Pix":report.filters.paymentMethod==="CREDIT_CARD"?"Cartão de crédito":"Todas as formas";return `${event} | ${lot} | ${method}`}
 
-const pageWidth = 842;
-const pageHeight = 595;
-const darkGreen = "0.000 0.290 0.125 rg";
-const darkGreenStroke = "0.000 0.290 0.125 RG";
-const midGreen = "0.000 0.420 0.190 rg";
-const paleGreen = "0.936 0.980 0.956 rg";
-const lineGreen = "0.520 0.760 0.650 RG";
-const ink = "0.045 0.060 0.090 rg";
-const muted = "0.260 0.330 0.420 rg";
+function header(c:string[],r:Report,page:number,pages:number){c.push(rect(0,H-112,W,112,green),txt(98,H-50,"Relatório de pedidos por evento",25,true,white,45),txt(98,H-76,"Vendas de ingressos - Visão consolidada",13,false,".75 .92 .84 rg",55));c.push(txt(38,H-64,"#",35,true,".48 .91 .69 rg",2));c.push(stroke(560,H-94,250,70,".21 .72 .52 RG",1),txt(600,H-47,"Período do relatório",9,false,".75 .92 .84 rg"),txt(600,H-65,`${datePt(r.filters.startDate)} a ${datePt(r.filters.endDate)}`,13,true,white),txt(575,H-84,`Filtros: ${filterLabel(r)}`,7.5,false,".75 .92 .84 rg",65),txt(765,H-129,`Página ${page} de ${pages}`,8,true,green,18))}
+function kpi(c:string[],x:number,title:string,value:unknown,caption:string,symbol:string){c.push(rect(x,H-230,183,92,white),stroke(x,H-230,183,92),circle(x+31,H-184,22,pale),txt(x+25,H-189,symbol,16,true,green2,4),txt(x+65,H-170,title,10,true,ink,26),txt(x+65,H-194,value,18,true,green,28),txt(x+65,H-213,caption,9,false,muted,24))}
+function payment(c:string[],r:Report){const card=r.byMethod.find(x=>x.method==="CREDIT_CARD")?.count??0,pix=r.byMethod.find(x=>x.method==="PIX")?.count??0,total=card+pix,rate=total?card/total:0,cx=365,cy=H-306,rr=58;c.push(rect(28,H-375,786,125,white),stroke(28,H-375,786,125),txt(67,H-290,"Cartão x Pix",15,true,green),txt(67,H-310,"Distribuição das vendas por forma de pagamento",9.5,false,muted,48),txt(42,H-304,"▭",25,true,green2,3));c.push(circle(cx,cy,rr,bright));if(rate>0)c.push(wedge(cx,cy,rr,-Math.PI/2,-Math.PI/2+Math.PI*2*rate,green));c.push(circle(cx,cy,20,white),txt(cx+23,cy-4,`${Math.round(rate*100)}%`,9,true,white),txt(cx-49,cy-4,`${Math.round((1-rate)*100)}%`,9,true,white));c.push(circle(490,H-290,7,green),txt(505,H-294,"Cartão de crédito",10,true),txt(505,H-311,`${card} vendas (${Math.round(rate*100)}%)`,9,false,muted),circle(490,H-334,7,bright),txt(505,H-338,"Pix",10,true),txt(505,H-355,`${pix} vendas (${Math.round((1-rate)*100)}%)`,9,false,muted))}
+function tableHeader(c:string[],y:number){c.push(rect(28,y-42,786,42,green));const labels=[[42,"Evento"],[265,"Cidade"],[377,"Ingressos"],[463,"Valor dos ingressos"],[590,"Taxa da bilheteria"],[706,"Juros cartão"]];for(const [x,l] of labels)c.push(txt(Number(x),y-26,l,8,true,white,25));[250,362,450,578,694].forEach(x=>c.push(rule(x,y-42,x,y,".25 .55 .46 RG",.4)))}
+function row(c:string[],r:Row,y:number){c.push(rect(28,y-55,786,55,white),stroke(28,y-55,786,55),txt(40,y-23,r.title,9.5,true,green,39),txt(40,y-40,r.venueName,8,false,muted,39),txt(263,y-30,`${r.city}/${r.state}`,8.5,false,ink,20),txt(397,y-30,r.tickets,9,true),txt(466,y-30,formatCurrency(r.ticketNetInCents),8.5,true),txt(598,y-30,formatCurrency(r.serviceFeeInCents),8.5,true),txt(710,y-30,formatCurrency(r.cardInterestInCents),8.5,true))}
+function total(c:string[],r:Report,y:number){c.push(rect(28,y-44,786,44,pale),txt(42,y-28,"TOTAL GERAL",12,true,green),txt(397,y-28,r.totals.ticketsIssued,10,true,green),txt(466,y-28,formatCurrency(r.totals.ticketNetInCents),9.5,true,green),txt(598,y-28,formatCurrency(r.totals.serviceFeeInCents),9.5,true,green),txt(710,y-28,formatCurrency(r.totals.cardInterestInCents),9.5,true,green))}
+function footer(c:string[],when:Date,page:number,pages:number){c.push(rule(28,58,814,58),txt(62,37,"Relatório gerado automaticamente pelo sistema de vendas de ingressos.",8,false,muted,80),txt(62,24,"Em caso de dúvidas, entre em contato com a equipe.",8,false,muted,70),txt(508,37,"Gerado em",8,false,muted),txt(508,24,issued(when),8,true,muted),txt(690,30,`Página ${page} de ${pages}`,8,true,green),txt(40,26,"#",19,true,bright))}
+function pdf(pages:string[]){const o:string[]=["<< /Type /Catalog /Pages 2 0 R >>","","<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>","<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"],nums:number[]=[];for(const content of pages){const n=o.length+1;o.push(`<< /Length ${Buffer.byteLength(content)} >>\nstream\n${content}\nendstream`);nums.push(o.length+1);o.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${n} 0 R >>`)}o[1]=`<< /Type /Pages /Kids [${nums.map(n=>`${n} 0 R`).join(" ")}] /Count ${nums.length} >>`;let out="%PDF-1.4\n";const offsets=[0];o.forEach((v,i)=>{offsets.push(Buffer.byteLength(out));out+=`${i+1} 0 obj\n${v}\nendobj\n`});const xr=Buffer.byteLength(out);out+=`xref\n0 ${o.length+1}\n0000000000 65535 f \n${offsets.slice(1).map(x=>`${String(x).padStart(10,"0")} 00000 n `).join("\n")}\ntrailer\n<< /Size ${o.length+1} /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`;return Buffer.from(out)}
 
-function pdfSafe(value: unknown) {
-  return String(value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[\\()]/g, "\\$&")
-    .replace(/[^\x20-\x7E]/g, " ");
-}
+export function buildFinanceEventsPdf(report:Report){const when=new Date(),chunks:Row[][]=[];for(let i=0;i<report.byEvent.length;i+=5)chunks.push(report.byEvent.slice(i,i+5));if(!chunks.length)chunks.push([]);return pdf(chunks.map((rows,index)=>{const c:string[]=[];header(c,report,index+1,chunks.length);let y;if(index===0){kpi(c,28,"Pedidos",report.totals.paidOrders,"no filtro","#");kpi(c,229,"Ingressos",report.totals.ticketsIssued,"vendidos","T");kpi(c,430,"Valor dos ingressos",formatCurrency(report.totals.ticketNetInCents),"sem taxas","$");kpi(c,631,"Taxa da bilheteria",formatCurrency(report.totals.serviceFeeInCents),"taxa paga","%");payment(c,report);c.push(txt(42,H-411,"Detalhamento por evento",16,true,ink),txt(42,H-428,"Confira abaixo o desempenho de cada evento no período selecionado.",9,false,muted));y=H-448}else{c.push(txt(42,H-154,"Detalhamento por evento - continuação",15,true,ink));y=H-176}tableHeader(c,y);let rowY=y-42;rows.forEach(item=>{row(c,item,rowY);rowY-=55});if(index===chunks.length-1)total(c,report,rowY-8);footer(c,when,index+1,chunks.length);return c.join("\n") }))}
 
-function fillRect(x: number, y: number, width: number, height: number, color: string) {
-  return `${color}\n${x} ${y} ${width} ${height} re f`;
-}
-
-function strokeRect(x: number, y: number, width: number, height: number, color: string, lineWidth = 1) {
-  return `${color}\n${lineWidth} w\n${x} ${y} ${width} ${height} re S`;
-}
-
-function line(x1: number, y1: number, x2: number, y2: number, color: string, lineWidth = 1) {
-  return `${color}\n${lineWidth} w\n${x1} ${y1} m\n${x2} ${y2} l S`;
-}
-
-function text(
-  x: number,
-  y: number,
-  value: unknown,
-  options?: { size?: number; font?: "F1" | "F2"; color?: string; max?: number }
-) {
-  const size = options?.size ?? 9;
-  const font = options?.font ?? "F1";
-  const color = options?.color ?? ink;
-  const max = options?.max ?? 100;
-
-  return `${color}\nBT\n/${font} ${size} Tf\n${x} ${y} Td\n(${pdfSafe(value).slice(0, max)}) Tj\nET`;
-}
-
-function buildPdfFromPages(pages: string[]) {
-  const objects: string[] = [];
-  const pageObjectNumbers: number[] = [];
-
-  objects.push("<< /Type /Catalog /Pages 2 0 R >>");
-  objects.push("");
-  objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
-  objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>");
-
-  pages.forEach((content) => {
-    const contentNumber = objects.length + 1;
-    objects.push(`<< /Length ${Buffer.byteLength(content, "utf8")} >>\nstream\n${content}\nendstream`);
-    const pageNumber = objects.length + 1;
-    pageObjectNumbers.push(pageNumber);
-    objects.push(
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${contentNumber} 0 R >>`
-    );
-  });
-
-  objects[1] = `<< /Type /Pages /Kids [${pageObjectNumbers.map((number) => `${number} 0 R`).join(" ")}] /Count ${pageObjectNumbers.length} >>`;
-
-  let pdf = "%PDF-1.4\n";
-  const offsets = [0];
-
-  objects.forEach((object, index) => {
-    offsets.push(Buffer.byteLength(pdf, "utf8"));
-    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
-  });
-
-  const xrefOffset = Buffer.byteLength(pdf, "utf8");
-  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  offsets.slice(1).forEach((offset) => {
-    pdf += `${String(offset).padStart(10, "0")} 00000 n \n`;
-  });
-  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
-
-  return Buffer.from(pdf, "utf8");
-}
-
-function formatDateInputPt(value: string) {
-  const [year, month, day] = value.split("-");
-  return year && month && day ? `${day}/${month}/${year}` : value;
-}
-
-function formatIssuedAt(value: Date) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-    timeZone: "America/Sao_Paulo"
-  }).format(value);
-}
-
-function drawBrand(commands: string[], brandName: string) {
-  const [firstWord, ...rest] = brandName.split(/\s+/).filter(Boolean);
-  const main = firstWord || "INGRESAAS";
-  const suffix = rest.join(" ");
-
-  commands.push(text(28, 530, main.toUpperCase(), { size: 21, font: "F2", color: midGreen, max: 20 }));
-  commands.push(text(96, 530, suffix || "Ingressos", { size: 20, font: "F2", color: ink, max: 22 }));
-  commands.push(text(47, 514, "AUTOMACAO OFICIAL DE EVENTOS", { size: 5.5, font: "F2", color: ink, max: 46 }));
-}
-
-function drawIssuedBox(commands: string[], issuedAt: Date, page: number, totalPages: number) {
-  commands.push(fillRect(690, 504, 120, 78, "0.944 0.976 0.956 rg"));
-  commands.push(strokeRect(690, 504, 120, 78, "0.860 0.920 0.890 RG", 0.4));
-  commands.push(fillRect(700, 546, 18, 20, midGreen));
-  commands.push(text(704, 552, "cal", { size: 5.5, font: "F2", color: "1 1 1 rg", max: 8 }));
-  commands.push(text(728, 558, "Emitido em:", { size: 8, color: muted, max: 30 }));
-  commands.push(text(728, 544, formatIssuedAt(issuedAt), { size: 8.5, font: "F2", color: ink, max: 32 }));
-  commands.push(line(728, 532, 802, 532, "0.680 0.800 0.740 RG", 0.45));
-  commands.push(text(728, 516, "Pagina:", { size: 8, color: muted, max: 16 }));
-  commands.push(text(728, 503, `${page} / ${totalPages}`, { size: 9, font: "F2", color: ink, max: 12 }));
-}
-
-function drawHeader(commands: string[], report: FinanceReport, brandName: string, issuedAt: Date, page: number, totalPages: number) {
-  drawBrand(commands, brandName);
-  commands.push(text(410, 546, "Relatorio de vendas por evento", { size: 18, font: "F2", color: ink, max: 60 }));
-  commands.push(text(410, 520, "Periodo:", { size: 12, color: ink, max: 18 }));
-  commands.push(text(468, 520, `${formatDateInputPt(report.filters.startDate)} a ${formatDateInputPt(report.filters.endDate)}`, {
-    size: 12,
-    font: "F2",
-    color: midGreen,
-    max: 40
-  }));
-  drawIssuedBox(commands, issuedAt, page, totalPages);
-  commands.push(line(28, 492, 810, 492, darkGreenStroke, 1.2));
-}
-
-function drawTableHeader(commands: string[], y: number) {
-  commands.push(fillRect(28, y - 40, 784, 40, darkGreen));
-  commands.push(text(44, y - 25, "EVENTO", { size: 8.5, font: "F2", color: "1 1 1 rg", max: 18 }));
-  commands.push(text(205, y - 25, "PEDIDOS", { size: 8.5, font: "F2", color: "1 1 1 rg", max: 16 }));
-  commands.push(text(275, y - 25, "INGRESSOS", { size: 8.5, font: "F2", color: "1 1 1 rg", max: 18 }));
-  commands.push(text(350, y - 25, "VALOR DE INGRESSOS", { size: 8.5, font: "F2", color: "1 1 1 rg", max: 28 }));
-  commands.push(text(470, y - 25, "TAXAS", { size: 8.5, font: "F2", color: "1 1 1 rg", max: 14 }));
-  commands.push(text(555, y - 25, "JUROS", { size: 8.5, font: "F2", color: "1 1 1 rg", max: 14 }));
-  commands.push(text(623, y - 25, "DESCONTOS / CUPOM", { size: 8.5, font: "F2", color: "1 1 1 rg", max: 28 }));
-  commands.push(text(730, y - 25, "TOTAL PAGO", { size: 8.5, font: "F2", color: "1 1 1 rg", max: 18 }));
-}
-
-function drawEventRow(commands: string[], row: EventRow, y: number) {
-  commands.push(fillRect(28, y - 62, 784, 62, "1 1 1 rg"));
-  commands.push(line(28, y - 62, 812, y - 62, "0.880 0.900 0.890 RG", 0.45));
-  commands.push(text(44, y - 34, row.title, { size: 10.5, font: "F2", color: ink, max: 36 }));
-  commands.push(text(218, y - 34, row.count, { size: 10, font: "F2", color: ink, max: 8 }));
-  commands.push(text(292, y - 34, row.tickets, { size: 10, font: "F2", color: ink, max: 8 }));
-  commands.push(text(360, y - 34, formatCurrency(row.ticketSubtotalInCents), { size: 10, font: "F2", color: ink, max: 22 }));
-  commands.push(text(462, y - 34, formatCurrency(row.serviceFeeInCents), { size: 10, font: "F2", color: ink, max: 20 }));
-  commands.push(text(546, y - 34, formatCurrency(row.cardInterestInCents), { size: 10, font: "F2", color: ink, max: 20 }));
-  commands.push(text(633, y - 34, formatCurrency(row.discountInCents), { size: 10, font: "F2", color: ink, max: 20 }));
-  commands.push(fillRect(692, y - 54, 106, 42, paleGreen));
-  commands.push(text(707, y - 35, formatCurrency(row.grossInCents), { size: 12.5, font: "F2", color: darkGreen, max: 24 }));
-}
-
-function drawTotalRow(commands: string[], report: FinanceReport, y: number) {
-  commands.push(fillRect(28, y - 52, 784, 52, "0.952 0.988 0.966 rg"));
-  commands.push(text(44, y - 32, "TOTAL GERAL", { size: 11, font: "F2", color: darkGreen, max: 22 }));
-  commands.push(text(218, y - 32, report.totals.paidOrders, { size: 11, font: "F2", color: midGreen, max: 8 }));
-  commands.push(text(292, y - 32, report.totals.ticketsIssued, { size: 11, font: "F2", color: midGreen, max: 8 }));
-  commands.push(text(350, y - 32, formatCurrency(report.totals.ticketSubtotalInCents), { size: 11, font: "F2", color: midGreen, max: 24 }));
-  commands.push(text(462, y - 32, formatCurrency(report.totals.serviceFeeInCents), { size: 11, font: "F2", color: midGreen, max: 20 }));
-  commands.push(text(546, y - 32, formatCurrency(report.totals.cardInterestInCents), { size: 11, font: "F2", color: midGreen, max: 20 }));
-  commands.push(text(633, y - 32, formatCurrency(report.totals.discountInCents), { size: 11, font: "F2", color: midGreen, max: 20 }));
-  commands.push(fillRect(692, y - 45, 106, 38, darkGreen));
-  commands.push(text(708, y - 30, formatCurrency(report.totals.grossRevenueInCents), { size: 12, font: "F2", color: "1 1 1 rg", max: 24 }));
-}
-
-function drawFooter(commands: string[]) {
-  commands.push(line(28, 67, 812, 67, lineGreen, 0.7));
-  commands.push(strokeRect(40, 26, 17, 21, darkGreenStroke, 1.2));
-  commands.push(text(45, 34, "$", { size: 11, font: "F2", color: midGreen, max: 2 }));
-  commands.push(text(70, 43, "Este relatorio apresenta as vendas confirmadas no periodo selecionado.", { size: 9, color: muted, max: 92 }));
-  commands.push(text(70, 29, "Total pago = ingressos + taxas + juros - descontos/cupom.", { size: 9, color: muted, max: 86 }));
-}
-
-function buildFinanceEventsPdf(report: FinanceReport, brandName: string) {
-  const rows = report.byEvent;
-  const issuedAt = new Date();
-  const rowsPerPage = 5;
-  const chunks: EventRow[][] = [];
-
-  for (let index = 0; index < rows.length; index += rowsPerPage) {
-    chunks.push(rows.slice(index, index + rowsPerPage));
-  }
-
-  if (chunks.length === 0) {
-    chunks.push([]);
-  }
-
-  const pages = chunks.map((chunk, pageIndex) => {
-    const commands: string[] = [];
-    const isLastPage = pageIndex === chunks.length - 1;
-    drawHeader(commands, report, brandName, issuedAt, pageIndex + 1, chunks.length);
-    drawTableHeader(commands, 470);
-
-    if (rows.length === 0) {
-      commands.push(fillRect(28, 370, 784, 58, "1 1 1 rg"));
-      commands.push(text(44, 396, "Nenhuma venda paga encontrada nesse recorte.", { size: 11, font: "F2", color: ink, max: 70 }));
-    } else {
-      chunk.forEach((row, index) => drawEventRow(commands, row, 430 - index * 62));
-    }
-
-    if (isLastPage) {
-      const totalY = 430 - chunk.length * 62;
-      drawTotalRow(commands, report, Math.max(totalY, 112));
-      drawFooter(commands);
-    }
-
-    return commands.join("\n");
-  });
-
-  return buildPdfFromPages(pages);
-}
-
-export async function GET(request: Request) {
-  const admin = await requirePermission("FINANCE");
-  const url = new URL(request.url);
-  const [report, organizationContext] = await Promise.all([
-    getFinanceReport(
-      {
-        eventId: url.searchParams.get("eventId") || undefined,
-        lotId: url.searchParams.get("lotId") || undefined,
-        paymentMethod: url.searchParams.get("paymentMethod") || undefined,
-        startDate: url.searchParams.get("startDate") || undefined,
-        endDate: url.searchParams.get("endDate") || undefined
-      },
-      admin.organizationId,
-      getAdminAllowedEventIds(admin)
-    ),
-    getOrganizationContextById(admin.organizationId)
-  ]);
-  const pdf = buildFinanceEventsPdf(report, organizationContext.brandName);
-
-  return new NextResponse(pdf, {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="vendas-por-evento-${new Date().toISOString().slice(0, 10)}.pdf"`
-    }
-  });
-}
+export async function GET(request:Request){const admin=await requirePermission("FINANCE"),url=new URL(request.url);const report=await getFinanceReport({eventId:url.searchParams.get("eventId")||undefined,lotId:url.searchParams.get("lotId")||undefined,paymentMethod:url.searchParams.get("paymentMethod")||undefined,startDate:url.searchParams.get("startDate")||undefined,endDate:url.searchParams.get("endDate")||undefined},admin.organizationId,getAdminAllowedEventIds(admin));return new NextResponse(buildFinanceEventsPdf(report),{headers:{"Content-Type":"application/pdf","Content-Disposition":`attachment; filename="relatorio-pedidos-por-evento-${new Date().toISOString().slice(0,10)}.pdf"`}})}

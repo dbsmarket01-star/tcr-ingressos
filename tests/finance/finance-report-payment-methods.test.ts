@@ -121,6 +121,7 @@ describe("finance report payment methods", () => {
     expect(card?.count).toBe(1);
     expect(card?.grossInCents).toBe(5850);
     expect(report.totals.ticketSubtotalInCents).toBe(7500);
+    expect(report.totals.ticketNetInCents).toBe(7500);
     expect(report.totals.serviceFeeInCents).toBe(1275);
     expect(prismaMock.event.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: { organizationId: "org_a2" }
@@ -239,12 +240,62 @@ describe("finance report payment methods", () => {
 
     expect(report.totals.paidOrders).toBe(1);
     expect(report.totals.ticketSubtotalInCents).toBe(10000);
+    expect(report.totals.ticketNetInCents).toBe(8900);
     expect(report.totals.serviceFeeInCents).toBe(1000);
     expect(report.totals.discountInCents).toBe(1100);
     expect(report.totals.grossRevenueInCents).toBe(9900);
     expect(report.totals.ticketsIssued).toBe(1);
     expect(report.paidOrders[0]?.totalInCents).toBe(9900);
+    expect(report.paidOrders[0]?.ticketNetInCents).toBe(8900);
     expect(report.paidOrders[0]?.items).toHaveLength(1);
+  });
+
+  it("separates full ticket subtotal from the ticket amount actually paid after coupon", async () => {
+    prismaMock.order.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        paidOrder({
+          id: "order_coupon",
+          code: "ING-COUPON",
+          subtotalInCents: 89000,
+          serviceFeeInCents: 0,
+          discountInCents: 19000,
+          totalInCents: 70000,
+          items: [
+            {
+              lotId: "lot_hotel",
+              lot: { id: "lot_hotel", name: "Ingresso + Hospedagem" },
+              lotOption: null,
+              quantity: 1,
+              totalInCents: 89000,
+              serviceFeeInCents: 0
+            }
+          ],
+          tickets: [{ id: "ticket_coupon", lotId: "lot_hotel", status: "ACTIVE" }],
+          payment: {
+            provider: "ASAAS",
+            status: "APPROVED",
+            pixQrCodePayload: "000201",
+            rawPayload: { payment: { billingType: "PIX", netValue: 700 } }
+          }
+        })
+      ]);
+
+    const { getFinanceReport } = await import("@/features/finance/finance-report.service");
+    const report = await getFinanceReport(
+      {
+        startDate: "2026-05-01",
+        endDate: "2026-05-31"
+      },
+      "org_a2"
+    );
+
+    expect(report.totals.ticketSubtotalInCents).toBe(89000);
+    expect(report.totals.discountInCents).toBe(19000);
+    expect(report.totals.ticketNetInCents).toBe(70000);
+    expect(report.totals.grossRevenueInCents).toBe(70000);
+    expect(report.byEvent[0]?.ticketNetInCents).toBe(70000);
+    expect(report.paidOrders[0]?.ticketNetInCents).toBe(70000);
   });
 
   it("keeps the complete paid order history available for the filtered period", async () => {

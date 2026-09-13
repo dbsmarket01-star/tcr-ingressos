@@ -124,6 +124,7 @@ function addToMap<T extends { grossInCents: number; netInCents: number; count: n
 function addBreakdownToMap<
   T extends {
     ticketSubtotalInCents: number;
+    ticketNetInCents: number;
     serviceFeeInCents: number;
     cardInterestInCents: number;
     discountInCents: number;
@@ -131,11 +132,13 @@ function addBreakdownToMap<
 >(
   row: T,
   ticketSubtotalInCents: number,
+  ticketNetInCents: number,
   serviceFeeInCents: number,
   cardInterestInCents: number,
   discountInCents: number
 ) {
   row.ticketSubtotalInCents += ticketSubtotalInCents;
+  row.ticketNetInCents += ticketNetInCents;
   row.serviceFeeInCents += serviceFeeInCents;
   row.cardInterestInCents += cardInterestInCents;
   row.discountInCents += discountInCents;
@@ -147,6 +150,10 @@ function allocateAmountByShare(totalInCents: number, selectedInCents: number, ba
   }
 
   return Math.min(totalInCents, Math.round((totalInCents * selectedInCents) / baseInCents));
+}
+
+function getTicketNetInCents(totalPaidInCents: number, serviceFeeInCents: number, cardInterestInCents: number) {
+  return Math.max(totalPaidInCents - serviceFeeInCents - cardInterestInCents, 0);
 }
 
 export async function getFinanceReport(
@@ -188,7 +195,10 @@ export async function getFinanceReport(
         event: {
           select: {
             id: true,
-            title: true
+            title: true,
+            venueName: true,
+            city: true,
+            state: true
           }
         }
       }
@@ -206,7 +216,10 @@ export async function getFinanceReport(
         event: {
           select: {
             id: true,
-            title: true
+            title: true,
+            venueName: true,
+            city: true,
+            state: true
           }
         },
         customer: true,
@@ -238,7 +251,10 @@ export async function getFinanceReport(
         event: {
           select: {
             id: true,
-            title: true
+            title: true,
+            venueName: true,
+            city: true,
+            state: true
           }
         },
         customer: true,
@@ -290,10 +306,14 @@ export async function getFinanceReport(
     {
       id: string;
       title: string;
+      venueName: string;
+      city: string;
+      state: string;
       count: number;
       grossInCents: number;
       netInCents: number;
       ticketSubtotalInCents: number;
+      ticketNetInCents: number;
       serviceFeeInCents: number;
       cardInterestInCents: number;
       discountInCents: number;
@@ -308,6 +328,7 @@ export async function getFinanceReport(
       grossInCents: number;
       netInCents: number;
       ticketSubtotalInCents: number;
+      ticketNetInCents: number;
       serviceFeeInCents: number;
       cardInterestInCents: number;
       discountInCents: number;
@@ -321,6 +342,7 @@ export async function getFinanceReport(
       grossInCents: number;
       netInCents: number;
       ticketSubtotalInCents: number;
+      ticketNetInCents: number;
       serviceFeeInCents: number;
       cardInterestInCents: number;
       discountInCents: number;
@@ -340,13 +362,19 @@ export async function getFinanceReport(
   let grossRevenueInCents = 0;
   let netRevenueInCents = 0;
   let ticketSubtotalInCents = 0;
+  let ticketNetInCents = 0;
   let serviceFeeInCents = 0;
   let cardInterestInCents = 0;
   let discountInCents = 0;
   let splitTotalInCents = 0;
   let splitPaymentsCount = 0;
   let netValueKnownCount = 0;
-  const scopedPaidOrders: Array<(typeof paidOrders)[number] & { splitSummary: ReturnType<typeof summarizeAsaasSplit> }> = [];
+  const scopedPaidOrders: Array<
+    (typeof paidOrders)[number] & {
+      splitSummary: ReturnType<typeof summarizeAsaasSplit>;
+      ticketNetInCents: number;
+    }
+  > = [];
 
   for (const order of paidOrders) {
     const scopedItems = lotId ? order.items.filter((item) => item.lotId === lotId) : order.items;
@@ -373,6 +401,7 @@ export async function getFinanceReport(
     const orderServiceFee = lotId ? scopedServiceFee : order.serviceFeeInCents;
     const orderCardInterest = scopedCardInterest;
     const orderDiscount = scopedDiscount;
+    const orderTicketNet = getTicketNetInCents(gross, orderServiceFee, orderCardInterest);
     const netFromProvider = extractNetValueInCents(order.payment?.rawPayload);
     const splitSummary = summarizeAsaasSplit(order.payment?.rawPayload);
     const net = lotId && netFromProvider !== null
@@ -393,12 +422,14 @@ export async function getFinanceReport(
       totalInCents: gross,
       items: scopedItems,
       tickets: scopedTickets,
-      splitSummary
+      splitSummary,
+      ticketNetInCents: orderTicketNet
     });
 
     grossRevenueInCents += gross;
     netRevenueInCents += net;
     ticketSubtotalInCents += orderTicketSubtotal;
+    ticketNetInCents += orderTicketNet;
     serviceFeeInCents += orderServiceFee;
     cardInterestInCents += orderCardInterest;
     discountInCents += orderDiscount;
@@ -427,10 +458,14 @@ export async function getFinanceReport(
       {
         id: order.event.id,
         title: order.event.title,
+        venueName: order.event.venueName,
+        city: order.event.city,
+        state: order.event.state,
         count: 0,
         grossInCents: 0,
         netInCents: 0,
         ticketSubtotalInCents: 0,
+        ticketNetInCents: 0,
         serviceFeeInCents: 0,
         cardInterestInCents: 0,
         discountInCents: 0,
@@ -443,7 +478,7 @@ export async function getFinanceReport(
     const eventRow = byEvent.get(order.event.id);
     if (eventRow) {
       eventRow.tickets += scopedTickets.length;
-      addBreakdownToMap(eventRow, orderTicketSubtotal, orderServiceFee, orderCardInterest, orderDiscount);
+      addBreakdownToMap(eventRow, orderTicketSubtotal, orderTicketNet, orderServiceFee, orderCardInterest, orderDiscount);
     }
 
     addToMap(
@@ -455,6 +490,7 @@ export async function getFinanceReport(
         grossInCents: 0,
         netInCents: 0,
         ticketSubtotalInCents: 0,
+        ticketNetInCents: 0,
         serviceFeeInCents: 0,
         cardInterestInCents: 0,
         discountInCents: 0
@@ -465,7 +501,7 @@ export async function getFinanceReport(
 
     const methodRow = byMethod.get(method);
     if (methodRow) {
-      addBreakdownToMap(methodRow, orderTicketSubtotal, orderServiceFee, orderCardInterest, orderDiscount);
+      addBreakdownToMap(methodRow, orderTicketSubtotal, orderTicketNet, orderServiceFee, orderCardInterest, orderDiscount);
     }
 
     const sourceLabel = getSourceLabel(order.utmSource, order.utmMedium);
@@ -478,6 +514,7 @@ export async function getFinanceReport(
         grossInCents: 0,
         netInCents: 0,
         ticketSubtotalInCents: 0,
+        ticketNetInCents: 0,
         serviceFeeInCents: 0,
         cardInterestInCents: 0,
         discountInCents: 0
@@ -488,7 +525,7 @@ export async function getFinanceReport(
 
     const sourceRow = bySource.get(sourceLabel);
     if (sourceRow) {
-      addBreakdownToMap(sourceRow, orderTicketSubtotal, orderServiceFee, orderCardInterest, orderDiscount);
+      addBreakdownToMap(sourceRow, orderTicketSubtotal, orderTicketNet, orderServiceFee, orderCardInterest, orderDiscount);
     }
   }
 
@@ -514,6 +551,7 @@ export async function getFinanceReport(
       grossRevenueInCents,
       netRevenueInCents,
       ticketSubtotalInCents,
+      ticketNetInCents,
       serviceFeeInCents,
       cardInterestInCents,
       discountInCents,
