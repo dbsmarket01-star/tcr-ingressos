@@ -443,7 +443,11 @@ export async function GET(request: Request) {
   const totals = buildTotals(eventRows);
   const paymentBreakdown = buildPaymentBreakdown(orders);
   const filterId = "orders-export-filters";
-  const filterSummary = buildFiltersLabel(url).replace(/^Filtros:\s*/, "");
+  const filterSummary = [
+    filters.status ? orderStatusLabels[filters.status] || filters.status : "Todos os status",
+    filters.city || "todas as cidades",
+    filters.state || "todos os estados"
+  ].join(" | ");
   const report = {
     filters: {
       eventId: filterId,

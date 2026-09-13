@@ -14,6 +14,24 @@ export type AdminOrderFilters = {
 
 type EventScope = string[] | null | undefined;
 
+type OrderReferenceDate = {
+  status: OrderStatus;
+  paidAt: Date | null;
+  createdAt: Date;
+};
+
+export function getOrderReferenceDate(order: OrderReferenceDate) {
+  return order.status === OrderStatus.PAID && order.paidAt ? order.paidAt : order.createdAt;
+}
+
+export function sortOrdersByReferenceDateDesc<T extends OrderReferenceDate>(orders: T[]) {
+  return [...orders].sort((left, right) => {
+    const referenceDifference = getOrderReferenceDate(right).getTime() - getOrderReferenceDate(left).getTime();
+
+    return referenceDifference || right.createdAt.getTime() - left.createdAt.getTime();
+  });
+}
+
 function parseStartDate(value?: string) {
   if (!value) {
     return undefined;
@@ -251,7 +269,7 @@ export async function listAdminOrders(
       orderBy: {
         createdAt: "desc"
       },
-      take: 100,
+      take: 5000,
       include: {
         customer: true,
         event: true,
@@ -267,7 +285,7 @@ export async function listAdminOrders(
     prisma.order.count({ where })
   ]);
 
-  return { orders, totalCount };
+  return { orders: sortOrdersByReferenceDateDesc(orders).slice(0, 100), totalCount };
 }
 
 export async function getOrdersSummary(
@@ -340,7 +358,7 @@ export async function listOrdersForCsvExport(
 ) {
   await expirePendingOrders({ limit: 500, organizationId, allowedEventIds });
 
-  return prisma.order.findMany({
+  const orders = await prisma.order.findMany({
     where: await buildReportOrderWhere(filters, organizationId, allowedEventIds),
     orderBy: {
       createdAt: "desc"
@@ -358,4 +376,6 @@ export async function listOrdersForCsvExport(
       }
     }
   });
+
+  return sortOrdersByReferenceDateDesc(orders);
 }
