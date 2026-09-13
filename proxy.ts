@@ -46,7 +46,7 @@ function withInternalHeaders(response: NextResponse) {
   response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("Referrer-Policy", "same-origin");
-  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  response.headers.set("Permissions-Policy", "camera=(self), microphone=(), geolocation=()");
 
   return response;
 }

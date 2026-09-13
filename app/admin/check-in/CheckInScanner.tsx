@@ -8,32 +8,18 @@ type CheckInScannerProps = {
   eventTitle: string;
 };
 
-type BarcodeDetectorShape = {
-  detect(video: HTMLVideoElement): Promise<Array<{ rawValue: string }>>;
-};
-
-type BarcodeDetectorConstructor = new (options: {
-  formats: string[];
-}) => BarcodeDetectorShape;
-
 type ScannerControls = {
   stop(): void;
 };
-
-declare global {
-  interface Window {
-    BarcodeDetector?: BarcodeDetectorConstructor;
-  }
-}
 
 export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const deviceInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
   const scannerControlsRef = useRef<ScannerControls | null>(null);
   const scanningRef = useRef(false);
+  const cameraSessionRef = useRef(0);
   const [cameraStatus, setCameraStatus] = useState<
     "idle" | "unsupported" | "starting" | "scanning" | "error"
   >("idle");
@@ -46,7 +32,7 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
     }
 
     return () => {
-      stopCamera();
+      stopCamera(false);
     };
   }, []);
 
@@ -62,108 +48,82 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
     window.setTimeout(() => formRef.current?.requestSubmit(), 100);
   }
 
-  function stopCamera() {
+  function stopCamera(updateStatus = true) {
+    cameraSessionRef.current += 1;
     scanningRef.current = false;
     scannerControlsRef.current?.stop();
     scannerControlsRef.current = null;
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
 
     if (videoRef.current) {
+      const stream = videoRef.current.srcObject;
+
+      if (stream instanceof MediaStream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+
       videoRef.current.srcObject = null;
     }
 
-    setCameraStatus((current) => (current === "scanning" ? "idle" : current));
+    if (updateStatus) {
+      setCameraStatus("idle");
+    }
   }
 
   async function startCamera() {
+    if (scanningRef.current || cameraStatus === "starting") {
+      return;
+    }
+
+    const sessionId = cameraSessionRef.current + 1;
+    cameraSessionRef.current = sessionId;
+    scanningRef.current = true;
+
     try {
       setCameraStatus("starting");
+      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
 
-      if (!("BarcodeDetector" in window) || !window.BarcodeDetector) {
-        await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
-
-        if (!videoRef.current) {
-          setCameraStatus("error");
-          return;
-        }
-
-        const { BrowserQRCodeReader } = await import("@zxing/browser");
-        const reader = new BrowserQRCodeReader(undefined, {
-          delayBetweenScanAttempts: 250,
-          delayBetweenScanSuccess: 500
-        });
-
-        scanningRef.current = true;
-        setCameraStatus("scanning");
-        scannerControlsRef.current = await reader.decodeFromConstraints(
-          {
-            video: {
-              facingMode: {
-                ideal: "environment"
-              }
-            },
-            audio: false
-          },
-          videoRef.current,
-          (result) => {
-            if (result && scanningRef.current) {
-              submitCode(result.getText());
-            }
-          }
-        );
+      if (!videoRef.current || sessionId !== cameraSessionRef.current) {
+        scanningRef.current = false;
         return;
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: {
-            ideal: "environment"
-          }
-        },
-        audio: false
+      const { BrowserQRCodeReader } = await import("@zxing/browser");
+      const reader = new BrowserQRCodeReader(undefined, {
+        delayBetweenScanAttempts: 250,
+        delayBetweenScanSuccess: 500
       });
+      const controls = await reader.decodeFromConstraints(
+        {
+          video: {
+            facingMode: {
+              ideal: "environment"
+            },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        },
+        videoRef.current,
+        (result) => {
+          if (result && scanningRef.current && sessionId === cameraSessionRef.current) {
+            submitCode(result.getText());
+          }
+        }
+      );
 
-      streamRef.current = stream;
-
-      if (!videoRef.current) {
-        stopCamera();
+      if (sessionId !== cameraSessionRef.current) {
+        controls.stop();
         return;
       }
 
-      videoRef.current.srcObject = stream;
-      await videoRef.current.play();
-
-      const detector = new window.BarcodeDetector({ formats: ["qr_code"] });
-      scanningRef.current = true;
+      scannerControlsRef.current = controls;
       setCameraStatus("scanning");
-
-      const scan = async () => {
-        if (!scanningRef.current || !videoRef.current) {
-          return;
-        }
-
-        try {
-          const codes = await detector.detect(videoRef.current);
-          const firstCode = codes[0]?.rawValue;
-
-          if (firstCode) {
-            submitCode(firstCode);
-            return;
-          }
-        } catch {
-          setCameraStatus("error");
-          stopCamera();
-          return;
-        }
-
-        window.setTimeout(scan, 350);
-      };
-
-      scan();
-    } catch {
-      setCameraStatus("error");
-      stopCamera();
+    } catch (error) {
+      if (sessionId === cameraSessionRef.current) {
+        console.error("[check-in-camera] Não foi possível manter a câmera ativa", error);
+        stopCamera(false);
+        setCameraStatus("error");
+      }
     }
   }
 
@@ -190,7 +150,7 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
           Abrir câmera
         </button>
         {showCameraPreview ? (
-          <button className="secondaryButton" onClick={stopCamera} type="button">
+          <button className="secondaryButton" onClick={() => stopCamera()} type="button">
             Parar leitura
           </button>
         ) : null}
@@ -218,7 +178,6 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
       <label className="field">
         <span>Código ou token do QR Code</span>
         <input
-          autoFocus
           name="code"
           placeholder="Cole ou leia o código do ingresso"
           ref={inputRef}

@@ -37,6 +37,22 @@ describe("multi-tenant proxy isolation", () => {
     expect(response.headers.get("location")).toBe("https://produtor.a2imergidos.com.br/login");
   });
 
+  it("allows the same-origin camera on internal admin pages", () => {
+    process.env.ADMIN_HOST = "produtor.tcringressos.app.br";
+
+    const response = proxy(
+      makeRequest(
+        "https://produtor.tcringressos.app.br/admin/check-in",
+        "produtor.tcringressos.app.br"
+      )
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("permissions-policy")).toBe(
+      "camera=(self), microphone=(), geolocation=()"
+    );
+  });
+
   it("blocks /login on a public child host", () => {
     process.env.ADMIN_HOST = "produtor.a2imergidos.com.br";
 
