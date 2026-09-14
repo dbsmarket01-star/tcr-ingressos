@@ -218,7 +218,14 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
   const hotelItems = selectedItems.filter((item) => item.lot.hasHotel);
   const asksChurchName = selectedItems.some((item) => item.lot.churchQuestionEnabled);
   const ticketsTotalInCents = selectedItems.reduce((sum, item) => sum + item.subtotalInCents, 0);
-  const initialCheckoutSplits = calculateAsaasSplitsForOrder(selectedItems.map((item) => ({ quantity: item.quantity, totalInCents: item.subtotalInCents })), effectiveSplitRules);
+  const initialCheckoutSplits = calculateAsaasSplitsForOrder(
+    selectedItems.map((item) => ({
+      quantity: item.quantity,
+      totalInCents: item.subtotalInCents,
+      admissionsPerUnit: item.lot.admissionsPerUnit
+    })),
+    effectiveSplitRules
+  );
   const configuredServiceFeeTotalInCents = selectedItems.reduce((sum, item) => sum + item.serviceFeeInCents, 0);
   const unroundedServiceFeeTotalInCents = Math.max(configuredServiceFeeTotalInCents, sumAsaasSplitsInCents(initialCheckoutSplits)) + effectiveFixedOrderFeeInCents;
   const orderTotalInCents = finalizeOrganizationPublicPriceInCents(
@@ -266,7 +273,11 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
 
   const checkoutQueryFields = getCheckoutQueryFields(query);
   const discountedCheckoutSplits = calculateAsaasSplitsForOrder(
-    selectedItems.map((item) => ({ quantity: item.quantity, totalInCents: item.subtotalInCents })),
+    selectedItems.map((item) => ({
+      quantity: item.quantity,
+      totalInCents: item.subtotalInCents,
+      admissionsPerUnit: item.lot.admissionsPerUnit
+    })),
     effectiveSplitRules,
     { discountInCents: couponPreview?.discountInCents ?? 0 }
   );

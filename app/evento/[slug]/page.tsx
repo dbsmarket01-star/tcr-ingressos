@@ -303,7 +303,10 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           getEffectiveServiceFeeBps(organizationSlug, lot.serviceFeeBps)
         ),
         sumAsaasSplitsInCents(
-          calculateAsaasSplitsForOrder([{ quantity: 1, totalInCents: lot.priceInCents }], effectiveSplitRules)
+          calculateAsaasSplitsForOrder(
+            [{ quantity: 1, totalInCents: lot.priceInCents, admissionsPerUnit: lot.admissionsPerUnit }],
+            effectiveSplitRules
+          )
         )
       )
   }));

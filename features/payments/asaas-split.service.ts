@@ -6,6 +6,7 @@ import type { AsaasSplit } from "./payment-provider";
 type OrderItemForSplit = {
   quantity: number;
   totalInCents: number;
+  admissionsPerUnit?: number | null;
 };
 
 function moneyFromCents(valueInCents: number) {
@@ -55,7 +56,10 @@ export function calculateAsaasSplitsForOrder(
   }>,
   options?: { discountInCents?: number; installments?: number }
 ) {
-  const ticketQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+  const ticketQuantity = items.reduce(
+    (sum, item) => sum + item.quantity * Math.max(item.admissionsPerUnit ?? 1, 1),
+    0
+  );
   const ticketSubtotalInCents = items.reduce((sum, item) => sum + item.totalInCents, 0);
   const netTicketAmountInCents = Math.max(ticketSubtotalInCents - Math.max(options?.discountInCents ?? 0, 0), 0);
   const splits = rules
