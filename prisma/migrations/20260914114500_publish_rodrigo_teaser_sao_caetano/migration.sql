@@ -89,7 +89,7 @@ INSERT INTO "TicketLot" (
 )
 SELECT
   lot."id", e."id", lot."name", lot."description", lot."highlightColor", lot."priceInCents",
-  750, 0, 0, 400, 1, 500, 1, 10, lot."sortOrder", 'ACTIVE',
+  2000, 0, 0, 400, 1, 500, 1, 10, lot."sortOrder", 'ACTIVE',
   CURRENT_TIMESTAMP, TIMESTAMPTZ '2026-11-29 21:00:00-03:00', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM "Event" e
 CROSS JOIN (VALUES
@@ -106,7 +106,7 @@ ON CONFLICT ("id") DO UPDATE SET
   "description" = EXCLUDED."description",
   "highlightColor" = EXCLUDED."highlightColor",
   "priceInCents" = EXCLUDED."priceInCents",
-  "serviceFeeBps" = 750,
+  "serviceFeeBps" = 2000,
   "pixDiscountPercentBps" = 0,
   "pixDiscountFixedInCents" = 0,
   "cardInterestBpsPerInstallment" = 400,
@@ -126,7 +126,7 @@ BEGIN
   JOIN "Event" e ON e."id" = tl."eventId"
   WHERE e."slug" = 'rodrigo-teaser-em-sao-caetano-do-sul-2026'
     AND tl."status" = 'ACTIVE'
-    AND tl."serviceFeeBps" = 750
+    AND tl."serviceFeeBps" = 2000
     AND tl."cardInterestBpsPerInstallment" = 400
     AND tl."cardInterestStartsAtInstallment" = 1;
 
