@@ -277,7 +277,9 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1600&q=80";
   const bannerCrop = parseImageCrop(event.bannerCrop) || imageCropFromBannerPosition(event.bannerPosition);
   const publicBannerCrop = bannerCrop;
-  const preserveOriginalBannerRatio = event.slug === "rodrigo-teaser-em-taubate-2026";
+  const preserveOriginalBannerRatio =
+    event.slug === "rodrigo-teaser-em-taubate-2026" ||
+    event.slug === "rodrigo-teaser-em-sao-caetano-do-sul-2026";
   const mapCrop = parseImageCrop(event.eventMapCrop);
   const ctaText = event.conversionCtaText || "Garantir minha vaga";
   const organizationSlug = organizationContext.organization.slug;

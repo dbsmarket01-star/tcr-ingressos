@@ -56,7 +56,7 @@ ON CONFLICT ("slug") DO UPDATE SET
   "description" = EXCLUDED."description",
   "bannerUrl" = EXCLUDED."bannerUrl",
   "bannerPosition" = EXCLUDED."bannerPosition",
-  "bannerCrop" = NULL,
+  "bannerCrop" = '{"x":50,"y":50,"zoom":1}',
   "eventMapImageUrl" = EXCLUDED."eventMapImageUrl",
   "eventMapNotes" = EXCLUDED."eventMapNotes",
   "googleMapsUrl" = EXCLUDED."googleMapsUrl",
