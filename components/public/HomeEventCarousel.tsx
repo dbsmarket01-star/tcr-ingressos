@@ -21,7 +21,7 @@ type HomeEventCarouselProps = {
   events: ShowcaseEvent[];
 };
 
-const carouselAutoRotationMs = 3000;
+const carouselAutoRotationMs = 5000;
 
 function PinIcon() {
   return (
@@ -69,6 +69,7 @@ function formatPrice(valueInCents?: number) {
 
 export function HomeEventCarousel({ events }: HomeEventCarouselProps) {
   const railRef = useRef<HTMLDivElement | null>(null);
+  const autoRotationIntervalRef = useRef<number | null>(null);
   const hasCarouselControls = events.length > 1;
 
   const scrollRail = useCallback((direction: "prev" | "next") => {
@@ -108,17 +109,38 @@ export function HomeEventCarousel({ events }: HomeEventCarouselProps) {
     });
   }, []);
 
-  useEffect(() => {
+  const startAutoRotation = useCallback(() => {
+    if (autoRotationIntervalRef.current !== null) {
+      window.clearInterval(autoRotationIntervalRef.current);
+      autoRotationIntervalRef.current = null;
+    }
+
     if (!hasCarouselControls) {
       return;
     }
 
-    const intervalId = window.setInterval(() => {
+    autoRotationIntervalRef.current = window.setInterval(() => {
       scrollRail("next");
     }, carouselAutoRotationMs);
-
-    return () => window.clearInterval(intervalId);
   }, [hasCarouselControls, scrollRail]);
+
+  const navigateManually = useCallback(
+    (direction: "prev" | "next") => {
+      scrollRail(direction);
+      startAutoRotation();
+    },
+    [scrollRail, startAutoRotation]
+  );
+
+  useEffect(() => {
+    startAutoRotation();
+
+    return () => {
+      if (autoRotationIntervalRef.current !== null) {
+        window.clearInterval(autoRotationIntervalRef.current);
+      }
+    };
+  }, [startAutoRotation]);
 
   if (events.length === 0) {
     return (
@@ -132,7 +154,7 @@ export function HomeEventCarousel({ events }: HomeEventCarouselProps) {
   return (
     <div className={`tcrCarouselShell ${hasCarouselControls ? "hasCarouselControls" : "isSingleCarousel"}`}>
       {hasCarouselControls ? (
-        <button aria-label="Eventos anteriores" className="tcrCarouselArrow tcrCarouselArrowPrev" onClick={() => scrollRail("prev")} type="button">
+        <button aria-label="Eventos anteriores" className="tcrCarouselArrow tcrCarouselArrowPrev" onClick={() => navigateManually("prev")} type="button">
           ‹
         </button>
       ) : null}
@@ -162,7 +184,7 @@ export function HomeEventCarousel({ events }: HomeEventCarouselProps) {
         ))}
       </div>
       {hasCarouselControls ? (
-        <button aria-label="Próximos eventos" className="tcrCarouselArrow tcrCarouselArrowNext" onClick={() => scrollRail("next")} type="button">
+        <button aria-label="Próximos eventos" className="tcrCarouselArrow tcrCarouselArrowNext" onClick={() => navigateManually("next")} type="button">
           ›
         </button>
       ) : null}
