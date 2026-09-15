@@ -22,8 +22,8 @@ export function calculatePixChargeInCents(
 
 export function getCardProcessorFeeBps(installments: number, settings: PaymentFeeSettings) {
   const safeInstallments = Math.max(Math.trunc(installments), 1);
-  if (safeInstallments === 1 && settings.cardFirstInstallmentInterestFree) {
-    return 0;
+  if (settings.cardFirstInstallmentInterestFree) {
+    return Math.max(safeInstallments - 1, 0) * Math.max(settings.cardAdditionalInstallmentFeeBps, 0);
   }
   return Math.max(settings.cardBaseFeeBps, 0) +
     Math.max(safeInstallments - 1, 0) * Math.max(settings.cardAdditionalInstallmentFeeBps, 0);
