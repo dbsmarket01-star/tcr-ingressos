@@ -127,7 +127,7 @@ export async function generateMetadata({ params }: Pick<CheckoutPageProps, "para
   const seo = buildEventSeo(event);
 
   return {
-    title: `Cadastro | ${seo.title}`,
+    title: `Dados do comprador | ${seo.title}`,
     description: seo.description
   };
 }
@@ -437,6 +437,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                 Informe os dados de quem receberá {totalQrCodes > 1 ? "os QR Codes" : totalQuantity > 1 ? "os ingressos" : "o ingresso"}. Você poderá
                 revisar o pedido antes do pagamento.
               </p>
+              <p>Não é necessário criar conta ou senha para comprar.</p>
             </div>
 
             <form id="checkoutRegistrationForm" action={createCheckoutOrderAction} className="form checkoutRegistrationForm">
@@ -473,6 +474,10 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
               <MetaTrackingFields />
 
               <div className="checkoutBuyer checkoutBuyerNoTopBorder">
+                {firstParam(query.google) && firstParam(query.google) !== "connected" ? (
+                  <ErrorNotice message="Não foi possível preencher seus dados pelo Google. Você pode continuar a compra abaixo sem login ou senha." />
+                ) : null}
+                <p>Preencha os dados abaixo para seguir direto ao pagamento. O Google é opcional.</p>
                 <a
                   className="googleButton"
                   href={`/api/auth/google/start?returnTo=${encodeURIComponent(currentCheckoutPath)}`}

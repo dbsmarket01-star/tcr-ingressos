@@ -29,4 +29,17 @@ describe("payment fee calculator", () => {
     expect(calculateCardChargeInCents(10000, 1750, 1, settings)).toBe(12240);
     expect(calculateCardChargeInCents(8000, 1430, 1, settings)).toBe(9823);
   });
+
+  it("does not charge card interest in 1x for TCR, while preserving 4% per installment from 2x", () => {
+    const tcrSettings = {
+      ...settings,
+      cardBaseFeeBps: 400,
+      cardAdditionalInstallmentFeeBps: 400,
+      cardFirstInstallmentInterestFree: true
+    };
+    expect(getCardProcessorFeeBps(1, tcrSettings)).toBe(0);
+    expect(getCardProcessorFeeBps(2, tcrSettings)).toBe(800);
+    expect(getCardProcessorFeeBps(10, tcrSettings)).toBe(4000);
+    expect(calculateCardChargeInCents(10000, 1750, 1, tcrSettings)).toBe(11750);
+  });
 });

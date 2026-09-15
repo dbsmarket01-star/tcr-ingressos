@@ -1,4 +1,5 @@
 const A2_IMERGIDOS_ORGANIZATION_SLUG = "a2-imergidos";
+const TCR_INGRESSOS_ORGANIZATION_SLUG = "tcr-ingressos";
 
 export function isFeeFreeOrganization(organizationSlug?: string | null) {
   return organizationSlug === A2_IMERGIDOS_ORGANIZATION_SLUG;
@@ -27,6 +28,12 @@ export function getEffectivePaymentFeeSettings<T extends {
   cardBaseFeeBps: number;
   cardAdditionalInstallmentFeeBps: number;
 }>(organizationSlug: string | null | undefined, settings: T): T {
+  if (organizationSlug === TCR_INGRESSOS_ORGANIZATION_SLUG) {
+    return {
+      ...settings,
+      cardFirstInstallmentInterestFree: true
+    };
+  }
   if (!isFeeFreeOrganization(organizationSlug)) {
     return settings;
   }
