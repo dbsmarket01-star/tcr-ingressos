@@ -471,7 +471,7 @@ export default async function Home({ searchParams }: HomePageProps) {
           .filter(Boolean)
           .some((value) => value.toLocaleLowerCase("pt-BR").includes(normalizedSearchQuery))
       )
-    : allEvents.slice(0, 6);
+    : allEvents;
   const companySettings = await getCompanySettingsByOrganizationId(organizationContext.organization.id);
   const publicSocialSettings = companySettings as typeof companySettings & {
     instagramUrl?: string | null;
