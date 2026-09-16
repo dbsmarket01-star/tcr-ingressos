@@ -21,7 +21,7 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
   const scanningRef = useRef(false);
   const cameraSessionRef = useRef(0);
   const [cameraStatus, setCameraStatus] = useState<
-    "idle" | "unsupported" | "starting" | "scanning" | "error"
+    "idle" | "unsupported" | "starting" | "scanning" | "interrupted" | "error"
   >("idle");
 
   useEffect(() => {
@@ -31,7 +31,22 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
       deviceInputRef.current.value = savedDeviceName;
     }
 
+    function releaseCameraWhenPageIsHidden() {
+      if (document.visibilityState === "hidden") {
+        stopCamera();
+      }
+    }
+
+    function releaseCameraWhenPageIsLeft() {
+      stopCamera(false);
+    }
+
+    document.addEventListener("visibilitychange", releaseCameraWhenPageIsHidden);
+    window.addEventListener("pagehide", releaseCameraWhenPageIsLeft);
+
     return () => {
+      document.removeEventListener("visibilitychange", releaseCameraWhenPageIsHidden);
+      window.removeEventListener("pagehide", releaseCameraWhenPageIsLeft);
       stopCamera(false);
     };
   }, []);
@@ -117,12 +132,36 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
       }
 
       scannerControlsRef.current = controls;
+
+      const stream = videoRef.current.srcObject;
+
+      if (stream instanceof MediaStream) {
+        const handleCameraInterruption = () => {
+          if (!scanningRef.current || sessionId !== cameraSessionRef.current) {
+            return;
+          }
+
+          console.warn("[check-in-camera] Captura interrompida pelo navegador ou por outra aba");
+          stopCamera(false);
+          setCameraStatus("interrupted");
+        };
+
+        stream.getVideoTracks().forEach((track) => {
+          track.addEventListener("mute", handleCameraInterruption, { once: true });
+          track.addEventListener("ended", handleCameraInterruption, { once: true });
+        });
+      }
+
       setCameraStatus("scanning");
     } catch (error) {
       if (sessionId === cameraSessionRef.current) {
         console.error("[check-in-camera] Não foi possível manter a câmera ativa", error);
         stopCamera(false);
-        setCameraStatus("error");
+        setCameraStatus(
+          error instanceof DOMException && (error.name === "NotReadableError" || error.name === "AbortError")
+            ? "interrupted"
+            : "error"
+        );
       }
     }
   }
@@ -172,6 +211,12 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
       {cameraStatus === "error" ? (
         <p className="formHint">
           Não consegui acessar a câmera. Confira a permissão do navegador ou valide pelo código.
+        </p>
+      ) : null}
+
+      {cameraStatus === "interrupted" ? (
+        <p className="formHint">
+          A câmera foi interrompida por outra aba ou sistema. Feche a câmera no outro leitor e toque em Abrir câmera novamente.
         </p>
       ) : null}
 
