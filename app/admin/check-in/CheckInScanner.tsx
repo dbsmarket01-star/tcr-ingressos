@@ -60,7 +60,7 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
 
     inputRef.current.value = normalizedCode;
     stopCamera();
-    window.setTimeout(() => formRef.current?.requestSubmit(), 100);
+    formRef.current.requestSubmit();
   }
 
   function stopCamera(updateStatus = true) {

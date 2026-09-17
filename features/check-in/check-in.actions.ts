@@ -15,7 +15,36 @@ export async function validateTicketAction(formData: FormData) {
     redirect("/admin/check-in?status=INVALID&message=Selecione+um+evento+antes+de+validar+o+ingresso.");
   }
 
-  const result = await validateTicketForCheckIn(code, deviceName || undefined, admin, selectedEventId);
+  const codeSuffix = code.slice(-6);
+  console.info("[check-in] validation requested", {
+    eventId: selectedEventId,
+    adminUserId: admin.id,
+    deviceName: deviceName || null,
+    codeSuffix
+  });
+
+  let result;
+
+  try {
+    result = await validateTicketForCheckIn(code, deviceName || undefined, admin, selectedEventId);
+  } catch (error) {
+    console.error("[check-in] validation failed", {
+      eventId: selectedEventId,
+      adminUserId: admin.id,
+      deviceName: deviceName || null,
+      codeSuffix,
+      error: error instanceof Error ? error.message : String(error)
+    });
+    throw error;
+  }
+
+  console.info("[check-in] validation completed", {
+    eventId: selectedEventId,
+    adminUserId: admin.id,
+    deviceName: deviceName || null,
+    codeSuffix,
+    status: result.status
+  });
 
   revalidatePath("/admin/check-in");
 
