@@ -279,7 +279,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const publicBannerCrop = bannerCrop;
   const preserveOriginalBannerRatio =
     event.slug === "rodrigo-teaser-em-taubate-2026" ||
-    event.slug === "rodrigo-teaser-em-sao-caetano-do-sul-2026";
+    event.slug === "rodrigo-teaser-em-sao-caetano-do-sul-2026" ||
+    event.slug === "rodrigo-teaser-em-piracicaba-2026";
   const mapCrop = parseImageCrop(event.eventMapCrop);
   const ctaText = event.conversionCtaText || "Garantir minha vaga";
   const organizationSlug = organizationContext.organization.slug;
@@ -398,7 +399,10 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             fetchPriority="high"
             height={828}
             loading="eager"
-            style={imageCropStyle(publicBannerCrop)}
+            style={{
+              ...imageCropStyle(publicBannerCrop),
+              ...(preserveOriginalBannerRatio ? { objectFit: "contain" as const } : {})
+            }}
             width={1900}
           />
         </div>
