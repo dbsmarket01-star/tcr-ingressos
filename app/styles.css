@@ -25568,6 +25568,80 @@ small,
   }
 }
 
+/* Keep homepage event cards readable across phones and narrow tablets. */
+@media (max-width: 900px) {
+  .homePage .tcrCarouselShell.hasCarouselControls {
+    grid-template-columns: 1fr 1fr !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .homePage .tcrCarouselShell.hasCarouselControls .tcrCarouselRail {
+    display: flex !important;
+    gap: 14px !important;
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    padding: 4px 4px 12px !important;
+    scroll-padding-inline: 4px !important;
+    scroll-snap-type: x mandatory !important;
+    width: 100% !important;
+  }
+
+  .homePage .tcrCarouselRail .tcrEventCard {
+    flex: 0 0 clamp(280px, 84vw, 360px) !important;
+    max-width: clamp(280px, 84vw, 360px) !important;
+    min-width: clamp(280px, 84vw, 360px) !important;
+    scroll-snap-align: start !important;
+  }
+
+  .homePage .tcrEventCardBody {
+    gap: 10px !important;
+    padding: 15px 16px 17px !important;
+  }
+
+  .homePage .tcrEventCardBody h3 {
+    font-size: 18px !important;
+    line-height: 1.2 !important;
+    min-height: auto !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .homePage .tcrEventCardBody small,
+  .homePage .tcrEventCardLocation {
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+  }
+
+  .homePage .tcrEventCardLocation {
+    min-height: auto !important;
+  }
+
+  .homePage .tcrEventCardBody strong,
+  .homePage .tcrEventCardButton {
+    font-size: 16px !important;
+  }
+
+  .homePage .tcrEventCardButton {
+    min-height: 46px !important;
+    padding: 0 15px !important;
+  }
+
+  .homePage .tcrCarouselArrowPrev,
+  .homePage .tcrCarouselArrowNext {
+    grid-row: 2 !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .homePage .tcrCarouselRail .tcrEventCard {
+    flex-basis: calc(100vw - 48px) !important;
+    max-width: calc(100vw - 48px) !important;
+    min-width: calc(100vw - 48px) !important;
+  }
+}
+
 /* Checkout visual refresh */
 .checkoutFlowPage {
   gap: 22px;
