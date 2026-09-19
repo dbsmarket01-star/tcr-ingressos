@@ -5446,7 +5446,7 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 .publicHeroImage {
   display: block;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   width: 100%;
 }
 
@@ -28484,6 +28484,172 @@ small,
   .homePage .tcrPremiumHeroLead p {
     font-size: 15px !important;
     max-width: 100% !important;
+  }
+}
+
+/* Producer mobile baseline: every admin route must fit an iPhone viewport. */
+@media (max-width: 860px) {
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .adminShell,
+  .adminMain,
+  .adminMain > *,
+  .adminMain section,
+  .adminMain article,
+  .adminMain form,
+  .adminMain fieldset,
+  .adminMain label,
+  .adminMain div {
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  .adminMain {
+    padding: 12px;
+    width: 100%;
+  }
+
+  .adminHeader:not(.adminHeaderMinimal) {
+    align-items: flex-start;
+    border-radius: 16px;
+    display: grid;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 15px;
+  }
+
+  .adminHeader h1 {
+    font-size: clamp(26px, 8vw, 34px);
+    margin-bottom: 5px;
+    overflow-wrap: anywhere;
+  }
+
+  .adminHeader p {
+    font-size: 13px;
+    line-height: 1.42;
+  }
+
+  .adminHeaderActions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .adminHeaderActions .adminHeaderPulse,
+  .adminHeaderActions > .secondaryButton,
+  .adminHeaderActions > form {
+    display: none;
+  }
+
+  .adminUserBadge {
+    border-radius: 12px;
+    min-height: 0;
+    padding: 8px 11px;
+  }
+
+  .adminUserBadge strong,
+  .adminUserBadge span {
+    font-size: 11px;
+  }
+
+  .adminMain :is(input, select, textarea, button) {
+    box-sizing: border-box;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .adminMain :is(.grid, .twoColumns, .threeColumns, .cardsGrid) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .adminMain :is(.dashboardGrid, .adminMetricsDense, .commercialSummaryGrid, .platformMasterSnapshot) {
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adminMain :is(.card, .adminPanelHero, .dashboardPanel, .moduleCard) {
+    border-radius: 14px;
+    padding: 14px;
+  }
+
+  .adminMain .metric {
+    gap: 5px;
+    min-height: 104px;
+    padding: 12px;
+  }
+
+  .adminMain .metric strong {
+    font-size: clamp(18px, 5.4vw, 24px);
+    overflow-wrap: anywhere;
+  }
+
+  .adminMain :is(.sectionHeader, .moduleHeader, .tableActions, .formActions, .eventLotsReportBanner) {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .adminMain :is(.sectionHeader, .pageTitle) {
+    margin-bottom: 12px;
+    margin-top: 16px;
+  }
+
+  .adminMain :is(.sectionHeader h2, .card h2, .card h3) {
+    overflow-wrap: anywhere;
+  }
+
+  .adminMain :is(.tableScroll, .wideTableScroll, .adminTableWrap) {
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    width: 100%;
+  }
+
+  .adminMain :is(.table, .operationalTable, .financeTable, .eventLotsTable) {
+    width: max-content;
+  }
+
+  .adminMain .table :is(th, td) {
+    max-width: 280px;
+    overflow-wrap: anywhere;
+  }
+
+  .adminMain :is(.inlineForm, .lotTableActions, .homeListFilterActions, .homeListExportActions) {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .adminMain :is(.inlineForm, .lotTableActions, .homeListFilterActions, .homeListExportActions) > * {
+    flex: 1 1 150px;
+    min-width: 0;
+  }
+
+  .adminMain :is(.homeListFilters, .financeFiltersForm, .settingsGrid, .settingsStatusList, .footerSettingsGrid) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .adminMain :is(.button, .secondaryButton) {
+    justify-content: center;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 480px) {
+  .adminMain :is(.dashboardGrid, .adminMetricsDense, .commercialSummaryGrid, .platformMasterSnapshot) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adminMain .metric .muted {
+    font-size: 10px;
+  }
+
+  .adminMain .metric strong {
+    font-size: clamp(17px, 5vw, 22px);
   }
 }
 
