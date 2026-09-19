@@ -526,7 +526,10 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
                     name="buyerPhone"
                     type="tel"
                     autoComplete="tel"
-                    inputMode="tel"
+                    inputMode="numeric"
+                    maxLength={16}
+                    pattern="(?:\\+?55\\s?)?(?:\\(?\\d{2}\\)?\\s?)?9?\\d{4}[-\\s]?\\d{4}"
+                    title="Informe um telefone válido com DDD, por exemplo: 11999999999."
                     defaultValue={buyerProfile?.phone || ""}
                     placeholder="1194444-2222"
                   />

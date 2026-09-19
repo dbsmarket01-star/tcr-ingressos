@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidBrazilianPhone } from "@/lib/phone-validation";
 
 export const checkoutOrderSchema = z.object({
   eventId: z.string().min(1),
@@ -6,7 +7,9 @@ export const checkoutOrderSchema = z.object({
   buyerName: z.string().min(3),
   buyerEmail: z.string().email(),
   buyerDocument: z.string().min(5),
-  buyerPhone: z.string().optional(),
+  buyerPhone: z.string().refine(isValidBrazilianPhone, {
+    message: "Informe um telefone válido com DDD."
+  }).optional(),
   buyerPostalCode: z.string().refine((value) => value.replace(/\D/g, "").length === 8, {
     message: "Informe um CEP válido."
   }),

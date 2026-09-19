@@ -27,6 +27,10 @@ function checkoutValidationMessage(error: unknown) {
       return "Preencha seu CPF.";
     }
 
+    if (field === "buyerPhone") {
+      return "Informe um telefone válido com DDD, por exemplo: 11999999999.";
+    }
+
     if (field === "buyerPostalCode") {
       return "Preencha um CEP válido.";
     }

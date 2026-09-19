@@ -10,6 +10,7 @@ import {
   MIN_CARD_PAYMENT_AMOUNT_IN_CENTS,
   MIN_PIX_PAYMENT_AMOUNT_IN_CENTS
 } from "@/features/pricing/pricing";
+import { normalizeBrazilianPhone } from "@/lib/phone-validation";
 
 export type PaymentIntentInput = {
   orderId: string;
@@ -157,28 +158,6 @@ function parseAsaasResponsePayload<T>(text: string) {
       errors: [{ description: "O Asaas retornou uma resposta em formato inválido. Tente novamente em instantes." }]
     } as T & { errors?: Array<{ description?: string }> };
   }
-}
-
-function normalizeAsaasBrazilianPhone(value?: string | null) {
-  if (!value) {
-    return undefined;
-  }
-
-  let digits = value.replace(/\D/g, "").replace(/^0+/, "");
-
-  if (digits.startsWith("55") && (digits.length === 12 || digits.length === 13)) {
-    digits = digits.slice(2);
-  }
-
-  if (!digits) {
-    return undefined;
-  }
-
-  if (digits.length < 10 || digits.length > 11) {
-    throw new Error("Telefone inválido. Informe um telefone com DDD, sem código do país. Exemplo: 11999999999.");
-  }
-
-  return digits;
 }
 
 export class MercadoPagoCheckoutProProvider implements PaymentProvider {
@@ -339,7 +318,7 @@ export class AsaasPaymentProvider implements PaymentProvider {
         name: input.customerName,
         email: input.customerEmail,
         cpfCnpj: input.customerDocument.replace(/\D/g, ""),
-        mobilePhone: normalizeAsaasBrazilianPhone(input.customerPhone),
+        mobilePhone: normalizeBrazilianPhone(input.customerPhone),
         externalReference: input.orderCode,
         notificationDisabled: true
       })
@@ -417,7 +396,7 @@ export class AsaasPaymentProvider implements PaymentProvider {
     const dueDate = new Date();
     const sanitizedCardNumber = input.number.replace(/\D/g, "");
     const sanitizedCpfCnpj = input.holderCpfCnpj.replace(/\D/g, "");
-    const sanitizedPhone = normalizeAsaasBrazilianPhone(input.customerPhone);
+    const sanitizedPhone = normalizeBrazilianPhone(input.customerPhone);
     const paymentValue = input.amountInCents / 100;
     const installmentCount = input.installments > 1 ? input.installments : undefined;
 

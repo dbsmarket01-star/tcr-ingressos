@@ -132,6 +132,44 @@ describe("Asaas payment provider", () => {
     expect(customerRequest?.body?.mobilePhone).toBe("21992440020");
   });
 
+  it("omits an invalid legacy phone instead of blocking Pix creation", async () => {
+    const requests: Array<{ url: string; method: string; body: Record<string, unknown> | null }> = [];
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        const method = init?.method ?? "GET";
+        const body = init?.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : null;
+        requests.push({ url, method, body });
+
+        if (url.endsWith("/customers")) {
+          return jsonResponse({ id: "cus_legacy" });
+        }
+
+        if (url.endsWith("/payments") && method === "POST") {
+          return jsonResponse({ id: "pay_legacy", status: "PENDING" });
+        }
+
+        if (url.endsWith("/payments/pay_legacy/pixQrCode")) {
+          return jsonResponse({ encodedImage: "base64-image", payload: "000201" });
+        }
+
+        return jsonResponse({ errors: [{ description: "not found" }] }, 404);
+      })
+    );
+
+    const provider = new AsaasPaymentProvider(config);
+    const result = await provider.createPaymentIntent({
+      ...basePixInput,
+      customerPhone: "119990277996"
+    });
+
+    const customerRequest = requests.find((request) => request.url.endsWith("/customers"));
+    expect(customerRequest?.body?.mobilePhone).toBeUndefined();
+    expect(result.pixQrCodePayload).toBe("000201");
+  });
+
   it("does not create an Asaas customer when Pix value is below the Asaas minimum", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
