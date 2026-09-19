@@ -28537,7 +28537,7 @@ small,
 
   .adminShell:has(.dashboardGeneralShell) .dashboardGeneralKpiGrid {
     gap: 10px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
   .adminShell:has(.dashboardGeneralShell) .dashboardGeneralKpiCard {
