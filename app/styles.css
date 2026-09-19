@@ -28444,3 +28444,45 @@ small,
     overflow: hidden;
   }
 }
+
+/* iPhone Pro Max: keep the public hero and account action inside the viewport. */
+@media (max-width: 480px) {
+  .homePage .tcrPremiumHeader {
+    column-gap: 10px;
+  }
+
+  .homePage .tcrPremiumActions {
+    max-width: none !important;
+    overflow: visible !important;
+  }
+
+  .homePage .tcrPremiumTicketsCta {
+    height: 40px;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 !important;
+    width: 40px;
+  }
+
+  .homePage .tcrPremiumTicketsCta span {
+    display: none;
+  }
+
+  .homePage .tcrPremiumTicketsCta svg {
+    height: 18px;
+    width: 18px;
+  }
+
+  .homePage .tcrPremiumHeroLead h1 {
+    font-size: clamp(29px, 7.4vw, 32px) !important;
+    line-height: 1.08 !important;
+    max-width: 100% !important;
+    overflow-wrap: normal !important;
+    text-wrap: normal !important;
+  }
+
+  .homePage .tcrPremiumHeroLead p {
+    font-size: 15px !important;
+    max-width: 100% !important;
+  }
+}
