@@ -28530,4 +28530,42 @@ small,
     min-width: 0;
     width: 100%;
   }
+
+  .adminShell:has(.dashboardGeneralShell) .adminMain > .adminHeader {
+    display: none;
+  }
+
+  .adminShell:has(.dashboardGeneralShell) .dashboardGeneralKpiGrid {
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adminShell:has(.dashboardGeneralShell) .dashboardGeneralKpiCard {
+    border-radius: 14px;
+    gap: 7px;
+    min-height: 120px;
+    padding: 12px;
+  }
+
+  .adminShell:has(.dashboardGeneralShell) .dashboardGeneralKpiIcon {
+    height: 34px;
+    width: 34px;
+  }
+
+  .adminShell:has(.dashboardGeneralShell) .dashboardGeneralKpiIcon svg {
+    height: 19px;
+    width: 19px;
+  }
+
+  .adminShell:has(.dashboardGeneralShell) .dashboardGeneralKpiLabel {
+    font-size: 11px;
+  }
+
+  .adminShell:has(.dashboardGeneralShell) .dashboardGeneralKpiCard strong {
+    font-size: clamp(17px, 5vw, 22px);
+  }
+
+  .adminShell:has(.dashboardGeneralShell) .dashboardGeneralDelta {
+    font-size: 9px;
+  }
 }
