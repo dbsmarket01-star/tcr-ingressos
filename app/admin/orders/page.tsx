@@ -85,6 +85,7 @@ function getDateRangePresets(): DateRangePreset[] {
   const previousMonthYear = today.month === 1 ? today.year - 1 : today.year;
   const previousMonthLastDay = new Date(Date.UTC(previousMonthYear, previousMonth, 0)).getUTCDate();
   const todayValue = formatDateInput(today.year, today.month, today.day);
+  const sevenDaysAgo = new Date(Date.UTC(today.year, today.month - 1, today.day - 6));
 
   return [
     {
@@ -96,6 +97,15 @@ function getDateRangePresets(): DateRangePreset[] {
       label: "Ontem",
       startDate: formatDateInput(yesterday.year, yesterday.month, yesterday.day),
       endDate: formatDateInput(yesterday.year, yesterday.month, yesterday.day)
+    },
+    {
+      label: "Últimos 7 dias",
+      startDate: formatDateInput(
+        sevenDaysAgo.getUTCFullYear(),
+        sevenDaysAgo.getUTCMonth() + 1,
+        sevenDaysAgo.getUTCDate()
+      ),
+      endDate: todayValue
     },
     {
       label: "Este mês",
