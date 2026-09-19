@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PasswordInput } from "@/components/forms/PasswordInput";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { loginAction } from "@/features/auth/auth.actions";
 import { getAdminLandingPath, getCurrentAdmin } from "@/features/auth/auth.service";
@@ -78,12 +79,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
             <label className="field">
               <span>Senha</span>
-              <input
+              <PasswordInput
                 autoComplete="current-password"
                 name="password"
                 placeholder="Sua senha"
                 required
-                type="password"
               />
             </label>
 

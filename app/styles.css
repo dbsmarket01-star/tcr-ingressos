@@ -13306,6 +13306,53 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   outline: none;
 }
 
+.passwordInputShell {
+  position: relative;
+}
+
+.passwordInputShell .passwordInput {
+  padding-right: 54px;
+}
+
+.passwordVisibilityButton {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  color: #60708f;
+  cursor: pointer;
+  display: inline-flex;
+  height: 40px;
+  justify-content: center;
+  padding: 0;
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+}
+
+.passwordVisibilityButton:hover {
+  background: rgba(var(--brand-rgb), 0.08);
+  color: var(--brand-dark);
+}
+
+.passwordVisibilityButton:focus-visible {
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb), 0.16);
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+.passwordVisibilityButton svg {
+  fill: none;
+  height: 22px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  width: 22px;
+}
+
 .loginFormArea .button.fullButton {
   background: linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--brand) 74%, white 26%));
   border-radius: 14px;

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PasswordInput } from "@/components/forms/PasswordInput";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { resetPasswordAction } from "@/features/auth/auth.actions";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
@@ -48,11 +49,11 @@ export default async function ResetPasswordPage({ params, searchParams }: ResetP
             <input type="hidden" name="token" value={token} />
             <label className="field">
               <span>Nova senha</span>
-              <input autoComplete="new-password" name="newPassword" required type="password" minLength={8} />
+              <PasswordInput autoComplete="new-password" name="newPassword" required minLength={8} />
             </label>
             <label className="field">
               <span>Confirmar nova senha</span>
-              <input autoComplete="new-password" name="confirmPassword" required type="password" minLength={8} />
+              <PasswordInput autoComplete="new-password" name="confirmPassword" required minLength={8} />
             </label>
 
             <button className="button fullButton" type="submit">
