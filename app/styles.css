@@ -5446,7 +5446,7 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 .publicHeroImage {
   display: block;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   width: 100%;
 }
 
