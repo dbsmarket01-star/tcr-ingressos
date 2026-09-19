@@ -476,7 +476,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               <small>Sem venda ativa</small>
             </div>
           </article>
-          <article className="ordersSummaryCard">
+          <article className="ordersSummaryCard ordersSummaryCardFinancial">
             <span className="ordersMetricIcon ordersMetricIconRevenue">$</span>
             <div>
               <span>{financialCopy.totalTitle}</span>
@@ -484,7 +484,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               <small>{financialCopy.totalDetail}</small>
             </div>
           </article>
-          <article className="ordersSummaryCard">
+          <article className="ordersSummaryCard ordersSummaryCardFinancial">
             <span className="ordersMetricIcon ordersMetricIconRevenue">R$</span>
             <div>
               <span>{financialCopy.subtotalTitle}</span>
@@ -492,7 +492,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               <small>{financialCopy.subtotalDetail}</small>
             </div>
           </article>
-          <article className="ordersSummaryCard">
+          <article className="ordersSummaryCard ordersSummaryCardFinancial">
             <span className="ordersMetricIcon ordersMetricIconPaid">%</span>
             <div>
               <span>{financialCopy.serviceFeeTitle}</span>
@@ -500,7 +500,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               <small>{financialCopy.serviceFeeDetail}</small>
             </div>
           </article>
-          <article className="ordersSummaryCard">
+          <article className="ordersSummaryCard ordersSummaryCardFinancial">
             <span className="ordersMetricIcon ordersMetricIconPending">CC</span>
             <div>
               <span>{financialCopy.cardInterestTitle}</span>
@@ -640,20 +640,20 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
 
                     return (
                       <tr key={order.id}>
-                        <td className="ordersCodeCell">
+                        <td className="ordersCodeCell" data-label="Pedido">
                           <strong>{order.code}</strong>
                         </td>
-                        <td className="ordersCustomerCell">
+                        <td className="ordersCustomerCell" data-label="Cliente">
                           <strong>{order.customer.name}</strong>
                           <span>{order.customer.email}</span>
                           <span>{order.customer.phone || "Telefone não informado"}</span>
                           <span>CPF: {formatCpf(order.customer.document)}</span>
                         </td>
-                        <td className="ordersEventCell">
+                        <td className="ordersEventCell" data-label="Evento">
                           <strong>{order.event.title}</strong>
                           <span>{order.event.venueName}</span>
                         </td>
-                        <td className="ordersTicketItemsCell">
+                        <td className="ordersTicketItemsCell" data-label="Ingressos">
                           {breakdown.ticketLines.map((item) => (
                             <span key={item.label}>
                               <strong>
@@ -666,16 +666,16 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                             </span>
                           ))}
                         </td>
-                        <td className="ordersCityCell">
+                        <td className="ordersCityCell" data-label="Cidade">
                           <strong>{order.event.city}</strong>
                           <span>{order.event.state}</span>
                         </td>
-                        <td className="ordersDateCell">{formatDateTime(referenceDate)}</td>
-                        <td className="ordersValueCell">
+                        <td className="ordersDateCell" data-label="Data">{formatDateTime(referenceDate)}</td>
+                        <td className="ordersValueCell" data-label="Valor vendido">
                           <strong>{formatCurrency(breakdown.ticketSubtotalInCents)}</strong>
                           <span>Somente ingressos</span>
                         </td>
-                        <td className="ordersFeesCell">
+                        <td className="ordersFeesCell" data-label="Taxas">
                           {breakdown.feeLines.map((fee) => (
                             <span key={fee.label}>
                               <strong>{fee.label}</strong>
@@ -683,12 +683,12 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                             </span>
                           ))}
                         </td>
-                        <td>
+                        <td data-label="Status">
                           <span className={`ordersStatusBadge ${orderStatusClasses[order.status] ?? "neutral"}`}>
                             {orderStatusLabels[order.status] ?? order.status}
                           </span>
                         </td>
-                        <td className="ordersPaymentCell">
+                        <td className="ordersPaymentCell" data-label="Pagamento">
                           <strong>{payment.title}</strong>
                           <span>{payment.detail}</span>
                         </td>

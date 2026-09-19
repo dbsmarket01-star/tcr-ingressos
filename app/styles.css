@@ -35,6 +35,255 @@
   --event-banner-ratio: 1900 / 828;
 }
 
+/* Orders workspace: balanced desktop density and a compact mobile flow. */
+.adminShell:has(.ordersDeskPage) .ordersSummaryGrid {
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+}
+
+.adminShell:has(.ordersDeskPage) .ordersFilterGrid {
+  grid-template-columns: minmax(280px, 1.45fr) minmax(220px, 1.2fr) repeat(3, minmax(150px, 0.8fr));
+}
+
+.adminShell:has(.ordersDeskPage) .ordersPeriodField {
+  min-width: 0;
+}
+
+@media (max-width: 1320px) {
+  .adminShell:has(.ordersDeskPage) .ordersSummaryGrid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersFilterGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .adminShell:has(.ordersDeskPage) .adminMain {
+    padding: 12px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .adminHeader {
+    border-radius: 16px;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 14px 16px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .adminHeader h1 {
+    font-size: 30px;
+    margin-bottom: 0;
+  }
+
+  .adminShell:has(.ordersDeskPage) .adminHeader > div:first-child p,
+  .adminShell:has(.ordersDeskPage) .adminHeaderPulse,
+  .adminShell:has(.ordersDeskPage) .adminHeaderActions > .secondaryButton,
+  .adminShell:has(.ordersDeskPage) .adminHeaderActions > form {
+    display: none;
+  }
+
+  .adminShell:has(.ordersDeskPage) .adminHeaderActions {
+    display: block;
+  }
+
+  .adminShell:has(.ordersDeskPage) .adminUserBadge {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    display: flex;
+    gap: 8px;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .adminShell:has(.ordersDeskPage) .adminUserBadge strong {
+    font-size: 13px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .adminUserBadge span {
+    background: rgba(var(--brand-rgb), 0.09);
+    border-radius: 999px;
+    font-size: 10px;
+    padding: 4px 7px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDeskPage {
+    gap: 12px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersSummaryGrid {
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersSummaryCard {
+    align-content: start;
+    border-radius: 14px;
+    gap: 8px;
+    grid-template-columns: 34px minmax(0, 1fr);
+    min-height: 108px;
+    padding: 12px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersSummaryCardFinancial {
+    align-items: center;
+    grid-column: 1 / -1;
+    min-height: 82px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersMetricIcon {
+    font-size: 16px;
+    height: 34px;
+    width: 34px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersSummaryCard span:not(.ordersMetricIcon) {
+    font-size: 11px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersSummaryCard strong {
+    font-size: clamp(18px, 5.4vw, 23px);
+    margin-top: 4px;
+    white-space: normal;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersSummaryCard small {
+    font-size: 10px;
+    margin-top: 4px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersFilterPanel,
+  .adminShell:has(.ordersDeskPage) .ordersTablePanel {
+    border-radius: 14px;
+    padding: 14px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersFilterHeader {
+    margin-bottom: 12px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersFilterGrid {
+    gap: 12px;
+    grid-template-columns: 1fr;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDateRange {
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDateRange input {
+    min-width: 0;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersQuickDateFilters {
+    display: grid;
+    gap: 7px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 9px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersQuickDateButton {
+    min-height: 36px;
+    padding: 0 8px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersSearchField {
+    max-width: none;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersFilterActions {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersPrimaryButton {
+    grid-column: 1 / -1;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersPrimaryButton,
+  .adminShell:has(.ordersDeskPage) .ordersSecondaryButton,
+  .adminShell:has(.ordersDeskPage) .ordersExportButton {
+    margin: 0;
+    min-width: 0;
+    padding: 0 10px;
+    width: 100%;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersTableHeader {
+    margin-bottom: 12px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersTableWrap {
+    border: 0;
+    overflow: visible;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDeskTable,
+  .adminShell:has(.ordersDeskPage) .ordersDeskTable tbody {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDeskTable thead {
+    display: none;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDeskTable tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDeskTable tr {
+    background: #fff;
+    border: 1px solid #dfe7ea;
+    border-radius: 13px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    display: grid;
+    overflow: hidden;
+    padding: 4px 12px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDeskTable td {
+    align-items: start;
+    border-bottom: 1px solid #edf2f4;
+    display: grid;
+    font-size: 13px;
+    gap: 3px;
+    grid-template-columns: 104px minmax(0, 1fr);
+    min-width: 0;
+    padding: 10px 0;
+    white-space: normal;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDeskTable td:last-child {
+    border-bottom: 0;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDeskTable td::before {
+    color: #64748b;
+    content: attr(data-label);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .adminShell:has(.ordersDeskPage) :is(.ordersCustomerCell, .ordersEventCell, .ordersTicketItemsCell, .ordersFeesCell) {
+    grid-template-columns: 1fr;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersStatusBadge {
+    font-size: 12px;
+    min-height: 32px;
+    min-width: 0;
+    padding: 0 10px;
+    width: fit-content;
+  }
+}
+
 .srOnly {
   border: 0;
   clip: rect(0 0 0 0);
@@ -27098,6 +27347,48 @@ small,
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.ordersQuickDateFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.ordersQuickDateButton {
+  align-items: center;
+  background: #f8fbfa;
+  border: 1px solid #dce9e4;
+  border-radius: 999px;
+  color: #0f513f;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  justify-content: center;
+  line-height: 1;
+  min-height: 30px;
+  padding: 0 12px;
+  text-decoration: none;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+  white-space: nowrap;
+}
+
+.ordersQuickDateButton:hover,
+.ordersQuickDateButton:focus-visible {
+  background: #eef8f3;
+  border-color: rgba(0, 89, 63, 0.35);
+  transform: translateY(-1px);
+}
+
+.ordersQuickDateButton.isActive {
+  background: #0f513f;
+  border-color: #0f513f;
+  color: #fff;
+}
+
 .ordersSearchField {
   max-width: 680px;
 }
@@ -27800,5 +28091,356 @@ small,
     justify-self: stretch;
     margin: 12px 18px 16px;
     max-width: none;
+  }
+}
+
+/* Orders and dashboard responsive polish. Kept at the end for predictable precedence. */
+.adminShell:has(.ordersDeskPage) .ordersSummaryGrid {
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+}
+
+.adminShell:has(.ordersDeskPage) .ordersFilterGrid {
+  grid-template-columns: minmax(280px, 1.45fr) minmax(220px, 1.2fr) repeat(3, minmax(150px, 0.8fr));
+}
+
+@media (max-width: 1320px) {
+  .adminShell:has(.ordersDeskPage) .ordersSummaryGrid,
+  .adminShell:has(.ordersDeskPage) .ordersFilterGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .adminShell:has(.ordersDeskPage) .adminMain,
+  .adminShell:has(.dashboardGeneralShell) .adminMain {
+    padding: 12px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .adminHeader,
+  .adminShell:has(.dashboardGeneralShell) .adminHeader {
+    border-radius: 16px;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 14px 16px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .adminHeader h1,
+  .adminShell:has(.dashboardGeneralShell) .adminHeader h1 {
+    font-size: 29px;
+    margin: 0;
+  }
+
+  .adminShell:has(.ordersDeskPage) .adminHeader > div:first-child p,
+  .adminShell:has(.ordersDeskPage) .adminHeaderPulse,
+  .adminShell:has(.ordersDeskPage) .adminHeaderActions > .secondaryButton,
+  .adminShell:has(.ordersDeskPage) .adminHeaderActions > form,
+  .adminShell:has(.dashboardGeneralShell) .adminHeader > div:first-child p,
+  .adminShell:has(.dashboardGeneralShell) .adminHeaderPulse,
+  .adminShell:has(.dashboardGeneralShell) .adminHeaderActions > .secondaryButton,
+  .adminShell:has(.dashboardGeneralShell) .adminHeaderActions > form {
+    display: none;
+  }
+
+  .adminShell:has(.ordersDeskPage) .adminHeaderActions,
+  .adminShell:has(.dashboardGeneralShell) .adminHeaderActions {
+    display: block;
+  }
+
+  .adminShell:has(.ordersDeskPage) .adminUserBadge,
+  .adminShell:has(.dashboardGeneralShell) .adminUserBadge {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    display: flex;
+    gap: 7px;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .adminShell:has(.ordersDeskPage) .adminUserBadge strong,
+  .adminShell:has(.dashboardGeneralShell) .adminUserBadge strong {
+    font-size: 12px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .adminUserBadge span,
+  .adminShell:has(.dashboardGeneralShell) .adminUserBadge span {
+    background: rgba(var(--brand-rgb), 0.09);
+    border-radius: 999px;
+    font-size: 9px;
+    padding: 4px 7px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDeskPage {
+    gap: 12px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersSummaryGrid {
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersSummaryCard {
+    align-content: start;
+    border-radius: 14px;
+    gap: 8px;
+    grid-template-columns: 34px minmax(0, 1fr);
+    min-height: 108px;
+    padding: 12px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersSummaryCardFinancial {
+    align-items: center;
+    grid-column: 1 / -1;
+    min-height: 82px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersMetricIcon {
+    font-size: 15px;
+    height: 34px;
+    width: 34px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersSummaryCard span:not(.ordersMetricIcon) {
+    font-size: 11px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersSummaryCard strong {
+    font-size: clamp(18px, 5.4vw, 23px);
+    margin-top: 4px;
+    white-space: normal;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersSummaryCard small {
+    font-size: 10px;
+    margin-top: 4px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersFilterPanel,
+  .adminShell:has(.ordersDeskPage) .ordersTablePanel {
+    border-radius: 14px;
+    padding: 14px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersFilterGrid {
+    gap: 12px;
+    grid-template-columns: 1fr;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDateRange,
+  .adminShell:has(.ordersDeskPage) .ordersQuickDateFilters,
+  .adminShell:has(.ordersDeskPage) .ordersFilterActions {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersQuickDateFilters {
+    margin-top: 9px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersQuickDateButton {
+    min-height: 36px;
+    padding: 0 8px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersSearchField {
+    max-width: none;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersPrimaryButton {
+    grid-column: 1 / -1;
+  }
+
+  .adminShell:has(.ordersDeskPage) :is(.ordersPrimaryButton, .ordersSecondaryButton, .ordersExportButton) {
+    margin: 0;
+    min-width: 0;
+    padding: 0 10px;
+    width: 100%;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersTableWrap {
+    border: 0;
+    overflow: visible;
+  }
+
+  .adminShell:has(.ordersDeskPage) :is(.ordersDeskTable, .ordersDeskTable tbody) {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDeskTable thead {
+    display: none;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDeskTable tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDeskTable tr {
+    background: #fff;
+    border: 1px solid #dfe7ea;
+    border-radius: 13px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    display: grid;
+    overflow: hidden;
+    padding: 4px 12px;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDeskTable td {
+    align-items: start;
+    border-bottom: 1px solid #edf2f4;
+    display: grid;
+    font-size: 13px;
+    gap: 3px;
+    grid-template-columns: 96px minmax(0, 1fr);
+    min-width: 0;
+    padding: 10px 0;
+    white-space: normal;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDeskTable td:last-child {
+    border-bottom: 0;
+  }
+
+  .adminShell:has(.ordersDeskPage) .ordersDeskTable td::before {
+    color: #64748b;
+    content: attr(data-label);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .adminShell:has(.ordersDeskPage) :is(.ordersCustomerCell, .ordersEventCell, .ordersTicketItemsCell, .ordersFeesCell) {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardGeneralShell {
+    gap: 12px;
+  }
+
+  .dashboardGeneralTopbar {
+    display: none;
+  }
+
+  .dashboardGeneralHeader {
+    align-items: stretch;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .dashboardGeneralHeader h1 {
+    font-size: 28px;
+  }
+
+  .dashboardGeneralHeader p {
+    font-size: 13px;
+  }
+
+  .dashboardGeneralDateCard {
+    padding: 12px;
+  }
+
+  .dashboardGeneralDateFields {
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboardGeneralDateFields button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .dashboardGeneralKpiGrid {
+    gap: 10px;
+  }
+
+  .dashboardGeneralKpiCard {
+    min-height: 122px;
+    padding: 13px;
+  }
+
+  .dashboardGeneralKpiCard strong {
+    font-size: clamp(20px, 6vw, 27px);
+  }
+
+  .dashboardGeneralPanel {
+    border-radius: 16px;
+    padding: 15px;
+  }
+
+  .dashboardGeneralChartPanel {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .dashboardGeneralChartPanel .dashboardGeneralPanelHeader {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .dashboardGeneralChartPanel .dashboardGeneralPanelHeader h2 {
+    font-size: 21px;
+  }
+
+  .dashboardGeneralChartPanel .dashboardGeneralPanelHeader p {
+    font-size: 12px;
+  }
+
+  .dashboardGeneralChartPanel .dashboardGeneralPill {
+    font-size: 10px;
+    min-height: 30px;
+    padding: 0 9px;
+  }
+
+  .dashboardGeneralLineChartWrap {
+    display: block;
+    overflow: visible;
+  }
+
+  .dashboardGeneralLineChart {
+    min-height: 244px;
+  }
+
+  .dashboardGeneralLineChart svg {
+    height: 210px;
+    min-width: 100%;
+  }
+
+  .dashboardGeneralChartHotspots {
+    bottom: 30px;
+  }
+
+  .dashboardGeneralChartHotspot {
+    touch-action: manipulation;
+  }
+
+  .dashboardGeneralChartTooltip {
+    left: 50%;
+    max-width: calc(100vw - 64px);
+    min-width: min(250px, calc(100vw - 64px));
+    position: fixed;
+    top: 50%;
+    transform: translate(-50%, -54%);
+    z-index: 1000;
+  }
+
+  .dashboardGeneralChartHotspot:is(:hover, :focus, :active) .dashboardGeneralChartTooltip {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+
+  .dashboardGeneralChartLegend {
+    gap: 7px 10px;
+  }
+
+  .dashboardGeneralChartLegend span {
+    font-size: 10px;
+  }
+
+  .dashboardGeneralXAxis {
+    overflow: hidden;
   }
 }
