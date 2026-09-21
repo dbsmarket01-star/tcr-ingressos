@@ -297,6 +297,10 @@ export async function getOrdersSummary(
 
   const where = await buildReportOrderWhere(filters, organizationId, allowedEventIds);
   const requestedStatus = parseStatus(filters.status);
+  const summaryWhere: Prisma.OrderWhereInput =
+    requestedStatus === OrderStatus.REFUNDED
+      ? { ...where, id: { in: [] } }
+      : { ...where, status: requestedStatus ?? { not: OrderStatus.REFUNDED } };
   const financialWhere: Prisma.OrderWhereInput =
     requestedStatus === OrderStatus.PENDING_PAYMENT
       ? where
@@ -310,7 +314,7 @@ export async function getOrdersSummary(
   const [statusGroups, totals] = await Promise.all([
     prisma.order.groupBy({
       by: ["status"],
-      where,
+      where: summaryWhere,
       _count: {
         _all: true
       }
@@ -341,7 +345,7 @@ export async function getOrdersSummary(
     totalOrders,
     paidOrders: countByStatus.PAID ?? 0,
     pendingOrders: countByStatus.PENDING_PAYMENT ?? 0,
-    canceledOrders: (countByStatus.CANCELED ?? 0) + (countByStatus.EXPIRED ?? 0) + (countByStatus.REFUNDED ?? 0),
+    canceledOrders: (countByStatus.CANCELED ?? 0) + (countByStatus.EXPIRED ?? 0),
     totalInCents: totals._sum.totalInCents ?? 0,
     subtotalInCents: totals._sum.subtotalInCents ?? 0,
     serviceFeeInCents: totals._sum.serviceFeeInCents ?? 0,

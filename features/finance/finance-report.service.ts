@@ -286,18 +286,19 @@ export async function getFinanceReport(
       Boolean(order.payment?.pixQrCodePayload)
     ) === paymentMethod)
     : paidOrdersRaw;
+  const operationalOrdersInPeriod = ordersInPeriod.filter((order) => order.status !== OrderStatus.REFUNDED);
 
   const statusCounts = Object.fromEntries(
     Object.values(OrderStatus).map((status) => [
       status,
-      ordersInPeriod.filter((order) => order.status === status).length
+      operationalOrdersInPeriod.filter((order) => order.status === status).length
     ])
   ) as Record<OrderStatus, number>;
 
   const paymentStatusCounts = Object.fromEntries(
     Object.values(PaymentStatus).map((status) => [
       status,
-      ordersInPeriod.filter((order) => order.payment?.status === status).length
+      operationalOrdersInPeriod.filter((order) => order.payment?.status === status).length
     ])
   ) as Record<PaymentStatus, number>;
 
@@ -558,11 +559,10 @@ export async function getFinanceReport(
       estimatedFeesInCents: Math.max(grossRevenueInCents - netRevenueInCents, 0),
       pendingAmountInCents,
       canceledAmountInCents,
-      ordersInPeriod: ordersInPeriod.length,
+      ordersInPeriod: operationalOrdersInPeriod.length,
       paidOrders: paidOrders.length,
       pendingOrders: statusCounts.PENDING_PAYMENT ?? 0,
-      canceledOrders:
-        (statusCounts.CANCELED ?? 0) + (statusCounts.EXPIRED ?? 0) + (statusCounts.REFUNDED ?? 0),
+      canceledOrders: (statusCounts.CANCELED ?? 0) + (statusCounts.EXPIRED ?? 0),
       approvedPayments: paymentStatusCounts.APPROVED ?? 0,
       failedPayments: (paymentStatusCounts.FAILED ?? 0) + (paymentStatusCounts.CANCELED ?? 0),
       ticketsIssued: scopedPaidOrders.reduce((sum, order) => sum + order.tickets.length, 0),

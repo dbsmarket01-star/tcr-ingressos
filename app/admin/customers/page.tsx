@@ -48,7 +48,10 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
       : {};
   const orderScopeWhere: Prisma.OrderWhereInput = {
     ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
-    ...(customerSearchConditions ? { customer: { OR: customerSearchConditions } } : {})
+    ...(customerSearchConditions ? { customer: { OR: customerSearchConditions } } : {}),
+    status: {
+      not: "REFUNDED"
+    }
   };
 
   const [customers, totalCustomers, totalOrdersInScope, paidRevenue, returningGroups] = await Promise.all([
@@ -59,13 +62,12 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
       include: {
         _count: {
           select: {
-            orders: allowedEventIds
-              ? {
-                  where: {
-                    eventId: { in: allowedEventIds }
-                  }
-                }
-              : true,
+            orders: {
+              where: {
+                ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+                status: { not: "REFUNDED" }
+              }
+            },
             participants: true
           }
         },

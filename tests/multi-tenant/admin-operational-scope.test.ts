@@ -98,6 +98,29 @@ describe("admin operational tenant isolation", () => {
     );
   });
 
+  it("removes refunded orders from every sales summary indicator", async () => {
+    const { getOrdersSummary } = await import("@/features/orders/order.admin.service");
+
+    prismaMock.order.groupBy.mockResolvedValue([
+      { status: "PAID", _count: { _all: 4 } },
+      { status: "CANCELED", _count: { _all: 2 } },
+      { status: "EXPIRED", _count: { _all: 3 } }
+    ]);
+
+    const summary = await getOrdersSummary({}, "org_tcr", null);
+
+    expect(prismaMock.order.groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: { not: "REFUNDED" }
+        })
+      })
+    );
+    expect(summary.totalOrders).toBe(9);
+    expect(summary.paidOrders).toBe(4);
+    expect(summary.canceledOrders).toBe(5);
+  });
+
   it("excludes pending order attempts after the customer paid for the same event", async () => {
     const { getOrdersSummary, listAdminOrders } = await import("@/features/orders/order.admin.service");
 
