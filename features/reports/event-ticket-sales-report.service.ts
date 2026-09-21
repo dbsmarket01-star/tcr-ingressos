@@ -188,23 +188,21 @@ export async function getEventTicketSalesReport(
       const couponDiscountInCents = discountByItemId.get(item.id) ?? 0;
       const reversedAmountInCents = Math.max(item.totalInCents + item.serviceFeeInCents - couponDiscountInCents, 0);
 
-      row.quantity += getAdmissionCount([item]);
-      row.ticketRevenueInCents += item.totalInCents;
-      row.serviceFeeInCents += item.serviceFeeInCents;
-      row.couponDiscountInCents += couponDiscountInCents;
-
       if (chargeback) {
         row.chargebackInCents += reversedAmountInCents;
       } else if (reversed) {
         row.refundInCents += reversedAmountInCents;
+      } else {
+        row.quantity += getAdmissionCount([item]);
+        row.ticketRevenueInCents += item.totalInCents;
+        row.serviceFeeInCents += item.serviceFeeInCents;
+        row.couponDiscountInCents += couponDiscountInCents;
       }
 
       row.totalInCents =
         row.ticketRevenueInCents +
         row.serviceFeeInCents -
-        row.couponDiscountInCents -
-        row.refundInCents -
-        row.chargebackInCents;
+        row.couponDiscountInCents;
       rows.set(key, row);
     }
   }

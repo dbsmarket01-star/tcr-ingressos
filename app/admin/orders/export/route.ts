@@ -439,9 +439,12 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const filters = getFiltersFromUrl(url);
   const orders = await listOrdersForCsvExport(filters, admin.organizationId, getAdminAllowedEventIds(admin));
-  const eventRows = buildEventRows(orders);
+  const reportOrders = filters.status === "PENDING_PAYMENT"
+    ? orders.filter((order) => order.status === "PENDING_PAYMENT")
+    : orders.filter((order) => order.status === "PAID" && order.payment?.status !== "REFUNDED");
+  const eventRows = buildEventRows(reportOrders);
   const totals = buildTotals(eventRows);
-  const paymentBreakdown = buildPaymentBreakdown(orders);
+  const paymentBreakdown = buildPaymentBreakdown(reportOrders);
   const filterId = "orders-export-filters";
   const filterSummary = [
     filters.status ? orderStatusLabels[filters.status] || filters.status : "Todos os status",

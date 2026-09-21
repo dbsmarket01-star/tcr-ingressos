@@ -66,7 +66,7 @@ describe("event ticket sales report", () => {
     prismaMock.order.findMany.mockResolvedValue([]);
   });
 
-  it("groups sold tickets by lot option and subtracts coupons and chargebacks from the total", async () => {
+  it("keeps refunded sales and their fees out of sold-ticket totals", async () => {
     prismaMock.order.findMany.mockResolvedValue([
       order({
         id: "order_paid",
@@ -107,9 +107,9 @@ describe("event ticket sales report", () => {
       ticketName: "Cadeira Ouro - Solidario",
       ticketType: "Online",
       unitPriceInCents: 10000,
-      quantity: 3,
-      ticketRevenueInCents: 30000,
-      serviceFeeInCents: 3000,
+      quantity: 2,
+      ticketRevenueInCents: 20000,
+      serviceFeeInCents: 2000,
       couponDiscountInCents: 1000,
       chargebackInCents: 11000,
       refundInCents: 0,
