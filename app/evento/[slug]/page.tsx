@@ -201,6 +201,13 @@ function getLotSaleBadge(lot: {
   return null;
 }
 
+function isInterestFreeUpToTenInstallments(lot: {
+  cardInterestBpsPerInstallment: number;
+  cardInterestStartsAtInstallment: number;
+}) {
+  return lot.cardInterestBpsPerInstallment === 0 || lot.cardInterestStartsAtInstallment > 10;
+}
+
 export async function generateMetadata({ params }: Pick<EventPageProps, "params">): Promise<Metadata> {
   const { slug } = await params;
   const organizationContext = await getCurrentOrganizationContext();
@@ -280,14 +287,18 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const preserveOriginalBannerRatio =
     event.slug === "rodrigo-teaser-em-taubate-2026" ||
     event.slug === "rodrigo-teaser-em-sao-caetano-do-sul-2026" ||
-    event.slug === "rodrigo-teaser-em-piracicaba-2026";
+    event.slug === "rodrigo-teaser-em-piracicaba-2026" ||
+    event.slug === "rodrigo-teaser-em-marilia-2026";
+  const shouldUseWidePosterFrame = event.slug === "a2-imergidos-ibf-church-sao-paulo";
   const mapCrop = parseImageCrop(event.eventMapCrop);
   const ctaText = event.conversionCtaText || "Garantir minha vaga";
   const organizationSlug = organizationContext.organization.slug;
-  const isFeeFree = isFeeFreeOrganization(organizationSlug);
+  const isFeeFree = isFeeFreeOrganization(organizationSlug, event.slug);
+  const shouldPromoteInterestFreeInstallments = organizationSlug === "a2-imergidos";
   const effectiveFixedOrderFeeInCents = getEffectiveFixedOrderFeeInCents(
     organizationSlug,
-    companySettings.pixTransactionFeeInCents
+    companySettings.pixTransactionFeeInCents,
+    event.slug
   );
   const effectiveSplitRules = isFeeFree ? [] : splitRules.filter((rule) => rule.isActive);
   const highlightedLotId = event.highlightedLotId || purchasableLots[0]?.id;
@@ -301,7 +312,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         calculateServiceFeeInCents(
           lot.priceInCents,
           1,
-          getEffectiveServiceFeeBps(organizationSlug, lot.serviceFeeBps)
+          getEffectiveServiceFeeBps(organizationSlug, lot.serviceFeeBps, event.slug)
         ),
         sumAsaasSplitsInCents(
           calculateAsaasSplitsForOrder(
@@ -314,6 +325,9 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const hasServiceFees = checkoutEstimatorLots.some(
     (lot) => lot.totalWithFeeInCents > (purchasableLots.find((candidate) => candidate.id === lot.id)?.priceInCents ?? 0)
   );
+  const hasInterestFreeInstallments =
+    shouldPromoteInterestFreeInstallments &&
+    purchasableLots.length > 0;
   const publicSocialSettings = companySettings as typeof companySettings & {
     instagramUrl?: string | null;
     facebookUrl?: string | null;
@@ -388,7 +402,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
       <section className="publicHero">
         <div
-          className={`publicHeroMedia ${publicBannerCrop ? "hasCrop" : ""}`}
+          className={`publicHeroMedia ${publicBannerCrop ? "hasCrop" : ""} ${shouldUseWidePosterFrame ? "widePosterFrame" : ""}`}
           style={preserveOriginalBannerRatio ? { aspectRatio: "2 / 1" } : undefined}
         >
           <img
@@ -492,6 +506,13 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             </div>
           ) : null}
 
+          {hasInterestFreeInstallments ? (
+            <div className="installmentCampaign" role="note">
+              <strong>Em até 10x sem juros</strong>
+              <span>Condição válida para todos os ingressos no cartão de crédito.</span>
+            </div>
+          ) : null}
+
           {visibleLots.length === 0 ? (
             <div className="empty">Nenhum ingresso disponível no momento.</div>
           ) : (
@@ -524,7 +545,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                   const hasLotServiceFee = calculateServiceFeeInCents(
                     lot.priceInCents,
                     1,
-                    getEffectiveServiceFeeBps(organizationSlug, lot.serviceFeeBps)
+                    getEffectiveServiceFeeBps(organizationSlug, lot.serviceFeeBps, event.slug)
                   ) > 0;
                   const lotEndsSoon = lot.salesEndsAt
                     ? lot.salesEndsAt.getTime() - Date.now() <= 24 * 60 * 60 * 1000
