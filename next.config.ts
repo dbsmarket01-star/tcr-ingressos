@@ -25,6 +25,23 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "12mb"
     }
   },
+  images: {
+    deviceSizes: [430, 640, 750, 828, 1080, 1180, 1600, 1920],
+    formats: ["image/avif", "image/webp"],
+    imageSizes: [32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 86400,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com"
+      },
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/public/**"
+      }
+    ]
+  },
   async headers() {
     return [
       {

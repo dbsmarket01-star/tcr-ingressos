@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import Script from "next/script";
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
@@ -392,14 +393,14 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           className={`publicHeroMedia ${publicBannerCrop ? "hasCrop" : ""}`}
           style={preserveOriginalBannerRatio ? { aspectRatio: "2 / 1" } : undefined}
         >
-          <img
+          <Image
             className={`publicHeroImage ${publicBannerCrop ? "croppedImage" : ""}`}
             src={heroImage}
             alt={`Banner do evento ${event.title}`}
-            decoding="async"
-            fetchPriority="high"
             height={828}
-            loading="eager"
+            priority
+            quality={80}
+            sizes="(max-width: 768px) 100vw, 1180px"
             style={{
               ...imageCropStyle(publicBannerCrop),
               ...(preserveOriginalBannerRatio ? { objectFit: "contain" as const } : {})
@@ -463,13 +464,15 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             <section className="contentBlock eventMapBlock">
               <h2>Mapa do evento</h2>
               <div className={`eventMapImageFrame ${mapCrop ? "hasCrop" : ""}`}>
-                <img
+                <Image
                   className={mapCrop ? "croppedImage" : ""}
                   src={event.eventMapImageUrl}
                   alt={`Mapa do evento - ${event.title}`}
-                  decoding="async"
-                  loading="lazy"
+                  height={1200}
+                  quality={78}
+                  sizes="(max-width: 768px) calc(100vw - 32px), 720px"
                   style={imageCropStyle(mapCrop)}
+                  width={1600}
                 />
               </div>
               <p className="eventModularMapNotice">Imagem meramente ilustrativa do local.</p>
