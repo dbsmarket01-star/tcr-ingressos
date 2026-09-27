@@ -145,8 +145,8 @@ export default async function MarketingWhatsAppPage({ searchParams }: MarketingW
         </article>
         <article className="card dashboardHeroMetric metric">
           <span className="muted">Templates</span>
-          <strong>2</strong>
-          <small>compra_aprovada e abandono_carrinho</small>
+          <strong>1</strong>
+          <small>abandono_carrinho</small>
         </article>
         <article className="card metric">
           <span className="muted">Webhook Meta</span>
@@ -160,16 +160,11 @@ export default async function MarketingWhatsAppPage({ searchParams }: MarketingW
           <div>
             <h2>Disparos disponiveis</h2>
             <p className="muted">
-              Compra aprovada e abandono de carrinho ja ficam no fluxo automatico. Disparo em massa usa a lista de leads com telefone.
+              Abandono de carrinho fica no fluxo automatico. Disparo em massa usa a lista de leads com telefone.
             </p>
           </div>
         </div>
         <div className="twoColumnGrid">
-          <article className="campaignSummaryCard">
-            <span>Compra aprovada</span>
-            <strong>Automatico</strong>
-            <small>Enviado apos pagamento aprovado, com template compra_aprovada.</small>
-          </article>
           <article className="campaignSummaryCard">
             <span>Carrinho abandonado</span>
             <strong>5 min</strong>

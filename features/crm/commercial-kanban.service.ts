@@ -266,6 +266,28 @@ function buildWhatsappHref(phone?: string | null) {
   return `https://wa.me/${whatsappPhone}`;
 }
 
+function buildInternalWhatsappHref(input: { orderCode?: string | null; leadId?: string | null; phone?: string | null }) {
+  const whatsappPhone = normalizePhoneForWhatsapp(input.phone);
+
+  if (!whatsappPhone) {
+    return undefined;
+  }
+
+  const params = new URLSearchParams();
+
+  if (input.orderCode) {
+    params.set("orderCode", input.orderCode);
+  }
+
+  if (input.leadId) {
+    params.set("leadId", input.leadId);
+  }
+
+  params.set("phone", whatsappPhone);
+
+  return `/admin/crm/whatsapp?${params.toString()}`;
+}
+
 function getPaymentLabel(order: CommercialOrder) {
   if (!order.payment) {
     return "A definir";
@@ -358,7 +380,10 @@ function buildOrderCard(order: CommercialOrder, now = new Date()): CommercialKan
     churchName: order.churchName,
     createdAt: order.createdAt,
     lastActivityAt: order.paidAt ?? order.updatedAt ?? order.createdAt,
-    whatsappHref: buildWhatsappHref(order.customer.phone),
+    whatsappHref: buildInternalWhatsappHref({
+      orderCode: order.code,
+      phone: order.customer.phone
+    }),
     detailHref: `/admin/orders/${order.code}`
   };
 }
@@ -384,7 +409,10 @@ function buildLeadCard(lead: CommercialLead): CommercialKanbanCard {
     hasHotel: false,
     createdAt: lead.createdAt,
     lastActivityAt: lead.whatsappClickedAt ?? lead.thankYouViewedAt ?? lead.createdAt,
-    whatsappHref: buildWhatsappHref(lead.phone),
+    whatsappHref: buildInternalWhatsappHref({
+      leadId: lead.id,
+      phone: lead.phone
+    }),
     detailHref: `/admin/events/${lead.eventId}/leads?search=${encodeURIComponent(lead.email)}`
   };
 }

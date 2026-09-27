@@ -210,9 +210,9 @@ function KanbanCard({ card }: { card: CommercialKanbanCard }) {
 
       <div className="crmDealActions">
         {card.whatsappHref ? (
-          <a className="crmIconButton crmWhatsappButton" href={card.whatsappHref} rel="noreferrer" target="_blank" title="Chamar no WhatsApp">
+          <Link className="crmIconButton crmWhatsappButton" href={card.whatsappHref} title="Abrir conversa no WhatsApp interno">
             <ActionIcon kind="whatsapp" />
-          </a>
+          </Link>
         ) : (
           <span className="crmIconButton isDisabled" title="Sem WhatsApp">
             <ActionIcon kind="whatsapp" />

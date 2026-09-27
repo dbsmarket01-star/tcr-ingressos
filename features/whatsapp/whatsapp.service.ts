@@ -1,20 +1,34 @@
 import { Prisma, WhatsAppMessageStatus, WhatsAppMessageType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { normalizeHost } from "@/lib/request-host";
 
 type WhatsAppTemplateParameter = {
   type: "text";
   text: string;
 };
 
-type WhatsAppTemplateComponent = {
-  type: "body";
-  parameters: WhatsAppTemplateParameter[];
+type WhatsAppTemplateButtonParameter = {
+  type: "text";
+  text: string;
 };
+
+type WhatsAppTemplateComponent =
+  | {
+      type: "body";
+      parameters: WhatsAppTemplateParameter[];
+    }
+  | {
+      type: "button";
+      sub_type: "url";
+      index: string;
+      parameters: WhatsAppTemplateButtonParameter[];
+    };
 
 type SendTemplateMessageInput = {
   to?: string | null;
   templateName: string;
   parameters: string[];
+  urlButtonParameter?: string;
   logContext?: WhatsAppLogContext;
 };
 
@@ -22,6 +36,16 @@ type WhatsAppApiResponse = {
   messages?: Array<{
     id?: string;
   }>;
+};
+
+type WhatsAppApiErrorPayload = {
+  error?: {
+    code?: number;
+    error_subcode?: number;
+    fbtrace_id?: string;
+    message?: string;
+    type?: string;
+  };
 };
 
 type WhatsAppLogContext = {
@@ -33,21 +57,12 @@ type WhatsAppLogContext = {
   recipientName?: string | null;
 };
 
-export type PurchaseApprovedWhatsAppInput = {
-  buyerName: string;
-  buyerPhone?: string | null;
-  eventTitle: string;
-  orderCode: string;
-  orderUrl: string;
-  organizationId?: string | null;
-  eventId?: string | null;
-  orderId?: string | null;
-};
-
 export type CartAbandonmentWhatsAppInput = {
   buyerName: string;
   buyerPhone?: string | null;
   eventTitle: string;
+  cartSummary?: string;
+  orderCode?: string;
   orderUrl: string;
   expiresAt: Date;
   organizationId?: string | null;
@@ -88,6 +103,10 @@ function getWhatsAppConfig() {
   };
 }
 
+function getTemplateName(envName: string, fallback: string) {
+  return process.env[envName]?.trim() || fallback;
+}
+
 function normalizeError(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
@@ -104,10 +123,42 @@ function extractProviderMessageId(response: WhatsAppApiResponse) {
   return response.messages?.find((message) => message.id)?.id ?? null;
 }
 
+function parseWhatsAppApiError(detail: string) {
+  try {
+    const json = JSON.parse(detail) as WhatsAppApiErrorPayload;
+    const error = json.error;
+
+    if (!error) {
+      return {
+        message: detail,
+        payload: json
+      };
+    }
+
+    const pieces = [
+      error.message,
+      error.code ? `code ${error.code}` : null,
+      error.error_subcode ? `subcode ${error.error_subcode}` : null,
+      error.fbtrace_id ? `trace ${error.fbtrace_id}` : null
+    ].filter(Boolean);
+
+    return {
+      message: pieces.join(" | ") || detail,
+      payload: json
+    };
+  } catch {
+    return {
+      message: detail,
+      payload: detail
+    };
+  }
+}
+
 async function recordWhatsAppMessageLog(input: {
   to?: string | null;
   templateName?: string | null;
   parameters?: string[];
+  textContent?: string | null;
   context?: WhatsAppLogContext;
   status: WhatsAppMessageStatus;
   providerMessageId?: string | null;
@@ -135,6 +186,10 @@ async function recordWhatsAppMessageLog(input: {
               templateName: input.templateName,
               parameters: input.parameters || []
             })
+          : input.textContent
+            ? toJson({
+                text: input.textContent
+              })
           : undefined,
         webhookPayload: input.webhookPayload ? toJson(input.webhookPayload) : undefined,
         sentAt: input.status === WhatsAppMessageStatus.SENT ? now : null,
@@ -155,6 +210,41 @@ async function recordWhatsAppMessageLog(input: {
 export function isWhatsAppConfigured() {
   const config = getWhatsAppConfig();
   return Boolean(config.token && config.phoneNumberId);
+}
+
+async function getDefaultWhatsAppOrganizationId() {
+  const hosts = [
+    normalizeHost(process.env.APP_URL),
+    normalizeHost(process.env.NEXT_PUBLIC_APP_URL),
+    normalizeHost(process.env.ADMIN_HOST)
+  ].filter(Boolean) as string[];
+
+  if (hosts.length === 0) {
+    return null;
+  }
+
+  const organization = await prisma.organization.findFirst({
+    where: {
+      isActive: true,
+      OR: [
+        {
+          publicDomain: {
+            in: hosts
+          }
+        },
+        {
+          adminDomain: {
+            in: hosts
+          }
+        }
+      ]
+    },
+    select: {
+      id: true
+    }
+  });
+
+  return organization?.id ?? null;
 }
 
 export function formatPhone(phone?: string | null) {
@@ -200,6 +290,21 @@ async function sendTemplateMessage(input: SendTemplateMessageInput) {
         parameters
       }
     ];
+
+    if (input.urlButtonParameter) {
+      components.push({
+        type: "button",
+        sub_type: "url",
+        index: "0",
+        parameters: [
+          {
+            type: "text",
+            text: input.urlButtonParameter
+          }
+        ]
+      });
+    }
+
     const response = await fetch(
       `https://graph.facebook.com/${getWhatsAppApiVersion()}/${config.phoneNumberId}/messages`,
       {
@@ -224,16 +329,12 @@ async function sendTemplateMessage(input: SendTemplateMessageInput) {
     );
 
     if (!response.ok) {
-      let detail = await response.text().catch(() => "");
+      const detail = await response.text().catch(() => "");
+      const parsedError = parseWhatsAppApiError(detail);
 
-      try {
-        const json = JSON.parse(detail) as { error?: { message?: string } };
-        detail = json.error?.message || detail;
-      } catch {
-        // Mantem o texto bruto do provedor.
-      }
-
-      throw new Error(detail || `WhatsApp API retornou HTTP ${response.status}.`);
+      throw Object.assign(new Error(parsedError.message || `WhatsApp API retornou HTTP ${response.status}.`), {
+        providerPayload: parsedError.payload
+      });
     }
 
     const payload = (await response.json()) as WhatsAppApiResponse;
@@ -254,34 +355,40 @@ async function sendTemplateMessage(input: SendTemplateMessageInput) {
       parameters: input.parameters,
       context: input.logContext,
       status: WhatsAppMessageStatus.FAILED,
-      errorMessage: normalizeError(error)
+      errorMessage: normalizeError(error),
+      webhookPayload:
+        error instanceof Error && "providerPayload" in error
+          ? (error as Error & { providerPayload?: unknown }).providerPayload
+          : undefined
     });
 
     throw error;
   }
 }
 
-export async function sendPurchaseApprovedWhatsApp(input: PurchaseApprovedWhatsAppInput) {
-  return sendTemplateMessage({
-    to: input.buyerPhone,
-    templateName: "compra_aprovada",
-    parameters: [input.buyerName, input.eventTitle, input.orderCode, input.orderUrl],
-    logContext: {
-      type: WhatsAppMessageType.PURCHASE_APPROVED,
-      organizationId: input.organizationId,
-      eventId: input.eventId,
-      orderId: input.orderId,
-      recipientName: input.buyerName
-    }
-  });
-}
-
 export async function sendCartAbandonmentWhatsApp(input: CartAbandonmentWhatsAppInput) {
   const minutesRemaining = Math.max(0, Math.ceil((input.expiresAt.getTime() - Date.now()) / 60000));
+  const templateName = getTemplateName("WHATSAPP_CART_ABANDONMENT_TEMPLATE_NAME", "abandono_carrinho");
+
+  if (templateName === "abandono_carrinho_tcr_botao_v1" || templateName === "abandono_carrinho_tcr_botao_v2") {
+    return sendTemplateMessage({
+      to: input.buyerPhone,
+      templateName,
+      parameters: [input.buyerName, input.cartSummary || "ingressos selecionados", input.eventTitle],
+      urlButtonParameter: input.orderCode,
+      logContext: {
+        type: WhatsAppMessageType.CART_ABANDONMENT,
+        organizationId: input.organizationId,
+        eventId: input.eventId,
+        orderId: input.orderId,
+        recipientName: input.buyerName
+      }
+    });
+  }
 
   return sendTemplateMessage({
     to: input.buyerPhone,
-    templateName: "abandono_carrinho",
+    templateName,
     parameters: [input.buyerName, input.eventTitle, String(minutesRemaining), input.orderUrl],
     logContext: {
       type: WhatsAppMessageType.CART_ABANDONMENT,
@@ -348,6 +455,101 @@ export async function sendBulkWhatsApp<TRecipient extends BulkWhatsAppRecipient>
   return result;
 }
 
+export async function sendWhatsAppTextMessage(input: {
+  to?: string | null;
+  text: string;
+  organizationId?: string | null;
+  eventId?: string | null;
+  orderId?: string | null;
+  leadId?: string | null;
+  recipientName?: string | null;
+}) {
+  let to = input.to || null;
+  const config = getWhatsAppConfig();
+
+  try {
+    if (!config.token || !config.phoneNumberId) {
+      throw new Error("WhatsApp Business API nao configurada.");
+    }
+
+    const text = input.text.trim();
+
+    if (!text) {
+      throw new Error("Mensagem nao informada.");
+    }
+
+    to = formatPhone(input.to);
+    const response = await fetch(
+      `https://graph.facebook.com/${getWhatsAppApiVersion()}/${config.phoneNumberId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${config.token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          to,
+          type: "text",
+          text: {
+            preview_url: true,
+            body: text
+          }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      const parsedError = parseWhatsAppApiError(detail);
+
+      throw Object.assign(new Error(parsedError.message || `WhatsApp API retornou HTTP ${response.status}.`), {
+        providerPayload: parsedError.payload
+      });
+    }
+
+    const payload = (await response.json()) as WhatsAppApiResponse;
+    await recordWhatsAppMessageLog({
+      to,
+      textContent: text,
+      context: {
+        type: WhatsAppMessageType.BULK,
+        organizationId: input.organizationId,
+        eventId: input.eventId,
+        orderId: input.orderId,
+        leadId: input.leadId,
+        recipientName: input.recipientName
+      },
+      status: WhatsAppMessageStatus.SENT,
+      providerMessageId: extractProviderMessageId(payload)
+    });
+
+    return payload;
+  } catch (error) {
+    await recordWhatsAppMessageLog({
+      to,
+      textContent: input.text,
+      context: {
+        type: WhatsAppMessageType.BULK,
+        organizationId: input.organizationId,
+        eventId: input.eventId,
+        orderId: input.orderId,
+        leadId: input.leadId,
+        recipientName: input.recipientName
+      },
+      status: WhatsAppMessageStatus.FAILED,
+      errorMessage: normalizeError(error),
+      webhookPayload:
+        error instanceof Error && "providerPayload" in error
+          ? (error as Error & { providerPayload?: unknown }).providerPayload
+          : undefined
+    });
+
+    throw error;
+  }
+}
+
 function mapWebhookStatus(status?: string) {
   const normalized = status?.trim().toLowerCase();
 
@@ -396,6 +598,15 @@ type WhatsAppWebhookPayload = {
   entry?: Array<{
     changes?: Array<{
       value?: {
+        messages?: Array<{
+          id?: string;
+          from?: string;
+          timestamp?: string;
+          type?: string;
+          text?: {
+            body?: string;
+          };
+        }>;
         statuses?: WhatsAppWebhookStatus[];
       };
     }>;
@@ -406,8 +617,41 @@ export async function handleWhatsAppMetaWebhook(payload: unknown) {
   const body = payload as WhatsAppWebhookPayload;
   const statuses =
     body.entry?.flatMap((entry) => entry.changes?.flatMap((change) => change.value?.statuses || []) || []) || [];
+  const messages =
+    body.entry?.flatMap((entry) => entry.changes?.flatMap((change) => change.value?.messages || []) || []) || [];
   let updated = 0;
   let received = 0;
+  const organizationId = messages.length > 0 ? await getDefaultWhatsAppOrganizationId() : null;
+
+  for (const message of messages) {
+    if (message.id) {
+      const existingMessage = await prisma.whatsAppMessageLog.findFirst({
+        where: {
+          providerMessageId: message.id
+        },
+        select: {
+          id: true
+        }
+      });
+
+      if (existingMessage) {
+        continue;
+      }
+    }
+
+    await recordWhatsAppMessageLog({
+      to: message.from,
+      textContent: message.text?.body || null,
+      context: {
+        type: WhatsAppMessageType.WEBHOOK,
+        organizationId
+      },
+      status: WhatsAppMessageStatus.RECEIVED,
+      providerMessageId: message.id,
+      webhookPayload: message
+    });
+    received += 1;
+  }
 
   for (const status of statuses) {
     const providerMessageId = status.id;
@@ -462,7 +706,7 @@ export async function handleWhatsAppMetaWebhook(payload: unknown) {
   }
 
   return {
-    received: statuses.length,
+    received: statuses.length + messages.length,
     updated,
     created: received
   };
