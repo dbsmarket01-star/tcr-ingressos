@@ -153,6 +153,11 @@ export default async function MarketingWhatsAppPage({ searchParams }: MarketingW
           <strong>{envStatus(process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN)}</strong>
           <small>Token de verificacao</small>
         </article>
+        <article className="card metric">
+          <span className="muted">Assinatura do webhook</span>
+          <strong>{envStatus(process.env.WHATSAPP_APP_SECRET)}</strong>
+          <small>WHATSAPP_APP_SECRET</small>
+        </article>
       </section>
 
       <section className="card adminPanelBlock spacedSection">

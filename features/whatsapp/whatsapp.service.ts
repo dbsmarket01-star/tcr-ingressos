@@ -1,4 +1,5 @@
 import { Prisma, WhatsAppMessageStatus, WhatsAppMessageType } from "@prisma/client";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { normalizeHost } from "@/lib/request-host";
 
@@ -101,6 +102,27 @@ function getWhatsAppConfig() {
     token: process.env.WHATSAPP_API_TOKEN?.trim(),
     phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID?.trim()
   };
+}
+
+export function verifyWhatsAppMetaSignature(rawBody: string, signature?: string | null) {
+  const appSecret = process.env.WHATSAPP_APP_SECRET?.trim();
+
+  if (!appSecret) {
+    return true;
+  }
+
+  if (!signature?.startsWith("sha256=")) {
+    return false;
+  }
+
+  const expected = createHmac("sha256", appSecret).update(rawBody, "utf8").digest("hex");
+  const received = signature.slice("sha256=".length);
+
+  if (!/^[a-f0-9]{64}$/i.test(received)) {
+    return false;
+  }
+
+  return timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(received, "hex"));
 }
 
 function getTemplateName(envName: string, fallback: string) {
@@ -309,6 +331,7 @@ async function sendTemplateMessage(input: SendTemplateMessageInput) {
       `https://graph.facebook.com/${getWhatsAppApiVersion()}/${config.phoneNumberId}/messages`,
       {
         method: "POST",
+        signal: AbortSignal.timeout(15_000),
         headers: {
           Authorization: `Bearer ${config.token}`,
           "Content-Type": "application/json"
@@ -483,6 +506,7 @@ export async function sendWhatsAppTextMessage(input: {
       `https://graph.facebook.com/${getWhatsAppApiVersion()}/${config.phoneNumberId}/messages`,
       {
         method: "POST",
+        signal: AbortSignal.timeout(15_000),
         headers: {
           Authorization: `Bearer ${config.token}`,
           "Content-Type": "application/json"

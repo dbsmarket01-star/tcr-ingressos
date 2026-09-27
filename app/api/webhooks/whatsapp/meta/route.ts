@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { handleWhatsAppMetaWebhook } from "@/features/whatsapp/whatsapp.service";
+import {
+  handleWhatsAppMetaWebhook,
+  verifyWhatsAppMetaSignature
+} from "@/features/whatsapp/whatsapp.service";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
@@ -57,7 +60,27 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const payload = await request.json().catch(() => null);
+    const rawBody = await request.text();
+    const signature = request.headers.get("x-hub-signature-256");
+
+    if (!verifyWhatsAppMetaSignature(rawBody, signature)) {
+      return NextResponse.json(
+        { ok: false, error: "Assinatura do webhook invalida." },
+        { status: 401, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    let payload: unknown;
+
+    try {
+      payload = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json(
+        { ok: false, error: "Payload JSON invalido." },
+        { status: 400, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
     const result = await handleWhatsAppMetaWebhook(payload);
 
     return NextResponse.json(
