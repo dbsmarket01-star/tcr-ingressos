@@ -3,6 +3,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { sendCrmWhatsAppApprovedTemplate, sendCrmWhatsAppMessage } from "@/features/crm/whatsapp-chat.actions";
 import { getCrmWhatsAppConversation, getCrmWhatsAppInbox } from "@/features/crm/whatsapp-chat.service";
+import { WhatsAppSendButton } from "./WhatsAppSendButton";
 
 export const dynamic = "force-dynamic";
 
@@ -30,14 +31,21 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
   const admin = await requirePermission("CRM");
   const params = searchParams ? await searchParams : {};
   const allowedEventIds = getAdminAllowedEventIds(admin);
-  const rawInbox = await getCrmWhatsAppInbox({ organizationId: admin.organizationId, allowedEventIds, search: params.search });
+  const inboxPromise = getCrmWhatsAppInbox({ organizationId: admin.organizationId, allowedEventIds, search: params.search });
+  const hasExplicitSelection = Boolean(params.orderCode || params.leadId || params.phone);
+  const selectedConversationPromise = hasExplicitSelection
+    ? getCrmWhatsAppConversation({ orderCode: params.orderCode, leadId: params.leadId, phone: params.phone, organizationId: admin.organizationId, allowedEventIds })
+    : null;
+  const rawInbox = await inboxPromise;
   const activeStatus = ["unread", "open", "waiting", "closed"].includes(params.status || "") ? params.status! : "all";
   const counters = { all: rawInbox.length, unread: rawInbox.filter((item) => item.needsReply).length, open: rawInbox.filter((item) => item.canReply).length, waiting: rawInbox.filter((item) => !item.needsReply && item.canReply).length, closed: rawInbox.filter((item) => !item.canReply).length };
   const inbox = rawInbox.filter((item) => activeStatus === "unread" ? item.needsReply : activeStatus === "open" ? item.canReply : activeStatus === "waiting" ? !item.needsReply && item.canReply : activeStatus === "closed" ? !item.canReply : true);
   const selectedInboxItem = params.orderCode || params.leadId || params.phone ? null : inbox[0] || rawInbox[0] || null;
   const selectedOrderCode = params.orderCode || selectedInboxItem?.orderCode || undefined;
   const selectedPhone = params.phone || selectedInboxItem?.phone || undefined;
-  const conversation = await getCrmWhatsAppConversation({ orderCode: selectedOrderCode, leadId: params.leadId, phone: selectedPhone, organizationId: admin.organizationId, allowedEventIds });
+  const conversation = selectedConversationPromise
+    ? await selectedConversationPromise
+    : await getCrmWhatsAppConversation({ orderCode: selectedOrderCode, leadId: params.leadId, phone: selectedPhone, organizationId: admin.organizationId, allowedEventIds });
   const contact = conversation.contact;
   const eventTags = contact?.eventTitle ? contact.eventTitle.split(" em ") : [];
   let lastDay = "";
@@ -66,7 +74,7 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
         <div className="crmWhatsappConversation">
           <header className="crmWhatsappConversationHeader"><div className="crmWhatsappContactIdentity"><span className="crmWhatsappContactAvatar">{initials(contact?.name)}</span><span><strong>{contact?.name || "Selecione uma conversa"}</strong><small>{contact?.phone || "Caixa de entrada do WhatsApp"}</small></span></div><div className="crmWhatsappContactTags">{eventTags[0] ? <span>{eventTags[0]}</span> : null}{eventTags[1] ? <span>{eventTags[1]}</span> : null}{contact ? <span className="isBuyer">• Comprador</span> : null}</div><div className="crmWhatsappConversationActions"><span className="crmWhatsappIconOnly" title="Mais opções"><Icon name="dots"/></span><span className="crmWhatsappIconOnly" title="Favoritos"><Icon name="star"/></span><span className="crmWhatsappIconOnly" title="Histórico"><Icon name="clock"/></span>{contact ? <Link href={contact.orderCode ? `/admin/crm?search=${encodeURIComponent(contact.orderCode)}` : "/admin/crm"}><Icon name="kanban"/>Ver no Kanban</Link> : null}<span className={conversation.canReply ? "isOpen" : "isClosed"}>{conversation.canReply ? "Atendimento aberto" : "Fora da janela de 24h"}</span></div></header>
           <div className="crmWhatsappMessages">{conversation.hiddenFailureCount > 0 ? <div className="crmWhatsappNotice">{conversation.hiddenFailureCount} tentativa(s) antiga(s) com falha técnica foram ocultadas.</div> : null}{conversation.messages.length === 0 ? <div className="crmWhatsappEmpty">{conversation.hiddenFailureCount > 0 ? "Nenhuma mensagem entregue ou recebida com este contato ainda." : "Nenhuma mensagem registrada com este contato ainda."}</div> : conversation.messages.map((message) => { const currentDay = dayLabel(message.createdAt); const showDay = currentDay !== lastDay; lastDay = currentDay; const templateLabel = getTemplateLabel(message.templateName); return <div className="crmWhatsappMessageGroup" key={message.id}>{showDay ? <div className="crmWhatsappDateDivider">{currentDay}</div> : null}<article className={`crmWhatsappBubble ${message.direction === "inbound" ? "isInbound" : "isOutbound"}`}>{templateLabel ? <span className="crmWhatsappTemplate">{templateLabel}</span> : null}<p>{message.content}</p>{message.errorMessage ? <small className="crmWhatsappError">{getErrorLabel(message.errorMessage)}</small> : null}{message.errorDetails ? <small className="crmWhatsappErrorDetails">{message.errorDetails}</small> : null}<footer><time>{timeLabel(message.createdAt)}</time>{message.direction === "outbound" ? <Icon name="check"/> : null}</footer></article></div>; })}</div>
-          <form action={sendCrmWhatsAppMessage} className="crmWhatsappComposer"><input name="orderCode" type="hidden" value={selectedOrderCode || ""}/><input name="leadId" type="hidden" value={params.leadId || ""}/><input name="phone" type="hidden" value={selectedPhone || contact?.phone || ""}/><span className="crmWhatsappComposerIcon" title="Use o teclado do dispositivo para emojis"><Icon name="smile"/></span><span className="crmWhatsappComposerIcon isDisabled" title="Arquivos não são suportados pela integração atual"><Icon name="clip"/></span><span className="crmWhatsappComposerIcon"><Icon name="plus"/></span><textarea name="text" placeholder={conversation.canReply ? "Escreva uma resposta..." : "Aguardando o cliente responder para abrir a janela de 24h"} disabled={!conversation.canReply || !contact?.phone} rows={1}/><button className="crmWhatsappSend" type="submit" disabled={!conversation.canReply || !contact?.phone} aria-label="Enviar mensagem"><Icon name="send"/></button></form>
+          <form action={sendCrmWhatsAppMessage} className="crmWhatsappComposer"><input name="orderCode" type="hidden" value={selectedOrderCode || ""}/><input name="leadId" type="hidden" value={params.leadId || ""}/><input name="phone" type="hidden" value={selectedPhone || contact?.phone || ""}/><span className="crmWhatsappComposerIcon" title="Use o teclado do dispositivo para emojis"><Icon name="smile"/></span><span className="crmWhatsappComposerIcon isDisabled" title="Arquivos não são suportados pela integração atual"><Icon name="clip"/></span><span className="crmWhatsappComposerIcon"><Icon name="plus"/></span><textarea name="text" placeholder={conversation.canReply ? "Escreva uma resposta..." : "Aguardando o cliente responder para abrir a janela de 24h"} disabled={!conversation.canReply || !contact?.phone} rows={1}/><WhatsAppSendButton disabled={!conversation.canReply || !contact?.phone}/></form>
           {!conversation.canReply && contact?.phone ? <form action={sendCrmWhatsAppApprovedTemplate} className="crmWhatsappTemplateComposer"><input name="orderCode" type="hidden" value={selectedOrderCode || ""}/><input name="leadId" type="hidden" value={params.leadId || ""}/><input name="phone" type="hidden" value={selectedPhone || contact.phone || ""}/><p>Fora da janela de 24h. Use um template aprovado para iniciar a conversa.</p><button className="crmSecondaryButton" type="submit" disabled={!contact.orderCode}>Enviar template aprovado</button></form> : null}
         </div>
       </section>

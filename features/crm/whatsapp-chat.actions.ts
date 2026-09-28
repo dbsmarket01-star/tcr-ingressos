@@ -5,6 +5,29 @@ import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth
 import { getCrmWhatsAppConversation } from "@/features/crm/whatsapp-chat.service";
 import { sendCartAbandonmentWhatsApp, sendWhatsAppTextMessage } from "@/features/whatsapp/whatsapp.service";
 
+const recentTextSends = new Map<string, { expiresAt: number; promise: Promise<unknown> }>();
+const TEXT_SEND_DEDUPLICATION_MS = 20_000;
+
+function sendTextMessageOnce(input: Parameters<typeof sendWhatsAppTextMessage>[0]) {
+  const now = Date.now();
+
+  for (const [key, value] of recentTextSends) {
+    if (value.expiresAt <= now) recentTextSends.delete(key);
+  }
+
+  const phone = String(input.to || "").replace(/\D/g, "");
+  const key = [input.organizationId || "", phone, input.text.trim()].join("|");
+  const recent = recentTextSends.get(key);
+
+  if (recent && recent.expiresAt > now) {
+    return recent.promise;
+  }
+
+  const promise = sendWhatsAppTextMessage(input);
+  recentTextSends.set(key, { expiresAt: now + TEXT_SEND_DEDUPLICATION_MS, promise });
+  return promise;
+}
+
 function getFormText(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
@@ -93,7 +116,7 @@ export async function sendCrmWhatsAppMessage(formData: FormData) {
   }
 
   try {
-    await sendWhatsAppTextMessage({
+    await sendTextMessageOnce({
       to: conversation.contact.phone,
       text,
       organizationId: admin.organizationId,
