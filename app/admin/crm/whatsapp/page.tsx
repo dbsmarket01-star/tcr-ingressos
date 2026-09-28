@@ -30,6 +30,22 @@ function dayLabel(value: Date) {
   const text = formatter.format(value);
   return dayKey.format(value) === dayKey.format(new Date()) ? `Hoje • ${text}` : text;
 }
+function inboxDayKey(value: Date) {
+  return new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: CRM_TIME_ZONE }).format(value);
+}
+function inboxDayLabel(value: Date) {
+  const key = inboxDayKey(value);
+  const today = inboxDayKey(new Date());
+  const yesterday = inboxDayKey(new Date(Date.now() - 24 * 60 * 60 * 1000));
+  if (key === today) return "Hoje";
+  if (key === yesterday) return "Ontem";
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", timeZone: CRM_TIME_ZONE }).format(value);
+}
+function inboxStatusLabel(item: { needsReply: boolean; canReply: boolean }) {
+  if (!item.canReply) return "Fechado";
+  if (item.needsReply) return "Nova mensagem";
+  return "Aguardando cliente";
+}
 function getErrorLabel(errorMessage: string | null) { if (errorMessage === "API access blocked.") return "Não entregue pela Meta: acesso da API bloqueado."; if (errorMessage === "WhatsApp Business API nao configurada.") return "Não entregue: API do WhatsApp não estava configurada no momento do envio."; return errorMessage; }
 function getTemplateLabel(templateName: string | null) { if (!templateName) return null; if (templateName.startsWith("abandono_carrinho_tcr_botao")) return "Carrinho abandonado"; if (templateName.startsWith("abandono_carrinho_tcr_followup")) return "Follow-up de carrinho"; return "Mensagem automática"; }
 
@@ -55,6 +71,7 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
   const contact = conversation.contact;
   const eventTags = contact?.eventTitle ? contact.eventTitle.split(" em ") : [];
   let lastDay = "";
+  let lastInboxDay = "";
   const statusHref = (status: string) => { const query = new URLSearchParams(); if (params.search) query.set("search", params.search); if (status !== "all") query.set("status", status); return `/admin/crm/whatsapp${query.size ? `?${query}` : ""}`; };
 
   return <AdminShell title="WhatsApp interno" description="Atendimento comercial conectado à API oficial do WhatsApp." headerVariant="minimal">
@@ -73,7 +90,8 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
           <nav className="crmWhatsappInboxList" aria-label="Conversas do WhatsApp">{inbox.length === 0 ? <p className="crmWhatsappInboxEmpty">Nenhuma conversa encontrada.</p> : null}{inbox.map((item) => {
             const query = new URLSearchParams(); if (item.orderCode) query.set("orderCode", item.orderCode); else query.set("phone", item.phone); if (params.search) query.set("search", params.search); if (activeStatus !== "all") query.set("status", activeStatus);
             const isActive = (selectedOrderCode && selectedOrderCode === item.orderCode) || (!selectedOrderCode && selectedPhone && selectedPhone.replace(/\D/g, "").endsWith(item.key)); const tags = item.eventTitle.split(" em ");
-            return <Link className={`crmWhatsappInboxItem ${isActive ? "isActive" : ""}`} href={`/admin/crm/whatsapp?${query}`} key={item.key}><span className="crmWhatsappInboxAvatar">{initials(item.name)}</span><span className="crmWhatsappInboxCopy"><span className="crmWhatsappInboxName"><strong>{item.name}</strong><time>{timeLabel(item.latestAt)}</time></span><span className="crmWhatsappInboxPreview">{item.lastDirection === "outbound" ? "Você: " : ""}{item.latestMessage}</span><span className="crmWhatsappInboxTags"><small>{tags[0]}</small>{tags[1] ? <small>{tags[1]}</small> : null}</span></span>{item.needsReply ? <i title="Mensagem não lida">1</i> : null}</Link>;
+            const currentInboxDay = inboxDayKey(item.latestAt); const showInboxDay = currentInboxDay !== lastInboxDay; lastInboxDay = currentInboxDay;
+            return <div key={item.key}>{showInboxDay ? <div style={{ padding: "9px 14px 5px", color: "#64748b", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em" }}>{inboxDayLabel(item.latestAt)}</div> : null}<Link className={`crmWhatsappInboxItem ${isActive ? "isActive" : ""}`} href={`/admin/crm/whatsapp?${query}`}><span className="crmWhatsappInboxAvatar">{initials(item.name)}</span><span className="crmWhatsappInboxCopy"><span className="crmWhatsappInboxName"><strong>{item.name}</strong><time>{timeLabel(item.latestAt)}</time></span><span className="crmWhatsappInboxPreview">{item.lastDirection === "outbound" ? "Você: " : ""}{item.latestMessage}</span><span className="crmWhatsappInboxTags"><small>{inboxStatusLabel(item)}</small><small>{tags[0]}</small>{tags[1] ? <small>{tags[1]}</small> : null}</span></span>{item.needsReply ? <i title="Mensagem não lida">1</i> : null}</Link></div>;
           })}</nav>
         </aside>
 

@@ -17,7 +17,9 @@ function candidatePhones(value?: string | null) {
   }
 
   const withoutCountry = digits.startsWith("55") ? digits.slice(2) : digits;
-  return Array.from(new Set([digits, `55${withoutCountry}`, withoutCountry].filter(Boolean)));
+  return Array.from(
+    new Set([digits, `+${digits}`, `55${withoutCountry}`, `+55${withoutCountry}`, withoutCountry].filter(Boolean))
+  );
 }
 
 function conversationPhoneKey(value?: string | null) {
@@ -131,6 +133,31 @@ async function loadCrmWhatsAppInbox(input: {
       })
     : [];
   const orderById = new Map(orders.map((order) => [order.id, order]));
+  const loggedPhoneCandidates = Array.from(
+    new Set(scopedOutbound.flatMap((message) => candidatePhones(message.recipientPhone)))
+  );
+  const phoneOrders = loggedPhoneCandidates.length
+    ? await prisma.order.findMany({
+        where: {
+          customer: { phone: { in: loggedPhoneCandidates } },
+          event: {
+            organizationId: input.organizationId,
+            ...(input.allowedEventIds ? { id: { in: input.allowedEventIds } } : {})
+          }
+        },
+        orderBy: { createdAt: "desc" },
+        select: {
+          code: true,
+          customer: { select: { name: true, phone: true } },
+          event: { select: { title: true } }
+        }
+      })
+    : [];
+  const orderByPhone = new Map<string, (typeof phoneOrders)[number]>();
+  for (const order of phoneOrders) {
+    const key = conversationPhoneKey(order.customer.phone);
+    if (key && !orderByPhone.has(key)) orderByPhone.set(key, order);
+  }
   const allowedKeys = new Set<string>();
 
   for (const message of scopedOutbound) {
@@ -170,7 +197,7 @@ async function loadCrmWhatsAppInbox(input: {
       const messages = group.messages.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
       const latest = messages.at(-1)!;
       const latestOrderMessage = [...messages].reverse().find((message) => message.orderId && orderById.has(message.orderId));
-      const order = latestOrderMessage?.orderId ? orderById.get(latestOrderMessage.orderId) : null;
+      const order = (latestOrderMessage?.orderId ? orderById.get(latestOrderMessage.orderId) : null) || orderByPhone.get(key);
       const latestInbound = [...messages].reverse().find((message) => message.status === "RECEIVED");
       const latestOutbound = [...messages].reverse().find((message) => message.status !== "RECEIVED");
       const latestHumanOutbound = [...messages]
@@ -182,15 +209,14 @@ async function loadCrmWhatsAppInbox(input: {
         latestInbound &&
           (!latestHumanOutbound || latestInbound.createdAt.getTime() > latestHumanOutbound.createdAt.getTime())
       );
-      const previewMessage = needsReply && latestInbound ? latestInbound : latest;
       const item = {
         key,
         name,
         phone: group.phone,
         eventTitle,
         orderCode: order?.code || null,
-        latestMessage: messageContent(previewMessage),
-        latestAt: previewMessage.createdAt,
+        latestMessage: messageContent(latest),
+        latestAt: latest.createdAt,
         needsReply,
         canReply: Boolean(latestInbound && Date.now() - latestInbound.createdAt.getTime() < 24 * 60 * 60 * 1000),
         lastDirection: latest.status === "RECEIVED" ? ("inbound" as const) : ("outbound" as const),
@@ -204,10 +230,7 @@ async function loadCrmWhatsAppInbox(input: {
         .filter(Boolean)
         .some((value) => String(value).toLocaleLowerCase("pt-BR").includes(search));
     })
-    .sort((a, b) => {
-      if (a.needsReply !== b.needsReply) return a.needsReply ? -1 : 1;
-      return b.latestAt.getTime() - a.latestAt.getTime();
-    })
+    .sort((a, b) => b.latestAt.getTime() - a.latestAt.getTime())
     .slice(0, 120);
 }
 
