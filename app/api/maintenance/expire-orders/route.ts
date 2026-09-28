@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { unpublishExpiredPublishedEvents } from "@/features/events/event.service";
 import { expirePendingOrders } from "@/features/orders/order.service";
 import { getMaintenanceOrganizationForRequest } from "@/features/maintenance/maintenance-organization";
 import { reconcileAsaasPayments } from "@/features/payments/payment.service";
@@ -45,6 +46,9 @@ export async function GET(request: Request) {
       limit: 500,
       organizationId: organization?.id
     });
+    const expiredEvents = await unpublishExpiredPublishedEvents({
+      organizationId: organization?.id
+    });
 
     return NextResponse.json(
       {
@@ -57,6 +61,7 @@ export async function GET(request: Request) {
             }
           : null,
         reconciliation,
+        expiredEventsUnpublished: expiredEvents.count,
         ...result
       },
       {

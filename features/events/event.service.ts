@@ -7,6 +7,18 @@ import type { EventDraftInput } from "./event.schema";
 export type EventListItem = Awaited<ReturnType<typeof listEvents>>[number];
 export type EventManagement = NonNullable<Awaited<ReturnType<typeof getEventForManagement>>>;
 
+/** Midnight in Sao Paulo expressed as an absolute UTC instant. */
+export function getSaoPauloDayStart(now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "America/Sao_Paulo",
+    year: "numeric"
+  }).formatToParts(now);
+  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value;
+  return new Date(`${value("year")}-${value("month")}-${value("day")}T03:00:00.000Z`);
+}
+
 export async function listEvents(organizationId: string, allowedEventIds?: string[] | null) {
   return prisma.event.findMany({
     where: {
@@ -62,10 +74,14 @@ export async function listEvents(organizationId: string, allowedEventIds?: strin
 }
 
 export async function listPublishedEventShowcase(organizationId: string, limit = 6) {
+  const todayStart = getSaoPauloDayStart();
   return prisma.event.findMany({
     where: {
       organizationId,
-      status: EventStatus.PUBLISHED
+      status: EventStatus.PUBLISHED,
+      startsAt: {
+        gte: todayStart
+      }
     },
     orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],
     take: limit,
@@ -611,6 +627,30 @@ export async function updateEventStatus(eventId: string, status: EventStatus) {
   return prisma.event.update({
     where: { id: eventId },
     data: { status }
+  });
+}
+
+export async function unpublishExpiredPublishedEvents(options?: {
+  now?: Date;
+  hoursAfterEnd?: number;
+  organizationId?: string | null;
+}) {
+  const now = options?.now ?? new Date();
+  const cutoff = options?.hoursAfterEnd === undefined
+    ? getSaoPauloDayStart(now)
+    : new Date(now.getTime() - options.hoursAfterEnd * 60 * 60 * 1000);
+
+  return prisma.event.updateMany({
+    where: {
+      status: EventStatus.PUBLISHED,
+      ...(options?.organizationId ? { organizationId: options.organizationId } : {}),
+      startsAt: {
+        lt: cutoff
+      }
+    },
+    data: {
+      status: EventStatus.UNPUBLISHED
+    }
   });
 }
 
