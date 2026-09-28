@@ -32,6 +32,7 @@ import type { CreditCardPaymentInput as CreditCardFormInput } from "./credit-car
 type WebhookPayload = {
   externalId: string;
   orderCode?: string;
+  provider?: "ASAAS" | "MERCADO_PAGO" | "SIMULATED";
   status: "APPROVED" | "FAILED" | "CANCELED" | "PENDING" | "REFUNDED";
   reason?: string;
   rawPayload?: unknown;
@@ -559,8 +560,7 @@ export async function findAsaasWebhookOrganization(input: {
       ? {
           order: {
             code: input.orderCode
-          },
-          provider: "ASAAS"
+          }
         }
       : input.externalId
         ? {
@@ -1087,6 +1087,17 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         (payment.status === PaymentStatus.APPROVED || payment.order.status === OrderStatus.PAID) &&
         payload.status !== "REFUNDED"
       ) {
+        if (payload.provider || payload.externalId !== payment.externalId) {
+          await tx.payment.update({
+            where: { id: payment.id },
+            data: {
+              ...(payload.provider ? { provider: payload.provider } : {}),
+              externalId: payload.externalId || payment.externalId,
+              rawPayload: (payload.rawPayload || payload) as Prisma.InputJsonValue
+            }
+          });
+        }
+
         await createHomeListEntriesForApprovedOrder(tx, payment.orderId, new Date());
 
         const approvedTicketsEmail = buildApprovedTicketsEmail(
@@ -1177,6 +1188,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
             }
           },
           data: {
+            ...(payload.provider ? { provider: payload.provider } : {}),
             status: PaymentStatus.APPROVED,
             externalId: payload.externalId || payment.externalId,
             amountInCents: approvedAmountInCents,

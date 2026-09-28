@@ -185,6 +185,7 @@ export async function POST(request: Request) {
     await handlePaymentWebhook({
       externalId: paymentId,
       orderCode,
+      provider: "ASAAS",
       status: mapAsaasStatus(body?.event, body?.payment?.status),
       reason: body?.event,
       rawPayload: body
