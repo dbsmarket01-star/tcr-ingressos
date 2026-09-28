@@ -80,7 +80,11 @@ function messageContent(message: {
   );
 }
 
-export async function getCrmWhatsAppInbox(input: {
+type InboxResult = Awaited<ReturnType<typeof loadCrmWhatsAppInbox>>;
+const inboxCache = new Map<string, { expiresAt: number; promise: Promise<InboxResult> }>();
+const INBOX_CACHE_MS = 5_000;
+
+async function loadCrmWhatsAppInbox(input: {
   organizationId: string;
   allowedEventIds?: EventScope;
   search?: string;
@@ -205,6 +209,36 @@ export async function getCrmWhatsAppInbox(input: {
       return b.latestAt.getTime() - a.latestAt.getTime();
     })
     .slice(0, 120);
+}
+
+export function clearCrmWhatsAppInboxCache(organizationId?: string) {
+  if (!organizationId) {
+    inboxCache.clear();
+    return;
+  }
+  for (const key of inboxCache.keys()) {
+    if (key.startsWith(`${organizationId}|`)) inboxCache.delete(key);
+  }
+}
+
+export function getCrmWhatsAppInbox(input: {
+  organizationId: string;
+  allowedEventIds?: EventScope;
+  search?: string;
+}) {
+  const now = Date.now();
+  const key = [
+    input.organizationId,
+    [...(input.allowedEventIds || [])].sort().join(","),
+    String(input.search || "").trim().toLocaleLowerCase("pt-BR")
+  ].join("|");
+  const cached = inboxCache.get(key);
+  if (cached && cached.expiresAt > now) return cached.promise;
+
+  const promise = loadCrmWhatsAppInbox(input);
+  inboxCache.set(key, { expiresAt: now + INBOX_CACHE_MS, promise });
+  promise.catch(() => inboxCache.delete(key));
+  return promise;
 }
 
 function errorDetailsFromPayload(payload: Prisma.JsonValue | null | undefined) {

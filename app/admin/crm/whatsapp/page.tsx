@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
-import { sendCrmWhatsAppApprovedTemplate, sendCrmWhatsAppMessage } from "@/features/crm/whatsapp-chat.actions";
+import { sendCrmWhatsAppApprovedTemplate } from "@/features/crm/whatsapp-chat.actions";
 import { getCrmWhatsAppConversation, getCrmWhatsAppInbox } from "@/features/crm/whatsapp-chat.service";
-import { WhatsAppSendButton } from "./WhatsAppSendButton";
+import { WhatsAppComposer } from "./WhatsAppComposer";
 
 export const dynamic = "force-dynamic";
 
@@ -22,8 +22,14 @@ function Icon({ name }: { name: IconName }) {
 }
 
 const initials = (name?: string | null) => String(name || "WA").split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
-const timeLabel = (value: Date) => new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(value);
-function dayLabel(value: Date) { const today = new Date(); const text = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric" }).format(value); return value.toDateString() === today.toDateString() ? `Hoje • ${text}` : text; }
+const CRM_TIME_ZONE = "America/Sao_Paulo";
+const timeLabel = (value: Date) => new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: CRM_TIME_ZONE }).format(value);
+function dayLabel(value: Date) {
+  const formatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric", timeZone: CRM_TIME_ZONE });
+  const dayKey = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: CRM_TIME_ZONE });
+  const text = formatter.format(value);
+  return dayKey.format(value) === dayKey.format(new Date()) ? `Hoje • ${text}` : text;
+}
 function getErrorLabel(errorMessage: string | null) { if (errorMessage === "API access blocked.") return "Não entregue pela Meta: acesso da API bloqueado."; if (errorMessage === "WhatsApp Business API nao configurada.") return "Não entregue: API do WhatsApp não estava configurada no momento do envio."; return errorMessage; }
 function getTemplateLabel(templateName: string | null) { if (!templateName) return null; if (templateName.startsWith("abandono_carrinho_tcr_botao")) return "Carrinho abandonado"; if (templateName.startsWith("abandono_carrinho_tcr_followup")) return "Follow-up de carrinho"; return "Mensagem automática"; }
 
@@ -74,7 +80,7 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
         <div className="crmWhatsappConversation">
           <header className="crmWhatsappConversationHeader"><div className="crmWhatsappContactIdentity"><span className="crmWhatsappContactAvatar">{initials(contact?.name)}</span><span><strong>{contact?.name || "Selecione uma conversa"}</strong><small>{contact?.phone || "Caixa de entrada do WhatsApp"}</small></span></div><div className="crmWhatsappContactTags">{eventTags[0] ? <span>{eventTags[0]}</span> : null}{eventTags[1] ? <span>{eventTags[1]}</span> : null}{contact ? <span className="isBuyer">• Comprador</span> : null}</div><div className="crmWhatsappConversationActions"><span className="crmWhatsappIconOnly" title="Mais opções"><Icon name="dots"/></span><span className="crmWhatsappIconOnly" title="Favoritos"><Icon name="star"/></span><span className="crmWhatsappIconOnly" title="Histórico"><Icon name="clock"/></span>{contact ? <Link href={contact.orderCode ? `/admin/crm?search=${encodeURIComponent(contact.orderCode)}` : "/admin/crm"}><Icon name="kanban"/>Ver no Kanban</Link> : null}<span className={conversation.canReply ? "isOpen" : "isClosed"}>{conversation.canReply ? "Atendimento aberto" : "Fora da janela de 24h"}</span></div></header>
           <div className="crmWhatsappMessages">{conversation.hiddenFailureCount > 0 ? <div className="crmWhatsappNotice">{conversation.hiddenFailureCount} tentativa(s) antiga(s) com falha técnica foram ocultadas.</div> : null}{conversation.messages.length === 0 ? <div className="crmWhatsappEmpty">{conversation.hiddenFailureCount > 0 ? "Nenhuma mensagem entregue ou recebida com este contato ainda." : "Nenhuma mensagem registrada com este contato ainda."}</div> : conversation.messages.map((message) => { const currentDay = dayLabel(message.createdAt); const showDay = currentDay !== lastDay; lastDay = currentDay; const templateLabel = getTemplateLabel(message.templateName); return <div className="crmWhatsappMessageGroup" key={message.id}>{showDay ? <div className="crmWhatsappDateDivider">{currentDay}</div> : null}<article className={`crmWhatsappBubble ${message.direction === "inbound" ? "isInbound" : "isOutbound"}`}>{templateLabel ? <span className="crmWhatsappTemplate">{templateLabel}</span> : null}<p>{message.content}</p>{message.errorMessage ? <small className="crmWhatsappError">{getErrorLabel(message.errorMessage)}</small> : null}{message.errorDetails ? <small className="crmWhatsappErrorDetails">{message.errorDetails}</small> : null}<footer><time>{timeLabel(message.createdAt)}</time>{message.direction === "outbound" ? <Icon name="check"/> : null}</footer></article></div>; })}</div>
-          <form action={sendCrmWhatsAppMessage} className="crmWhatsappComposer"><input name="orderCode" type="hidden" value={selectedOrderCode || ""}/><input name="leadId" type="hidden" value={params.leadId || ""}/><input name="phone" type="hidden" value={selectedPhone || contact?.phone || ""}/><span className="crmWhatsappComposerIcon" title="Use o teclado do dispositivo para emojis"><Icon name="smile"/></span><span className="crmWhatsappComposerIcon isDisabled" title="Arquivos não são suportados pela integração atual"><Icon name="clip"/></span><span className="crmWhatsappComposerIcon"><Icon name="plus"/></span><textarea name="text" placeholder={conversation.canReply ? "Escreva uma resposta..." : "Aguardando o cliente responder para abrir a janela de 24h"} disabled={!conversation.canReply || !contact?.phone} rows={1}/><WhatsAppSendButton disabled={!conversation.canReply || !contact?.phone}/></form>
+          <WhatsAppComposer canReply={conversation.canReply} leadId={params.leadId || ""} orderCode={selectedOrderCode || ""} phone={selectedPhone || contact?.phone || ""}/>
           {!conversation.canReply && contact?.phone ? <form action={sendCrmWhatsAppApprovedTemplate} className="crmWhatsappTemplateComposer"><input name="orderCode" type="hidden" value={selectedOrderCode || ""}/><input name="leadId" type="hidden" value={params.leadId || ""}/><input name="phone" type="hidden" value={selectedPhone || contact.phone || ""}/><p>Fora da janela de 24h. Use um template aprovado para iniciar a conversa.</p><button className="crmSecondaryButton" type="submit" disabled={!contact.orderCode}>Enviar template aprovado</button></form> : null}
         </div>
       </section>

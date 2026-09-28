@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
-import { getCrmWhatsAppConversation } from "@/features/crm/whatsapp-chat.service";
+import { clearCrmWhatsAppInboxCache, getCrmWhatsAppConversation } from "@/features/crm/whatsapp-chat.service";
 import { sendCartAbandonmentWhatsApp, sendWhatsAppTextMessage } from "@/features/whatsapp/whatsapp.service";
 
 const recentTextSends = new Map<string, { expiresAt: number; promise: Promise<unknown> }>();
@@ -125,6 +125,7 @@ export async function sendCrmWhatsAppMessage(formData: FormData) {
       leadId: conversation.contact.leadId,
       recipientName: conversation.contact.name
     });
+    clearCrmWhatsAppInboxCache(admin.organizationId);
   } catch (error) {
     redirect(
       buildRedirect({
