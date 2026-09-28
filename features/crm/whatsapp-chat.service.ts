@@ -178,14 +178,15 @@ export async function getCrmWhatsAppInbox(input: {
         latestInbound &&
           (!latestHumanOutbound || latestInbound.createdAt.getTime() > latestHumanOutbound.createdAt.getTime())
       );
+      const previewMessage = needsReply && latestInbound ? latestInbound : latest;
       const item = {
         key,
         name,
         phone: group.phone,
         eventTitle,
         orderCode: order?.code || null,
-        latestMessage: messageContent(latest),
-        latestAt: latest.createdAt,
+        latestMessage: messageContent(previewMessage),
+        latestAt: previewMessage.createdAt,
         needsReply,
         canReply: Boolean(latestInbound && Date.now() - latestInbound.createdAt.getTime() < 24 * 60 * 60 * 1000),
         lastDirection: latest.status === "RECEIVED" ? ("inbound" as const) : ("outbound" as const),
