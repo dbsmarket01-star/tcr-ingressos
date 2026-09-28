@@ -393,6 +393,23 @@
   .crmWhatsappComposerIcon:nth-of-type(2), .crmWhatsappComposerIcon:nth-of-type(3) { display: none; }
 }
 
+/* Mantém listas grandes dentro do painel, sem empurrar o compositor para fora. */
+.crmWhatsappInboxPanel,
+.crmWhatsappConversation {
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.crmWhatsappConversationHeader > .crmWhatsappContactTags {
+  display: flex !important;
+  grid-column: auto !important;
+}
+
+.crmWhatsappConversationHeader > .crmWhatsappContactTags span {
+  display: inline-flex !important;
+  width: auto !important;
+}
+
 .srOnly {
   border: 0;
   clip: rect(0 0 0 0);
