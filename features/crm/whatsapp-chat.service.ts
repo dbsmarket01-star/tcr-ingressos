@@ -100,6 +100,7 @@ export async function getCrmWhatsAppInbox(input: {
       eventId: true,
       recipientName: true,
       recipientPhone: true,
+      type: true,
       status: true,
       templateName: true,
       payload: true,
@@ -168,9 +169,15 @@ export async function getCrmWhatsAppInbox(input: {
       const order = latestOrderMessage?.orderId ? orderById.get(latestOrderMessage.orderId) : null;
       const latestInbound = [...messages].reverse().find((message) => message.status === "RECEIVED");
       const latestOutbound = [...messages].reverse().find((message) => message.status !== "RECEIVED");
+      const latestHumanOutbound = [...messages]
+        .reverse()
+        .find((message) => message.type === "BULK" && message.status !== "FAILED");
       const name = order?.customer.name || [...messages].reverse().find((message) => message.recipientName)?.recipientName || "Contato";
       const eventTitle = order?.event.title || "Conversa pelo WhatsApp";
-      const needsReply = latest.status === "RECEIVED";
+      const needsReply = Boolean(
+        latestInbound &&
+          (!latestHumanOutbound || latestInbound.createdAt.getTime() > latestHumanOutbound.createdAt.getTime())
+      );
       const item = {
         key,
         name,
