@@ -29427,4 +29427,3 @@ small,
   .crmWhatsappComposer { grid-template-columns: auto minmax(0,1fr) auto; }
   .crmWhatsappComposerIcon:nth-of-type(2), .crmWhatsappComposerIcon:nth-of-type(3) { display: none; }
 }
-
