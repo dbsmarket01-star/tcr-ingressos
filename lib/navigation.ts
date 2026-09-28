@@ -54,6 +54,12 @@ export const adminNavItems: AdminNavItem[] = [
     area: "CRM"
   },
   {
+    href: "/admin/crm/whatsapp",
+    label: "WhatsApp",
+    description: "Conversas e atendimento aos compradores",
+    area: "CRM"
+  },
+  {
     href: "/admin/marketing/email",
     label: "Disparos de e-mail",
     description: "Campanhas, leads e métricas de e-mail",
@@ -192,7 +198,7 @@ export const adminNavGroups: AdminNavGroup[] = [
     label: "Comercial",
     description: "Kanban comercial",
     defaultOpen: true,
-    items: adminNavItems.filter((item) => item.href === "/admin/crm")
+    items: adminNavItems.filter((item) => ["/admin/crm", "/admin/crm/whatsapp"].includes(item.href))
   },
   {
     label: "Marketing",

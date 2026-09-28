@@ -392,6 +392,36 @@ async function sendTemplateMessage(input: SendTemplateMessageInput) {
 export async function sendCartAbandonmentWhatsApp(input: CartAbandonmentWhatsAppInput) {
   const minutesRemaining = Math.max(0, Math.ceil((input.expiresAt.getTime() - Date.now()) / 60000));
   const templateName = getTemplateName("WHATSAPP_CART_ABANDONMENT_TEMPLATE_NAME", "abandono_carrinho");
+  const formattedPhone = formatPhone(input.buyerPhone);
+  const phoneWithoutCountry = formattedPhone.startsWith("55") ? formattedPhone.slice(2) : formattedPhone;
+  const phoneCandidates = Array.from(new Set([formattedPhone, phoneWithoutCountry, `55${phoneWithoutCountry}`]));
+  const recentAbandonment = await prisma.whatsAppMessageLog.findFirst({
+    where: {
+      type: WhatsAppMessageType.CART_ABANDONMENT,
+      status: {
+        in: [WhatsAppMessageStatus.SENT, WhatsAppMessageStatus.DELIVERED, WhatsAppMessageStatus.READ]
+      },
+      recipientPhone: {
+        in: phoneCandidates
+      },
+      createdAt: {
+        gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
+      },
+      ...(input.organizationId ? { organizationId: input.organizationId } : {})
+    },
+    select: {
+      id: true,
+      createdAt: true
+    }
+  });
+
+  if (recentAbandonment) {
+    return {
+      skipped: true as const,
+      reason: "RECENT_CART_ABANDONMENT",
+      previousMessageAt: recentAbandonment.createdAt
+    };
+  }
 
   if (templateName === "abandono_carrinho_tcr_botao_v1" || templateName === "abandono_carrinho_tcr_botao_v2") {
     return sendTemplateMessage({

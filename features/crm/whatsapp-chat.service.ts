@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 
 type EventScope = string[] | null | undefined;
 
+const KNOWN_WHATSAPP_TYPES = ["PURCHASE_APPROVED", "CART_ABANDONMENT", "BULK", "WEBHOOK"] as const;
+
 function normalizeDigits(value?: string | null) {
   return String(value ?? "").replace(/\D/g, "");
 }
@@ -16,6 +18,11 @@ function candidatePhones(value?: string | null) {
 
   const withoutCountry = digits.startsWith("55") ? digits.slice(2) : digits;
   return Array.from(new Set([digits, `55${withoutCountry}`, withoutCountry].filter(Boolean)));
+}
+
+function conversationPhoneKey(value?: string | null) {
+  const digits = normalizeDigits(value);
+  return digits.startsWith("55") && digits.length >= 12 ? digits.slice(2) : digits;
 }
 
 function textFromPayload(payload: Prisma.JsonValue | null | undefined) {
@@ -71,6 +78,125 @@ function messageContent(message: {
     textFromPayload(message.webhookPayload) ||
     templatePreview(message.payload, message.templateName)
   );
+}
+
+export async function getCrmWhatsAppInbox(input: {
+  organizationId: string;
+  allowedEventIds?: EventScope;
+  search?: string;
+}) {
+  const scopedOutbound = await prisma.whatsAppMessageLog.findMany({
+    where: {
+      organizationId: input.organizationId,
+      type: {
+        in: [...KNOWN_WHATSAPP_TYPES]
+      }
+    },
+    orderBy: { createdAt: "desc" },
+    take: 800,
+    select: {
+      id: true,
+      orderId: true,
+      eventId: true,
+      recipientName: true,
+      recipientPhone: true,
+      status: true,
+      templateName: true,
+      payload: true,
+      webhookPayload: true,
+      createdAt: true
+    }
+  });
+  const orderIds = Array.from(new Set(scopedOutbound.map((message) => message.orderId).filter(Boolean))) as string[];
+  const orders = orderIds.length
+    ? await prisma.order.findMany({
+        where: {
+          id: { in: orderIds },
+          event: {
+            organizationId: input.organizationId,
+            ...(input.allowedEventIds ? { id: { in: input.allowedEventIds } } : {})
+          }
+        },
+        select: {
+          id: true,
+          code: true,
+          customer: { select: { name: true, phone: true } },
+          event: { select: { id: true, title: true } }
+        }
+      })
+    : [];
+  const orderById = new Map(orders.map((order) => [order.id, order]));
+  const allowedKeys = new Set<string>();
+
+  for (const message of scopedOutbound) {
+    const order = message.orderId ? orderById.get(message.orderId) : null;
+    if (
+      input.allowedEventIds &&
+      !order &&
+      (!message.eventId || !input.allowedEventIds.includes(message.eventId))
+    ) {
+      continue;
+    }
+    const key = conversationPhoneKey(message.recipientPhone || order?.customer.phone);
+    if (key) allowedKeys.add(key);
+  }
+
+  const groups = new Map<
+    string,
+    {
+      phone: string;
+      messages: typeof scopedOutbound;
+    }
+  >();
+
+  for (const message of scopedOutbound) {
+    const order = message.orderId ? orderById.get(message.orderId) : null;
+    const phone = message.recipientPhone || order?.customer.phone || "";
+    const key = conversationPhoneKey(phone);
+    if (!key || (input.allowedEventIds && !allowedKeys.has(key))) continue;
+    const group = groups.get(key) || { phone, messages: [] };
+    group.messages.push(message);
+    groups.set(key, group);
+  }
+
+  const search = String(input.search || "").trim().toLocaleLowerCase("pt-BR");
+  return Array.from(groups.entries())
+    .map(([key, group]) => {
+      const messages = group.messages.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      const latest = messages.at(-1)!;
+      const latestOrderMessage = [...messages].reverse().find((message) => message.orderId && orderById.has(message.orderId));
+      const order = latestOrderMessage?.orderId ? orderById.get(latestOrderMessage.orderId) : null;
+      const latestInbound = [...messages].reverse().find((message) => message.status === "RECEIVED");
+      const latestOutbound = [...messages].reverse().find((message) => message.status !== "RECEIVED");
+      const name = order?.customer.name || [...messages].reverse().find((message) => message.recipientName)?.recipientName || "Contato";
+      const eventTitle = order?.event.title || "Conversa pelo WhatsApp";
+      const needsReply = latest.status === "RECEIVED";
+      const item = {
+        key,
+        name,
+        phone: group.phone,
+        eventTitle,
+        orderCode: order?.code || null,
+        latestMessage: messageContent(latest),
+        latestAt: latest.createdAt,
+        needsReply,
+        canReply: Boolean(latestInbound && Date.now() - latestInbound.createdAt.getTime() < 24 * 60 * 60 * 1000),
+        lastDirection: latest.status === "RECEIVED" ? ("inbound" as const) : ("outbound" as const),
+        lastOutboundAt: latestOutbound?.createdAt || null
+      };
+      return item;
+    })
+    .filter((item) => {
+      if (!search) return true;
+      return [item.name, item.phone, item.eventTitle, item.orderCode, item.latestMessage]
+        .filter(Boolean)
+        .some((value) => String(value).toLocaleLowerCase("pt-BR").includes(search));
+    })
+    .sort((a, b) => {
+      if (a.needsReply !== b.needsReply) return a.needsReply ? -1 : 1;
+      return b.latestAt.getTime() - a.latestAt.getTime();
+    })
+    .slice(0, 120);
 }
 
 function errorDetailsFromPayload(payload: Prisma.JsonValue | null | undefined) {

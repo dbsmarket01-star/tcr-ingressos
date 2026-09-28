@@ -903,7 +903,7 @@ export async function sendCartAbandonmentReminders(options?: {
         continue;
       }
 
-      await sendCartAbandonmentWhatsApp({
+      const delivery = await sendCartAbandonmentWhatsApp({
         buyerName: order.customer.name,
         buyerPhone: order.customer.phone,
         eventTitle: order.event.title,
@@ -916,7 +916,11 @@ export async function sendCartAbandonmentReminders(options?: {
         orderId: order.id
       });
 
-      sent += 1;
+      if ("skipped" in delivery && delivery.skipped) {
+        skipped += 1;
+      } else {
+        sent += 1;
+      }
     } catch (error) {
       failed += 1;
 

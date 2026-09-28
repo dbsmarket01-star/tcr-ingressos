@@ -2,7 +2,7 @@ import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { sendCrmWhatsAppApprovedTemplate, sendCrmWhatsAppMessage } from "@/features/crm/whatsapp-chat.actions";
-import { getCrmWhatsAppConversation } from "@/features/crm/whatsapp-chat.service";
+import { getCrmWhatsAppConversation, getCrmWhatsAppInbox } from "@/features/crm/whatsapp-chat.service";
 import { formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +13,7 @@ type CrmWhatsAppPageProps = {
     message?: string;
     orderCode?: string;
     phone?: string;
+    search?: string;
     status?: string;
   }>;
 };
@@ -61,10 +62,21 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
   const admin = await requirePermission("CRM");
   const params = searchParams ? await searchParams : {};
   const allowedEventIds = getAdminAllowedEventIds(admin);
+  const inbox = await getCrmWhatsAppInbox({
+    organizationId: admin.organizationId,
+    allowedEventIds,
+    search: params.search
+  });
+  const selectedInboxItem =
+    params.orderCode || params.leadId || params.phone
+      ? null
+      : inbox[0] || null;
+  const selectedOrderCode = params.orderCode || selectedInboxItem?.orderCode || undefined;
+  const selectedPhone = params.phone || selectedInboxItem?.phone || undefined;
   const conversation = await getCrmWhatsAppConversation({
-    orderCode: params.orderCode,
+    orderCode: selectedOrderCode,
     leadId: params.leadId,
-    phone: params.phone,
+    phone: selectedPhone,
     organizationId: admin.organizationId,
     allowedEventIds
   });
@@ -80,8 +92,8 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
         <header className="crmWhatsappHeader">
           <div>
             <span>CRM / WhatsApp</span>
-            <h1>{contact?.name || "Contato nao encontrado"}</h1>
-            <p>{contact?.eventTitle || "Abra a conversa a partir de um card do Kanban."}</p>
+            <h1>Central de conversas</h1>
+            <p>Responda compradores e acompanhe retornos das mensagens automáticas.</p>
           </div>
           <Link className="crmSecondaryButton" href="/admin/crm">
             Voltar ao Kanban
@@ -95,22 +107,65 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
         ) : null}
 
         <section className="crmWhatsappShell">
-          <aside className="crmWhatsappContactPanel">
-            <div className="crmWhatsappContactAvatar">{contact?.name?.slice(0, 2).toUpperCase() || "WA"}</div>
-            <strong>{contact?.name || "Sem contato"}</strong>
-            <span>{contact?.phone || "Telefone nao informado"}</span>
-            {contact?.email ? <span>{contact.email}</span> : null}
-            {contact?.orderCode ? <span>Pedido {contact.orderCode}</span> : null}
-            {conversation.canReply ? (
-              <small className="crmWhatsappWindowOpen">Janela de atendimento aberta</small>
-            ) : (
-              <small className="crmWhatsappWindowClosed">
-                Para responder com texto livre, o cliente precisa ter enviado mensagem nas ultimas 24h.
-              </small>
-            )}
+          <aside className="crmWhatsappInboxPanel">
+            <div className="crmWhatsappInboxTop">
+              <div>
+                <strong>Conversas</strong>
+                <span>{inbox.filter((item) => item.needsReply).length} aguardando resposta</span>
+              </div>
+              <form action="/admin/crm/whatsapp" method="get">
+                <input name="search" placeholder="Buscar conversa" defaultValue={params.search || ""} />
+              </form>
+            </div>
+            <nav className="crmWhatsappInboxList" aria-label="Conversas do WhatsApp">
+              {inbox.length === 0 ? <p className="crmWhatsappInboxEmpty">Nenhuma conversa encontrada.</p> : null}
+              {inbox.map((item) => {
+                const query = new URLSearchParams();
+                if (item.orderCode) query.set("orderCode", item.orderCode);
+                else query.set("phone", item.phone);
+                const isActive =
+                  (selectedOrderCode && selectedOrderCode === item.orderCode) ||
+                  (!selectedOrderCode && selectedPhone && selectedPhone.replace(/\D/g, "").endsWith(item.key));
+                return (
+                  <Link
+                    className={`crmWhatsappInboxItem ${isActive ? "isActive" : ""}`}
+                    href={`/admin/crm/whatsapp?${query.toString()}`}
+                    key={item.key}
+                  >
+                    <span className="crmWhatsappInboxAvatar">{item.name.slice(0, 2).toUpperCase()}</span>
+                    <span className="crmWhatsappInboxCopy">
+                      <span className="crmWhatsappInboxName">
+                        <strong>{item.name}</strong>
+                        <time>{formatDateTime(item.latestAt)}</time>
+                      </span>
+                      <small>{item.eventTitle}</small>
+                      <span className="crmWhatsappInboxPreview">
+                        {item.lastDirection === "outbound" ? "Você: " : ""}
+                        {item.latestMessage}
+                      </span>
+                    </span>
+                    {item.needsReply ? <i title="Aguardando resposta" /> : null}
+                  </Link>
+                );
+              })}
+            </nav>
           </aside>
 
           <div className="crmWhatsappConversation">
+            <header className="crmWhatsappConversationHeader">
+              <div className="crmWhatsappContactAvatar">{contact?.name?.slice(0, 2).toUpperCase() || "WA"}</div>
+              <div>
+                <strong>{contact?.name || "Selecione uma conversa"}</strong>
+                <span>{contact?.eventTitle || contact?.phone || "Caixa de entrada do WhatsApp"}</span>
+              </div>
+              {contact ? (
+                conversation.canReply ? (
+                  <small className="crmWhatsappWindowOpen">Atendimento aberto</small>
+                ) : (
+                  <small className="crmWhatsappWindowClosed">Fora da janela de 24h</small>
+                )
+              ) : null}
+            </header>
             <div className="crmWhatsappMessages">
               {conversation.hiddenFailureCount > 0 ? (
                 <div className="crmWhatsappNotice">
@@ -146,9 +201,9 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
             </div>
 
             <form action={sendCrmWhatsAppMessage} className="crmWhatsappComposer">
-              <input name="orderCode" type="hidden" value={params.orderCode || ""} />
+              <input name="orderCode" type="hidden" value={selectedOrderCode || ""} />
               <input name="leadId" type="hidden" value={params.leadId || ""} />
-              <input name="phone" type="hidden" value={params.phone || contact?.phone || ""} />
+              <input name="phone" type="hidden" value={selectedPhone || contact?.phone || ""} />
               <textarea
                 name="text"
                 placeholder={
@@ -165,9 +220,9 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
             </form>
             {!conversation.canReply && contact?.phone ? (
               <form action={sendCrmWhatsAppApprovedTemplate} className="crmWhatsappTemplateComposer">
-                <input name="orderCode" type="hidden" value={params.orderCode || ""} />
+                <input name="orderCode" type="hidden" value={selectedOrderCode || ""} />
                 <input name="leadId" type="hidden" value={params.leadId || ""} />
-                <input name="phone" type="hidden" value={params.phone || contact.phone || ""} />
+                <input name="phone" type="hidden" value={selectedPhone || contact.phone || ""} />
                 <p>Para iniciar conversa fora da janela de 24h, envie um template aprovado pela Meta.</p>
                 <button className="crmSecondaryButton" type="submit" disabled={!contact.orderCode}>
                   Enviar template aprovado

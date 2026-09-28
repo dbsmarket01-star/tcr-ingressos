@@ -164,8 +164,10 @@ export async function sendCrmWhatsAppApprovedTemplate(formData: FormData) {
     );
   }
 
+  let skippedByRecentMessage = false;
+
   try {
-    await sendCartAbandonmentWhatsApp({
+    const delivery = await sendCartAbandonmentWhatsApp({
       buyerName: contact.name,
       buyerPhone: contact.phone,
       eventTitle: contact.eventTitle || "evento",
@@ -177,6 +179,7 @@ export async function sendCrmWhatsAppApprovedTemplate(formData: FormData) {
       eventId: contact.eventId,
       orderId: contact.orderId
     });
+    skippedByRecentMessage = "skipped" in delivery && delivery.skipped;
   } catch (error) {
     redirect(
       buildRedirect({
@@ -185,6 +188,18 @@ export async function sendCrmWhatsAppApprovedTemplate(formData: FormData) {
         phone,
         status: "erro",
         message: error instanceof Error ? error.message : "Nao foi possivel enviar o template aprovado."
+      })
+    );
+  }
+
+  if (skippedByRecentMessage) {
+    redirect(
+      buildRedirect({
+        orderCode,
+        leadId,
+        phone,
+        status: "erro",
+        message: "Mensagem não enviada: este contato já recebeu recuperação de carrinho nas últimas 24 horas."
       })
     );
   }

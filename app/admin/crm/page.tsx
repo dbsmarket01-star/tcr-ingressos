@@ -254,6 +254,9 @@ export default async function CrmPage({ searchParams }: CrmPageProps) {
             <h1>CRM / Kanban</h1>
             <p>Acompanhe e gerencie todo o fluxo de atendimento e vendas.</p>
           </div>
+          <Link className="crmPrimaryButton" href="/admin/crm/whatsapp">
+            Abrir WhatsApp
+          </Link>
         </header>
 
         <section className="crmMetricStrip" aria-label="Resumo comercial">
