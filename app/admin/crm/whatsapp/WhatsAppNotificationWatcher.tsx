@@ -21,6 +21,11 @@ type NotificationSnapshot = {
   unreadCount?: number;
 };
 
+type AudioWindow = Window & {
+  webkitAudioContext?: typeof AudioContext;
+  __tcrWhatsAppAudioContext?: AudioContext;
+};
+
 function BellIcon({ muted }: { muted: boolean }) {
   return <svg aria-hidden="true" className="crmWaIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>
@@ -28,10 +33,27 @@ function BellIcon({ muted }: { muted: boolean }) {
   </svg>;
 }
 
-function playNotificationSound(volume: number) {
-  const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!AudioContextClass) return;
-  const context = new AudioContextClass();
+async function getUnlockedAudioContext() {
+  const audioWindow = window as AudioWindow;
+  const AudioContextClass = window.AudioContext || audioWindow.webkitAudioContext;
+  if (!AudioContextClass) return null;
+  if (!audioWindow.__tcrWhatsAppAudioContext || audioWindow.__tcrWhatsAppAudioContext.state === "closed") {
+    audioWindow.__tcrWhatsAppAudioContext = new AudioContextClass();
+  }
+  const context = audioWindow.__tcrWhatsAppAudioContext;
+  if (context.state === "suspended") {
+    try {
+      await context.resume();
+    } catch {
+      return null;
+    }
+  }
+  return context.state === "running" ? context : null;
+}
+
+async function playNotificationSound(volume: number) {
+  const context = await getUnlockedAudioContext();
+  if (!context) return false;
   const master = context.createGain();
   const compressor = context.createDynamicsCompressor();
   master.gain.value = Math.max(0, Math.min(1, volume / 100)) * 0.65;
@@ -52,7 +74,11 @@ function playNotificationSound(volume: number) {
     oscillator.start(startsAt);
     oscillator.stop(startsAt + 0.6);
   });
-  window.setTimeout(() => void context.close(), 1_450);
+  window.setTimeout(() => {
+    master.disconnect();
+    compressor.disconnect();
+  }, 1_450);
+  return true;
 }
 
 export function WhatsAppNotificationWatcher({
@@ -70,7 +96,8 @@ export function WhatsAppNotificationWatcher({
   const [liveUnreadCount, setLiveUnreadCount] = useState(unreadCount);
 
   useEffect(() => {
-    setSoundEnabled(window.localStorage.getItem(SOUND_STORAGE_KEY) === "on");
+    const existingContext = (window as AudioWindow).__tcrWhatsAppAudioContext;
+    setSoundEnabled(window.localStorage.getItem(SOUND_STORAGE_KEY) === "on" && existingContext?.state === "running");
     const storedVolumeValue = window.localStorage.getItem(VOLUME_STORAGE_KEY);
     const storedVolume = storedVolumeValue === null ? NaN : Number(storedVolumeValue);
     if (Number.isFinite(storedVolume) && storedVolume >= 0 && storedVolume <= 100) setVolume(storedVolume);
@@ -103,7 +130,7 @@ export function WhatsAppNotificationWatcher({
         if (previousId === nextId) return;
 
         window.sessionStorage.setItem(LAST_MESSAGE_STORAGE_KEY, nextId);
-        if (soundEnabled) playNotificationSound(volume);
+        if (soundEnabled) void playNotificationSound(volume);
         if (document.hidden && "Notification" in window && Notification.permission === "granted") {
           const notification = new Notification(snapshot.latestInbound?.name || "Nova mensagem no WhatsApp", {
             body: snapshot.latestInbound?.message || "Você recebeu uma nova mensagem na Central de Conversas.",
@@ -144,17 +171,20 @@ export function WhatsAppNotificationWatcher({
     }
     if (lastMessageId === latestInboundId) return;
     window.sessionStorage.setItem(LAST_MESSAGE_STORAGE_KEY, latestInboundId);
-    if (soundEnabled) playNotificationSound(volume);
+    if (soundEnabled) void playNotificationSound(volume);
   }, [latestInboundId, soundEnabled, volume]);
 
-  function toggleSound() {
+  async function toggleSound() {
     const next = !soundEnabled;
-    setSoundEnabled(next);
-    window.localStorage.setItem(SOUND_STORAGE_KEY, next ? "on" : "off");
     if (next) {
-      playNotificationSound(volume);
+      const unlocked = await playNotificationSound(volume);
+      setSoundEnabled(unlocked);
+      window.localStorage.setItem(SOUND_STORAGE_KEY, unlocked ? "on" : "off");
       if ("Notification" in window && Notification.permission === "default") void Notification.requestPermission();
+      return;
     }
+    setSoundEnabled(false);
+    window.localStorage.setItem(SOUND_STORAGE_KEY, "off");
   }
 
   function changeVolume(nextVolume: number) {
@@ -166,13 +196,13 @@ export function WhatsAppNotificationWatcher({
     <button
       aria-label={soundEnabled ? "Silenciar notificações do WhatsApp" : "Ativar som das notificações do WhatsApp"}
       className={`crmWhatsappHeaderIcon crmWhatsappSoundToggle ${soundEnabled ? "isEnabled" : ""}`}
-      onClick={toggleSound}
-      title={soundEnabled ? "Som ligado — clique para silenciar" : "Ativar som de novas mensagens"}
+      onClick={() => void toggleSound()}
+      title={soundEnabled ? "Som liberado — clique para silenciar" : "Liberar som de novas mensagens neste navegador"}
       type="button"
     >
       <BellIcon muted={!soundEnabled}/>
       {liveUnreadCount ? <b>{liveUnreadCount}</b> : null}
-      <span>{soundEnabled ? "Som ligado" : "Ativar som"}</span>
+      <span>{soundEnabled ? "Som liberado" : "Liberar som"}</span>
     </button>
     <label className="crmWhatsappVolumeControl" title={`Volume das notificações: ${volume}%`}>
       <span aria-hidden="true">🔊</span>
@@ -181,7 +211,7 @@ export function WhatsAppNotificationWatcher({
         max="100"
         min="0"
         onChange={(event) => changeVolume(Number(event.target.value))}
-        onPointerUp={(event) => soundEnabled && playNotificationSound(Number(event.currentTarget.value))}
+        onPointerUp={(event) => soundEnabled && void playNotificationSound(Number(event.currentTarget.value))}
         step="5"
         type="range"
         value={volume}
