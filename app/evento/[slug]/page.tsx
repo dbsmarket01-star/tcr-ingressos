@@ -295,6 +295,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const highlightedLotId = event.highlightedLotId || purchasableLots[0]?.id;
   const eventLead = event.subtitle?.trim() || "";
   const checkoutEstimatorLots = purchasableLots.map((lot) => ({
+    admissionsPerUnit: Math.max(lot.admissionsPerUnit, 1),
     id: lot.id,
     name: lot.name,
     totalWithFeeInCents:
@@ -573,7 +574,11 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                         ) : null}
                         {!isSoldOut && (isLowStock || lotEndsSoon) ? (
                           <small className="ticketPickerUrgency">
-                            {isLowStock ? `Últimos ${available} ingressos` : "Lote vira em breve"}
+                            {isLowStock
+                              ? /\bmesa\b/i.test(lot.name) && lot.admissionsPerUnit > 1
+                                ? `${available === 1 ? "Última" : "Últimas"} ${available} ${available === 1 ? "mesa disponível" : "mesas disponíveis"}`
+                                : `Últimos ${available} ingressos`
+                              : "Lote vira em breve"}
                           </small>
                         ) : null}
                       </div>
