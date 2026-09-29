@@ -120,7 +120,12 @@ export function WhatsAppNotificationWatcher({
         });
         if (!response.ok) return;
         const snapshot = (await response.json()) as NotificationSnapshot;
-        setLiveUnreadCount(Number(snapshot.unreadCount || 0));
+        // The exact counter arrives with the server-rendered inbox. The polling
+        // endpoint intentionally returns only the newest inbound message so it
+        // stays cheap and cannot overload the database every second.
+        if (typeof snapshot.unreadCount === "number") {
+          setLiveUnreadCount(snapshot.unreadCount);
+        }
         const nextId = snapshot.latestInbound?.id;
         if (!nextId) return;
         const previousId = window.sessionStorage.getItem(LAST_MESSAGE_STORAGE_KEY);

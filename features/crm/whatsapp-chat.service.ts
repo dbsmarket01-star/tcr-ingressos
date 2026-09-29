@@ -6,6 +6,43 @@ type EventScope = string[] | null | undefined;
 
 const KNOWN_WHATSAPP_TYPES = ["PURCHASE_APPROVED", "CART_ABANDONMENT", "BULK", "WEBHOOK"] as const;
 
+export async function getCrmWhatsAppNotificationSnapshot(input: {
+  organizationId: string;
+  allowedEventIds?: EventScope;
+}) {
+  // This endpoint is polled frequently by the operator console. Keep it to one
+  // indexed row instead of rebuilding the complete CRM inbox (messages,
+  // orders, audit logs and AI state) on every poll.
+  const latestInbound = await prisma.whatsAppMessageLog.findFirst({
+    where: {
+      organizationId: input.organizationId,
+      status: "RECEIVED",
+      ...(input.allowedEventIds ? { eventId: { in: input.allowedEventIds } } : {})
+    },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      recipientName: true,
+      recipientPhone: true,
+      payload: true,
+      webhookPayload: true,
+      createdAt: true,
+      status: true,
+      templateName: true
+    }
+  });
+
+  return latestInbound
+    ? {
+        id: latestInbound.id,
+        at: latestInbound.createdAt,
+        name: latestInbound.recipientName || "Contato",
+        message: messageContent(latestInbound),
+        phone: latestInbound.recipientPhone
+      }
+    : null;
+}
+
 function normalizeDigits(value?: string | null) {
   return String(value ?? "").replace(/\D/g, "");
 }
