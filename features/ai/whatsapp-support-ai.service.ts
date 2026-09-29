@@ -229,7 +229,6 @@ async function loadSupportContext(organizationId: string, phone: string) {
       serviceFeeInCents: true,
       cardInterestInCents: true,
       totalInCents: true,
-      refundedInCents: true,
       createdAt: true,
       paidAt: true,
       expiresAt: true,
@@ -325,6 +324,15 @@ async function loadSupportContext(organizationId: string, phone: string) {
   const customerName = orders[0]?.customer.name || "cliente";
   return {
     customer: { firstName: firstName(customerName) },
+    businessRules: {
+      doubleTicket:
+        "Cadeira duplo, ingresso duplo ou qualquer produto identificado como duplo vale para duas pessoas e gera dois ingressos com dois QR Codes individuais.",
+      paymentMethods: "A TCR Ingressos aceita Pix e cartao de credito.",
+      cardInstallments:
+        "O cartao de credito pode ser parcelado em ate 6 vezes. O parcelamento possui juros; informe o valor exibido no checkout e nunca invente o total das parcelas.",
+      fees:
+        "A taxa de bilheteria e os juros devem ser informados conforme os dados do ingresso e do checkout. Nao estime nem recalcule valores ausentes."
+    },
     company: settings
       ? {
           ...settings,
@@ -366,7 +374,6 @@ async function loadSupportContext(organizationId: string, phone: string) {
       subtotal: brl(order.subtotalInCents),
       serviceFee: brl(order.serviceFeeInCents),
       cardInterest: brl(order.cardInterestInCents),
-      refunded: brl(order.refundedInCents),
       total: brl(order.totalInCents),
       ticketEmailStatus: order.ticketsEmailStatus,
       ticketEmailSentAt: brDate(order.ticketsEmailSentAt),
@@ -413,6 +420,8 @@ REGRAS CRITICAS
 5. Nunca solicite senha, numero completo do cartao, CVV, codigo de verificacao ou foto de documento pelo WhatsApp.
 6. Nao revele CPF, e-mail completo, dados de outros clientes, identificadores internos nem detalhes tecnicos.
 7. Ingresso duplo vale duas admissoes. Use totalAdmissions e issuedTickets para explicar quantos QR Codes existem; se houver divergencia, HANDOFF.
+7.1. Como regra comercial geral, cadeira duplo ou ingresso duplo e para duas pessoas e gera dois ingressos com dois QR Codes individuais.
+7.2. A TCR aceita Pix e cartao de credito. O cartao pode ser parcelado em ate 6 vezes, com juros. Para valores, taxas e parcelas, use apenas os dados exibidos no contexto ou oriente o cliente a conferir o resumo do checkout; nunca invente calculos.
 8. Para pedido pendente, pode fornecer somente o orderUrl existente no contexto.
 9. Se nao houver informacao suficiente ou houver qualquer duvida sobre os dados, use HANDOFF.
 10. Nao prometa prazo ou acao futura que nao esteja garantida.
