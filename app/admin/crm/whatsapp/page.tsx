@@ -61,9 +61,28 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
     ? getCrmWhatsAppConversation({ orderCode: params.orderCode, leadId: params.leadId, phone: params.phone, organizationId: admin.organizationId, allowedEventIds })
     : null;
   const rawInbox = await inboxPromise;
-  const activeStatus = ["unread", "open", "waiting", "closed"].includes(params.status || "") ? params.status! : "all";
-  const counters = { all: rawInbox.length, unread: rawInbox.filter((item) => item.needsReply).length, open: rawInbox.filter((item) => item.canReply).length, waiting: rawInbox.filter((item) => !item.needsReply && item.canReply).length, closed: rawInbox.filter((item) => !item.canReply).length };
-  const inbox = rawInbox.filter((item) => activeStatus === "unread" ? item.needsReply : activeStatus === "open" ? item.canReply : activeStatus === "waiting" ? !item.needsReply && item.canReply : activeStatus === "closed" ? !item.canReply : true);
+  const activeStatus = ["unread", "human", "open", "waiting", "closed"].includes(params.status || "") ? params.status! : "all";
+  const counters = {
+    all: rawInbox.length,
+    unread: rawInbox.filter((item) => item.needsReply).length,
+    human: rawInbox.filter((item) => item.aiMode === "HANDOFF" || item.aiMode === "PAUSED").length,
+    open: rawInbox.filter((item) => item.canReply).length,
+    waiting: rawInbox.filter((item) => !item.needsReply && item.canReply).length,
+    closed: rawInbox.filter((item) => !item.canReply).length
+  };
+  const inbox = rawInbox.filter((item) =>
+    activeStatus === "unread"
+      ? item.needsReply
+      : activeStatus === "human"
+        ? item.aiMode === "HANDOFF" || item.aiMode === "PAUSED"
+        : activeStatus === "open"
+          ? item.canReply
+          : activeStatus === "waiting"
+            ? !item.needsReply && item.canReply
+            : activeStatus === "closed"
+              ? !item.canReply
+              : true
+  );
   const selectedInboxItem = params.orderCode || params.leadId || params.phone ? null : inbox[0] || rawInbox[0] || null;
   const selectedOrderCode = params.orderCode || selectedInboxItem?.orderCode || undefined;
   const selectedPhone = params.phone || selectedInboxItem?.phone || undefined;
@@ -86,7 +105,7 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
         <div className="crmWhatsappHeaderTools"><form action="/admin/crm/whatsapp" className="crmWhatsappGlobalSearch" method="get"><Icon name="search"/><input name="search" placeholder="Buscar conversas, contatos ou pedidos..." defaultValue={params.search || ""}/><kbd>⌘ K</kbd></form><span className="crmWhatsappHeaderIcon"><Icon name="bell"/>{counters.unread ? <b>{counters.unread}</b> : null}</span><span className="crmWhatsappUser"><i>{initials(admin.name)}</i><span><strong>{admin.name}</strong><small>{admin.role}</small></span></span></div>
       </header>
 
-      <nav className="crmWhatsappStatusTabs" aria-label="Filtrar conversas por status">{[["all", "Todos", counters.all], ["unread", "Não lidos", counters.unread], ["open", "Em atendimento", counters.open], ["waiting", "Aguardando cliente", counters.waiting], ["closed", "Fechados", counters.closed]].map(([key, label, count]) => <Link className={activeStatus === key ? "isActive" : ""} href={statusHref(String(key))} key={String(key)}>{label}<b>{count}</b></Link>)}</nav>
+      <nav className="crmWhatsappStatusTabs" aria-label="Filtrar conversas por status">{[["all", "Todos", counters.all], ["unread", "Não lidos", counters.unread], ["human", "Atendimento humano", counters.human], ["open", "Em atendimento", counters.open], ["waiting", "Aguardando cliente", counters.waiting], ["closed", "Fechados", counters.closed]].map(([key, label, count]) => <Link className={`${activeStatus === key ? "isActive" : ""} ${key === "human" ? "isHuman" : ""}`.trim()} href={statusHref(String(key))} key={String(key)}>{label}<b>{count}</b></Link>)}</nav>
       {params.status === "erro" || params.status === "ok" ? <div className={`crmWhatsappFeedback ${params.status === "erro" ? "isError" : "isSuccess"}`}>{params.message || "Mensagem enviada."}</div> : null}
 
       <section className="crmWhatsappShell">

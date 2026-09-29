@@ -311,6 +311,10 @@
 .crmWhatsappStatusTabs a b { align-items: center; background: #edf1f6; border-radius: 999px; display: flex; font-size: 11px; height: 22px; justify-content: center; min-width: 22px; padding: 0 6px; }
 .crmWhatsappStatusTabs a.isActive { background: #078a4e; border-color: #078a4e; color: #fff; }
 .crmWhatsappStatusTabs a.isActive b { background: #d7f5e5; color: #087a46; }
+.crmWhatsappStatusTabs a.isHuman { border-color: #fdba74; color: #9a3412; }
+.crmWhatsappStatusTabs a.isHuman b { background: #ffedd5; color: #9a3412; }
+.crmWhatsappStatusTabs a.isHuman.isActive { background: #c2410c; border-color: #c2410c; color: #fff; }
+.crmWhatsappStatusTabs a.isHuman.isActive b { background: #ffedd5; color: #9a3412; }
 .crmWhatsappFeedback { margin: -5px 0 0; }
 .crmWhatsappShell { background: #fff; border: 1px solid #dfe7ef; border-radius: 16px; display: grid; grid-template-columns: minmax(330px, 365px) minmax(0, 1fr); height: min(720px, calc(100vh - 210px)); min-height: 590px; overflow: hidden; }
 .crmWhatsappInboxPanel { border-right: 1px solid #dfe7ef; display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; }
@@ -392,6 +396,12 @@
   .crmWhatsappComposer { grid-template-columns: auto minmax(0,1fr) auto; }
   .crmWhatsappComposerIcon:nth-of-type(2), .crmWhatsappComposerIcon:nth-of-type(3) { display: none; }
 }
+
+/* A fila humana precisa se destacar mesmo após os blocos legados de estilo. */
+.crmWhatsappStatusTabs a.isHuman { border-color: #fdba74; color: #9a3412; }
+.crmWhatsappStatusTabs a.isHuman b { background: #ffedd5; color: #9a3412; }
+.crmWhatsappStatusTabs a.isHuman.isActive { background: #c2410c; border-color: #c2410c; color: #fff; }
+.crmWhatsappStatusTabs a.isHuman.isActive b { background: #ffedd5; color: #9a3412; }
 
 /* Mantém listas grandes dentro do painel, sem empurrar o compositor para fora. */
 .crmWhatsappInboxPanel,
