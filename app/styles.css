@@ -301,6 +301,9 @@
 .crmWhatsappGlobalSearch kbd { background: #f3f5f8; border-radius: 6px; color: #667085; font: inherit; font-size: 11px; padding: 4px 6px; }
 .crmWhatsappHeaderIcon { align-items: center; background: #fff; border: 1px solid #dce4ed; border-radius: 12px; display: flex; height: 44px; justify-content: center; position: relative; width: 44px; }
 .crmWhatsappHeaderIcon b { align-items: center; background: #ef3434; border: 2px solid #fff; border-radius: 999px; color: #fff; display: flex; font-size: 9px; height: 18px; justify-content: center; position: absolute; right: -5px; top: -7px; width: 18px; }
+.crmWhatsappHeaderIcon.crmWhatsappSoundToggle { appearance: none; color: #64748b; cursor: pointer; gap: 7px; padding: 0 11px; width: auto; }
+.crmWhatsappSoundToggle > span { font-size: 11px; font-weight: 800; white-space: nowrap; }
+.crmWhatsappSoundToggle.isEnabled { background: #ecfdf5; border-color: #6ee7b7; color: #047857; }
 .crmWhatsappUser { align-items: center; background: #fff; border: 1px solid #dce4ed; border-radius: 12px; display: flex; gap: 10px; min-height: 44px; padding: 4px 13px 4px 7px; }
 .crmWhatsappUser > i { align-items: center; background: #087a46; border-radius: 999px; color: #fff; display: flex; font-size: 11px; font-style: normal; font-weight: 900; height: 34px; justify-content: center; width: 34px; }
 .crmWhatsappUser > span { display: grid; }
@@ -381,7 +384,9 @@
   .crmWhatsappHeader { display: grid; }
   .crmWhatsappHeaderTools { width: 100%; }
   .crmWhatsappGlobalSearch { flex: 1; grid-template-columns: auto 1fr; }
-  .crmWhatsappGlobalSearch kbd, .crmWhatsappHeaderIcon { display: none; }
+  .crmWhatsappGlobalSearch kbd { display: none; }
+  .crmWhatsappHeaderIcon.crmWhatsappSoundToggle { display: inline-flex; }
+  .crmWhatsappSoundToggle > span { display: none; }
   .crmWhatsappStatusTabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
   .crmWhatsappStatusTabs a { flex: 0 0 auto; }
   .crmWhatsappShell { height: auto; min-height: 0; grid-template-columns: 1fr; }

@@ -245,6 +245,8 @@ async function loadCrmWhatsAppInbox(input: {
         orderCode: order?.code || null,
         latestMessage: messageContent(latest),
         latestAt: latest.createdAt,
+        latestInboundId: latestInbound?.id || null,
+        latestInboundAt: latestInbound?.createdAt || null,
         needsReply,
         canReply: Boolean(latestInbound && Date.now() - latestInbound.createdAt.getTime() < 24 * 60 * 60 * 1000),
         lastDirection: latest.status === "RECEIVED" ? ("inbound" as const) : ("outbound" as const),

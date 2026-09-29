@@ -5,6 +5,7 @@ import { sendCrmWhatsAppApprovedTemplate, setCrmWhatsAppAiMode } from "@/feature
 import { getCrmWhatsAppConversation, getCrmWhatsAppInbox } from "@/features/crm/whatsapp-chat.service";
 import { getWhatsAppAiConversationState } from "@/features/ai/whatsapp-support-ai.service";
 import { WhatsAppComposer } from "./WhatsAppComposer";
+import { WhatsAppNotificationWatcher } from "./WhatsAppNotificationWatcher";
 
 export const dynamic = "force-dynamic";
 
@@ -83,6 +84,9 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
               ? !item.canReply
               : true
   );
+  const latestInbound = rawInbox
+    .filter((item) => item.latestInboundId && item.latestInboundAt)
+    .sort((left, right) => right.latestInboundAt!.getTime() - left.latestInboundAt!.getTime())[0];
   const selectedInboxItem = params.orderCode || params.leadId || params.phone ? null : inbox[0] || rawInbox[0] || null;
   const selectedOrderCode = params.orderCode || selectedInboxItem?.orderCode || undefined;
   const selectedPhone = params.phone || selectedInboxItem?.phone || undefined;
@@ -102,7 +106,7 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
     <div className="crmWhatsappPage">
       <header className="crmWhatsappHeader">
         <div className="crmWhatsappHeading"><span className="crmWhatsappBreadcrumb">CRM / <strong>WhatsApp</strong></span><h1>Central de conversas</h1><p>Responda compradores e acompanhe retornos das mensagens automáticas.</p></div>
-        <div className="crmWhatsappHeaderTools"><form action="/admin/crm/whatsapp" className="crmWhatsappGlobalSearch" method="get"><Icon name="search"/><input name="search" placeholder="Buscar conversas, contatos ou pedidos..." defaultValue={params.search || ""}/><kbd>⌘ K</kbd></form><span className="crmWhatsappHeaderIcon"><Icon name="bell"/>{counters.unread ? <b>{counters.unread}</b> : null}</span><span className="crmWhatsappUser"><i>{initials(admin.name)}</i><span><strong>{admin.name}</strong><small>{admin.role}</small></span></span></div>
+        <div className="crmWhatsappHeaderTools"><form action="/admin/crm/whatsapp" className="crmWhatsappGlobalSearch" method="get"><Icon name="search"/><input name="search" placeholder="Buscar conversas, contatos ou pedidos..." defaultValue={params.search || ""}/><kbd>⌘ K</kbd></form><WhatsAppNotificationWatcher latestInboundId={latestInbound?.latestInboundId || null} unreadCount={counters.unread}/><span className="crmWhatsappUser"><i>{initials(admin.name)}</i><span><strong>{admin.name}</strong><small>{admin.role}</small></span></span></div>
       </header>
 
       <nav className="crmWhatsappStatusTabs" aria-label="Filtrar conversas por status">{[["all", "Todos", counters.all], ["unread", "Não lidos", counters.unread], ["human", "Atendimento humano", counters.human], ["open", "Em atendimento", counters.open], ["waiting", "Aguardando cliente", counters.waiting], ["closed", "Fechados", counters.closed]].map(([key, label, count]) => <Link className={`${activeStatus === key ? "isActive" : ""} ${key === "human" ? "isHuman" : ""}`.trim()} href={statusHref(String(key))} key={String(key)}>{label}<b>{count}</b></Link>)}</nav>
