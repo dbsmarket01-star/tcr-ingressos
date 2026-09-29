@@ -401,6 +401,15 @@
 .crmWhatsappComposerText small { background: #eef7f2; border-radius: 6px; bottom: 4px; color: #176444; font-size: 9px; left: 10px; max-width: calc(100% - 20px); overflow: hidden; padding: 2px 5px; position: absolute; text-overflow: ellipsis; white-space: nowrap; }
 .crmWhatsappComposerText:has(small) textarea { padding-bottom: 19px; }
 .crmWhatsappComposer textarea { border: 1px solid #dce4ed; border-radius: 10px; font: inherit; font-size: 13px; height: 42px; min-height: 42px; padding: 11px 13px; resize: none; width: 100%; }
+.crmWhatsappComposerWrap { background: #fff; position: relative; }
+.crmWhatsappOptimistic { background: #f7f8f5; display: grid; padding: 8px 22px; }
+.crmWhatsappComposerFeedback { background: #fff1f2; color: #9f1239; font-size: 12px; font-weight: 700; margin: 0; padding: 7px 14px; }
+.crmWhatsappEmojiControl { position: relative; }
+.crmWhatsappEmojiPicker { background: #fff; border: 1px solid #dce4ed; border-radius: 12px; bottom: 48px; box-shadow: 0 12px 32px rgba(15, 23, 42, .16); display: grid; gap: 4px; grid-template-columns: repeat(5, minmax(34px, auto)); left: 0; padding: 8px; position: absolute; z-index: 20; }
+.crmWhatsappEmojiPicker button { background: transparent; border: 0; border-radius: 7px; cursor: pointer; font: inherit; min-height: 34px; padding: 4px 7px; }
+.crmWhatsappEmojiPicker button:hover { background: #eef7f2; }
+.crmWhatsappComposerIcon.isRecording { animation: crmRecordingPulse 1s ease-in-out infinite; background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
+@keyframes crmRecordingPulse { 50% { box-shadow: 0 0 0 5px rgba(239, 68, 68, .13); } }
 .crmWhatsappSend { align-items: center; background: #087f48; border: 0; border-radius: 10px; color: #fff; display: flex; height: 42px; justify-content: center; width: 48px; }
 .crmWhatsappSend:disabled { background: #9bb9a9; }
 .crmWhatsappTemplateComposer { background: #fffaf0; border-top: 1px solid #f4dfb8; padding: 9px 12px; }
@@ -436,8 +445,9 @@
   .crmWhatsappConversationActions .crmWhatsappIconOnly { display: none; }
   .crmWhatsappMessages { min-height: 430px; padding: 16px 12px; }
   .crmWhatsappBubble { max-width: 88%; }
-  .crmWhatsappComposer { grid-template-columns: auto minmax(0,1fr) auto; }
-  .crmWhatsappComposerIcon:nth-of-type(2), .crmWhatsappComposerIcon:nth-of-type(3) { display: none; }
+  .crmWhatsappComposer { grid-template-columns: auto auto auto minmax(0,1fr) auto; }
+  .crmWhatsappComposerIcon { display: flex; }
+  .crmWhatsappEmojiPicker { left: 0; }
 }
 
 /* Estado final da lista: item clicável + menu manual de Follow-up. */

@@ -262,7 +262,7 @@ async function loadCrmWhatsAppInbox(input: {
     where: {
       entityType: "WHATSAPP_CONVERSATION",
       entityId: { startsWith: `${input.organizationId}:` },
-      action: { in: ["WHATSAPP_CONVERSATION_READ", "WHATSAPP_FOLLOWUP_ENABLED", "WHATSAPP_FOLLOWUP_DISABLED"] }
+      action: { in: ["WHATSAPP_CONVERSATION_READ", "WHATSAPP_FOLLOWUP_ENABLED", "WHATSAPP_FOLLOWUP_DISABLED", "WHATSAPP_CONVERSATION_HIDDEN"] }
     },
     orderBy: { createdAt: "desc" },
     select: { action: true, entityId: true, metadata: true, createdAt: true }
@@ -270,6 +270,7 @@ async function loadCrmWhatsAppInbox(input: {
   const latestReadAtByPhone = new Map<string, Date>();
   const hasEverBeenRead = new Set<string>();
   const followUpByPhone = new Map<string, boolean>();
+  const hiddenPhones = new Set<string>();
   for (const log of workflowLogs) {
     if (!log.entityId) continue;
     const key = log.entityId.slice(`${input.organizationId}:`.length);
@@ -281,6 +282,7 @@ async function loadCrmWhatsAppInbox(input: {
     if ((log.action === "WHATSAPP_FOLLOWUP_ENABLED" || log.action === "WHATSAPP_FOLLOWUP_DISABLED") && !followUpByPhone.has(key)) {
       followUpByPhone.set(key, log.action === "WHATSAPP_FOLLOWUP_ENABLED");
     }
+    if (log.action === "WHATSAPP_CONVERSATION_HIDDEN") hiddenPhones.add(key);
   }
   const allowedKeys = new Set<string>();
 
@@ -309,7 +311,7 @@ async function loadCrmWhatsAppInbox(input: {
     const order = message.orderId ? orderById.get(message.orderId) : null;
     const phone = message.recipientPhone || order?.customer.phone || "";
     const key = conversationPhoneKey(phone);
-    if (!key || (input.allowedEventIds && !allowedKeys.has(key))) continue;
+    if (!key || hiddenPhones.has(key) || (input.allowedEventIds && !allowedKeys.has(key))) continue;
     const group = groups.get(key) || { phone, messages: [] };
     group.messages.push(message);
     groups.set(key, group);

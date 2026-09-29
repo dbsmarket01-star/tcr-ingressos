@@ -83,7 +83,7 @@ export async function sendCrmWhatsAppMessage(formData: FormData) {
   const mediaCandidates = [formData.get("media"), formData.get("audio")];
   const mediaFile = mediaCandidates.find((value): value is File => value instanceof File && value.size > 0) || null;
   if (mediaFile && mediaFile.size > 10 * 1024 * 1024) {
-    redirect(buildRedirect({ orderCode, leadId, phone, status: "erro", message: "O arquivo para envio deve ter no máximo 10MB." }));
+    return { ok: false, message: "O arquivo para envio deve ter no máximo 10MB." };
   }
   const allowedEventIds = getAdminAllowedEventIds(admin);
   const conversation = await getCrmWhatsAppConversation({
@@ -95,39 +95,15 @@ export async function sendCrmWhatsAppMessage(formData: FormData) {
   });
 
   if (!conversation.contact?.phone) {
-    redirect(
-      buildRedirect({
-        orderCode,
-        leadId,
-        phone,
-        status: "erro",
-        message: "Contato sem telefone valido para WhatsApp."
-      })
-    );
+    return { ok: false, message: "Contato sem telefone válido para WhatsApp." };
   }
 
   if (!conversation.canReply) {
-    redirect(
-      buildRedirect({
-        orderCode,
-        leadId,
-        phone,
-        status: "erro",
-        message: "Este contato ainda nao abriu uma janela de atendimento de 24h. Use um template aprovado para iniciar a conversa."
-      })
-    );
+    return { ok: false, message: "Este contato ainda não abriu uma janela de atendimento de 24h. Use um template aprovado para iniciar a conversa." };
   }
 
   if (!text && !mediaFile) {
-    redirect(
-      buildRedirect({
-        orderCode,
-        leadId,
-        phone,
-        status: "erro",
-        message: "Digite uma mensagem ou selecione um arquivo antes de enviar."
-      })
-    );
+    return { ok: false, message: "Digite uma mensagem ou selecione um arquivo antes de enviar." };
   }
 
   try {
@@ -167,26 +143,9 @@ export async function sendCrmWhatsAppMessage(formData: FormData) {
     });
     clearCrmWhatsAppInboxCache(admin.organizationId);
   } catch (error) {
-    redirect(
-      buildRedirect({
-        orderCode,
-        leadId,
-        phone,
-        status: "erro",
-        message: error instanceof Error ? error.message : "Nao foi possivel enviar a mensagem."
-      })
-    );
+    return { ok: false, message: error instanceof Error ? error.message : "Não foi possível enviar a mensagem." };
   }
-
-  redirect(
-    buildRedirect({
-      orderCode,
-      leadId,
-      phone,
-      status: "ok",
-      message: "Mensagem enviada. A IA ficará pausada nesta conversa por 12 horas."
-    })
-  );
+  return { ok: true, message: "Mensagem enviada." };
 }
 
 export async function setCrmWhatsAppAiMode(formData: FormData) {
