@@ -186,6 +186,7 @@ async function recordWhatsAppMessageLog(input: {
   providerMessageId?: string | null;
   errorMessage?: string | null;
   webhookPayload?: unknown;
+  payloadMetadata?: Record<string, unknown>;
 }) {
   const now = new Date();
 
@@ -206,11 +207,13 @@ async function recordWhatsAppMessageLog(input: {
         payload: input.templateName
           ? toJson({
               templateName: input.templateName,
-              parameters: input.parameters || []
+              parameters: input.parameters || [],
+              ...(input.payloadMetadata || {})
             })
           : input.textContent
             ? toJson({
-                text: input.textContent
+                text: input.textContent,
+                ...(input.payloadMetadata || {})
               })
           : undefined,
         webhookPayload: input.webhookPayload ? toJson(input.webhookPayload) : undefined,
@@ -516,6 +519,8 @@ export async function sendWhatsAppTextMessage(input: {
   orderId?: string | null;
   leadId?: string | null;
   recipientName?: string | null;
+  source?: string;
+  metadata?: Record<string, unknown>;
 }) {
   let to = input.to || null;
   const config = getWhatsAppConfig();
@@ -576,7 +581,11 @@ export async function sendWhatsAppTextMessage(input: {
         recipientName: input.recipientName
       },
       status: WhatsAppMessageStatus.SENT,
-      providerMessageId: extractProviderMessageId(payload)
+      providerMessageId: extractProviderMessageId(payload),
+      payloadMetadata: {
+        ...(input.source ? { source: input.source } : {}),
+        ...(input.metadata || {})
+      }
     });
 
     return payload;
@@ -594,6 +603,10 @@ export async function sendWhatsAppTextMessage(input: {
       },
       status: WhatsAppMessageStatus.FAILED,
       errorMessage: normalizeError(error),
+      payloadMetadata: {
+        ...(input.source ? { source: input.source } : {}),
+        ...(input.metadata || {})
+      },
       webhookPayload:
         error instanceof Error && "providerPayload" in error
           ? (error as Error & { providerPayload?: unknown }).providerPayload
