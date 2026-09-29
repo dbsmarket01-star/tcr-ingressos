@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 const SOUND_STORAGE_KEY = "tcr-whatsapp-notification-sound";
 const VOLUME_STORAGE_KEY = "tcr-whatsapp-notification-volume";
 const LAST_MESSAGE_STORAGE_KEY = "tcr-whatsapp-last-inbound-message";
-const FOREGROUND_POLL_MS = 3_000;
-const BACKGROUND_POLL_MS = 12_000;
+const FOREGROUND_POLL_MS = 1_000;
+const BACKGROUND_POLL_MS = 5_000;
 const DEFAULT_VOLUME = 85;
 
 type NotificationSnapshot = {
@@ -91,6 +91,7 @@ export function WhatsAppNotificationWatcher({
   const router = useRouter();
   const initialized = useRef(false);
   const pollInFlight = useRef(false);
+  const pendingNotification = useRef<NotificationSnapshot["latestInbound"]>(null);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const [liveUnreadCount, setLiveUnreadCount] = useState(unreadCount);
@@ -128,23 +129,12 @@ export function WhatsAppNotificationWatcher({
           return;
         }
         if (previousId === nextId) return;
+        if (pendingNotification.current?.id === nextId) return;
 
-        window.sessionStorage.setItem(LAST_MESSAGE_STORAGE_KEY, nextId);
-        if (soundEnabled) void playNotificationSound(volume);
-        if (document.hidden && "Notification" in window && Notification.permission === "granted") {
-          const notification = new Notification(snapshot.latestInbound?.name || "Nova mensagem no WhatsApp", {
-            body: snapshot.latestInbound?.message || "Você recebeu uma nova mensagem na Central de Conversas.",
-            icon: "/favicon.ico",
-            tag: `tcr-whatsapp-${nextId}`
-          });
-          notification.onclick = () => {
-            window.focus();
-            if (snapshot.latestInbound?.phone) {
-              window.location.href = `/admin/crm/whatsapp?phone=${encodeURIComponent(snapshot.latestInbound.phone)}`;
-            }
-            notification.close();
-          };
-        }
+        // Guarde a mensagem, mas somente avise depois que o refresh realmente
+        // entregar a conversa nova para a tela. Assim o som nunca chega antes
+        // da mensagem visível e o operador não procura uma conversa ainda antiga.
+        pendingNotification.current = snapshot.latestInbound;
         router.refresh();
       } catch {
         // Uma falha transitória não interrompe as próximas verificações.
@@ -172,6 +162,22 @@ export function WhatsAppNotificationWatcher({
     if (lastMessageId === latestInboundId) return;
     window.sessionStorage.setItem(LAST_MESSAGE_STORAGE_KEY, latestInboundId);
     if (soundEnabled) void playNotificationSound(volume);
+    const pending = pendingNotification.current?.id === latestInboundId ? pendingNotification.current : null;
+    pendingNotification.current = null;
+    if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+      const notification = new Notification(pending?.name || "Nova mensagem no WhatsApp", {
+        body: pending?.message || "Você recebeu uma nova mensagem na Central de Conversas.",
+        icon: "/favicon.ico",
+        tag: `tcr-whatsapp-${latestInboundId}`
+      });
+      notification.onclick = () => {
+        window.focus();
+        if (pending?.phone) {
+          window.location.href = `/admin/crm/whatsapp?phone=${encodeURIComponent(pending.phone)}`;
+        }
+        notification.close();
+      };
+    }
   }, [latestInboundId, soundEnabled, volume]);
 
   async function toggleSound() {
