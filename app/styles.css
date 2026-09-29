@@ -304,6 +304,11 @@
 .crmWhatsappHeaderIcon.crmWhatsappSoundToggle { appearance: none; color: #64748b; cursor: pointer; gap: 7px; padding: 0 11px; width: auto; }
 .crmWhatsappSoundToggle > span { font-size: 11px; font-weight: 800; white-space: nowrap; }
 .crmWhatsappSoundToggle.isEnabled { background: #ecfdf5; border-color: #6ee7b7; color: #047857; }
+.crmWhatsappSoundControls { align-items: center; display: flex; gap: 7px; }
+.crmWhatsappVolumeControl { align-items: center; background: #fff; border: 1px solid #dce4ed; border-radius: 12px; display: flex; gap: 6px; height: 44px; padding: 0 9px; }
+.crmWhatsappVolumeControl > span { font-size: 14px; }
+.crmWhatsappVolumeControl input { accent-color: #078a4e; cursor: pointer; width: 72px; }
+.crmWhatsappVolumeControl output { color: #475569; font-size: 10px; font-weight: 800; min-width: 30px; }
 .crmWhatsappUser { align-items: center; background: #fff; border: 1px solid #dce4ed; border-radius: 12px; display: flex; gap: 10px; min-height: 44px; padding: 4px 13px 4px 7px; }
 .crmWhatsappUser > i { align-items: center; background: #087a46; border-radius: 999px; color: #fff; display: flex; font-size: 11px; font-style: normal; font-weight: 900; height: 34px; justify-content: center; width: 34px; }
 .crmWhatsappUser > span { display: grid; }
@@ -387,6 +392,10 @@
   .crmWhatsappGlobalSearch kbd { display: none; }
   .crmWhatsappHeaderIcon.crmWhatsappSoundToggle { display: inline-flex; }
   .crmWhatsappSoundToggle > span { display: none; }
+  .crmWhatsappSoundControls { margin-left: auto; }
+  .crmWhatsappVolumeControl { padding: 0 7px; }
+  .crmWhatsappVolumeControl input { width: 58px; }
+  .crmWhatsappVolumeControl output { display: none; }
   .crmWhatsappStatusTabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
   .crmWhatsappStatusTabs a { flex: 0 0 auto; }
   .crmWhatsappShell { height: auto; min-height: 0; grid-template-columns: 1fr; }
