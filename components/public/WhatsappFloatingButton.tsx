@@ -1,16 +1,33 @@
 type WhatsappFloatingButtonProps = {
   href: string;
   label?: string;
+  prefilledMessage?: string;
 };
+
+export function buildWhatsappHref(href: string, prefilledMessage?: string) {
+  const message = prefilledMessage?.trim();
+  if (!message) return href;
+
+  try {
+    const url = new URL(href);
+    url.searchParams.set("text", message);
+    return url.toString();
+  } catch {
+    return href;
+  }
+}
 
 export function WhatsappFloatingButton({
   href,
-  label = "Falar no WhatsApp"
+  label = "Falar no WhatsApp",
+  prefilledMessage
 }: WhatsappFloatingButtonProps) {
+  const whatsappHref = buildWhatsappHref(href, prefilledMessage);
+
   return (
     <a
       className="whatsappFloatingButton"
-      href={href}
+      href={whatsappHref}
       target="_blank"
       rel="noreferrer noopener"
       aria-label={label}

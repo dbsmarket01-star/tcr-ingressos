@@ -658,7 +658,12 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         </section>
       ) : null}
       <PublicSiteFooter brandName={organizationContext.brandName} settings={publicSocialSettings} />
-      {event.supportWhatsappUrl ? <WhatsappFloatingButton href={event.supportWhatsappUrl} /> : null}
+      {event.supportWhatsappUrl ? (
+        <WhatsappFloatingButton
+          href={event.supportWhatsappUrl}
+          prefilledMessage={`Quero tirar uma dúvida no site da TCR Ingressos sobre o evento ${event.title}.`}
+        />
+      ) : null}
     </main>
   );
 }
