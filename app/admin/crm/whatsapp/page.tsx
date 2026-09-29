@@ -12,7 +12,7 @@ import { WhatsAppMessageScroller } from "./WhatsAppMessageScroller";
 
 export const dynamic = "force-dynamic";
 
-type CrmWhatsAppPageProps = { searchParams?: Promise<{ leadId?: string; message?: string; orderCode?: string; phone?: string; search?: string; status?: string }> };
+type CrmWhatsAppPageProps = { searchParams?: Promise<{ leadId?: string; limit?: string; message?: string; orderCode?: string; phone?: string; search?: string; status?: string }> };
 type IconName = "search" | "filter" | "bell" | "dots" | "star" | "clock" | "kanban" | "plus" | "smile" | "clip" | "send" | "check";
 
 function Icon({ name }: { name: IconName }) {
@@ -98,6 +98,9 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
               ? item.abandonedWithoutReturn
               : true
   );
+  const requestedLimit = Number(params.limit || 120);
+  const displayLimit = Number.isFinite(requestedLimit) ? Math.min(Math.max(Math.trunc(requestedLimit), 60), 600) : 120;
+  const visibleInbox = inbox.slice(0, displayLimit);
   const latestInbound = rawInbox
     .filter((item) => item.latestInboundId && item.latestInboundAt)
     .sort((left, right) => right.latestInboundAt!.getTime() - left.latestInboundAt!.getTime())[0];
@@ -123,18 +126,18 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
         <div className="crmWhatsappHeaderTools"><form action="/admin/crm/whatsapp" className="crmWhatsappGlobalSearch" method="get"><Icon name="search"/><input name="search" placeholder="Buscar conversas, contatos ou pedidos..." defaultValue={params.search || ""}/><kbd>⌘ K</kbd></form><WhatsAppNotificationWatcher latestInboundId={latestInbound?.latestInboundId || null} unreadCount={visualUnreadCount}/><span className="crmWhatsappUser"><i>{initials(admin.name)}</i><span><strong>{admin.name}</strong><small>{admin.role}</small></span></span></div>
       </header>
 
-      <nav className="crmWhatsappStatusTabs" aria-label="Filtrar conversas por status">{[["all", "Todos", counters.all], ["unread", "Não lidos", counters.unread], ["human", "Atendimento humano", counters.human], ["followup", "Em atendimento / Follow-up", counters.followup], ["closed", "Fechados", counters.closed], ["abandoned", "Carrinho abandonado sem retorno", counters.abandoned]].map(([key, label, count]) => <Link className={`${activeStatus === key ? "isActive" : ""} ${key === "human" ? "isHuman" : ""}`.trim()} href={statusHref(String(key))} key={String(key)}>{label}<b>{count}</b></Link>)}</nav>
+      <nav className="crmWhatsappStatusTabs" aria-label="Filtrar conversas por status">{[["all", "Todos", counters.all], ["unread", "Não lidos", counters.unread], ["human", "Atendimento humano", counters.human], ["followup", "Em atendimento / Follow-up", counters.followup], ["closed", "Fechados", counters.closed], ["abandoned", "Carrinho abandonado sem retorno", counters.abandoned]].map(([key, label, count]) => <Link className={`${activeStatus === key ? "isActive" : ""} ${key === "human" ? "isHuman" : ""}`.trim()} href={statusHref(String(key))} key={String(key)} prefetch={false}>{label}<b>{count}</b></Link>)}</nav>
       {params.status === "erro" || params.status === "ok" ? <div className={`crmWhatsappFeedback ${params.status === "erro" ? "isError" : "isSuccess"}`}>{params.message || "Mensagem enviada."}</div> : null}
 
       <section className="crmWhatsappShell">
         <aside className="crmWhatsappInboxPanel">
           <form action="/admin/crm/whatsapp" className="crmWhatsappInboxSearch" method="get">{activeStatus !== "all" ? <input name="status" type="hidden" value={activeStatus}/> : null}<label><Icon name="search"/><input name="search" placeholder="Buscar conversa..." defaultValue={params.search || ""}/></label><button aria-label="Aplicar busca" type="submit"><Icon name="filter"/></button></form>
-          <nav className="crmWhatsappInboxList" aria-label="Conversas do WhatsApp">{inbox.length === 0 ? <p className="crmWhatsappInboxEmpty">Nenhuma conversa encontrada.</p> : null}{inbox.map((item) => {
+          <nav className="crmWhatsappInboxList" aria-label="Conversas do WhatsApp">{inbox.length === 0 ? <p className="crmWhatsappInboxEmpty">Nenhuma conversa encontrada.</p> : null}{visibleInbox.map((item) => {
             const query = new URLSearchParams(); if (item.orderCode) query.set("orderCode", item.orderCode); else query.set("phone", item.phone); if (params.search) query.set("search", params.search); if (activeStatus !== "all") query.set("status", activeStatus);
             const isActive = (selectedOrderCode && selectedOrderCode === item.orderCode) || (!selectedOrderCode && selectedPhone && selectedPhone.replace(/\D/g, "").endsWith(item.key)); const tags = item.eventTitle.split(" em ");
             const currentInboxDay = inboxDayKey(item.latestAt); const showInboxDay = currentInboxDay !== lastInboxDay; lastInboxDay = currentInboxDay;
-            return <div key={item.key}>{showInboxDay ? <div style={{ padding: "9px 14px 5px", color: "#64748b", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em" }}>{inboxDayLabel(item.latestAt)}</div> : null}<div className={`crmWhatsappInboxItem ${isActive ? "isActive" : ""}`}><Link className="crmWhatsappInboxMainLink" href={`/admin/crm/whatsapp?${query}`} prefetch scroll={false}><span className="crmWhatsappInboxAvatar">{initials(item.name)}</span><span className="crmWhatsappInboxCopy"><span className="crmWhatsappInboxName"><strong>{item.name}</strong><time>{timeLabel(item.latestAt)}</time></span><span className="crmWhatsappInboxPreview">{item.lastDirection === "outbound" ? "Você: " : ""}{item.latestMessage}</span><span className="crmWhatsappInboxTags"><small>{inboxStatusLabel(item)}</small><small>{tags[0]}</small>{tags[1] ? <small>{tags[1]}</small> : null}</span></span>{item.hasUnread ? <WhatsAppUnreadBadge phone={item.phone}/> : null}</Link><details className="crmWhatsappInboxMenu"><summary aria-label={`Opções de ${item.name}`}>⋮</summary><form action={setCrmWhatsAppFollowUp}><input name="phone" type="hidden" value={item.phone}/><input name="enabled" type="hidden" value={item.followUp ? "false" : "true"}/><button type="submit">{item.followUp ? "Remover de Em atendimento / Follow-up" : "Mover para Em atendimento / Follow-up"}</button></form></details></div></div>;
-          })}</nav>
+            return <div key={item.key}>{showInboxDay ? <div style={{ padding: "9px 14px 5px", color: "#64748b", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em" }}>{inboxDayLabel(item.latestAt)}</div> : null}<div className={`crmWhatsappInboxItem ${isActive ? "isActive" : ""}`}><Link className="crmWhatsappInboxMainLink" href={`/admin/crm/whatsapp?${query}`} prefetch={false} scroll={false}><span className="crmWhatsappInboxAvatar">{initials(item.name)}</span><span className="crmWhatsappInboxCopy"><span className="crmWhatsappInboxName"><strong>{item.name}</strong><time>{timeLabel(item.latestAt)}</time></span><span className="crmWhatsappInboxPreview">{item.lastDirection === "outbound" ? "Você: " : ""}{item.latestMessage}</span><span className="crmWhatsappInboxTags"><small>{inboxStatusLabel(item)}</small><small>{tags[0]}</small>{tags[1] ? <small>{tags[1]}</small> : null}</span></span>{item.hasUnread ? <WhatsAppUnreadBadge phone={item.phone}/> : null}</Link><details className="crmWhatsappInboxMenu"><summary aria-label={`Opções de ${item.name}`}>⋮</summary><form action={setCrmWhatsAppFollowUp}><input name="phone" type="hidden" value={item.phone}/><input name="enabled" type="hidden" value={item.followUp ? "false" : "true"}/><button type="submit">{item.followUp ? "Remover de Em atendimento / Follow-up" : "Mover para Em atendimento / Follow-up"}</button></form></details></div></div>;
+          })}{visibleInbox.length < inbox.length ? <Link className="crmWhatsappInboxEmpty" href={statusHref(activeStatus) + `${statusHref(activeStatus).includes("?") ? "&" : "?"}limit=${Math.min(displayLimit + 120, 600)}`} prefetch={false} scroll={false}>Carregar mais conversas ({inbox.length - visibleInbox.length} restantes)</Link> : null}</nav>
         </aside>
 
         <div className="crmWhatsappConversation">
