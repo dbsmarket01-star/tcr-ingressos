@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { OrderStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { resolveWhatsAppAiConversationMode } from "@/features/ai/whatsapp-support-ai.service";
 
@@ -181,7 +181,7 @@ async function loadCrmWhatsAppInbox(input: {
       }
     },
     orderBy: { createdAt: "desc" },
-    take: 800,
+    take: 5000,
     select: {
       id: true,
       orderId: true,
@@ -209,6 +209,7 @@ async function loadCrmWhatsAppInbox(input: {
         select: {
           id: true,
           code: true,
+          status: true,
           customer: { select: { name: true, phone: true } },
           event: { select: { id: true, title: true } }
         }
@@ -230,6 +231,7 @@ async function loadCrmWhatsAppInbox(input: {
         orderBy: { createdAt: "desc" },
         select: {
           code: true,
+          status: true,
           customer: { select: { name: true, phone: true } },
           event: { select: { title: true } }
         }
@@ -255,6 +257,30 @@ async function loadCrmWhatsAppInbox(input: {
     const key = log.entityId.slice(`${input.organizationId}:`.length);
     if (!key || aiModeByPhone.has(key)) continue;
     aiModeByPhone.set(key, resolveWhatsAppAiConversationMode({ action: log.action, metadata: log.metadata }));
+  }
+  const workflowLogs = await prisma.adminAuditLog.findMany({
+    where: {
+      entityType: "WHATSAPP_CONVERSATION",
+      entityId: { startsWith: `${input.organizationId}:` },
+      action: { in: ["WHATSAPP_CONVERSATION_READ", "WHATSAPP_FOLLOWUP_ENABLED", "WHATSAPP_FOLLOWUP_DISABLED"] }
+    },
+    orderBy: { createdAt: "desc" },
+    select: { action: true, entityId: true, metadata: true, createdAt: true }
+  });
+  const latestReadAtByPhone = new Map<string, Date>();
+  const hasEverBeenRead = new Set<string>();
+  const followUpByPhone = new Map<string, boolean>();
+  for (const log of workflowLogs) {
+    if (!log.entityId) continue;
+    const key = log.entityId.slice(`${input.organizationId}:`.length);
+    if (!key) continue;
+    if (log.action === "WHATSAPP_CONVERSATION_READ") {
+      hasEverBeenRead.add(key);
+      if (!latestReadAtByPhone.has(key)) latestReadAtByPhone.set(key, log.createdAt);
+    }
+    if ((log.action === "WHATSAPP_FOLLOWUP_ENABLED" || log.action === "WHATSAPP_FOLLOWUP_DISABLED") && !followUpByPhone.has(key)) {
+      followUpByPhone.set(key, log.action === "WHATSAPP_FOLLOWUP_ENABLED");
+    }
   }
   const allowedKeys = new Set<string>();
 
@@ -308,9 +334,17 @@ async function loadCrmWhatsAppInbox(input: {
         );
       const name = order?.customer.name || [...messages].reverse().find((message) => message.recipientName)?.recipientName || "Contato";
       const eventTitle = order?.event.title || "Conversa pelo WhatsApp";
-      const needsReply = Boolean(
-        latestInbound &&
-          (!latestHumanOutbound || latestInbound.createdAt.getTime() > latestHumanOutbound.createdAt.getTime())
+      const auditedReadAt = latestReadAtByPhone.get(key);
+      const latestReadAt = [auditedReadAt, latestHumanOutbound?.createdAt]
+        .filter((value): value is Date => Boolean(value))
+        .sort((left, right) => right.getTime() - left.getTime())[0];
+      const wasAlreadyAttended = hasEverBeenRead.has(key) || Boolean(latestHumanOutbound);
+      const hasUnread = Boolean(latestInbound && (!latestReadAt || latestInbound.createdAt > latestReadAt));
+      const unreadQueue = hasUnread && !wasAlreadyAttended;
+      const cartMessage = [...messages].reverse().find((message) => message.type === "CART_ABANDONMENT" && message.status !== "FAILED");
+      const hasPaidOrder = phoneOrders.some((candidate) => conversationPhoneKey(candidate.customer.phone) === key && candidate.status === OrderStatus.PAID);
+      const abandonedWithoutReturn = Boolean(
+        cartMessage && !hasPaidOrder && (!latestInbound || latestInbound.createdAt <= cartMessage.createdAt)
       );
       const item = {
         key,
@@ -323,7 +357,12 @@ async function loadCrmWhatsAppInbox(input: {
         latestInboundId: latestInbound?.id || null,
         latestInboundAt: latestInbound?.createdAt || null,
         latestInboundMessage: latestInbound ? messageContent(latestInbound) : null,
-        needsReply,
+        needsReply: hasUnread,
+        hasUnread,
+        unreadQueue,
+        followUp: followUpByPhone.get(key) || false,
+        isClosed: hasPaidOrder,
+        abandonedWithoutReturn,
         canReply: Boolean(latestInbound && Date.now() - latestInbound.createdAt.getTime() < 24 * 60 * 60 * 1000),
         lastDirection: latest.status === "RECEIVED" ? ("inbound" as const) : ("outbound" as const),
         lastOutboundAt: latestOutbound?.createdAt || null,
@@ -337,8 +376,7 @@ async function loadCrmWhatsAppInbox(input: {
         .filter(Boolean)
         .some((value) => String(value).toLocaleLowerCase("pt-BR").includes(search));
     })
-    .sort((a, b) => b.latestAt.getTime() - a.latestAt.getTime())
-    .slice(0, 120);
+    .sort((a, b) => b.latestAt.getTime() - a.latestAt.getTime());
 }
 
 export function clearCrmWhatsAppInboxCache(organizationId?: string) {

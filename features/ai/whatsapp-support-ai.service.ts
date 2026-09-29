@@ -655,6 +655,12 @@ async function processInboundMessage(message: MetaTextMessage) {
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     console.error("[WhatsApp AI] Falha ao atender mensagem", { providerMessageId: message.id, error: detail });
+    await setWhatsAppAiConversationState({
+      organizationId: inbound.organizationId,
+      phone: message.from,
+      mode: "HANDOFF",
+      reason: "A IA não conseguiu responder com segurança; atendimento humano solicitado."
+    });
     await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "FAILED", error: detail.slice(0, 500) });
   }
 }

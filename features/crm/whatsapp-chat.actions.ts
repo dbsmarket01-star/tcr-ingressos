@@ -6,6 +6,7 @@ import { clearCrmWhatsAppInboxCache, getCrmWhatsAppConversation } from "@/featur
 import { sendCartAbandonmentWhatsApp, sendWhatsAppMediaMessage, sendWhatsAppTextMessage, type WhatsAppMediaKind } from "@/features/whatsapp/whatsapp.service";
 import { setWhatsAppAiConversationState } from "@/features/ai/whatsapp-support-ai.service";
 import { savePublicMediaUpload } from "@/features/uploads/local-upload.service";
+import { prisma } from "@/lib/prisma";
 
 const recentTextSends = new Map<string, { expiresAt: number; promise: Promise<unknown> }>();
 const TEXT_SEND_DEDUPLICATION_MS = 20_000;
@@ -221,6 +222,25 @@ export async function setCrmWhatsAppAiMode(formData: FormData) {
       message: mode === "ACTIVE" ? "Atendimento automatico reativado." : "IA pausada; atendimento humano ativo."
     })
   );
+}
+
+export async function setCrmWhatsAppFollowUp(formData: FormData) {
+  const admin = await requirePermission("CRM");
+  const phone = getFormText(formData, "phone");
+  const enabled = getFormText(formData, "enabled") === "true";
+  const key = phone.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
+  if (!key) redirect(buildRedirect({ status: "erro", message: "Conversa sem telefone válido." }));
+  await prisma.adminAuditLog.create({
+    data: {
+      adminUserId: admin.id,
+      action: enabled ? "WHATSAPP_FOLLOWUP_ENABLED" : "WHATSAPP_FOLLOWUP_DISABLED",
+      entityType: "WHATSAPP_CONVERSATION",
+      entityId: `${admin.organizationId}:${key}`,
+      metadata: { phone }
+    }
+  });
+  clearCrmWhatsAppInboxCache(admin.organizationId);
+  redirect(buildRedirect({ phone, status: "ok", message: enabled ? "Conversa movida para Em atendimento / Follow-up." : "Conversa removida do Follow-up." }));
 }
 
 export async function sendCrmWhatsAppApprovedTemplate(formData: FormData) {
