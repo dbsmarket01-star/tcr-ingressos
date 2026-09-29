@@ -333,6 +333,8 @@
 .crmWhatsappInboxList { max-height: none; overflow-y: auto; }
 .crmWhatsappInboxItem { align-items: center; border-bottom: 1px solid #edf1f5; color: inherit; display: grid; gap: 11px; grid-template-columns: 44px minmax(0, 1fr) auto; min-height: 78px; padding: 10px 13px; text-decoration: none; }
 .crmWhatsappInboxItem:hover { background: #f8fbfa; }
+.crmWhatsappInboxItem:active { background: #e3f7ed; transform: translateY(1px); }
+.crmWhatsappInboxItem { transition: background-color .12s ease, box-shadow .12s ease, transform .08s ease; }
 .crmWhatsappInboxItem.isActive { background: #effaf5; box-shadow: inset 3px 0 #0a9a57; }
 .crmWhatsappInboxAvatar, .crmWhatsappContactAvatar { align-items: center; background: #d8f6e6; border-radius: 999px; color: #087f48; display: flex; font-size: 13px; font-weight: 900; height: 44px; justify-content: center; width: 44px; }
 .crmWhatsappInboxCopy { display: grid; gap: 3px; min-width: 0; }

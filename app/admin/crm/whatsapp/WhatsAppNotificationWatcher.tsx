@@ -6,8 +6,20 @@ import { useRouter } from "next/navigation";
 const SOUND_STORAGE_KEY = "tcr-whatsapp-notification-sound";
 const VOLUME_STORAGE_KEY = "tcr-whatsapp-notification-volume";
 const LAST_MESSAGE_STORAGE_KEY = "tcr-whatsapp-last-inbound-message";
-const REFRESH_INTERVAL_MS = 6_000;
+const FOREGROUND_POLL_MS = 3_000;
+const BACKGROUND_POLL_MS = 12_000;
 const DEFAULT_VOLUME = 85;
+
+type NotificationSnapshot = {
+  latestInbound?: {
+    id?: string | null;
+    at?: string | null;
+    name?: string | null;
+    message?: string | null;
+    phone?: string | null;
+  } | null;
+  unreadCount?: number;
+};
 
 function BellIcon({ muted }: { muted: boolean }) {
   return <svg aria-hidden="true" className="crmWaIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -52,8 +64,10 @@ export function WhatsAppNotificationWatcher({
 }) {
   const router = useRouter();
   const initialized = useRef(false);
+  const pollInFlight = useRef(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [volume, setVolume] = useState(DEFAULT_VOLUME);
+  const [liveUnreadCount, setLiveUnreadCount] = useState(unreadCount);
 
   useEffect(() => {
     setSoundEnabled(window.localStorage.getItem(SOUND_STORAGE_KEY) === "on");
@@ -62,10 +76,63 @@ export function WhatsAppNotificationWatcher({
     if (Number.isFinite(storedVolume) && storedVolume >= 0 && storedVolume <= 100) setVolume(storedVolume);
   }, []);
 
+  useEffect(() => setLiveUnreadCount(unreadCount), [unreadCount]);
+
   useEffect(() => {
-    const timer = window.setInterval(() => router.refresh(), REFRESH_INTERVAL_MS);
-    return () => window.clearInterval(timer);
-  }, [router]);
+    let stopped = false;
+    let timer: number | undefined;
+
+    async function poll() {
+      if (stopped || pollInFlight.current) return;
+      pollInFlight.current = true;
+      try {
+        const response = await fetch("/api/admin/crm/whatsapp/notifications", {
+          cache: "no-store",
+          headers: { Accept: "application/json" }
+        });
+        if (!response.ok) return;
+        const snapshot = (await response.json()) as NotificationSnapshot;
+        setLiveUnreadCount(Number(snapshot.unreadCount || 0));
+        const nextId = snapshot.latestInbound?.id;
+        if (!nextId) return;
+        const previousId = window.sessionStorage.getItem(LAST_MESSAGE_STORAGE_KEY);
+        if (!previousId) {
+          window.sessionStorage.setItem(LAST_MESSAGE_STORAGE_KEY, nextId);
+          return;
+        }
+        if (previousId === nextId) return;
+
+        window.sessionStorage.setItem(LAST_MESSAGE_STORAGE_KEY, nextId);
+        if (soundEnabled) playNotificationSound(volume);
+        if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+          const notification = new Notification(snapshot.latestInbound?.name || "Nova mensagem no WhatsApp", {
+            body: snapshot.latestInbound?.message || "Você recebeu uma nova mensagem na Central de Conversas.",
+            icon: "/favicon.ico",
+            tag: `tcr-whatsapp-${nextId}`
+          });
+          notification.onclick = () => {
+            window.focus();
+            if (snapshot.latestInbound?.phone) {
+              window.location.href = `/admin/crm/whatsapp?phone=${encodeURIComponent(snapshot.latestInbound.phone)}`;
+            }
+            notification.close();
+          };
+        }
+        router.refresh();
+      } catch {
+        // Uma falha transitória não interrompe as próximas verificações.
+      } finally {
+        pollInFlight.current = false;
+        if (!stopped) timer = window.setTimeout(poll, document.hidden ? BACKGROUND_POLL_MS : FOREGROUND_POLL_MS);
+      }
+    }
+
+    timer = window.setTimeout(poll, FOREGROUND_POLL_MS);
+    return () => {
+      stopped = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [router, soundEnabled, volume]);
 
   useEffect(() => {
     if (!latestInboundId) return;
@@ -84,7 +151,10 @@ export function WhatsAppNotificationWatcher({
     const next = !soundEnabled;
     setSoundEnabled(next);
     window.localStorage.setItem(SOUND_STORAGE_KEY, next ? "on" : "off");
-    if (next) playNotificationSound(volume);
+    if (next) {
+      playNotificationSound(volume);
+      if ("Notification" in window && Notification.permission === "default") void Notification.requestPermission();
+    }
   }
 
   function changeVolume(nextVolume: number) {
@@ -101,7 +171,7 @@ export function WhatsAppNotificationWatcher({
       type="button"
     >
       <BellIcon muted={!soundEnabled}/>
-      {unreadCount ? <b>{unreadCount}</b> : null}
+      {liveUnreadCount ? <b>{liveUnreadCount}</b> : null}
       <span>{soundEnabled ? "Som ligado" : "Ativar som"}</span>
     </button>
     <label className="crmWhatsappVolumeControl" title={`Volume das notificações: ${volume}%`}>
