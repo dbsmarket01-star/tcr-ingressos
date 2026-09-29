@@ -5,6 +5,7 @@ import { sendWhatsAppTextMessage } from "@/features/whatsapp/whatsapp.service";
 const AI_SOURCE = "TCR_WHATSAPP_AI";
 const DEFAULT_MODEL = "gpt-5.4-mini";
 const DEFAULT_MONTHLY_LIMIT = 2_000;
+const DEFAULT_HUMAN_PAUSE_HOURS = 12;
 const MAX_CONTEXT_MESSAGES = 12;
 const MAX_CUSTOMER_ORDERS = 5;
 
@@ -173,6 +174,31 @@ function conversationStateAction(action?: string | null) {
   return null;
 }
 
+function humanPauseHours() {
+  const configured = Number(process.env.WHATSAPP_AI_HUMAN_PAUSE_HOURS || DEFAULT_HUMAN_PAUSE_HOURS);
+  return Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_HUMAN_PAUSE_HOURS;
+}
+
+export function humanPauseUntil(from = new Date()) {
+  return new Date(from.getTime() + humanPauseHours() * 60 * 60 * 1_000);
+}
+
+export function resolveWhatsAppAiConversationMode(input: {
+  action?: string | null;
+  metadata?: Prisma.JsonValue | null;
+  now?: Date;
+}) {
+  const explicit = conversationStateAction(input.action);
+  if (explicit !== "PAUSED") return explicit || ("ACTIVE" as const);
+
+  const pausedUntilValue = jsonObject(input.metadata).pausedUntil;
+  const pausedUntil = typeof pausedUntilValue === "string" ? new Date(pausedUntilValue) : null;
+  if (pausedUntil && Number.isFinite(pausedUntil.getTime()) && pausedUntil.getTime() <= (input.now || new Date()).getTime()) {
+    return "ACTIVE" as const;
+  }
+  return "PAUSED" as const;
+}
+
 export async function getWhatsAppAiConversationState(organizationId: string, phone?: string | null) {
   const key = phoneKey(phone);
   if (!key || !isEnabled()) return { mode: "DISABLED" as const, reason: "IA desativada no ambiente." };
@@ -185,11 +211,16 @@ export async function getWhatsAppAiConversationState(organizationId: string, pho
     orderBy: { createdAt: "desc" },
     select: { action: true, metadata: true, createdAt: true }
   });
-  const explicit = conversationStateAction(latest?.action);
+  const mode = resolveWhatsAppAiConversationMode({ action: latest?.action, metadata: latest?.metadata });
+  const metadata = jsonObject(latest?.metadata);
   return {
-    mode: explicit || ("ACTIVE" as const),
-    reason: String(jsonObject(latest?.metadata).reason || "Atendimento automatico ativo."),
-    changedAt: latest?.createdAt || null
+    mode,
+    reason:
+      mode === "ACTIVE" && latest?.action === "WHATSAPP_AI_PAUSED"
+        ? "Pausa do atendimento humano encerrada; IA reativada automaticamente."
+        : String(metadata.reason || "Atendimento automatico ativo."),
+    changedAt: latest?.createdAt || null,
+    pausedUntil: typeof metadata.pausedUntil === "string" ? metadata.pausedUntil : null
   };
 }
 
@@ -208,6 +239,7 @@ export async function setWhatsAppAiConversationState(input: {
       : input.mode === "HANDOFF"
         ? "WHATSAPP_AI_HANDOFF"
         : "WHATSAPP_AI_PAUSED";
+  const pausedUntil = input.mode === "PAUSED" ? humanPauseUntil() : null;
   await prisma.adminAuditLog.create({
     data: {
       adminUserId: input.adminUserId || null,
@@ -216,7 +248,8 @@ export async function setWhatsAppAiConversationState(input: {
       entityId: `${input.organizationId}:${key}`,
       metadata: {
         phone: key,
-        reason: input.reason || (input.mode === "ACTIVE" ? "IA reativada." : "Atendimento humano assumiu a conversa.")
+        reason: input.reason || (input.mode === "ACTIVE" ? "IA reativada." : "Atendimento humano assumiu a conversa."),
+        pausedUntil: pausedUntil?.toISOString() || null
       }
     }
   });

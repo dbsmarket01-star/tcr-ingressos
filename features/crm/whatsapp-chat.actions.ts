@@ -130,7 +130,7 @@ export async function sendCrmWhatsAppMessage(formData: FormData) {
       organizationId: admin.organizationId,
       phone: conversation.contact.phone,
       mode: "PAUSED",
-      reason: "Atendente humano enviou uma mensagem.",
+      reason: "Atendente humano enviou uma mensagem; IA pausada automaticamente por 12 horas.",
       adminUserId: admin.id
     });
     clearCrmWhatsAppInboxCache(admin.organizationId);
@@ -152,7 +152,7 @@ export async function sendCrmWhatsAppMessage(formData: FormData) {
       leadId,
       phone,
       status: "ok",
-      message: "Mensagem enviada."
+      message: "Mensagem enviada. A IA ficará pausada nesta conversa por 12 horas."
     })
   );
 }

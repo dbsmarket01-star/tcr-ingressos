@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { resolveWhatsAppAiConversationMode } from "@/features/ai/whatsapp-support-ai.service";
 
 type EventScope = string[] | null | undefined;
 
@@ -171,17 +172,14 @@ async function loadCrmWhatsAppInbox(input: {
       action: { in: ["WHATSAPP_AI_ENABLED", "WHATSAPP_AI_PAUSED", "WHATSAPP_AI_HANDOFF"] }
     },
     orderBy: { createdAt: "desc" },
-    select: { action: true, entityId: true }
+    select: { action: true, entityId: true, metadata: true }
   });
   const aiModeByPhone = new Map<string, "ACTIVE" | "PAUSED" | "HANDOFF">();
   for (const log of aiStateLogs) {
     if (!log.entityId) continue;
     const key = log.entityId.slice(`${input.organizationId}:`.length);
     if (!key || aiModeByPhone.has(key)) continue;
-    aiModeByPhone.set(
-      key,
-      log.action === "WHATSAPP_AI_HANDOFF" ? "HANDOFF" : log.action === "WHATSAPP_AI_PAUSED" ? "PAUSED" : "ACTIVE"
-    );
+    aiModeByPhone.set(key, resolveWhatsAppAiConversationMode({ action: log.action, metadata: log.metadata }));
   }
   const allowedKeys = new Set<string>();
 
