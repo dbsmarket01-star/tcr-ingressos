@@ -82,7 +82,22 @@ function mediaFromPayload(payload: Prisma.JsonValue | null | undefined): ChatMed
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
   const object = payload as Record<string, unknown>;
   const candidate = object.media || object._tcrMedia;
-  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null;
+  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) {
+    for (const kind of ["image", "audio", "video", "document", "sticker"]) {
+      const raw = object[kind];
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+      const media = raw as Record<string, unknown>;
+      if (typeof media.id !== "string" || !media.id) continue;
+      return {
+        kind,
+        url: `/api/admin/crm/whatsapp/media/${encodeURIComponent(media.id)}`,
+        fileName: typeof media.filename === "string" ? media.filename : null,
+        mimeType: typeof media.mime_type === "string" ? media.mime_type : null,
+        caption: typeof media.caption === "string" ? media.caption : null
+      };
+    }
+    return null;
+  }
   const media = candidate as Record<string, unknown>;
   return {
     kind: typeof media.kind === "string" ? media.kind : "document",

@@ -781,6 +781,24 @@ async function downloadInboundWhatsAppMedia(message: WhatsAppInboundMessage) {
   }
 }
 
+export async function fetchWhatsAppMediaById(mediaId: string) {
+  const token = getWhatsAppConfig().token;
+  if (!token) throw new Error("WhatsApp Business API nao configurada.");
+  if (!/^[A-Za-z0-9._-]{6,200}$/.test(mediaId)) throw new Error("Identificador de mídia inválido.");
+  const metadataResponse = await fetch(`https://graph.facebook.com/${getWhatsAppApiVersion()}/${mediaId}`, {
+    headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(12_000), cache: "no-store"
+  });
+  if (!metadataResponse.ok) throw new Error(`Mídia indisponível na Meta (HTTP ${metadataResponse.status}).`);
+  const metadata = (await metadataResponse.json()) as { url?: string; mime_type?: string; file_size?: number };
+  if (!metadata.url) throw new Error("Meta não retornou a URL da mídia.");
+  const response = await fetch(metadata.url, { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(20_000), cache: "no-store" });
+  if (!response.ok) throw new Error(`Não foi possível baixar a mídia (HTTP ${response.status}).`);
+  return {
+    body: await response.arrayBuffer(),
+    mimeType: metadata.mime_type || response.headers.get("content-type") || "application/octet-stream"
+  };
+}
+
 export async function handleWhatsAppMetaWebhook(payload: unknown) {
   const body = payload as WhatsAppWebhookPayload;
   const statuses =
