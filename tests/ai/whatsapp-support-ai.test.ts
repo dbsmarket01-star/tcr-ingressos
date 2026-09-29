@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseWhatsAppAiDecision } from "@/features/ai/whatsapp-support-ai.service";
+import { isHumanHandoffRequest, parseWhatsAppAiDecision } from "@/features/ai/whatsapp-support-ai.service";
 
 describe("WhatsApp support AI", () => {
   it("reads a structured Responses API decision", () => {
@@ -35,5 +35,20 @@ describe("WhatsApp support AI", () => {
         output_text: JSON.stringify({ outcome: "REFUND", reply: "", reason: "", topic: "" })
       })
     ).toThrow("decisao invalida");
+  });
+});
+
+describe("human handoff intent", () => {
+  it.each([
+    "Quero falar com atendente",
+    "preciso de uma atendente",
+    "Tem como falar com uma pessoa?",
+    "quero atendimento humano"
+  ])("identifica solicitação humana: %s", (message) => {
+    expect(isHumanHandoffRequest(message)).toBe(true);
+  });
+
+  it("não confunde uma dúvida comum com pedido de atendente", () => {
+    expect(isHumanHandoffRequest("A cadeira duplo serve para duas pessoas?")).toBe(false);
   });
 });

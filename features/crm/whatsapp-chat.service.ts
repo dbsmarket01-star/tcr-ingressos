@@ -49,6 +49,12 @@ function textFromPayload(payload: Prisma.JsonValue | null | undefined) {
   return typeof data.body === "string" ? data.body : null;
 }
 
+function payloadSource(payload: Prisma.JsonValue | null | undefined) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+  const source = (payload as { source?: unknown }).source;
+  return typeof source === "string" ? source : null;
+}
+
 function templatePreview(payload: Prisma.JsonValue | null | undefined, templateName?: string | null) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     return templateName ? `Template: ${templateName}` : "Mensagem enviada";
@@ -158,6 +164,25 @@ async function loadCrmWhatsAppInbox(input: {
     const key = conversationPhoneKey(order.customer.phone);
     if (key && !orderByPhone.has(key)) orderByPhone.set(key, order);
   }
+  const aiStateLogs = await prisma.adminAuditLog.findMany({
+    where: {
+      entityType: "WHATSAPP_CONVERSATION",
+      entityId: { startsWith: `${input.organizationId}:` },
+      action: { in: ["WHATSAPP_AI_ENABLED", "WHATSAPP_AI_PAUSED", "WHATSAPP_AI_HANDOFF"] }
+    },
+    orderBy: { createdAt: "desc" },
+    select: { action: true, entityId: true }
+  });
+  const aiModeByPhone = new Map<string, "ACTIVE" | "PAUSED" | "HANDOFF">();
+  for (const log of aiStateLogs) {
+    if (!log.entityId) continue;
+    const key = log.entityId.slice(`${input.organizationId}:`.length);
+    if (!key || aiModeByPhone.has(key)) continue;
+    aiModeByPhone.set(
+      key,
+      log.action === "WHATSAPP_AI_HANDOFF" ? "HANDOFF" : log.action === "WHATSAPP_AI_PAUSED" ? "PAUSED" : "ACTIVE"
+    );
+  }
   const allowedKeys = new Set<string>();
 
   for (const message of scopedOutbound) {
@@ -202,7 +227,12 @@ async function loadCrmWhatsAppInbox(input: {
       const latestOutbound = [...messages].reverse().find((message) => message.status !== "RECEIVED");
       const latestHumanOutbound = [...messages]
         .reverse()
-        .find((message) => message.type === "BULK" && message.status !== "FAILED");
+        .find(
+          (message) =>
+            message.type === "BULK" &&
+            message.status !== "FAILED" &&
+            payloadSource(message.payload) !== "TCR_WHATSAPP_AI"
+        );
       const name = order?.customer.name || [...messages].reverse().find((message) => message.recipientName)?.recipientName || "Contato";
       const eventTitle = order?.event.title || "Conversa pelo WhatsApp";
       const needsReply = Boolean(
@@ -220,7 +250,8 @@ async function loadCrmWhatsAppInbox(input: {
         needsReply,
         canReply: Boolean(latestInbound && Date.now() - latestInbound.createdAt.getTime() < 24 * 60 * 60 * 1000),
         lastDirection: latest.status === "RECEIVED" ? ("inbound" as const) : ("outbound" as const),
-        lastOutboundAt: latestOutbound?.createdAt || null
+        lastOutboundAt: latestOutbound?.createdAt || null,
+        aiMode: aiModeByPhone.get(key) || "ACTIVE"
       };
       return item;
     })

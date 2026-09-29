@@ -55,6 +55,31 @@ function phoneKey(value?: string | null) {
   return digits.startsWith("55") && digits.length >= 12 ? digits.slice(2) : digits;
 }
 
+function normalizeIntent(value?: string | null) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("pt-BR")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function isHumanHandoffRequest(value?: string | null) {
+  const text = normalizeIntent(value);
+  if (!text) return false;
+  return [
+    /\bfalar com (um |uma )?atendente\b/,
+    /\bfalar com (uma )?pessoa\b/,
+    /\bquero (um |uma )?atendente\b/,
+    /\bquero atendimento humano\b/,
+    /\batendente humano\b/,
+    /\batendimento (com uma pessoa|pessoal|humano)\b/,
+    /\bpreciso (de )?(um |uma )?atendente\b/,
+    /\bchama(r)? (um |uma )?atendente\b/
+  ].some((pattern) => pattern.test(text));
+}
+
 function brl(valueInCents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valueInCents / 100);
 }
@@ -324,6 +349,7 @@ async function loadSupportContext(organizationId: string, phone: string) {
   const customerName = orders[0]?.customer.name || "cliente";
   return {
     customer: { firstName: firstName(customerName) },
+    hasPreviousAiReply: logs.some((message) => jsonObject(message.payload).source === AI_SOURCE),
     businessRules: {
       doubleTicket:
         "Cadeira duplo, ingresso duplo ou qualquer produto identificado como duplo vale para duas pessoas e gera dois ingressos com dois QR Codes individuais.",
@@ -427,6 +453,8 @@ REGRAS CRITICAS
 10. Nao prometa prazo ou acao futura que nao esteja garantida.
 11. Nao repita saudacoes em todas as mensagens. Responda ao ponto, em no maximo 550 caracteres, com no maximo uma pergunta.
 12. SILENT so deve ser usado para mensagem vazia, figurinha sem contexto, confirmacao final que nao exige resposta ou conteudo automatico.
+13. Quando hasPreviousAiReply for falso e a resposta for AUTO_REPLY, termine com: "Se preferir, escreva falar com atendente."
+14. Quando o cliente pedir uma pessoa ou atendente, use HANDOFF. O sistema tambem possui uma deteccao direta para esse pedido.
 
 SAIDA
 AUTO_REPLY quando puder responder com seguranca.
@@ -521,6 +549,32 @@ async function processInboundMessage(message: MetaTextMessage) {
   const state = await getWhatsAppAiConversationState(inbound.organizationId, message.from);
   if (state.mode !== "ACTIVE") {
     await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "SKIPPED", reason: state.reason });
+    return;
+  }
+  if (isHumanHandoffRequest(message.text.body)) {
+    const reply =
+      "Claro. Encaminhei sua conversa para um atendente da TCR Ingressos. Nosso atendimento humano responde em horário comercial e continuará por aqui assim que estiver disponível.";
+    await setWhatsAppAiConversationState({
+      organizationId: inbound.organizationId,
+      phone: message.from,
+      mode: "HANDOFF",
+      reason: "Cliente solicitou atendimento humano."
+    });
+    await sendWhatsAppTextMessage({
+      to: message.from,
+      text: reply,
+      organizationId: inbound.organizationId,
+      source: AI_SOURCE,
+      metadata: { outcome: "HANDOFF", topic: "atendimento_humano", inboundProviderMessageId: message.id }
+    });
+    await markInboundAi({
+      id: inbound.id,
+      webhookPayload: inbound.webhookPayload,
+      status: "COMPLETED",
+      outcome: "HANDOFF",
+      topic: "atendimento_humano",
+      reason: "Cliente solicitou atendimento humano."
+    });
     return;
   }
   const usage = await monthlyUsageAllowed(inbound.organizationId);
