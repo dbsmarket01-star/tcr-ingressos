@@ -3,8 +3,9 @@
 import { redirect } from "next/navigation";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { clearCrmWhatsAppInboxCache, getCrmWhatsAppConversation } from "@/features/crm/whatsapp-chat.service";
-import { sendCartAbandonmentWhatsApp, sendWhatsAppTextMessage } from "@/features/whatsapp/whatsapp.service";
+import { sendCartAbandonmentWhatsApp, sendWhatsAppMediaMessage, sendWhatsAppTextMessage, type WhatsAppMediaKind } from "@/features/whatsapp/whatsapp.service";
 import { setWhatsAppAiConversationState } from "@/features/ai/whatsapp-support-ai.service";
+import { savePublicMediaUpload } from "@/features/uploads/local-upload.service";
 
 const recentTextSends = new Map<string, { expiresAt: number; promise: Promise<unknown> }>();
 const TEXT_SEND_DEDUPLICATION_MS = 20_000;
@@ -31,6 +32,13 @@ function sendTextMessageOnce(input: Parameters<typeof sendWhatsAppTextMessage>[0
 
 function getFormText(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
+}
+
+function mediaKindFromFile(file: File): WhatsAppMediaKind {
+  if (file.type.startsWith("image/")) return "image";
+  if (file.type.startsWith("video/")) return "video";
+  if (file.type.startsWith("audio/")) return "audio";
+  return "document";
 }
 
 function buildRedirect(input: {
@@ -71,6 +79,11 @@ export async function sendCrmWhatsAppMessage(formData: FormData) {
   const leadId = getFormText(formData, "leadId");
   const phone = getFormText(formData, "phone");
   const text = getFormText(formData, "text");
+  const mediaCandidates = [formData.get("media"), formData.get("audio")];
+  const mediaFile = mediaCandidates.find((value): value is File => value instanceof File && value.size > 0) || null;
+  if (mediaFile && mediaFile.size > 10 * 1024 * 1024) {
+    redirect(buildRedirect({ orderCode, leadId, phone, status: "erro", message: "O arquivo para envio deve ter no máximo 10MB." }));
+  }
   const allowedEventIds = getAdminAllowedEventIds(admin);
   const conversation = await getCrmWhatsAppConversation({
     orderCode,
@@ -104,28 +117,46 @@ export async function sendCrmWhatsAppMessage(formData: FormData) {
     );
   }
 
-  if (!text) {
+  if (!text && !mediaFile) {
     redirect(
       buildRedirect({
         orderCode,
         leadId,
         phone,
         status: "erro",
-        message: "Digite a mensagem antes de enviar."
+        message: "Digite uma mensagem ou selecione um arquivo antes de enviar."
       })
     );
   }
 
   try {
-    await sendTextMessageOnce({
-      to: conversation.contact.phone,
-      text,
-      organizationId: admin.organizationId,
-      eventId: conversation.contact.eventId,
-      orderId: conversation.contact.orderId,
-      leadId: conversation.contact.leadId,
-      recipientName: conversation.contact.name
-    });
+    if (mediaFile) {
+      const mediaUrl = await savePublicMediaUpload(mediaFile, `whatsapp/outbound/${admin.organizationId}`);
+      if (!mediaUrl) throw new Error("Não foi possível armazenar o arquivo.");
+      await sendWhatsAppMediaMessage({
+        to: conversation.contact.phone,
+        kind: mediaKindFromFile(mediaFile),
+        mediaUrl,
+        fileName: mediaFile.name,
+        mimeType: mediaFile.type,
+        caption: text || null,
+        organizationId: admin.organizationId,
+        eventId: conversation.contact.eventId,
+        orderId: conversation.contact.orderId,
+        leadId: conversation.contact.leadId,
+        recipientName: conversation.contact.name
+      });
+    } else {
+      await sendTextMessageOnce({
+        to: conversation.contact.phone,
+        text,
+        organizationId: admin.organizationId,
+        eventId: conversation.contact.eventId,
+        orderId: conversation.contact.orderId,
+        leadId: conversation.contact.leadId,
+        recipientName: conversation.contact.name
+      });
+    }
     await setWhatsAppAiConversationState({
       organizationId: admin.organizationId,
       phone: conversation.contact.phone,

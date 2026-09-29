@@ -4,8 +4,20 @@ import path from "node:path";
 
 const MAX_IMAGE_SIZE_MB = Number(process.env.UPLOAD_MAX_IMAGE_MB || 10);
 const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
+const MAX_MEDIA_SIZE_MB = Number(process.env.UPLOAD_MAX_MEDIA_MB || 25);
+const MAX_MEDIA_SIZE_BYTES = MAX_MEDIA_SIZE_MB * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 const ALLOWED_IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
+const ALLOWED_MEDIA_TYPES = new Set([
+  ...ALLOWED_IMAGE_TYPES,
+  "audio/aac", "audio/amr", "audio/mpeg", "audio/mp4", "audio/ogg", "audio/webm",
+  "video/mp4", "video/3gpp", "video/webm",
+  "application/pdf", "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "text/plain"
+]);
 
 function extensionFromName(name: string) {
   return name.split(".").pop()?.toLowerCase() || "";
@@ -27,6 +39,20 @@ function extensionFromType(type: string) {
   if (type === "image/gif") {
     return "gif";
   }
+
+  const knownExtensions: Record<string, string> = {
+    "audio/aac": "aac", "audio/amr": "amr", "audio/mpeg": "mp3", "audio/mp4": "m4a",
+    "audio/ogg": "ogg", "audio/webm": "webm", "video/mp4": "mp4", "video/3gpp": "3gp",
+    "video/webm": "webm", "application/pdf": "pdf", "application/msword": "doc",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+    "application/vnd.ms-excel": "xls",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+    "application/vnd.ms-powerpoint": "ppt",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
+    "text/plain": "txt"
+  };
+
+  if (knownExtensions[type]) return knownExtensions[type];
 
   return "bin";
 }
@@ -66,7 +92,7 @@ function shouldUseSupabaseStorage() {
   return process.env.UPLOAD_STORAGE_PROVIDER === "SUPABASE_STORAGE";
 }
 
-async function saveSupabaseStorageImage(file: File, folder: string) {
+async function saveSupabaseStorageFile(file: File, folder: string) {
   const supabaseUrl = cleanSupabaseUrl();
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const bucket = process.env.SUPABASE_STORAGE_BUCKET || "event-media";
@@ -113,7 +139,7 @@ export async function savePublicImageUpload(file: File | null | undefined, folde
   }
 
   if (shouldUseSupabaseStorage()) {
-    return saveSupabaseStorageImage(file, folder);
+    return saveSupabaseStorageFile(file, folder);
   }
 
   const safeFolder = safeLocalFolder(folder);
@@ -124,5 +150,26 @@ export async function savePublicImageUpload(file: File | null | undefined, folde
   await mkdir(uploadsDir, { recursive: true });
   await writeFile(filePath, Buffer.from(await file.arrayBuffer()));
 
+  return `/uploads/${safeFolder}/${fileName}`;
+}
+
+export async function savePublicMediaUpload(file: File | null | undefined, folder: string) {
+  if (!file || file.size === 0) return null;
+
+  if (!ALLOWED_MEDIA_TYPES.has(file.type)) {
+    throw new Error("Formato não suportado. Envie imagem, áudio, vídeo, PDF, Word, Excel, PowerPoint ou TXT.");
+  }
+
+  if (file.size > MAX_MEDIA_SIZE_BYTES) {
+    throw new Error(`O arquivo deve ter no máximo ${MAX_MEDIA_SIZE_MB}MB.`);
+  }
+
+  if (shouldUseSupabaseStorage()) return saveSupabaseStorageFile(file, folder);
+
+  const safeFolder = safeLocalFolder(folder);
+  const uploadsDir = path.join(process.cwd(), "public", "uploads", safeFolder);
+  const fileName = `${Date.now()}-${randomBytes(8).toString("hex")}.${extensionForFile(file)}`;
+  await mkdir(uploadsDir, { recursive: true });
+  await writeFile(path.join(uploadsDir, fileName), Buffer.from(await file.arrayBuffer()));
   return `/uploads/${safeFolder}/${fileName}`;
 }

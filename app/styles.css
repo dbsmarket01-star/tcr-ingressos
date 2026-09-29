@@ -370,10 +370,25 @@
 .crmWhatsappBubble footer { align-items: center; color: #617086; display: flex; font-size: 9px; gap: 3px; justify-content: flex-end; }
 .crmWhatsappBubble footer .crmWaIcon { color: #188fe5; height: 13px; width: 13px; }
 .crmWhatsappTemplate { color: #07824a; font-size: 9px; font-weight: 900; text-transform: uppercase; }
+.crmWhatsappMedia { border-radius: 9px; display: block; max-width: 360px; overflow: hidden; }
+.crmWhatsappMedia img { display: block; height: auto; max-height: 360px; max-width: 100%; object-fit: contain; width: auto; }
+.crmWhatsappMediaAudio { height: 42px; max-width: min(330px, 100%); width: 330px; }
+.crmWhatsappMediaVideo { border-radius: 9px; max-height: 360px; max-width: min(360px, 100%); }
+.crmWhatsappMediaFile { align-items: center; background: rgba(255,255,255,.58); border: 1px solid rgba(71,85,105,.18); border-radius: 9px; color: #1f3650; display: flex; gap: 9px; min-width: 230px; padding: 10px; text-decoration: none; }
+.crmWhatsappMediaFile .crmWaIcon { flex: 0 0 auto; }
+.crmWhatsappMediaFile span { display: grid; min-width: 0; }
+.crmWhatsappMediaFile strong, .crmWhatsappMediaFile small { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crmWhatsappMediaFile small, .crmWhatsappMediaUnavailable { color: #64748b; font-size: 10px; }
+.crmWhatsappMediaUnavailable { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 7px; color: #9a3412; padding: 7px 9px; }
 .crmWhatsappComposer { align-items: center; background: #fff; border-top: 1px solid #dfe7ef; display: grid; gap: 8px; grid-template-columns: auto auto auto minmax(0,1fr) auto; padding: 10px 12px; }
-.crmWhatsappComposerIcon { align-items: center; border: 1px solid #dce4ed; border-radius: 9px; color: #33445e; display: flex; height: 40px; justify-content: center; width: 40px; }
+.crmWhatsappComposerIcon { align-items: center; background: #fff; border: 1px solid #dce4ed; border-radius: 9px; color: #33445e; cursor: pointer; display: flex; height: 40px; justify-content: center; padding: 0; width: 40px; }
 .crmWhatsappComposerIcon.isDisabled { color: #9aa6b5; }
-.crmWhatsappComposer textarea { border: 1px solid #dce4ed; border-radius: 10px; font: inherit; font-size: 13px; height: 42px; min-height: 42px; padding: 11px 13px; resize: none; }
+.crmWhatsappComposerIcon:disabled { color: #9aa6b5; cursor: not-allowed; }
+.crmWhatsappFileInput { display: none; }
+.crmWhatsappComposerText { display: grid; min-width: 0; position: relative; }
+.crmWhatsappComposerText small { background: #eef7f2; border-radius: 6px; bottom: 4px; color: #176444; font-size: 9px; left: 10px; max-width: calc(100% - 20px); overflow: hidden; padding: 2px 5px; position: absolute; text-overflow: ellipsis; white-space: nowrap; }
+.crmWhatsappComposerText:has(small) textarea { padding-bottom: 19px; }
+.crmWhatsappComposer textarea { border: 1px solid #dce4ed; border-radius: 10px; font: inherit; font-size: 13px; height: 42px; min-height: 42px; padding: 11px 13px; resize: none; width: 100%; }
 .crmWhatsappSend { align-items: center; background: #087f48; border: 0; border-radius: 10px; color: #fff; display: flex; height: 42px; justify-content: center; width: 48px; }
 .crmWhatsappSend:disabled { background: #9bb9a9; }
 .crmWhatsappTemplateComposer { background: #fffaf0; border-top: 1px solid #f4dfb8; padding: 9px 12px; }

@@ -76,6 +76,61 @@ function templatePreview(payload: Prisma.JsonValue | null | undefined, templateN
   return templateName ? `Template: ${templateName}` : "Mensagem enviada";
 }
 
+type ChatMedia = { kind: string; url: string | null; fileName: string | null; mimeType: string | null; caption: string | null };
+
+function mediaFromPayload(payload: Prisma.JsonValue | null | undefined): ChatMedia | null {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+  const object = payload as Record<string, unknown>;
+  const candidate = object.media || object._tcrMedia;
+  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null;
+  const media = candidate as Record<string, unknown>;
+  return {
+    kind: typeof media.kind === "string" ? media.kind : "document",
+    url: typeof media.url === "string" ? media.url : null,
+    fileName: typeof media.fileName === "string" ? media.fileName : null,
+    mimeType: typeof media.mimeType === "string" ? media.mimeType : null,
+    caption: typeof media.caption === "string" ? media.caption : null
+  };
+}
+
+function webhookFallbackContent(payload: Prisma.JsonValue | null | undefined) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+  const data = payload as Record<string, unknown>;
+  const reaction = data.reaction;
+  if (reaction && typeof reaction === "object" && !Array.isArray(reaction)) {
+    const emoji = (reaction as { emoji?: unknown }).emoji;
+    return typeof emoji === "string" && emoji ? `Reagiu ${emoji}` : "Removeu uma reação";
+  }
+  const location = data.location;
+  if (location && typeof location === "object" && !Array.isArray(location)) {
+    const value = location as { latitude?: unknown; longitude?: unknown; name?: unknown; address?: unknown };
+    const label = [value.name, value.address].filter((part): part is string => typeof part === "string" && Boolean(part)).join(" — ");
+    const coordinates = typeof value.latitude === "number" && typeof value.longitude === "number" ? `https://maps.google.com/?q=${value.latitude},${value.longitude}` : "";
+    return `📍 ${label || "Localização compartilhada"}${coordinates ? `\n${coordinates}` : ""}`;
+  }
+  const contacts = data.contacts;
+  if (Array.isArray(contacts) && contacts.length) {
+    return contacts.map((contact) => {
+      if (!contact || typeof contact !== "object" || Array.isArray(contact)) return "👤 Contato compartilhado";
+      const item = contact as { name?: { formatted_name?: unknown }; phones?: Array<{ phone?: unknown; wa_id?: unknown }> };
+      const name = typeof item.name?.formatted_name === "string" ? item.name.formatted_name : "Contato compartilhado";
+      const phones = (item.phones || []).map((phone) => typeof phone.phone === "string" ? phone.phone : typeof phone.wa_id === "string" ? phone.wa_id : "").filter(Boolean).join(", ");
+      return `👤 ${name}${phones ? ` — ${phones}` : ""}`;
+    }).join("\n");
+  }
+  const button = data.button;
+  if (button && typeof button === "object" && !Array.isArray(button) && typeof (button as { text?: unknown }).text === "string") return String((button as { text: string }).text);
+  const interactive = data.interactive;
+  if (interactive && typeof interactive === "object" && !Array.isArray(interactive)) {
+    const item = interactive as { button_reply?: { title?: unknown }; list_reply?: { title?: unknown; description?: unknown } };
+    if (typeof item.button_reply?.title === "string") return item.button_reply.title;
+    if (typeof item.list_reply?.title === "string") return [item.list_reply.title, typeof item.list_reply.description === "string" ? item.list_reply.description : ""].filter(Boolean).join(" — ");
+  }
+  const labels: Record<string, string> = { image: "📷 Imagem", audio: "🎤 Áudio", video: "🎥 Vídeo", document: "📎 Documento", sticker: "🏷️ Figurinha", location: "📍 Localização", contacts: "👤 Contato compartilhado", button: "Resposta de botão", interactive: "Resposta interativa" };
+  const type = typeof data.type === "string" ? data.type : "";
+  return labels[type] || (type ? `Mensagem do tipo ${type}` : null);
+}
+
 function messageContent(message: {
   status: string;
   templateName: string | null;
@@ -85,13 +140,18 @@ function messageContent(message: {
   return (
     textFromPayload(message.payload) ||
     textFromPayload(message.webhookPayload) ||
+    mediaFromPayload(message.payload)?.caption ||
+    mediaFromPayload(message.webhookPayload)?.caption ||
+    webhookFallbackContent(message.webhookPayload) ||
     templatePreview(message.payload, message.templateName)
   );
 }
 
 type InboxResult = Awaited<ReturnType<typeof loadCrmWhatsAppInbox>>;
 const inboxCache = new Map<string, { expiresAt: number; promise: Promise<InboxResult> }>();
-const INBOX_CACHE_MS = 5_000;
+// O monitor consulta a cada segundo. Um cache maior fazia a API detectar o
+// webhook, mas manter a lista antiga por alguns segundos.
+const INBOX_CACHE_MS = 750;
 
 async function loadCrmWhatsAppInbox(input: {
   organizationId: string;
@@ -548,6 +608,7 @@ export async function getCrmWhatsAppConversation(input: {
       status: message.status,
       templateName: message.templateName,
       content: messageContent(message),
+      media: mediaFromPayload(message.payload) || mediaFromPayload(message.webhookPayload),
       createdAt: message.createdAt,
       errorMessage: message.errorMessage,
       errorDetails: errorDetailsFromPayload(message.webhookPayload)
