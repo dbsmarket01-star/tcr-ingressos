@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { clearCrmWhatsAppInboxCache, getCrmWhatsAppConversation } from "@/features/crm/whatsapp-chat.service";
 import { sendCartAbandonmentWhatsApp, sendWhatsAppTextMessage } from "@/features/whatsapp/whatsapp.service";
+import { setWhatsAppAiConversationState } from "@/features/ai/whatsapp-support-ai.service";
 
 const recentTextSends = new Map<string, { expiresAt: number; promise: Promise<unknown> }>();
 const TEXT_SEND_DEDUPLICATION_MS = 20_000;
@@ -125,6 +126,13 @@ export async function sendCrmWhatsAppMessage(formData: FormData) {
       leadId: conversation.contact.leadId,
       recipientName: conversation.contact.name
     });
+    await setWhatsAppAiConversationState({
+      organizationId: admin.organizationId,
+      phone: conversation.contact.phone,
+      mode: "PAUSED",
+      reason: "Atendente humano enviou uma mensagem.",
+      adminUserId: admin.id
+    });
     clearCrmWhatsAppInboxCache(admin.organizationId);
   } catch (error) {
     redirect(
@@ -145,6 +153,41 @@ export async function sendCrmWhatsAppMessage(formData: FormData) {
       phone,
       status: "ok",
       message: "Mensagem enviada."
+    })
+  );
+}
+
+export async function setCrmWhatsAppAiMode(formData: FormData) {
+  const admin = await requirePermission("CRM");
+  const orderCode = getFormText(formData, "orderCode");
+  const leadId = getFormText(formData, "leadId");
+  const phone = getFormText(formData, "phone");
+  const mode = getFormText(formData, "mode") === "ACTIVE" ? "ACTIVE" : "PAUSED";
+  const allowedEventIds = getAdminAllowedEventIds(admin);
+  const conversation = await getCrmWhatsAppConversation({
+    orderCode,
+    leadId,
+    phone,
+    organizationId: admin.organizationId,
+    allowedEventIds
+  });
+  if (!conversation.contact?.phone) {
+    redirect(buildRedirect({ orderCode, leadId, phone, status: "erro", message: "Conversa sem telefone valido." }));
+  }
+  await setWhatsAppAiConversationState({
+    organizationId: admin.organizationId,
+    phone: conversation.contact.phone,
+    mode,
+    reason: mode === "ACTIVE" ? "IA reativada pelo atendente." : "Atendente humano assumiu a conversa.",
+    adminUserId: admin.id
+  });
+  redirect(
+    buildRedirect({
+      orderCode,
+      leadId,
+      phone,
+      status: "ok",
+      message: mode === "ACTIVE" ? "Atendimento automatico reativado." : "IA pausada; atendimento humano ativo."
     })
   );
 }

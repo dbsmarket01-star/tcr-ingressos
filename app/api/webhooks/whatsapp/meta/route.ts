@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import {
   handleWhatsAppMetaWebhook,
   verifyWhatsAppMetaSignature
 } from "@/features/whatsapp/whatsapp.service";
+import { processWhatsAppSupportAiPayload } from "@/features/ai/whatsapp-support-ai.service";
 
 export const dynamic = "force-dynamic";
 export const preferredRegion = "gru1";
@@ -82,6 +83,12 @@ export async function POST(request: Request) {
     }
 
     const result = await handleWhatsAppMetaWebhook(payload);
+
+    if (result.created > 0) {
+      after(async () => {
+        await processWhatsAppSupportAiPayload(payload);
+      });
+    }
 
     return NextResponse.json(
       {
