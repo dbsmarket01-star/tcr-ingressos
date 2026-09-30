@@ -157,6 +157,7 @@ enum MarketingEmailRecipientStatus {
 }
 
 enum WhatsAppMessageType {
+  AI_ASSISTANT
   PURCHASE_APPROVED
   CART_ABANDONMENT
   BULK

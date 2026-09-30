@@ -1,10 +1,10 @@
-import { OrderStatus, Prisma } from "@prisma/client";
+import { OrderStatus, Prisma, WhatsAppMessageType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { resolveWhatsAppAiConversationMode } from "@/features/ai/whatsapp-support-ai.service";
 
 type EventScope = string[] | null | undefined;
 
-const KNOWN_WHATSAPP_TYPES = ["PURCHASE_APPROVED", "CART_ABANDONMENT", "BULK", "WEBHOOK"] as const;
+const KNOWN_WHATSAPP_TYPES = Object.values(WhatsAppMessageType);
 
 export async function getCrmWhatsAppNotificationSnapshot(input: {
   organizationId: string;
