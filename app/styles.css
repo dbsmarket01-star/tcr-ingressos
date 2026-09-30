@@ -323,6 +323,12 @@
 .crmWhatsappStatusTabs a.isHuman b { background: #ffedd5; color: #9a3412; }
 .crmWhatsappStatusTabs a.isHuman.isActive { background: #c2410c; border-color: #c2410c; color: #fff; }
 .crmWhatsappStatusTabs a.isHuman.isActive b { background: #ffedd5; color: #9a3412; }
+.crmWhatsappPeriodBar { align-items: end; background: #fff; border: 1px solid #dfe6ee; border-radius: 12px; display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 12px; }
+.crmWhatsappPeriodBar > a, .crmWhatsappPeriodBar > button { align-items: center; background: #f8fafc; border: 1px solid #dbe3ec; border-radius: 999px; color: #334155; cursor: pointer; display: inline-flex; font: inherit; font-size: 12px; font-weight: 800; min-height: 34px; padding: 0 13px; text-decoration: none; }
+.crmWhatsappPeriodBar > a.isActive { background: #087a46; border-color: #087a46; color: #fff; }
+.crmWhatsappPeriodBar > button { background: #0f5132; border-color: #0f5132; color: #fff; }
+.crmWhatsappPeriodBar label { color: #64748b; display: grid; font-size: 10px; font-weight: 800; gap: 2px; text-transform: uppercase; }
+.crmWhatsappPeriodBar input { border: 1px solid #dbe3ec; border-radius: 8px; color: #172033; font: inherit; min-height: 34px; padding: 0 9px; }
 
 /* Fluxo comercial explícito da Central de Conversas. */
 .crmWhatsappInboxItem { position: relative; padding: 0; }

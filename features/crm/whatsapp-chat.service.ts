@@ -209,13 +209,23 @@ async function loadCrmWhatsAppInbox(input: {
   organizationId: string;
   allowedEventIds?: EventScope;
   search?: string;
+  startAt?: Date;
+  endAt?: Date;
 }) {
   const scopedOutbound = await prisma.whatsAppMessageLog.findMany({
     where: {
       organizationId: input.organizationId,
       type: {
         in: [...KNOWN_WHATSAPP_TYPES]
-      }
+      },
+      ...(input.startAt || input.endAt
+        ? {
+            createdAt: {
+              ...(input.startAt ? { gte: input.startAt } : {}),
+              ...(input.endAt ? { lt: input.endAt } : {})
+            }
+          }
+        : {})
     },
     orderBy: { createdAt: "desc" },
     take: 5000,
@@ -432,12 +442,16 @@ export function getCrmWhatsAppInbox(input: {
   organizationId: string;
   allowedEventIds?: EventScope;
   search?: string;
+  startAt?: Date;
+  endAt?: Date;
 }) {
   const now = Date.now();
   const key = [
     input.organizationId,
     [...(input.allowedEventIds || [])].sort().join(","),
-    String(input.search || "").trim().toLocaleLowerCase("pt-BR")
+    String(input.search || "").trim().toLocaleLowerCase("pt-BR"),
+    input.startAt?.toISOString() || "",
+    input.endAt?.toISOString() || ""
   ].join("|");
   const cached = inboxCache.get(key);
   if (cached && cached.expiresAt > now) return cached.promise;

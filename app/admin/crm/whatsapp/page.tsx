@@ -12,7 +12,7 @@ import { WhatsAppMessageScroller } from "./WhatsAppMessageScroller";
 
 export const dynamic = "force-dynamic";
 
-type CrmWhatsAppPageProps = { searchParams?: Promise<{ leadId?: string; limit?: string; message?: string; orderCode?: string; phone?: string; search?: string; status?: string }> };
+type CrmWhatsAppPageProps = { searchParams?: Promise<{ endDate?: string; leadId?: string; limit?: string; message?: string; orderCode?: string; period?: string; phone?: string; search?: string; startDate?: string; status?: string }> };
 type IconName = "search" | "filter" | "bell" | "dots" | "star" | "clock" | "kanban" | "plus" | "smile" | "clip" | "send" | "check";
 
 function Icon({ name }: { name: IconName }) {
@@ -28,6 +28,28 @@ function Icon({ name }: { name: IconName }) {
 
 const initials = (name?: string | null) => String(name || "WA").split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 const CRM_TIME_ZONE = "America/Sao_Paulo";
+const BRAZIL_OFFSET = "-03:00";
+const localDateKey = (value = new Date()) => new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: CRM_TIME_ZONE }).format(value);
+function addDays(dateKey: string, days: number) {
+  const value = new Date(`${dateKey}T12:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+function resolvePeriod(params: { endDate?: string; period?: string; startDate?: string }) {
+  const today = localDateKey();
+  const period = ["today", "yesterday", "week", "month", "lastMonth", "custom"].includes(params.period || "") ? params.period! : "today";
+  let start = today;
+  let endExclusive = addDays(today, 1);
+  if (period === "yesterday") { start = addDays(today, -1); endExclusive = today; }
+  if (period === "week") { const day = new Date(`${today}T12:00:00Z`).getUTCDay(); start = addDays(today, -day); endExclusive = addDays(start, 7); }
+  if (period === "month") { start = `${today.slice(0, 7)}-01`; endExclusive = `${addDays(start, 32).slice(0, 7)}-01`; }
+  if (period === "lastMonth") { const currentStart = `${today.slice(0, 7)}-01`; start = `${addDays(currentStart, -1).slice(0, 7)}-01`; endExclusive = currentStart; }
+  if (period === "custom" && /^\d{4}-\d{2}-\d{2}$/.test(params.startDate || "") && /^\d{4}-\d{2}-\d{2}$/.test(params.endDate || "")) {
+    start = params.startDate!;
+    endExclusive = addDays(params.endDate!, 1);
+  }
+  return { period, start, end: addDays(endExclusive, -1), startAt: new Date(`${start}T00:00:00${BRAZIL_OFFSET}`), endAt: new Date(`${endExclusive}T00:00:00${BRAZIL_OFFSET}`) };
+}
 const timeLabel = (value: Date) => new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: CRM_TIME_ZONE }).format(value);
 function dayLabel(value: Date) {
   const formatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric", timeZone: CRM_TIME_ZONE });
@@ -69,7 +91,8 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
   const admin = await requirePermission("CRM");
   const params = searchParams ? await searchParams : {};
   const allowedEventIds = getAdminAllowedEventIds(admin);
-  const inboxPromise = getCrmWhatsAppInbox({ organizationId: admin.organizationId, allowedEventIds, search: params.search });
+  const selectedPeriod = resolvePeriod(params);
+  const inboxPromise = getCrmWhatsAppInbox({ organizationId: admin.organizationId, allowedEventIds, search: params.search, startAt: selectedPeriod.startAt, endAt: selectedPeriod.endAt });
   const hasExplicitSelection = Boolean(params.orderCode || params.leadId || params.phone);
   const selectedConversationPromise = hasExplicitSelection
     ? getCrmWhatsAppConversation({ orderCode: params.orderCode, leadId: params.leadId, phone: params.phone, organizationId: admin.organizationId, allowedEventIds })
@@ -117,7 +140,8 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
   const eventTags = contact?.eventTitle ? contact.eventTitle.split(" em ") : [];
   let lastDay = "";
   let lastInboxDay = "";
-  const statusHref = (status: string) => { const query = new URLSearchParams(); if (params.search) query.set("search", params.search); if (status !== "all") query.set("status", status); return `/admin/crm/whatsapp${query.size ? `?${query}` : ""}`; };
+  const statusHref = (status: string) => { const query = new URLSearchParams(); if (params.search) query.set("search", params.search); if (status !== "all") query.set("status", status); query.set("period", selectedPeriod.period); if (selectedPeriod.period === "custom") { query.set("startDate", selectedPeriod.start); query.set("endDate", selectedPeriod.end); } return `/admin/crm/whatsapp${query.size ? `?${query}` : ""}`; };
+  const periodHref = (period: string) => { const query = new URLSearchParams(); if (activeStatus !== "all") query.set("status", activeStatus); if (params.search) query.set("search", params.search); query.set("period", period); return `/admin/crm/whatsapp?${query}`; };
 
   return <AdminShell title="WhatsApp interno" description="Atendimento comercial conectado à API oficial do WhatsApp." headerVariant="minimal">
     <div className="crmWhatsappPage">
@@ -127,13 +151,20 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
       </header>
 
       <nav className="crmWhatsappStatusTabs" aria-label="Filtrar conversas por status">{[["all", "Todos", counters.all], ["unread", "Não lidos", counters.unread], ["human", "Atendimento humano", counters.human], ["followup", "Em atendimento / Follow-up", counters.followup], ["closed", "Fechados", counters.closed], ["abandoned", "Carrinho abandonado sem retorno", counters.abandoned]].map(([key, label, count]) => <Link className={`${activeStatus === key ? "isActive" : ""} ${key === "human" ? "isHuman" : ""}`.trim()} href={statusHref(String(key))} key={String(key)} prefetch={false}>{label}<b>{count}</b></Link>)}</nav>
+      <form action="/admin/crm/whatsapp" className="crmWhatsappPeriodBar" method="get">
+        {activeStatus !== "all" ? <input name="status" type="hidden" value={activeStatus}/> : null}
+        {[['today','Hoje'],['yesterday','Ontem'],['week','Esta semana'],['month','Este mês'],['lastMonth','Mês passado']].map(([value,label]) => <Link className={selectedPeriod.period === value ? "isActive" : ""} href={periodHref(value)} key={value} prefetch={false}>{label}</Link>)}
+        <label><span>De</span><input defaultValue={selectedPeriod.start} name="startDate" type="date"/></label>
+        <label><span>Até</span><input defaultValue={selectedPeriod.end} name="endDate" type="date"/></label>
+        <button name="period" type="submit" value="custom">Aplicar período</button>
+      </form>
       {params.status === "erro" || params.status === "ok" ? <div className={`crmWhatsappFeedback ${params.status === "erro" ? "isError" : "isSuccess"}`}>{params.message || "Mensagem enviada."}</div> : null}
 
       <section className="crmWhatsappShell">
         <aside className="crmWhatsappInboxPanel">
-          <form action="/admin/crm/whatsapp" className="crmWhatsappInboxSearch" method="get">{activeStatus !== "all" ? <input name="status" type="hidden" value={activeStatus}/> : null}<label><Icon name="search"/><input name="search" placeholder="Buscar conversa..." defaultValue={params.search || ""}/></label><button aria-label="Aplicar busca" type="submit"><Icon name="filter"/></button></form>
+          <form action="/admin/crm/whatsapp" className="crmWhatsappInboxSearch" method="get">{activeStatus !== "all" ? <input name="status" type="hidden" value={activeStatus}/> : null}<input name="period" type="hidden" value={selectedPeriod.period}/>{selectedPeriod.period === "custom" ? <><input name="startDate" type="hidden" value={selectedPeriod.start}/><input name="endDate" type="hidden" value={selectedPeriod.end}/></> : null}<label><Icon name="search"/><input name="search" placeholder="Buscar conversa..." defaultValue={params.search || ""}/></label><button aria-label="Aplicar busca" type="submit"><Icon name="filter"/></button></form>
           <nav className="crmWhatsappInboxList" aria-label="Conversas do WhatsApp">{inbox.length === 0 ? <p className="crmWhatsappInboxEmpty">Nenhuma conversa encontrada.</p> : null}{visibleInbox.map((item) => {
-            const query = new URLSearchParams(); if (item.orderCode) query.set("orderCode", item.orderCode); else query.set("phone", item.phone); if (params.search) query.set("search", params.search); if (activeStatus !== "all") query.set("status", activeStatus);
+            const query = new URLSearchParams(); if (item.orderCode) query.set("orderCode", item.orderCode); else query.set("phone", item.phone); if (params.search) query.set("search", params.search); if (activeStatus !== "all") query.set("status", activeStatus); query.set("period", selectedPeriod.period); if (selectedPeriod.period === "custom") { query.set("startDate", selectedPeriod.start); query.set("endDate", selectedPeriod.end); }
             const isActive = (selectedOrderCode && selectedOrderCode === item.orderCode) || (!selectedOrderCode && selectedPhone && selectedPhone.replace(/\D/g, "").endsWith(item.key)); const tags = item.eventTitle.split(" em ");
             const currentInboxDay = inboxDayKey(item.latestAt); const showInboxDay = currentInboxDay !== lastInboxDay; lastInboxDay = currentInboxDay;
             return <div key={item.key}>{showInboxDay ? <div style={{ padding: "9px 14px 5px", color: "#64748b", fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".08em" }}>{inboxDayLabel(item.latestAt)}</div> : null}<div className={`crmWhatsappInboxItem ${isActive ? "isActive" : ""}`}><Link className="crmWhatsappInboxMainLink" href={`/admin/crm/whatsapp?${query}`} prefetch={false} scroll={false}><span className="crmWhatsappInboxAvatar">{initials(item.name)}</span><span className="crmWhatsappInboxCopy"><span className="crmWhatsappInboxName"><strong>{item.name}</strong><time>{timeLabel(item.latestAt)}</time></span><span className="crmWhatsappInboxPreview">{item.lastDirection === "outbound" ? "Você: " : ""}{item.latestMessage}</span><span className="crmWhatsappInboxTags"><small>{inboxStatusLabel(item)}</small><small>{tags[0]}</small>{tags[1] ? <small>{tags[1]}</small> : null}</span></span>{item.hasUnread ? <WhatsAppUnreadBadge phone={item.phone}/> : null}</Link><details className="crmWhatsappInboxMenu"><summary aria-label={`Opções de ${item.name}`}>⋮</summary><form action={setCrmWhatsAppFollowUp}><input name="phone" type="hidden" value={item.phone}/><input name="enabled" type="hidden" value={item.followUp ? "false" : "true"}/><button type="submit">{item.followUp ? "Remover de Em atendimento / Follow-up" : "Mover para Em atendimento / Follow-up"}</button></form></details></div></div>;
