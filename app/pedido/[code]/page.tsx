@@ -656,7 +656,11 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
         </aside>
       </section>
       {order.status !== "PAID" && order.event.supportWhatsappUrl ? (
-        <WhatsappFloatingButton href={order.event.supportWhatsappUrl} label="Precisa de ajuda?" />
+        <WhatsappFloatingButton
+          href={order.event.supportWhatsappUrl}
+          label="Precisa de ajuda?"
+          prefilledMessage={`Quero tirar uma dúvida no site da TCR Ingressos sobre o evento ${order.event.title}.`}
+        />
       ) : null}
     </main>
   );

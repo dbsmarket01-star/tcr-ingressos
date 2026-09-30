@@ -31,6 +31,29 @@ const nextConfig: NextConfig = {
     imageSizes: [32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 86400,
     remotePatterns: [
+      // Legacy event imports still use these public media origins.
+      // Keep their paths restricted instead of allowing arbitrary remote URLs.
+      {
+        protocol: "https",
+        hostname: "www.phsis.com.br",
+        port: "",
+        pathname: "/files/*/image/**",
+        search: ""
+      },
+      {
+        protocol: "https",
+        hostname: "eloconferenceglobal.com.br",
+        port: "",
+        pathname: "/event-maps/**",
+        search: ""
+      },
+      {
+        protocol: "https",
+        hostname: "raw.githubusercontent.com",
+        port: "",
+        pathname: "/dbsmarket01-star/tcr-ingressos/main/public/events/**",
+        search: ""
+      },
       {
         protocol: "https",
         hostname: "images.unsplash.com"

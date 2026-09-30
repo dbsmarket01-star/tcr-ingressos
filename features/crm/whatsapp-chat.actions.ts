@@ -3,8 +3,10 @@
 import { redirect } from "next/navigation";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { clearCrmWhatsAppInboxCache, getCrmWhatsAppConversation } from "@/features/crm/whatsapp-chat.service";
-import { sendCartAbandonmentWhatsApp, sendWhatsAppTextMessage } from "@/features/whatsapp/whatsapp.service";
+import { sendCartAbandonmentWhatsApp, sendWhatsAppMediaMessage, sendWhatsAppTextMessage, type WhatsAppMediaKind } from "@/features/whatsapp/whatsapp.service";
 import { setWhatsAppAiConversationState } from "@/features/ai/whatsapp-support-ai.service";
+import { savePublicMediaUpload } from "@/features/uploads/local-upload.service";
+import { prisma } from "@/lib/prisma";
 
 const recentTextSends = new Map<string, { expiresAt: number; promise: Promise<unknown> }>();
 const TEXT_SEND_DEDUPLICATION_MS = 20_000;
@@ -31,6 +33,13 @@ function sendTextMessageOnce(input: Parameters<typeof sendWhatsAppTextMessage>[0
 
 function getFormText(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
+}
+
+function mediaKindFromFile(file: File): WhatsAppMediaKind {
+  if (file.type.startsWith("image/")) return "image";
+  if (file.type.startsWith("video/")) return "video";
+  if (file.type.startsWith("audio/")) return "audio";
+  return "document";
 }
 
 function buildRedirect(input: {
@@ -71,6 +80,11 @@ export async function sendCrmWhatsAppMessage(formData: FormData) {
   const leadId = getFormText(formData, "leadId");
   const phone = getFormText(formData, "phone");
   const text = getFormText(formData, "text");
+  const mediaCandidates = [formData.get("media"), formData.get("audio")];
+  const mediaFile = mediaCandidates.find((value): value is File => value instanceof File && value.size > 0) || null;
+  if (mediaFile && mediaFile.size > 10 * 1024 * 1024) {
+    return { ok: false, message: "O arquivo para envio deve ter no máximo 10MB." };
+  }
   const allowedEventIds = getAdminAllowedEventIds(admin);
   const conversation = await getCrmWhatsAppConversation({
     orderCode,
@@ -81,80 +95,57 @@ export async function sendCrmWhatsAppMessage(formData: FormData) {
   });
 
   if (!conversation.contact?.phone) {
-    redirect(
-      buildRedirect({
-        orderCode,
-        leadId,
-        phone,
-        status: "erro",
-        message: "Contato sem telefone valido para WhatsApp."
-      })
-    );
+    return { ok: false, message: "Contato sem telefone válido para WhatsApp." };
   }
 
   if (!conversation.canReply) {
-    redirect(
-      buildRedirect({
-        orderCode,
-        leadId,
-        phone,
-        status: "erro",
-        message: "Este contato ainda nao abriu uma janela de atendimento de 24h. Use um template aprovado para iniciar a conversa."
-      })
-    );
+    return { ok: false, message: "Este contato ainda não abriu uma janela de atendimento de 24h. Use um template aprovado para iniciar a conversa." };
   }
 
-  if (!text) {
-    redirect(
-      buildRedirect({
-        orderCode,
-        leadId,
-        phone,
-        status: "erro",
-        message: "Digite a mensagem antes de enviar."
-      })
-    );
+  if (!text && !mediaFile) {
+    return { ok: false, message: "Digite uma mensagem ou selecione um arquivo antes de enviar." };
   }
 
   try {
-    await sendTextMessageOnce({
-      to: conversation.contact.phone,
-      text,
-      organizationId: admin.organizationId,
-      eventId: conversation.contact.eventId,
-      orderId: conversation.contact.orderId,
-      leadId: conversation.contact.leadId,
-      recipientName: conversation.contact.name
-    });
+    if (mediaFile) {
+      const mediaUrl = await savePublicMediaUpload(mediaFile, `whatsapp/outbound/${admin.organizationId}`);
+      if (!mediaUrl) throw new Error("Não foi possível armazenar o arquivo.");
+      await sendWhatsAppMediaMessage({
+        to: conversation.contact.phone,
+        kind: mediaKindFromFile(mediaFile),
+        mediaUrl,
+        fileName: mediaFile.name,
+        mimeType: mediaFile.type,
+        caption: text || null,
+        organizationId: admin.organizationId,
+        eventId: conversation.contact.eventId,
+        orderId: conversation.contact.orderId,
+        leadId: conversation.contact.leadId,
+        recipientName: conversation.contact.name
+      });
+    } else {
+      await sendTextMessageOnce({
+        to: conversation.contact.phone,
+        text,
+        organizationId: admin.organizationId,
+        eventId: conversation.contact.eventId,
+        orderId: conversation.contact.orderId,
+        leadId: conversation.contact.leadId,
+        recipientName: conversation.contact.name
+      });
+    }
     await setWhatsAppAiConversationState({
       organizationId: admin.organizationId,
       phone: conversation.contact.phone,
       mode: "PAUSED",
-      reason: "Atendente humano enviou uma mensagem.",
+      reason: "Atendente humano enviou uma mensagem; IA pausada automaticamente por 12 horas.",
       adminUserId: admin.id
     });
     clearCrmWhatsAppInboxCache(admin.organizationId);
   } catch (error) {
-    redirect(
-      buildRedirect({
-        orderCode,
-        leadId,
-        phone,
-        status: "erro",
-        message: error instanceof Error ? error.message : "Nao foi possivel enviar a mensagem."
-      })
-    );
+    return { ok: false, message: error instanceof Error ? error.message : "Não foi possível enviar a mensagem." };
   }
-
-  redirect(
-    buildRedirect({
-      orderCode,
-      leadId,
-      phone,
-      status: "ok",
-      message: "Mensagem enviada."
-    })
-  );
+  return { ok: true, message: "Mensagem enviada." };
 }
 
 export async function setCrmWhatsAppAiMode(formData: FormData) {
@@ -190,6 +181,25 @@ export async function setCrmWhatsAppAiMode(formData: FormData) {
       message: mode === "ACTIVE" ? "Atendimento automatico reativado." : "IA pausada; atendimento humano ativo."
     })
   );
+}
+
+export async function setCrmWhatsAppFollowUp(formData: FormData) {
+  const admin = await requirePermission("CRM");
+  const phone = getFormText(formData, "phone");
+  const enabled = getFormText(formData, "enabled") === "true";
+  const key = phone.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
+  if (!key) redirect(buildRedirect({ status: "erro", message: "Conversa sem telefone válido." }));
+  await prisma.adminAuditLog.create({
+    data: {
+      adminUserId: admin.id,
+      action: enabled ? "WHATSAPP_FOLLOWUP_ENABLED" : "WHATSAPP_FOLLOWUP_DISABLED",
+      entityType: "WHATSAPP_CONVERSATION",
+      entityId: `${admin.organizationId}:${key}`,
+      metadata: { phone }
+    }
+  });
+  clearCrmWhatsAppInboxCache(admin.organizationId);
+  redirect(buildRedirect({ phone, status: "ok", message: enabled ? "Conversa movida para Em atendimento / Follow-up." : "Conversa removida do Follow-up." }));
 }
 
 export async function sendCrmWhatsAppApprovedTemplate(formData: FormData) {

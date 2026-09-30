@@ -5,6 +5,7 @@ import { sendWhatsAppTextMessage } from "@/features/whatsapp/whatsapp.service";
 const AI_SOURCE = "TCR_WHATSAPP_AI";
 const DEFAULT_MODEL = "gpt-5.4-mini";
 const DEFAULT_MONTHLY_LIMIT = 2_000;
+const DEFAULT_HUMAN_PAUSE_HOURS = 12;
 const MAX_CONTEXT_MESSAGES = 12;
 const MAX_CUSTOMER_ORDERS = 5;
 
@@ -53,6 +54,31 @@ function phoneCandidates(value?: string | null) {
 function phoneKey(value?: string | null) {
   const digits = normalizeDigits(value);
   return digits.startsWith("55") && digits.length >= 12 ? digits.slice(2) : digits;
+}
+
+function normalizeIntent(value?: string | null) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("pt-BR")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function isHumanHandoffRequest(value?: string | null) {
+  const text = normalizeIntent(value);
+  if (!text) return false;
+  return [
+    /\bfalar com (um |uma )?atendente\b/,
+    /\bfalar com (uma )?pessoa\b/,
+    /\bquero (um |uma )?atendente\b/,
+    /\bquero atendimento humano\b/,
+    /\batendente humano\b/,
+    /\batendimento (com uma pessoa|pessoal|humano)\b/,
+    /\bpreciso (de )?(um |uma )?atendente\b/,
+    /\bchama(r)? (um |uma )?atendente\b/
+  ].some((pattern) => pattern.test(text));
 }
 
 function brl(valueInCents: number) {
@@ -148,6 +174,31 @@ function conversationStateAction(action?: string | null) {
   return null;
 }
 
+function humanPauseHours() {
+  const configured = Number(process.env.WHATSAPP_AI_HUMAN_PAUSE_HOURS || DEFAULT_HUMAN_PAUSE_HOURS);
+  return Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_HUMAN_PAUSE_HOURS;
+}
+
+export function humanPauseUntil(from = new Date()) {
+  return new Date(from.getTime() + humanPauseHours() * 60 * 60 * 1_000);
+}
+
+export function resolveWhatsAppAiConversationMode(input: {
+  action?: string | null;
+  metadata?: Prisma.JsonValue | null;
+  now?: Date;
+}) {
+  const explicit = conversationStateAction(input.action);
+  if (explicit !== "PAUSED") return explicit || ("ACTIVE" as const);
+
+  const pausedUntilValue = jsonObject(input.metadata).pausedUntil;
+  const pausedUntil = typeof pausedUntilValue === "string" ? new Date(pausedUntilValue) : null;
+  if (pausedUntil && Number.isFinite(pausedUntil.getTime()) && pausedUntil.getTime() <= (input.now || new Date()).getTime()) {
+    return "ACTIVE" as const;
+  }
+  return "PAUSED" as const;
+}
+
 export async function getWhatsAppAiConversationState(organizationId: string, phone?: string | null) {
   const key = phoneKey(phone);
   if (!key || !isEnabled()) return { mode: "DISABLED" as const, reason: "IA desativada no ambiente." };
@@ -160,11 +211,16 @@ export async function getWhatsAppAiConversationState(organizationId: string, pho
     orderBy: { createdAt: "desc" },
     select: { action: true, metadata: true, createdAt: true }
   });
-  const explicit = conversationStateAction(latest?.action);
+  const mode = resolveWhatsAppAiConversationMode({ action: latest?.action, metadata: latest?.metadata });
+  const metadata = jsonObject(latest?.metadata);
   return {
-    mode: explicit || ("ACTIVE" as const),
-    reason: String(jsonObject(latest?.metadata).reason || "Atendimento automatico ativo."),
-    changedAt: latest?.createdAt || null
+    mode,
+    reason:
+      mode === "ACTIVE" && latest?.action === "WHATSAPP_AI_PAUSED"
+        ? "Pausa do atendimento humano encerrada; IA reativada automaticamente."
+        : String(metadata.reason || "Atendimento automatico ativo."),
+    changedAt: latest?.createdAt || null,
+    pausedUntil: typeof metadata.pausedUntil === "string" ? metadata.pausedUntil : null
   };
 }
 
@@ -183,6 +239,7 @@ export async function setWhatsAppAiConversationState(input: {
       : input.mode === "HANDOFF"
         ? "WHATSAPP_AI_HANDOFF"
         : "WHATSAPP_AI_PAUSED";
+  const pausedUntil = input.mode === "PAUSED" ? humanPauseUntil() : null;
   await prisma.adminAuditLog.create({
     data: {
       adminUserId: input.adminUserId || null,
@@ -191,7 +248,8 @@ export async function setWhatsAppAiConversationState(input: {
       entityId: `${input.organizationId}:${key}`,
       metadata: {
         phone: key,
-        reason: input.reason || (input.mode === "ACTIVE" ? "IA reativada." : "Atendimento humano assumiu a conversa.")
+        reason: input.reason || (input.mode === "ACTIVE" ? "IA reativada." : "Atendimento humano assumiu a conversa."),
+        pausedUntil: pausedUntil?.toISOString() || null
       }
     }
   });
@@ -229,7 +287,6 @@ async function loadSupportContext(organizationId: string, phone: string) {
       serviceFeeInCents: true,
       cardInterestInCents: true,
       totalInCents: true,
-      refundedInCents: true,
       createdAt: true,
       paidAt: true,
       expiresAt: true,
@@ -325,6 +382,16 @@ async function loadSupportContext(organizationId: string, phone: string) {
   const customerName = orders[0]?.customer.name || "cliente";
   return {
     customer: { firstName: firstName(customerName) },
+    hasPreviousAiReply: logs.some((message) => jsonObject(message.payload).source === AI_SOURCE),
+    businessRules: {
+      doubleTicket:
+        "Cadeira duplo, ingresso duplo ou qualquer produto identificado como duplo vale para duas pessoas e gera dois ingressos com dois QR Codes individuais.",
+      paymentMethods: "A TCR Ingressos aceita Pix e cartao de credito.",
+      cardInstallments:
+        "O cartao de credito pode ser parcelado em ate 6 vezes. O parcelamento possui juros; informe o valor exibido no checkout e nunca invente o total das parcelas.",
+      fees:
+        "A taxa de bilheteria e os juros devem ser informados conforme os dados do ingresso e do checkout. Nao estime nem recalcule valores ausentes."
+    },
     company: settings
       ? {
           ...settings,
@@ -366,7 +433,6 @@ async function loadSupportContext(organizationId: string, phone: string) {
       subtotal: brl(order.subtotalInCents),
       serviceFee: brl(order.serviceFeeInCents),
       cardInterest: brl(order.cardInterestInCents),
-      refunded: brl(order.refundedInCents),
       total: brl(order.totalInCents),
       ticketEmailStatus: order.ticketsEmailStatus,
       ticketEmailSentAt: brDate(order.ticketsEmailSentAt),
@@ -413,11 +479,15 @@ REGRAS CRITICAS
 5. Nunca solicite senha, numero completo do cartao, CVV, codigo de verificacao ou foto de documento pelo WhatsApp.
 6. Nao revele CPF, e-mail completo, dados de outros clientes, identificadores internos nem detalhes tecnicos.
 7. Ingresso duplo vale duas admissoes. Use totalAdmissions e issuedTickets para explicar quantos QR Codes existem; se houver divergencia, HANDOFF.
+7.1. Como regra comercial geral, cadeira duplo ou ingresso duplo e para duas pessoas e gera dois ingressos com dois QR Codes individuais.
+7.2. A TCR aceita Pix e cartao de credito. O cartao pode ser parcelado em ate 6 vezes, com juros. Para valores, taxas e parcelas, use apenas os dados exibidos no contexto ou oriente o cliente a conferir o resumo do checkout; nunca invente calculos.
 8. Para pedido pendente, pode fornecer somente o orderUrl existente no contexto.
 9. Se nao houver informacao suficiente ou houver qualquer duvida sobre os dados, use HANDOFF.
 10. Nao prometa prazo ou acao futura que nao esteja garantida.
 11. Nao repita saudacoes em todas as mensagens. Responda ao ponto, em no maximo 550 caracteres, com no maximo uma pergunta.
 12. SILENT so deve ser usado para mensagem vazia, figurinha sem contexto, confirmacao final que nao exige resposta ou conteudo automatico.
+13. Quando hasPreviousAiReply for falso e a resposta for AUTO_REPLY, termine com: "Se preferir, escreva falar com atendente."
+14. Quando o cliente pedir uma pessoa ou atendente, use HANDOFF. O sistema tambem possui uma deteccao direta para esse pedido.
 
 SAIDA
 AUTO_REPLY quando puder responder com seguranca.
@@ -514,6 +584,32 @@ async function processInboundMessage(message: MetaTextMessage) {
     await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "SKIPPED", reason: state.reason });
     return;
   }
+  if (isHumanHandoffRequest(message.text.body)) {
+    const reply =
+      "Claro. Encaminhei sua conversa para um atendente da TCR Ingressos. Nosso atendimento humano responde em horário comercial e continuará por aqui assim que estiver disponível.";
+    await setWhatsAppAiConversationState({
+      organizationId: inbound.organizationId,
+      phone: message.from,
+      mode: "HANDOFF",
+      reason: "Cliente solicitou atendimento humano."
+    });
+    await sendWhatsAppTextMessage({
+      to: message.from,
+      text: reply,
+      organizationId: inbound.organizationId,
+      source: AI_SOURCE,
+      metadata: { outcome: "HANDOFF", topic: "atendimento_humano", inboundProviderMessageId: message.id }
+    });
+    await markInboundAi({
+      id: inbound.id,
+      webhookPayload: inbound.webhookPayload,
+      status: "COMPLETED",
+      outcome: "HANDOFF",
+      topic: "atendimento_humano",
+      reason: "Cliente solicitou atendimento humano."
+    });
+    return;
+  }
   const usage = await monthlyUsageAllowed(inbound.organizationId);
   if (!usage.allowed) {
     await setWhatsAppAiConversationState({
@@ -559,6 +655,12 @@ async function processInboundMessage(message: MetaTextMessage) {
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     console.error("[WhatsApp AI] Falha ao atender mensagem", { providerMessageId: message.id, error: detail });
+    await setWhatsAppAiConversationState({
+      organizationId: inbound.organizationId,
+      phone: message.from,
+      mode: "HANDOFF",
+      reason: "A IA não conseguiu responder com segurança; atendimento humano solicitado."
+    });
     await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "FAILED", error: detail.slice(0, 500) });
   }
 }

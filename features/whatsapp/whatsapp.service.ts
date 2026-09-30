@@ -2,6 +2,7 @@ import { Prisma, WhatsAppMessageStatus, WhatsAppMessageType } from "@prisma/clie
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { normalizeHost } from "@/lib/request-host";
+import { savePublicMediaUpload } from "@/features/uploads/local-upload.service";
 
 type WhatsAppTemplateParameter = {
   type: "text";
@@ -210,9 +211,9 @@ async function recordWhatsAppMessageLog(input: {
               parameters: input.parameters || [],
               ...(input.payloadMetadata || {})
             })
-          : input.textContent
+          : input.textContent || input.payloadMetadata
             ? toJson({
-                text: input.textContent,
+                ...(input.textContent ? { text: input.textContent } : {}),
                 ...(input.payloadMetadata || {})
               })
           : undefined,
@@ -617,6 +618,64 @@ export async function sendWhatsAppTextMessage(input: {
   }
 }
 
+export type WhatsAppMediaKind = "audio" | "document" | "image" | "video";
+
+export async function sendWhatsAppMediaMessage(input: {
+  to?: string | null;
+  kind: WhatsAppMediaKind;
+  mediaUrl: string;
+  fileName?: string | null;
+  caption?: string | null;
+  mimeType?: string | null;
+  organizationId?: string | null;
+  eventId?: string | null;
+  orderId?: string | null;
+  leadId?: string | null;
+  recipientName?: string | null;
+}) {
+  const config = getWhatsAppConfig();
+  let to = input.to || null;
+  try {
+    if (!config.token || !config.phoneNumberId) throw new Error("WhatsApp Business API nao configurada.");
+    to = formatPhone(input.to);
+    const media: Record<string, string> = { link: input.mediaUrl };
+    if (input.caption && input.kind !== "audio") media.caption = input.caption;
+    if (input.fileName && input.kind === "document") media.filename = input.fileName;
+    const response = await fetch(`https://graph.facebook.com/${getWhatsAppApiVersion()}/${config.phoneNumberId}/messages`, {
+      method: "POST",
+      signal: AbortSignal.timeout(20_000),
+      headers: { Authorization: `Bearer ${config.token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ messaging_product: "whatsapp", recipient_type: "individual", to, type: input.kind, [input.kind]: media })
+    });
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      const parsedError = parseWhatsAppApiError(detail);
+      throw Object.assign(new Error(parsedError.message || `WhatsApp API retornou HTTP ${response.status}.`), { providerPayload: parsedError.payload });
+    }
+    const payload = (await response.json()) as WhatsAppApiResponse;
+    await recordWhatsAppMessageLog({
+      to,
+      textContent: input.caption || null,
+      context: { type: WhatsAppMessageType.BULK, organizationId: input.organizationId, eventId: input.eventId, orderId: input.orderId, leadId: input.leadId, recipientName: input.recipientName },
+      status: WhatsAppMessageStatus.SENT,
+      providerMessageId: extractProviderMessageId(payload),
+      payloadMetadata: { media: { kind: input.kind, url: input.mediaUrl, fileName: input.fileName || null, mimeType: input.mimeType || null } }
+    });
+    return payload;
+  } catch (error) {
+    await recordWhatsAppMessageLog({
+      to,
+      textContent: input.caption || null,
+      context: { type: WhatsAppMessageType.BULK, organizationId: input.organizationId, eventId: input.eventId, orderId: input.orderId, leadId: input.leadId, recipientName: input.recipientName },
+      status: WhatsAppMessageStatus.FAILED,
+      errorMessage: normalizeError(error),
+      payloadMetadata: { media: { kind: input.kind, url: input.mediaUrl, fileName: input.fileName || null, mimeType: input.mimeType || null } },
+      webhookPayload: error instanceof Error && "providerPayload" in error ? (error as Error & { providerPayload?: unknown }).providerPayload : undefined
+    });
+    throw error;
+  }
+}
+
 function mapWebhookStatus(status?: string) {
   const normalized = status?.trim().toLowerCase();
 
@@ -661,24 +720,84 @@ type WhatsAppWebhookStatus = {
   }>;
 };
 
+type WhatsAppInboundMessage = {
+  id?: string;
+  from?: string;
+  timestamp?: string;
+  type?: string;
+  text?: { body?: string };
+  image?: { id?: string; mime_type?: string; caption?: string; sha256?: string };
+  audio?: { id?: string; mime_type?: string; voice?: boolean; sha256?: string };
+  video?: { id?: string; mime_type?: string; caption?: string; sha256?: string };
+  document?: { id?: string; mime_type?: string; caption?: string; filename?: string; sha256?: string };
+  sticker?: { id?: string; mime_type?: string; animated?: boolean; sha256?: string };
+  reaction?: { message_id?: string; emoji?: string };
+  location?: { latitude?: number; longitude?: number; name?: string; address?: string };
+  contacts?: Array<{ name?: { formatted_name?: string }; phones?: Array<{ phone?: string; wa_id?: string }> }>;
+  button?: { text?: string; payload?: string };
+  interactive?: { button_reply?: { title?: string; id?: string }; list_reply?: { title?: string; description?: string; id?: string } };
+};
+
 type WhatsAppWebhookPayload = {
   entry?: Array<{
     changes?: Array<{
       value?: {
-        messages?: Array<{
-          id?: string;
-          from?: string;
-          timestamp?: string;
-          type?: string;
-          text?: {
-            body?: string;
-          };
-        }>;
+        messages?: WhatsAppInboundMessage[];
         statuses?: WhatsAppWebhookStatus[];
       };
     }>;
   }>;
 };
+
+function inboundMedia(message: WhatsAppInboundMessage) {
+  for (const kind of ["image", "audio", "video", "document", "sticker"] as const) {
+    const data = message[kind];
+    if (data?.id) return { kind, data };
+  }
+  return null;
+}
+
+async function downloadInboundWhatsAppMedia(message: WhatsAppInboundMessage) {
+  const media = inboundMedia(message);
+  const token = getWhatsAppConfig().token;
+  if (!media || !token) return null;
+  try {
+    const metadataResponse = await fetch(`https://graph.facebook.com/${getWhatsAppApiVersion()}/${media.data.id}`, {
+      headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(12_000), cache: "no-store"
+    });
+    if (!metadataResponse.ok) throw new Error(`Meta media metadata HTTP ${metadataResponse.status}`);
+    const metadata = (await metadataResponse.json()) as { url?: string; mime_type?: string };
+    if (!metadata.url) throw new Error("Meta não retornou a URL da mídia.");
+    const mediaResponse = await fetch(metadata.url, { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(20_000), cache: "no-store" });
+    if (!mediaResponse.ok) throw new Error(`Meta media download HTTP ${mediaResponse.status}`);
+    const mimeType = media.data.mime_type || metadata.mime_type || mediaResponse.headers.get("content-type") || "application/octet-stream";
+    const fileName = "filename" in media.data && media.data.filename ? media.data.filename : `whatsapp-${media.kind}`;
+    const file = new File([await mediaResponse.arrayBuffer()], fileName, { type: mimeType });
+    const url = await savePublicMediaUpload(file, `whatsapp/inbound/${new Date().toISOString().slice(0, 10)}`);
+    return { kind: media.kind, url, fileName, mimeType, caption: "caption" in media.data ? media.data.caption || null : null };
+  } catch (error) {
+    console.error("[WhatsApp] Falha ao preservar mídia recebida", { mediaId: media.data.id, kind: media.kind, error: normalizeError(error) });
+    return { kind: media.kind, url: null, fileName: "filename" in media.data ? media.data.filename || null : null, mimeType: media.data.mime_type || null, error: normalizeError(error) };
+  }
+}
+
+export async function fetchWhatsAppMediaById(mediaId: string) {
+  const token = getWhatsAppConfig().token;
+  if (!token) throw new Error("WhatsApp Business API nao configurada.");
+  if (!/^[A-Za-z0-9._-]{6,200}$/.test(mediaId)) throw new Error("Identificador de mídia inválido.");
+  const metadataResponse = await fetch(`https://graph.facebook.com/${getWhatsAppApiVersion()}/${mediaId}`, {
+    headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(12_000), cache: "no-store"
+  });
+  if (!metadataResponse.ok) throw new Error(`Mídia indisponível na Meta (HTTP ${metadataResponse.status}).`);
+  const metadata = (await metadataResponse.json()) as { url?: string; mime_type?: string; file_size?: number };
+  if (!metadata.url) throw new Error("Meta não retornou a URL da mídia.");
+  const response = await fetch(metadata.url, { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(20_000), cache: "no-store" });
+  if (!response.ok) throw new Error(`Não foi possível baixar a mídia (HTTP ${response.status}).`);
+  return {
+    body: await response.arrayBuffer(),
+    mimeType: metadata.mime_type || response.headers.get("content-type") || "application/octet-stream"
+  };
+}
 
 export async function handleWhatsAppMetaWebhook(payload: unknown) {
   const body = payload as WhatsAppWebhookPayload;
@@ -706,16 +825,18 @@ export async function handleWhatsAppMetaWebhook(payload: unknown) {
       }
     }
 
+    const media = await downloadInboundWhatsAppMedia(message);
+    const reactionText = message.reaction?.emoji ? `Reagiu ${message.reaction.emoji}` : null;
     await recordWhatsAppMessageLog({
       to: message.from,
-      textContent: message.text?.body || null,
+      textContent: message.text?.body || reactionText || media?.caption || null,
       context: {
         type: WhatsAppMessageType.WEBHOOK,
         organizationId
       },
       status: WhatsAppMessageStatus.RECEIVED,
       providerMessageId: message.id,
-      webhookPayload: message
+      webhookPayload: media ? { ...message, _tcrMedia: media } : message
     });
     received += 1;
   }
