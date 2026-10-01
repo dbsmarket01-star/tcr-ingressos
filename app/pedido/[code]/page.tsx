@@ -87,8 +87,8 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
     getCompanySettings(order.event.organizationId),
     listPaymentSplitRules(order.event.organizationId)
   ]);
-  const isFeeFree = isFeeFreeOrganization(order.event.organization.slug);
-  const feeSettings = getEffectivePaymentFeeSettings(order.event.organization.slug, storedFeeSettings);
+  const isFeeFree = isFeeFreeOrganization(order.event.organization.slug, order.event.slug);
+  const feeSettings = getEffectivePaymentFeeSettings(order.event.organization.slug, storedFeeSettings, order.event.slug);
   const splitRules = isFeeFree ? [] : storedSplitRules;
   const effectiveOrderServiceFeeInCents = isFeeFree ? 0 : order.serviceFeeInCents;
 

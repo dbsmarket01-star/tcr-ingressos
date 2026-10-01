@@ -1,6 +1,7 @@
 import { OrderStatus, PaymentProvider, PaymentStatus, Prisma, TicketLotOptionStatus } from "@prisma/client";
 import { createAuditLog } from "@/features/audit/audit.service";
 import { createHomeListEntriesForApprovedOrder } from "@/features/hospitality/home-list.service";
+import { getHotelRoomsPerUnit } from "@/features/hospitality/hotel-lot-rules";
 import { prisma } from "@/lib/prisma";
 import { createOrderCode } from "@/features/orders/order.service";
 import { createQrCodeToken, createTicketCode } from "@/features/tickets/ticket-code";
@@ -276,7 +277,9 @@ export async function createManualSale(
 
       const hotelGuests = (input.hotelGuests ?? []).sort((left, right) => left.guestIndex - right.guestIndex);
 
-      if (lot.hasHotel && hotelGuests.length !== quantity) {
+      const hotelRoomCount = lot.hasHotel ? quantity * getHotelRoomsPerUnit(lot) : 0;
+
+      if (lot.hasHotel && hotelGuests.length !== hotelRoomCount) {
         throw new Error("Informe os dados de hospedes para cada hospedagem vendida.");
       }
 

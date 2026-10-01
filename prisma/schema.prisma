@@ -296,19 +296,20 @@ enum UnlockActionType {
 }
 
 model Organization {
-  id             String   @id @default(cuid())
-  slug           String   @unique
-  name           String
-  publicDomain   String?  @unique
-  adminDomain    String?  @unique
-  logoUrl        String?
-  primaryColor   String?
-  secondaryColor String?
-  supportEmail   String?
-  supportPhone   String?
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  financialLedgerAccount FinancialLedgerAccount?
+  id                     String                  @id @default(cuid())
+  slug                   String                  @unique
+  name                   String
+  publicDomain           String?                 @unique
+  adminDomain            String?                 @unique
+  logoUrl                String?
+  primaryColor           String?
+  secondaryColor         String?
+  supportEmail           String?
+  supportPhone           String?
+  isActive               Boolean                 @default(true)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
 
   adminUsers              AdminUser[]
   companySettings         CompanySettings[]
@@ -406,9 +407,9 @@ model CompanySettings {
   footerCancellationPolicyContent String?
   defaultCurrency                 String   @default("BRL")
   platformFeeBps                  Int      @default(1000)
-  pixTransactionFeeInCents       Int      @default(200)
-  cardBaseFeeBps                 Int      @default(400)
-  cardAdditionalInstallmentFeeBps Int     @default(300)
+  pixTransactionFeeInCents        Int      @default(200)
+  cardBaseFeeBps                  Int      @default(400)
+  cardAdditionalInstallmentFeeBps Int      @default(300)
   orderReservationMinutes         Int      @default(120)
   cardPendingReservationMinutes   Int      @default(30)
   createdAt                       DateTime @default(now())
@@ -931,21 +932,23 @@ model Participant {
 }
 
 model Order {
-  id                             String      @id @default(cuid())
-  code                           String      @unique
+  financialLedgerEntries         FinancialLedgerEntry[]
+  id                             String                 @id @default(cuid())
+  code                           String                 @unique
   eventId                        String
   customerId                     String
   couponId                       String?
   couponCode                     String?
   churchName                     String?
-  status                         OrderStatus @default(PENDING_PAYMENT)
+  status                         OrderStatus            @default(PENDING_PAYMENT)
   subtotalInCents                Int
-  serviceFeeInCents              Int         @default(0)
-  pixDiscountInCents             Int         @default(0)
-  cardInterestInCents            Int         @default(0)
-  discountInCents                Int         @default(0)
+  serviceFeeInCents              Int                    @default(0)
+  pixDiscountInCents             Int                    @default(0)
+  cardInterestInCents            Int                    @default(0)
+  discountInCents                Int                    @default(0)
+  refundedInCents                Int                    @default(0)
   totalInCents                   Int
-  currency                       String      @default("BRL")
+  currency                       String                 @default("BRL")
   buyerCity                      String?
   buyerState                     String?
   buyerPostalCode                String?
@@ -958,7 +961,7 @@ model Order {
   ticketsEmailStatus             String?
   ticketsEmailLastCheckedAt      DateTime?
   ticketsEmailLastError          String?
-  ticketsEmailAttempts           Int         @default(0)
+  ticketsEmailAttempts           Int                    @default(0)
   purchaseApprovedWhatsAppSentAt DateTime?
   cartAbandonmentSentAt          DateTime?
   paidAt                         DateTime?
@@ -975,8 +978,8 @@ model Order {
   clientIpAddress                String?
   clientUserAgent                String?
   metaPurchaseTrackedAt          DateTime?
-  createdAt                      DateTime    @default(now())
-  updatedAt                      DateTime    @updatedAt
+  createdAt                      DateTime               @default(now())
+  updatedAt                      DateTime               @updatedAt
 
   event            Event             @relation(fields: [eventId], references: [id], onDelete: Restrict)
   customer         Customer          @relation(fields: [customerId], references: [id], onDelete: Restrict)
@@ -988,6 +991,7 @@ model Order {
   orderSeats       OrderSeat[]
   orderHotelGuests OrderHotelGuest[]
   homeListEntries  HomeListEntry[]
+  paymentRefunds   PaymentRefund[]
 
   @@index([eventId, status, createdAt])
   @@index([status, expiresAt])
@@ -997,6 +1001,21 @@ model Order {
   @@index([eventId, churchName])
   @@index([buyerCity, buyerState])
   @@index([ticketsEmailProviderId])
+}
+
+model PaymentRefund {
+  id                String   @id @default(cuid())
+  orderId           String
+  externalPaymentId String
+  amountInCents     Int
+  rawPayload        Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, externalPaymentId])
+  @@index([orderId])
 }
 
 model WhatsAppMessageLog {
@@ -1128,22 +1147,23 @@ model HomeListEntry {
 }
 
 model Payment {
-  id               String          @id @default(cuid())
-  orderId          String          @unique
-  provider         PaymentProvider @default(SIMULATED)
-  status           PaymentStatus   @default(CREATED)
-  externalId       String?
-  checkoutUrl      String?
-  pixQrCodeImage   String?
-  pixQrCodePayload String?
-  pixExpiresAt     DateTime?
-  amountInCents    Int
-  paidAt           DateTime?
-  failedAt         DateTime?
-  failureReason    String?
-  rawPayload       Json?
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  financialLedgerEntries FinancialLedgerEntry[]
+  id                     String                 @id @default(cuid())
+  orderId                String                 @unique
+  provider               PaymentProvider        @default(SIMULATED)
+  status                 PaymentStatus          @default(CREATED)
+  externalId             String?
+  checkoutUrl            String?
+  pixQrCodeImage         String?
+  pixQrCodePayload       String?
+  pixExpiresAt           DateTime?
+  amountInCents          Int
+  paidAt                 DateTime?
+  failedAt               DateTime?
+  failureReason          String?
+  rawPayload             Json?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
@@ -1641,4 +1661,327 @@ model UnlockRequest {
   @@index([userId, status, createdAt])
   @@index([deviceId, status])
   @@index([partnerEmail, status])
+}
+
+// Append-only financial facts. SQL migration enforces sign, tenant and immutability.
+model FinancialLedgerAccount {
+  organization              Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict, map: "LedgerAccount_organization_fkey")
+  organizationId            String                 @id
+  providerAccountId         String
+  startsOn                  DateTime               @db.Date
+  openingCashInCents        BigInt
+  openingProducerInCents    BigInt
+  openingReceivablesInCents BigInt
+  openingEvidence           String
+  createdBy                 String
+  createdAt                 DateTime               @default(now())
+  entries                   FinancialLedgerEntry[]
+  closings                  FinancialClosing[]
+  incidents                 FinancialIncident[]
+  audits                    FinancialLedgerAudit[]
+}
+
+model FinancialLedgerEntry {
+  order             Order?                 @relation(fields: [orderId], references: [id], onDelete: Restrict, map: "LedgerEntry_order_fkey")
+  payment           Payment?               @relation(fields: [paymentId], references: [id], onDelete: Restrict, map: "LedgerEntry_payment_fkey")
+  id                String                 @id @default(cuid())
+  sequence          BigInt                 @unique @default(autoincrement())
+  organizationId    String
+  sourceKey         String
+  type              String
+  account           String
+  direction         String
+  amountInCents     BigInt
+  effectiveAt       DateTime
+  verified          Boolean
+  orderId           String?
+  paymentId         String?
+  externalPaymentId String?
+  transactionId     String?
+  reversalOfId      String?                @unique
+  fingerprint       String
+  evidence          String
+  metadata          Json
+  createdAt         DateTime               @default(now())
+  ledgerAccount     FinancialLedgerAccount @relation(fields: [organizationId], references: [organizationId], onDelete: Restrict)
+  reversalOf        FinancialLedgerEntry?  @relation("LedgerReversal", fields: [reversalOfId], references: [id], onDelete: Restrict)
+  reversals         FinancialLedgerEntry[] @relation("LedgerReversal")
+
+  @@unique([organizationId, sourceKey])
+  @@index([organizationId, effectiveAt, sequence])
+  @@index([organizationId, orderId, type])
+  @@index([organizationId, externalPaymentId])
+}
+
+model FinancialClosing {
+  id                String                 @id @default(cuid())
+  organizationId    String
+  date              DateTime               @db.Date
+  revision          Int
+  status            String                 @default("DRAFT")
+  sourceHash        String
+  sourceSnapshot    Json
+  ledgerHash        String
+  ledgerSequence    BigInt
+  ledgerCount       Int
+  differenceInCents BigInt                 @default(0)
+  issueCount        Int                    @default(0)
+  result            Json
+  createdBy         String
+  publishedBy       String?
+  publishedAt       DateTime?
+  createdAt         DateTime               @default(now())
+  ledgerAccount     FinancialLedgerAccount @relation(fields: [organizationId], references: [organizationId], onDelete: Restrict)
+
+  @@unique([organizationId, date, revision])
+  @@index([organizationId, date, status])
+}
+
+model FinancialIncident {
+  id                 String                 @id @default(cuid())
+  organizationId     String
+  key                String
+  kind               String
+  effectiveAt        DateTime
+  details            Json
+  resolvedAt         DateTime?
+  resolutionEvidence String?
+  resolvedBy         String?
+  createdAt          DateTime               @default(now())
+  ledgerAccount      FinancialLedgerAccount @relation(fields: [organizationId], references: [organizationId], onDelete: Restrict)
+
+  @@unique([organizationId, key])
+  @@index([organizationId, resolvedAt, effectiveAt])
+}
+
+model FinancialLedgerAudit {
+  id             String                 @id @default(cuid())
+  organizationId String
+  actorId        String
+  action         String
+  entityId       String
+  evidence       String
+  metadata       Json
+  createdAt      DateTime               @default(now())
+  ledgerAccount  FinancialLedgerAccount @relation(fields: [organizationId], references: [organizationId], onDelete: Restrict)
+
+  @@index([organizationId, createdAt])
+}
+
+// Durable WhatsApp campaigns; message dispatch is owned by a background worker.
+model WaIntegration {
+  id                String    @id @default(cuid())
+  organizationId    String    @unique
+  phoneNumberId     String    @unique
+  wabaId            String
+  portfolioId       String?
+  health            Json      @default("{}")
+  syncedAt          DateTime?
+  blockedReason     String?
+  blockedUntil      DateTime?
+  frequencyHours    Int       @default(72)
+  cooldownDays      Int       @default(14)
+  disengagedAfter   Int       @default(3)
+  minimumIntervalMs Int       @default(1000)
+  consecutiveErrors Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model WaContact {
+  lastReservedAt   DateTime?
+  id               String         @id @default(cuid())
+  organizationId   String
+  phone            String
+  name             String
+  city             String         @default("")
+  tag              String         @default("")
+  status           String         @default("active")
+  optInStatus      String         @default("unknown")
+  optInDate        DateTime?
+  optInSource      String?
+  purpose          String         @default("")
+  collectionSource String         @default("")
+  lastInboundAt    DateTime?
+  lastMarketingAt  DateTime?
+  cooldownUntil    DateTime?
+  unengagedCount   Int            @default(0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  members          WaListMember[]
+  jobs             WaMessageJob[]
+
+  @@unique([organizationId, phone])
+}
+
+model WaSuppression {
+  id             String   @id @default(cuid())
+  organizationId String
+  phone          String
+  reason         String
+  source         String
+  createdAt      DateTime @default(now())
+
+  @@unique([organizationId, phone])
+}
+
+model WaContactList {
+  id             String         @id @default(cuid())
+  organizationId String
+  name           String
+  version        Int            @default(1)
+  status         String         @default("processing")
+  source         String
+  originalCount  Int            @default(0)
+  validCount     Int            @default(0)
+  invalidCount   Int            @default(0)
+  duplicateCount Int            @default(0)
+  importDetails  Json           @default("{}")
+  createdBy      String
+  createdAt      DateTime       @default(now())
+  members        WaListMember[]
+}
+
+model WaListMember {
+  id        String        @id @default(cuid())
+  listId    String
+  contactId String
+  snapshot  Json
+  list      WaContactList @relation(fields: [listId], references: [id], onDelete: Restrict)
+  contact   WaContact     @relation(fields: [contactId], references: [id], onDelete: Restrict)
+
+  @@unique([listId, contactId])
+}
+
+model WaTemplate {
+  id             String   @id @default(cuid())
+  organizationId String
+  metaId         String
+  name           String
+  language       String
+  status         String
+  category       String
+  quality        String?
+  components     Json
+  syncedAt       DateTime @default(now())
+
+  @@unique([organizationId, metaId])
+  @@unique([organizationId, name, language])
+}
+
+model WaCampaign {
+  id              String         @id @default(cuid())
+  organizationId  String
+  creationKey     String
+  createdBy       String
+  name            String         @default("Nova campanha")
+  status          String         @default("draft")
+  version         Int            @default(1)
+  config          Json           @default("{}")
+  snapshot        Json?
+  snapshotHash    String?
+  listId          String?
+  templateId      String?
+  phoneNumberId   String?
+  scheduledAt     DateTime?
+  nextDispatchAt  DateTime?
+  dispatchedCount Int            @default(0)
+  confirmedAt     DateTime?
+  confirmedBy     String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  pauseReason     String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  jobs            WaMessageJob[]
+
+  @@unique([organizationId, creationKey])
+  @@index([status, nextDispatchAt])
+  @@index([organizationId, createdAt])
+}
+
+model WaMedia {
+  ready          Boolean  @default(false)
+  uploadVersion  Int      @default(0)
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  mime           String
+  size           Int
+  sha256         String
+  data           Bytes
+  metadata       Json
+  createdBy      String
+  createdAt      DateTime @default(now())
+}
+
+model WaMessageJob {
+  reservedAt        DateTime?
+  id                String           @id @default(cuid())
+  organizationId    String
+  campaignId        String
+  contactId         String
+  phone             String
+  recipient         Json
+  state             String           @default("queued")
+  attemptId         String?          @unique
+  attempts          Int              @default(0)
+  providerMessageId String?          @unique
+  availableAt       DateTime         @default(now())
+  dispatchStartedAt DateTime?
+  acceptedAt        DateTime?
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  readAt            DateTime?
+  failedAt          DateTime?
+  repliedAt         DateTime?
+  optedOutAt        DateTime?
+  clickedAt         DateTime?
+  clickCount        Int              @default(0)
+  clickToken        String           @unique @default(cuid())
+  errorCode         String?
+  errorMessage      String?
+  uncertain         Boolean          @default(false)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  campaign          WaCampaign       @relation(fields: [campaignId], references: [id], onDelete: Restrict)
+  contact           WaContact        @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  events            WaMessageEvent[]
+
+  @@unique([campaignId, contactId])
+  @@unique([campaignId, phone])
+  @@index([state, availableAt])
+  @@index([organizationId, phone, createdAt])
+}
+
+model WaMessageEvent {
+  id                String        @id @default(cuid())
+  sourceKey         String        @unique
+  jobId             String?
+  organizationId    String
+  providerMessageId String?
+  phone             String?
+  kind              String
+  happenedAt        DateTime
+  detail            Json
+  job               WaMessageJob? @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  createdAt         DateTime      @default(now())
+}
+
+model WaRateGate {
+  key          String    @id
+  nextAt       DateTime  @default(now())
+  blockedUntil DateTime?
+}
+
+model WaAudit {
+  id             String   @id @default(cuid())
+  organizationId String
+  campaignId     String?
+  actorId        String
+  action         String
+  detail         Json
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, campaignId, createdAt])
 }

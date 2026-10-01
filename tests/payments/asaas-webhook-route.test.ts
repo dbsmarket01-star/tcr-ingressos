@@ -124,6 +124,27 @@ describe("Asaas payment webhook route", () => {
     );
   });
 
+  it("keeps a partial Asaas refund distinct from a full refund", async () => {
+    findAsaasWebhookOrganizationMock.mockResolvedValue({ id: "org_a2", slug: "a2-imergidos", name: "A2 Imergidos" });
+    handlePaymentWebhookMock.mockResolvedValue({});
+    const { POST } = await import("@/app/api/webhooks/payments/asaas/route");
+    const response = await POST(new Request("https://www.a2imergidos.com.br/api/webhooks/payments/asaas", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-asaas-token": "a2-webhook-token" },
+      body: JSON.stringify({
+        event: "PAYMENT_PARTIALLY_REFUNDED",
+        payment: { id: "pay_partial", status: "CONFIRMED", externalReference: "ING-PARTIAL", value: 100, refundedValue: 25 }
+      })
+    }));
+
+    expect(response.status).toBe(200);
+    expect(handlePaymentWebhookMock).toHaveBeenCalledWith(expect.objectContaining({
+      externalId: "pay_partial",
+      orderCode: "ING-PARTIAL",
+      status: "PARTIALLY_REFUNDED"
+    }));
+  });
+
   it("maps refused credit card capture events as failed", async () => {
     findAsaasWebhookOrganizationMock.mockResolvedValue({
       id: "org_a2",

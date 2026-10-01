@@ -1,8 +1,10 @@
 import { OrderStatus, PaymentProvider, PaymentStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSourceLabel } from "@/features/tracking/tracking";
-import { summarizeAsaasSplit } from "@/features/payments/split-report.service";
+import { summarizeAsaasPaymentAmounts, summarizeAsaasSplit } from "@/features/payments/split-report.service";
 import { getReportPeriod } from "@/features/reports/report-period";
+import { allocateOrderAmountsAfterRefund } from "./order-refund-allocation";
+import { assertCents, validateFinanceReport } from "./financial-integrity";
 
 type FinanceReportFilters = {
   eventId?: string;
@@ -96,17 +98,6 @@ function extractBillingType(rawPayload: unknown, provider: PaymentProvider, hasP
   return "OTHER";
 }
 
-function extractNetValueInCents(rawPayload: unknown) {
-  const payload = extractPaymentPayload(rawPayload);
-  const netValue = payload?.netValue;
-
-  if (typeof netValue !== "number" || !Number.isFinite(netValue)) {
-    return null;
-  }
-
-  return Math.round(netValue * 100);
-}
-
 function addToMap<T extends { grossInCents: number; netInCents: number; count: number }>(
   map: Map<string, T>,
   key: string,
@@ -175,7 +166,7 @@ export async function getFinanceReport(
   const ordersEventWhere = buildScopedEventWhere(organizationId, allowedEventIds, eventId);
   const orderItemsWhere = lotId ? { items: { some: { lotId } } } : {};
 
-  const [events, lots, ordersInPeriod, paidOrdersRaw] = await Promise.all([
+  const [events, lots, ordersInPeriod, paidOrdersRaw, refundsInPeriodRaw] = await prisma.$transaction([
     prisma.event.findMany({
       where: eventsWhere,
       orderBy: [{ startsAt: "desc" }, { title: "asc" }],
@@ -276,8 +267,30 @@ export async function getFinanceReport(
       orderBy: {
         paidAt: "desc"
       }
+    }),
+    prisma.paymentRefund.findMany({
+      where: {
+        createdAt: { gte: startDate, lte: endDate },
+        order: {
+          event: ordersEventWhere,
+          ...orderItemsWhere
+        }
+      },
+      include: {
+        order: {
+          select: {
+            payment: {
+              select: {
+                provider: true,
+                pixQrCodePayload: true,
+                rawPayload: true
+              }
+            }
+          }
+        }
+      }
     })
-  ]);
+  ], { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
 
   const paidOrders = paymentMethod
     ? paidOrdersRaw.filter((order) => extractBillingType(
@@ -286,6 +299,11 @@ export async function getFinanceReport(
       Boolean(order.payment?.pixQrCodePayload)
     ) === paymentMethod)
     : paidOrdersRaw;
+  const refundsInPeriod = refundsInPeriodRaw.filter((refund) => !paymentMethod || extractBillingType(
+    refund.order.payment?.rawPayload,
+    refund.order.payment?.provider ?? PaymentProvider.SIMULATED,
+    Boolean(refund.order.payment?.pixQrCodePayload)
+  ) === paymentMethod);
   const operationalOrdersInPeriod = ordersInPeriod.filter((order) => order.status !== OrderStatus.REFUNDED);
 
   const statusCounts = Object.fromEntries(
@@ -377,7 +395,16 @@ export async function getFinanceReport(
     }
   > = [];
 
+  const sourceIssues: string[] = [];
   for (const order of paidOrders) {
+    try {
+      for (const key of ["totalInCents", "subtotalInCents", "serviceFeeInCents", "cardInterestInCents", "discountInCents", "refundedInCents"] as const) {
+        assertCents(order[key], `${order.id}.${key}`);
+      }
+      if (order.refundedInCents > order.totalInCents) sourceIssues.push(`Estorno excede o pedido: ${order.id}`);
+    } catch (error) {
+      sourceIssues.push(error instanceof Error ? error.message : `Pedido inválido: ${order.id}`);
+    }
     const scopedItems = lotId ? order.items.filter((item) => item.lotId === lotId) : order.items;
 
     if (lotId && scopedItems.length === 0) {
@@ -395,19 +422,34 @@ export async function getFinanceReport(
     const scopedCardInterest = lotId
       ? allocateAmountByShare(order.cardInterestInCents, scopedBaseForAllocation, orderBaseForAllocation)
       : order.cardInterestInCents;
-    const gross = lotId
+    const grossBeforeRefund = lotId
       ? Math.max(scopedSubtotal + scopedServiceFee + scopedCardInterest - scopedDiscount, 0)
       : order.totalInCents;
-    const orderTicketSubtotal = lotId ? scopedSubtotal : order.subtotalInCents;
-    const orderServiceFee = lotId ? scopedServiceFee : order.serviceFeeInCents;
-    const orderCardInterest = scopedCardInterest;
-    const orderDiscount = scopedDiscount;
+    const refundForScope = lotId
+      ? allocateAmountByShare(order.refundedInCents, grossBeforeRefund, order.totalInCents)
+      : order.refundedInCents;
+    const effectiveAmounts = allocateOrderAmountsAfterRefund({
+      totalInCents: grossBeforeRefund,
+      subtotalInCents: lotId ? scopedSubtotal : order.subtotalInCents,
+      serviceFeeInCents: lotId ? scopedServiceFee : order.serviceFeeInCents,
+      cardInterestInCents: scopedCardInterest,
+      discountInCents: scopedDiscount,
+      refundedInCents: refundForScope
+    });
+    const gross = effectiveAmounts.totalInCents;
+    const orderTicketSubtotal = effectiveAmounts.subtotalInCents;
+    const orderServiceFee = effectiveAmounts.serviceFeeInCents;
+    const orderCardInterest = effectiveAmounts.cardInterestInCents;
+    const orderDiscount = effectiveAmounts.discountInCents;
     const orderTicketNet = getTicketNetInCents(gross, orderServiceFee, orderCardInterest);
-    const netFromProvider = extractNetValueInCents(order.payment?.rawPayload);
+    const providerAmounts = summarizeAsaasPaymentAmounts(order.payment?.rawPayload);
     const splitSummary = summarizeAsaasSplit(order.payment?.rawPayload);
-    const net = lotId && netFromProvider !== null
-      ? allocateAmountByShare(netFromProvider, gross, order.totalInCents)
-      : netFromProvider ?? gross;
+    const providerFeeBeforeRefund = providerAmounts.feeInCents;
+    const providerFeeForScope = lotId
+      ? allocateAmountByShare(providerFeeBeforeRefund, grossBeforeRefund, order.totalInCents)
+      : providerFeeBeforeRefund;
+    const effectiveProviderFee = allocateAmountByShare(providerFeeForScope, gross, grossBeforeRefund);
+    const net = Math.max(gross - effectiveProviderFee, 0);
     const method = extractBillingType(
       order.payment?.rawPayload,
       order.payment?.provider ?? PaymentProvider.SIMULATED,
@@ -434,9 +476,10 @@ export async function getFinanceReport(
     serviceFeeInCents += orderServiceFee;
     cardInterestInCents += orderCardInterest;
     discountInCents += orderDiscount;
-    splitTotalInCents += splitSummary.totalInCents;
+    const effectiveSplitTotalInCents = allocateAmountByShare(splitSummary.totalInCents, gross, grossBeforeRefund);
+    splitTotalInCents += effectiveSplitTotalInCents;
     splitPaymentsCount += splitSummary.entries.length > 0 ? 1 : 0;
-    netValueKnownCount += netFromProvider === null ? 0 : 1;
+    netValueKnownCount += providerAmounts.netInCents > 0 ? 1 : 0;
 
     for (const splitEntry of splitSummary.entries) {
       const key = `${splitEntry.walletId}:${splitEntry.status}`;
@@ -449,7 +492,7 @@ export async function getFinanceReport(
       };
 
       current.count += 1;
-      current.totalInCents += splitEntry.totalInCents;
+      current.totalInCents += allocateAmountByShare(splitEntry.totalInCents, gross, grossBeforeRefund);
       bySplitWallet.set(key, current);
     }
 
@@ -538,7 +581,7 @@ export async function getFinanceReport(
     .filter((order) => order.status === OrderStatus.CANCELED || order.status === OrderStatus.EXPIRED)
     .reduce((sum, order) => sum + order.totalInCents, 0);
 
-  return {
+  const report = {
     filters: {
       eventId: eventId ?? "",
       lotId: lotId ?? "",
@@ -560,7 +603,7 @@ export async function getFinanceReport(
       pendingAmountInCents,
       canceledAmountInCents,
       ordersInPeriod: operationalOrdersInPeriod.length,
-      paidOrders: paidOrders.length,
+      paidOrders: scopedPaidOrders.length,
       pendingOrders: statusCounts.PENDING_PAYMENT ?? 0,
       canceledOrders: (statusCounts.CANCELED ?? 0) + (statusCounts.EXPIRED ?? 0),
       approvedPayments: paymentStatusCounts.APPROVED ?? 0,
@@ -570,7 +613,8 @@ export async function getFinanceReport(
       splitTotalInCents,
       splitPaymentsCount,
       splitCoverage: scopedPaidOrders.length > 0 ? Math.round((splitPaymentsCount / scopedPaidOrders.length) * 100) : 0,
-      platformAfterSplitInCents: Math.max(netRevenueInCents - splitTotalInCents, 0)
+      platformAfterSplitInCents: Math.max(netRevenueInCents - splitTotalInCents, 0),
+      refundsInCents: refundsInPeriod.reduce((sum, refund) => sum + refund.amountInCents, 0)
     },
     byEvent: Array.from(byEvent.values()).sort((a, b) => b.grossInCents - a.grossInCents),
     byMethod: Array.from(byMethod.values()).sort((a, b) => b.grossInCents - a.grossInCents),
@@ -580,4 +624,8 @@ export async function getFinanceReport(
     recentPaidOrders: scopedPaidOrders.slice(0, 12),
     recentOrders: ordersInPeriod.slice(0, 12)
   };
+  const integrity = validateFinanceReport(report);
+  integrity.issues.push(...sourceIssues);
+  integrity.valid = integrity.issues.length === 0;
+  return { ...report, integrity };
 }

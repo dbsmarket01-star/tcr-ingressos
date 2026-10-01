@@ -1,0 +1,35 @@
+{
+  "organizationId": "TCR-auditoria-historica",
+  "scope": "Reprodução isolada do erro de sinal do print; não é o saldo final auditado",
+  "startDate": "2026-09-24",
+  "endDate": "2026-09-25",
+  "opening": {
+    "amountInCents": 1484203,
+    "verified": false,
+    "evidence": "Saldo impresso em 23/09; usado somente para demonstrar o erro local de 24/09"
+  },
+  "sourceReconciliation": {
+    "verified": false,
+    "evidence": "relatorios/explicacao-rastreio-9315-2026-09-29.md; este exemplo isola o sinal e não incorpora as demais correções da auditoria"
+  },
+  "movements": [
+    {
+      "sourceKey": "print:2026-09-24:entradas",
+      "effectiveDate": "2026-09-24",
+      "kind": "SALE_PRINCIPAL",
+      "amountInCents": 758810,
+      "evidence": "Entradas de 24/09 conferidas na auditoria"
+    },
+    {
+      "sourceKey": "print:2026-09-25:entradas",
+      "effectiveDate": "2026-09-25",
+      "kind": "SALE_PRINCIPAL",
+      "amountInCents": 619070,
+      "evidence": "Entradas de 25/09 conferidas na auditoria"
+    }
+  ],
+  "published": [
+    { "date": "2026-09-24", "balanceInCents": 725393 },
+    { "date": "2026-09-25", "balanceInCents": 1344463 }
+  ]
+}

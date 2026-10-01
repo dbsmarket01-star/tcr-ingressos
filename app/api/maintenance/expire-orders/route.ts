@@ -38,8 +38,10 @@ export async function GET(request: Request) {
   try {
     const organization = await getMaintenanceOrganizationForRequest(request);
     const reconciliation = await reconcileAsaasPayments({
-      limit: 500,
-      lookbackHours: 24 * 7,
+      limit: 50,
+      lookbackHours: 24 * 2,
+      includeFinalized: false,
+      requestDelayMs: 250,
       organizationId: organization?.id
     });
     const result = await expirePendingOrders({

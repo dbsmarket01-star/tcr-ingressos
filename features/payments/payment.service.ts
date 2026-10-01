@@ -1,3 +1,4 @@
+import { recordOrderFinancialState } from "@/features/finance/ledger/payment-ledger";
 import { HomeListStatus, OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createPublicOrderUrl, createPublicTicketUrl, sendTicketsEmail, type EmailSendResult } from "@/features/email/email.service";
@@ -33,7 +34,7 @@ type WebhookPayload = {
   externalId: string;
   orderCode?: string;
   provider?: "ASAAS" | "MERCADO_PAGO" | "SIMULATED";
-  status: "APPROVED" | "FAILED" | "CANCELED" | "PENDING" | "REFUNDED";
+  status: "APPROVED" | "FAILED" | "CANCELED" | "PENDING" | "REFUNDED" | "PARTIALLY_REFUNDED";
   reason?: string;
   rawPayload?: unknown;
 };
@@ -254,6 +255,17 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return null;
 }
 
+function getAsaasRefundDetails(rawPayload: unknown) {
+  const root = asRecord(rawPayload);
+  const payment = asRecord(root?.payment);
+  const refundedInCents = numberToCents(payment?.refundedValue) ?? numberToCents(payment?.value) ?? 0;
+
+  return {
+    refundedInCents,
+    isInstallment: typeof payment?.installment === "string" && payment.installment.length > 0
+  };
+}
+
 function extractPaymentPayload(rawPayload: unknown) {
   const root = asRecord(rawPayload);
   const nestedPayment = asRecord(root?.payment);
@@ -372,13 +384,13 @@ export async function startPaymentForOrder(orderCode: string) {
   const discountableTicketTotalInCents = Math.max(order.subtotalInCents - order.discountInCents, 0);
   const pixDiscountInCents = capDiscountToPayableAmount(discountableTicketTotalInCents, order.pixDiscountInCents);
   const totalTicketDiscountInCents = order.discountInCents + pixDiscountInCents;
-  const isFeeFree = isFeeFreeOrganization(order.event.organization.slug);
+  const isFeeFree = isFeeFreeOrganization(order.event.organization.slug, order.event.slug);
   const calculatedSplit = await buildAsaasSplitsForOrder(order.items, order.event.organizationId, {
     discountInCents: totalTicketDiscountInCents
   });
   const split = isFeeFree ? [] : calculatedSplit;
   const storedFeeSettings = await getCompanySettings(order.event.organizationId);
-  const feeSettings = getEffectivePaymentFeeSettings(order.event.organization.slug, storedFeeSettings);
+  const feeSettings = getEffectivePaymentFeeSettings(order.event.organization.slug, storedFeeSettings, order.event.slug);
   const netTicketAmountInCents = calculateNetTicketAmountInCents(order.subtotalInCents, totalTicketDiscountInCents);
   const splitTotalInCents = sumAsaasSplitsInCents(split);
   const configuredPixFeeWithoutFixedInCents = isFeeFree
@@ -681,6 +693,7 @@ export type AsaasPaymentReconciliationResult = {
   failed: number;
   refunded: number;
   skipped: number;
+  rateLimited: boolean;
   errors: Array<{
     orderCode: string;
     externalId: string;
@@ -692,13 +705,36 @@ type ReconcileAsaasPaymentsOptions = {
   limit?: number;
   lookbackHours?: number;
   organizationId?: string | null;
+  includeFinalized?: boolean;
+  requestDelayMs?: number;
 };
+
+function isAsaasRateLimitError(message: string) {
+  const normalizedMessage = message.toLocaleLowerCase("pt-BR");
+
+  return (
+    normalizedMessage.includes("limite de requisicoes") ||
+    normalizedMessage.includes("limite de requisições") ||
+    normalizedMessage.includes("temporariamente bloqueado") ||
+    normalizedMessage.includes("rate limit")
+  );
+}
+
+function wait(milliseconds: number) {
+  if (milliseconds <= 0) {
+    return Promise.resolve();
+  }
+
+  return new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+}
 
 export async function reconcileAsaasPayments(
   options?: ReconcileAsaasPaymentsOptions
 ): Promise<AsaasPaymentReconciliationResult> {
   const limit = Math.min(Math.max(options?.limit ?? 100, 1), 500);
   const lookbackHours = Math.min(Math.max(options?.lookbackHours ?? 72, 1), 24 * 30);
+  const includeFinalized = options?.includeFinalized ?? true;
+  const requestDelayMs = Math.min(Math.max(options?.requestDelayMs ?? 200, 0), 2_000);
   const since = new Date(Date.now() - lookbackHours * 60 * 60 * 1000);
 
   const payments = await prisma.payment.findMany({
@@ -719,26 +755,41 @@ export async function reconcileAsaasPayments(
             }
           }
         : {}),
-      OR: [
-        {
-          status: {
-            in: [
-              PaymentStatus.CREATED,
-              PaymentStatus.PENDING,
-              PaymentStatus.CANCELED,
-              PaymentStatus.FAILED,
-              PaymentStatus.APPROVED
-            ]
-          }
-        },
-        {
-          order: {
-            status: {
-              in: [OrderStatus.PENDING_PAYMENT, OrderStatus.EXPIRED, OrderStatus.CANCELED, OrderStatus.PAID]
+      OR: includeFinalized
+        ? [
+            {
+              status: {
+                in: [
+                  PaymentStatus.CREATED,
+                  PaymentStatus.PENDING,
+                  PaymentStatus.CANCELED,
+                  PaymentStatus.FAILED,
+                  PaymentStatus.APPROVED
+                ]
+              }
+            },
+            {
+              order: {
+                status: {
+                  in: [OrderStatus.PENDING_PAYMENT, OrderStatus.EXPIRED, OrderStatus.CANCELED, OrderStatus.PAID]
+                }
+              }
             }
-          }
-        }
-      ]
+          ]
+        : [
+            {
+              status: {
+                in: [PaymentStatus.CREATED, PaymentStatus.PENDING, PaymentStatus.CANCELED, PaymentStatus.FAILED]
+              }
+            },
+            {
+              order: {
+                status: {
+                  in: [OrderStatus.PENDING_PAYMENT, OrderStatus.EXPIRED, OrderStatus.CANCELED]
+                }
+              }
+            }
+          ]
     },
     orderBy: {
       updatedAt: "asc"
@@ -769,6 +820,7 @@ export async function reconcileAsaasPayments(
     failed: 0,
     refunded: 0,
     skipped: 0,
+    rateLimited: false,
     errors: []
   };
 
@@ -783,6 +835,10 @@ export async function reconcileAsaasPayments(
     result.checked += 1;
 
     try {
+      if (result.checked > 1) {
+        await wait(requestDelayMs);
+      }
+
       const asaas = getAsaasProvider(localPayment.order.event.organization);
       const remotePayment = await asaas.getPayment(externalId);
       const nextStatus = mapAsaasPaymentStatus(remotePayment.status);
@@ -830,6 +886,11 @@ export async function reconcileAsaasPayments(
         externalId,
         error: message
       });
+
+      if (isAsaasRateLimitError(message)) {
+        result.rateLimited = true;
+        break;
+      }
     }
   }
 
@@ -873,14 +934,14 @@ export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & {
     throw new Error(`Este evento permite parcelamento em até ${maxInstallments}x.`);
   }
 
-  const isFeeFree = isFeeFreeOrganization(order.event.organization.slug);
+  const isFeeFree = isFeeFreeOrganization(order.event.organization.slug, order.event.slug);
   const calculatedSplit = await buildAsaasSplitsForOrder(order.items, order.event.organizationId, {
     discountInCents: order.discountInCents,
     installments: input.installments
   });
   const split = isFeeFree ? [] : calculatedSplit;
   const storedFeeSettings = await getCompanySettings(order.event.organizationId);
-  const feeSettings = getEffectivePaymentFeeSettings(order.event.organization.slug, storedFeeSettings);
+  const feeSettings = getEffectivePaymentFeeSettings(order.event.organization.slug, storedFeeSettings, order.event.slug);
   const netTicketAmountInCents = calculateNetTicketAmountInCents(order.subtotalInCents, order.discountInCents);
   const splitTotalInCents = sumAsaasSplitsInCents(split);
   const configuredCardFeeInCents = isFeeFree
@@ -961,6 +1022,7 @@ export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & {
 export async function handlePaymentWebhook(payload: WebhookPayload) {
   const result = await prisma.$transaction(
     async (tx) => {
+      const outcome = await (async () => {
       const payment = await tx.payment.findFirst({
         where: payload.orderCode
           ? {
@@ -1084,8 +1146,83 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
       };
 
       if (
+        payload.status === "REFUNDED" &&
+        (payment.status === PaymentStatus.REFUNDED || payment.order.status === OrderStatus.REFUNDED)
+      ) {
+        return { payment, orderId: payment.orderId, email: null, whatsapp: null };
+      }
+
+      if (payload.status === "PARTIALLY_REFUNDED" || payload.status === "REFUNDED") {
+        const details = getAsaasRefundDetails(payload.rawPayload);
+        const fallbackFullRefund = payload.status === "REFUNDED" && !details.isInstallment;
+        const refundAmountInCents = details.refundedInCents || (fallbackFullRefund ? payment.order.totalInCents : 0);
+
+        const existingRefund = refundAmountInCents > 0
+          ? await tx.paymentRefund.findUnique({
+            where: { orderId_externalPaymentId: { orderId: payment.orderId, externalPaymentId: payload.externalId } }
+          })
+          : null;
+
+        // Provider notifications can arrive repeatedly or out of order. A cumulative
+        // refund may only increase; an older notification cannot restore revenue.
+        if (existingRefund && refundAmountInCents <= existingRefund.amountInCents) {
+          return { payment, orderId: payment.orderId, email: null, whatsapp: null };
+        }
+
+        if (refundAmountInCents > 0) {
+          await tx.paymentRefund.upsert({
+            where: {
+              orderId_externalPaymentId: {
+                orderId: payment.orderId,
+                externalPaymentId: payload.externalId
+              }
+            },
+            create: {
+              orderId: payment.orderId,
+              externalPaymentId: payload.externalId,
+              amountInCents: refundAmountInCents,
+              rawPayload: (payload.rawPayload || payload) as Prisma.InputJsonValue
+            },
+            update: {
+              amountInCents: refundAmountInCents,
+              rawPayload: (payload.rawPayload || payload) as Prisma.InputJsonValue
+            }
+          });
+        }
+
+        const refundTotals = await tx.paymentRefund.aggregate({
+          where: { orderId: payment.orderId },
+          _sum: { amountInCents: true }
+        });
+        const cumulativeRefundInCents = Math.min(
+          refundTotals._sum.amountInCents ?? refundAmountInCents,
+          payment.order.totalInCents
+        );
+        const isFullOrderRefund = cumulativeRefundInCents >= payment.order.totalInCents - 2;
+
+        await tx.order.update({
+          where: { id: payment.orderId },
+          data: { refundedInCents: cumulativeRefundInCents }
+        });
+
+        if (!isFullOrderRefund) {
+          const currentPayment = await tx.payment.update({
+            where: { id: payment.id },
+            data: {
+              externalId: payment.externalId,
+              failureReason: payload.reason || "Estorno parcial confirmado pelo Asaas.",
+              rawPayload: (payload.rawPayload || payload) as Prisma.InputJsonValue
+            }
+          });
+
+          return { payment: currentPayment, orderId: payment.orderId, email: null, whatsapp: null };
+        }
+      }
+
+      if (
         (payment.status === PaymentStatus.APPROVED || payment.order.status === OrderStatus.PAID) &&
-        payload.status !== "REFUNDED"
+        payload.status !== "REFUNDED" &&
+        payload.status !== "PARTIALLY_REFUNDED"
       ) {
         if (payload.provider || payload.externalId !== payment.externalId) {
           await tx.payment.update({
@@ -1108,13 +1245,6 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
         );
 
         return { payment, orderId: payment.orderId, email: approvedTicketsEmail };
-      }
-
-      if (
-        payload.status === "REFUNDED" &&
-        (payment.status === PaymentStatus.REFUNDED || payment.order.status === OrderStatus.REFUNDED)
-      ) {
-        return { payment, orderId: payment.orderId, email: null, whatsapp: null };
       }
 
       if (payment.status === PaymentStatus.REFUNDED || payment.order.status === OrderStatus.REFUNDED) {
@@ -1407,6 +1537,7 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
           },
           data: {
             status: OrderStatus.REFUNDED,
+            refundedInCents: payment.order.totalInCents,
             canceledAt: new Date()
           }
         });
@@ -1491,6 +1622,9 @@ export async function handlePaymentWebhook(payload: WebhookPayload) {
       }
 
       return { payment, orderId: payment.orderId, email: null, whatsapp: null };
+      })();
+      await recordOrderFinancialState(tx, outcome.orderId);
+      return outcome;
     },
     {
       isolationLevel: Prisma.TransactionIsolationLevel.Serializable,

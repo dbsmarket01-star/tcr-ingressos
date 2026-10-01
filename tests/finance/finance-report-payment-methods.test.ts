@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const prismaMock = {
+  $transaction: vi.fn((queries: Promise<unknown>[]) => Promise.all(queries)),
   event: {
     findMany: vi.fn()
   },
@@ -8,6 +9,9 @@ const prismaMock = {
     findMany: vi.fn()
   },
   order: {
+    findMany: vi.fn()
+  },
+  paymentRefund: {
     findMany: vi.fn()
   }
 };
@@ -21,6 +25,12 @@ vi.mock("@/features/tracking/tracking", () => ({
 }));
 
 vi.mock("@/features/payments/split-report.service", () => ({
+  summarizeAsaasPaymentAmounts: vi.fn(() => ({
+    installmentCount: 1,
+    grossInCents: 0,
+    netInCents: 0,
+    feeInCents: 0
+  })),
   summarizeAsaasSplit: vi.fn(() => ({
     entries: [],
     totalInCents: 0
@@ -39,6 +49,7 @@ function paidOrder(overrides: Record<string, unknown>) {
     serviceFeeInCents: 0,
     cardInterestInCents: 0,
     discountInCents: 0,
+    refundedInCents: 0,
     utmSource: null,
     utmMedium: null,
     event: {
@@ -60,6 +71,7 @@ describe("finance report payment methods", () => {
     vi.clearAllMocks();
     prismaMock.event.findMany.mockResolvedValue([]);
     prismaMock.ticketLot.findMany.mockResolvedValue([]);
+    prismaMock.paymentRefund.findMany.mockResolvedValue([]);
   });
 
   it("keeps Pix and credit card revenue separated in financial reports", async () => {
@@ -113,6 +125,8 @@ describe("finance report payment methods", () => {
       "org_a2"
     );
 
+    expect(report.integrity).toEqual({ valid: true, issues: [] });
+    expect(prismaMock.$transaction).toHaveBeenCalledWith(expect.any(Array), { isolationLevel: "RepeatableRead" });
     const pix = report.byMethod.find((row) => row.method === "PIX");
     const card = report.byMethod.find((row) => row.method === "CREDIT_CARD");
 
@@ -141,7 +155,7 @@ describe("finance report payment methods", () => {
           id: "order_pix",
           code: "ING-PIX",
           totalInCents: 2925,
-          items: [{ lotId: "lot_1", lot: { id: "lot_1", name: "Cadeira Ouro" }, lotOption: null }],
+          items: [{ totalInCents: 2500, serviceFeeInCents: 425, lotId: "lot_1", lot: { id: "lot_1", name: "Cadeira Ouro" }, lotOption: null }],
           tickets: [{ id: "ticket_pix", lotId: "lot_1", status: "ACTIVE" }],
           payment: {
             provider: "ASAAS",
@@ -154,7 +168,7 @@ describe("finance report payment methods", () => {
           id: "order_card",
           code: "ING-CARD",
           totalInCents: 5850,
-          items: [{ lotId: "lot_1", lot: { id: "lot_1", name: "Cadeira Ouro" }, lotOption: null }],
+          items: [{ totalInCents: 2500, serviceFeeInCents: 425, lotId: "lot_1", lot: { id: "lot_1", name: "Cadeira Ouro" }, lotOption: null }],
           tickets: [{ id: "ticket_card", lotId: "lot_1", status: "ACTIVE" }],
           payment: {
             provider: "ASAAS",
@@ -176,6 +190,7 @@ describe("finance report payment methods", () => {
       "org_a2"
     );
 
+    expect(report.integrity.valid).toBe(true);
     expect(report.filters.lotId).toBe("lot_1");
     expect(report.filters.paymentMethod).toBe("PIX");
     expect(report.totals.paidOrders).toBe(1);
@@ -334,4 +349,14 @@ describe("finance report payment methods", () => {
     expect(report.paidOrders).toHaveLength(13);
     expect(report.recentPaidOrders).toHaveLength(12);
   });
+  it("blocks an over-refund before proportional allocation can hide it", async () => {
+    prismaMock.order.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      paidOrder({ refundedInCents: 3000 })
+    ]);
+    const { getFinanceReport } = await import("@/features/finance/finance-report.service");
+    const report = await getFinanceReport({}, "org_a2");
+    expect(report.integrity.valid).toBe(false);
+    expect(report.integrity.issues).toContain("Estorno excede o pedido: order_1");
+  });
+
 });

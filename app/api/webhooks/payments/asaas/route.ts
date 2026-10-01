@@ -31,7 +31,6 @@ function isAsaasRefundOrChargeback(event?: string, status?: string) {
   return values.some((value) =>
     value === "REFUNDED" ||
     value === "PAYMENT_REFUNDED" ||
-    value === "PAYMENT_REFUND_IN_PROGRESS" ||
     value === "PAYMENT_RECEIVED_IN_CASH_UNDONE" ||
     value === "PAYMENT_CHARGEBACK_REQUESTED" ||
     value === "PAYMENT_CHARGEBACK_DISPUTE" ||
@@ -44,6 +43,14 @@ function isAsaasRefundOrChargeback(event?: string, status?: string) {
 function mapAsaasStatus(event?: string, status?: string) {
   const normalizedEvent = event?.trim().toUpperCase();
   const normalizedStatus = status?.trim().toUpperCase();
+
+  if (normalizedEvent === "PAYMENT_PARTIALLY_REFUNDED") {
+    return "PARTIALLY_REFUNDED" as const;
+  }
+
+  if (normalizedEvent === "PAYMENT_REFUND_IN_PROGRESS" || normalizedEvent === "PAYMENT_REFUND_DENIED") {
+    return "PENDING" as const;
+  }
 
   if (isAsaasRefundOrChargeback(event, status)) {
     return "REFUNDED" as const;

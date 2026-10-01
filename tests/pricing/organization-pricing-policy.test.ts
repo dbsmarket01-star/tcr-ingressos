@@ -24,6 +24,23 @@ describe("organization pricing policy", () => {
     });
   });
 
+  it("allows ticket service fee for the A2 IBF Church event only", () => {
+    const eventSlug = "a2-imergidos-ibf-church-sao-paulo";
+
+    expect(isFeeFreeOrganization("a2-imergidos", eventSlug)).toBe(false);
+    expect(getEffectiveServiceFeeBps("a2-imergidos", 835, eventSlug)).toBe(835);
+    expect(getEffectiveFixedOrderFeeInCents("a2-imergidos", 200, eventSlug)).toBe(0);
+    expect(getEffectivePaymentFeeSettings("a2-imergidos", {
+      pixTransactionFeeInCents: 200,
+      cardBaseFeeBps: 400,
+      cardAdditionalInstallmentFeeBps: 300
+    }, eventSlug)).toEqual({
+      pixTransactionFeeInCents: 0,
+      cardBaseFeeBps: 0,
+      cardAdditionalInstallmentFeeBps: 0
+    });
+  });
+
   it("keeps TCR configured fees without changing the exact total", () => {
     expect(isFeeFreeOrganization("tcr-ingressos")).toBe(false);
     expect(getEffectiveServiceFeeBps("tcr-ingressos", 750)).toBe(750);

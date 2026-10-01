@@ -109,7 +109,7 @@ export function verifyWhatsAppMetaSignature(rawBody: string, signature?: string 
   const appSecret = process.env.WHATSAPP_APP_SECRET?.trim();
 
   if (!appSecret) {
-    return true;
+    return false;
   }
 
   if (!signature?.startsWith("sha256=")) {

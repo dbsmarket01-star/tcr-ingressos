@@ -3,27 +3,40 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "postinstall": "prisma generate",
+    "postinstall": "node ./node_modules/prisma/build/index.js generate",
     "dev": "next dev",
-    "build": "npm run test:payment-safety && prisma generate && npm run test:whatsapp-safety && next build",
+    "build": "npm run test:payment-safety && npm run test:finance-safety && npm run test:whatsapp-safety && node ./node_modules/prisma/build/index.js generate && node ./node_modules/next/dist/bin/next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
     "test:payment-safety": "node ./node_modules/vitest/vitest.mjs run tests/payments/payment-fee-calculator.test.ts tests/payments/asaas-split-calculation.test.ts tests/payments/asaas-pix-provider.test.ts tests/payments/payment-organization-config.test.ts tests/payments/payment-pricing-guards.test.ts tests/pricing/public-price-rounding.test.ts",
     "test:watch": "vitest",
     "dns:apple-local": "tsx scripts/apple_local_dns_server.ts",
-    "db:generate": "prisma generate",
-    "db:validate": "prisma validate",
-    "db:migrate": "prisma migrate dev",
+    "db:generate": "node ./node_modules/prisma/build/index.js generate",
+    "db:validate": "node ./node_modules/prisma/build/index.js validate",
+    "db:migrate": "node ./node_modules/prisma/build/index.js migrate dev",
     "db:seed": "node prisma/seed.js",
     "db:studio": "prisma studio",
-    "test:whatsapp-safety": "node ./node_modules/vitest/vitest.mjs run tests/crm/whatsapp-ai-message-type.test.ts"
+    "deploy:check": "node scripts/verify-safe-production-deploy.mjs",
+    "predeploy:production": "npm run deploy:check",
+    "deploy:production": "npm run build && npx --yes vercel@62.0.0 --prod --yes && npm run verify:production",
+    "verify:production": "node scripts/verify-production-health.mjs",
+    "finance:reconcile": "node ./node_modules/tsx/dist/cli.mjs scripts/reconcile-producer-closing.ts",
+    "test:finance-safety": "node ./node_modules/vitest/vitest.mjs run tests/finance tests/payments/payment-webhook-idempotency.test.ts tests/payments/payment-webhook-conflict.test.ts tests/payments/asaas-webhook-route.test.ts",
+    "test:whatsapp-safety": "node ./node_modules/vitest/vitest.mjs run tests/crm/whatsapp-ai-message-type.test.ts tests/whatsapp",
+    "worker:whatsapp": "node node_modules/tsx/dist/cli.mjs scripts/whatsapp-campaign-worker.ts --run"
   },
   "dependencies": {
     "@prisma/client": "6.19.3",
     "@zxing/browser": "^0.1.5",
     "bcryptjs": "3.0.3",
+    "csv-parse": "^7.0.3",
     "dotenv": "17.4.2",
+    "exceljs": "^4.4.0",
+    "file-type": "^22.1.1",
+    "libphonenumber-js": "^1.13.14",
+    "luxon": "^3.7.2",
+    "mediainfo.js": "^0.3.8",
     "next": "16.2.3",
     "pg": "8.20.0",
     "prisma": "6.19.3",
@@ -31,10 +44,13 @@
     "react": "19.2.5",
     "react-dom": "19.2.5",
     "resend": "6.12.0",
+    "sharp": "^0.35.5",
     "zod": "4.3.6"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@types/bcryptjs": "2.4.6",
+    "@types/luxon": "^3.7.6",
     "@types/node": "25.6.0",
     "@types/qrcode": "1.5.6",
     "@types/react": "19.2.14",
@@ -42,5 +58,10 @@
     "tsx": "4.21.0",
     "typescript": "6.0.2",
     "vitest": "3.2.4"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "^11.1.1"
+    }
   }
 }

@@ -1,6 +1,7 @@
 import { EventStatus, OrderStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { expirePendingOrders } from "./order.service";
+import { allocateOrderAmountsAfterRefund } from "@/features/finance/order-refund-allocation";
 
 export type AdminOrderFilters = {
   eventId?: string;
@@ -311,7 +312,7 @@ export async function getOrdersSummary(
             : { status: OrderStatus.PAID })
         };
 
-  const [statusGroups, totals] = await Promise.all([
+  const [statusGroups, financialOrders] = await Promise.all([
     prisma.order.groupBy({
       by: ["status"],
       where: summaryWhere,
@@ -319,18 +320,31 @@ export async function getOrdersSummary(
         _all: true
       }
     }),
-    prisma.order.aggregate({
+    prisma.order.findMany({
       where: financialWhere,
-      _sum: {
+      select: {
         totalInCents: true,
         subtotalInCents: true,
         serviceFeeInCents: true,
         cardInterestInCents: true,
         discountInCents: true,
-        pixDiscountInCents: true
+        pixDiscountInCents: true,
+        refundedInCents: true
       }
     })
   ]);
+
+  const totals = financialOrders.reduce((sum, order) => {
+    const amounts = allocateOrderAmountsAfterRefund(order);
+    return {
+      totalInCents: sum.totalInCents + amounts.totalInCents,
+      subtotalInCents: sum.subtotalInCents + amounts.subtotalInCents,
+      serviceFeeInCents: sum.serviceFeeInCents + amounts.serviceFeeInCents,
+      cardInterestInCents: sum.cardInterestInCents + amounts.cardInterestInCents,
+      discountInCents: sum.discountInCents + amounts.discountInCents,
+      pixDiscountInCents: sum.pixDiscountInCents + amounts.pixDiscountInCents
+    };
+  }, { totalInCents: 0, subtotalInCents: 0, serviceFeeInCents: 0, cardInterestInCents: 0, discountInCents: 0, pixDiscountInCents: 0 });
 
   const totalOrders = statusGroups.reduce((sum, item) => sum + item._count._all, 0);
   const countByStatus = statusGroups.reduce(
@@ -346,12 +360,12 @@ export async function getOrdersSummary(
     paidOrders: countByStatus.PAID ?? 0,
     pendingOrders: countByStatus.PENDING_PAYMENT ?? 0,
     canceledOrders: (countByStatus.CANCELED ?? 0) + (countByStatus.EXPIRED ?? 0),
-    totalInCents: totals._sum.totalInCents ?? 0,
-    subtotalInCents: totals._sum.subtotalInCents ?? 0,
-    serviceFeeInCents: totals._sum.serviceFeeInCents ?? 0,
-    cardInterestInCents: totals._sum.cardInterestInCents ?? 0,
-    discountInCents: totals._sum.discountInCents ?? 0,
-    pixDiscountInCents: totals._sum.pixDiscountInCents ?? 0
+    totalInCents: totals.totalInCents,
+    subtotalInCents: totals.subtotalInCents,
+    serviceFeeInCents: totals.serviceFeeInCents,
+    cardInterestInCents: totals.cardInterestInCents,
+    discountInCents: totals.discountInCents,
+    pixDiscountInCents: totals.pixDiscountInCents
   };
 }
 

@@ -1,6 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["gru1"],
+  "regions": [
+    "gru1"
+  ],
   "crons": [
     {
       "path": "/api/maintenance/expire-orders",
@@ -9,6 +11,14 @@
     {
       "path": "/api/cron/cart-abandonment",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/maintenance/reconcile-financial-ledger",
+      "schedule": "10 3 * * *"
+    },
+    {
+      "path": "/api/cron/whatsapp-campaigns",
+      "schedule": "* * * * *"
     }
   ]
 }

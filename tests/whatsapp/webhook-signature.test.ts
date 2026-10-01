@@ -16,7 +16,9 @@ describe("WhatsApp Meta webhook signature", () => {
   it("accepts Meta's valid HMAC signature", () => {
     process.env.WHATSAPP_APP_SECRET = "test-secret";
     const body = JSON.stringify({ object: "whatsapp_business_account" });
-    const digest = createHmac("sha256", "test-secret").update(body, "utf8").digest("hex");
+    const digest = createHmac("sha256", "test-secret")
+      .update(body, "utf8")
+      .digest("hex");
 
     expect(verifyWhatsAppMetaSignature(body, `sha256=${digest}`)).toBe(true);
   });
@@ -26,12 +28,14 @@ describe("WhatsApp Meta webhook signature", () => {
     const body = JSON.stringify({ object: "whatsapp_business_account" });
 
     expect(verifyWhatsAppMetaSignature(body, null)).toBe(false);
-    expect(verifyWhatsAppMetaSignature(body, `sha256=${"0".repeat(64)}`)).toBe(false);
+    expect(verifyWhatsAppMetaSignature(body, `sha256=${"0".repeat(64)}`)).toBe(
+      false,
+    );
   });
 
-  it("keeps the current webhook compatible until the app secret is configured", () => {
+  it("rejects webhook traffic when the app secret is absent", () => {
     delete process.env.WHATSAPP_APP_SECRET;
 
-    expect(verifyWhatsAppMetaSignature("{}", null)).toBe(true);
+    expect(verifyWhatsAppMetaSignature("{}", null)).toBe(false);
   });
 });

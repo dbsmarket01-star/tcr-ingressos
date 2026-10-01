@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidCpf } from "@/lib/document-validation";
 import { isValidBrazilianPhone } from "@/lib/phone-validation";
 
 export const checkoutOrderSchema = z.object({
@@ -6,7 +7,9 @@ export const checkoutOrderSchema = z.object({
   eventSlug: z.string().min(1),
   buyerName: z.string().min(3),
   buyerEmail: z.string().email(),
-  buyerDocument: z.string().min(5),
+  buyerDocument: z.string().refine(isValidCpf, {
+    message: "Informe um CPF válido."
+  }),
   buyerPhone: z.string().refine(isValidBrazilianPhone, {
     message: "Informe um telefone válido com DDD."
   }).optional(),

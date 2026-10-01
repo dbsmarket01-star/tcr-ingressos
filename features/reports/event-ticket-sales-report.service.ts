@@ -187,6 +187,12 @@ export async function getEventTicketSalesReport(
       };
       const couponDiscountInCents = discountByItemId.get(item.id) ?? 0;
       const reversedAmountInCents = Math.max(item.totalInCents + item.serviceFeeInCents - couponDiscountInCents, 0);
+      const partialRefundInCents = !reversed && order.refundedInCents > 0 && order.totalInCents > 0
+        ? Math.round(order.refundedInCents * (reversedAmountInCents / order.totalInCents))
+        : 0;
+      const remainingRatio = reversedAmountInCents > 0
+        ? Math.max((reversedAmountInCents - partialRefundInCents) / reversedAmountInCents, 0)
+        : 1;
 
       if (chargeback) {
         row.chargebackInCents += reversedAmountInCents;
@@ -194,9 +200,10 @@ export async function getEventTicketSalesReport(
         row.refundInCents += reversedAmountInCents;
       } else {
         row.quantity += getAdmissionCount([item]);
-        row.ticketRevenueInCents += item.totalInCents;
-        row.serviceFeeInCents += item.serviceFeeInCents;
-        row.couponDiscountInCents += couponDiscountInCents;
+        row.ticketRevenueInCents += Math.round(item.totalInCents * remainingRatio);
+        row.serviceFeeInCents += Math.round(item.serviceFeeInCents * remainingRatio);
+        row.couponDiscountInCents += Math.round(couponDiscountInCents * remainingRatio);
+        row.refundInCents += partialRefundInCents;
       }
 
       row.totalInCents =

@@ -1,4 +1,5 @@
 import { EventPageVisitType, EventStatus, OrderStatus, PaymentProvider, type Prisma } from "@prisma/client";
+import { allocateOrderAmountsAfterRefund } from "@/features/finance/order-refund-allocation";
 import { prisma } from "@/lib/prisma";
 import { formatReportDateInput, getReportPeriod } from "@/features/reports/report-period";
 import { getAdmissionCount } from "@/features/tickets/admission-count";
@@ -134,6 +135,7 @@ type PaidOrderLite = {
   subtotalInCents: number;
   serviceFeeInCents: number;
   cardInterestInCents: number;
+  refundedInCents: number;
   totalInCents: number;
   paidAt: Date | null;
   createdAt: Date;
@@ -408,7 +410,11 @@ export async function getDashboardMetrics(
         orders: {
           where: paidPeriodWhere,
           select: {
-            totalInCents: true
+            totalInCents: true,
+            subtotalInCents: true,
+            serviceFeeInCents: true,
+            cardInterestInCents: true,
+            refundedInCents: true
           }
         }
       }
@@ -497,14 +503,16 @@ export async function getDashboardMetrics(
     })
   ]);
 
-  const currentRevenueInCents = currentPaidOrders.reduce((sum, order) => sum + order.totalInCents, 0);
-  const previousRevenueInCents = previousPaidOrders.reduce((sum, order) => sum + order.totalInCents, 0);
-  const currentTicketSalesInCents = currentPaidOrders.reduce((sum, order) => sum + order.subtotalInCents, 0);
-  const previousTicketSalesInCents = previousPaidOrders.reduce((sum, order) => sum + order.subtotalInCents, 0);
-  const currentServiceFeesInCents = currentPaidOrders.reduce((sum, order) => sum + order.serviceFeeInCents, 0);
-  const previousServiceFeesInCents = previousPaidOrders.reduce((sum, order) => sum + order.serviceFeeInCents, 0);
-  const currentCardInterestInCents = currentPaidOrders.reduce((sum, order) => sum + order.cardInterestInCents, 0);
-  const previousCardInterestInCents = previousPaidOrders.reduce((sum, order) => sum + order.cardInterestInCents, 0);
+  const sumEffective = (orders: typeof currentPaidOrders, field: "totalInCents" | "subtotalInCents" | "serviceFeeInCents" | "cardInterestInCents") =>
+    orders.reduce((sum, order) => sum + allocateOrderAmountsAfterRefund(order)[field], 0);
+  const currentRevenueInCents = sumEffective(currentPaidOrders, "totalInCents");
+  const previousRevenueInCents = sumEffective(previousPaidOrders, "totalInCents");
+  const currentTicketSalesInCents = sumEffective(currentPaidOrders, "subtotalInCents");
+  const previousTicketSalesInCents = sumEffective(previousPaidOrders, "subtotalInCents");
+  const currentServiceFeesInCents = sumEffective(currentPaidOrders, "serviceFeeInCents");
+  const previousServiceFeesInCents = sumEffective(previousPaidOrders, "serviceFeeInCents");
+  const currentCardInterestInCents = sumEffective(currentPaidOrders, "cardInterestInCents");
+  const previousCardInterestInCents = sumEffective(previousPaidOrders, "cardInterestInCents");
   const currentPaidTicketQuantity = getPaidTicketQuantity(currentPaidOrders as PaidOrderLite[]);
   const previousPaidTicketQuantity = getPaidTicketQuantity(previousPaidOrders as PaidOrderLite[]);
   const currentAverageTicket = currentPaidTicketQuantity > 0 ? Math.round(currentTicketSalesInCents / currentPaidTicketQuantity) : 0;
@@ -557,12 +565,13 @@ export async function getDashboardMetrics(
   };
 
   for (const order of currentPaidOrders as PaidOrderLite[]) {
+    const effective = allocateOrderAmountsAfterRefund(order);
     const paidAt = order.paidAt ?? order.createdAt;
     const dayKey = formatDayKey(paidAt);
-    dailySalesMap.set(dayKey, (dailySalesMap.get(dayKey) ?? 0) + order.totalInCents);
-    dailyTicketSalesMap.set(dayKey, (dailyTicketSalesMap.get(dayKey) ?? 0) + order.subtotalInCents);
-    dailyServiceFeeMap.set(dayKey, (dailyServiceFeeMap.get(dayKey) ?? 0) + order.serviceFeeInCents);
-    dailyCardInterestMap.set(dayKey, (dailyCardInterestMap.get(dayKey) ?? 0) + order.cardInterestInCents);
+    dailySalesMap.set(dayKey, (dailySalesMap.get(dayKey) ?? 0) + effective.totalInCents);
+    dailyTicketSalesMap.set(dayKey, (dailyTicketSalesMap.get(dayKey) ?? 0) + effective.subtotalInCents);
+    dailyServiceFeeMap.set(dayKey, (dailyServiceFeeMap.get(dayKey) ?? 0) + effective.serviceFeeInCents);
+    dailyCardInterestMap.set(dayKey, (dailyCardInterestMap.get(dayKey) ?? 0) + effective.cardInterestInCents);
     dailySalesCountMap.set(dayKey, (dailySalesCountMap.get(dayKey) ?? 0) + 1);
     dailyPaidTicketCountMap.set(dayKey, (dailyPaidTicketCountMap.get(dayKey) ?? 0) + getPaidTicketQuantity([order]));
 
@@ -575,7 +584,7 @@ export async function getDashboardMetrics(
       revenueInCents: 0
     };
     eventPerformance.count += 1;
-    eventPerformance.revenueInCents += order.totalInCents;
+    eventPerformance.revenueInCents += effective.totalInCents;
     eventPerformanceMap.set(order.event.id, eventPerformance);
 
     const cityKey = `${order.event.city.trim().toLocaleLowerCase("pt-BR")}|${order.event.state.trim().toLocaleLowerCase("pt-BR")}`;
@@ -594,13 +603,13 @@ export async function getDashboardMetrics(
 
     if (method === "PIX") {
       paymentMethodTotals.pix.count += 1;
-      paymentMethodTotals.pix.revenueInCents += order.totalInCents;
+      paymentMethodTotals.pix.revenueInCents += effective.totalInCents;
     } else if (method === "CREDIT_CARD") {
       paymentMethodTotals.card.count += 1;
-      paymentMethodTotals.card.revenueInCents += order.totalInCents;
+      paymentMethodTotals.card.revenueInCents += effective.totalInCents;
     } else {
       paymentMethodTotals.other.count += 1;
-      paymentMethodTotals.other.revenueInCents += order.totalInCents;
+      paymentMethodTotals.other.revenueInCents += effective.totalInCents;
     }
   }
 
@@ -617,7 +626,10 @@ export async function getDashboardMetrics(
       (sum, lot) => sum + lot.reservedQuantity * Math.max(lot.admissionsPerUnit, 1),
       0
     );
-    const revenueInCents = event.orders.reduce((sum, order) => sum + order.totalInCents, 0);
+    const revenueInCents = event.orders.reduce(
+      (sum, order) => sum + allocateOrderAmountsAfterRefund(order).totalInCents,
+      0
+    );
     const eventTickets = ticketCountByEvent.get(event.id) ?? { active: 0, used: 0 };
     const periodEventPerformance = eventPerformanceMap.get(event.id);
     const conversionRate = totalCapacity > 0 ? percentage(periodEventPerformance?.count ?? 0, totalCapacity) : 0;

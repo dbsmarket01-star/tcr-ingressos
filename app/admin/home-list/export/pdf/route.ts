@@ -300,11 +300,22 @@ function buildHomeListPdf(entries: HomeListExportEntry[], branding: { name: stri
 export async function GET(request: Request) {
   const admin = await requirePermission("REPORTS");
   const { searchParams } = new URL(request.url);
+  const eventId = searchParams.get("eventId");
+
+  if (!eventId) {
+    return new Response("Selecione um evento antes de exportar a Home List.", {
+      status: 400,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8"
+      }
+    });
+  }
+
   const [entries, organization] = await Promise.all([
     listHomeListEntriesForExport(
       admin.organizationId,
       {
-        eventId: searchParams.get("eventId"),
+        eventId,
         hotelId: searchParams.get("hotelId"),
         status: parseStatus(searchParams.get("status")),
         search: searchParams.get("search")

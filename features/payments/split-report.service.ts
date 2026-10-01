@@ -28,6 +28,32 @@ function numberToCents(value: unknown) {
   return Math.round(value * 100);
 }
 
+function extractInstallmentCount(payload: Record<string, unknown> | null) {
+  const description = typeof payload?.description === "string" ? payload.description : "";
+  const match = description.match(/parcela\s+\d+\s+de\s+(\d+)/i);
+  const parsed = match ? Number(match[1]) : 1;
+
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+export function summarizeAsaasPaymentAmounts(rawPayload: unknown) {
+  const payload = extractPaymentPayload(rawPayload);
+  const installmentCount = extractInstallmentCount(payload);
+  const grossPerInstallmentInCents = numberToCents(payload?.value);
+  const netPerInstallmentInCents = numberToCents(payload?.netValue);
+
+  if (grossPerInstallmentInCents <= 0 || netPerInstallmentInCents <= 0) {
+    return { installmentCount, grossInCents: 0, netInCents: 0, feeInCents: 0 };
+  }
+
+  return {
+    installmentCount,
+    grossInCents: grossPerInstallmentInCents * installmentCount,
+    netInCents: netPerInstallmentInCents * installmentCount,
+    feeInCents: Math.max(grossPerInstallmentInCents - netPerInstallmentInCents, 0) * installmentCount
+  };
+}
+
 export function extractAsaasSplitEntries(rawPayload: unknown) {
   const payload = extractPaymentPayload(rawPayload);
   const split = Array.isArray(payload?.split) ? payload.split : [];
@@ -56,7 +82,12 @@ export function extractAsaasSplitEntries(rawPayload: unknown) {
 }
 
 export function summarizeAsaasSplit(rawPayload: unknown) {
-  const entries = extractAsaasSplitEntries(rawPayload);
+  const payload = extractPaymentPayload(rawPayload);
+  const installmentCount = extractInstallmentCount(payload);
+  const entries = extractAsaasSplitEntries(rawPayload).map((entry) => ({
+    ...entry,
+    totalInCents: entry.totalInCents * installmentCount
+  }));
 
   return {
     entries,

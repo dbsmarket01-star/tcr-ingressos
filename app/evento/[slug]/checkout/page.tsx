@@ -148,10 +148,11 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
   }
 
   const organizationSlug = organizationContext.organization.slug;
-  const isFeeFree = isFeeFreeOrganization(organizationSlug);
+  const isFeeFree = isFeeFreeOrganization(organizationSlug, event.slug);
   const effectiveFixedOrderFeeInCents = getEffectiveFixedOrderFeeInCents(
     organizationSlug,
-    companySettings.pixTransactionFeeInCents
+    companySettings.pixTransactionFeeInCents,
+    event.slug
   );
   const effectiveSplitRules = isFeeFree ? [] : splitRules.filter((rule) => rule.isActive);
 
@@ -189,7 +190,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
     const serviceFeeInCents = calculateServiceFeeInCents(
       lot.priceInCents,
       quantity,
-      getEffectiveServiceFeeBps(organizationSlug, lot.serviceFeeBps)
+      getEffectiveServiceFeeBps(organizationSlug, lot.serviceFeeBps, event.slug)
     );
     const subtotalInCents = lot.priceInCents * quantity;
 

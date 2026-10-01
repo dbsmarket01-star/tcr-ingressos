@@ -1,19 +1,25 @@
 const A2_IMERGIDOS_ORGANIZATION_SLUG = "a2-imergidos";
 const TCR_INGRESSOS_ORGANIZATION_SLUG = "tcr-ingressos";
+const A2_SERVICE_FEE_EVENT_SLUGS = new Set(["a2-imergidos-ibf-church-sao-paulo"]);
 
-export function isFeeFreeOrganization(organizationSlug?: string | null) {
-  return organizationSlug === A2_IMERGIDOS_ORGANIZATION_SLUG;
+export function isFeeFreeOrganization(organizationSlug?: string | null, eventSlug?: string | null) {
+  return organizationSlug === A2_IMERGIDOS_ORGANIZATION_SLUG && !A2_SERVICE_FEE_EVENT_SLUGS.has(eventSlug ?? "");
 }
 
-export function getEffectiveServiceFeeBps(organizationSlug: string | null | undefined, serviceFeeBps: number) {
-  return isFeeFreeOrganization(organizationSlug) ? 0 : serviceFeeBps;
+export function getEffectiveServiceFeeBps(
+  organizationSlug: string | null | undefined,
+  serviceFeeBps: number,
+  eventSlug?: string | null
+) {
+  return isFeeFreeOrganization(organizationSlug, eventSlug) ? 0 : serviceFeeBps;
 }
 
 export function getEffectiveFixedOrderFeeInCents(
   organizationSlug: string | null | undefined,
-  fixedOrderFeeInCents: number
+  fixedOrderFeeInCents: number,
+  _eventSlug?: string | null
 ) {
-  return isFeeFreeOrganization(organizationSlug) ? 0 : fixedOrderFeeInCents;
+  return organizationSlug === A2_IMERGIDOS_ORGANIZATION_SLUG ? 0 : fixedOrderFeeInCents;
 }
 
 export function finalizeOrganizationPublicPriceInCents(
@@ -27,14 +33,14 @@ export function getEffectivePaymentFeeSettings<T extends {
   pixTransactionFeeInCents: number;
   cardBaseFeeBps: number;
   cardAdditionalInstallmentFeeBps: number;
-}>(organizationSlug: string | null | undefined, settings: T): T {
+}>(organizationSlug: string | null | undefined, settings: T, _eventSlug?: string | null): T {
   if (organizationSlug === TCR_INGRESSOS_ORGANIZATION_SLUG) {
     return {
       ...settings,
       cardFirstInstallmentInterestFree: true
     };
   }
-  if (!isFeeFreeOrganization(organizationSlug)) {
+  if (organizationSlug !== A2_IMERGIDOS_ORGANIZATION_SLUG) {
     return settings;
   }
 

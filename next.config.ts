@@ -20,6 +20,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["mediainfo.js"],
+  outputFileTracingIncludes: { "/api/admin/whatsapp/**": ["./node_modules/mediainfo.js/dist/MediaInfoModule.wasm"] },
   experimental: {
     serverActions: {
       bodySizeLimit: "12mb"

@@ -1,5 +1,6 @@
 import { HomeListStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getHomeListNotesForLot } from "./hotel-lot-rules";
 
 export type HomeListFilters = {
   eventId?: string | null;
@@ -72,6 +73,11 @@ export async function createHomeListEntriesForApprovedOrder(
       },
       orderHotelGuests: {
         include: {
+          lot: {
+            select: {
+              name: true
+            }
+          },
           homeListEntry: {
             select: {
               id: true
@@ -107,7 +113,7 @@ export async function createHomeListEntriesForApprovedOrder(
         orderHotelGuestId: guest.id,
         status: HomeListStatus.CONFIRMED,
         roomNumber,
-        notes: null,
+        notes: getHomeListNotesForLot(guest.lot),
         purchaseDate,
         confirmedAt: paidAt,
         guest1Name: guest.guest1Name,

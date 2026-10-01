@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("@/features/finance/ledger/payment-ledger", () => ({ recordOrderFinancialState: vi.fn() }));
+
 const prismaMock = {
   $transaction: vi.fn(),
   payment: {
@@ -155,6 +157,8 @@ describe("payment webhook idempotency", () => {
     expect(prismaMock.$executeRaw).not.toHaveBeenCalled();
     expect(sendTicketsEmailMock).not.toHaveBeenCalled();
     expect(result).toBe(approvedPayment);
+    const { recordOrderFinancialState } = await import("@/features/finance/ledger/payment-ledger");
+    expect(recordOrderFinancialState).toHaveBeenCalledWith(prismaMock, "order_1");
   });
 
   it("records PAYMENT_CREATED/PENDING webhook without issuing tickets", async () => {
@@ -235,7 +239,7 @@ describe("payment webhook idempotency", () => {
     expect(result).toBe(updatedPayment);
   });
 
-  it("issues tickets and records the Resend id when an APPROVED webhook confirms a pending order", async () => {
+  it.each([1, 2, 4])("issues %i admissions and records the Resend id when an APPROVED webhook confirms a pending order", async (admissionsPerUnit) => {
     const pendingPayment = {
       id: "pay_5",
       orderId: "order_5",
@@ -258,7 +262,8 @@ describe("payment webhook idempotency", () => {
           {
             id: "item_1",
             lotId: "lot_1",
-            quantity: 1
+            quantity: 1,
+            admissionsPerUnit
           }
         ],
         orderSeats: [],
@@ -318,17 +323,18 @@ describe("payment webhook idempotency", () => {
       }
     });
 
+    expect(prismaMock.ticket.create).toHaveBeenCalledTimes(admissionsPerUnit);
     expect(sendTicketsEmailMock).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "buyer@example.com",
         orderCode: "PED555",
         brandName: "A2 Imergidos",
-        tickets: [
+        tickets: Array.from({ length: admissionsPerUnit }, () =>
           expect.objectContaining({
             code: "TICKET-1",
             lotName: "Ingresso Casal"
           })
-        ]
+        )
       })
     );
     expect(prismaMock.order.update).toHaveBeenCalledWith({

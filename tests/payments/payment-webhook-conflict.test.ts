@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("@/features/finance/ledger/payment-ledger", () => ({ recordOrderFinancialState: vi.fn() }));
+
 const prismaMock = {
   $transaction: vi.fn(),
   payment: {
@@ -13,12 +15,19 @@ const prismaMock = {
     update: vi.fn(),
     updateMany: vi.fn()
   },
+  seatReservation: { findMany: vi.fn() },
+  orderSeat: { findMany: vi.fn() },
   ticket: {
     updateMany: vi.fn(),
     create: vi.fn()
   },
   coupon: {
     update: vi.fn()
+  },
+  paymentRefund: {
+    findUnique: vi.fn(),
+    upsert: vi.fn(),
+    aggregate: vi.fn()
   },
   $executeRaw: vi.fn()
 };
@@ -70,6 +79,9 @@ vi.mock("@/features/payments/payment-provider", () => ({
 describe("payment webhook conflict handling", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    prismaMock.paymentRefund.findUnique.mockResolvedValue(null);
+    prismaMock.seatReservation.findMany.mockResolvedValue([]);
+    prismaMock.orderSeat.findMany.mockResolvedValue([]);
     sendTicketsEmailMock.mockResolvedValue({
       provider: "resend",
       providerId: "email_expired",
@@ -116,6 +128,7 @@ describe("payment webhook conflict handling", () => {
             primaryColor: "#0f5f8c"
           }
         },
+        orderSeats: [],
         tickets: []
       }
     };
@@ -290,6 +303,7 @@ describe("payment webhook conflict handling", () => {
         eventId: "event_1",
         couponId: null,
         status: "PAID",
+        totalInCents: 249700,
         ticketsEmailSentAt: new Date(),
         customer: {
           email: "buyer@example.com",
@@ -339,6 +353,7 @@ describe("payment webhook conflict handling", () => {
       callback(prismaMock as never)
     );
     prismaMock.payment.findFirst.mockResolvedValue(approvedPayment);
+    prismaMock.paymentRefund.aggregate.mockResolvedValue({ _sum: { amountInCents: 249700 } });
     prismaMock.payment.updateMany.mockResolvedValue({ count: 1 });
     prismaMock.order.updateMany.mockResolvedValue({ count: 1 });
     prismaMock.payment.findUniqueOrThrow.mockResolvedValue(refundedPayment);
@@ -422,4 +437,62 @@ describe("payment webhook conflict handling", () => {
       })
     );
   });
+
+  it("can limit the frequent reconciliation to non-finalized payments", async () => {
+    prismaMock.payment.findMany.mockResolvedValue([]);
+
+    const { reconcileAsaasPayments } = await import("@/features/payments/payment.service");
+
+    const result = await reconcileAsaasPayments({
+      organizationId: "org_a2",
+      includeFinalized: false,
+      requestDelayMs: 0
+    });
+
+    expect(result.rateLimited).toBe(false);
+    expect(prismaMock.payment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: expect.arrayContaining([
+            {
+              status: {
+                in: ["CREATED", "PENDING", "CANCELED", "FAILED"]
+              }
+            },
+            {
+              order: {
+                status: {
+                  in: ["PENDING_PAYMENT", "EXPIRED", "CANCELED"]
+                }
+              }
+            }
+          ])
+        })
+      })
+    );
+  });
+  it.each([30, 60, 80])("never decreases a cumulative refund when a notification reports %s reais", async refundedValue => {
+    const payment = {
+      id: "pay_partial", orderId: "order_partial", externalId: "ext_partial", status: "APPROVED",
+      order: { id: "order_partial", status: "PAID", totalInCents: 10000, refundedInCents: 6000 }
+    };
+    prismaMock.$transaction.mockImplementation(async (callback: (tx: typeof prismaMock) => Promise<unknown>) => callback(prismaMock));
+    prismaMock.payment.findFirst.mockResolvedValue(payment);
+    prismaMock.paymentRefund.findUnique.mockResolvedValue({ amountInCents: 6000 });
+    prismaMock.paymentRefund.aggregate.mockResolvedValue({ _sum: { amountInCents: Math.max(6000, refundedValue * 100) } });
+    prismaMock.payment.update.mockResolvedValue(payment);
+    const { handlePaymentWebhook } = await import("@/features/payments/payment.service");
+    await handlePaymentWebhook({ externalId: "ext_partial", status: "PARTIALLY_REFUNDED", rawPayload: { payment: { refundedValue } } });
+    if (refundedValue <= 60) expect(prismaMock.paymentRefund.upsert).not.toHaveBeenCalled();
+    else expect(prismaMock.paymentRefund.upsert).toHaveBeenCalledWith(expect.objectContaining({ update: expect.objectContaining({ amountInCents: 8000 }) }));
+    if (refundedValue <= 60) {
+      expect(prismaMock.order.update).not.toHaveBeenCalled();
+      expect(prismaMock.payment.update).not.toHaveBeenCalled();
+    } else {
+      expect(prismaMock.order.update).toHaveBeenCalledWith({ where: { id: "order_partial" }, data: { refundedInCents: 8000 } });
+    }
+    expect(prismaMock.ticket.updateMany).not.toHaveBeenCalled();
+    expect(prismaMock.$transaction).toHaveBeenCalledWith(expect.any(Function), expect.objectContaining({ isolationLevel: "Serializable" }));
+  });
+
 });

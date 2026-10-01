@@ -1,3 +1,5 @@
+import { campaignWebhook } from "@/features/whatsapp/campaigns/webhook";
+import { isOptOut } from "@/features/whatsapp/campaigns/rules";
 import { after, NextResponse } from "next/server";
 import {
   handleWhatsAppMetaWebhook,
@@ -82,11 +84,16 @@ export async function POST(request: Request) {
       );
     }
 
+    await campaignWebhook(payload);
     const result = await handleWhatsAppMetaWebhook(payload);
 
     if (result.created > 0) {
       after(async () => {
-        await processWhatsAppSupportAiPayload(payload);
+        const safePayload = JSON.parse(JSON.stringify(payload));
+        for (const entry of safePayload.entry ?? []) for (const change of entry.changes ?? []) {
+          if (change.value?.messages) change.value.messages = change.value.messages.filter((m: any) => !isOptOut(m.text?.body ?? m.button?.text ?? m.interactive?.button_reply?.title ?? ""));
+        }
+        await processWhatsAppSupportAiPayload(safePayload);
       });
     }
 

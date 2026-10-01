@@ -1,0 +1,30 @@
+name: Financial safety
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: financial-safety-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Validate schema
+        run: npm run db:validate
+      - name: Payment safety tests
+        run: npm run test:payment-safety
+      - name: Financial safety tests
+        run: npm run test:finance-safety
+      - name: Production build
+        run: npm run build

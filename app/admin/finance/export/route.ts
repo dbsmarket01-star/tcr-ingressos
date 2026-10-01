@@ -31,14 +31,20 @@ export async function GET(request: Request) {
     getAdminAllowedEventIds(admin)
   );
 
+  if (!report.integrity.valid) {
+    return NextResponse.json({ error: "FINANCIAL_INTEGRITY_FAILED", issues: report.integrity.issues }, { status: 409 });
+  }
+
   const rows: unknown[][] = [
-    ["Resumo financeiro"],
+    ["Composição de vendas — não é fechamento de caixa"],
+    ["Base", "Pedidos pagos no período, líquidos dos estornos conhecidos na consulta"],
+    ["Conciliação bancária", "Não realizada por este relatório"],
     ["Periodo inicial", report.filters.startDate],
     ["Periodo final", report.filters.endDate],
     ["Bruto confirmado", formatMoney(report.totals.grossRevenueInCents)],
     ["Valor de ingressos pago", formatMoney(report.totals.ticketNetInCents)],
     ["Subtotal de ingressos antes dos cupons", formatMoney(report.totals.ticketSubtotalInCents)],
-    ["Taxas recebidas", formatMoney(report.totals.serviceFeeInCents)],
+    ["Taxas cobradas", formatMoney(report.totals.serviceFeeInCents)],
     ["Juros de cartao", formatMoney(report.totals.cardInterestInCents)],
     ["Descontos", formatMoney(report.totals.discountInCents)],
     ["Pedidos pagos", report.totals.paidOrders],
@@ -47,7 +53,7 @@ export async function GET(request: Request) {
     ["Ingressos emitidos", report.totals.ticketsIssued],
     [],
     ["Por forma de pagamento"],
-    ["Forma", "Pedidos", "Bruto", "Taxas recebidas", "Juros", "Descontos"],
+    ["Forma", "Pedidos", "Bruto", "Taxas cobradas", "Juros", "Descontos"],
     ...report.byMethod.map((row) => [
       row.method,
       row.count,
@@ -58,7 +64,7 @@ export async function GET(request: Request) {
     ]),
     [],
     ["Por evento"],
-    ["Evento", "Pedidos pagos", "Ingressos", "Valor de ingressos pago", "Subtotal antes dos cupons", "Taxas recebidas", "Juros", "Descontos", "Total pago"],
+    ["Evento", "Pedidos pagos", "Ingressos", "Valor de ingressos pago", "Subtotal antes dos cupons", "Taxas cobradas", "Juros", "Descontos", "Total pago"],
     ...report.byEvent.map((row) => [
       row.title,
       row.count,
@@ -72,7 +78,7 @@ export async function GET(request: Request) {
     ]),
     [],
     ["Por origem"],
-    ["Origem", "Pedidos", "Valor de ingressos pago", "Subtotal antes dos cupons", "Taxas recebidas", "Juros", "Descontos", "Total pago"],
+    ["Origem", "Pedidos", "Valor de ingressos pago", "Subtotal antes dos cupons", "Taxas cobradas", "Juros", "Descontos", "Total pago"],
     ...report.bySource.map((row) => [
       row.source,
       row.count,

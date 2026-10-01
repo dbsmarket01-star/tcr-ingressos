@@ -247,6 +247,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
         select: {
           id: true,
           organizationId: true,
+          slug: true,
           organization: {
             select: {
               slug: true
@@ -408,7 +409,8 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
 
         const effectiveServiceFeeBps = getEffectiveServiceFeeBps(
           event.organization?.slug,
-          lot.serviceFeeBps
+          lot.serviceFeeBps,
+          event.slug
         );
         const serviceFeeInCents = calculateServiceFeeInCents(
           lot.priceInCents,
@@ -490,7 +492,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           select: { pixTransactionFeeInCents: true }
         })
       ]);
-      const isFeeFree = isFeeFreeOrganization(event.organization?.slug);
+      const isFeeFree = isFeeFreeOrganization(event.organization?.slug, event.slug);
       const checkoutSplits = calculateAsaasSplitsForOrder(
         orderItems,
         isFeeFree ? [] : splitRules,
@@ -498,7 +500,8 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
       );
       const fixedOrderFeeInCents = getEffectiveFixedOrderFeeInCents(
         event.organization?.slug,
-        feeSettings?.pixTransactionFeeInCents ?? 200
+        feeSettings?.pixTransactionFeeInCents ?? 200,
+        event.slug
       );
       const unroundedServiceFeeInCents = Math.max(configuredServiceFeeInCents, sumAsaasSplitsInCents(checkoutSplits)) + fixedOrderFeeInCents;
       const roundedTotalInCents = finalizeOrganizationPublicPriceInCents(
@@ -717,6 +720,7 @@ export async function expirePendingOrders(options?: {
           title: true,
           organization: {
             select: {
+              slug: true,
               name: true,
               publicDomain: true,
               primaryColor: true
@@ -1237,6 +1241,7 @@ export async function refundPaidOrderByCode(
         },
         data: {
           status: OrderStatus.REFUNDED,
+          refundedInCents: order.totalInCents,
           canceledAt: new Date()
         }
       });
@@ -1284,6 +1289,8 @@ export async function refundPaidOrderByCode(
       if (!paymentId) {
         throw new Error("Pagamento nao encontrado para registrar o reembolso.");
       }
+      const paymentExternalId = order.payment?.externalId || `manual_${order.id}`;
+      const paymentRawPayload = order.payment?.rawPayload ?? undefined;
 
       await tx.payment.update({
         where: {
@@ -1292,6 +1299,25 @@ export async function refundPaidOrderByCode(
         data: {
           status: PaymentStatus.REFUNDED,
           failureReason: reason
+        }
+      });
+
+      await tx.paymentRefund.upsert({
+        where: {
+          orderId_externalPaymentId: {
+            orderId: order.id,
+            externalPaymentId: paymentExternalId
+          }
+        },
+        create: {
+          orderId: order.id,
+          externalPaymentId: paymentExternalId,
+          amountInCents: order.totalInCents,
+          rawPayload: paymentRawPayload
+        },
+        update: {
+          amountInCents: order.totalInCents,
+          rawPayload: paymentRawPayload
         }
       });
 

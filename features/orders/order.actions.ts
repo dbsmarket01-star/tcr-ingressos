@@ -24,7 +24,7 @@ function checkoutValidationMessage(error: unknown) {
     }
 
     if (field === "buyerDocument") {
-      return "Preencha seu CPF.";
+      return "Informe um CPF válido.";
     }
 
     if (field === "buyerPhone") {
@@ -76,8 +76,12 @@ function parseHotelGuests(formData: FormData, lotIds: string[]) {
 
   lotIds.forEach((lotId) => {
     const quantity = Number(formData.get(`quantity_${lotId}`) ?? 0);
+    const hotelRoomCount = Number(formData.get(`hotelRoomCount_${lotId}`) ?? quantity);
+    const guestCount = Number.isFinite(hotelRoomCount) && hotelRoomCount > 0
+      ? Math.floor(hotelRoomCount)
+      : quantity;
 
-    for (let index = 1; index <= quantity; index += 1) {
+    for (let index = 1; index <= guestCount; index += 1) {
       if (String(formData.get(`hotelGuest_${lotId}_${index}_enabled`) ?? "") !== "1") {
         continue;
       }

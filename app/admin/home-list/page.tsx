@@ -60,10 +60,13 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
     search: firstParam(query.search) || null
   };
   const allowedEventIds = getAdminAllowedEventIds(admin);
-  const [entries, filterOptions] = await Promise.all([
-    listHomeListEntries(admin.organizationId, filters, allowedEventIds),
-    getHomeListFilterOptions(admin.organizationId, allowedEventIds)
-  ]);
+  const filterOptions = await getHomeListFilterOptions(admin.organizationId, allowedEventIds);
+  const selectedEvent = filters.eventId
+    ? filterOptions.events.find((event) => event.id === filters.eventId) ?? null
+    : null;
+  const entries = selectedEvent
+    ? await listHomeListEntries(admin.organizationId, filters, allowedEventIds)
+    : [];
   const queryString = buildQuery(filters);
   const returnTo = `/admin/home-list${queryString ? `?${queryString}` : ""}`;
   const saved = firstParam(query.saved) === "1";
@@ -82,7 +85,7 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
           <label className="field">
             <span>Evento</span>
             <select name="eventId" defaultValue={filters.eventId ?? ""}>
-              <option value="">Todos</option>
+              <option value="">Selecione um evento</option>
               {filterOptions.events.map((event) => (
                 <option value={event.id} key={event.id}>
                   {event.title}
@@ -126,18 +129,30 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
           </div>
         </form>
 
-        <div className="homeListExportActions">
-          <Link className="secondaryButton" href={`/admin/home-list/export${queryString ? `?${queryString}` : ""}`}>
-            Exportar Excel
-          </Link>
-          <Link className="secondaryButton" href={`/admin/home-list/export/pdf${queryString ? `?${queryString}` : ""}`}>
-            Exportar PDF
-          </Link>
-          <PrintButton />
-        </div>
+        {selectedEvent ? (
+          <div className="homeListExportActions">
+            <Link className="secondaryButton" href={`/admin/home-list/export${queryString ? `?${queryString}` : ""}`}>
+              Exportar Excel
+            </Link>
+            <Link className="secondaryButton" href={`/admin/home-list/export/pdf${queryString ? `?${queryString}` : ""}`}>
+              Exportar PDF
+            </Link>
+            <PrintButton />
+          </div>
+        ) : null}
       </section>
 
-      <section className="homeListSummaryGrid">
+      {!selectedEvent ? (
+        <section className="emptyState card">
+          <h2>Selecione um evento para ver a Home List</h2>
+          <p className="muted">
+            Cada evento tem sua propria lista de hospedagem. Escolha o evento acima para evitar misturar Gramado
+            2026, Gramado 2027 ou outros eventos.
+          </p>
+        </section>
+      ) : null}
+
+      {selectedEvent ? <section className="homeListSummaryGrid">
         <article className="metric card">
           <span>Registros</span>
           <strong>{entries.length}</strong>
@@ -158,9 +173,9 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
           <strong>{entries.filter((entry) => entry.status === HomeListStatus.CANCELED).length}</strong>
           <small>Pedido cancelado ou reembolsado</small>
         </article>
-      </section>
+      </section> : null}
 
-      <section className="homeListEntries">
+      {selectedEvent ? <section className="homeListEntries">
         {entries.length === 0 ? (
           <div className="emptyState card">
             <h2>Nenhuma hospedagem encontrada</h2>
@@ -276,7 +291,7 @@ export default async function HomeListPage({ searchParams }: HomeListPageProps) 
             </form>
           ))
         )}
-      </section>
+      </section> : null}
     </AdminShell>
   );
 }

@@ -5649,7 +5649,7 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 .publicHeroImage {
   display: block;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   width: 100%;
 }
 
@@ -5657,10 +5657,19 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   padding: 0;
 }
 
+.publicHeroMedia.widePosterFrame {
+  aspect-ratio: 16 / 9;
+}
+
+.publicHeroMedia.widePosterFrame .publicHeroImage {
+  object-fit: cover;
+  object-position: center center;
+}
+
 .publicHeroImage.croppedImage {
   height: 100%;
   max-height: none;
-  object-fit: cover;
+  object-fit: contain;
   width: 100%;
 }
 
@@ -5718,6 +5727,35 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   font-weight: 700;
   line-height: 1.25;
   padding: 9px 12px;
+}
+
+.heroInstallmentBanner {
+  align-items: center;
+  background: linear-gradient(135deg, #063f68, #0f78b8);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 8px;
+  box-shadow: 0 14px 30px rgba(15, 95, 153, 0.22);
+  color: #fff;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  justify-content: space-between;
+  padding: 14px 16px;
+}
+
+.heroInstallmentBanner strong {
+  font-size: clamp(20px, 3vw, 30px);
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.heroInstallmentBanner span {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
 }
 
 .publicMobileFacts {
@@ -12517,6 +12555,7 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 }
 
 .zeroFeeCampaign,
+.installmentCampaign,
 .zeroFeeCheckoutMessage {
   display: grid;
   gap: 2px;
@@ -12531,7 +12570,15 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   margin-bottom: 12px;
 }
 
+.installmentCampaign {
+  background: linear-gradient(135deg, rgba(232, 244, 255, 0.98), rgba(246, 251, 255, 0.98));
+  border-color: rgba(15, 95, 153, 0.2);
+  color: #064f80;
+  margin-bottom: 12px;
+}
+
 .zeroFeeCampaign strong,
+.installmentCampaign strong,
 .zeroFeeCheckoutMessage strong {
   font-size: 0.9rem;
   font-weight: 900;
@@ -12540,11 +12587,16 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 }
 
 .zeroFeeCampaign span,
+.installmentCampaign span,
 .zeroFeeCheckoutMessage span {
   color: #315f4c;
   font-size: 0.78rem;
   font-weight: 650;
   line-height: 1.35;
+}
+
+.installmentCampaign span {
+  color: #31566f;
 }
 
 .zeroFeeBadge {
@@ -12557,6 +12609,19 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   font-weight: 900;
   letter-spacing: 0.055em;
   line-height: 1.2;
+}
+
+.installmentBadge {
+  background: #0f5f99;
+  border-radius: 999px;
+  color: #fff;
+  flex: 0 0 auto;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  padding: 3px 7px;
+  text-transform: uppercase;
 }
 
 .zeroFeeCheckoutMessage {
@@ -22420,6 +22485,10 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
     padding: 0;
   }
 
+  .publicHeroMedia.widePosterFrame {
+    aspect-ratio: 16 / 9;
+  }
+
   .publicHeroImage,
   .publicHeroImage.croppedImage {
     height: auto;
@@ -22427,6 +22496,12 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
     object-fit: contain;
     object-position: center center !important;
     transform: none !important;
+    width: 100%;
+  }
+
+  .publicHeroMedia.widePosterFrame .publicHeroImage {
+    height: 100%;
+    object-fit: cover;
     width: 100%;
   }
 
@@ -29284,6 +29359,14 @@ small,
     max-width: 100%;
     overflow-x: auto;
     overscroll-behavior-inline: contain;
+    width: 100%;
+  }
+
+  .adminMain .card > .table {
+    -webkit-overflow-scrolling: touch;
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
     width: 100%;
   }
 

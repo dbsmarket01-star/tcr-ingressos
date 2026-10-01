@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
+import { getHotelRoomsPerUnit } from "@/features/hospitality/hotel-lot-rules";
 import { createManualSaleAction } from "@/features/manual-sales/manual-sale.actions";
 import { listManualSaleOptions } from "@/features/manual-sales/manual-sale.service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -65,7 +66,7 @@ export default async function ManualSalesPage({ searchParams }: ManualSalesPageP
       : Math.max(selectedLot.totalQuantity - selectedLot.soldQuantity - selectedLot.reservedQuantity, 0)
     : 0;
   const suggestedTotalInCents = selectedLot ? selectedLot.priceInCents * effectiveQuantity : 0;
-  const hotelGuestCount = selectedLot?.hasHotel ? effectiveQuantity : 0;
+  const hotelGuestCount = selectedLot?.hasHotel ? effectiveQuantity * getHotelRoomsPerUnit(selectedLot) : 0;
   const canShowSaleForm = Boolean(selectedEvent && selectedLot && (!selectedLot.hasTypeOptions || selectedLotOption));
 
   return (

@@ -36,12 +36,14 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const limit = Number.parseInt(url.searchParams.get("limit") || "500", 10);
   const lookbackHours = Number.parseInt(url.searchParams.get("lookbackHours") || String(24 * 7), 10);
+  const includeFinalized = url.searchParams.get("includeFinalized") !== "false";
 
   try {
     const organization = await getMaintenanceOrganizationForRequest(request);
     const result = await reconcileAsaasPayments({
       limit: Number.isFinite(limit) ? limit : 500,
       lookbackHours: Number.isFinite(lookbackHours) ? lookbackHours : 24 * 7,
+      includeFinalized,
       organizationId: organization?.id
     });
 
