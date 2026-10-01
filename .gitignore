@@ -30,3 +30,8 @@ OFC - vercel-production.env
 asaas-vercel-fix.env
 .vercel
 .env*.local
+
+# Local generated reports and audit exports (preserve on disk, never deploy)
+/output/
+/outputs/
+/relatorios/
