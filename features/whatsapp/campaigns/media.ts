@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import path from "node:path";
-import sharp from "sharp";
 import { fileTypeFromBuffer } from "file-type";
 import mediaInfoFactory from "mediainfo.js";
 import { prisma } from "@/lib/prisma";
@@ -40,6 +39,9 @@ export async function inspectMedia(bytes: Buffer, mime: string, name: string) {
       "O conteúdo do arquivo não corresponde ao formato informado.",
     );
   if (mime.startsWith("image/")) {
+    // Sharp ships native binaries. Load it only for an actual image upload so
+    // the campaign list/API can start even when no media processing is needed.
+    const { default: sharp } = await import("sharp");
     const data = await sharp(bytes, { limitInputPixels: 40000000 }).metadata();
     if (!data.width || !data.height) throw new Error("Imagem inválida.");
     return {
