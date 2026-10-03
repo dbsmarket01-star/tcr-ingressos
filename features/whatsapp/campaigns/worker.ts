@@ -229,10 +229,11 @@ export async function claimJob(now = new Date()) {
       });
       const ordinal = current.dispatchedCount + 1;
       const delay = paceDelay(config, ordinal, integration.minimumIntervalMs);
+      const gateLeaseUntil = new Date(now.getTime() + 120000);
       await tx.waRateGate.updateMany({
         where: { key: { in: keys } },
         data: {
-          nextAt: new Date(now.getTime() + integration.minimumIntervalMs),
+          nextAt: gateLeaseUntil,
         },
       });
       await tx.waCampaign.update({
@@ -270,6 +271,9 @@ export async function claimJob(now = new Date()) {
       return {
         ...job,
         attemptId,
+        gateKeys: keys,
+        gateLeaseUntil,
+        paceMs: delay,
         attempts: job.attempts + 1,
         config,
         template: snapshot.template as TemplateShape | null,
@@ -412,6 +416,15 @@ export async function processOne() {
       )
         throw new Error("Template alterado após confirmação.");
     }
+    if (Date.now() + 25000 >= job.gateLeaseUntil.getTime())
+      throw new Error(
+        "Preparação excedeu a reserva de envio; revalide antes de retomar.",
+      );
+    // Pace from the actual provider attempt, after potentially slow media preparation.
+    await prisma.waCampaign.update({
+      where: { id: job.campaignId },
+      data: { nextDispatchAt: new Date(Date.now() + job.paceMs) },
+    });
     requestStarted = true;
     const response = await graph(job.organizationId, `${c.phone}/messages`, {
       method: "POST",
@@ -554,6 +567,14 @@ export async function processOne() {
           "Sequência de falhas. Revise a integração e os destinatários.",
         );
     }
+  } finally {
+    // Compare the reservation before releasing: never overwrite a newer worker lease.
+    await prisma.waRateGate.updateMany({
+      where: { key: { in: job.gateKeys }, nextAt: job.gateLeaseUntil },
+      data: {
+        nextAt: new Date(Date.now() + job.integration.minimumIntervalMs),
+      },
+    });
   }
   return true;
 }

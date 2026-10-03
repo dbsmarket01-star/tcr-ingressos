@@ -17,6 +17,7 @@ import {
   type CampaignConfig,
   validateContent,
 } from "@/features/whatsapp/campaigns/rules";
+import { uploadMime } from "@/features/whatsapp/campaigns/media-policy";
 import { useCampaignDraft, api } from "./autosave";
 import { Icon } from "./icons";
 import s from "./campaigns.module.css";
@@ -37,9 +38,17 @@ const kindLabels: Record<string, string> = {
 };
 const percent = (n: number = 0) => `${n.toLocaleString("pt-BR")}%`;
 function duration(seconds: number) {
-  const hours = Math.floor(seconds / 3600),
-    minutes = Math.ceil((seconds % 3600) / 60);
-  return hours ? `${hours}h ${minutes}min` : `${minutes}min`;
+  const total = Math.max(0, Math.ceil(seconds));
+  const hours = Math.floor(total / 3600),
+    minutes = Math.floor((total % 3600) / 60),
+    rest = total % 60;
+  return [
+    hours ? `${hours}h` : "",
+    minutes ? `${minutes}min` : "",
+    rest || !total ? `${rest}s` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 function pace(c: CampaignConfig) {
   return c.pace === "auto"
@@ -330,11 +339,7 @@ export function CampaignModule({ campaignId }: { campaignId?: string }) {
     }
   };
   const upload = async (file: File) => {
-    const mime = file.name.toLowerCase().endsWith(".csv")
-      ? "text/csv"
-      : file.name.toLowerCase().endsWith(".xlsx")
-        ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        : file.type;
+    const mime = uploadMime(file.name, file.type);
     const upload = await api({
       operation: "beginUpload",
       name: file.name,
@@ -359,7 +364,7 @@ export function CampaignModule({ campaignId }: { campaignId?: string }) {
     return final;
   };
   const attach = (file?: File) => {
-    if (!file) return;
+    if (!file || busy) return;
     void run(async () => {
       setProgress(0);
       const result = await upload(file);
@@ -990,6 +995,14 @@ export function CampaignModule({ campaignId }: { campaignId?: string }) {
                       </span>
                     </div>
                   )}
+                  {selectedList && (
+                    <p className={s.helper}>
+                      Importação: {number(selectedList.originalCount)} linhas ·{" "}
+                      {number(selectedList.invalidCount)} inválidos ·{" "}
+                      {number(selectedList.duplicateCount)} duplicados
+                      removidos.
+                    </p>
+                  )}
                   <div className={s.info}>
                     ⓘ Formatos aceitos: CSV e Excel (.xlsx). Inclua telefone com
                     código do país e os registros de consentimento.
@@ -1215,16 +1228,17 @@ export function CampaignModule({ campaignId }: { campaignId?: string }) {
                     )}
                     <div className={s.estimate}>
                       <Icon name="clock" />
-                      {number(audience?.total ?? 0)} contatos · {pace(c)} ·
-                      Tempo estimado:{" "}
+                      {number(audience?.eligible ?? 0)} contatos elegíveis ·{" "}
+                      {pace(c)} · Tempo estimado:{" "}
                       {duration(
                         estimateSeconds(
                           c,
-                          Math.min(audience?.total ?? 0, 20000),
+                          Math.min(audience?.eligible ?? 0, 20000),
                           data?.integration?.minimumIntervalMs ?? 1000,
                         ),
                       )}
-                      . Pausas e limites podem ampliar esse tempo.
+                      . O intervalo é mínimo: processamento, pausas e limites
+                      podem ampliar esse tempo.
                     </div>
                   </div>
                 </Card>
@@ -1243,7 +1257,9 @@ export function CampaignModule({ campaignId }: { campaignId?: string }) {
                         <button
                           key={key}
                           className={c.kind === key ? s.selectedTab : ""}
+                          disabled={busy}
                           onClick={() => {
+                            if (c.kind === key) return;
                             draft.update({
                               kind: key as any,
                               mediaId: "",
@@ -1279,11 +1295,14 @@ export function CampaignModule({ campaignId }: { campaignId?: string }) {
                         onChange={(e) =>
                           draft.update({ message: e.target.value })
                         }
-                        maxLength={c.templateId ? 1024 : 4096}
+                        maxLength={
+                          c.templateId || c.kind !== "text" ? 1024 : 4096
+                        }
                       />
                     </Field>
                     <div className={s.characterCount}>
-                      {c.message.length}/{c.templateId ? 1024 : 4096}
+                      {c.message.length}/
+                      {c.templateId || c.kind !== "text" ? 1024 : 4096}
                     </div>
                     {c.templateId && (
                       <p className={s.helper}>
@@ -1413,9 +1432,12 @@ export function CampaignModule({ campaignId }: { campaignId?: string }) {
                               ? "image/jpeg,image/png"
                               : c.kind === "video"
                                 ? "video/mp4,video/3gpp"
-                                : "audio/mpeg,audio/aac,audio/amr,audio/mp4,audio/ogg"
+                                : ".mp3,.aac,.amr,.m4a,.ogg,audio/mpeg,audio/aac,audio/amr,audio/mp4,audio/x-m4a,audio/ogg"
                           }
-                          onChange={(e) => attach(e.target.files?.[0])}
+                          onChange={(e) => {
+                            attach(e.target.files?.[0]);
+                            e.target.value = "";
+                          }}
                         />
                         {media && (
                           <div className={s.mediaSummary}>

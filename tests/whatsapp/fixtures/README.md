@@ -1,0 +1,1 @@
+Synthetic media generated locally for validation tests: green 320×180 image/video and a one-second 440 Hz tone. Video is H.264/AAC; M4A uses AAC; MP3 uses MPEG Audio. No customer media or personal data.

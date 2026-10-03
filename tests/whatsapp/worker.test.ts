@@ -255,3 +255,19 @@ describe("temporary circuit recovery", () => {
     expect(campaign.status).toBe("paused");
   });
 });
+
+it("keeps shared gates reserved while the provider request is in flight", async () => {
+  mocks.graph.mockImplementation(async () => {
+    expect(gates.every((g) => g.nextAt.getTime() > Date.now() + 60000)).toBe(
+      true,
+    );
+    return { messages: [{ id: "wamid.lease" }] };
+  });
+  await processOne();
+  expect(gates.every((g) => g.nextAt.getTime() < Date.now() + 3000)).toBe(true);
+  expect(mocks.db.waRateGate.updateMany).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      where: expect.objectContaining({ nextAt: expect.any(Date) }),
+    }),
+  );
+});

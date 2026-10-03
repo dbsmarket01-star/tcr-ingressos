@@ -5,6 +5,7 @@ import mediaInfoFactory from "mediainfo.js";
 import { prisma } from "@/lib/prisma";
 import { json } from "./meta";
 import { transaction } from "./service";
+import { canonicalMime } from "./media-policy";
 const limits: Record<string, number> = {
   "image/jpeg": 5,
   "image/png": 5,
@@ -19,9 +20,10 @@ const limits: Record<string, number> = {
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": 10,
 };
 export function uploadLimit(mime: string) {
-  return (limits[mime] ?? 0) * 1024 * 1024;
+  return (limits[canonicalMime(mime)] ?? 0) * 1024 * 1024;
 }
 export async function inspectMedia(bytes: Buffer, mime: string, name: string) {
+  mime = canonicalMime(mime);
   if (mime === "text/csv" && name.toLowerCase().endsWith(".csv"))
     return { kind: "list", receivedSize: bytes.length };
   if (
@@ -34,7 +36,11 @@ export async function inspectMedia(bytes: Buffer, mime: string, name: string) {
     return { kind: "list", receivedSize: bytes.length };
   }
   const detected = await fileTypeFromBuffer(bytes);
-  if (!detected || detected.mime !== mime)
+  if (
+    !detected ||
+    (canonicalMime(detected.mime) !== mime &&
+      !(mime === "audio/mp4" && detected.mime === "video/mp4"))
+  )
     throw new Error(
       "O conteúdo do arquivo não corresponde ao formato informado.",
     );
@@ -53,7 +59,11 @@ export async function inspectMedia(bytes: Buffer, mime: string, name: string) {
   }
   const parser = await mediaInfoFactory({
     format: "object",
-    locateFile: () => path.join(process.cwd(), "node_modules/mediainfo.js/dist/MediaInfoModule.wasm"),
+    locateFile: () =>
+      path.join(
+        process.cwd(),
+        "node_modules/mediainfo.js/dist/MediaInfoModule.wasm",
+      ),
   });
   try {
     const result = await parser.analyzeData(
@@ -81,11 +91,24 @@ export async function inspectMedia(bytes: Buffer, mime: string, name: string) {
       );
     if (
       mime.startsWith("audio/") &&
-      (!audio.length ||
+      (audio.length !== 1 ||
         video.length ||
-        (mime === "audio/ogg" && audio.some((t) => t.Format !== "Opus")))
+        audio.some(
+          (t) =>
+            !(
+              {
+                "audio/mp4": ["AAC"],
+                "audio/aac": ["AAC"],
+                "audio/mpeg": ["MPEG Audio"],
+                "audio/amr": ["AMR"],
+                "audio/ogg": ["Opus"],
+              } as Record<string, string[]>
+            )[mime]?.includes(t.Format),
+        ))
     )
-      throw new Error("Formato de áudio incompatível. OGG precisa usar Opus.");
+      throw new Error(
+        "Codec de áudio incompatível. M4A/AAC exige AAC; OGG exige Opus.",
+      );
     return {
       kind: mime.startsWith("video/") ? "video" : "audio",
       duration,
@@ -106,6 +129,7 @@ export async function beginUpload(
   mime: string,
   size: number,
 ) {
+  mime = canonicalMime(mime);
   if (
     !name ||
     name.length > 240 ||

@@ -224,3 +224,15 @@ describe("WhatsApp campaign safety rules", () => {
     ).toThrow(/botão/);
   });
 });
+
+it.each([1, 2, 3, 10, 60])(
+  "respects a configured interval of %i seconds",
+  (seconds) => {
+    const config = configSchema.parse({
+      pace: "interval",
+      intervalSeconds: seconds,
+    });
+    expect(paceDelay(config, 1, 1000)).toBe(seconds * 1000);
+    expect(estimateSeconds(config, 3, 1000)).toBe(seconds * 2);
+  },
+);

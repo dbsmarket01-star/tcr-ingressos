@@ -264,6 +264,10 @@ export function validateContent(c: CampaignConfig, t: TemplateShape | null) {
     } else if (c.ctaUrl || c.ctaLabel)
       throw new Error("O template selecionado não tem CTA de URL.");
   } else {
+    if (["image", "video"].includes(c.kind) && c.message.length > 1024)
+      throw new Error(
+        "A legenda de imagem ou vídeo deve ter até 1.024 caracteres.",
+      );
     if (c.trackClicks)
       throw new Error("Rastreamento exige um CTA de template compatível.");
     if (c.kind === "audio" && (c.message || c.ctaUrl))

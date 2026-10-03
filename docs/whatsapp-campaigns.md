@@ -70,3 +70,9 @@ Respostas com referência são atribuídas ao envio correspondente; sem referên
 - Erros de template da família `132xxx`, incluindo `132001`, abrem o circuito e pausam todas as campanhas da integração no primeiro erro.
 - Confirmações são idempotentes, cada contato/telefone só gera um trabalho por campanha e envios sem confirmação nunca são repetidos automaticamente.
 - Toda criação, confirmação, pausa, início, falha e aceite registra ator, campanha, horário e contexto em `WaAudit`.
+
+## Revisão de uploads e ritmo — 03/10/2026
+
+Normalização de MIME entre navegadores (incluindo M4A), validação real de codecs e limite de 1.024 caracteres nas legendas de imagem/vídeo. Repetir o clique no tipo selecionado preserva o anexo; o seletor permite repetir o mesmo arquivo após erro. A importação mostra totais de inválidos e duplicados; a estimativa usa destinatários elegíveis e inclui segundos.
+
+O worker reserva os controladores compartilhados durante a preparação e a requisição. O próximo horário da campanha é calculado a partir da tentativa real na Meta, evitando encurtar o intervalo após upload lento. Reservas vencidas impedem o POST. O intervalo é mínimo; cron, processamento e restrições podem aumentar a espera. Os testes de ritmo usam transporte simulado, sem mensagens reais.
