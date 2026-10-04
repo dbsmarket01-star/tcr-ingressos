@@ -146,7 +146,10 @@ export async function persistReconciliation(
       where: {
         event: { organizationId },
         payment: { provider: "ASAAS" },
-        paidAt: { lte: dayEnd(date) },
+        // The ledger is intentionally prospective. Re-reading orders from before
+        // its opening only wastes transaction time and can make a valid daily
+        // close exceed Prisma's interactive transaction deadline.
+        paidAt: { gte: config.startsOn, lte: dayEnd(date) },
       },
       include: { payment: true },
     });
@@ -329,7 +332,7 @@ export async function persistReconciliation(
       { status: closing.status, date, revision: closing.revision },
     );
     return closing;
-  });
+  }, { timeoutMs: 180000 });
 }
 export async function publishClosing(
   organizationId: string,

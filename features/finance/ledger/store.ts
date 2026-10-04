@@ -128,12 +128,13 @@ export async function appendEntry(
 
 export async function withLedgerTransaction<T>(
   work: (tx: Tx) => Promise<T>,
+  options: { timeoutMs?: number } = {},
 ): Promise<T> {
   for (let attempt = 0; ; attempt++) {
     try {
       return await prisma.$transaction(work, {
         isolationLevel: "Serializable",
-        timeout: 30000,
+        timeout: options.timeoutMs ?? 30000,
         maxWait: 10000,
       });
     } catch (error) {

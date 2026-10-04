@@ -165,12 +165,20 @@ export function evaluateReconciliation(input: {
     CASH: input.openingCashInCents,
     RECEIVABLES: 0,
   };
-  const paid = snapshot.charges.filter(
+  const allPaid = snapshot.charges.filter(
     (c) => c.paidDate && c.paidDate <= snapshot.endDate,
   );
+  const paid = allPaid.filter((c) => c.paidDate! >= snapshot.startDate);
   const orderMap = new Map(orders.map((o) => [o.code, o]));
-  for (const charge of paid) {
-    if (!charge.orderCode || !orderMap.has(charge.orderCode))
+  for (const charge of allPaid) {
+    // Legacy charges compose the opening receivables balance, but only charges
+    // created inside the prospective ledger window must have a TCR order.
+    // Applying this check to the entire provider history creates thousands of
+    // false incidents for sales made before the ledger existed.
+    if (
+      charge.paidDate! >= snapshot.startDate &&
+      (!charge.orderCode || !orderMap.has(charge.orderCode))
+    )
       add("PAID_CHARGE_WITHOUT_ORDER", charge.id);
     if (charge.refunds.some((r) => !r.date))
       add("REFUND_DATE_MISSING", charge.id);
@@ -258,7 +266,7 @@ export function evaluateReconciliation(input: {
   }
   // Refunds of pre-opening sales need an explicitly reconciled opening/legacy adjustment.
   if (
-    paid.some(
+    allPaid.some(
       (c) =>
         c.paidDate! < snapshot.startDate &&
         c.refunds.some(
