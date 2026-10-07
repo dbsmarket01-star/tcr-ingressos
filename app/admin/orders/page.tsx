@@ -222,6 +222,16 @@ function pluralizeTicket(quantity: number) {
   return quantity === 1 ? "ingresso" : "ingressos";
 }
 
+function purchaseUnitLabel(item: { label: string; quantity: number; admissions: number }) {
+  if (/\bmesa\b/i.test(item.label)) {
+    return item.quantity === 1 ? "mesa" : "mesas";
+  }
+  if (item.admissions === item.quantity * 2) {
+    return item.quantity === 1 ? "ingresso duplo" : "ingressos duplos";
+  }
+  return item.quantity === 1 ? "pacote" : "pacotes";
+}
+
 function getOrderTicketLines(order: {
   items: Array<{
     quantity: number;
@@ -661,7 +671,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                               </strong>{" "}
                               {item.label}
                               {item.admissions !== item.quantity
-                                ? ` (${item.quantity} compra${item.quantity === 1 ? "" : "s"} de ingresso duplo)`
+                                ? ` (${item.quantity} ${purchaseUnitLabel(item)})`
                                 : ""}
                             </span>
                           ))}
