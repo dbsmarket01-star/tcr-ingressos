@@ -282,6 +282,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     event.slug === "rodrigo-teaser-em-taubate-2026" ||
     event.slug === "rodrigo-teaser-em-sao-caetano-do-sul-2026" ||
     event.slug === "rodrigo-teaser-em-piracicaba-2026" ||
+    event.slug === "rodrigo-teaser-em-ribeirao-pires-2026" ||
     event.slug === "rodrigo-teaser-em-marilia-2026";
   const mapCrop = parseImageCrop(event.eventMapCrop);
   const ctaText = event.conversionCtaText || "Garantir minha vaga";
