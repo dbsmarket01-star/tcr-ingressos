@@ -2091,6 +2091,17 @@ function CampaignReport({
             report.status,
           ) && (
             <>
+              {["sending", "scheduled", "queued"].includes(
+                report.status,
+              ) && Number(m.queued ?? 0) > 0 ? (
+                <button
+                  className={s.secondary}
+                  disabled={busy}
+                  onClick={() => control(report.id, "dispatchNow")}
+                >
+                  Enviar próximo agora
+                </button>
+              ) : null}
               <button
                 className={s.secondary}
                 disabled={busy}
