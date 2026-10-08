@@ -17,9 +17,21 @@ export async function integrationConfig(organizationId: string) {
     select: { slug: true },
   });
   const suffix = org.slug.toUpperCase().replace(/[^A-Z0-9]/g, "_");
+  // Keep the default TCR variables as explicit references. Vercel traces each
+  // serverless function separately and cannot reliably include env variables
+  // that are accessed only through a dynamically constructed key.
+  const defaults: Record<string, string | undefined> = {
+    WHATSAPP_API_TOKEN: process.env.WHATSAPP_API_TOKEN,
+    WHATSAPP_PHONE_NUMBER_ID: process.env.WHATSAPP_PHONE_NUMBER_ID,
+    WHATSAPP_BUSINESS_ACCOUNT_ID:
+      process.env.WHATSAPP_BUSINESS_ACCOUNT_ID,
+    WHATSAPP_BUSINESS_PORTFOLIO_ID:
+      process.env.WHATSAPP_BUSINESS_PORTFOLIO_ID,
+    WHATSAPP_GRAPH_API_VERSION: process.env.WHATSAPP_GRAPH_API_VERSION,
+  };
   const env = (key: string) =>
     process.env[`${key}_${suffix}`]?.trim() ||
-    (org.slug === "tcr-ingressos" ? process.env[key]?.trim() : undefined);
+    (org.slug === "tcr-ingressos" ? defaults[key]?.trim() : undefined);
   const token = env("WHATSAPP_API_TOKEN"),
     phone = env("WHATSAPP_PHONE_NUMBER_ID"),
     waba = env("WHATSAPP_BUSINESS_ACCOUNT_ID"),
