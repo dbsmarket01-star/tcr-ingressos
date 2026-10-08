@@ -279,6 +279,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const bannerCrop = parseImageCrop(event.bannerCrop) || imageCropFromBannerPosition(event.bannerPosition);
   const publicBannerCrop = bannerCrop;
   const preserveOriginalBannerRatio =
+    event.slug === "geriatricus-em-santo-andre-2026" ||
     event.slug === "rodrigo-teaser-em-taubate-2026" ||
     event.slug === "rodrigo-teaser-em-sao-caetano-do-sul-2026" ||
     event.slug === "rodrigo-teaser-em-piracicaba-2026" ||
