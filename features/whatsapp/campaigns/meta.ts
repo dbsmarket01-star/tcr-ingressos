@@ -48,6 +48,19 @@ export class MetaRequestError extends Error {
     super(message);
   }
 }
+export const META_HEALTH_SYNC_BLOCK =
+  "Não foi possível atualizar a saúde da integração Meta.";
+
+export function integrationBlockAfterSync(
+  previousReason: string | null | undefined,
+  currentReason: string | null,
+) {
+  if (currentReason)
+    return { blockedReason: currentReason, blockedUntil: null };
+  if (previousReason === META_HEALTH_SYNC_BLOCK)
+    return { blockedReason: null, blockedUntil: null };
+  return {};
+}
 export async function graph(
   organizationId: string,
   path: string,
@@ -158,7 +171,7 @@ export async function syncIntegration(organizationId: string, actorId: string) {
         update: {
           health: json(health),
           syncedAt: now,
-          ...(reason ? { blockedReason: reason } : {}),
+          ...integrationBlockAfterSync(old?.blockedReason, reason),
         },
       });
       for (const t of templates)

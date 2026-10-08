@@ -22,6 +22,10 @@ import { useCampaignDraft, api } from "./autosave";
 import { Icon } from "./icons";
 import s from "./campaigns.module.css";
 const base = "/admin/marketing/whatsapp";
+const contactListTemplate = [
+  "nome;telefone;cidade;tag;opt_in_status;opt_in_date;opt_in_source;finalidade;origem_coleta",
+  ...Array(10).fill(";;;;;;;;"),
+].join("\n");
 const number = (n: number = 0) => n.toLocaleString("pt-BR");
 const date = (value: string | null) =>
   value
@@ -1885,10 +1889,10 @@ function ImportDialog({
         </p>
         <a
           className={s.textButton}
-          download="modelo-contatos.csv"
-          href="data:text/csv;charset=utf-8,nome%3Btelefone%3Bcidade%3Btag%3Bopt_in_status%3Bopt_in_date%3Bopt_in_source%3Bfinalidade%3Borigem_coleta%0A"
+          download="modelo-teste-whatsapp-10-contatos.csv"
+          href={`data:text/csv;charset=utf-8,${encodeURIComponent(contactListTemplate)}`}
         >
-          Baixar modelo CSV
+          Baixar modelo CSV para 10 contatos
         </a>
         {busy && (
           <p role="status">
