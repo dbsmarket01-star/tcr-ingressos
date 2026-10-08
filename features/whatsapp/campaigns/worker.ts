@@ -40,11 +40,12 @@ async function pauseIntegration(
     await audit(tx, org, "worker", "CIRCUIT_OPENED", null, { reason, until });
   });
 }
-export async function claimJob(now = new Date()) {
+export async function claimJob(now = new Date(), campaignId?: string) {
   return transaction(async (tx) => {
     // One queue controller per phone/WABA/portfolio. Sorted locks avoid cross-campaign deadlocks.
     const candidates = await tx.waCampaign.findMany({
       where: {
+        ...(campaignId ? { id: campaignId } : {}),
         status: { in: ["queued", "scheduled", "sending"] },
         nextDispatchAt: { lte: now },
       },
@@ -284,8 +285,8 @@ export async function claimJob(now = new Date()) {
     return null;
   });
 }
-export async function processOne() {
-  const job = await claimJob();
+export async function processOne(campaignId?: string) {
+  const job = await claimJob(new Date(), campaignId);
   if (!job) return false;
   let requestStarted = false;
   try {

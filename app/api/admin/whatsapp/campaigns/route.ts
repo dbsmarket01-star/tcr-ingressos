@@ -24,6 +24,7 @@ import {
 } from "@/features/whatsapp/campaigns/meta";
 import { importList } from "@/features/whatsapp/campaigns/import";
 import { beginUpload } from "@/features/whatsapp/campaigns/media";
+import { processOne } from "@/features/whatsapp/campaigns/worker";
 export const dynamic = "force-dynamic";
 export const maxDuration = 180;
 const response = (data: unknown, status = 200) =>
@@ -47,6 +48,7 @@ const schema = z.discriminatedUnion("operation", [
     })
     .strict(),
   z.object({ operation: z.enum(["pause", "resume", "cancel"]), id }).strict(),
+  z.object({ operation: z.literal("dispatchNow"), id }).strict(),
   z.object({ operation: z.literal("audience"), config: configSchema }).strict(),
   z
     .object({
@@ -288,6 +290,45 @@ export async function POST(request: Request) {
           input.operation,
         );
         break;
+      case "dispatchNow": {
+        if (admin.role !== "OWNER" && admin.role !== "MANAGER")
+          throw new Error("FORBIDDEN");
+        const campaign = await prisma.waCampaign.findFirstOrThrow({
+          where: { id: input.id, organizationId: org },
+          select: { id: true, status: true },
+        });
+        if (!["queued", "scheduled", "sending"].includes(campaign.status))
+          throw new Error(
+            "A campanha precisa estar na fila para o envio imediato.",
+          );
+        await syncIntegration(org, admin.id);
+        const integration = await prisma.waIntegration.findUniqueOrThrow({
+          where: { organizationId: org },
+        });
+        const health = integration.health as Record<string, unknown>;
+        if (
+          health.quality_rating === "RED" ||
+          (health.status &&
+            !["CONNECTED", "VERIFIED"].includes(
+              String(health.status),
+            )) ||
+          (integration.blockedUntil && integration.blockedUntil > new Date())
+        )
+          throw new Error("A integração ainda está restrita ou em backoff.");
+        await transaction(async (tx) => {
+          await tx.waIntegration.update({
+            where: { organizationId: org },
+            data: {
+              blockedReason: null,
+              blockedUntil: null,
+              consecutiveErrors: 0,
+            },
+          });
+          await audit(tx, org, admin.id, "ADMIN_DISPATCH_REQUESTED", input.id);
+        });
+        result = { processed: await processOne(input.id) };
+        break;
+      }
       case "audience":
         result = await audienceSummary(org, input.config);
         break;
