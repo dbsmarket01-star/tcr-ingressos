@@ -19,10 +19,11 @@ export function getSaoPauloDayStart(now = new Date()) {
   return new Date(`${value("year")}-${value("month")}-${value("day")}T03:00:00.000Z`);
 }
 
-export async function listEvents(organizationId: string, allowedEventIds?: string[] | null) {
+export async function listEvents(organizationId: string, allowedEventIds?: string[] | null, status?: EventStatus) {
   return prisma.event.findMany({
     where: {
       organizationId,
+      ...(status ? { status } : {}),
       ...(allowedEventIds ? { id: { in: allowedEventIds } } : {})
     },
     orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],

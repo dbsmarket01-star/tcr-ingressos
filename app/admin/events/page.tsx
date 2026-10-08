@@ -104,14 +104,23 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const organizationContext = await getCurrentOrganizationContext();
   const params = searchParams ? await searchParams : {};
   const query = params.q?.trim() ?? "";
-  const selectedStatus = params.status?.trim() || "all";
+  const requestedStatus = params.status?.trim();
+  const selectedStatus = requestedStatus === "all"
+    ? "all"
+    : requestedStatus && Object.hasOwn(statusLabels, requestedStatus)
+      ? requestedStatus as keyof typeof statusLabels
+      : "PUBLISHED";
   const selectedDate = params.date?.trim() || "all";
   const selectedCity = params.city?.trim() || "all";
   const pageError = typeof params.error === "string" ? params.error : "";
   const page = Math.max(1, Number(params.page || "1") || 1);
   const pageSize = Math.min(20, Math.max(5, Number(params.pageSize || "5") || 5));
 
-  const events = await listEvents(admin.organizationId!, getAdminAllowedEventIds(admin));
+  const events = await listEvents(
+    admin.organizationId!,
+    getAdminAllowedEventIds(admin),
+    selectedStatus === "all" ? undefined : selectedStatus
+  );
   const cityOptions = Array.from(new Set(events.map((event) => `${event.city}, ${event.state}`))).sort((a, b) =>
     a.localeCompare(b, "pt-BR")
   );
@@ -123,11 +132,10 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
         .filter(Boolean)
         .some((value) => normalizeText(String(value)).includes(normalizeText(query)));
 
-    const matchesStatus = selectedStatus === "all" ? true : event.status === selectedStatus;
     const matchesDate = getDatePresetMatch(event.startsAt, selectedDate);
     const matchesCity = selectedCity === "all" ? true : `${event.city}, ${event.state}` === selectedCity;
 
-    return matchesQuery && matchesStatus && matchesDate && matchesCity;
+    return matchesQuery && matchesDate && matchesCity;
   });
 
   const totalPages = Math.max(1, Math.ceil(filteredEvents.length / pageSize));
@@ -363,7 +371,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                   className={`eventsIndexPageButton ${safePage <= 1 ? "isDisabled" : ""}`}
                   href={`/admin/events?${new URLSearchParams({
                     ...(query ? { q: query } : {}),
-                    ...(selectedStatus !== "all" ? { status: selectedStatus } : {}),
+                    status: selectedStatus,
                     ...(selectedDate !== "all" ? { date: selectedDate } : {}),
                     ...(selectedCity !== "all" ? { city: selectedCity } : {}),
                     page: String(Math.max(1, safePage - 1)),
@@ -383,7 +391,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                         className={`eventsIndexPageButton ${pageNumber === safePage ? "isActive" : ""}`}
                         href={`/admin/events?${new URLSearchParams({
                           ...(query ? { q: query } : {}),
-                          ...(selectedStatus !== "all" ? { status: selectedStatus } : {}),
+                          status: selectedStatus,
                           ...(selectedDate !== "all" ? { date: selectedDate } : {}),
                           ...(selectedCity !== "all" ? { city: selectedCity } : {}),
                           page: String(pageNumber),
@@ -400,7 +408,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
                   className={`eventsIndexPageButton ${safePage >= totalPages ? "isDisabled" : ""}`}
                   href={`/admin/events?${new URLSearchParams({
                     ...(query ? { q: query } : {}),
-                    ...(selectedStatus !== "all" ? { status: selectedStatus } : {}),
+                    status: selectedStatus,
                     ...(selectedDate !== "all" ? { date: selectedDate } : {}),
                     ...(selectedCity !== "all" ? { city: selectedCity } : {}),
                     page: String(Math.min(totalPages, safePage + 1)),
