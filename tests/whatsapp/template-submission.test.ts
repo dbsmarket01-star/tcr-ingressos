@@ -12,7 +12,9 @@ Prepare-se para cantar, se emocionar e reviver ao vivo músicas que marcaram ger
 
 🎟️ Os ingressos estão disponíveis!
 
-Garanta sua participação e venha viver essa experiência inesquecível!`;
+Garanta sua participação e venha viver essa experiência inesquecível!
+
+Instagram oficial: @tcrshows.eventos`;
 
 describe("Meta template submission", () => {
   it("preserves the exact approved copy and official sales CTA", () => {
