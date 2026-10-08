@@ -1,6 +1,15 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sendWhatsAppTextMessage } from "@/features/whatsapp/whatsapp.service";
+import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
+import {
+  calculateCardChargeInCents,
+  calculateNetTicketAmountInCents,
+  type PaymentFeeSettings
+} from "@/features/payments/payment-fee-calculator";
+import { calculateAsaasSplitsForOrder, sumAsaasSplitsInCents } from "@/features/payments/asaas-split.service";
+import { getEffectivePaymentFeeSettings, getEffectiveServiceFeeBps } from "@/features/pricing/organization-pricing-policy";
+import { getCreditCardInstallmentLimitForEvent } from "@/lib/payment-installments";
 
 const AI_SOURCE = "TCR_WHATSAPP_AI";
 const DEFAULT_MODEL = "gpt-5.4-mini";
@@ -83,6 +92,53 @@ export function isHumanHandoffRequest(value?: string | null) {
 
 function brl(valueInCents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valueInCents / 100);
+}
+
+type QuoteItem = {
+  quantity: number;
+  totalInCents: number;
+  admissionsPerUnit?: number | null;
+};
+
+type QuoteSplitRule = Parameters<typeof calculateAsaasSplitsForOrder>[1][number];
+
+export function buildExactCardInstallmentOptions(input: {
+  subtotalInCents: number;
+  serviceFeeInCents: number;
+  discountInCents?: number;
+  items: QuoteItem[];
+  splitRules: QuoteSplitRule[];
+  feeSettings: PaymentFeeSettings;
+  maxInstallments: number;
+}) {
+  const discountInCents = Math.max(input.discountInCents || 0, 0);
+  const netTicketInCents = calculateNetTicketAmountInCents(input.subtotalInCents, discountInCents);
+
+  return Array.from({ length: Math.max(Math.trunc(input.maxInstallments), 1) }, (_, index) => index + 1)
+    .map((installments) => {
+      const splits = calculateAsaasSplitsForOrder(input.items, input.splitRules, {
+        discountInCents,
+        installments
+      });
+      const splitTotalInCents = sumAsaasSplitsInCents(splits);
+      const configuredCardFeeInCents = Math.max(
+        input.serviceFeeInCents - input.feeSettings.pixTransactionFeeInCents,
+        splitTotalInCents
+      );
+      const totalInCents = calculateCardChargeInCents(
+        netTicketInCents,
+        configuredCardFeeInCents,
+        installments,
+        input.feeSettings
+      );
+
+      return {
+        installments,
+        totalInCents,
+        installmentValueInCents: Math.ceil(totalInCents / installments)
+      };
+    })
+    .filter((option) => option.installmentValueInCents >= 500);
 }
 
 function brDate(value?: Date | null) {
@@ -285,6 +341,7 @@ async function loadSupportContext(organizationId: string, phone: string) {
       status: true,
       subtotalInCents: true,
       serviceFeeInCents: true,
+      discountInCents: true,
       cardInterestInCents: true,
       totalInCents: true,
       createdAt: true,
@@ -296,6 +353,8 @@ async function loadSupportContext(organizationId: string, phone: string) {
       payment: { select: { status: true, provider: true, paidAt: true, pixExpiresAt: true } },
       event: {
         select: {
+          slug: true,
+          organization: { select: { slug: true } },
           title: true,
           startsAt: true,
           doorsOpenAt: true,
@@ -309,6 +368,7 @@ async function loadSupportContext(organizationId: string, phone: string) {
       items: {
         select: {
           quantity: true,
+          totalInCents: true,
           admissionsPerUnit: true,
           lot: { select: { name: true } },
           lotOption: { select: { label: true } }
@@ -335,7 +395,21 @@ async function loadSupportContext(organizationId: string, phone: string) {
       footerFaqContent: true,
       footerHelpContent: true,
       footerCancellationPolicyContent: true,
-      footerContactContent: true
+      footerContactContent: true,
+      pixTransactionFeeInCents: true,
+      cardBaseFeeBps: true,
+      cardAdditionalInstallmentFeeBps: true
+    }
+  });
+
+  const splitRules = await prisma.paymentSplitRule.findMany({
+    where: { organizationId, isActive: true },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    select: {
+      walletId: true,
+      type: true,
+      percentageBps: true,
+      fixedValueInCents: true
     }
   });
 
@@ -349,24 +423,34 @@ async function loadSupportContext(organizationId: string, phone: string) {
     take: 12,
     select: {
       slug: true,
+      organization: { select: { slug: true } },
       title: true,
+      subtitle: true,
+      description: true,
       startsAt: true,
       doorsOpenAt: true,
+      salesEndsAt: true,
       venueName: true,
       venueAddress: true,
+      googleMapsUrl: true,
       city: true,
       state: true,
       importantInfo: true,
+      eventMapNotes: true,
       lots: {
         where: { status: "ACTIVE" },
         orderBy: { sortOrder: "asc" },
         select: {
           name: true,
+          description: true,
           priceInCents: true,
           serviceFeeBps: true,
           cardInterestBpsPerInstallment: true,
           cardInterestStartsAtInstallment: true,
           admissionsPerUnit: true,
+          totalQuantity: true,
+          soldQuantity: true,
+          reservedQuantity: true,
           status: true,
           typeOptions: {
             where: { status: "ACTIVE" },
@@ -380,6 +464,11 @@ async function loadSupportContext(organizationId: string, phone: string) {
 
   const publicBaseUrl = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "https://www.tcringressos.app.br").replace(/\/$/, "");
   const customerName = orders[0]?.customer.name || "cliente";
+  const storedFeeSettings: PaymentFeeSettings = {
+    pixTransactionFeeInCents: settings?.pixTransactionFeeInCents || 0,
+    cardBaseFeeBps: settings?.cardBaseFeeBps || 0,
+    cardAdditionalInstallmentFeeBps: settings?.cardAdditionalInstallmentFeeBps || 0
+  };
   return {
     customer: { firstName: firstName(customerName) },
     hasPreviousAiReply: logs.some((message) => jsonObject(message.payload).source === AI_SOURCE),
@@ -388,9 +477,9 @@ async function loadSupportContext(organizationId: string, phone: string) {
         "Cadeira duplo, ingresso duplo ou qualquer produto identificado como duplo vale para duas pessoas e gera dois ingressos com dois QR Codes individuais.",
       paymentMethods: "A TCR Ingressos aceita Pix e cartao de credito.",
       cardInstallments:
-        "O cartao de credito pode ser parcelado em ate 6 vezes. O parcelamento possui juros; informe o valor exibido no checkout e nunca invente o total das parcelas.",
+        "O cartao de credito pode ser parcelado. Para responder valores, use exclusivamente as simulacoes exatas do checkout presentes em exactCardInstallmentOptions.",
       fees:
-        "A taxa de bilheteria e os juros devem ser informados conforme os dados do ingresso e do checkout. Nao estime nem recalcule valores ausentes."
+        "A taxa de bilheteria e os juros devem ser informados conforme os dados do ingresso e as simulacoes exatas do checkout. Nao estime nem recalcule valores ausentes."
     },
     company: settings
       ? {
@@ -401,27 +490,72 @@ async function loadSupportContext(organizationId: string, phone: string) {
           footerContactContent: knowledgeText(settings.footerContactContent)
         }
       : null,
-    activeEvents: activeEvents.map((event) => ({
-      title: event.title,
-      startsAt: brDate(event.startsAt),
-      doorsOpenAt: brDate(event.doorsOpenAt),
-      venue: event.venueName,
-      address: event.venueAddress,
-      city: event.city,
-      state: event.state,
-      importantInfo: knowledgeText(event.importantInfo),
-      url: `${publicBaseUrl}/evento/${event.slug}`,
-      tickets: event.lots.map((lot) => ({
-        name: lot.name,
-        options: lot.typeOptions.map((option) => option.label),
-        basePrice: brl(lot.priceInCents),
-        serviceFeePercent: lot.serviceFeeBps / 100,
-        cardInterestPercentPerInstallment: lot.cardInterestBpsPerInstallment / 100,
-        cardInterestStartsAtInstallment: lot.cardInterestStartsAtInstallment,
-        admissionsPerUnit: lot.admissionsPerUnit
-      }))
-    })),
-    orders: orders.map((order) => ({
+    activeEvents: activeEvents.map((event) => {
+      const feeSettings = getEffectivePaymentFeeSettings(event.organization.slug, storedFeeSettings, event.slug);
+      const maxInstallments = getCreditCardInstallmentLimitForEvent(event);
+      return {
+        title: event.title,
+        subtitle: event.subtitle,
+        description: knowledgeText(event.description),
+        startsAt: brDate(event.startsAt),
+        doorsOpenAt: brDate(event.doorsOpenAt),
+        salesEndsAt: brDate(event.salesEndsAt),
+        venue: event.venueName,
+        address: event.venueAddress,
+        googleMapsUrl: event.googleMapsUrl,
+        city: event.city,
+        state: event.state,
+        importantInfo: knowledgeText(event.importantInfo),
+        eventMapNotes: knowledgeText(event.eventMapNotes),
+        url: `${publicBaseUrl}/evento/${event.slug}`,
+        tickets: event.lots.map((lot) => {
+          const effectiveServiceFeeBps = getEffectiveServiceFeeBps(
+            event.organization.slug,
+            lot.serviceFeeBps,
+            event.slug
+          );
+          const serviceFeeInCents = calculateServiceFeeInCents(lot.priceInCents, 1, effectiveServiceFeeBps);
+          const exactOptions = buildExactCardInstallmentOptions({
+            subtotalInCents: lot.priceInCents,
+            serviceFeeInCents,
+            items: [{ quantity: 1, totalInCents: lot.priceInCents, admissionsPerUnit: lot.admissionsPerUnit }],
+            splitRules,
+            feeSettings,
+            maxInstallments
+          });
+          return {
+            name: lot.name,
+            description: knowledgeText(lot.description),
+            options: lot.typeOptions.map((option) => option.label),
+            basePrice: brl(lot.priceInCents),
+            serviceFee: brl(serviceFeeInCents),
+            admissionsPerUnit: lot.admissionsPerUnit,
+            availableUnits: Math.max(lot.totalQuantity - lot.soldQuantity - lot.reservedQuantity, 0),
+            exactCardInstallmentOptionsForOneUnit: exactOptions.map((option) => ({
+              installments: option.installments,
+              installmentValue: brl(option.installmentValueInCents),
+              total: brl(option.totalInCents)
+            }))
+          };
+        })
+      };
+    }),
+    orders: orders.map((order) => {
+      const feeSettings = getEffectivePaymentFeeSettings(order.event.organization.slug, storedFeeSettings, order.event.slug);
+      const exactOptions = buildExactCardInstallmentOptions({
+        subtotalInCents: order.subtotalInCents,
+        serviceFeeInCents: order.serviceFeeInCents,
+        discountInCents: order.discountInCents,
+        items: order.items.map((item) => ({
+          quantity: item.quantity,
+          totalInCents: item.totalInCents,
+          admissionsPerUnit: item.admissionsPerUnit
+        })),
+        splitRules,
+        feeSettings,
+        maxInstallments: getCreditCardInstallmentLimitForEvent(order.event)
+      });
+      return {
       code: order.code,
       status: order.status,
       paymentStatus: order.payment?.status || null,
@@ -434,6 +568,11 @@ async function loadSupportContext(organizationId: string, phone: string) {
       serviceFee: brl(order.serviceFeeInCents),
       cardInterest: brl(order.cardInterestInCents),
       total: brl(order.totalInCents),
+      exactCardInstallmentOptions: exactOptions.map((option) => ({
+        installments: option.installments,
+        installmentValue: brl(option.installmentValueInCents),
+        total: brl(option.totalInCents)
+      })),
       ticketEmailStatus: order.ticketsEmailStatus,
       ticketEmailSentAt: brDate(order.ticketsEmailSentAt),
       issuedTickets: order.tickets.length,
@@ -456,7 +595,8 @@ async function loadSupportContext(organizationId: string, phone: string) {
         importantInfo: order.event.importantInfo
       },
       orderUrl: `${publicBaseUrl}/pedido/${order.code}`
-    })),
+      };
+    }),
     conversation: logs.reverse().map((message) => ({
       direction: message.status === "RECEIVED" ? "customer" : "support",
       text: contentFromLog(message),
@@ -469,7 +609,16 @@ function developerInstructions() {
   return `Voce e a assistente virtual oficial da TCR Ingressos no WhatsApp.
 
 OBJETIVO
-Atenda em portugues brasileiro com acolhimento, clareza e mensagens curtas. Resolva apenas o que os dados fornecidos comprovam. Nao diga que e humana. Na primeira resposta, apresente-se discretamente como assistente virtual da TCR Ingressos.
+Atenda em portugues brasileiro como uma excelente consultora comercial da TCR Ingressos: humana no tom, atenciosa, objetiva, segura e interessada em ajudar a pessoa a escolher e concluir a compra. Resolva apenas o que os dados fornecidos comprovam. Nao diga que e humana. Na primeira resposta, apresente-se discretamente como assistente virtual da TCR Ingressos.
+
+ESTILO DE ATENDIMENTO
+- Comece respondendo exatamente ao que a pessoa perguntou. Depois, quando for util, conduza para o proximo passo da compra.
+- Escreva como uma pessoa cordial, nao como um robo: varie as frases, reconheca a intencao do cliente e mantenha continuidade com as mensagens anteriores.
+- Apresente datas, locais, setores, precos, regras e links de forma organizada e facil de ler.
+- Seja comercial sem pressionar, criar urgencia falsa, inventar escassez ou oferecer desconto inexistente.
+- Nao sugira pagamento a vista nem destaque economia quando o cliente pediu parcelamento. Responda somente a simulacao solicitada.
+- Ao recomendar setor, explique brevemente o criterio com base apenas nos nomes, descricoes e informacoes reais disponiveis. Nao chame um setor de melhor se o contexto nao sustentar isso.
+- Quando a duvida estiver respondida e houver um link de evento ou pedido pertinente, ofereca o link naturalmente para a pessoa continuar a compra.
 
 REGRAS CRITICAS
 1. Os dados do CONTEXTO DO SISTEMA sao a unica fonte de verdade para pedidos, pagamentos, ingressos e eventos.
@@ -480,11 +629,14 @@ REGRAS CRITICAS
 6. Nao revele CPF, e-mail completo, dados de outros clientes, identificadores internos nem detalhes tecnicos.
 7. Ingresso duplo vale duas admissoes. Use totalAdmissions e issuedTickets para explicar quantos QR Codes existem; se houver divergencia, HANDOFF.
 7.1. Como regra comercial geral, cadeira duplo ou ingresso duplo e para duas pessoas e gera dois ingressos com dois QR Codes individuais.
-7.2. A TCR aceita Pix e cartao de credito. O cartao pode ser parcelado em ate 6 vezes, com juros. Para valores, taxas e parcelas, use apenas os dados exibidos no contexto ou oriente o cliente a conferir o resumo do checkout; nunca invente calculos.
+7.2. A TCR aceita Pix e cartao de credito. Para simulacoes no cartao, use exclusivamente exactCardInstallmentOptions do pedido real quando houver um pedido correspondente. Sem pedido, use exactCardInstallmentOptionsForOneUnit do ingresso e deixe claro que o valor e para uma unidade. O total e o valor de cada parcela ja foram calculados pelo mesmo motor do checkout: copie esses valores exatamente, sem recalcular, arredondar ou estimar.
+7.3. Se o cliente informar apenas o numero de parcelas em resposta a uma pergunta anterior, recupere da conversa o evento, setor e pedido a que ele se refere. Nao encaminhe ao humano apenas porque a pergunta envolve parcelamento.
+7.4. Se houver mais de um ingresso ou evento possivel e isso realmente mudar a resposta, faca uma unica pergunta curta para esclarecer. Use HANDOFF somente se, mesmo com o contexto e essa confirmacao, nao existir dado confiavel.
+7.5. Informacoes publicadas no site que estejam em activeEvents, company ou businessRules podem e devem ser respondidas diretamente, com boa apresentacao. Nao encaminhe duvidas comuns que o contexto resolve.
 8. Para pedido pendente, pode fornecer somente o orderUrl existente no contexto.
-9. Se nao houver informacao suficiente ou houver qualquer duvida sobre os dados, use HANDOFF.
+9. Se faltar apenas uma informacao simples para localizar evento, setor, quantidade ou pedido, pergunte ao cliente antes de usar HANDOFF. Use HANDOFF quando o dado nao existe no sistema, ha conflito real ou a operacao exige uma pessoa.
 10. Nao prometa prazo ou acao futura que nao esteja garantida.
-11. Nao repita saudacoes em todas as mensagens. Responda ao ponto, em no maximo 550 caracteres, com no maximo uma pergunta.
+11. Nao repita saudacoes em todas as mensagens. Responda ao ponto, em no maximo 650 caracteres, com no maximo uma pergunta.
 12. SILENT so deve ser usado para mensagem vazia, figurinha sem contexto, confirmacao final que nao exige resposta ou conteudo automatico.
 13. Quando hasPreviousAiReply for falso e a resposta for AUTO_REPLY, termine com: "Se preferir, escreva falar com atendente."
 14. Quando o cliente pedir uma pessoa ou atendente, use HANDOFF. O sistema tambem possui uma deteccao direta para esse pedido.

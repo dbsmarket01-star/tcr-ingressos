@@ -1,10 +1,54 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildExactCardInstallmentOptions,
   humanPauseUntil,
   isHumanHandoffRequest,
   parseWhatsAppAiDecision,
   resolveWhatsAppAiConversationMode
 } from "@/features/ai/whatsapp-support-ai.service";
+
+describe("exact checkout installment quotes", () => {
+  it("uses the same gross-up calculation as the checkout", () => {
+    const options = buildExactCardInstallmentOptions({
+      subtotalInCents: 10_000,
+      serviceFeeInCents: 2_000,
+      items: [{ quantity: 1, totalInCents: 10_000, admissionsPerUnit: 1 }],
+      splitRules: [],
+      feeSettings: {
+        pixTransactionFeeInCents: 200,
+        cardBaseFeeBps: 400,
+        cardAdditionalInstallmentFeeBps: 300,
+        cardFirstInstallmentInterestFree: true
+      },
+      maxInstallments: 6
+    });
+
+    expect(options).toHaveLength(6);
+    expect(options[0]).toEqual({ installments: 1, totalInCents: 11_800, installmentValueInCents: 11_800 });
+    expect(options[5]).toEqual({ installments: 6, totalInCents: 13_883, installmentValueInCents: 2_314 });
+  });
+
+  it("preserves configured splits when they exceed the service fee", () => {
+    const options = buildExactCardInstallmentOptions({
+      subtotalInCents: 10_000,
+      serviceFeeInCents: 1_000,
+      items: [{ quantity: 1, totalInCents: 10_000, admissionsPerUnit: 2 }],
+      splitRules: [
+        { walletId: "diego", type: "PERCENTAGE", percentageBps: 1000, fixedValueInCents: null },
+        { walletId: "lucas", type: "FIXED_PER_TICKET", percentageBps: null, fixedValueInCents: 150 }
+      ],
+      feeSettings: {
+        pixTransactionFeeInCents: 200,
+        cardBaseFeeBps: 400,
+        cardAdditionalInstallmentFeeBps: 300,
+        cardFirstInstallmentInterestFree: true
+      },
+      maxInstallments: 1
+    });
+
+    expect(options[0]).toEqual({ installments: 1, totalInCents: 11_300, installmentValueInCents: 11_300 });
+  });
+});
 
 describe("WhatsApp support AI", () => {
   it("reads a structured Responses API decision", () => {
