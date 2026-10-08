@@ -166,7 +166,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
             </Link>
           </div>
 
-          <form className="eventsIndexFiltersBar">
+          <form className="eventsIndexFiltersBar" key={JSON.stringify([query, selectedStatus, selectedDate, selectedCity])}>
             <div className="eventsIndexSearchGroup">
               <label htmlFor="events-index-search">Busca</label>
               <div className="eventsIndexSearchField">
