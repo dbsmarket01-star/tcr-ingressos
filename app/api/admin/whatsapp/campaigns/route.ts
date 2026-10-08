@@ -18,7 +18,10 @@ import {
   configSchema,
   normalizePhone,
 } from "@/features/whatsapp/campaigns/rules";
-import { syncIntegration } from "@/features/whatsapp/campaigns/meta";
+import {
+  submitTemplate,
+  syncIntegration,
+} from "@/features/whatsapp/campaigns/meta";
 import { importList } from "@/features/whatsapp/campaigns/import";
 import { beginUpload } from "@/features/whatsapp/campaigns/media";
 export const dynamic = "force-dynamic";
@@ -49,6 +52,17 @@ const schema = z.discriminatedUnion("operation", [
     .object({
       operation: z.literal("sync"),
       release: z.boolean().default(false),
+    })
+    .strict(),
+  z
+    .object({
+      operation: z.literal("submitTemplate"),
+      name: z.string().regex(/^[a-z0-9_]{1,512}$/),
+      language: z.literal("pt_BR"),
+      category: z.literal("MARKETING"),
+      body: z.string().min(1).max(1024),
+      buttonText: z.string().min(1).max(25),
+      buttonUrl: z.url(),
     })
     .strict(),
   z
@@ -313,6 +327,13 @@ export async function POST(request: Request) {
             await audit(tx, org, admin.id, "INTEGRATION_RELEASED", null);
           });
         }
+        break;
+      }
+      case "submitTemplate": {
+        if (!["OWNER", "MANAGER"].includes(admin.role))
+          throw new Error("FORBIDDEN");
+        const { operation, ...template } = input;
+        result = await submitTemplate(org, admin.id, template);
         break;
       }
       case "beginUpload":

@@ -67,6 +67,9 @@ export async function graph(
   options: RequestInit = {},
 ) {
   const c = await integrationConfig(organizationId);
+  const isCreate =
+    options.method === "POST" &&
+    (path.endsWith("/messages") || path.endsWith("/message_templates"));
   let response: Response;
   try {
     response = await fetch(`https://graph.facebook.com/${c.version}/${path}`, {
@@ -81,7 +84,7 @@ export async function graph(
       0,
       0,
       "A conexão com a Meta foi interrompida.",
-      options.method === "POST" && path.endsWith("/messages"),
+      isCreate,
     );
   }
   let data: any;
@@ -92,7 +95,7 @@ export async function graph(
       0,
       response.status,
       "Resposta da Meta sem confirmação válida.",
-      options.method === "POST" && path.endsWith("/messages"),
+      isCreate,
     );
   }
   if (!response.ok || data.error)
@@ -102,6 +105,130 @@ export async function graph(
       String(data.error?.message ?? "Falha na API Meta").slice(0, 800),
     );
   return data;
+}
+
+export type TemplateSubmission = {
+  name: string;
+  language: "pt_BR";
+  category: "MARKETING";
+  body: string;
+  buttonText: string;
+  buttonUrl: string;
+};
+
+export function templateSubmissionPayload(input: TemplateSubmission) {
+  if (!/^[a-z0-9_]{1,512}$/.test(input.name))
+    throw new Error("Nome de template inválido.");
+  if (!input.body.trim() || input.body.length > 1024)
+    throw new Error("O texto do template deve ter entre 1 e 1024 caracteres.");
+  if (!input.buttonText.trim() || input.buttonText.length > 25)
+    throw new Error("O texto do botão deve ter entre 1 e 25 caracteres.");
+  const url = new URL(input.buttonUrl);
+  if (
+    url.protocol !== "https:" ||
+    url.hostname !== "www.tcringressos.app.br" ||
+    !url.pathname.startsWith("/evento/")
+  )
+    throw new Error("Use o link oficial HTTPS de vendas do evento.");
+  return {
+    name: input.name,
+    language: input.language,
+    category: input.category,
+    components: [
+      { type: "BODY", text: input.body },
+      {
+        type: "BUTTONS",
+        buttons: [
+          { type: "URL", text: input.buttonText, url: input.buttonUrl },
+        ],
+      },
+    ],
+  };
+}
+
+export async function submitTemplate(
+  organizationId: string,
+  actorId: string,
+  input: TemplateSubmission,
+) {
+  const payload = templateSubmissionPayload(input);
+  const existing = await prisma.waTemplate.findUnique({
+    where: {
+      organizationId_name_language: {
+        organizationId,
+        name: input.name,
+        language: input.language,
+      },
+    },
+  });
+  if (existing) {
+    if (
+      existing.category !== input.category ||
+      JSON.stringify(existing.components) !== JSON.stringify(payload.components)
+    )
+      throw new Error(
+        "Já existe um template com esse nome e conteúdo diferente na Meta.",
+      );
+    return existing;
+  }
+  const c = await integrationConfig(organizationId);
+  let result: any;
+  try {
+    result = await graph(organizationId, `${c.waba}/message_templates`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    if (error instanceof MetaRequestError && error.ambiguous) {
+      await syncIntegration(organizationId, actorId);
+      const recovered = await prisma.waTemplate.findUnique({
+        where: {
+          organizationId_name_language: {
+            organizationId,
+            name: input.name,
+            language: input.language,
+          },
+        },
+      });
+      if (recovered) return recovered;
+    }
+    throw error;
+  }
+  if (!result.id || !result.status || !result.category)
+    throw new Error("A Meta não confirmou o cadastro completo do template.");
+  const status = String(result.status);
+  const category = String(result.category);
+  return prisma.$transaction(async (tx) => {
+    const saved = await tx.waTemplate.create({
+      data: {
+        organizationId,
+        metaId: String(result.id),
+        name: input.name,
+        language: input.language,
+        status,
+        category,
+        reviewReason: null,
+        components: json(payload.components),
+        syncedAt: new Date(),
+      },
+    });
+    await tx.waAudit.create({
+      data: {
+        organizationId,
+        actorId,
+        action: "TEMPLATE_SUBMITTED",
+        detail: json({
+          metaId: saved.metaId,
+          name: saved.name,
+          language: saved.language,
+          category: saved.category,
+          status: saved.status,
+        }),
+      },
+    });
+    return saved;
+  });
 }
 export async function syncIntegration(organizationId: string, actorId: string) {
   const c = await integrationConfig(organizationId);
@@ -195,6 +322,7 @@ export async function syncIntegration(organizationId: string, actorId: string) {
             category: t.category,
             components: json(t.components ?? []),
             quality: t.quality_score?.score ?? null,
+            ...(t.status === "APPROVED" ? { reviewReason: null } : {}),
             syncedAt: now,
           },
         });

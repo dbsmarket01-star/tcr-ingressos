@@ -28,7 +28,16 @@ export async function campaignWebhook(payload: any) {
                 organizationId: owner.organizationId,
                 metaId: String(value.message_template_id),
               },
-              data: { status: String(value.event), syncedAt: new Date() },
+              data: {
+                status: String(value.event),
+                reviewReason:
+                  value.event === "REJECTED"
+                    ? value.reason
+                      ? String(value.reason).slice(0, 1000)
+                      : null
+                    : null,
+                syncedAt: new Date(),
+              },
             });
             if (value.event !== "APPROVED")
               await tx.waCampaign.updateMany({

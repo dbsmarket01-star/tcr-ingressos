@@ -1862,6 +1862,7 @@ model WaTemplate {
   status         String
   category       String
   quality        String?
+  reviewReason   String?
   components     Json
   syncedAt       DateTime @default(now())
 

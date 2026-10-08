@@ -1,5 +1,6 @@
 "use client";
 import {
+  Fragment,
   useState,
   useEffect,
   useCallback,
@@ -1806,6 +1807,7 @@ export function CampaignModule({ campaignId }: { campaignId?: string }) {
       {settingsOpen && (
         <SettingsDialog
           integration={data?.integration}
+          templates={data?.templates ?? []}
           busy={busy}
           onClose={() => setSettingsOpen(false)}
           submit={(body) =>
@@ -1920,11 +1922,13 @@ function ImportDialog({
 }
 function SettingsDialog({
   integration: i,
+  templates,
   busy,
   onClose,
   submit,
 }: {
   integration: any;
+  templates: any[];
   busy: boolean;
   onClose: () => void;
   submit: (body: any) => void;
@@ -1957,6 +1961,24 @@ function SettingsDialog({
       >
         Revalidar integração e templates
       </button>
+      <h3>Templates da Meta</h3>
+      {templates.length ? (
+        <dl className={s.summary}>
+          {templates.map((template) => (
+            <Fragment key={template.id}>
+              <dt>{template.name}</dt>
+              <dd>
+                {template.category} · {template.language} · {template.status}
+                {template.reviewReason
+                  ? ` — Motivo: ${template.reviewReason}`
+                  : ""}
+              </dd>
+            </Fragment>
+          ))}
+        </dl>
+      ) : (
+        <p className={s.helper}>Nenhum template sincronizado.</p>
+      )}
       <form
         onSubmit={(e) => {
           e.preventDefault();
