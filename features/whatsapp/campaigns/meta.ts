@@ -25,16 +25,17 @@ export async function integrationConfig(organizationId: string) {
     waba = env("WHATSAPP_BUSINESS_ACCOUNT_ID"),
     portfolio = env("WHATSAPP_BUSINESS_PORTFOLIO_ID"),
     version = env("WHATSAPP_GRAPH_API_VERSION") || "v23.0";
-  if (
-    !token ||
-    !phone ||
-    !waba ||
-    !/^\d+$/.test(phone) ||
-    !/^\d+$/.test(waba) ||
-    !/^v\d+\.0$/.test(version)
-  )
+  const invalid = [
+    !token && "token ausente",
+    !phone && "número ausente",
+    phone && !/^\d+$/.test(phone) && "número inválido",
+    !waba && "WABA ausente",
+    waba && !/^\d+$/.test(waba) && "WABA inválida",
+    !/^v\d+\.0$/.test(version) && "versão da API inválida",
+  ].filter(Boolean);
+  if (invalid.length)
     throw new Error(
-      "Integração WhatsApp incompleta. Configure token, número e WABA desta organização.",
+      `Integração WhatsApp incompleta: ${invalid.join(", ")}.`,
     );
   return { token, phone, waba, portfolio, version };
 }
