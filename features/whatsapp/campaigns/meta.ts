@@ -37,7 +37,7 @@ export async function integrationConfig(organizationId: string) {
     throw new Error(
       `Integração WhatsApp incompleta: ${invalid.join(", ")}.`,
     );
-  return { token, phone, waba, portfolio, version };
+  return { token: token!, phone: phone!, waba: waba!, portfolio, version };
 }
 export class MetaRequestError extends Error {
   constructor(
