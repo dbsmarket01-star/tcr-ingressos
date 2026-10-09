@@ -74,5 +74,8 @@ describe("Meta template submission", () => {
     expect((result.components[1] as any).buttons[0].url).toBe(
       "https://www.tcringressos.app.br/r/whatsapp/{{1}}",
     );
+    expect((result.components[1] as any).buttons[0].example).toEqual([
+      "https://www.tcringressos.app.br/r/whatsapp/exemplo-rastreamento",
+    ]);
   });
 });

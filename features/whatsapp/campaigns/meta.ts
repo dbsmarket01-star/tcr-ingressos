@@ -137,12 +137,13 @@ export function templateSubmissionPayload(input: TemplateSubmission) {
   if (!input.buttonText.trim() || input.buttonText.length > 25)
     throw new Error("O texto do botão deve ter entre 1 e 25 caracteres.");
   const url = new URL(input.buttonUrl);
+  const dynamicTrackingUrl =
+    url.pathname === "/r/whatsapp/%7B%7B1%7D%7D" ||
+    url.pathname === "/r/whatsapp/{{1}}";
   if (
     url.protocol !== "https:" ||
     url.hostname !== "www.tcringressos.app.br" ||
-    (!url.pathname.startsWith("/evento/") &&
-      url.pathname !== "/r/whatsapp/%7B%7B1%7D%7D" &&
-      url.pathname !== "/r/whatsapp/{{1}}")
+    (!url.pathname.startsWith("/evento/") && !dynamicTrackingUrl)
   )
     throw new Error("Use o link oficial HTTPS do evento ou do rastreador TCR.");
   return {
@@ -154,7 +155,18 @@ export function templateSubmissionPayload(input: TemplateSubmission) {
       {
         type: "BUTTONS",
         buttons: [
-          { type: "URL", text: input.buttonText, url: input.buttonUrl },
+          {
+            type: "URL",
+            text: input.buttonText,
+            url: input.buttonUrl,
+            ...(dynamicTrackingUrl
+              ? {
+                  example: [
+                    "https://www.tcringressos.app.br/r/whatsapp/exemplo-rastreamento",
+                  ],
+                }
+              : {}),
+          },
         ],
       },
     ],

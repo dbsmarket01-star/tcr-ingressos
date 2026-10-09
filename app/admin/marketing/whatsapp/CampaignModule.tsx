@@ -1959,7 +1959,7 @@ function SettingsDialog({
     [phone, setPhone] = useState(""),
     [reason, setReason] = useState("");
   const clickTrackingTemplate = templates.find(
-    (template) => template.name === "guilherme_arantes_50_anos_luz_v2",
+    (template) => template.name === "guilherme_arantes_50_anos_luz_v3",
   );
   const sourceTemplate = templates.find(
     (template) => template.name === "guilherme_arantes_50_anos_luz",
@@ -2012,7 +2012,7 @@ function SettingsDialog({
             const parts = templateParts(sourceTemplate);
             submit({
               operation: "submitTemplate",
-              name: "guilherme_arantes_50_anos_luz_v2",
+              name: "guilherme_arantes_50_anos_luz_v3",
               language: "pt_BR",
               category: "MARKETING",
               body: parts.body,
