@@ -1958,6 +1958,12 @@ function SettingsDialog({
     [minimum, setMinimum] = useState((i?.minimumIntervalMs ?? 1000) / 1000),
     [phone, setPhone] = useState(""),
     [reason, setReason] = useState("");
+  const clickTrackingTemplate = templates.find(
+    (template) => template.name === "guilherme_arantes_50_anos_luz_v2",
+  );
+  const sourceTemplate = templates.find(
+    (template) => template.name === "guilherme_arantes_50_anos_luz",
+  );
   return (
     <Modal title="Integração e preferências" onClose={onClose}>
       <dl className={s.summary}>
@@ -1998,6 +2004,35 @@ function SettingsDialog({
       ) : (
         <p className={s.helper}>Nenhum template sincronizado.</p>
       )}
+      {!clickTrackingTemplate && sourceTemplate ? (
+        <button
+          className={s.secondary}
+          disabled={busy}
+          onClick={() => {
+            const parts = templateParts(sourceTemplate);
+            submit({
+              operation: "submitTemplate",
+              name: "guilherme_arantes_50_anos_luz_v2",
+              language: "pt_BR",
+              category: "MARKETING",
+              body: parts.body,
+              buttonText: "Comprar ingressos",
+              buttonUrl:
+                "https://www.tcringressos.app.br/r/whatsapp/{{1}}",
+            });
+          }}
+        >
+          Submeter versão com medição de cliques
+        </button>
+      ) : null}
+      {clickTrackingTemplate ? (
+        <p className={s.helper}>
+          Template rastreável: {clickTrackingTemplate.status}
+          {clickTrackingTemplate.reviewReason
+            ? ` — ${clickTrackingTemplate.reviewReason}`
+            : ""}
+        </p>
+      ) : null}
       <form
         onSubmit={(e) => {
           e.preventDefault();
