@@ -26,6 +26,7 @@ export const configSchema = z
     batchSize: z.number().int().min(1).max(1000).default(5),
     batchPeriodSeconds: z.number().int().min(1).max(86400).default(30),
     batchPauseSeconds: z.number().int().min(0).max(86400).default(90),
+    canarySize: z.number().int().min(0).max(1000).default(10),
     kind: z.enum(["text", "image", "video", "audio"]).default("text"),
     message: z.string().max(4096).default(""),
     templateId: z.string().default(""),
@@ -253,10 +254,11 @@ export function validateContent(c: CampaignConfig, t: TemplateShape | null) {
       const url = button.url ?? "",
         prefix = url.replace(/\{\{1\}\}$/, " ").trim();
       if (url.includes("{{1}}")) {
+        if (!url.endsWith("{{1}}"))
+          throw new Error("O botão dinâmico aprovado é inválido.");
         if (
-          !url.endsWith("{{1}}") ||
-          !c.ctaUrl.startsWith(prefix) ||
-          c.ctaUrl.length <= prefix.length
+          !c.trackClicks &&
+          (!c.ctaUrl.startsWith(prefix) || c.ctaUrl.length <= prefix.length)
         )
           throw new Error("O link deve respeitar o prefixo do botão aprovado.");
       } else if (c.ctaUrl !== url)

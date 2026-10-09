@@ -60,4 +60,19 @@ describe("Meta template submission", () => {
       }),
     ).toThrow("link oficial");
   });
+
+  it("accepts the official per-recipient click tracker", () => {
+    const result = templateSubmissionPayload({
+      name: "guilherme_arantes_50_anos_luz_v2",
+      language: "pt_BR",
+      category: "MARKETING",
+      body,
+      buttonText: "Comprar ingressos",
+      buttonUrl: "https://www.tcringressos.app.br/r/whatsapp/{{1}}",
+    });
+
+    expect((result.components[1] as any).buttons[0].url).toBe(
+      "https://www.tcringressos.app.br/r/whatsapp/{{1}}",
+    );
+  });
 });

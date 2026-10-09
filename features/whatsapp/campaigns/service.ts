@@ -477,7 +477,11 @@ export function metrics(
     delivered = jobs.filter((j) => j.deliveredAt || j.readAt).length,
     read = count("readAt"),
     replies = count("repliedAt"),
-    clicks = count("clickedAt");
+    clicks = count("clickedAt"),
+    totalClicks = jobs.reduce(
+      (sum, job) => sum + Number((job as { clickCount?: number }).clickCount ?? 0),
+      0,
+    );
   const rate = (n: number, d: number) =>
     d ? Math.round((n / d) * 1000) / 10 : 0;
   const errors: Record<string, number> = {};
@@ -495,6 +499,7 @@ export function metrics(
     cancelled: jobs.filter((j) => j.state === "cancelled").length,
     optOuts: count("optedOutAt"),
     clicks,
+    totalClicks,
     deliveryRate: rate(delivered, sent),
     readRate: rate(read, delivered),
     replyRate: rate(replies, delivered),
@@ -511,17 +516,25 @@ export async function campaignReport(org: string, id: string) {
   return {
     ...row,
     metrics: metrics(jobs),
-    contacts: jobs
-      .slice(0, 100)
-      .map((j) => ({
+    contacts: jobs.map((j) => ({
         id: j.id,
         phone: j.phone,
+        name:
+          typeof j.recipient === "object" && j.recipient
+            ? String((j.recipient as { name?: unknown }).name ?? "")
+            : "",
         state: j.state,
         uncertain: j.uncertain,
+        errorCode: j.errorCode,
         error: j.errorMessage,
+        acceptedAt: j.acceptedAt,
         sentAt: j.sentAt,
         deliveredAt: j.deliveredAt,
         readAt: j.readAt,
+        repliedAt: j.repliedAt,
+        clickedAt: j.clickedAt,
+        clickCount: j.clickCount,
+        optedOutAt: j.optedOutAt,
       })),
     audit: await prisma.waAudit.findMany({
       where: { organizationId: org, campaignId: id },

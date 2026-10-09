@@ -276,6 +276,7 @@ export async function claimJob(now = new Date(), campaignId?: string) {
         gateLeaseUntil,
         paceMs: delay,
         attempts: job.attempts + 1,
+        ordinal,
         config,
         template: snapshot.template as TemplateShape | null,
         snapshot,
@@ -467,6 +468,28 @@ export async function processOne(campaignId?: string) {
         job.campaignId,
         { jobId: job.id, messageId },
       );
+      const total = await tx.waMessageJob.count({
+        where: { campaignId: job.campaignId },
+      });
+      if (
+        job.config.canarySize > 0 &&
+        total > job.config.canarySize &&
+        job.ordinal === job.config.canarySize
+      ) {
+        const reason = `Lote inicial de ${job.config.canarySize} aceito pela Meta. Confira entregas e falhas antes de liberar o restante.`;
+        await tx.waCampaign.update({
+          where: { id: job.campaignId },
+          data: { status: "paused", pauseReason: reason },
+        });
+        await audit(
+          tx,
+          job.organizationId,
+          "worker",
+          "CANARY_BATCH_PAUSED",
+          job.campaignId,
+          { size: job.config.canarySize },
+        );
+      }
     });
   } catch (error) {
     const ambiguous =

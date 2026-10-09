@@ -140,9 +140,11 @@ export function templateSubmissionPayload(input: TemplateSubmission) {
   if (
     url.protocol !== "https:" ||
     url.hostname !== "www.tcringressos.app.br" ||
-    !url.pathname.startsWith("/evento/")
+    (!url.pathname.startsWith("/evento/") &&
+      url.pathname !== "/r/whatsapp/%7B%7B1%7D%7D" &&
+      url.pathname !== "/r/whatsapp/{{1}}")
   )
-    throw new Error("Use o link oficial HTTPS de vendas do evento.");
+    throw new Error("Use o link oficial HTTPS do evento ou do rastreador TCR.");
   return {
     name: input.name,
     language: input.language,

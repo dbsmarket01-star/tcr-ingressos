@@ -413,6 +413,8 @@ export function CampaignModule({ campaignId }: { campaignId?: string }) {
     }
     const p = templateParts(t),
       button = p.buttons.find((b) => b.type === "URL"),
+      trackingButton =
+        button?.url === `${data?.trackingBaseUrl}/r/whatsapp/{{1}}`,
       kind = (
         p.header?.format ?? "TEXT"
       ).toLowerCase() as CampaignConfig["kind"];
@@ -425,9 +427,11 @@ export function CampaignModule({ campaignId }: { campaignId?: string }) {
       kind: ["text", "image", "video"].includes(kind) ? kind : "text",
       mediaId: "",
       ctaLabel: button?.text ?? "",
-      ctaUrl: button?.url?.replace("{{1}}", "") ?? "",
+      ctaUrl: trackingButton
+        ? ""
+        : (button?.url?.replace("{{1}}", "") ?? ""),
       purpose: t.category === "UTILITY" ? "utility" : "marketing",
-      trackClicks: false,
+      trackClicks: trackingButton,
     });
     setMedia(null);
   };
@@ -1245,6 +1249,21 @@ export function CampaignModule({ campaignId }: { campaignId?: string }) {
                       . O intervalo é mínimo: processamento, pausas e limites
                       podem ampliar esse tempo.
                     </div>
+                    <Field label="Lote inicial para validação">
+                      <input
+                        type="number"
+                        min={0}
+                        max={1000}
+                        value={c.canarySize}
+                        onChange={(e) =>
+                          draft.update({ canarySize: Number(e.target.value) })
+                        }
+                      />
+                      <small>
+                        A campanha pausa após esse lote para conferir aceitação,
+                        entrega e falhas. Use 0 somente para não pausar.
+                      </small>
+                    </Field>
                   </div>
                 </Card>
               </div>
@@ -2149,6 +2168,10 @@ function CampaignReport({
           ["Descadastros", m.optOuts],
           ["Cancelados", m.cancelled],
           ["Cliques no CTA", snapshot.config?.trackClicks ? m.clicks : null],
+          [
+            "Cliques totais",
+            snapshot.config?.trackClicks ? m.totalClicks : null,
+          ],
         ].map(([label, value]) => (
           <article key={String(label)}>
             <span>{label}</span>
@@ -2202,6 +2225,41 @@ function CampaignReport({
           direta são atribuídas ao último envio aceito dos últimos 7 dias.
           Cliques rastreados podem incluir acessos automatizados.
         </p>
+      </Card>
+      <Card icon="users" title="Detalhamento por destinatário">
+        <div className={s.tableScroll}>
+          <table>
+            <thead>
+              <tr>
+                <th>Contato</th>
+                <th>Telefone</th>
+                <th>Status</th>
+                <th>Aceito</th>
+                <th>Entregue</th>
+                <th>Lido</th>
+                <th>Cliques</th>
+                <th>Falha / restrição</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(report.contacts ?? []).map((contact: any) => (
+                <tr key={contact.id}>
+                  <td>{contact.name || "—"}</td>
+                  <td>{contact.phone}</td>
+                  <td>{stateLabels[contact.state] ?? contact.state}</td>
+                  <td>{date(contact.acceptedAt)}</td>
+                  <td>{date(contact.deliveredAt)}</td>
+                  <td>{date(contact.readAt)}</td>
+                  <td>{number(Number(contact.clickCount ?? 0))}</td>
+                  <td>
+                    {contact.errorCode ? `${contact.errorCode} · ` : ""}
+                    {contact.error || "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
       <Card icon="file" title="Falhas e restrições por motivo">
         {Object.entries(m.errors ?? {}).map(([reason, n]) => (

@@ -278,6 +278,7 @@ export async function POST(request: Request) {
         );
         break;
       case "confirm":
+        await syncIntegration(org, admin.id);
         result = await confirmCampaign(org, admin.id, input.id, input.version);
         break;
       case "pause":
