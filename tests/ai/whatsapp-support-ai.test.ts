@@ -4,7 +4,9 @@ import {
   humanPauseUntil,
   isHumanHandoffRequest,
   parseWhatsAppAiDecision,
-  resolveWhatsAppAiConversationMode
+  resolvedHandoffReply,
+  resolveWhatsAppAiConversationMode,
+  shouldProcessWhatsAppAiMessage
 } from "@/features/ai/whatsapp-support-ai.service";
 
 describe("exact checkout installment quotes", () => {
@@ -128,5 +130,19 @@ describe("human intervention pause", () => {
       metadata: { pausedUntil: "2026-09-29T03:00:00.000Z" },
       now: new Date("2026-09-30T03:00:00.000Z")
     })).toBe("HANDOFF");
+  });
+});
+
+describe("dúvida respondível após pedido de atendente", () => {
+  it("permite que a IA avalie uma nova pergunta enquanto o handoff ainda não foi assumido", () => {
+    expect(shouldProcessWhatsAppAiMessage("HANDOFF")).toBe(true);
+    expect(shouldProcessWhatsAppAiMessage("PAUSED")).toBe(false);
+    expect(shouldProcessWhatsAppAiMessage("DISABLED")).toBe(false);
+  });
+
+  it("oferece novamente o atendimento humano depois de responder", () => {
+    expect(resolvedHandoffReply("A taxa é de R$ 31,58.")).toBe(
+      'A taxa é de R$ 31,58.\n\nSe sua dúvida não ficou resolvida e ainda quiser falar com uma pessoa, escreva novamente "falar com atendente".',
+    );
   });
 });

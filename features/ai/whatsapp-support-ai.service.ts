@@ -90,6 +90,16 @@ export function isHumanHandoffRequest(value?: string | null) {
   ].some((pattern) => pattern.test(text));
 }
 
+export function shouldProcessWhatsAppAiMessage(mode: string) {
+  return mode === "ACTIVE" || mode === "HANDOFF";
+}
+
+export function resolvedHandoffReply(reply: string) {
+  const invitation =
+    'Se sua dúvida não ficou resolvida e ainda quiser falar com uma pessoa, escreva novamente "falar com atendente".';
+  return `${reply.trim()}\n\n${invitation}`.trim();
+}
+
 function brl(valueInCents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valueInCents / 100);
 }
@@ -605,7 +615,7 @@ async function loadSupportContext(organizationId: string, phone: string) {
   };
 }
 
-function developerInstructions() {
+function developerInstructions(pendingHumanRequest = false) {
   return `Voce e a assistente virtual oficial da TCR Ingressos no WhatsApp.
 
 OBJETIVO
@@ -635,6 +645,8 @@ REGRAS CRITICAS
 7.5. Informacoes publicadas no site que estejam em activeEvents, company ou businessRules podem e devem ser respondidas diretamente, com boa apresentacao. Nao encaminhe duvidas comuns que o contexto resolve.
 7.6. Ao explicar tipos de ingresso, leia primeiro a description do ingresso e importantInfo do evento correspondente. Explique de forma pratica: meia-entrada exige o enquadramento indicado; solidario exige exatamente a doacao informada; inteira nao exige comprovacao ou doacao; duplo vale o numero de admissoes registrado. Se a regra disser "por pessoa", deixe isso explicito.
 7.7. Nunca copie a exigencia de alimento, documento, faixa etaria ou regra comercial de outro evento. Se a description e importantInfo do evento consultado nao trouxerem a resposta, faca uma pergunta de esclarecimento ou use HANDOFF, sem completar por suposicao.
+7.8. Sobre meia-entrada, use primeiro as regras do evento. Como regra legal geral no Brasil, podem ter direito, mediante comprovacao valida, estudantes, pessoas com 60 anos ou mais, pessoas com deficiencia e acompanhante quando necessario, e jovens de baixa renda com ID Jovem, alem de categorias previstas em legislacao local. Nunca diga que a idade federal para idoso e 65 anos.
+7.9. Quando o cliente perguntar a taxa de um ingresso, identifique o evento e o ingresso pela conversa, pelos pedidos e pelos dados de activeEvents. Informe exatamente basePrice, serviceFee e o total para uma unidade. Se houver ambiguidade real entre eventos ou setores, faca uma unica pergunta curta antes de responder.
 8. Para pedido pendente, pode fornecer somente o orderUrl existente no contexto.
 9. Se faltar apenas uma informacao simples para localizar evento, setor, quantidade ou pedido, pergunte ao cliente antes de usar HANDOFF. Use HANDOFF quando o dado nao existe no sistema, ha conflito real ou a operacao exige uma pessoa.
 10. Nao prometa prazo ou acao futura que nao esteja garantida.
@@ -642,6 +654,7 @@ REGRAS CRITICAS
 12. SILENT so deve ser usado para mensagem vazia, figurinha sem contexto, confirmacao final que nao exige resposta ou conteudo automatico.
 13. Quando hasPreviousAiReply for falso e a resposta for AUTO_REPLY, termine com: "Se preferir, escreva falar com atendente."
 14. Quando o cliente pedir uma pessoa ou atendente, use HANDOFF. O sistema tambem possui uma deteccao direta para esse pedido.
+15. ${pendingHumanRequest ? "Existe um pedido anterior de atendimento humano, mas nenhum atendente entrou na conversa. Se a nova duvida puder ser respondida com seguranca pelo contexto, use AUTO_REPLY normalmente. Nao use HANDOFF apenas por causa do pedido anterior; o sistema oferecera o atendente novamente depois da resposta." : "Nao existe pedido anterior pendente de atendimento humano."}
 
 SAIDA
 AUTO_REPLY quando puder responder com seguranca.
@@ -649,7 +662,11 @@ HANDOFF quando uma pessoa precisar assumir; nesse caso escreva uma mensagem curt
 SILENT quando nenhuma resposta for necessaria.`;
 }
 
-async function requestDecision(userText: string, context: Awaited<ReturnType<typeof loadSupportContext>>) {
+async function requestDecision(
+  userText: string,
+  context: Awaited<ReturnType<typeof loadSupportContext>>,
+  pendingHumanRequest = false,
+) {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) throw new Error("OPENAI_API_KEY nao configurada.");
   const timeoutMs = Number(process.env.OPENAI_CHAT_TIMEOUT_MS || 12_000);
@@ -663,7 +680,7 @@ async function requestDecision(userText: string, context: Awaited<ReturnType<typ
       reasoning: { effort: "low" },
       max_output_tokens: Number.isFinite(maxOutputTokens) ? maxOutputTokens : 360,
       input: [
-        { role: "developer", content: developerInstructions() },
+        { role: "developer", content: developerInstructions(pendingHumanRequest) },
         {
           role: "user",
           content: `MENSAGEM NOVA DO CLIENTE:\n${userText}\n\nCONTEXTO DO SISTEMA:\n${JSON.stringify(context)}`
@@ -734,7 +751,7 @@ async function processInboundMessage(message: MetaTextMessage) {
   if (!inbound?.organizationId || aiMetadataFromLog(inbound.webhookPayload)) return;
 
   const state = await getWhatsAppAiConversationState(inbound.organizationId, message.from);
-  if (state.mode !== "ACTIVE") {
+  if (!shouldProcessWhatsAppAiMessage(state.mode)) {
     await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "SKIPPED", reason: state.reason });
     return;
   }
@@ -779,7 +796,12 @@ async function processInboundMessage(message: MetaTextMessage) {
   await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "PROCESSING" });
   try {
     const context = await loadSupportContext(inbound.organizationId, message.from);
-    const decision = await requestDecision(message.text.body.trim(), context);
+    const pendingHumanRequest = state.mode === "HANDOFF";
+    const decision = await requestDecision(
+      message.text.body.trim(),
+      context,
+      pendingHumanRequest,
+    );
     if (decision.outcome === "HANDOFF") {
       await setWhatsAppAiConversationState({
         organizationId: inbound.organizationId,
@@ -788,10 +810,21 @@ async function processInboundMessage(message: MetaTextMessage) {
         reason: decision.reason
       });
     }
+    if (pendingHumanRequest && decision.outcome === "AUTO_REPLY") {
+      await setWhatsAppAiConversationState({
+        organizationId: inbound.organizationId,
+        phone: message.from,
+        mode: "ACTIVE",
+        reason: "A IA respondeu com segurança à dúvida enviada após a solicitação de atendente."
+      });
+    }
     if (decision.outcome !== "SILENT" && decision.reply) {
       await sendWhatsAppTextMessage({
         to: message.from,
-        text: decision.reply,
+        text:
+          pendingHumanRequest && decision.outcome === "AUTO_REPLY"
+            ? resolvedHandoffReply(decision.reply)
+            : decision.reply,
         organizationId: inbound.organizationId,
         recipientName: context.customer.firstName,
         source: AI_SOURCE,
