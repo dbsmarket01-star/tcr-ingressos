@@ -10,6 +10,7 @@ import {
 import { calculateAsaasSplitsForOrder, sumAsaasSplitsInCents } from "@/features/payments/asaas-split.service";
 import { getEffectivePaymentFeeSettings, getEffectiveServiceFeeBps } from "@/features/pricing/organization-pricing-policy";
 import { getCreditCardInstallmentLimitForEvent } from "@/lib/payment-installments";
+import { loadApprovedSupportKnowledge } from "@/features/ai/whatsapp-support-knowledge.service";
 
 const AI_SOURCE = "TCR_WHATSAPP_AI";
 const DEFAULT_MODEL = "gpt-5.4-mini";
@@ -91,7 +92,12 @@ export function isHumanHandoffRequest(value?: string | null) {
 }
 
 export function shouldProcessWhatsAppAiMessage(mode: string) {
-  return mode === "ACTIVE" || mode === "HANDOFF";
+  return mode === "ACTIVE";
+}
+
+export function shouldProcessWhatsAppAiState(state: { mode: string; reason?: string | null }) {
+  return shouldProcessWhatsAppAiMessage(state.mode) ||
+    (state.mode === "HANDOFF" && state.reason === "Cliente solicitou atendimento humano.");
 }
 
 export function resolvedHandoffReply(reply: string) {
@@ -426,12 +432,15 @@ async function loadSupportContext(organizationId: string, phone: string) {
   const activeEvents = await prisma.event.findMany({
     where: {
       organizationId,
-      status: "PUBLISHED",
-      startsAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+      OR: [
+        { status: "PUBLISHED", startsAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
+        { slug: { in: orders.map((order) => order.event.slug) } }
+      ]
     },
     orderBy: { startsAt: "asc" },
     take: 12,
     select: {
+      id: true,
       slug: true,
       organization: { select: { slug: true } },
       title: true,
@@ -472,6 +481,8 @@ async function loadSupportContext(organizationId: string, phone: string) {
     }
   });
 
+  const approvedKnowledge = await loadApprovedSupportKnowledge(organizationId, activeEvents.map((event) => event.id));
+
   const publicBaseUrl = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "https://www.tcringressos.app.br").replace(/\/$/, "");
   const customerName = orders[0]?.customer.name || "cliente";
   const storedFeeSettings: PaymentFeeSettings = {
@@ -491,6 +502,7 @@ async function loadSupportContext(organizationId: string, phone: string) {
       fees:
         "A taxa de bilheteria e os juros devem ser informados conforme os dados do ingresso e as simulacoes exatas do checkout. Nao estime nem recalcule valores ausentes."
     },
+    approvedKnowledge,
     company: settings
       ? {
           ...settings,
@@ -504,6 +516,7 @@ async function loadSupportContext(organizationId: string, phone: string) {
       const feeSettings = getEffectivePaymentFeeSettings(event.organization.slug, storedFeeSettings, event.slug);
       const maxInstallments = getCreditCardInstallmentLimitForEvent(event);
       return {
+        id: event.id,
         title: event.title,
         subtitle: event.subtitle,
         description: knowledgeText(event.description),
@@ -632,6 +645,7 @@ ESTILO DE ATENDIMENTO
 
 REGRAS CRITICAS
 1. Os dados do CONTEXTO DO SISTEMA sao a unica fonte de verdade para pedidos, pagamentos, ingressos e eventos.
+1.1. approvedKnowledge contem regras revisadas pela equipe. Regras com eventId so valem para o evento correspondente. Nunca aplique a outro evento. Se houver conflito com preco, disponibilidade, descricao ou outras informacoes atuais do sistema, prevalecem os dados atuais e use HANDOFF quando a divergencia afetar a resposta.
 2. Nunca afirme que um pagamento foi aprovado se order.status nao for PAID ou paymentStatus nao for APPROVED.
 3. Se o cliente disser que pagou e o sistema nao confirmar, use HANDOFF. Nao mande pagar novamente.
 4. Estorno, cancelamento, chargeback, ameaca juridica, alteracao de titularidade, divergencia financeira, reclamacao grave ou pedido que exige mudanca manual sempre usam HANDOFF.
@@ -751,7 +765,7 @@ async function processInboundMessage(message: MetaTextMessage) {
   if (!inbound?.organizationId || aiMetadataFromLog(inbound.webhookPayload)) return;
 
   const state = await getWhatsAppAiConversationState(inbound.organizationId, message.from);
-  if (!shouldProcessWhatsAppAiMessage(state.mode)) {
+  if (!shouldProcessWhatsAppAiState(state)) {
     await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "SKIPPED", reason: state.reason });
     return;
   }

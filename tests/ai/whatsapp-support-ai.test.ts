@@ -6,7 +6,8 @@ import {
   parseWhatsAppAiDecision,
   resolvedHandoffReply,
   resolveWhatsAppAiConversationMode,
-  shouldProcessWhatsAppAiMessage
+  shouldProcessWhatsAppAiMessage,
+  shouldProcessWhatsAppAiState
 } from "@/features/ai/whatsapp-support-ai.service";
 
 describe("exact checkout installment quotes", () => {
@@ -135,7 +136,9 @@ describe("human intervention pause", () => {
 
 describe("dúvida respondível após pedido de atendente", () => {
   it("permite que a IA avalie uma nova pergunta enquanto o handoff ainda não foi assumido", () => {
-    expect(shouldProcessWhatsAppAiMessage("HANDOFF")).toBe(true);
+    expect(shouldProcessWhatsAppAiMessage("HANDOFF")).toBe(false);
+    expect(shouldProcessWhatsAppAiState({ mode: "HANDOFF", reason: "Cliente solicitou atendimento humano." })).toBe(true);
+    expect(shouldProcessWhatsAppAiState({ mode: "HANDOFF", reason: "Pagamento não confirmado." })).toBe(false);
     expect(shouldProcessWhatsAppAiMessage("PAUSED")).toBe(false);
     expect(shouldProcessWhatsAppAiMessage("DISABLED")).toBe(false);
   });

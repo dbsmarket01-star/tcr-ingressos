@@ -7,6 +7,8 @@ import { sendCartAbandonmentWhatsApp, sendWhatsAppMediaMessage, sendWhatsAppText
 import { setWhatsAppAiConversationState } from "@/features/ai/whatsapp-support-ai.service";
 import { savePublicMediaUpload } from "@/features/uploads/local-upload.service";
 import { prisma } from "@/lib/prisma";
+import { after } from "next/server";
+import { proposeSupportKnowledgeFromHumanReply } from "@/features/ai/whatsapp-support-knowledge.service";
 
 const recentTextSends = new Map<string, { expiresAt: number; promise: Promise<unknown> }>();
 const TEXT_SEND_DEDUPLICATION_MS = 20_000;
@@ -124,15 +126,27 @@ export async function sendCrmWhatsAppMessage(formData: FormData) {
         recipientName: conversation.contact.name
       });
     } else {
-      await sendTextMessageOnce({
+      const sent = await sendTextMessageOnce({
         to: conversation.contact.phone,
         text,
         organizationId: admin.organizationId,
         eventId: conversation.contact.eventId,
         orderId: conversation.contact.orderId,
         leadId: conversation.contact.leadId,
-        recipientName: conversation.contact.name
+        recipientName: conversation.contact.name,
+        metadata: { humanAdminUserId: admin.id }
       });
+      const providerMessageId = (sent as { messages?: Array<{ id?: string }> }).messages?.[0]?.id;
+      if (providerMessageId && conversation.contact.eventId && /\blucas\b/i.test(admin.name)) {
+        after(() => proposeSupportKnowledgeFromHumanReply({
+          organizationId: admin.organizationId,
+          eventId: conversation.contact!.eventId,
+          providerMessageId,
+          adminUserId: admin.id,
+          adminName: admin.name,
+          phone: conversation.contact!.phone!
+        }).catch((error) => console.error("[WhatsApp knowledge] Falha ao propor regra", error)));
+      }
     }
     await setWhatsAppAiConversationState({
       organizationId: admin.organizationId,
