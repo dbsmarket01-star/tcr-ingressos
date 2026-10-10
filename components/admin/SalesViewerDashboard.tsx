@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SalesViewerChart } from "./SalesViewerChart";
 import { AdminShell } from "./AdminShell";
 import type { getDashboardMetrics } from "@/features/dashboard/dashboard.service";
 import { formatCurrency } from "@/lib/format";
@@ -6,17 +7,16 @@ import { formatCurrency } from "@/lib/format";
 type Dashboard = Awaited<ReturnType<typeof getDashboardMetrics>>;
 export function SalesViewerDashboard({ dashboard }: { dashboard: Dashboard }) {
   const days = dashboard.salesByDay;
-  const peak = Math.max(0, ...days.map(day => day.ticketSalesInCents));
-  const max = Math.max(1, peak);
-  const points = days.map((day, i) => `${40 + (days.length > 1 ? i / (days.length - 1) : 0.5) * 620},${190 - day.ticketSalesInCents / max * 150}`).join(" ");
   const methods = [
-    { label: "Pix", count: dashboard.paymentMethods.pix.count, color: "#179b72" },
-    { label: "Cartão de crédito", count: dashboard.paymentMethods.card.count, color: "#3975d7" },
-    { label: "Outros", count: dashboard.paymentMethods.other.count, color: "#a5adba" }
+    { label: "Pix", ...dashboard.paymentMethods.pix, colorClass: "is-pix" },
+    { label: "Cartão de crédito", ...dashboard.paymentMethods.card, colorClass: "is-card" },
+    { label: "Outros", ...dashboard.paymentMethods.other, colorClass: "is-other" }
   ];
-  const total = methods.reduce((sum, m) => sum + m.count, 0);
-  let offset = 0;
-  const gradient = methods.map(m => { const start = offset; offset += total ? m.count / total * 100 : 0; return `${m.color} ${start}% ${offset}%`; }).join(", ");
+  const total = methods.reduce((sum, m) => sum + m.ticketSalesInCents, 0);
+  const pixRate = total ? methods[0].ticketSalesInCents / total * 100 : 0;
+  const cardRate = total ? methods[1].ticketSalesInCents / total * 100 : 0;
+  const gradient = total ? `conic-gradient(var(--brand) 0% ${pixRate}%, #b8c4bf ${pixRate}% ${pixRate+cardRate}%, #dfe6e2 ${pixRate+cardRate}% 100%)` : "#dfe6e2";
+  const periodLabel = `De ${dashboard.period.startDate.split("-").reverse().join("/")} a ${dashboard.period.endDate.split("-").reverse().join("/")}`;
   return <AdminShell title="Vendas" description="Acompanhe as vendas dos eventos liberados para seu acesso." hideSidebarIntro>
     <form className="card form spacedSection" method="get">
       <div className="grid twoColumns">
@@ -31,24 +31,16 @@ export function SalesViewerDashboard({ dashboard }: { dashboard: Dashboard }) {
       <article className="card metric"><span>Ingressos vendidos</span><strong>{dashboard.kpis.paidTickets}</strong></article>
       <article className="card metric"><span>Pedidos pagos</span><strong>{dashboard.kpis.paidOrders}</strong></article>
     </section>
-    <section className="grid twoColumns spacedSection">
-      <article className="card">
-        <h2>Evolução diária das vendas</h2><p className="muted">Valor dos ingressos em cada dia do período.</p>
-        <svg viewBox="0 0 700 240" role="img" aria-label="Gráfico diário do valor dos ingressos vendidos; valores detalhados na tabela abaixo" style={{ width: "100%", height: "auto" }}>
-          {[40, 90, 140, 190].map(y => <line key={y} x1="40" x2="660" y1={y} y2={y} stroke="#e1e9e5" />)}
-          <text x="40" y="25" fontSize="12" fill="#476258">{formatCurrency(peak)}</text>
-          <polyline points={points} fill="none" stroke="#179b72" strokeWidth="3" strokeLinejoin="round" />
-          {days.map((day, i) => <circle key={day.date} cx={40 + (days.length > 1 ? i / (days.length - 1) : 0.5) * 620} cy={190 - day.ticketSalesInCents / max * 150} r="3" fill="#179b72"><title>{`${day.label}: ${formatCurrency(day.ticketSalesInCents)}`}</title></circle>)}
-          <text x="40" y="220" fontSize="12" fill="#476258">{days[0]?.label}</text><text x="660" y="220" textAnchor="end" fontSize="12" fill="#476258">{days.at(-1)?.label}</text>
-        </svg>
-      </article>
-      <article className="card">
-        <h2>Formas de pagamento</h2><p className="muted">Participação na quantidade de pedidos pagos do período.</p>
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 24, padding: "16px 0" }}>
-          <div role="img" aria-label={total ? methods.map(m => `${m.label}: ${(m.count / total * 100).toFixed(1)}%`).join(", ") : "Nenhum pedido pago no período"} style={{ width: 180, height: 180, flexShrink: 0, borderRadius: "50%", background: total ? `conic-gradient(${gradient})` : "#e1e9e5" }} />
-          <ul style={{ listStyle: "none", padding: 0 }}>{methods.map(m => <li key={m.label} style={{ marginBottom: 14 }}><span aria-hidden="true" style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: m.color, marginRight: 8 }} /><strong>{m.label}</strong><br />{m.count} pedidos · {(total ? m.count / total * 100 : 0).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%</li>)}</ul>
+    <section className="dashboardGeneralMainGrid spacedSection">
+      <SalesViewerChart days={days.map(({ date, label, ticketSalesInCents, paidTicketQuantity, salesCount }) => ({ date, label, ticketSalesInCents, paidTicketQuantity, salesCount }))} periodLabel={periodLabel} />
+      <article className="dashboardGeneralPanel">
+        <div className="dashboardGeneralPanelHeader"><div><h2>Meios de pagamento</h2><p>Composição da venda de ingressos</p></div></div>
+        <div className="dashboardGeneralPaymentGrid">
+          <div className="dashboardGeneralDonut" role="img" aria-label={methods.map(m => `${m.label}: ${(total ? m.ticketSalesInCents / total * 100 : 0).toFixed(1)}%`).join(", ")} style={{ background: gradient }}><span /></div>
+          <div className="dashboardGeneralPaymentLegend">{methods.map(m => <div className="dashboardGeneralLegendRow" key={m.label}><div><i className={m.colorClass} /><span>{m.label}</span></div><strong>{formatCurrency(m.ticketSalesInCents)}</strong><small>{(total ? m.ticketSalesInCents / total * 100 : 0).toLocaleString("pt-BR", {maximumFractionDigits:1})}%</small></div>)}</div>
         </div>
         {!total ? <p className="muted">Nenhuma venda no período selecionado.</p> : null}
+        <div className="dashboardGeneralTotalsFooter"><span>Total</span><strong>{formatCurrency(total)}</strong></div>
       </article>
     </section>
     <section className="card spacedSection">

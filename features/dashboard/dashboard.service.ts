@@ -561,9 +561,9 @@ export async function getDashboardMetrics(
   const dailyPaidTicketCountMap = new Map<string, number>();
   const topCitiesMap = new Map<string, { label: string; count: number }>();
   const paymentMethodTotals = {
-    pix: { revenueInCents: 0, count: 0 },
-    card: { revenueInCents: 0, count: 0 },
-    other: { revenueInCents: 0, count: 0 }
+    pix: { revenueInCents: 0, ticketSalesInCents: 0, count: 0 },
+    card: { revenueInCents: 0, ticketSalesInCents: 0, count: 0 },
+    other: { revenueInCents: 0, ticketSalesInCents: 0, count: 0 }
   };
 
   for (const order of currentPaidOrders as PaidOrderLite[]) {
@@ -610,12 +610,15 @@ export async function getDashboardMetrics(
     if (method === "PIX") {
       paymentMethodTotals.pix.count += 1;
       paymentMethodTotals.pix.revenueInCents += effective.totalInCents;
+      paymentMethodTotals.pix.ticketSalesInCents += effective.subtotalInCents;
     } else if (method === "CREDIT_CARD") {
       paymentMethodTotals.card.count += 1;
       paymentMethodTotals.card.revenueInCents += effective.totalInCents;
+      paymentMethodTotals.card.ticketSalesInCents += effective.subtotalInCents;
     } else {
       paymentMethodTotals.other.count += 1;
       paymentMethodTotals.other.revenueInCents += effective.totalInCents;
+      paymentMethodTotals.other.ticketSalesInCents += effective.subtotalInCents;
     }
   }
 

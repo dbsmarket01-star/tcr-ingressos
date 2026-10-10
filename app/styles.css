@@ -29604,3 +29604,12 @@ small,
   .crmWhatsappComposer { grid-template-columns: auto minmax(0,1fr) auto; }
   .crmWhatsappComposerIcon:nth-of-type(2), .crmWhatsappComposerIcon:nth-of-type(3) { display: none; }
 }
+
+/* Restricted sales charts reuse the general dashboard visual language. */
+.salesViewerChart .dashboardGeneralLineChartWrap { grid-template-columns: auto minmax(0, 1fr) auto; }
+.salesViewerAxisCaption { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; color: var(--brand); }
+.salesViewerAxisCaption span:last-child, .salesViewerCountAxis { color: #946b10; }
+.salesViewerChart .dashboardGeneralChartHotspot.is-active .dashboardGeneralChartTooltip { opacity: 1; transform: translate(-50%, 0); }
+@media (max-width: 760px) {
+  .salesViewerChart .dashboardGeneralChartHotspot.is-active .dashboardGeneralChartTooltip { transform: translate(-50%, -50%); }
+}
