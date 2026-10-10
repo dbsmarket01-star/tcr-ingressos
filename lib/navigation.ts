@@ -99,7 +99,7 @@ export const adminNavItems: AdminNavItem[] = [
     href: "/admin/manual-sales",
     label: "Venda manual",
     description: "Cadastro de vendas antigas ou externas",
-    area: "ORDERS"
+    area: "ORDERS_WRITE"
   },
   {
     href: "/admin/tickets",

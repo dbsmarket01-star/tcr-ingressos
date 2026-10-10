@@ -1,3 +1,4 @@
+import { SalesViewerDashboard } from "@/components/admin/SalesViewerDashboard";
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
@@ -296,6 +297,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const admin = await requirePermission("DASHBOARD");
   const params = searchParams ? await searchParams : {};
   const organizationContext = await getCurrentOrganizationContext();
+
+  if (admin.role === "SALES_VIEWER") {
+    const dashboard = await getDashboardMetrics(params, admin.organizationId, getAdminAllowedEventIds(admin));
+    return <SalesViewerDashboard dashboard={dashboard} />;
+  }
 
   if (organizationContext.isPlatformHost) {
     const platformOverview = await getPlatformOverview();

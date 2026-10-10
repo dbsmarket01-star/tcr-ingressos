@@ -8,7 +8,7 @@ import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 import { cancelPendingOrderByCode, expirePendingOrders, refundPaidOrderByCode } from "./order.service";
 
 export async function expirePendingOrdersAction() {
-  const admin = await requirePermission("ORDERS");
+  const admin = await requirePermission("ORDERS_WRITE");
   const result = await expirePendingOrders({
     limit: 200,
     organizationId: admin.organizationId,
@@ -27,7 +27,7 @@ export async function expirePendingOrdersAction() {
 }
 
 export async function cancelPendingOrderAction(formData: FormData) {
-  const admin = await requirePermission("ORDERS");
+  const admin = await requirePermission("ORDERS_WRITE");
   const allowedEventIds = getAdminAllowedEventIds(admin);
   const orderCode = String(formData.get("orderCode") ?? "").trim();
 
@@ -61,7 +61,7 @@ export async function cancelPendingOrderAction(formData: FormData) {
 }
 
 export async function refundPaidOrderAction(formData: FormData) {
-  const admin = await requirePermission("ORDERS");
+  const admin = await requirePermission("ORDERS_WRITE");
   const allowedEventIds = getAdminAllowedEventIds(admin);
   const orderCode = String(formData.get("orderCode") ?? "").trim();
   const refundReason =

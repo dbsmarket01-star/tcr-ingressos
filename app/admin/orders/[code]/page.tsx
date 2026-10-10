@@ -61,6 +61,22 @@ export default async function AdminOrderDetailPage({ params, searchParams }: Adm
     notFound();
   }
 
+  if (admin.role === "SALES_VIEWER") {
+    return <AdminShell title={`Pedido ${order.code}`} description="Consulta de vendas — somente leitura.">
+      <section className="card spacedSection">
+        <h2>{order.event.title}</h2>
+        <p>Cliente: {order.customer.name}</p>
+        <p>Status: {orderStatusLabels[order.status]}</p>
+        <p>Criado em: {formatDateTime(order.createdAt)}</p>
+        {order.paidAt ? <p>Pago em: {formatDateTime(order.paidAt)}</p> : null}
+        <p>Ingressos: {formatCurrency(order.subtotalInCents)}</p>
+        <p>Total do pedido: {formatCurrency(order.totalInCents)}</p>
+        <ul>{order.items.map(item => <li key={item.id}>{item.lot.name}: {item.quantity * Math.max(item.admissionsPerUnit, 1)} ingresso(s)</li>)}</ul>
+        <Link className="secondaryButton" href="/admin/orders">Voltar aos pedidos</Link>
+      </section>
+    </AdminShell>;
+  }
+
   const refundSuccess = query.refunded === "1";
   const orderError = typeof query.orderError === "string" ? query.orderError : null;
   const publicOrderUrl = getPublicOrderUrl(order.code, order.event.organization);

@@ -9,6 +9,7 @@ datasource db {
 }
 
 enum AdminRole {
+  SALES_VIEWER
   OWNER
   MANAGER
   FINANCE

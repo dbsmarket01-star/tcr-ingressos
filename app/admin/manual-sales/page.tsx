@@ -45,7 +45,7 @@ function formatDateTimeLocal(value: Date) {
 }
 
 export default async function ManualSalesPage({ searchParams }: ManualSalesPageProps) {
-  const admin = await requirePermission("ORDERS");
+  const admin = await requirePermission("ORDERS_WRITE");
   const params = searchParams ? await searchParams : {};
   const selectedEventId = firstParam(params.eventId) || "";
   const selectedLotId = firstParam(params.lotId) || "";

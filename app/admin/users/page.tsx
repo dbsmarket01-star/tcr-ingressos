@@ -17,6 +17,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 const roleLabels = {
+  SALES_VIEWER: "Consulta de vendas",
   OWNER: "Proprietário",
   MANAGER: "Gerente",
   FINANCE: "Financeiro",

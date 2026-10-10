@@ -86,7 +86,7 @@ function parsePaymentMethod(value: FormDataEntryValue | null): ManualSalePayment
 }
 
 export async function createManualSaleAction(formData: FormData) {
-  const admin = await requirePermission("ORDERS");
+  const admin = await requirePermission("ORDERS_WRITE");
   const quantity = parseQuantity(formData.get("quantity"));
   const hotelGuestCount = Number.parseInt(String(formData.get("hotelGuestCount") ?? "0"), 10);
   const returnTo = "/admin/manual-sales";
