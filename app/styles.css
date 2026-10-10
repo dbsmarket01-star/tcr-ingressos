@@ -29742,3 +29742,31 @@ small,
   .dashboardGeneralChartTooltipRow b { font-size: 12px; white-space: nowrap; }
   .dashboardGeneralChartTooltipRow span { font-size: 12px; }
 }
+
+@media (max-width: 860px) {
+  .salesViewerEventsBody .adminTableWrap { overflow: visible; }
+  .salesViewerEventsTable, .salesViewerEventsTable tbody, .salesViewerEventsTable tfoot { display: block; width: 100%; min-width: 0; }
+  .salesViewerEventsTable thead { display: none; }
+  .salesViewerEventsTable tbody { display: grid; gap: 10px; }
+  .salesViewerEventsTable tr { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); border: 1px solid #d5e7db; border-radius: 12px; overflow: hidden; }
+  .salesViewerEventsTable tr > :first-child { grid-column: 1 / -1; padding: 14px; white-space: normal; overflow-wrap: normal; }
+  .salesViewerEventsTable td { padding: 10px 14px; border: 0; white-space: normal; min-width: 0; }
+  .salesViewerEventsTable td:last-child { grid-column: 1 / -1; font-size: 17px; background: #e8f4ed; }
+  .salesViewerEventsTable td[data-label]::before { content: attr(data-label); display: block; font-size: 11px; font-weight: 500; color: #4f6b5b; margin-bottom: 5px; }
+  .salesViewerEventsTable tfoot { margin-top: 12px; border-radius: 12px; }
+  .salesViewerEventsTable tfoot td:last-child { background: #125139; }
+  .salesViewerEventsTable tfoot td[data-label]::before { color: #d0ead9; }
+  .salesViewerChart .dashboardGeneralLineChart:has(.dashboardGeneralChartHotspot.is-active) { margin-bottom: 150px; }
+}
+
+.dashboardMobileDayDetails { display: none; }
+@media (max-width: 860px) {
+  .dashboardGeneralLineChart .dashboardGeneralChartHotspot .dashboardGeneralChartTooltip { display: none !important; }
+  .dashboardGeneralChartPanel .dashboardGeneralLineChart:has(.dashboardGeneralChartHotspot.is-active) { margin-bottom: 0; }
+  .dashboardMobileDayDetails { display: grid; gap: 8px; margin-top: 16px; padding: 14px; border-radius: 14px; background: #162d26; color: white; font-size: 12px; min-width: 0; }
+  .dashboardMobileDayDetails > strong { font-size: 14px; color: white; }
+  .dashboardMobileDayDetails dl { display: grid; gap: 6px; margin: 0; }
+  .dashboardMobileDayDetails dl > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; background: #ffffff0d; border-radius: 8px; padding: 8px; }
+  .dashboardMobileDayDetails dt { color: #e2f1e8; }
+  .dashboardMobileDayDetails dd { margin: 0; font-weight: 800; color: white; white-space: nowrap; }
+}

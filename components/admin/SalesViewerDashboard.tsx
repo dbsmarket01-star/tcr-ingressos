@@ -53,9 +53,9 @@ export function SalesViewerDashboard({ dashboard }: { dashboard: Dashboard }) {
           <thead><tr><th>Evento</th><th>Ingressos vendidos</th><th>Pedidos pagos</th><th>Valor dos ingressos</th></tr></thead>
           <tbody>{dashboard.eventSales.map(event => <tr key={event.id}>
             <td><Link href={`/admin/orders?eventId=${event.id}&startDate=${dashboard.period.startDate}&endDate=${dashboard.period.endDate}&status=PAID`}>{event.title}</Link></td>
-            <td><span className="salesViewerQuantity">{event.ticketQuantity}</span></td><td>{event.paidOrders}</td><td className="salesViewerEventValue">{formatCurrency(event.ticketSalesInCents)}</td>
+            <td data-label="Ingressos vendidos"><span className="salesViewerQuantity">{event.ticketQuantity}</span></td><td data-label="Pedidos pagos">{event.paidOrders}</td><td data-label="Valor dos ingressos" className="salesViewerEventValue">{formatCurrency(event.ticketSalesInCents)}</td>
           </tr>)}</tbody>
-          <tfoot><tr><th>Total no período</th><td>{dashboard.kpis.paidTickets}</td><td>{dashboard.kpis.paidOrders}</td><td>{formatCurrency(dashboard.kpis.ticketSalesInCents)}</td></tr></tfoot>
+          <tfoot><tr><th>Total no período</th><td data-label="Ingressos vendidos">{dashboard.kpis.paidTickets}</td><td data-label="Pedidos pagos">{dashboard.kpis.paidOrders}</td><td data-label="Valor dos ingressos">{formatCurrency(dashboard.kpis.ticketSalesInCents)}</td></tr></tfoot>
         </table></div>
         {!dashboard.eventSales.length ? <p className="muted">Nenhum evento ativo disponível a partir da data inicial para este acesso.</p> : null}
         <p className="muted salesViewerEventsHint">Selecione um evento para consultar seus pedidos no mesmo período. Valores somente dos ingressos.</p>

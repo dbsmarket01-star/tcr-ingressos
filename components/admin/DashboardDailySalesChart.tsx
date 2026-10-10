@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { chartDayAtTouch } from "@/lib/chart-touch";
+import { MobileSalesDayDetails } from "./MobileSalesDayDetails";
 import { formatCurrency } from "@/lib/format";
 
 type Day = {
@@ -64,6 +65,7 @@ export function DashboardDailySalesChart({ days, periodLabel }: { days: Day[]; p
 
   const current = getDailySalesPage(days, pageSize, requestedPage);
   const chart = buildChart(current.days);
+  const selectedDay = current.days.find(day => day.date === activeDate);
   const firstDay = current.days[0];
   const lastDay = current.days.at(-1);
   const dateLabel = firstDay && lastDay
@@ -148,6 +150,12 @@ export function DashboardDailySalesChart({ days, periodLabel }: { days: Day[]; p
           </div>
         </div>
       </div>
+      {selectedDay ? <MobileSalesDayDetails day={selectedDay} rows={[
+        {label: "Total pago", value: selectedDay.revenueInCents},
+        {label: "Ingressos", value: selectedDay.ticketSalesInCents},
+        {label: "Taxa bilheteria", value: selectedDay.serviceFeesInCents},
+        {label: "Taxas cartão", value: selectedDay.cardInterestInCents}
+      ]} /> : null}
     </article>
   );
 }

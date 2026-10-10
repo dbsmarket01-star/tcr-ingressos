@@ -1,12 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { chartDayAtTouch } from "@/lib/chart-touch";
+import { MobileSalesDayDetails } from "./MobileSalesDayDetails";
+import { getDailySalesPage } from "./DashboardDailySalesChart";
 import { formatCurrency } from "@/lib/format";
 
 type Day = { date: string; label: string; ticketSalesInCents: number; paidTicketQuantity: number; salesCount: number };
-export function SalesViewerChart({ days, periodLabel }: { days: Day[]; periodLabel: string }) {
+export function SalesViewerChart({ days: allDays, periodLabel }: { days: Day[]; periodLabel: string }) {
   const [active, setActive] = useState<number | null>(null);
+  const [mobile, setMobile] = useState(false);
+  const [requestedPage, setRequestedPage] = useState(999999);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 860px)");
+    const update = () => { setMobile(media.matches); setActive(null); };
+    update(); media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  const current = getDailySalesPage(allDays, mobile ? 7 : Math.max(1, allDays.length), requestedPage);
+  const days = current.days;
+  const selectedDay = active === null ? null : days[active];
+  const changePage = (page: number) => { setActive(null); setRequestedPage(page); };
   const maxValue = Math.max(0, ...days.map(d => d.ticketSalesInCents));
   const maxCount = Math.max(0, ...days.map(d => d.paidTicketQuantity));
   const points = days.map((d, i) => ({ ...d, x: 26 + (days.length === 1 ? 0.5 : i / Math.max(1, days.length - 1)) * 596, y: 246 - d.ticketSalesInCents / Math.max(1, maxValue) * 228, countY: 246 - d.paidTicketQuantity / Math.max(1, maxCount) * 228 }));
@@ -14,7 +28,8 @@ export function SalesViewerChart({ days, periodLabel }: { days: Day[]; periodLab
   const area = points.length ? `${path("y")} L ${points.at(-1)!.x} 246 L ${points[0].x} 246 Z` : "";
   const step = Math.max(1, Math.ceil(days.length / 8));
   return <article className="dashboardGeneralPanel dashboardGeneralChartPanel salesViewerChart">
-    <div className="dashboardGeneralPanelHeader"><div><h2>Vendas por dia</h2><p>{periodLabel}</p></div><span className="dashboardGeneralPill">{days.length} dias</span></div>
+    <div className="dashboardGeneralPanelHeader"><div><h2>Vendas por dia</h2><p>{periodLabel}</p></div><span className="dashboardGeneralPill">{allDays.length} dias</span></div>
+    {mobile && current.pageCount > 1 ? <nav className="dashboardDailySalesPager" aria-label="Navegar pelos dias de venda"><button type="button" aria-label="Dias anteriores" disabled={current.page === 0} onClick={() => changePage(current.page - 1)}>←</button><span aria-live="polite">{days[0]?.label} a {days.at(-1)?.label} · {current.page + 1} de {current.pageCount}</span><button type="button" aria-label="Dias seguintes" disabled={current.page === current.pageCount - 1} onClick={() => changePage(current.page + 1)}>→</button></nav> : null}
     <div className="salesViewerAxisCaption"><span>Venda de ingressos (R$)</span><span>Quantidade de ingressos</span></div>
     <div className="dashboardGeneralLineChartWrap">
       <div className="dashboardGeneralYAxis">{[1,.75,.5,.25,0].map(r => <span key={r}>{formatCurrency(Math.round(maxValue*r))}</span>)}</div>
@@ -44,5 +59,6 @@ export function SalesViewerChart({ days, periodLabel }: { days: Day[]; periodLab
       </div>
       <div className="dashboardGeneralYAxis salesViewerCountAxis">{[1,.75,.5,.25,0].map(r=><span key={r}>{Math.round(maxCount*r)}</span>)}</div>
     </div>
+    {selectedDay ? <MobileSalesDayDetails day={selectedDay} rows={[{ label: "Valor dos ingressos", value: selectedDay.ticketSalesInCents }]} /> : null}
   </article>;
 }
