@@ -42,7 +42,7 @@ export function SalesViewerChart({ days: allDays, periodLabel }: { days: Day[]; 
           {points.map(p => <g key={p.date}><circle className="dashboardGeneralLinePoint is-revenue" cx={p.x} cy={p.y} r="5.2" /><circle className="dashboardGeneralLinePoint is-ticket-sales" cx={p.x} cy={p.countY} r="4.6" /></g>)}
         </svg>
         <div className="dashboardGeneralChartLegend"><span><i className="is-revenue" />Venda de ingressos</span><span><i className="is-ticket-sales" />Quantidade de ingressos</span></div>
-        <div className="dashboardGeneralChartHotspots" style={{ gridTemplateColumns: `repeat(${Math.max(days.length,1)},minmax(0,1fr))` }} onPointerLeave={() => setActive(null)} onTouchMove={event => {
+        <div className="dashboardGeneralChartHotspots" style={{ gridTemplateColumns: `repeat(${Math.max(days.length,1)},minmax(0,1fr))` }} onPointerLeave={(event) => { if (event.pointerType === "mouse" && !mobile) setActive(null); }} onTouchMove={event => {
           const rect = event.currentTarget.getBoundingClientRect();
           const touch = event.touches[0];
           if (touch) setActive(chartDayAtTouch(touch.clientX, rect.left, rect.width, days.length));
