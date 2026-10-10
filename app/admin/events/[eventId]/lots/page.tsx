@@ -136,6 +136,20 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
 
         <section className="eventLotsReportBanner">
           <div>
+            <span className="sectionEyebrow">Ingressos por setor</span>
+            <h2>Consolidado deste evento</h2>
+            <p className="muted">
+              Some todas as categorias de cada setor, incluindo cortesias, em um PDF com total geral.
+              Conta ingressos válidos de pedidos pagos, incluindo os já utilizados; não inclui reservas ou cancelados.
+            </p>
+          </div>
+          <a className="button" href={`/admin/events/${event.id}/lots/export/sectors`}>
+            Exportar relatório por setor
+          </a>
+        </section>
+
+        <section className="eventLotsReportBanner">
+          <div>
             <span className="sectionEyebrow">Relatório do evento</span>
             <h2>Resumo de ingressos vendidos</h2>
             <p className="muted">
