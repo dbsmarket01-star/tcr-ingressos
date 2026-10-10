@@ -123,7 +123,26 @@ export async function listCachedPublishedEventShowcase(limit = 6, organizationId
   return events.map((event) => normalizeCachedEventDates(event));
 }
 
+// TCR events share one Meta dataset. Keep the credential in the database, never in source code.
+async function getTcrMetaTracking(organizationId: string) {
+  const organization = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { slug: true }
+  });
+  if (organization?.slug !== "tcr-ingressos") return null;
+
+  const reference = await prisma.event.findFirst({
+    where: { id: "evt_rodrigo_teaser_piracicaba_2026", organizationId },
+    select: { metaPixelId: true, metaConversionsApiToken: true }
+  });
+  if (!reference?.metaPixelId || !reference.metaConversionsApiToken) {
+    throw new Error("O pixel e a API de Conversões da TCR precisam estar configurados antes de salvar o evento.");
+  }
+  return reference;
+}
+
 export async function createEvent(input: EventDraftInput & { status: EventStatus }, organizationId: string) {
+  const tcrTracking = await getTcrMetaTracking(organizationId);
   const data: Prisma.EventCreateInput = {
     organization: {
       connect: {
@@ -154,8 +173,8 @@ export async function createEvent(input: EventDraftInput & { status: EventStatus
     salesStartsAt: input.salesStartsAt || null,
     salesEndsAt: input.salesEndsAt || null,
     importantInfo: input.importantInfo || null,
-    metaPixelId: input.metaPixelId || null,
-    metaConversionsApiToken: input.metaConversionsApiToken || null,
+    metaPixelId: tcrTracking?.metaPixelId ?? (input.metaPixelId || null),
+    metaConversionsApiToken: tcrTracking?.metaConversionsApiToken ?? (input.metaConversionsApiToken || null),
     metaTestEventCode: input.metaTestEventCode || null,
     googleTagManagerId: input.googleTagManagerId || null,
     seoTitle: input.seoTitle || null,
@@ -551,6 +570,11 @@ export async function getCachedEventSeoBySlugInOrganization(slug: string, organi
 }
 
 export async function updateEvent(eventId: string, input: EventDraftInput & { status: EventStatus }) {
+  const existingEvent = await prisma.event.findUniqueOrThrow({
+    where: { id: eventId },
+    select: { organizationId: true }
+  });
+  const tcrTracking = await getTcrMetaTracking(existingEvent.organizationId);
   const data: Prisma.EventUpdateInput = {
     title: input.title,
     slug: input.slug,
@@ -576,8 +600,8 @@ export async function updateEvent(eventId: string, input: EventDraftInput & { st
     salesStartsAt: input.salesStartsAt || null,
     salesEndsAt: input.salesEndsAt || null,
     importantInfo: input.importantInfo || null,
-    metaPixelId: input.metaPixelId || null,
-    metaConversionsApiToken: input.metaConversionsApiToken || null,
+    metaPixelId: tcrTracking?.metaPixelId ?? (input.metaPixelId || null),
+    metaConversionsApiToken: tcrTracking?.metaConversionsApiToken ?? (input.metaConversionsApiToken || null),
     metaTestEventCode: input.metaTestEventCode || null,
     googleTagManagerId: input.googleTagManagerId || null,
     seoTitle: input.seoTitle || null,
@@ -625,9 +649,20 @@ export async function updateEvent(eventId: string, input: EventDraftInput & { st
 }
 
 export async function updateEventStatus(eventId: string, status: EventStatus) {
+  const existingEvent = await prisma.event.findUniqueOrThrow({
+    where: { id: eventId },
+    select: { organizationId: true }
+  });
+  const tcrTracking = await getTcrMetaTracking(existingEvent.organizationId);
   return prisma.event.update({
     where: { id: eventId },
-    data: { status }
+    data: {
+      status,
+      ...(tcrTracking ? {
+        metaPixelId: tcrTracking.metaPixelId,
+        metaConversionsApiToken: tcrTracking.metaConversionsApiToken
+      } : {})
+    }
   });
 }
 
