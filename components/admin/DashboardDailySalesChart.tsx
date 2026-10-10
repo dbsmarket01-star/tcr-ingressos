@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { chartDayAtTouch } from "@/lib/chart-touch";
 import { formatCurrency } from "@/lib/format";
 
 type Day = {
@@ -45,6 +46,7 @@ function buildChart(days: Day[]) {
 }
 
 export function DashboardDailySalesChart({ days, periodLabel }: { days: Day[]; periodLabel: string }) {
+  const [activeDate, setActiveDate] = useState<string | null>(null);
   const [pageSize, setPageSize] = useState(DESKTOP_DAYS_PER_PAGE);
   const [requestedPage, setRequestedPage] = useState(() => Math.max(0, Math.ceil(days.length / DESKTOP_DAYS_PER_PAGE) - 1));
 
@@ -110,11 +112,21 @@ export function DashboardDailySalesChart({ days, periodLabel }: { days: Day[]; p
             <span><i className="is-ticket-sales" />Venda de ingressos</span>
             <span><i className="is-service-fees" />Taxa bilheteria</span>
           </div>
-          <div className="dashboardGeneralChartHotspots" style={{ gridTemplateColumns: `repeat(${Math.max(current.days.length, 1)}, minmax(0, 1fr))` }}>
+          <div className="dashboardGeneralChartHotspots" style={{ gridTemplateColumns: `repeat(${Math.max(current.days.length, 1)}, minmax(0, 1fr))` }}
+            onTouchMove={(event) => {
+              const rect = event.currentTarget.getBoundingClientRect();
+              const touch = event.touches[0];
+              if (!touch || !rect.width) return;
+              const index = chartDayAtTouch(touch.clientX, rect.left, rect.width, current.days.length);
+              setActiveDate(index === null ? null : current.days[index].date);
+            }}>
             {current.days.map((day) => (
               <button
                 type="button"
-                className="dashboardGeneralChartHotspot"
+                className={`dashboardGeneralChartHotspot${activeDate === day.date ? " is-active" : ""}`}
+                onFocus={() => setActiveDate(day.date)}
+                onClick={() => setActiveDate(day.date)}
+                onBlur={() => setActiveDate(null)}
                 key={day.date}
                 aria-label={`${day.label}: ${day.salesCount} pedido(s), ${formatCurrency(day.revenueInCents)} total pago`}
               >

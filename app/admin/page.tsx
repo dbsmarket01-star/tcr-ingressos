@@ -731,9 +731,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                         </span>
                         <strong>{event.title}</strong>
                       </div>
-                      <span>{event.periodSalesCount}</span>
-                      <span>{formatCurrency(event.periodRevenueInCents)}</span>
-                      <span>{formatPercentage(event.conversionRate)}</span>
+                      <span data-label="Vendas">{event.periodSalesCount}</span>
+                      <span data-label="Receita">{formatCurrency(event.periodRevenueInCents)}</span>
+                      <span data-label="Conversão">{formatPercentage(event.conversionRate)}</span>
                     </Link>
                   ))}
                 </div>

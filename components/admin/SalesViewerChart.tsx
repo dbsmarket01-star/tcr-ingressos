@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { chartDayAtTouch } from "@/lib/chart-touch";
 import { formatCurrency } from "@/lib/format";
 
 type Day = { date: string; label: string; ticketSalesInCents: number; paidTicketQuantity: number; salesCount: number };
@@ -29,7 +30,7 @@ export function SalesViewerChart({ days, periodLabel }: { days: Day[]; periodLab
         <div className="dashboardGeneralChartHotspots" style={{ gridTemplateColumns: `repeat(${Math.max(days.length,1)},minmax(0,1fr))` }} onPointerLeave={() => setActive(null)} onTouchMove={event => {
           const rect = event.currentTarget.getBoundingClientRect();
           const touch = event.touches[0];
-          if (touch && days.length && rect.width) setActive(Math.max(0, Math.min(days.length - 1, Math.floor((touch.clientX - rect.left) / rect.width * days.length))));
+          if (touch) setActive(chartDayAtTouch(touch.clientX, rect.left, rect.width, days.length));
         }}>
           {days.map((d,i) => <button type="button" key={d.date} className={`dashboardGeneralChartHotspot${active===i ? " is-active" : ""}`} onPointerEnter={() => setActive(i)} onFocus={() => setActive(i)} onBlur={() => setActive(null)} onClick={() => setActive(i)} aria-label={`${d.label}: ${d.salesCount} pedidos pagos, ${d.paidTicketQuantity} ingressos, ${formatCurrency(d.ticketSalesInCents)} faturados`}>
             <span className="dashboardGeneralChartTooltip" role="tooltip">

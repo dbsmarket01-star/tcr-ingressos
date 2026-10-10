@@ -628,6 +628,31 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
             <div className="ordersEmptyState">Nenhum pedido encontrado com estes filtros.</div>
           ) : (
             <div className="ordersTableWrap">
+              <div className="ordersMobileCards">
+                {orders.map((order) => {
+                  const breakdown = getOrderFinancialBreakdown(order);
+                  const payment = paymentMethodLabel(order.payment);
+                  const referenceDate = order.status === "PAID" && order.paidAt ? order.paidAt : order.createdAt;
+                  const admissions = breakdown.ticketLines.reduce((sum, item) => sum + item.admissions, 0);
+                  return <details className="ordersMobileCard" key={order.id}>
+                    <summary>
+                      <span className="ordersMobileCardHeading"><strong>{order.customer.name}</strong><span className={`ordersStatusBadge ${orderStatusClasses[order.status] ?? "neutral"}`}>{orderStatusLabels[order.status] ?? order.status}</span></span>
+                      <span className="ordersMobileEvent">{order.event.title}</span>
+                      <span className="ordersMobileCardTotals"><span>{admissions} {pluralizeTicket(admissions)} · {payment.title}</span><strong>{formatCurrency(breakdown.ticketSubtotalInCents)}</strong></span>
+                      <span className="ordersMobileCardFoot"><small>{formatDateTime(referenceDate)}</small><span>Detalhes <b aria-hidden="true">⌄</b></span></span>
+                    </summary>
+                    <dl>
+                      <dt>Pedido</dt><dd>{order.code}</dd>
+                      <dt>Contato</dt><dd>{order.customer.email}<br />{order.customer.phone || "Telefone não informado"}<br />CPF: {formatCpf(order.customer.document)}</dd>
+                      <dt>Local</dt><dd>{order.event.venueName} · {order.event.city}, {order.event.state}</dd>
+                      <dt>Ingressos</dt><dd>{breakdown.ticketLines.map(item => <p key={item.label}>{item.admissions} {pluralizeTicket(item.admissions)} · {item.label}{item.admissions !== item.quantity ? ` (${item.quantity} ${purchaseUnitLabel(item)})` : ""}</p>)}</dd>
+                      <dt>Valor vendido</dt><dd>{formatCurrency(breakdown.ticketSubtotalInCents)} · Somente ingressos</dd>
+                      {!ticketsOnly ? <><dt>Taxas</dt><dd>{breakdown.feeLines.map(fee => <p key={fee.label}>{fee.label}: {fee.value}</p>)}</dd></> : null}
+                      <dt>Pagamento</dt><dd>{payment.title} · {payment.detail}</dd>
+                    </dl>
+                  </details>;
+                })}
+              </div>
               <table className="ordersDeskTable">
                 <thead>
                   <tr>

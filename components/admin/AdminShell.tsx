@@ -71,7 +71,7 @@ export async function AdminShell({
               <p>{sidebarText}</p>
             </div>
           ) : null}
-          <AdminSideNav groups={navGroups} />
+          <AdminSideNav groups={navGroups} compact />
         </div>
       </details>
 

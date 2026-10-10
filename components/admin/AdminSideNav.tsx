@@ -6,6 +6,7 @@ import type { AdminNavGroup } from "@/lib/navigation";
 
 type AdminSideNavProps = {
   groups: AdminNavGroup[];
+  compact?: boolean;
 };
 
 function isActiveLink(pathname: string, href: string) {
@@ -16,7 +17,7 @@ function isActiveLink(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AdminSideNav({ groups }: AdminSideNavProps) {
+export function AdminSideNav({ groups, compact = false }: AdminSideNavProps) {
   const pathname = usePathname();
 
   return (
@@ -25,7 +26,7 @@ export function AdminSideNav({ groups }: AdminSideNavProps) {
         const hasActiveItem = group.items.some((item) => isActiveLink(pathname, item.href));
 
         return (
-          <details className="sideNavGroup" key={group.label} open={group.defaultOpen || hasActiveItem}>
+          <details className="sideNavGroup" key={group.label} open={hasActiveItem || (!compact && group.defaultOpen)}>
             <summary>
               <strong>{group.label}</strong>
               <span>{group.description}</span>

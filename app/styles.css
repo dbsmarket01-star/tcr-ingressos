@@ -29687,3 +29687,58 @@ small,
   .adminMain .crmWhatsappComposerText { grid-column: 1 / 5; grid-row: 2; }
   .adminMain .crmWhatsappSend { grid-column: 5; grid-row: 2; justify-self: end; min-height: 44px; }
 }
+
+/* Mobile layouts keep desktop tables and chart presentation unchanged. */
+.ordersMobileCards { display: none; }
+@media (max-width: 860px) {
+  .adminMobileMenuPanel { position: absolute; top: calc(100% + 6px); left: 10px; right: 10px; max-height: min(70svh, 580px); padding: 12px; border-radius: 18px; background: #124d39; box-shadow: 0 16px 36px #092c3440; overscroll-behavior: contain; }
+  .adminMobileMenuPanel .adminMobileIntro { display: none; }
+  .adminMobileAccount { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; padding: 10px; }
+  .adminMobileAccount > div { grid-column: 1 / -1; }
+  .adminMobileAccount > div > span { display: none; }
+  .adminMobileAccount small { font-size: 12px; }
+  .adminMobileAccount button { font-size: 13px; padding: 8px 14px; }
+  .adminMobileSiteLink { align-self: center; font-size: 13px; }
+  .adminMobileMenuPanel .sideNav { gap: 6px; }
+  .adminMobileMenuPanel .sideNavGroup { border-radius: 10px; }
+  .adminMobileMenuPanel .sideNavGroup > summary { min-height: 44px; padding: 10px 12px; }
+  .adminMobileMenuPanel .sideNavGroup > summary strong { font-size: 12px; }
+  .adminMobileMenuPanel .sideNavGroupItems { padding: 4px; }
+  .adminMobileMenuPanel .sideNavGroupItems a { min-height: 44px; padding: 10px; }
+  .adminMobileMenuPanel .sideNavGroupItems a strong { font-size: 13px; }
+  .dashboardGeneralEventTable .dashboardGeneralEventTableHead { display: none; }
+  .dashboardGeneralEventTable .dashboardGeneralEventRow { grid-template-columns: minmax(0, .7fr) minmax(0, 1.5fr) minmax(0, 1fr); gap: 14px 8px; padding: 14px; }
+  .dashboardGeneralEventRow .dashboardGeneralEventCell { grid-column: 1 / -1; }
+  .dashboardGeneralEventCell strong { overflow-wrap: normal; word-break: normal; font-size: 14px; line-height: 1.4; }
+  .dashboardGeneralEventRow > span { font-size: 13px; font-weight: 700; min-width: 0; }
+  .dashboardGeneralEventRow > span::before { content: attr(data-label); display: block; font-size: 10px; color: #64746d; font-weight: 500; margin-bottom: 5px; }
+  .adminShell:has(.ordersDeskPage) .ordersDeskTable { display: none; }
+  .ordersMobileCards { display: grid; gap: 10px; }
+  .ordersMobileCard { border: 1px solid #dce9e2; border-radius: 14px; background: white; overflow: hidden; }
+  .ordersMobileCard > summary { cursor: pointer; list-style: none; display: grid; gap: 9px; padding: 14px; }
+  .ordersMobileCard > summary::-webkit-details-marker { display: none; }
+  .ordersMobileCardHeading, .ordersMobileCardTotals, .ordersMobileCardFoot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .ordersMobileCardHeading > strong { font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
+  .ordersMobileCardHeading .ordersStatusBadge { flex-shrink: 0; }
+  .ordersMobileEvent { color: #52665b; font-size: 13px; line-height: 1.4; }
+  .ordersMobileCardTotals { font-size: 12px; flex-wrap: wrap; }
+  .ordersMobileCardTotals strong { color: #165a3f; font-size: 16px; }
+  .ordersMobileCardFoot { border-top: 1px solid #edf3ef; padding-top: 9px; font-size: 12px; color: #637369; }
+  .ordersMobileCardFoot b { display: inline-block; }
+  .ordersMobileCard[open] .ordersMobileCardFoot b { transform: rotate(180deg); }
+  .ordersMobileCard dl { margin: 0; padding: 0 14px 14px; font-size: 13px; line-height: 1.5; }
+  .ordersMobileCard dt { color: #607169; font-size: 11px; font-weight: 700; margin-top: 12px; }
+  .ordersMobileCard dd { margin: 3px 0 0; overflow-wrap: anywhere; }
+  .ordersMobileCard dd p { margin: 4px 0; }
+  .dashboardGeneralLineChart .dashboardGeneralLinePath { vector-effect: non-scaling-stroke; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .dashboardGeneralLineChart .dashboardGeneralLinePoint { vector-effect: non-scaling-stroke; stroke-width: 2; }
+  .dashboardGeneralLineChart .dashboardGeneralChartHotspots { top: 0; bottom: auto; height: 210px; }
+  .dashboardGeneralLineChart .dashboardGeneralChartHotspot { position: static; touch-action: pan-y; }
+  .dashboardGeneralLineChart .dashboardGeneralChartHotspot::after { display: none; }
+  .dashboardGeneralLineChart:has(.dashboardGeneralChartHotspot.is-active) { margin-bottom: 260px; }
+  .dashboardGeneralLineChart .dashboardGeneralChartTooltip { display: none; position: absolute; top: calc(100% + 64px); left: 0; right: 0; width: 100%; min-width: 0; max-width: none; box-sizing: border-box; transform: none !important; padding: 12px; gap: 7px; z-index: 2; }
+  .dashboardGeneralLineChart .dashboardGeneralChartHotspot.is-active .dashboardGeneralChartTooltip { display: grid; opacity: 1; }
+  .dashboardGeneralChartTooltipRow { min-width: 0; gap: 8px; }
+  .dashboardGeneralChartTooltipRow b { font-size: 12px; white-space: nowrap; }
+  .dashboardGeneralChartTooltipRow span { font-size: 12px; }
+}
