@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildExactCardInstallmentOptions,
+  guardPublishedHalfPriceAnswer,
   humanPauseUntil,
   isHumanHandoffRequest,
   parseWhatsAppAiDecision,
@@ -87,6 +88,51 @@ describe("WhatsApp support AI", () => {
         output_text: JSON.stringify({ outcome: "REFUND", reply: "", reason: "", topic: "" })
       })
     ).toThrow("decisao invalida");
+  });
+});
+
+describe("published half-price availability", () => {
+  const incorrectAnswer = {
+    outcome: "AUTO_REPLY" as const,
+    reply: "Sim, na Primeira Fileira criança de 2 a 12 anos paga meia, quando disponível.",
+    reason: "Regra geral de crianças.",
+    topic: "meia_entrada"
+  };
+
+  it("blocks a half-price claim when the sector has no published half-price ticket", () => {
+    const decision = guardPublishedHalfPriceAnswer({
+      customerMessage: "Na primeira fileira criança paga meia?",
+      decision: incorrectAnswer,
+      events: [{ title: "Rodrigo Teaser em Marília", tickets: [
+        { name: "PRIMEIRA FILEIRA - EXCLUSIVO", availableUnits: 10 },
+        { name: "CADEIRA PRATA - MEIA ENTRADA", availableUnits: 10 }
+      ] }]
+    });
+    expect(decision.reply).toContain("Não encontrei ingresso de meia-entrada disponível para primeira fileira");
+    expect(decision.reply).not.toContain("criança de 2 a 12 anos");
+  });
+
+  it("keeps an answer when the same sector actually has available half-price tickets", () => {
+    const decision = guardPublishedHalfPriceAnswer({
+      customerMessage: "Na primeira fileira criança paga meia?",
+      decision: incorrectAnswer,
+      events: [{ title: "Evento exemplo", tickets: [
+        { name: "PRIMEIRA FILEIRA - MEIA ENTRADA", availableUnits: 10 }
+      ] }]
+    });
+    expect(decision).toEqual(incorrectAnswer);
+  });
+
+  it("asks which event when sector availability differs", () => {
+    const decision = guardPublishedHalfPriceAnswer({
+      customerMessage: "Na primeira fileira criança paga meia?",
+      decision: incorrectAnswer,
+      events: [
+        { title: "Evento A", tickets: [{ name: "PRIMEIRA FILEIRA - EXCLUSIVO", availableUnits: 10 }] },
+        { title: "Evento B", tickets: [{ name: "PRIMEIRA FILEIRA - MEIA ENTRADA", availableUnits: 10 }] }
+      ]
+    });
+    expect(decision.reply).toContain("Qual é o evento ou a cidade?");
   });
 });
 

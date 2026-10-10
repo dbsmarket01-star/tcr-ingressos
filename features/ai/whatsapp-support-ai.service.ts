@@ -76,6 +76,64 @@ function normalizeIntent(value?: string | null) {
     .trim();
 }
 
+type PublishedTicketEvent = {
+  title: string;
+  tickets: Array<{ name: string; options?: string[]; availableUnits: number }>;
+};
+
+function ticketSector(name: string) {
+  return normalizeIntent(name)
+    .replace(/\b(meia entrada|meia|inteira|inteiro|solidario|exclusivo|promocional)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isHalfPriceTicket(ticket: PublishedTicketEvent["tickets"][number]) {
+  return /\bmeia(?: entrada)?\b/.test(normalizeIntent(ticket.name)) ||
+    (ticket.options || []).some((option) => /\bmeia(?: entrada)?\b/.test(normalizeIntent(option)));
+}
+
+export function guardPublishedHalfPriceAnswer(input: {
+  customerMessage: string;
+  decision: AiDecision;
+  events: PublishedTicketEvent[];
+}): AiDecision {
+  const question = normalizeIntent(input.customerMessage);
+  const answer = normalizeIntent(input.decision.reply);
+  if (input.decision.outcome !== "AUTO_REPLY" || !/\bmeia\b/.test(question) ||
+      !/\bmeia\b/.test(answer) || !/\b(sim|tem|existe|disponivel|paga|pode comprar|direito)\b/.test(answer)) {
+    return input.decision;
+  }
+
+  const matches = input.events.flatMap((event) => {
+    const sectors = Array.from(new Set(event.tickets.map((ticket) => ticketSector(ticket.name))));
+    return sectors.filter((sector) => sector.length >= 5 && question.includes(sector)).map((sector) => ({
+      event,
+      sector,
+      hasHalfPrice: event.tickets.some((ticket) =>
+        ticket.availableUnits > 0 && ticketSector(ticket.name) === sector && isHalfPriceTicket(ticket)
+      )
+    }));
+  });
+  if (!matches.length || matches.every((match) => match.hasHalfPrice)) return input.decision;
+
+  const sector = matches[0].sector;
+  if (matches.some((match) => match.hasHalfPrice)) {
+    return {
+      outcome: "AUTO_REPLY",
+      reply: `A disponibilidade de meia-entrada para ${sector} varia conforme o evento. Qual é o evento ou a cidade? Assim confirmo as opções publicadas antes de te orientar.`,
+      reason: "A modalidade de meia-entrada varia entre os eventos encontrados para o setor.",
+      topic: "ingresso_meia_entrada"
+    };
+  }
+  return {
+    outcome: "AUTO_REPLY",
+    reply: `Não encontrei ingresso de meia-entrada disponível para ${sector} nas opções publicadas desse setor. Posso te ajudar a conferir os ingressos disponíveis para o evento.`,
+    reason: "Não há modalidade de meia-entrada disponível nos ingressos publicados do setor citado.",
+    topic: "ingresso_meia_entrada"
+  };
+}
+
 export function isHumanHandoffRequest(value?: string | null) {
   const text = normalizeIntent(value);
   if (!text) return false;
@@ -659,7 +717,7 @@ REGRAS CRITICAS
 7.5. Informacoes publicadas no site que estejam em activeEvents, company ou businessRules podem e devem ser respondidas diretamente, com boa apresentacao. Nao encaminhe duvidas comuns que o contexto resolve.
 7.6. Ao explicar tipos de ingresso, leia primeiro a description do ingresso e importantInfo do evento correspondente. Explique de forma pratica: meia-entrada exige o enquadramento indicado; solidario exige exatamente a doacao informada; inteira nao exige comprovacao ou doacao; duplo vale o numero de admissoes registrado. Se a regra disser "por pessoa", deixe isso explicito.
 7.7. Nunca copie a exigencia de alimento, documento, faixa etaria ou regra comercial de outro evento. Se a description e importantInfo do evento consultado nao trouxerem a resposta, faca uma pergunta de esclarecimento ou use HANDOFF, sem completar por suposicao.
-7.8. Sobre meia-entrada, use primeiro as regras do evento. Como regra legal geral no Brasil, podem ter direito, mediante comprovacao valida, estudantes, pessoas com 60 anos ou mais, pessoas com deficiencia e acompanhante quando necessario, e jovens de baixa renda com ID Jovem, alem de categorias previstas em legislacao local. Nunca diga que a idade federal para idoso e 65 anos.
+7.8. Separe direito legal a meia-entrada de disponibilidade de um tipo de ingresso em um setor. A fonte para dizer que existe ou pode ser comprado ingresso de meia-entrada num setor e exclusivamente a lista atual de tickets e options daquele evento: exija uma opcao ativa e disponivel de meia-entrada para o MESMO setor. Nunca aplique uma regra geral de criancas, estudantes ou idosos a Primeira Fileira, camarote ou qualquer outro setor sem essa verificacao. Se nao houver essa modalidade publicada, diga apenas que nao a encontrou entre as opcoes disponiveis; nao afirme que a lei retira o direito da pessoa por se tratar de setor privilegiado. Se houver duvida ou contestacao legal, use HANDOFF. Nunca diga que a idade federal para idoso e 65 anos.
 7.9. Quando o cliente perguntar a taxa de um ingresso, identifique o evento e o ingresso pela conversa, pelos pedidos e pelos dados de activeEvents. Informe exatamente basePrice, serviceFee e o total para uma unidade. Se houver ambiguidade real entre eventos ou setores, faca uma unica pergunta curta antes de responder.
 8. Para pedido pendente, pode fornecer somente o orderUrl existente no contexto.
 9. Se faltar apenas uma informacao simples para localizar evento, setor, quantidade ou pedido, pergunte ao cliente antes de usar HANDOFF. Use HANDOFF quando o dado nao existe no sistema, ha conflito real ou a operacao exige uma pessoa.
@@ -811,11 +869,16 @@ async function processInboundMessage(message: MetaTextMessage) {
   try {
     const context = await loadSupportContext(inbound.organizationId, message.from);
     const pendingHumanRequest = state.mode === "HANDOFF";
-    const decision = await requestDecision(
+    const modelDecision = await requestDecision(
       message.text.body.trim(),
       context,
       pendingHumanRequest,
     );
+    const decision = guardPublishedHalfPriceAnswer({
+      customerMessage: message.text.body.trim(),
+      decision: modelDecision,
+      events: context.activeEvents
+    });
     if (decision.outcome === "HANDOFF") {
       await setWhatsAppAiConversationState({
         organizationId: inbound.organizationId,
