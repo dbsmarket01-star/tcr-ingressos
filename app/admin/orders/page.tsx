@@ -410,6 +410,7 @@ function paymentMethodLabel(payment?: {
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const admin = await requirePermission("ORDERS");
   const params = searchParams ? await searchParams : {};
+  const ticketsOnly = admin.role === "SALES_VIEWER";
   const allowedEventIds = getAdminAllowedEventIds(admin);
   const dateRangePresets = getDateRangePresets();
   const [{ orders, totalCount }, events, summary] = await Promise.all([
@@ -486,14 +487,14 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               <small>Sem venda ativa</small>
             </div>
           </article>
-          <article className="ordersSummaryCard ordersSummaryCardFinancial">
+          {!ticketsOnly ? (<article className="ordersSummaryCard ordersSummaryCardFinancial">
             <span className="ordersMetricIcon ordersMetricIconRevenue">$</span>
             <div>
               <span>{financialCopy.totalTitle}</span>
               <strong>{formatCurrency(summary.totalInCents)}</strong>
               <small>{financialCopy.totalDetail}</small>
             </div>
-          </article>
+          </article>) : null}
           <article className="ordersSummaryCard ordersSummaryCardFinancial">
             <span className="ordersMetricIcon ordersMetricIconRevenue">R$</span>
             <div>
@@ -502,22 +503,22 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               <small>{financialCopy.subtotalDetail}</small>
             </div>
           </article>
-          <article className="ordersSummaryCard ordersSummaryCardFinancial">
+          {!ticketsOnly ? (<article className="ordersSummaryCard ordersSummaryCardFinancial">
             <span className="ordersMetricIcon ordersMetricIconPaid">%</span>
             <div>
               <span>{financialCopy.serviceFeeTitle}</span>
               <strong>{formatCurrency(summary.serviceFeeInCents)}</strong>
               <small>{financialCopy.serviceFeeDetail}</small>
             </div>
-          </article>
-          <article className="ordersSummaryCard ordersSummaryCardFinancial">
+          </article>) : null}
+          {!ticketsOnly ? (<article className="ordersSummaryCard ordersSummaryCardFinancial">
             <span className="ordersMetricIcon ordersMetricIconPending">CC</span>
             <div>
               <span>{financialCopy.cardInterestTitle}</span>
               <strong>{formatCurrency(summary.cardInterestInCents)}</strong>
               <small>{financialCopy.cardInterestDetail}</small>
             </div>
-          </article>
+          </article>) : null}
         </div>
 
         <section className="ordersFilterPanel" aria-label="Filtros de pedidos">
@@ -637,7 +638,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                     <th>Cidade</th>
                     <th>Data de referência</th>
                     <th>Valor vendido</th>
-                    <th>Taxas</th>
+                    {!ticketsOnly ? <th>Taxas</th> : null}
                     <th>Status</th>
                     <th>Pagamento</th>
                   </tr>
@@ -685,14 +686,14 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                           <strong>{formatCurrency(breakdown.ticketSubtotalInCents)}</strong>
                           <span>Somente ingressos</span>
                         </td>
-                        <td className="ordersFeesCell" data-label="Taxas">
+                        {!ticketsOnly ? (<td className="ordersFeesCell" data-label="Taxas">
                           {breakdown.feeLines.map((fee) => (
                             <span key={fee.label}>
                               <strong>{fee.label}</strong>
                               {fee.value}
                             </span>
                           ))}
-                        </td>
+                        </td>) : null}
                         <td data-label="Status">
                           <span className={`ordersStatusBadge ${orderStatusClasses[order.status] ?? "neutral"}`}>
                             {orderStatusLabels[order.status] ?? order.status}

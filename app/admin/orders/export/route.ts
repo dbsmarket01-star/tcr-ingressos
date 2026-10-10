@@ -484,7 +484,7 @@ export async function GET(request: Request) {
       cardInterestInCents: row.cardInterestInCents
     }))
   } as unknown as Parameters<typeof buildFinanceEventsPdf>[0];
-  const pdf = buildFinanceEventsPdf(report);
+  const pdf = buildFinanceEventsPdf(report, admin.role === "SALES_VIEWER");
   const filenamePrefix =
     filters.status === "PENDING_PAYMENT" ? "relatorio-oportunidades-pendentes" : "relatorio-pedidos-eventos";
 

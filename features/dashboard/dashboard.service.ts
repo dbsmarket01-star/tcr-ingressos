@@ -548,6 +548,8 @@ export async function getDashboardMetrics(
       bannerUrl: string | null;
       count: number;
       revenueInCents: number;
+      ticketSalesInCents: number;
+      ticketQuantity: number;
     }
   >();
 
@@ -581,10 +583,14 @@ export async function getDashboardMetrics(
       title: order.event.title,
       bannerUrl: order.event.bannerUrl,
       count: 0,
-      revenueInCents: 0
+      revenueInCents: 0,
+      ticketSalesInCents: 0,
+      ticketQuantity: 0
     };
     eventPerformance.count += 1;
     eventPerformance.revenueInCents += effective.totalInCents;
+    eventPerformance.ticketSalesInCents += effective.subtotalInCents;
+    eventPerformance.ticketQuantity += getPaidTicketQuantity([order]);
     eventPerformanceMap.set(order.event.id, eventPerformance);
 
     const cityKey = `${order.event.city.trim().toLocaleLowerCase("pt-BR")}|${order.event.state.trim().toLocaleLowerCase("pt-BR")}`;
@@ -776,6 +782,13 @@ export async function getDashboardMetrics(
       },
       totalRevenueInCents: totalPaymentRevenueInCents
     },
+    eventSales: events.map(event => ({
+      id: event.id,
+      title: event.title,
+      paidOrders: eventPerformanceMap.get(event.id)?.count ?? 0,
+      ticketSalesInCents: eventPerformanceMap.get(event.id)?.ticketSalesInCents ?? 0,
+      ticketQuantity: eventPerformanceMap.get(event.id)?.ticketQuantity ?? 0
+    })).sort((a, b) => b.ticketSalesInCents - a.ticketSalesInCents),
     eventPerformance: eventRows
       .filter((event) => event.periodSalesCount > 0)
       .sort((left, right) => right.periodRevenueInCents - left.periodRevenueInCents)

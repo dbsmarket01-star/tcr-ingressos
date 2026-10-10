@@ -70,7 +70,6 @@ export default async function AdminOrderDetailPage({ params, searchParams }: Adm
         <p>Criado em: {formatDateTime(order.createdAt)}</p>
         {order.paidAt ? <p>Pago em: {formatDateTime(order.paidAt)}</p> : null}
         <p>Ingressos: {formatCurrency(order.subtotalInCents)}</p>
-        <p>Total do pedido: {formatCurrency(order.totalInCents)}</p>
         <ul>{order.items.map(item => <li key={item.id}>{item.lot.name}: {item.quantity * Math.max(item.admissionsPerUnit, 1)} ingresso(s)</li>)}</ul>
         <Link className="secondaryButton" href="/admin/orders">Voltar aos pedidos</Link>
       </section>

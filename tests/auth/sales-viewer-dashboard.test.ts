@@ -1,0 +1,30 @@
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it, vi } from "vitest";
+import { SalesViewerDashboard } from "@/components/admin/SalesViewerDashboard";
+vi.mock("@/components/admin/AdminShell", () => ({ AdminShell: ({ children }: { children: React.ReactNode }) => children }));
+const dashboard = {
+  period: { startDate: "2026-10-01", endDate: "2026-10-10" },
+  kpis: { ticketSalesInCents: 20000, paidTickets: 2, paidOrders: 1, serviceFeesInCents: 98765, cardInterestInCents: 54321 },
+  salesByDay: [{ date: "2026-10-01", label: "01/10", ticketSalesInCents: 20000, paidTicketQuantity: 2 }],
+  paymentMethods: { pix: { count: 1 }, card: { count: 0 }, other: { count: 0 } },
+  eventSales: [{ id: "permitted", title: "Evento permitido", ticketSalesInCents: 20000, ticketQuantity: 2, paidOrders: 1 }]
+} as unknown as Parameters<typeof SalesViewerDashboard>[0]["dashboard"];
+describe("sales viewer dashboard", () => {
+  it("shows ticket-only charts and scoped event sales, linking to the same period", () => {
+    const html = renderToStaticMarkup(React.createElement(SalesViewerDashboard, { dashboard }));
+    expect(html).toContain("Vendas por evento no período");
+    expect(html).toContain("Evento permitido");
+    expect(html).toContain("Pix: 100.0%");
+    expect(html).toContain("eventId=permitted&amp;startDate=2026-10-01&amp;endDate=2026-10-10");
+    expect(html).not.toContain("987,65");
+    expect(html).not.toContain("543,21");
+  });
+  it("renders an empty period without invalid graph numbers", () => {
+    const empty = { ...dashboard, salesByDay: [], eventSales: [], paymentMethods: { pix: { count: 0 }, card: { count: 0 }, other: { count: 0 } } } as typeof dashboard;
+    const html = renderToStaticMarkup(React.createElement(SalesViewerDashboard, { dashboard: empty }));
+    expect(html).toContain("Nenhuma venda no período selecionado");
+    expect(html).not.toContain("NaN");
+    expect(html).not.toContain("Infinity");
+  });
+});
