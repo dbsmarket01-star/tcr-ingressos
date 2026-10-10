@@ -29682,8 +29682,8 @@ small,
   .adminMain .dashboardGeneralSearch { width: 100%; min-width: 0; }
   .adminMain .dashboardGeneralUserBar { display: none; }
   .adminMain .crmWhatsappSoundToggle { display: inline-flex; }
-  .adminMain .crmWhatsappComposer { grid-template-columns: repeat(3,44px) minmax(0,1fr); gap: 8px; }
-  .adminMain .crmWhatsappComposer > .crmWhatsappComposerIcon { display: inline-flex; min-width: 44px; min-height: 44px; }
-  .adminMain .crmWhatsappComposerText { grid-column: 1 / 4; grid-row: 2; }
-  .adminMain .crmWhatsappSend { grid-column: 4; grid-row: 2; justify-self: end; }
+  .adminMain .crmWhatsappComposer { grid-template-columns: repeat(3,44px) minmax(0,1fr) 48px; gap: 8px; }
+  .adminMain .crmWhatsappComposer .crmWhatsappComposerIcon { display: inline-flex; min-width: 44px; min-height: 44px; }
+  .adminMain .crmWhatsappComposerText { grid-column: 1 / 5; grid-row: 2; }
+  .adminMain .crmWhatsappSend { grid-column: 5; grid-row: 2; justify-self: end; min-height: 44px; }
 }
