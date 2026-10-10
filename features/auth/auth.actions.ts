@@ -53,12 +53,7 @@ export async function loginAction(formData: FormData) {
 }
 
 export async function logoutAction() {
-  const organizationContext = await getCurrentOrganizationContext();
   await clearAdminSession();
-  if (organizationContext.isAdminHost) {
-    redirect("/");
-  }
-
   redirect("/login");
 }
 

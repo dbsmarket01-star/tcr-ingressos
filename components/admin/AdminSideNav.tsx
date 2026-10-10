@@ -35,7 +35,7 @@ export function AdminSideNav({ groups }: AdminSideNavProps) {
                 const active = isActiveLink(pathname, item.href);
 
                 return (
-                  <Link href={item.href} key={item.href} aria-current={active ? "page" : undefined} className={active ? "active" : undefined}>
+                  <Link href={item.href} onClick={(event) => event.currentTarget.closest("details.adminMobileMenu")?.removeAttribute("open")} key={item.href} aria-current={active ? "page" : undefined} className={active ? "active" : undefined}>
                     <strong>{item.label}</strong>
                     <span>{item.description}</span>
                   </Link>

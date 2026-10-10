@@ -42,11 +42,12 @@ export function allowedAdminHosts() {
     .filter(Boolean);
 }
 
-function withInternalHeaders(response: NextResponse) {
+function withInternalHeaders(response: NextResponse, privateContent = true, allowMicrophone = false) {
+  if (privateContent) response.headers.set("Cache-Control", "private, no-store, max-age=0, must-revalidate");
   response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("Referrer-Policy", "same-origin");
-  response.headers.set("Permissions-Policy", "camera=(self), microphone=(), geolocation=()");
+  response.headers.set("Permissions-Policy", `camera=(self), microphone=${allowMicrophone ? "(self)" : "()"}, geolocation=()`);
 
   return response;
 }
@@ -125,7 +126,9 @@ export function proxy(request: NextRequest) {
         request: {
           headers: requestHeaders
         }
-      })
+      }),
+      isInternalPath(pathname),
+      pathname === "/admin/crm/whatsapp"
     );
   }
 

@@ -26,15 +26,15 @@ describe("multi-tenant proxy isolation", () => {
     expect(response.status).toBe(404);
   });
 
-  it("redirects admin host root to /login", () => {
+  it("rewrites unauthenticated admin host root to /login", () => {
     process.env.ADMIN_HOST = "produtor.a2imergidos.com.br";
 
     const response = proxy(
       makeRequest("https://produtor.a2imergidos.com.br/", "produtor.a2imergidos.com.br")
     );
 
-    expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("https://produtor.a2imergidos.com.br/login");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("x-middleware-rewrite")).toBe("https://produtor.a2imergidos.com.br/login");
   });
 
   it("allows the same-origin camera on internal admin pages", () => {
@@ -80,5 +80,25 @@ describe("multi-tenant proxy isolation", () => {
     const response = proxy(makeRequest("https://ingresaas.app.br/login", "ingresaas.app.br"));
 
     expect(response.status).toBe(200);
+  });
+});
+
+
+describe("admin mobile session and media", () => {
+  it("prevents caching private pages without disabling static asset caching", () => {
+    process.env.ADMIN_HOST = "produtor.tcringressos.app.br";
+    for (const path of ["/", "/admin", "/admin/orders", "/login", "/api/admin/events"]) {
+      const response = proxy(makeRequest(`https://produtor.tcringressos.app.br${path}`, "produtor.tcringressos.app.br"));
+      expect(response.headers.get("cache-control")).toContain("no-store");
+    }
+    const asset = proxy(makeRequest("https://produtor.tcringressos.app.br/uploads/banner.png", "produtor.tcringressos.app.br"));
+    expect(asset.headers.get("cache-control")).toBeNull();
+  });
+  it("allows recording audio only on the WhatsApp conversation page", () => {
+    process.env.ADMIN_HOST = "produtor.tcringressos.app.br";
+    const response = proxy(makeRequest("https://produtor.tcringressos.app.br/admin/crm/whatsapp", "produtor.tcringressos.app.br"));
+    expect(response.headers.get("permissions-policy")).toContain("microphone=(self)");
+    const other = proxy(makeRequest("https://produtor.tcringressos.app.br/admin/orders", "produtor.tcringressos.app.br"));
+    expect(other.headers.get("permissions-policy")).toContain("microphone=()");
   });
 });

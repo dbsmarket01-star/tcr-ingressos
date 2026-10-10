@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminSessionRestoreGuard } from "./AdminSessionRestoreGuard";
 import { AdminSideNav } from "@/components/admin/AdminSideNav";
 import { logoutAction } from "@/features/auth/auth.actions";
 import { getAdminLandingPath, getCurrentAdmin } from "@/features/auth/auth.service";
@@ -45,6 +46,7 @@ export async function AdminShell({
 
   return (
     <main className="adminShell">
+      <AdminSessionRestoreGuard />
       <details className="adminMobileMenu">
         <summary>
           <span className="adminMobileBrand">
@@ -58,6 +60,11 @@ export async function AdminShell({
           <span className="adminMobileMenuButton">Menu</span>
         </summary>
         <div className="adminMobileMenuPanel">
+          <section className="adminMobileAccount" aria-label="Sua conta">
+            <div><span>Conta conectada</span><strong>{admin?.name}</strong><small>{admin?.email}</small></div>
+            <form action={logoutAction}><button className="secondaryButton" type="submit">Sair da conta</button></form>
+            <Link className="adminMobileSiteLink" href={headerActionHref || publicSiteHref}>{headerActionLabel || "Ver site"}</Link>
+          </section>
           {!hideSidebarIntro ? (
             <div className="adminMobileIntro">
               <span>{sidebarEyebrow}</span>

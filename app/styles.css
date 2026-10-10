@@ -29668,3 +29668,22 @@ small,
 .salesViewerEventsTable tfoot th, .salesViewerEventsTable tfoot td { padding: 16px; color: white; }
 .salesViewerEventsHint { margin: 16px 0 0; font-size: 12px; }
 @media (max-width: 640px) { .salesViewerEventsHeader { align-items: start; flex-direction: column; padding: 20px; } .salesViewerEventsBody { padding: 12px; } }
+
+/* Mobile parity: keep account actions and operational controls reachable. */
+@media (max-width: 860px) {
+  .adminMobileAccount { display: grid; gap: 12px; padding: 14px; border: 1px solid rgba(255,255,255,.24); border-radius: 14px; background: rgba(255,255,255,.1); }
+  .adminMobileAccount > div { display: grid; gap: 4px; }
+  .adminMobileAccount span, .adminMobileAccount small { color: #e5f2eb; overflow-wrap: anywhere; }
+  .adminMobileAccount strong { color: white; font-size: 16px; }
+  .adminMobileAccount form { margin: 0; }
+  .adminMobileAccount button { width: 100%; min-height: 44px; color: #134c36; background: white; }
+  .adminMobileSiteLink { color: white; text-decoration: underline; padding: 8px 0; }
+  .adminMain .dashboardGeneralTopbar { display: flex; flex-wrap: wrap; padding: 0; }
+  .adminMain .dashboardGeneralSearch { width: 100%; min-width: 0; }
+  .adminMain .dashboardGeneralUserBar { display: none; }
+  .adminMain .crmWhatsappSoundToggle { display: inline-flex; }
+  .adminMain .crmWhatsappComposer { grid-template-columns: repeat(3,44px) minmax(0,1fr); gap: 8px; }
+  .adminMain .crmWhatsappComposer > .crmWhatsappComposerIcon { display: inline-flex; min-width: 44px; min-height: 44px; }
+  .adminMain .crmWhatsappComposerText { grid-column: 1 / 4; grid-row: 2; }
+  .adminMain .crmWhatsappSend { grid-column: 4; grid-row: 2; justify-self: end; }
+}
