@@ -2,7 +2,7 @@ import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { sendCrmWhatsAppApprovedTemplate, setCrmWhatsAppAiMode, setCrmWhatsAppFollowUp } from "@/features/crm/whatsapp-chat.actions";
-import { getCrmWhatsAppConversation, getCrmWhatsAppInbox } from "@/features/crm/whatsapp-chat.service";
+import { getCrmWhatsAppConversation, getCrmWhatsAppInbox, getCrmWhatsAppNotificationSnapshot } from "@/features/crm/whatsapp-chat.service";
 import { getWhatsAppAiConversationState } from "@/features/ai/whatsapp-support-ai.service";
 import { WhatsAppComposer } from "./WhatsAppComposer";
 import { WhatsAppNotificationWatcher } from "./WhatsAppNotificationWatcher";
@@ -93,6 +93,7 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
   const allowedEventIds = getAdminAllowedEventIds(admin);
   const selectedPeriod = resolvePeriod(params);
   const inboxPromise = getCrmWhatsAppInbox({ organizationId: admin.organizationId, allowedEventIds, search: params.search, startAt: selectedPeriod.startAt, endAt: selectedPeriod.endAt });
+  const latestInboundPromise = getCrmWhatsAppNotificationSnapshot({ organizationId: admin.organizationId, allowedEventIds });
   const hasExplicitSelection = Boolean(params.orderCode || params.leadId || params.phone);
   const selectedConversationPromise = hasExplicitSelection
     ? getCrmWhatsAppConversation({ orderCode: params.orderCode, leadId: params.leadId, phone: params.phone, organizationId: admin.organizationId, allowedEventIds })
@@ -124,9 +125,7 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
   const requestedLimit = Number(params.limit || 120);
   const displayLimit = Number.isFinite(requestedLimit) ? Math.min(Math.max(Math.trunc(requestedLimit), 60), 600) : 120;
   const visibleInbox = inbox.slice(0, displayLimit);
-  const latestInbound = rawInbox
-    .filter((item) => item.latestInboundId && item.latestInboundAt)
-    .sort((left, right) => right.latestInboundAt!.getTime() - left.latestInboundAt!.getTime())[0];
+  const latestInbound = await latestInboundPromise;
   const selectedInboxItem = params.orderCode || params.leadId || params.phone ? null : inbox[0] || rawInbox[0] || null;
   const selectedOrderCode = params.orderCode || selectedInboxItem?.orderCode || undefined;
   const selectedPhone = params.phone || selectedInboxItem?.phone || undefined;
@@ -147,7 +146,7 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
     <div className="crmWhatsappPage">
       <header className="crmWhatsappHeader">
         <div className="crmWhatsappHeading"><span className="crmWhatsappBreadcrumb">CRM / <strong>WhatsApp</strong></span><h1>Central de conversas</h1><p>Responda compradores e acompanhe retornos das mensagens automáticas.</p></div>
-        <div className="crmWhatsappHeaderTools"><Link href="/admin/crm/whatsapp/knowledge">Aprendizado da IA</Link><form action="/admin/crm/whatsapp" className="crmWhatsappGlobalSearch" method="get"><Icon name="search"/><input name="search" placeholder="Buscar conversas, contatos ou pedidos..." defaultValue={params.search || ""}/><kbd>⌘ K</kbd></form><WhatsAppNotificationWatcher latestInboundId={latestInbound?.latestInboundId || null} unreadCount={visualUnreadCount}/><span className="crmWhatsappUser"><i>{initials(admin.name)}</i><span><strong>{admin.name}</strong><small>{admin.role}</small></span></span></div>
+        <div className="crmWhatsappHeaderTools"><Link href="/admin/crm/whatsapp/knowledge">Aprendizado da IA</Link><form action="/admin/crm/whatsapp" className="crmWhatsappGlobalSearch" method="get"><Icon name="search"/><input name="search" placeholder="Buscar conversas, contatos ou pedidos..." defaultValue={params.search || ""}/><kbd>⌘ K</kbd></form><WhatsAppNotificationWatcher latestInboundId={latestInbound?.id || null} unreadCount={visualUnreadCount} refreshOnNewInbound={selectedPeriod.startAt <= new Date() && selectedPeriod.endAt > new Date()}/><span className="crmWhatsappUser"><i>{initials(admin.name)}</i><span><strong>{admin.name}</strong><small>{admin.role}</small></span></span></div>
       </header>
 
       <nav className="crmWhatsappStatusTabs" aria-label="Filtrar conversas por status">{[["all", "Todos", counters.all], ["unread", "Não lidos", counters.unread], ["human", "Atendimento humano", counters.human], ["followup", "Em atendimento / Follow-up", counters.followup], ["closed", "Fechados", counters.closed], ["abandoned", "Carrinho abandonado sem retorno", counters.abandoned]].map(([key, label, count]) => <Link className={`${activeStatus === key ? "isActive" : ""} ${key === "human" ? "isHuman" : ""}`.trim()} href={statusHref(String(key))} key={String(key)} prefetch={false}>{label}<b>{count}</b></Link>)}</nav>

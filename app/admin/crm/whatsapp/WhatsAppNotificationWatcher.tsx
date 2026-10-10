@@ -83,10 +83,12 @@ async function playNotificationSound(volume: number) {
 
 export function WhatsAppNotificationWatcher({
   latestInboundId,
-  unreadCount
+  unreadCount,
+  refreshOnNewInbound
 }: {
   latestInboundId: string | null;
   unreadCount: number;
+  refreshOnNewInbound: boolean;
 }) {
   const router = useRouter();
   const initialized = useRef(false);
@@ -136,6 +138,26 @@ export function WhatsAppNotificationWatcher({
         if (previousId === nextId) return;
         if (pendingNotification.current?.id === nextId) return;
 
+        if (!refreshOnNewInbound) {
+          // A mensagem nova não pertence ao período exibido (por exemplo,
+          // "Ontem"). Notifique, mas não recarregue a lista antiga em loop.
+          window.sessionStorage.setItem(LAST_MESSAGE_STORAGE_KEY, nextId);
+          if (soundEnabled) void playNotificationSound(volume);
+          if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+            const notification = new Notification(snapshot.latestInbound?.name || "Nova mensagem no WhatsApp", {
+              body: snapshot.latestInbound?.message || "Você recebeu uma nova mensagem na Central de Conversas.",
+              icon: "/favicon.ico",
+              tag: `tcr-whatsapp-${nextId}`
+            });
+            notification.onclick = () => {
+              window.focus();
+              window.location.href = `/admin/crm/whatsapp?period=today&phone=${encodeURIComponent(snapshot.latestInbound?.phone || "")}`;
+              notification.close();
+            };
+          }
+          return;
+        }
+
         // Guarde a mensagem, mas somente avise depois que o refresh realmente
         // entregar a conversa nova para a tela. Assim o som nunca chega antes
         // da mensagem visível e o operador não procura uma conversa ainda antiga.
@@ -154,7 +176,7 @@ export function WhatsAppNotificationWatcher({
       stopped = true;
       if (timer) window.clearTimeout(timer);
     };
-  }, [router, soundEnabled, volume]);
+  }, [router, soundEnabled, volume, refreshOnNewInbound]);
 
   useEffect(() => {
     if (!latestInboundId) return;

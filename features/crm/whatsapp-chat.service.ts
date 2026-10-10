@@ -244,8 +244,15 @@ async function loadCrmWhatsAppInbox(input: {
     }
   });
   const orderIds = Array.from(new Set(scopedOutbound.map((message) => message.orderId).filter(Boolean))) as string[];
-  const orders = orderIds.length
-    ? await prisma.order.findMany({
+  const loggedPhoneCandidates = Array.from(
+    new Set(scopedOutbound.flatMap((message) => candidatePhones(message.recipientPhone)))
+  );
+  const conversationEntityIds = Array.from(new Set(scopedOutbound
+    .map((message) => conversationPhoneKey(message.recipientPhone))
+    .filter((key): key is string => Boolean(key))
+    .map((key) => `${input.organizationId}:${key}`)));
+  const [orders, phoneOrders, aiStateLogs, workflowLogs] = await Promise.all([
+    orderIds.length ? prisma.order.findMany({
         where: {
           id: { in: orderIds },
           event: {
@@ -260,44 +267,50 @@ async function loadCrmWhatsAppInbox(input: {
           customer: { select: { name: true, phone: true } },
           event: { select: { id: true, title: true } }
         }
-      })
-    : [];
-  const orderById = new Map(orders.map((order) => [order.id, order]));
-  const loggedPhoneCandidates = Array.from(
-    new Set(scopedOutbound.flatMap((message) => candidatePhones(message.recipientPhone)))
-  );
-  const phoneOrders = loggedPhoneCandidates.length
-    ? await prisma.order.findMany({
-        where: {
-          customer: { phone: { in: loggedPhoneCandidates } },
-          event: {
-            organizationId: input.organizationId,
-            ...(input.allowedEventIds ? { id: { in: input.allowedEventIds } } : {})
-          }
-        },
-        orderBy: { createdAt: "desc" },
-        select: {
-          code: true,
-          status: true,
-          customer: { select: { name: true, phone: true } },
-          event: { select: { title: true } }
+      }) : Promise.resolve([]),
+    loggedPhoneCandidates.length ? prisma.order.findMany({
+      where: {
+        customer: { phone: { in: loggedPhoneCandidates } },
+        event: {
+          organizationId: input.organizationId,
+          ...(input.allowedEventIds ? { id: { in: input.allowedEventIds } } : {})
         }
-      })
-    : [];
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        code: true,
+        status: true,
+        customer: { select: { name: true, phone: true } },
+        event: { select: { title: true } }
+      }
+    }) : Promise.resolve([]),
+    conversationEntityIds.length ? prisma.adminAuditLog.findMany({
+      where: {
+        entityType: "WHATSAPP_CONVERSATION",
+        entityId: { in: conversationEntityIds },
+        action: { in: ["WHATSAPP_AI_ENABLED", "WHATSAPP_AI_PAUSED", "WHATSAPP_AI_HANDOFF"] }
+      },
+      orderBy: { createdAt: "desc" },
+      select: { action: true, entityId: true, metadata: true }
+    }) : Promise.resolve([]),
+    conversationEntityIds.length ? prisma.adminAuditLog.findMany({
+      where: {
+        entityType: "WHATSAPP_CONVERSATION",
+        entityId: { in: conversationEntityIds },
+        action: { in: ["WHATSAPP_CONVERSATION_READ", "WHATSAPP_FOLLOWUP_ENABLED", "WHATSAPP_FOLLOWUP_DISABLED", "WHATSAPP_CONVERSATION_HIDDEN"] }
+      },
+      orderBy: { createdAt: "desc" },
+      select: { action: true, entityId: true, metadata: true, createdAt: true }
+    }) : Promise.resolve([])
+  ]);
+  const orderById = new Map(orders.map((order) => [order.id, order]));
   const orderByPhone = new Map<string, (typeof phoneOrders)[number]>();
+  const paidPhones = new Set<string>();
   for (const order of phoneOrders) {
     const key = conversationPhoneKey(order.customer.phone);
     if (key && !orderByPhone.has(key)) orderByPhone.set(key, order);
+    if (key && order.status === OrderStatus.PAID) paidPhones.add(key);
   }
-  const aiStateLogs = await prisma.adminAuditLog.findMany({
-    where: {
-      entityType: "WHATSAPP_CONVERSATION",
-      entityId: { startsWith: `${input.organizationId}:` },
-      action: { in: ["WHATSAPP_AI_ENABLED", "WHATSAPP_AI_PAUSED", "WHATSAPP_AI_HANDOFF"] }
-    },
-    orderBy: { createdAt: "desc" },
-    select: { action: true, entityId: true, metadata: true }
-  });
   const aiModeByPhone = new Map<string, "ACTIVE" | "PAUSED" | "HANDOFF">();
   for (const log of aiStateLogs) {
     if (!log.entityId) continue;
@@ -305,15 +318,6 @@ async function loadCrmWhatsAppInbox(input: {
     if (!key || aiModeByPhone.has(key)) continue;
     aiModeByPhone.set(key, resolveWhatsAppAiConversationMode({ action: log.action, metadata: log.metadata }));
   }
-  const workflowLogs = await prisma.adminAuditLog.findMany({
-    where: {
-      entityType: "WHATSAPP_CONVERSATION",
-      entityId: { startsWith: `${input.organizationId}:` },
-      action: { in: ["WHATSAPP_CONVERSATION_READ", "WHATSAPP_FOLLOWUP_ENABLED", "WHATSAPP_FOLLOWUP_DISABLED", "WHATSAPP_CONVERSATION_HIDDEN"] }
-    },
-    orderBy: { createdAt: "desc" },
-    select: { action: true, entityId: true, metadata: true, createdAt: true }
-  });
   const latestReadAtByPhone = new Map<string, Date>();
   const hasEverBeenRead = new Set<string>();
   const followUpByPhone = new Map<string, boolean>();
@@ -391,7 +395,7 @@ async function loadCrmWhatsAppInbox(input: {
       const hasUnread = Boolean(latestInbound && (!latestReadAt || latestInbound.createdAt > latestReadAt));
       const unreadQueue = hasUnread && !wasAlreadyAttended;
       const cartMessage = [...messages].reverse().find((message) => message.type === "CART_ABANDONMENT" && message.status !== "FAILED");
-      const hasPaidOrder = phoneOrders.some((candidate) => conversationPhoneKey(candidate.customer.phone) === key && candidate.status === OrderStatus.PAID);
+      const hasPaidOrder = paidPhones.has(key);
       const abandonedWithoutReturn = Boolean(
         cartMessage && !hasPaidOrder && (!latestInbound || latestInbound.createdAt <= cartMessage.createdAt)
       );
@@ -675,10 +679,11 @@ export async function getCrmWhatsAppConversation(input: {
       OR: messageFilters
     },
     orderBy: {
-      createdAt: "asc"
+      createdAt: "desc"
     },
     take: 80
   });
+  rawMessages.reverse();
   const newestVisibleTechnicalFailureId = rawMessages
     .filter(isRepeatedTechnicalFailure)
     .at(-1)?.id;
