@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/cart-abandonment",
-      "schedule": "*/5 * * * *"
+      "schedule": "* * * * *"
     },
     {
       "path": "/api/maintenance/reconcile-financial-ledger",

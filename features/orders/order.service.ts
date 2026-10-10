@@ -23,7 +23,7 @@ import { isValidCpf, onlyDocumentDigits } from "@/lib/document-validation";
 import type { CheckoutOrderInput } from "./order.schema";
 
 const FALLBACK_ORDER_RESERVATION_MINUTES = 120;
-const DEFAULT_CART_ABANDONMENT_DELAY_SECONDS = 10 * 60;
+const CART_ABANDONMENT_DELAY_MS = 15 * 60 * 1000;
 type CheckoutHotelGuestInput = NonNullable<CheckoutOrderInput["hotelGuests"]>[number];
 
 export function createOrderCode() {
@@ -39,17 +39,8 @@ function onlyDigits(value?: string | null) {
   return String(value ?? "").replace(/\D/g, "");
 }
 
-function getCartAbandonmentDelayMs() {
-  const rawValue =
-    process.env.WHATSAPP_CART_ABANDONMENT_FIRST_DELAY_SECONDS ||
-    process.env.CART_ABANDONMENT_FIRST_DELAY_SECONDS;
-  const seconds = Number(rawValue);
-
-  if (!rawValue || !Number.isFinite(seconds) || seconds <= 0) {
-    return DEFAULT_CART_ABANDONMENT_DELAY_SECONDS * 1000;
-  }
-
-  return Math.max(30, Math.floor(seconds)) * 1000;
+export function getCartAbandonmentEligibilityCutoff(now: Date) {
+  return new Date(now.getTime() - CART_ABANDONMENT_DELAY_MS);
 }
 
 function formatCartAbandonmentSummary(
@@ -811,7 +802,7 @@ export async function sendCartAbandonmentReminders(options?: {
 }) {
   const now = options?.now ?? new Date();
   const limit = Math.min(Math.max(options?.limit ?? 100, 1), 500);
-  const minimumCreatedAt = new Date(now.getTime() - getCartAbandonmentDelayMs());
+  const minimumCreatedAt = getCartAbandonmentEligibilityCutoff(now);
   const orders = await prisma.order.findMany({
     where: {
       status: OrderStatus.PENDING_PAYMENT,
@@ -892,13 +883,39 @@ export async function sendCartAbandonmentReminders(options?: {
     }
 
     try {
+      // Webhooks can be late. Confirm the live Asaas status before claiming a reminder.
+      const payment = await prisma.payment.findUnique({
+        where: { orderId: order.id },
+        select: { provider: true, externalId: true }
+      });
+      if (payment?.provider === PaymentProvider.ASAAS && payment.externalId) {
+        try {
+          const { syncAsaasPaymentByOrderCode } = await import("@/features/payments/payment.service");
+          await syncAsaasPaymentByOrderCode(order.code);
+        } catch (error) {
+          // Fail closed: retry next cron run instead of messaging someone who may have paid.
+          skipped += 1;
+          console.error("[WhatsApp] Confirmacao Asaas indisponivel para carrinho", {
+            orderId: order.id,
+            error: error instanceof Error ? error.message : String(error)
+          });
+          continue;
+        }
+      }
+
+      const claimedAt = new Date();
       const claimed = await prisma.order.updateMany({
         where: {
           id: order.id,
-          cartAbandonmentSentAt: null
+          status: OrderStatus.PENDING_PAYMENT,
+          paidAt: null,
+          cartAbandonmentSentAt: null,
+          createdAt: { lte: getCartAbandonmentEligibilityCutoff(claimedAt) },
+          expiresAt: { gt: claimedAt },
+          NOT: { payment: { is: { status: PaymentStatus.APPROVED } } }
         },
         data: {
-          cartAbandonmentSentAt: new Date()
+          cartAbandonmentSentAt: claimedAt
         }
       });
 

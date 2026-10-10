@@ -23,7 +23,7 @@
     "verify:production": "node scripts/verify-production-health.mjs",
     "finance:reconcile": "node ./node_modules/tsx/dist/cli.mjs scripts/reconcile-producer-closing.ts",
     "test:finance-safety": "node ./node_modules/vitest/vitest.mjs run tests/finance tests/payments/payment-webhook-idempotency.test.ts tests/payments/payment-webhook-conflict.test.ts tests/payments/asaas-webhook-route.test.ts",
-    "test:whatsapp-safety": "node ./node_modules/vitest/vitest.mjs run tests/ai/whatsapp-support-ai.test.ts tests/crm/whatsapp-ai-message-type.test.ts tests/whatsapp",
+    "test:whatsapp-safety": "node ./node_modules/vitest/vitest.mjs run tests/ai/whatsapp-support-ai.test.ts tests/crm/whatsapp-ai-message-type.test.ts tests/orders/cart-abandonment-send-safety.test.ts tests/orders/cart-recovery-report.test.ts tests/whatsapp",
     "worker:whatsapp": "node node_modules/tsx/dist/cli.mjs scripts/whatsapp-campaign-worker.ts --run"
   },
   "dependencies": {

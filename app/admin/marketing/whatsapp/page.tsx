@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
   requirePermission,
@@ -14,6 +15,9 @@ export default async function Page() {
       headerVariant="minimal"
       hideSidebarIntro
     >
+      <section className="card spacedSection adminPanelBlock">
+        <Link className="button" href="/admin/marketing/whatsapp/cart-recovery">Ver relatório de recuperação de carrinho</Link>
+      </section>
       {getAdminAllowedEventIds(admin) === null ? (
         <CampaignModule />
       ) : (
