@@ -6349,6 +6349,42 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   white-space: nowrap;
 }
 
+.dashboardDailySalesPager {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 0 0 14px;
+}
+
+.dashboardDailySalesPager button {
+  background: #f7faf8;
+  border: 1px solid #dce9e4;
+  border-radius: 9px;
+  color: #0b7a63;
+  cursor: pointer;
+  font-size: 20px;
+  height: 34px;
+  width: 38px;
+}
+
+.dashboardDailySalesPager button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.dashboardDailySalesPager button:focus-visible {
+  outline: 2px solid #0b7a63;
+  outline-offset: 2px;
+}
+
+.dashboardDailySalesPager span {
+  color: #476258;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
 .dashboardGeneralLineChartWrap {
   display: grid;
   gap: 14px;

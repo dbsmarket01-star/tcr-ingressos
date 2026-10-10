@@ -1,4 +1,5 @@
 import { SalesViewerDashboard } from "@/components/admin/SalesViewerDashboard";
+import { DashboardDailySalesChart } from "@/components/admin/DashboardDailySalesChart";
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
@@ -107,66 +108,6 @@ function humanizePaymentMethod(method: "PIX" | "CREDIT_CARD" | "SIMULATED" | "OT
   if (method === "CREDIT_CARD") return "Cartão";
   if (method === "SIMULATED") return "Simulado";
   return "Outros";
-}
-
-function buildSalesChart(
-  series: Array<{
-    label: string;
-    revenueInCents: number;
-    ticketSalesInCents: number;
-    serviceFeesInCents: number;
-    salesCount: number;
-  }>,
-  maxRevenueInCents: number
-) {
-  const width = 640;
-  const height = 280;
-  const paddingLeft = 26;
-  const paddingRight = 18;
-  const paddingTop = 18;
-  const paddingBottom = 34;
-  const usableWidth = width - paddingLeft - paddingRight;
-  const usableHeight = height - paddingTop - paddingBottom;
-  const safeMax = maxRevenueInCents > 0 ? maxRevenueInCents : 1;
-
-  const points = series.map((item, index) => {
-    const x = paddingLeft + (usableWidth * index) / Math.max(1, series.length - 1);
-    const revenueY = paddingTop + usableHeight - (item.revenueInCents / safeMax) * usableHeight;
-    const ticketSalesY = paddingTop + usableHeight - (item.ticketSalesInCents / safeMax) * usableHeight;
-    const serviceFeesY = paddingTop + usableHeight - (item.serviceFeesInCents / safeMax) * usableHeight;
-    return { ...item, x, revenueY, ticketSalesY, serviceFeesY };
-  });
-
-  const buildLinePath = (key: "revenueY" | "ticketSalesY" | "serviceFeesY") =>
-    points
-      .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point[key].toFixed(1)}`)
-      .join(" ");
-
-  const revenueLinePath = buildLinePath("revenueY");
-  const ticketSalesLinePath = buildLinePath("ticketSalesY");
-  const serviceFeesLinePath = buildLinePath("serviceFeesY");
-
-  const areaPath = points.length
-    ? `${revenueLinePath} L ${points[points.length - 1].x.toFixed(1)} ${(height - paddingBottom).toFixed(1)} L ${points[0].x.toFixed(1)} ${(height - paddingBottom).toFixed(1)} Z`
-    : "";
-
-  return { width, height, paddingBottom, points, revenueLinePath, ticketSalesLinePath, serviceFeesLinePath, areaPath };
-}
-
-function buildXAxisDisplayLabels(series: Array<{ label: string }>) {
-  const total = series.length;
-  if (total <= 8) {
-    return series.map((item) => item.label);
-  }
-
-  const step = total <= 14 ? 2 : total <= 24 ? 3 : total <= 40 ? 4 : 5;
-
-  return series.map((item, index) => {
-    const isFirst = index === 0;
-    const isLast = index === total - 1;
-    const shouldShow = isFirst || isLast || index % step === 0;
-    return shouldShow ? item.label : "";
-  });
 }
 
 function DashboardIcon({
@@ -550,8 +491,6 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const dashboard = await getDashboardMetrics(params, admin.organizationId, getAdminAllowedEventIds(admin));
   const periodLabel = formatPeriodLabel(dashboard.period.startDate, dashboard.period.endDate);
   const dateRangeLabel = formatDateRangeLabel(dashboard.period.startDate, dashboard.period.endDate);
-  const salesChart = buildSalesChart(dashboard.salesByDay, dashboard.maxDailyRevenueInCents);
-  const salesXAxisLabels = buildXAxisDisplayLabels(dashboard.salesByDay);
   const paymentMethodsChart = `conic-gradient(
     var(--admin-primary, #0b7a63) 0deg ${(dashboard.paymentMethods.pix.rate / 100) * 360}deg,
     #b8c4bf ${(dashboard.paymentMethods.pix.rate / 100) * 360}deg ${((dashboard.paymentMethods.pix.rate + dashboard.paymentMethods.card.rate) / 100) * 360}deg,
@@ -705,96 +644,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </section>
 
         <section className="dashboardGeneralMainGrid">
-          <article className="dashboardGeneralPanel dashboardGeneralChartPanel">
-            <div className="dashboardGeneralPanelHeader">
-              <div>
-                <h2>Vendas por dia</h2>
-                <p>{periodLabel}</p>
-              </div>
-              <span className="dashboardGeneralPill">
-                {dashboard.salesByDay.length <= 7 ? "Últimos 7 dias" : `${dashboard.salesByDay.length} dias`}
-              </span>
-            </div>
-
-            <div className="dashboardGeneralLineChartWrap">
-              <div className="dashboardGeneralYAxis">
-                {[1, 0.75, 0.5, 0.25, 0].map((ratio) => (
-                  <span key={ratio}>{formatCurrency(Math.round(dashboard.maxDailyRevenueInCents * ratio))}</span>
-                ))}
-              </div>
-              <div className="dashboardGeneralLineChart">
-                <svg viewBox={`0 0 ${salesChart.width} ${salesChart.height}`} preserveAspectRatio="none">
-                  {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-                    const y = 18 + (salesChart.height - 52) * ratio;
-                    return <line className="dashboardGeneralGridLine" key={ratio} x1="26" x2="622" y1={y} y2={y} />;
-                  })}
-                  <path className="dashboardGeneralAreaPath" d={salesChart.areaPath} />
-                  <path className="dashboardGeneralLinePath is-revenue" d={salesChart.revenueLinePath} />
-                  <path className="dashboardGeneralLinePath is-ticket-sales" d={salesChart.ticketSalesLinePath} />
-                  <path className="dashboardGeneralLinePath is-service-fees" d={salesChart.serviceFeesLinePath} />
-                  {salesChart.points.map((point, index) => (
-                    <g key={`${point.label}-${index}`}>
-                      <circle className="dashboardGeneralLinePoint is-revenue" cx={point.x} cy={point.revenueY} r="5.2" />
-                      <circle className="dashboardGeneralLinePoint is-ticket-sales" cx={point.x} cy={point.ticketSalesY} r="4.6" />
-                      <circle className="dashboardGeneralLinePoint is-service-fees" cx={point.x} cy={point.serviceFeesY} r="4.2" />
-                    </g>
-                  ))}
-                </svg>
-                <div className="dashboardGeneralChartLegend" aria-hidden="true">
-                  <span><i className="is-revenue" />Total pago</span>
-                  <span><i className="is-ticket-sales" />Venda de ingressos</span>
-                  <span><i className="is-service-fees" />Taxa bilheteria</span>
-                </div>
-                <div
-                  className="dashboardGeneralChartHotspots"
-                  style={{ gridTemplateColumns: `repeat(${Math.max(dashboard.salesByDay.length, 1)}, minmax(0, 1fr))` }}
-                >
-                  {dashboard.salesByDay.map((item, index) => (
-                    <button
-                      aria-label={`${item.label}: ${item.salesCount} pedido(s), ${formatCurrency(item.revenueInCents)} total pago`}
-                      className="dashboardGeneralChartHotspot"
-                      key={`${item.date}-${index}-hotspot`}
-                      type="button"
-                    >
-                      <span className="dashboardGeneralChartTooltip">
-                        <strong className="dashboardGeneralChartTooltipTitle">{item.label}</strong>
-                        <span className="dashboardGeneralChartTooltipCounts">
-                          <small>{item.salesCount} pedido(s) pago(s)</small>
-                          <small>{item.paidTicketQuantity} ingresso(s) pago(s)</small>
-                        </span>
-                        <span className="dashboardGeneralChartTooltipRows">
-                          <span className="dashboardGeneralChartTooltipRow is-revenue">
-                            <span><i />Total pago</span>
-                            <b>{formatCurrency(item.revenueInCents)}</b>
-                          </span>
-                          <span className="dashboardGeneralChartTooltipRow is-ticket-sales">
-                            <span><i />Ingressos</span>
-                            <b>{formatCurrency(item.ticketSalesInCents)}</b>
-                          </span>
-                          <span className="dashboardGeneralChartTooltipRow is-service-fees">
-                            <span><i />Taxa bilheteria</span>
-                            <b>{formatCurrency(item.serviceFeesInCents)}</b>
-                          </span>
-                          <span className="dashboardGeneralChartTooltipRow is-card-fees">
-                            <span><i />Taxas cartão</span>
-                            <b>{formatCurrency(item.cardInterestInCents)}</b>
-                          </span>
-                        </span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-                <div
-                  className="dashboardGeneralXAxis"
-                  style={{ gridTemplateColumns: `repeat(${Math.max(dashboard.salesByDay.length, 1)}, minmax(0, 1fr))` }}
-                >
-                  {dashboard.salesByDay.map((item, index) => (
-                    <span key={item.date}>{salesXAxisLabels[index]}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </article>
+          <DashboardDailySalesChart key={periodLabel} days={dashboard.salesByDay} periodLabel={periodLabel} />
 
           <article className="dashboardGeneralPanel">
             <div className="dashboardGeneralPanelHeader">
