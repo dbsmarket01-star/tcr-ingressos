@@ -14,6 +14,8 @@ describe("sales viewer dashboard", () => {
   it("shows ticket-only charts and scoped event sales, linking to the same period", () => {
     const html = renderToStaticMarkup(React.createElement(SalesViewerDashboard, { dashboard }));
     expect(html).toContain("Vendas por evento no período");
+    expect(html).not.toContain("Vendas diárias no período");
+    expect(html).toContain("Total no período");
     expect(html).toContain("Evento permitido");
     expect(html).toContain("Pix: 100.0%");
     expect(html).toContain("Quantidade de ingressos");

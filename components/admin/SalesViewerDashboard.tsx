@@ -43,23 +43,23 @@ export function SalesViewerDashboard({ dashboard }: { dashboard: Dashboard }) {
         <div className="dashboardGeneralTotalsFooter"><span>Total</span><strong>{formatCurrency(total)}</strong></div>
       </article>
     </section>
-    <section className="card spacedSection">
-      <h2>Vendas por evento no período</h2>
-      <div className="adminTableWrap"><table className="table">
-        <thead><tr><th>Evento</th><th>Ingressos vendidos</th><th>Pedidos pagos</th><th>Valor dos ingressos</th></tr></thead>
-        <tbody>{dashboard.eventSales.map(event => <tr key={event.id}>
-          <td><Link href={`/admin/orders?eventId=${event.id}&startDate=${dashboard.period.startDate}&endDate=${dashboard.period.endDate}&status=PAID`}>{event.title}</Link></td>
-          <td>{event.ticketQuantity}</td><td>{event.paidOrders}</td><td>{formatCurrency(event.ticketSalesInCents)}</td>
-        </tr>)}</tbody>
-      </table></div>
-      {!dashboard.eventSales.length ? <p className="muted">Nenhum evento disponível para este acesso.</p> : null}
-    </section>
-    <section className="card spacedSection">
-      <h2>Vendas diárias no período</h2>
-      <div className="adminTableWrap"><table className="table"><thead><tr><th>Dia</th><th>Ingressos (R$)</th><th>Quantidade</th></tr></thead>
-        <tbody>{days.map(day => <tr key={day.date}><td>{day.label}</td><td>{formatCurrency(day.ticketSalesInCents)}</td><td>{day.paidTicketQuantity}</td></tr>)}</tbody>
-      </table></div>
-      <Link className="button" href={`/admin/orders?startDate=${dashboard.period.startDate}&endDate=${dashboard.period.endDate}&status=PAID`}>Consultar pedidos e filtrar por evento</Link>
+    <section className="salesViewerEvents spacedSection">
+      <header className="salesViewerEventsHeader">
+        <div><span className="salesViewerEyebrow">DESEMPENHO DOS EVENTOS</span><h2>Vendas por evento no período</h2><p>Eventos publicados, com venda disponível a partir da data inicial. Totais pela data do pagamento.</p></div>
+        <span className="salesViewerEventCount">{dashboard.eventSales.length} evento(s)</span>
+      </header>
+      <div className="salesViewerEventsBody">
+        <div className="adminTableWrap"><table className="table salesViewerEventsTable">
+          <thead><tr><th>Evento</th><th>Ingressos vendidos</th><th>Pedidos pagos</th><th>Valor dos ingressos</th></tr></thead>
+          <tbody>{dashboard.eventSales.map(event => <tr key={event.id}>
+            <td><Link href={`/admin/orders?eventId=${event.id}&startDate=${dashboard.period.startDate}&endDate=${dashboard.period.endDate}&status=PAID`}>{event.title}</Link></td>
+            <td><span className="salesViewerQuantity">{event.ticketQuantity}</span></td><td>{event.paidOrders}</td><td className="salesViewerEventValue">{formatCurrency(event.ticketSalesInCents)}</td>
+          </tr>)}</tbody>
+          <tfoot><tr><th>Total no período</th><td>{dashboard.kpis.paidTickets}</td><td>{dashboard.kpis.paidOrders}</td><td>{formatCurrency(dashboard.kpis.ticketSalesInCents)}</td></tr></tfoot>
+        </table></div>
+        {!dashboard.eventSales.length ? <p className="muted">Nenhum evento ativo disponível a partir da data inicial para este acesso.</p> : null}
+        <p className="muted salesViewerEventsHint">Selecione um evento para consultar seus pedidos no mesmo período. Valores somente dos ingressos.</p>
+      </div>
     </section>
   </AdminShell>;
 }

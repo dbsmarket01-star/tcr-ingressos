@@ -12,12 +12,14 @@ type DashboardFilters = {
 type EventScope = string[] | null | undefined;
 type PaymentMethod = "PIX" | "CREDIT_CARD" | "SIMULATED" | "OTHER";
 
-function buildDashboardEventWhere(organizationId: string, allowedEventIds?: EventScope): Prisma.EventWhereInput {
+export function buildDashboardEventWhere(organizationId: string, allowedEventIds?: EventScope, activeFrom?: Date): Prisma.EventWhereInput {
   return {
     organizationId,
-    status: {
-      not: EventStatus.DRAFT
-    },
+    status: activeFrom ? EventStatus.PUBLISHED : { not: EventStatus.DRAFT },
+    ...(activeFrom ? { AND: [
+      { OR: [{ startsAt: { gte: activeFrom } }, { endsAt: { gte: activeFrom } }] },
+      { OR: [{ salesEndsAt: null }, { salesEndsAt: { gte: activeFrom } }] }
+    ] } : {}),
     ...(allowedEventIds ? { id: { in: allowedEventIds } } : {})
   };
 }
@@ -203,7 +205,8 @@ function computeCustomerBreakdown(orders: PaidOrderLite[], previousCustomerIds: 
 export async function getDashboardMetrics(
   filters: DashboardFilters = {},
   organizationId: string,
-  allowedEventIds?: EventScope
+  allowedEventIds?: EventScope,
+  options: { activeEventsOnly?: boolean } = {}
 ) {
   const period = getReportPeriod({
     defaultDaysBack: 6,
@@ -217,7 +220,7 @@ export async function getDashboardMetrics(
   const previousPeriodStart = new Date(periodStart.getTime() - periodMs);
   const currentPeriodStartKey = formatBrazilDateKey(periodStart);
   const currentPeriodEndKey = formatBrazilDateKey(periodEnd);
-  const dashboardEventWhere = buildDashboardEventWhere(organizationId, allowedEventIds);
+  const dashboardEventWhere = buildDashboardEventWhere(organizationId, allowedEventIds, options.activeEventsOnly ? periodStart : undefined);
 
   const paidPeriodWhere = {
     status: "PAID" as const,
