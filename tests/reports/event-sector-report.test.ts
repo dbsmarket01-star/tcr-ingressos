@@ -26,7 +26,7 @@ describe("event sector report", () => {
     expect(db.event.findFirst).not.toHaveBeenCalled();
   });
   it("uses issued admissions and physical seat sections with paid/valid scope", async () => {
-    db.event.findFirst.mockResolvedValue({ id: "event", title: "Event", slug: "event", lots: [{ id: "lot", name: "OURO - MEIA", seatSections: [] }] });
+    db.event.findFirst.mockResolvedValue({ id: "event", title: "Event", slug: "event", lots: [{ id: "lot", name: "OURO - MEIA", typeOptions: [], seatSections: [] }] });
     db.ticket.groupBy.mockResolvedValue([{ lotId: "lot", seatId: null, _count: { _all: 4 } }, { lotId: "lot", seatId: "seat", _count: { _all: 1 } }]);
     db.seat.findMany.mockResolvedValue([{ id: "seat", section: { name: "Balcão" } }]);
     const r = await getEventSectorReport("org", "event", ["event"]);
@@ -34,6 +34,21 @@ describe("event sector report", () => {
     expect(r?.rows).toEqual([{ name: "BALCÃO", quantity: 1 }, { name: "OURO", quantity: 4 }]);
     expect(db.event.findFirst.mock.calls.at(-1)?.[0].where).toEqual({ id: "event", organizationId: "org" });
     expect(db.ticket.groupBy.mock.calls.at(-1)?.[0].where).toMatchObject({ eventId: "event", status: { in: ["ACTIVE", "USED"] }, order: { status: "PAID" } });
+  });
+  it("keeps each private box separate and preserves shared boxes and total admissions", async () => {
+    db.event.findFirst.mockResolvedValue({ id: "event", title: "Event", slug: "event", lots: [
+      { id: "closed", name: "CAMAROTE PARA 10 PESSOAS", typeOptions: [{ id: "box7", label: "CAMAROTE 07" }, { id: "box8", label: "CAMAROTE 08" }], seatSections: [{ name: "CAMAROTES" }] },
+      { id: "shared", name: "CAMAROTE 18 - COMPARTILHADO", typeOptions: [], seatSections: [] }
+    ] });
+    db.ticket.groupBy.mockResolvedValue([
+      { lotId: "closed", seatId: null, lotOptionId: "box7", _count: { _all: 10 } },
+      { lotId: "closed", seatId: null, lotOptionId: "box8", _count: { _all: 10 } },
+      { lotId: "shared", seatId: null, lotOptionId: null, _count: { _all: 9 } }
+    ]);
+    const report = await getEventSectorReport("org", "event");
+    expect(report?.rows).toEqual([{ name: "CAMAROTE 07", quantity: 10 }, { name: "CAMAROTE 08", quantity: 10 }, { name: "CAMAROTE 18", quantity: 9 }]);
+    expect(report?.total).toBe(29);
+    expect(db.ticket.groupBy.mock.calls.at(-1)?.[0].by).toContain("lotOptionId");
   });
   it("paginates without losing sector rows or duplicating the overall total", () => {
     const rows = Array.from({ length: 90 }, (_, i) => ({ name: `SETOR ${i}`, quantity: i }));

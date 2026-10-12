@@ -6,13 +6,13 @@ export async function getEventSectorReport(organizationId: string, eventId: stri
   const event = await prisma.event.findFirst({
     where: { id: eventId, organizationId },
     select: { id: true, title: true, slug: true, startsAt: true,
-      lots: { select: { id: true, name: true, seatSections: { select: { name: true } } } }
+      lots: { select: { id: true, name: true, typeOptions: { select: { id: true, label: true } }, seatSections: { select: { name: true } } } }
     }
   });
   if (!event) return null;
   // Each issued QR code is one admission, including doubles, tables and complimentary tickets.
   const counts = await prisma.ticket.groupBy({
-    by: ["lotId", "seatId"],
+    by: ["lotId", "seatId", "lotOptionId"],
     where: { eventId, status: { in: ["ACTIVE", "USED"] }, order: {
       status: "PAID", OR: [{ payment: null }, { payment: { status: { not: "REFUNDED" } } }]
     } },
@@ -26,12 +26,24 @@ export async function getEventSectorReport(organizationId: string, eventId: stri
   const lots = new Map(event.lots.map(lot => [lot.id, lot]));
   const lotSector = (lot: typeof event.lots[number]) => lot.seatSections.length === 1
     ? lot.seatSections[0].name : sectorFromLotName(lot.name);
-  const entries = event.lots.flatMap(lot => (lot.seatSections.length
-    ? lot.seatSections.map(section => section.name) : [lotSector(lot)])
-    .map(name => ({ name, quantity: 0 })));
+  const isPrivateBox = (lot: typeof event.lots[number]) => /\bcamarote\b/i.test(lot.name)
+    && !/compartilhado/i.test(lot.name);
+  const boxName = (label: string) => /\bcamarote\b/i.test(label) ? label : `CAMAROTE ${label}`;
+  const entries = event.lots.flatMap(lot => {
+    const names = isPrivateBox(lot) && lot.typeOptions.length
+      ? lot.typeOptions.map(option => boxName(option.label))
+      : lot.seatSections.length ? lot.seatSections.map(section => section.name) : [lotSector(lot)];
+    return names.map(name => ({ name, quantity: 0 }));
+  });
   for (const row of counts) {
     const lot = lots.get(row.lotId);
-    entries.push({ name: (row.seatId && seatNames.get(row.seatId)) || (lot ? lotSector(lot) : "SEM SETOR IDENTIFICADO"), quantity: row._count._all });
+    const option = lot?.typeOptions.find(option => option.id === row.lotOptionId);
+    // A numbered private box is its own sector, even when its physical section is shared.
+    const privateBox = lot && isPrivateBox(lot);
+    const name = privateBox && option ? boxName(option.label)
+      : (row.seatId && seatNames.get(row.seatId))
+        || (lot ? (privateBox && lot.typeOptions.length ? `${lotSector(lot)} - SEM NUMERAÇÃO IDENTIFICADA` : lotSector(lot)) : "SEM SETOR IDENTIFICADO");
+    entries.push({ name, quantity: row._count._all });
   }
   return { event, ...consolidateSectors(entries) };
 }
