@@ -22,6 +22,10 @@ export async function GET(_request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Ingresso nao encontrado." }, { status: 404 });
   }
 
+  if (ticket.status !== "ACTIVE" && ticket.status !== "USED") {
+    return NextResponse.json({ error: "Este ingresso foi invalidado e nao pode ser baixado." }, { status: 410 });
+  }
+
   const ticketUrl = getPublicTicketUrl(ticket.code, organizationContext.organization);
   const pdf = buildTicketPdf({
     brandName: organizationContext.brandName,

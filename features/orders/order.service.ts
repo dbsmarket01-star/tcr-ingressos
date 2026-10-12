@@ -1435,6 +1435,7 @@ export async function getOrderByCode(code: string, organizationId?: string | nul
       },
       payment: true,
       tickets: {
+        where: { status: { in: ["ACTIVE", "USED"] } },
         include: {
           lot: true,
           lotOption: true,

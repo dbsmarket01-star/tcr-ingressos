@@ -37,6 +37,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
       customer: true,
       event: true,
       tickets: {
+        where: { status: { in: ["ACTIVE", "USED"] } },
         orderBy: {
           issuedAt: "asc"
         },
@@ -53,7 +54,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
   }
 
   if (order.tickets.length === 0) {
-    return NextResponse.json({ error: "Este pedido ainda nao possui ingressos emitidos." }, { status: 404 });
+    return NextResponse.json({ error: "Este pedido nao possui ingressos validos para download." }, { status: 404 });
   }
 
   const scheduleLines = buildScheduleLines();

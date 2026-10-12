@@ -116,6 +116,7 @@ export async function resendTicketsEmailByOrderCode(
         }
       },
       tickets: {
+        where: { status: { in: ["ACTIVE", "USED"] } },
         orderBy: {
           issuedAt: "asc"
         },
