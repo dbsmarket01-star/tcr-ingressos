@@ -134,31 +134,38 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
 
         <EventSectionNav active="lots" event={event} />
 
-        <section className="eventLotsReportBanner">
+        <section className="eventLotsReports" aria-labelledby="event-lots-reports-title">
           <div>
-            <span className="sectionEyebrow">Ingressos por setor</span>
-            <h2>Consolidado deste evento</h2>
-            <p className="muted">
-              Some todas as categorias de cada setor, incluindo cortesias, em um PDF com total geral.
-              Conta ingressos válidos de pedidos pagos, incluindo os já utilizados; não inclui reservas ou cancelados.
-            </p>
+            <span className="sectionEyebrow">Vendas deste evento</span>
+            <h2 id="event-lots-reports-title">Relatórios de ingressos</h2>
+            <p className="muted">Escolha como deseja consultar as vendas de {event.title}.</p>
           </div>
-          <a className="button" href={`/admin/events/${event.id}/lots/export/sectors`}>
-            Exportar relatório por setor
-          </a>
-        </section>
-
-        <section className="eventLotsReportBanner">
-          <div>
-            <span className="sectionEyebrow">Relatório do evento</span>
-            <h2>Resumo de ingressos vendidos</h2>
-            <p className="muted">
-              Baixe o PDF com quantidade, valor de ingresso, taxas, cupons, estornos, chargebacks e total por ingresso/tipo.
-            </p>
+          <div className="eventLotsReportsGrid">
+            <article className="eventLotsReportOption">
+              <div>
+                <h3>Por setor</h3>
+                <p className="muted">
+                  Soma as categorias de cada setor, incluindo cortesias, com quantidade de ingressos e total geral.
+                  Considera ingressos válidos de pedidos pagos.
+                </p>
+              </div>
+              <a className="button secondary" href={`/admin/events/${event.id}/lots/export/sectors`} download>
+                Baixar PDF por setor
+              </a>
+            </article>
+            <article className="eventLotsReportOption">
+              <div>
+                <h3>Por lote / categoria</h3>
+                <p className="muted">
+                  Detalha cada ingresso e suas opções, sem juntar meia-entrada, inteira e solidário.
+                  Inclui quantidades, valores, taxas, descontos e estornos.
+                </p>
+              </div>
+              <a className="button" href={`/admin/events/${event.id}/lots/export/pdf`} download>
+                Baixar PDF por lote / categoria
+              </a>
+            </article>
           </div>
-          <Link className="button" href={`/admin/events/${event.id}/lots/export/pdf`}>
-            Baixar relatório PDF
-          </Link>
         </section>
 
         <section className="card form wideForm">
@@ -171,9 +178,6 @@ export default async function EventLotsPage({ params, searchParams }: EventLotsP
               <p className="muted">
                 Aqui ficam apenas os dados de ingresso: preço, quantidade, status, Pix, taxas, parcelamento e hotelaria.
               </p>
-              <Link className="button smallButton" href={`/admin/events/${event.id}/lots/export/pdf`}>
-                Baixar relatório PDF
-              </Link>
             </div>
           </div>
 
