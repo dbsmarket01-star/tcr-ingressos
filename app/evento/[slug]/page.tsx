@@ -25,7 +25,7 @@ import {
 import { buildEventSeo } from "@/features/seo/event-seo";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { formatCurrency, formatDateTime } from "@/lib/format";
-import { imageCropFromBannerPosition, imageCropStyle, parseImageCrop } from "@/lib/image-crop";
+import { imageCropStyle, parseImageCrop } from "@/lib/image-crop";
 import { TrackingRuntime } from "./TrackingRuntime";
 import { CheckoutEstimator } from "./CheckoutEstimator";
 import { TicketQuantityStepper } from "./TicketQuantityStepper";
@@ -276,17 +276,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const heroImage =
     event.bannerUrl ||
     "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1600&q=80";
-  const bannerCrop = parseImageCrop(event.bannerCrop) || imageCropFromBannerPosition(event.bannerPosition);
-  const publicBannerCrop = bannerCrop;
-  const preserveOriginalBannerRatio =
-    event.slug === "guilherme-arantes-sao-caetano-do-sul" ||
-    event.slug === "fernandinho-santo-andre-2026" ||
-    event.slug === "geriatricus-em-santo-andre-2026" ||
-    event.slug === "rodrigo-teaser-em-taubate-2026" ||
-    event.slug === "rodrigo-teaser-em-sao-caetano-do-sul-2026" ||
-    event.slug === "rodrigo-teaser-em-piracicaba-2026" ||
-    event.slug === "rodrigo-teaser-em-ribeirao-pires-2026" ||
-    event.slug === "rodrigo-teaser-em-marilia-2026";
   const mapCrop = parseImageCrop(event.eventMapCrop);
   const ctaText = event.conversionCtaText || "Garantir minha vaga";
   const organizationSlug = organizationContext.organization.slug;
@@ -395,21 +384,16 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
       <section className="publicHero">
         <div
-          className={`publicHeroMedia ${publicBannerCrop ? "hasCrop" : ""}`}
-          style={preserveOriginalBannerRatio ? { aspectRatio: "2 / 1" } : undefined}
+          className="publicHeroMedia naturalBanner"
         >
           <Image
-            className={`publicHeroImage ${publicBannerCrop ? "croppedImage" : ""}`}
+            className="publicHeroImage"
             src={heroImage}
             alt={`Banner do evento ${event.title}`}
             height={828}
             priority
             quality={80}
             sizes="(max-width: 768px) 100vw, 1180px"
-            style={{
-              ...imageCropStyle(publicBannerCrop),
-              ...(preserveOriginalBannerRatio ? { objectFit: "contain" as const } : {})
-            }}
             width={1900}
           />
         </div>
