@@ -11,7 +11,6 @@
     "test": "vitest run",
     "test:payment-safety": "node ./node_modules/vitest/vitest.mjs run tests/payments/payment-fee-calculator.test.ts tests/payments/asaas-split-calculation.test.ts tests/payments/asaas-pix-provider.test.ts tests/payments/payment-organization-config.test.ts tests/payments/payment-pricing-guards.test.ts tests/pricing/public-price-rounding.test.ts",
     "test:watch": "vitest",
-    "dns:apple-local": "tsx scripts/apple_local_dns_server.ts",
     "db:generate": "node ./node_modules/prisma/build/index.js generate",
     "db:validate": "node ./node_modules/prisma/build/index.js validate",
     "db:migrate": "node ./node_modules/prisma/build/index.js migrate dev",

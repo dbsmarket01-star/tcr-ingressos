@@ -2,9 +2,7 @@ const {
   PrismaClient,
   AdminRole,
   EventStatus,
-  LotStatus,
-  PlanStatus,
-  SubscriptionInterval
+  LotStatus
 } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 
@@ -15,16 +13,6 @@ const A2_IMERGIDOS_LOGO_URL =
 const A2_IMERGIDOS_CONECTADOS_BANNER_URL =
   process.env.SEED_A2_CONECTADOS_BANNER_URL ||
   "https://xbvrlheevlchxdkrsbnq.supabase.co/storage/v1/object/public/event-media/brands/a2-imergidos-conectados-banner.png";
-
-async function upsertPlan(plan) {
-  await prisma.subscriptionPlan.upsert({
-    where: {
-      code: plan.code
-    },
-    update: plan,
-    create: plan
-  });
-}
 
 async function ensureOrganization(input) {
   return prisma.organization.upsert({
@@ -243,80 +231,6 @@ async function ensureA2ImergidosConectadosEvent(organizationId, createdById) {
   return event;
 }
 
-async function upsertDefaultProtectionPolicy() {
-  const policy = await prisma.protectionPolicy.upsert({
-    where: {
-      slug: "default"
-    },
-    update: {
-      name: "Politica padrao Guerra a Pornografia",
-      description: "Politica inicial do MVP com foco em pornografia e defesa anti-bypass.",
-      isActive: true
-    },
-    create: {
-      slug: "default",
-      name: "Politica padrao Guerra a Pornografia",
-      description: "Politica inicial do MVP com foco em pornografia e defesa anti-bypass.",
-      isActive: true
-    }
-  });
-
-  const source = await prisma.blocklistSource.upsert({
-    where: {
-      policyId_code: {
-        policyId: policy.id,
-        code: "core-pornography"
-      }
-    },
-    update: {
-      name: "Core pornography blocklist",
-      description: "Lista inicial para o MVP.",
-      isEnabled: true,
-      priority: 10
-    },
-    create: {
-      policyId: policy.id,
-      code: "core-pornography",
-      name: "Core pornography blocklist",
-      description: "Lista inicial para o MVP.",
-      isEnabled: true,
-      priority: 10
-    }
-  });
-
-  const entries = [
-    ["porn", "URL_KEYWORD"],
-    ["xxx", "URL_KEYWORD"],
-    ["sex", "URL_KEYWORD"],
-    ["pornhub.com", "DOMAIN"],
-    ["xvideos.com", "DOMAIN"],
-    ["redtube.com", "DOMAIN"],
-    ["xnxx.com", "DOMAIN"],
-    ["onlyfans.com", "DOMAIN"]
-  ];
-
-  for (const [value, type] of entries) {
-    await prisma.blocklistEntry.upsert({
-      where: {
-        sourceId_value_type: {
-          sourceId: source.id,
-          value,
-          type
-        }
-      },
-      update: {
-        isActive: true
-      },
-      create: {
-        sourceId: source.id,
-        value,
-        type,
-        isActive: true
-      }
-    });
-  }
-}
-
 async function main() {
   const tcrAdminEmail = process.env.SEED_ADMIN_EMAIL || "admin@tcringressos.com.br";
   const tcrAdminPassword = process.env.SEED_ADMIN_PASSWORD || "troque-esta-senha";
@@ -363,99 +277,6 @@ async function main() {
     secondaryColor: "#ffffff",
     supportEmail: "contato@a2imergidos.com.br"
   });
-
-  const shieldGuardAdminEmail = process.env.SEED_SHIELDGUARD_ADMIN_EMAIL || "admin@guerraapornografia.com.br";
-  const shieldGuard = await ensureOrganization({
-    slug: "shieldguard",
-    name: "ShieldGuard",
-    supportEmail: shieldGuardAdminEmail
-  });
-
-  await ensureCompanySettings({
-    organizationId: shieldGuard.id,
-    companyName: "Guerra a Pornografia Tecnologia Ltda",
-    tradeName: "Guerra a Pornografia",
-    document: "00.000.000/0001-00",
-    supportEmail: shieldGuardAdminEmail,
-    platformFeeBps: 1000
-  });
-
-  const planSeeds = [
-    {
-      code: "monthly",
-      name: "Plano mensal",
-      description: "Ideal para uso individual com renovacao a cada mes.",
-      status: PlanStatus.ACTIVE,
-      interval: SubscriptionInterval.MONTHLY,
-      durationDays: 30,
-      priceInCents: 2990,
-      trialDays: 7,
-      gracePeriodDays: 2,
-      maxDevices: 2,
-      sortOrder: 10
-    },
-    {
-      code: "quarterly",
-      name: "Plano trimestral",
-      description: "Reduz churn com ciclo de 90 dias e ate 2 dispositivos.",
-      status: PlanStatus.ACTIVE,
-      interval: SubscriptionInterval.QUARTERLY,
-      durationDays: 90,
-      priceInCents: 7990,
-      trialDays: 7,
-      gracePeriodDays: 2,
-      maxDevices: 2,
-      sortOrder: 20
-    },
-    {
-      code: "semiannual",
-      name: "Plano semestral",
-      description: "Maior compromisso com mais estabilidade de receita.",
-      status: PlanStatus.ACTIVE,
-      interval: SubscriptionInterval.SEMIANNUAL,
-      durationDays: 180,
-      priceInCents: 14990,
-      trialDays: 7,
-      gracePeriodDays: 3,
-      maxDevices: 3,
-      sortOrder: 30
-    },
-    {
-      code: "annual",
-      name: "Plano anual",
-      description: "Melhor custo-beneficio para uso continuo.",
-      status: PlanStatus.ACTIVE,
-      interval: SubscriptionInterval.YEARLY,
-      durationDays: 365,
-      priceInCents: 26990,
-      trialDays: 7,
-      gracePeriodDays: 3,
-      maxDevices: 3,
-      sortOrder: 40
-    },
-    {
-      code: "family",
-      name: "Plano familia",
-      description: "Gerenciamento compartilhado para mais dispositivos e responsabilidade.",
-      status: PlanStatus.ACTIVE,
-      interval: SubscriptionInterval.FAMILY,
-      durationDays: 365,
-      priceInCents: 39990,
-      trialDays: 7,
-      gracePeriodDays: 3,
-      maxDevices: 5,
-      allowsAccountability: true,
-      allowsEmergencyMode: true,
-      allowsRecoveryTools: true,
-      sortOrder: 50
-    }
-  ];
-
-  for (const plan of planSeeds) {
-    await upsertPlan(plan);
-  }
-
-  await upsertDefaultProtectionPolicy();
 
   console.log("Seed multi-tenant concluido sem remover eventos operacionais.");
 }
