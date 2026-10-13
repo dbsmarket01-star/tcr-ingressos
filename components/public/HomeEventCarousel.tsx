@@ -40,18 +40,20 @@ function ArrowIcon() {
   );
 }
 
-function formatEventDate(value: Date | string) {
+export function formatEventDate(value: Date | string) {
   const date = value instanceof Date ? value : new Date(value);
-  const day = new Intl.DateTimeFormat("pt-BR", { day: "2-digit" }).format(date);
-  const month = new Intl.DateTimeFormat("pt-BR", { month: "short" })
+  // Server and browser must render the same event-local date during hydration.
+  const timeZone = "America/Sao_Paulo";
+  const day = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", timeZone }).format(date);
+  const month = new Intl.DateTimeFormat("pt-BR", { month: "short", timeZone })
     .format(date)
     .replace(".", "")
     .toUpperCase();
-  const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "short" })
+  const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "short", timeZone })
     .format(date)
     .replace(".", "")
     .toUpperCase();
-  const hour = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", hour12: false }).format(date);
+  const hour = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", hour12: false, timeZone }).format(date);
 
   return `${day} ${month} • ${weekday} ${hour}H`;
 }
