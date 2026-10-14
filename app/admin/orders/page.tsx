@@ -611,7 +611,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               </Link>
               <label className="field">
                 <span>Tipo de relatório</span>
-                <select name="report" defaultValue="sectors">
+                <select name="report" defaultValue="summary">
                   <option value="sectors">Ingressos por evento e setor</option>
                   <option value="summary">Resumo financeiro por evento</option>
                 </select>
