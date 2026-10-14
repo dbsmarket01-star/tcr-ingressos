@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-const db = vi.hoisted(() => ({ event: { findMany: vi.fn(), findFirst: vi.fn() }, ticket: { groupBy: vi.fn() }, seat: { findMany: vi.fn() } }));
+const db = vi.hoisted(() => ({ event: { findMany: vi.fn(), findFirst: vi.fn() }, orderItem: { findMany: vi.fn().mockResolvedValue([]) }, ticket: { groupBy: vi.fn() }, seat: { findMany: vi.fn() } }));
 vi.mock("@/lib/prisma", () => ({ prisma: db }));
 vi.mock("@/features/orders/order.service", () => ({ expirePendingOrders: vi.fn() }));
 import { getOrdersSectorReport } from "@/features/reports/orders-sector-report.service";
@@ -23,7 +23,7 @@ describe("orders sector report", () => {
     const r = await getOrdersSectorReport({ lotId: "selected", status: "PAID" }, "org", ["a", "b"]);
     expect(r.total).toBe(19);
     expect(r.groups.map(g => g.total)).toEqual([16, 3]);
-    expect(r.groups[0].rows).toEqual([{ name: "CAMAROTE 07", quantity: 10 }, { name: "OURO", quantity: 6 }]);
+    expect(r.groups[0].rows.map(({ revenueInCents, ...row }) => row)).toEqual([{ name: "CAMAROTE 07", quantity: 10 }, { name: "OURO", quantity: 6 }]);
     expect(db.ticket.groupBy.mock.calls[0][0].where).toMatchObject({ lotId: "selected", status: { in: ["ACTIVE", "USED"] }, order: { status: "PAID", AND: [{ status: "PAID" }] } });
   });
   it("does not substitute paid sales for an explicit canceled filter or bypass an empty event scope", async () => {

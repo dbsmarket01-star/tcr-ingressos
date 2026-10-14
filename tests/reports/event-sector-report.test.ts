@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { consolidateSectors, sectorFromLotName } from "@/features/reports/event-sector-report";
+import { allocateSectorRevenue, consolidateSectors, sectorFromLotName } from "@/features/reports/event-sector-report";
 import { buildEventSectorPdf } from "@/features/reports/event-sector-report-pdf";
-const db = vi.hoisted(() => ({ event: { findFirst: vi.fn() }, ticket: { groupBy: vi.fn() }, seat: { findMany: vi.fn() } }));
+const db = vi.hoisted(() => ({ event: { findFirst: vi.fn() }, orderItem: { findMany: vi.fn().mockResolvedValue([]) }, ticket: { groupBy: vi.fn() }, seat: { findMany: vi.fn() } }));
 vi.mock("@/lib/prisma", () => ({ prisma: db }));
 import { getEventSectorReport } from "@/features/reports/event-sector-report.service";
 
@@ -31,7 +31,7 @@ describe("event sector report", () => {
     db.seat.findMany.mockResolvedValue([{ id: "seat", section: { name: "Balcão" } }]);
     const r = await getEventSectorReport("org", "event", ["event"]);
     expect(r?.total).toBe(5);
-    expect(r?.rows).toEqual([{ name: "BALCÃO", quantity: 1 }, { name: "OURO", quantity: 4 }]);
+    expect(r?.rows.map(({ revenueInCents, ...row }) => row)).toEqual([{ name: "BALCÃO", quantity: 1 }, { name: "OURO", quantity: 4 }]);
     expect(db.event.findFirst.mock.calls.at(-1)?.[0].where).toEqual({ id: "event", organizationId: "org" });
     expect(db.ticket.groupBy.mock.calls.at(-1)?.[0].where).toMatchObject({ eventId: "event", status: { in: ["ACTIVE", "USED"] }, order: { status: "PAID" } });
   });
@@ -46,9 +46,23 @@ describe("event sector report", () => {
       { lotId: "shared", seatId: null, lotOptionId: null, _count: { _all: 9 } }
     ]);
     const report = await getEventSectorReport("org", "event");
-    expect(report?.rows).toEqual([{ name: "CAMAROTE 07", quantity: 10 }, { name: "CAMAROTE 08", quantity: 10 }, { name: "CAMAROTE 18", quantity: 9 }]);
+    expect(report?.rows.map(({ revenueInCents, ...row }) => row)).toEqual([{ name: "CAMAROTE 07", quantity: 10 }, { name: "CAMAROTE 08", quantity: 10 }, { name: "CAMAROTE 18", quantity: 9 }]);
     expect(report?.total).toBe(29);
     expect(db.ticket.groupBy.mock.calls.at(-1)?.[0].by).toContain("lotOptionId");
+  });
+  it("allocates package revenue once and preserves cents across sectors", async () => {
+    expect(allocateSectorRevenue(10000, [1, 1, 1])).toEqual([3333, 3334, 3333]);
+    expect(allocateSectorRevenue(0, [10])).toEqual([0]);
+    db.event.findFirst.mockResolvedValue({ id: "event", title: "Evento", lots: [{ id: "box", name: "CAMAROTE PARA 10 PESSOAS", typeOptions: [{ id: "7", label: "07" }, { id: "8", label: "08" }], seatSections: [] }] });
+    db.ticket.groupBy.mockResolvedValue([{ orderItemId: "item", lotId: "box", lotOptionId: "7", _count: { _all: 10 } }, { orderItemId: "item", lotId: "box", lotOptionId: "8", _count: { _all: 10 } }]);
+    db.orderItem.findMany.mockResolvedValueOnce([{ id: "item", totalInCents: 200000, order: { totalInCents: 240000, refundedInCents: 24000 } }]);
+    const result = await getEventSectorReport("org", "event");
+    expect(result?.total).toBe(20);
+    expect(result?.revenueInCents).toBe(180000);
+    expect(result?.rows.map(row => row.revenueInCents)).toEqual([90000, 90000]);
+    const pdf = buildEventSectorPdf(result!).toString("latin1");
+    expect(pdf).toContain("R$ 1.800,00");
+    expect(pdf).toContain("R$ 900,00");
   });
   it("paginates without losing sector rows or duplicating the overall total", () => {
     const rows = Array.from({ length: 90 }, (_, i) => ({ name: `SETOR ${i}`, quantity: i }));

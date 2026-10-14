@@ -7,7 +7,8 @@ function escaped(value: string) {
 function text(value: string, x: number, y: number, size = 11, bold = false) {
   return `BT /${bold ? "B" : "R"} ${size} Tf ${x} ${y} Td (${escaped(value)}) Tj ET`;
 }
-export function buildEventSectorPdf(report: { event: { title: string }; rows: SectorTotal[]; total: number; groups?: Array<{ title: string; rows: SectorTotal[]; total: number }>; filters?: string[] }, issuedAt = new Date()) {
+export function buildEventSectorPdf(report: { event: { title: string }; rows: SectorTotal[]; total: number; revenueInCents?: number; groups?: Array<{ title: string; rows: SectorTotal[]; total: number; revenueInCents?: number }>; filters?: string[] }, issuedAt = new Date()) {
+  const money = (value = 0) => `R$ ${(value / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const pages: string[] = [];
   let commands: string[] = [];
   let y = 0;
@@ -40,33 +41,40 @@ export function buildEventSectorPdf(report: { event: { title: string }; rows: Se
     y -= height;
     rect(36, y - 22, 523, 22, "0.90 0.94 0.92");
     label("SETOR", 48, y - 15, 8, true, muted);
-    label("INGRESSOS", 483, y - 15, 8, true, muted);
+    label("INGRESSOS", 359, y - 15, 8, true, muted);
+    label("VALOR EM INGRESSOS", 443, y - 15, 8, true, muted);
     y -= 22;
   };
   newPage();
-  const groups = report.groups ?? [{ title: report.event.title, rows: report.rows, total: report.total }];
+  const groups = report.groups ?? [{ title: report.event.title, rows: report.rows, total: report.total, revenueInCents: report.revenueInCents }];
   for (const group of groups) {
     if (y - wrap(group.title, 65).length * 17 < 160) newPage();
     groupHeading(group.title);
     group.rows.forEach((row, index) => {
-      const lines = wrap(row.name, 64);
+      const lines = wrap(row.name, 46);
       const height = Math.max(26, lines.length * 13 + 12);
       if (y - height < 115) { newPage(); groupHeading(`${group.title} (continuação)`); }
       rect(36, y - height, 523, height, index % 2 ? "0.95 0.97 0.96" : "0.99 0.99 0.99");
       lines.forEach((line, i) => label(line, 48, y - 17 - i * 13, 9));
       const qty = row.quantity.toLocaleString("pt-BR");
-      label(qty, 545 - qty.length * 6.1, y - 18, 11, true);
+      label(qty, 413 - qty.length * 6.1, y - 18, 11, true);
+      const amount = money(row.revenueInCents);
+      label(amount, 545 - amount.length * 5.5, y - 18, 10, true);
       y -= height;
     });
     if (y < 110) { newPage(); groupHeading(`${group.title} (continuação)`); }
     rect(36, y - 29, 523, 29, "0.85 0.92 0.88");
     label(`TOTAL DO EVENTO: ${group.total.toLocaleString("pt-BR")} INGRESSOS`, 48, y - 19, 10, true, green);
+    const subtotal = money(group.revenueInCents);
+    label(subtotal, 545 - subtotal.length * 5.5, y - 19, 10, true, green);
     y -= 45;
   }
   if (!groups.length) { label("Nenhum ingresso vendido válido nos filtros selecionados.", 36, y, 10); y -= 28; }
   if (y < 125) newPage();
   rect(36, y - 38, 523, 38, "0.12 0.16 0.20");
-  label(`TOTAL GERAL: ${report.total.toLocaleString("pt-BR")} INGRESSOS`, 48, y - 25, 14, true, "1 1 1");
+  label(`TOTAL GERAL: ${report.total.toLocaleString("pt-BR")} INGRESSOS`, 48, y - 25, 11, true, "1 1 1");
+  const grandTotal = money(report.revenueInCents);
+  label(grandTotal, 545 - grandTotal.length * 6.7, y - 25, 12, true, "1 1 1");
   pages.push(commands.join("\n"));
   const objects = ["<< /Type /Catalog /Pages 2 0 R >>", "", "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>", "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"];
   const pageIds: number[] = [];

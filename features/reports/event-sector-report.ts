@@ -9,7 +9,7 @@ export function sectorFromLotName(name: string) {
   return sector || "SEM SETOR IDENTIFICADO";
 }
 
-export type SectorTotal = { name: string; quantity: number };
+export type SectorTotal = { name: string; quantity: number; revenueInCents?: number };
 export function consolidateSectors(entries: SectorTotal[]) {
   const sectors = new Map<string, SectorTotal>();
   for (const entry of entries) {
@@ -21,4 +21,19 @@ export function consolidateSectors(entries: SectorTotal[]) {
   }
   const rows = [...sectors.values()].sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { numeric: true }));
   return { rows, total: rows.reduce((sum, row) => sum + row.quantity, 0) };
+}
+
+/** Distribute an item's historical ticket-only amount once across its issued admissions.
+ * Cumulative rounding preserves every cent, including packages split across sectors. */
+export function allocateSectorRevenue(amountInCents: number, quantities: number[]) {
+  const total = quantities.reduce((sum, quantity) => sum + quantity, 0);
+  let cumulative = 0;
+  let allocated = 0;
+  return quantities.map(quantity => {
+    cumulative += quantity;
+    const next = total ? Math.round(amountInCents * cumulative / total) : 0;
+    const amount = next - allocated;
+    allocated = next;
+    return amount;
+  });
 }

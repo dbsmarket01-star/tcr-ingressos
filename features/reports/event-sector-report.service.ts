@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { consolidateSectors, sectorFromLotName } from "./event-sector-report";
+import { allocateSectorRevenue, consolidateSectors, sectorFromLotName } from "./event-sector-report";
 
 export async function getEventSectorReport(organizationId: string, eventId: string, allowedEventIds?: string[] | null, filter?: { orderWhere: Prisma.OrderWhereInput; lotId?: string }) {
   if (allowedEventIds && !allowedEventIds.includes(eventId)) return null;
@@ -13,12 +13,25 @@ export async function getEventSectorReport(organizationId: string, eventId: stri
   if (!event) return null;
   // Each issued QR code is one admission, including doubles, tables and complimentary tickets.
   const counts = await prisma.ticket.groupBy({
-    by: ["lotId", "seatId", "lotOptionId"],
+    by: ["lotId", "seatId", "lotOptionId", "orderItemId"],
     where: { eventId, ...(filter?.lotId ? { lotId: filter.lotId } : {}), status: { in: ["ACTIVE", "USED"] }, order: {
       ...(filter ? { AND: [filter.orderWhere] } : {}), status: "PAID", OR: [{ payment: null }, { payment: { status: { not: "REFUNDED" } } }]
     } },
     _count: { _all: true }
   });
+  const items = await prisma.orderItem.findMany({
+    where: { id: { in: [...new Set(counts.map(row => row.orderItemId))] }, order: { eventId, event: { organizationId } } },
+    select: { id: true, totalInCents: true, order: { select: { totalInCents: true, refundedInCents: true } } }
+  });
+  const revenues = new Map<typeof counts[number], number>();
+  for (const item of items) {
+    const itemRows = counts.filter(row => row.orderItemId === item.id);
+    const remaining = item.order.totalInCents > 0
+      ? Math.max(0, 1 - Math.max(0, item.order.refundedInCents) / item.order.totalInCents) : 1;
+    const allocations = allocateSectorRevenue(Math.round(item.totalInCents * remaining), itemRows.map(row => row._count._all));
+    itemRows.forEach((row, index) => revenues.set(row, allocations[index]));
+  }
+  const revenueEntries: Array<{ name: string; amount: number }> = [];
   const seatIds = counts.flatMap(row => row.seatId ? [row.seatId] : []);
   const seats = seatIds.length ? await prisma.seat.findMany({
     where: { id: { in: seatIds }, eventId }, select: { id: true, section: { select: { name: true } } }
@@ -45,6 +58,10 @@ export async function getEventSectorReport(organizationId: string, eventId: stri
       : (row.seatId && seatNames.get(row.seatId))
         || (lot ? (privateBox && lot.typeOptions.length ? `${lotSector(lot)} - SEM NUMERAÇÃO IDENTIFICADA` : lotSector(lot)) : "SEM SETOR IDENTIFICADO");
     entries.push({ name, quantity: row._count._all });
+    revenueEntries.push({ name, amount: revenues.get(row) ?? 0 });
   }
-  return { event, ...consolidateSectors(entries) };
+  const result = consolidateSectors(entries);
+  const revenueRows = consolidateSectors(revenueEntries.map(entry => ({ name: entry.name, quantity: entry.amount }))).rows;
+  const rows = result.rows.map(row => ({ ...row, revenueInCents: revenueRows.find(value => value.name === row.name)?.quantity ?? 0 }));
+  return { event, ...result, rows, revenueInCents: rows.reduce((sum, row) => sum + row.revenueInCents, 0) };
 }
