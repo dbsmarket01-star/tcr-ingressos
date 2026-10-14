@@ -1,3 +1,5 @@
+import { getOrdersSectorReport } from "@/features/reports/orders-sector-report.service";
+import { buildEventSectorPdf } from "@/features/reports/event-sector-report-pdf";
 import { NextResponse } from "next/server";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { listOrdersForCsvExport, type AdminOrderFilters } from "@/features/orders/order.admin.service";
@@ -425,6 +427,7 @@ function buildOrdersPdf(orders: OrderExportRow[], filtersLabel: string, filters:
 function getFiltersFromUrl(url: URL): AdminOrderFilters {
   return {
     eventId: url.searchParams.get("eventId") || undefined,
+    lotId: url.searchParams.get("lotId") || undefined,
     status: url.searchParams.get("status") || undefined,
     search: url.searchParams.get("search") || undefined,
     startDate: url.searchParams.get("startDate") || undefined,
@@ -438,6 +441,23 @@ export async function GET(request: Request) {
   const admin = await requirePermission("ORDERS");
   const url = new URL(request.url);
   const filters = getFiltersFromUrl(url);
+  if (url.searchParams.get("report") === "sectors") {
+    const report = await getOrdersSectorReport(filters, admin.organizationId, getAdminAllowedEventIds(admin));
+    const pdf = buildEventSectorPdf({
+      event: { title: "Vendas por evento e setor no período" }, rows: [], ...report,
+      filters: [
+        `Período: ${filters.startDate || "início"} a ${filters.endDate || "hoje"} (Brasília).`,
+        `Status: ${orderStatusLabels[filters.status || ""] || "Todos"}. Apenas pedidos pagos contam como vendas.`,
+        ...(filters.lotId ? ["Filtro de ingresso/lote aplicado: somente ingressos desse lote."] : []),
+        ...(filters.city || filters.state ? [`Local: ${filters.city || "todas as cidades"} / ${filters.state || "todos os estados"}`] : []),
+        ...(filters.search ? [`Busca: ${filters.search.slice(0, 120)}`] : [])
+      ]
+    });
+    return new NextResponse(pdf, { headers: {
+      "Content-Type": "application/pdf", "Cache-Control": "private, no-store",
+      "Content-Disposition": `attachment; filename="ingressos-por-evento-setor-${new Date().toISOString().slice(0, 10)}.pdf"`
+    } });
+  }
   const orders = await listOrdersForCsvExport(filters, admin.organizationId, getAdminAllowedEventIds(admin));
   const reportOrders = filters.status === "PENDING_PAYMENT"
     ? orders.filter((order) => order.status === "PENDING_PAYMENT")

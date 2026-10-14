@@ -5,6 +5,7 @@ import { allocateOrderAmountsAfterRefund } from "@/features/finance/order-refund
 
 export type AdminOrderFilters = {
   eventId?: string;
+  lotId?: string;
   status?: string;
   search?: string;
   startDate?: string;
@@ -148,6 +149,7 @@ function buildOrderWhere(
   return {
     event: eventWhere,
     ...(filters.eventId ? { eventId: filters.eventId } : {}),
+    ...(filters.lotId ? { items: { some: { lotId: filters.lotId } } } : {}),
     ...(status ? { status } : {}),
     ...((startDate || endDate) && search ? { AND: [dateWhere, searchWhere] } : {}),
     ...((startDate || endDate) && !search ? dateWhere : {}),
@@ -168,7 +170,7 @@ function mergeOrderIdExclusion(where: Prisma.OrderWhereInput, excludedIds: strin
   };
 }
 
-async function buildReportOrderWhere(
+export async function buildReportOrderWhere(
   filters: AdminOrderFilters,
   organizationId: string,
   allowedEventIds?: EventScope
@@ -396,4 +398,13 @@ export async function listOrdersForCsvExport(
   });
 
   return sortOrdersByReferenceDateDesc(orders);
+}
+
+export async function listOrderFilterLots(filters: AdminOrderFilters, organizationId: string, allowedEventIds?: EventScope) {
+  const where = await buildReportOrderWhere({ ...filters, lotId: undefined }, organizationId, allowedEventIds);
+  return prisma.ticketLot.findMany({
+    where: { event: buildOrderEventWhere(organizationId, allowedEventIds), orderItems: { some: { order: where } } },
+    select: { id: true, name: true, event: { select: { title: true } } },
+    orderBy: [{ event: { title: "asc" } }, { sortOrder: "asc" }]
+  });
 }

@@ -7,7 +7,7 @@ function escaped(value: string) {
 function text(value: string, x: number, y: number, size = 11, bold = false) {
   return `BT /${bold ? "B" : "R"} ${size} Tf ${x} ${y} Td (${escaped(value)}) Tj ET`;
 }
-export function buildEventSectorPdf(report: { event: { title: string }; rows: SectorTotal[]; total: number }, issuedAt = new Date()) {
+export function buildEventSectorPdf(report: { event: { title: string }; rows: SectorTotal[]; total: number; groups?: Array<{ title: string; rows: SectorTotal[]; total: number }>; filters?: string[] }, issuedAt = new Date()) {
   const pages: string[] = [];
   let commands: string[] = [];
   let y = 0;
@@ -22,14 +22,35 @@ export function buildEventSectorPdf(report: { event: { title: string }; rows: Se
     commands.push(text("Ingressos válidos de pedidos pagos, incluindo cortesias e utilizados.", 42, y - 26, 9));
     commands.push(text("Categorias agrupadas. Reservas e ingressos cancelados não entram.", 42, y - 40, 9));
     y -= 75;
+    for (const filter of report.filters ?? []) {
+      for (const line of wrap(filter, 95)) { commands.push(text(line, 42, y, 9)); y -= 13; }
+    }
+    if (report.filters?.length) y -= 10;
   };
   newPage();
-  for (const row of report.rows) {
+  const groupHeading = (title: string) => {
+    for (const line of wrap(title, 62)) { commands.push(text(line, 42, y, 12, true)); y -= 17; }
+    y -= 8;
+  };
+  const drawRows = (rows: SectorTotal[], groupTitle?: string) => { for (const row of rows) {
     const lines = wrap(`${row.name} — TOTAL: ${row.quantity.toLocaleString("pt-BR")} INGRESSOS`, 65);
-    if (y - lines.length * 17 < 65) newPage();
+    if (y - lines.length * 17 < 65) { newPage(); if (groupTitle) groupHeading(`${groupTitle} (continuação)`); }
     for (const line of lines) { commands.push(text(line, 42, y, 11, true)); y -= 17; }
     y -= 12;
   }
+  };
+  if (report.groups) {
+    for (const group of report.groups) {
+      const titleLines = wrap(group.title, 62);
+      if (y - titleLines.length * 17 < 130) newPage();
+      groupHeading(group.title);
+      drawRows(group.rows, group.title);
+      if (y < 90) { newPage(); groupHeading(`${group.title} (continuação)`); }
+      commands.push(text(`TOTAL DO EVENTO: ${group.total.toLocaleString("pt-BR")} INGRESSOS`, 42, y, 11, true));
+      y -= 35;
+    }
+    if (!report.groups.length) { commands.push(text("Nenhum ingresso vendido válido nos filtros selecionados.", 42, y, 11)); y -= 25; }
+  } else drawRows(report.rows);
   if (y < 95) newPage();
   commands.push(text(`TOTAL GERAL: ${report.total.toLocaleString("pt-BR")} INGRESSOS`, 42, y - 10, 14, true));
   pages.push(commands.join("\n"));

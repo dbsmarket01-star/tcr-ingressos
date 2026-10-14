@@ -3,6 +3,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import {
   getOrdersSummary,
+  listOrderFilterLots,
   listAdminOrders,
   listOrderFilterEventsForOrganization
 } from "@/features/orders/order.admin.service";
@@ -40,6 +41,7 @@ const paymentStatusLabels: Record<string, string> = {
 
 type OrderSearchParams = {
   eventId?: string;
+  lotId?: string;
   status?: string;
   search?: string;
   startDate?: string;
@@ -413,10 +415,11 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const ticketsOnly = admin.role === "SALES_VIEWER";
   const allowedEventIds = getAdminAllowedEventIds(admin);
   const dateRangePresets = getDateRangePresets();
-  const [{ orders, totalCount }, events, summary] = await Promise.all([
+  const [{ orders, totalCount }, events, summary, lots] = await Promise.all([
     listAdminOrders(params, admin.organizationId, allowedEventIds),
     listOrderFilterEventsForOrganization(admin.organizationId, allowedEventIds),
-    getOrdersSummary(params, admin.organizationId, allowedEventIds)
+    getOrdersSummary(params, admin.organizationId, allowedEventIds),
+    listOrderFilterLots(params, admin.organizationId, allowedEventIds)
   ]);
 
   const cityOptions = Array.from(new Set(events.map((event) => event.city).filter(Boolean))).sort((left, right) =>
@@ -563,6 +566,15 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 </select>
               </label>
               <label className="field">
+                <span>Ingresso / lote no período</span>
+                <select name="lotId" defaultValue={params.lotId || ""}>
+                  <option value="">Todos os ingressos / lotes</option>
+                  {lots.map(lot => <option key={lot.id} value={lot.id}>{lot.event.title} — {lot.name}</option>)}
+                  {params.lotId && !lots.some(lot => lot.id === params.lotId) ? <option value={params.lotId}>Lote selecionado (sem pedidos neste filtro)</option> : null}
+                </select>
+                <small>Opções do período aplicado. A lista mostra pedidos que contêm o lote.</small>
+              </label>
+              <label className="field">
                 <span>Cidade (opcional)</span>
                 <select name="city" defaultValue={params.city || ""}>
                   <option value="">Todas as cidades</option>
@@ -609,10 +621,18 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               <Link className="ordersSecondaryButton" href="/admin/orders">
                 Limpar filtros
               </Link>
+              <label className="field">
+                <span>Tipo de relatório</span>
+                <select name="report" defaultValue="sectors">
+                  <option value="sectors">Ingressos por evento e setor</option>
+                  <option value="summary">Resumo financeiro por evento</option>
+                </select>
+              </label>
               <button className="ordersSecondaryButton ordersExportButton" type="submit" formAction="/admin/orders/export">
                 Exportar PDF
               </button>
             </div>
+            <p className="muted">O relatório por setor conta ingressos válidos de pedidos pagos, pela data do pagamento. Categorias são somadas; camarotes fechados são separados por número. Outros status não entram como vendas.</p>
           </form>
         </section>
 

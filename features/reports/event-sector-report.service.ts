@@ -1,7 +1,8 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { consolidateSectors, sectorFromLotName } from "./event-sector-report";
 
-export async function getEventSectorReport(organizationId: string, eventId: string, allowedEventIds?: string[] | null) {
+export async function getEventSectorReport(organizationId: string, eventId: string, allowedEventIds?: string[] | null, filter?: { orderWhere: Prisma.OrderWhereInput; lotId?: string }) {
   if (allowedEventIds && !allowedEventIds.includes(eventId)) return null;
   const event = await prisma.event.findFirst({
     where: { id: eventId, organizationId },
@@ -13,8 +14,8 @@ export async function getEventSectorReport(organizationId: string, eventId: stri
   // Each issued QR code is one admission, including doubles, tables and complimentary tickets.
   const counts = await prisma.ticket.groupBy({
     by: ["lotId", "seatId", "lotOptionId"],
-    where: { eventId, status: { in: ["ACTIVE", "USED"] }, order: {
-      status: "PAID", OR: [{ payment: null }, { payment: { status: { not: "REFUNDED" } } }]
+    where: { eventId, ...(filter?.lotId ? { lotId: filter.lotId } : {}), status: { in: ["ACTIVE", "USED"] }, order: {
+      ...(filter ? { AND: [filter.orderWhere] } : {}), status: "PAID", OR: [{ payment: null }, { payment: { status: { not: "REFUNDED" } } }]
     } },
     _count: { _all: true }
   });
@@ -29,7 +30,7 @@ export async function getEventSectorReport(organizationId: string, eventId: stri
   const isPrivateBox = (lot: typeof event.lots[number]) => /\bcamarote\b/i.test(lot.name)
     && !/compartilhado/i.test(lot.name);
   const boxName = (label: string) => /\bcamarote\b/i.test(label) ? label : `CAMAROTE ${label}`;
-  const entries = event.lots.flatMap(lot => {
+  const entries = (filter ? [] : event.lots).flatMap(lot => {
     const names = isPrivateBox(lot) && lot.typeOptions.length
       ? lot.typeOptions.map(option => boxName(option.label))
       : lot.seatSections.length ? lot.seatSections.map(section => section.name) : [lotSector(lot)];
