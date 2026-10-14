@@ -3,7 +3,6 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import {
   getOrdersSummary,
-  listOrderFilterLots,
   listAdminOrders,
   listOrderFilterEventsForOrganization
 } from "@/features/orders/order.admin.service";
@@ -41,7 +40,6 @@ const paymentStatusLabels: Record<string, string> = {
 
 type OrderSearchParams = {
   eventId?: string;
-  lotId?: string;
   status?: string;
   search?: string;
   startDate?: string;
@@ -411,15 +409,14 @@ function paymentMethodLabel(payment?: {
 
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const admin = await requirePermission("ORDERS");
-  const params = searchParams ? await searchParams : {};
+  const params = { ...(searchParams ? await searchParams : {}), lotId: undefined };
   const ticketsOnly = admin.role === "SALES_VIEWER";
   const allowedEventIds = getAdminAllowedEventIds(admin);
   const dateRangePresets = getDateRangePresets();
-  const [{ orders, totalCount }, events, summary, lots] = await Promise.all([
+  const [{ orders, totalCount }, events, summary] = await Promise.all([
     listAdminOrders(params, admin.organizationId, allowedEventIds),
     listOrderFilterEventsForOrganization(admin.organizationId, allowedEventIds),
-    getOrdersSummary(params, admin.organizationId, allowedEventIds),
-    listOrderFilterLots(params, admin.organizationId, allowedEventIds)
+    getOrdersSummary(params, admin.organizationId, allowedEventIds)
   ]);
 
   const cityOptions = Array.from(new Set(events.map((event) => event.city).filter(Boolean))).sort((left, right) =>
@@ -564,15 +561,6 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                     </option>
                   ))}
                 </select>
-              </label>
-              <label className="field">
-                <span>Ingresso / lote no período</span>
-                <select name="lotId" defaultValue={params.lotId || ""}>
-                  <option value="">Todos os ingressos / lotes</option>
-                  {lots.map(lot => <option key={lot.id} value={lot.id}>{lot.event.title} — {lot.name}</option>)}
-                  {params.lotId && !lots.some(lot => lot.id === params.lotId) ? <option value={params.lotId}>Lote selecionado (sem pedidos neste filtro)</option> : null}
-                </select>
-                <small>Opções do período aplicado. A lista mostra pedidos que contêm o lote.</small>
               </label>
               <label className="field">
                 <span>Cidade (opcional)</span>

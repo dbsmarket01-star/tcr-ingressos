@@ -55,7 +55,7 @@ describe("event sector report", () => {
     const pdf = buildEventSectorPdf({ event: { title: "Evento São André" }, rows, total: 4005 }).toString("latin1");
     expect(pdf).toContain("/Count 5");
     expect(pdf.match(/TOTAL GERAL/g)).toHaveLength(1);
-    expect(pdf.match(/TOTAL:/g)).toHaveLength(90);
+    for (const row of rows) expect(pdf.split(`(${row.name}) Tj`).length - 1).toBe(1);
     expect(pdf).toContain("4.005 INGRESSOS");
   });
 });
