@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OrdersDatePreset } from "@/components/admin/OrdersDatePreset";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import {
@@ -39,6 +40,7 @@ const paymentStatusLabels: Record<string, string> = {
 };
 
 type OrderSearchParams = {
+  report?: string;
   eventId?: string;
   status?: string;
   search?: string;
@@ -118,21 +120,6 @@ function getDateRangePresets(): DateRangePreset[] {
       endDate: formatDateInput(previousMonthYear, previousMonth, previousMonthLastDay)
     }
   ];
-}
-
-function buildOrdersPresetHref(params: OrderSearchParams, preset: DateRangePreset) {
-  const nextParams = new URLSearchParams();
-
-  Object.entries(params).forEach(([key, value]) => {
-    if (value && key !== "startDate" && key !== "endDate") {
-      nextParams.set(key, value);
-    }
-  });
-
-  nextParams.set("startDate", preset.startDate);
-  nextParams.set("endDate", preset.endDate);
-
-  return `/admin/orders?${nextParams.toString()}`;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -526,7 +513,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
             <span aria-hidden="true">⌁</span>
             <h2>Filtros</h2>
           </div>
-          <form className="ordersFilterForm">
+          <form className="ordersFilterForm" action="/admin/orders" method="get">
             <div className="ordersFilterGrid">
               <label className="field ordersPeriodField">
                 <span>Período</span>
@@ -539,14 +526,15 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                     const isActive = params.startDate === preset.startDate && params.endDate === preset.endDate;
 
                     return (
-                      <Link
+                      <OrdersDatePreset
                         aria-current={isActive ? "page" : undefined}
                         className={`ordersQuickDateButton ${isActive ? "isActive" : ""}`}
-                        href={buildOrdersPresetHref(params, preset)}
+                        startDate={preset.startDate}
+                        endDate={preset.endDate}
                         key={preset.label}
                       >
                         {preset.label}
-                      </Link>
+                      </OrdersDatePreset>
                     );
                   })}
                 </div>
@@ -611,7 +599,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               </Link>
               <label className="field">
                 <span>Tipo de relatório</span>
-                <select name="report" defaultValue="summary">
+                <select name="report" defaultValue={params.report === "sectors" ? "sectors" : "summary"}>
                   <option value="sectors">Ingressos por evento e setor</option>
                   <option value="summary">Resumo financeiro por evento</option>
                 </select>

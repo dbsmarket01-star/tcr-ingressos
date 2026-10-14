@@ -32,6 +32,14 @@ describe("orders sector report", () => {
     expect(db.event.findMany.mock.calls[0][0].where).toMatchObject({ organizationId: "org", id: { in: [] }, orders: { some: { status: "PAID", AND: [{ status: "CANCELED" }] } } });
     expect(db.ticket.groupBy).not.toHaveBeenCalled();
   });
+  it("restricts the event query by both the selected event and permitted scope", async () => {
+    db.event.findMany.mockResolvedValue([]);
+    await getOrdersSectorReport({ eventId: "selected", status: "PAID" }, "org", ["allowed"]);
+    expect(db.event.findMany.mock.calls[0][0].where).toMatchObject({
+      organizationId: "org", AND: [{ id: "selected" }], id: { in: ["allowed"] },
+      orders: { some: { AND: [{ eventId: "selected" }] } }
+    });
+  });
   it("writes event totals and an exact grand total with a paginated long report", () => {
     const groups = Array.from({ length: 25 }, (_, i) => ({ title: `Evento ${i}`, rows: [{ name: "OURO", quantity: 10 }], total: 10 }));
     const pdf = buildEventSectorPdf({ event: { title: "Vendas no período" }, rows: [], groups, total: 250, filters: ["2026-10-01 a 2026-10-31"] }).toString("latin1");

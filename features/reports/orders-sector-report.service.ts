@@ -6,7 +6,8 @@ export async function getOrdersSectorReport(filters: AdminOrderFilters, organiza
   // Keep the exact order filters as an AND: an explicit non-paid status yields no sales.
   const orderWhere = await buildReportOrderWhere(filters, organizationId, allowedEventIds);
   const events = await prisma.event.findMany({
-    where: { organizationId, ...(allowedEventIds ? { id: { in: allowedEventIds } } : {}),
+    where: { organizationId,
+      ...(filters.eventId ? { AND: [{ id: filters.eventId }] } : {}), ...(allowedEventIds ? { id: { in: allowedEventIds } } : {}),
       orders: { some: { AND: [orderWhere], status: "PAID" } } },
     select: { id: true }, orderBy: { title: "asc" }
   });
