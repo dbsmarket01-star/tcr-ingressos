@@ -1,0 +1,130 @@
+import { Prisma, WhatsAppMessageType } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { loadPilotSalesEvents, isPilotAd } from "@/features/whatsapp/ad-sales-catalog";
+import { buildAdSalesCheckoutUrl } from "@/features/whatsapp/ad-sales-checkout";
+import { sendWhatsAppTextMessage, sendWhatsAppUrlButtonMessage } from "@/features/whatsapp/whatsapp.service";
+
+const SALES_SOURCE = "TCR_WHATSAPP_AD_SALES";
+const SESSION_MS = 30 * 60_000;
+const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+type Inbound = { organizationId: string; phone: string; text: string; origin?: { kind?: string; adId?: string | null } };
+type Session = { step?: string; eventSlug?: string; lotId?: string; adId?: string; options?: string[]; source?: string };
+
+function digits(phone: string) { return phone.replace(/\D/g, ""); }
+
+export function isAuthorizedAdSalesTestKeyword(input: Inbound): boolean {
+  const allowedPhones = (process.env.WHATSAPP_SALES_TEST_PHONES || "")
+    .split(",").map(digits).filter(Boolean);
+  const keyword = (process.env.WHATSAPP_SALES_TEST_KEYWORD || "Diego teste 123").trim();
+  return Boolean(keyword && allowedPhones.includes(digits(input.phone)) &&
+    input.text.trim().toLocaleLowerCase("pt-BR") === keyword.toLocaleLowerCase("pt-BR"));
+}
+
+async function latestSession(organizationId: string, phone: string): Promise<Session | null> {
+  const normalized = digits(phone);
+  const variants = Array.from(new Set([phone, normalized, `+${normalized}`]));
+  const logs = await prisma.whatsAppMessageLog.findMany({
+    where: {
+      organizationId,
+      recipientPhone: { in: variants },
+      type: WhatsAppMessageType.BULK,
+      status: "SENT",
+      createdAt: { gte: new Date(Date.now() - SESSION_MS) }
+    },
+    select: { payload: true },
+    orderBy: { createdAt: "desc" },
+    take: 20
+  });
+  for (const log of logs) {
+    const payload = log.payload as Prisma.JsonObject | null;
+    if (payload?.source === SALES_SOURCE) return payload as Session;
+  }
+  return null;
+}
+
+async function sendStep(input: Inbound, text: string, step: string, eventSlug?: string, options?: string[], lotId?: string, adId?: string) {
+  await sendWhatsAppTextMessage({
+    to: input.phone,
+    text,
+    organizationId: input.organizationId,
+    source: SALES_SOURCE,
+    metadata: { step, ...(eventSlug ? { eventSlug } : {}), ...(options ? { options } : {}), ...(lotId ? { lotId } : {}), ...(adId ? { adId } : {}) }
+  });
+}
+
+/** Returns false when the existing support assistant should handle the message. */
+export async function processAdSalesJourney(input: Inbound): Promise<boolean> {
+  if (/quero tirar uma d[uú]vida no site/i.test(input.text)) return false;
+  const session = await latestSession(input.organizationId, input.phone);
+  const approvedAd = input.origin?.kind === "meta_ad" && isPilotAd(input.origin.adId);
+  const authorizedTest = isAuthorizedAdSalesTestKeyword(input);
+  if ((!session || session.step === "done") && !approvedAd && !authorizedTest) return false;
+  const adId = approvedAd ? input.origin?.adId || undefined : session?.adId;
+
+  const events = await loadPilotSalesEvents(input.organizationId);
+  if (!events.length) return false;
+  const choice = input.text.trim();
+  if (session && /^(sair|cancelar|parar|falar com suporte)$/i.test(choice)) return false;
+
+  if (!session || session.step === "done" || authorizedTest) {
+    await sendStep(input,
+      `Que bom ter você aqui! Qual evento Geriatricus deseja conhecer?\n\n${events.map((event, i) => `${i + 1}. ${event.title}`).join("\n")}\n\nResponda com o número da opção. Se preferir atendimento humano, escreva “falar com atendente”.`,
+      "choose_event", undefined, events.map((event) => event.slug), undefined, adId);
+    return true;
+  }
+
+  if (session.step === "choose_event") {
+    if (!/^\d+$/.test(choice)) return false;
+    const selected = events.find((event) => event.slug === session.options?.[Number(choice) - 1]);
+    if (!selected) {
+      await sendStep(input, `Escolha uma das opções para ver os ingressos disponíveis:\n${events.map((event, i) => `${i + 1}. ${event.title}`).join("\n")}`, "choose_event", undefined, events.map((event) => event.slug), undefined, adId);
+      return true;
+    }
+    await sendStep(input,
+      `${selected.title}\n\nEscolha o ingresso:\n${selected.lots.map((lot, i) => `${i + 1}. ${lot.name} — ${brl.format(lot.priceInCents / 100)}`).join("\n")}\n\nValores base dos ingressos; confira taxas e total final no checkout. A disponibilidade será confirmada no site antes do pagamento. Responda com o número da opção.`,
+      "choose_lot", selected.slug, selected.lots.map((lot) => lot.id), undefined, adId);
+    return true;
+  }
+
+  if (session.step === "choose_lot") {
+    const event = events.find((item) => item.slug === session.eventSlug);
+    if (!event) return false;
+    if (!/^\d+$/.test(choice)) return false;
+    const selected = event.lots.find((lot) => lot.id === session.options?.[Number(choice) - 1]);
+    if (!selected) {
+      await sendStep(input, `Essa opção não está mais disponível. Escolha novamente:\n${event.lots.map((lot, i) => `${i + 1}. ${lot.name}`).join("\n")}`, "choose_lot", event.slug, event.lots.map((lot) => lot.id), undefined, adId);
+      return true;
+    }
+    await sendStep(input,
+      `Você escolheu ${selected.name} para ${event.title}. Quantos ingressos deseja? Responda com um número de ${Math.max(selected.minPerOrder || 1, 1)} a ${Math.min(selected.maxPerOrder || 10, selected.available, 10)}.`,
+      "choose_quantity", event.slug, undefined, selected.id, adId);
+    return true;
+  }
+  if (session.step === "choose_quantity") {
+    const event = events.find((item) => item.slug === session.eventSlug);
+    const lot = event?.lots.find((item) => item.id === session.lotId);
+    if (!event || !lot) return false;
+    if (!/^\d+$/.test(choice)) return false;
+    const quantity = Number(choice);
+    const minimum = Math.max(lot.minPerOrder || 1, 1);
+    const maximum = Math.min(lot.maxPerOrder || 10, lot.available, 10);
+    if (quantity < minimum || quantity > maximum) {
+      await sendStep(input, `Para ${lot.name}, escolha entre ${minimum} e ${maximum} ingressos.`, "choose_quantity", event.slug, undefined, lot.id, adId);
+      return true;
+    }
+    const url = buildAdSalesCheckoutUrl({ eventSlug: event.slug, lotId: lot.id, quantity, adId });
+    await sendWhatsAppUrlButtonMessage({
+      to: input.phone,
+      organizationId: input.organizationId,
+      eventId: event.id,
+      text: `${quantity} ingresso(s) ${lot.name} para ${event.title}. Toque no botão para conferir o valor final, informar seus dados e pagar no site seguro da TCR. A disponibilidade será confirmada no checkout.`,
+      buttonText: "Comprar ingresso",
+      url,
+      source: SALES_SOURCE,
+      metadata: { step: "done", eventSlug: event.slug, lotId: lot.id, quantity, ...(adId ? { adId } : {}) }
+    });
+    return true;
+  }
+  return false;
+}

@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sendWhatsAppTextMessage } from "@/features/whatsapp/whatsapp.service";
+import { isAuthorizedAdSalesTestKeyword, processAdSalesJourney } from "@/features/whatsapp/ad-sales-journey";
 import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import {
   calculateCardChargeInCents,
@@ -823,7 +824,15 @@ async function processInboundMessage(message: MetaTextMessage) {
   if (!inbound?.organizationId || aiMetadataFromLog(inbound.webhookPayload)) return;
 
   const state = await getWhatsAppAiConversationState(inbound.organizationId, message.from);
-  if (!shouldProcessWhatsAppAiState(state)) {
+  const authorizedSalesTest = isAuthorizedAdSalesTestKeyword({
+    organizationId: inbound.organizationId, phone: message.from, text: message.text.body
+  });
+  if (authorizedSalesTest && !shouldProcessWhatsAppAiState(state)) {
+    await setWhatsAppAiConversationState({
+      organizationId: inbound.organizationId, phone: message.from,
+      mode: "ACTIVE", reason: "Teste autorizado da jornada de vendas por WhatsApp."
+    });
+  } else if (!shouldProcessWhatsAppAiState(state)) {
     await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "SKIPPED", reason: state.reason });
     return;
   }
@@ -851,6 +860,20 @@ async function processInboundMessage(message: MetaTextMessage) {
       topic: "atendimento_humano",
       reason: "Cliente solicitou atendimento humano."
     });
+    return;
+  }
+  const inboundPayload = jsonObject(inbound.webhookPayload);
+  const origin = jsonObject(inboundPayload._tcrOrigin as Prisma.JsonValue | null);
+  if (await processAdSalesJourney({
+    organizationId: inbound.organizationId,
+    phone: message.from,
+    text: message.text.body,
+    origin: {
+      kind: typeof origin.kind === "string" ? origin.kind : undefined,
+      adId: typeof origin.adId === "string" ? origin.adId : null
+    }
+  })) {
+    await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "COMPLETED", outcome: "AUTO_REPLY", topic: "ad_sales" });
     return;
   }
   const usage = await monthlyUsageAllowed(inbound.organizationId);

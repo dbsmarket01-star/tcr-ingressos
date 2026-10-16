@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { normalizeHost } from "@/lib/request-host";
 import { savePublicMediaUpload } from "@/features/uploads/local-upload.service";
+import { classifyWhatsAppInboundOrigin } from "@/features/whatsapp/inbound-origin";
 
 type WhatsAppTemplateParameter = {
   type: "text";
@@ -618,6 +619,61 @@ export async function sendWhatsAppTextMessage(input: {
   }
 }
 
+export async function sendWhatsAppUrlButtonMessage(input: {
+  to: string;
+  text: string;
+  buttonText: string;
+  url: string;
+  organizationId: string;
+  eventId?: string;
+  source?: string;
+  metadata?: Record<string, unknown>;
+}) {
+  const config = getWhatsAppConfig();
+  if (!config.token || !config.phoneNumberId) throw new Error("WhatsApp Business API nao configurada.");
+  const destination = new URL(input.url);
+  if (destination.protocol !== "https:" || destination.hostname !== "www.tcringressos.app.br" ||
+      !/^\/evento\/[^/]+\/checkout$/.test(destination.pathname)) {
+    throw new Error("O botão de compra deve abrir somente o checkout oficial da TCR.");
+  }
+  const to = formatPhone(input.to);
+  const response = await fetch(`https://graph.facebook.com/${getWhatsAppApiVersion()}/${config.phoneNumberId}/messages`, {
+    method: "POST",
+    signal: AbortSignal.timeout(15_000),
+    headers: { Authorization: `Bearer ${config.token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to,
+      type: "interactive",
+      interactive: {
+        type: "cta_url",
+        body: { text: input.text },
+        action: { name: "cta_url", parameters: { display_text: input.buttonText, url: destination.toString() } }
+      }
+    })
+  });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    const parsedError = parseWhatsAppApiError(detail);
+    throw new Error(parsedError.message || `WhatsApp API retornou HTTP ${response.status}.`);
+  }
+  const payload = (await response.json()) as WhatsAppApiResponse;
+  await recordWhatsAppMessageLog({
+    to,
+    textContent: input.text,
+    context: { type: WhatsAppMessageType.BULK, organizationId: input.organizationId, eventId: input.eventId },
+    status: WhatsAppMessageStatus.SENT,
+    providerMessageId: extractProviderMessageId(payload),
+    payloadMetadata: {
+      ...(input.source ? { source: input.source } : {}),
+      ...(input.metadata || {}),
+      button: { text: input.buttonText, url: destination.toString() }
+    }
+  });
+  return payload;
+}
+
 export type WhatsAppMediaKind = "audio" | "document" | "image" | "video";
 
 export async function sendWhatsAppMediaMessage(input: {
@@ -736,6 +792,7 @@ type WhatsAppInboundMessage = {
   contacts?: Array<{ name?: { formatted_name?: string }; phones?: Array<{ phone?: string; wa_id?: string }> }>;
   button?: { text?: string; payload?: string };
   interactive?: { button_reply?: { title?: string; id?: string }; list_reply?: { title?: string; description?: string; id?: string } };
+  referral?: { source_type?: string; source_id?: string; source_url?: string };
 };
 
 type WhatsAppWebhookPayload = {
@@ -827,6 +884,7 @@ export async function handleWhatsAppMetaWebhook(payload: unknown) {
 
     const media = await downloadInboundWhatsAppMedia(message);
     const reactionText = message.reaction?.emoji ? `Reagiu ${message.reaction.emoji}` : null;
+    const origin = classifyWhatsAppInboundOrigin(message);
     await recordWhatsAppMessageLog({
       to: message.from,
       textContent: message.text?.body || reactionText || media?.caption || null,
@@ -836,7 +894,11 @@ export async function handleWhatsAppMetaWebhook(payload: unknown) {
       },
       status: WhatsAppMessageStatus.RECEIVED,
       providerMessageId: message.id,
-      webhookPayload: media ? { ...message, _tcrMedia: media } : message
+      webhookPayload: {
+        ...message,
+        ...(media ? { _tcrMedia: media } : {}),
+        _tcrOrigin: origin
+      }
     });
     received += 1;
   }
