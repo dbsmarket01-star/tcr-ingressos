@@ -4,6 +4,7 @@ import {
   guardPublishedHalfPriceAnswer,
   humanPauseUntil,
   isHumanHandoffRequest,
+  normalizedWhatsAppInteractiveChoice,
   parseWhatsAppAiDecision,
   resolvedHandoffReply,
   resolveWhatsAppAiConversationMode,
@@ -55,6 +56,10 @@ describe("exact checkout installment quotes", () => {
 });
 
 describe("WhatsApp support AI", () => {
+  it("converts list button replies to the selected option number", () => {
+    expect(normalizedWhatsAppInteractiveChoice({ type: "interactive", interactive: { list_reply: { id: "2", title: "Geriatricus em Santo André" } } })).toBe("2");
+    expect(normalizedWhatsAppInteractiveChoice({ type: "interactive", interactive: { button_reply: { id: "support", title: "Falar com atendente" } } })).toBe("Falar com atendente");
+  });
   it("reads a structured Responses API decision", () => {
     expect(
       parseWhatsAppAiDecision({

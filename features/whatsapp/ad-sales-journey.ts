@@ -2,7 +2,7 @@ import { Prisma, WhatsAppMessageType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { loadPilotSalesEvents, isPilotAd } from "@/features/whatsapp/ad-sales-catalog";
 import { buildAdSalesCheckoutUrl } from "@/features/whatsapp/ad-sales-checkout";
-import { sendWhatsAppTextMessage, sendWhatsAppUrlButtonMessage } from "@/features/whatsapp/whatsapp.service";
+import { sendWhatsAppListMessage, sendWhatsAppTextMessage, sendWhatsAppUrlButtonMessage } from "@/features/whatsapp/whatsapp.service";
 
 const SALES_SOURCE = "TCR_WHATSAPP_AD_SALES";
 const SESSION_MS = 30 * 60_000;
@@ -29,7 +29,7 @@ async function latestSession(organizationId: string, phone: string): Promise<Ses
       organizationId,
       recipientPhone: { in: variants },
       type: WhatsAppMessageType.BULK,
-      status: "SENT",
+      status: { in: ["SENT", "DELIVERED", "READ"] },
       createdAt: { gte: new Date(Date.now() - SESSION_MS) }
     },
     select: { payload: true },
@@ -53,6 +53,18 @@ async function sendStep(input: Inbound, text: string, step: string, eventSlug?: 
   });
 }
 
+async function sendChoice(input: Inbound, text: string, step: string, rows: Array<{ title: string; description?: string }>, eventSlug?: string, options?: string[], lotId?: string, adId?: string) {
+  await sendWhatsAppListMessage({
+    to: input.phone,
+    organizationId: input.organizationId,
+    text,
+    buttonText: "Ver opções",
+    rows: rows.map((row, index) => ({ id: String(index + 1), title: row.title.slice(0, 24), description: row.description?.slice(0, 72) })),
+    source: SALES_SOURCE,
+    metadata: { step, ...(eventSlug ? { eventSlug } : {}), ...(options ? { options } : {}), ...(lotId ? { lotId } : {}), ...(adId ? { adId } : {}) }
+  });
+}
+
 /** Returns false when the existing support assistant should handle the message. */
 export async function processAdSalesJourney(input: Inbound): Promise<boolean> {
   if (/quero tirar uma d[uú]vida no site/i.test(input.text)) return false;
@@ -68,9 +80,9 @@ export async function processAdSalesJourney(input: Inbound): Promise<boolean> {
   if (session && /^(sair|cancelar|parar|falar com suporte)$/i.test(choice)) return false;
 
   if (!session || session.step === "done" || authorizedTest) {
-    await sendStep(input,
-      `Que bom ter você aqui! Qual evento Geriatricus deseja conhecer?\n\n${events.map((event, i) => `${i + 1}. ${event.title}`).join("\n")}\n\nResponda com o número da opção. Se preferir atendimento humano, escreva “falar com atendente”.`,
-      "choose_event", undefined, events.map((event) => event.slug), undefined, adId);
+    await sendChoice(input,
+      "Que bom ter você aqui! Qual evento Geriatricus deseja conhecer? Toque em Ver opções para escolher. Se preferir atendimento humano, escreva 'falar com atendente'.",
+      "choose_event", events.map((event) => ({ title: event.title })), undefined, events.map((event) => event.slug), undefined, adId);
     return true;
   }
 
@@ -78,12 +90,12 @@ export async function processAdSalesJourney(input: Inbound): Promise<boolean> {
     if (!/^\d+$/.test(choice)) return false;
     const selected = events.find((event) => event.slug === session.options?.[Number(choice) - 1]);
     if (!selected) {
-      await sendStep(input, `Escolha uma das opções para ver os ingressos disponíveis:\n${events.map((event, i) => `${i + 1}. ${event.title}`).join("\n")}`, "choose_event", undefined, events.map((event) => event.slug), undefined, adId);
+      await sendChoice(input, "Escolha um dos eventos disponíveis:", "choose_event", events.map((event) => ({ title: event.title })), undefined, events.map((event) => event.slug), undefined, adId);
       return true;
     }
-    await sendStep(input,
-      `${selected.title}\n\nEscolha o ingresso:\n${selected.lots.map((lot, i) => `${i + 1}. ${lot.name} — ${brl.format(lot.priceInCents / 100)}`).join("\n")}\n\nValores base dos ingressos; confira taxas e total final no checkout. A disponibilidade será confirmada no site antes do pagamento. Responda com o número da opção.`,
-      "choose_lot", selected.slug, selected.lots.map((lot) => lot.id), undefined, adId);
+    await sendChoice(input,
+      `${selected.title}: escolha seu ingresso em Ver opções. Os valores exibidos são base; taxas e total final aparecerão no checkout.`,
+      "choose_lot", selected.lots.map((lot) => ({ title: lot.name, description: `${lot.name} — ${brl.format(lot.priceInCents / 100)}` })), selected.slug, selected.lots.map((lot) => lot.id), undefined, adId);
     return true;
   }
 
@@ -93,12 +105,22 @@ export async function processAdSalesJourney(input: Inbound): Promise<boolean> {
     if (!/^\d+$/.test(choice)) return false;
     const selected = event.lots.find((lot) => lot.id === session.options?.[Number(choice) - 1]);
     if (!selected) {
-      await sendStep(input, `Essa opção não está mais disponível. Escolha novamente:\n${event.lots.map((lot, i) => `${i + 1}. ${lot.name}`).join("\n")}`, "choose_lot", event.slug, event.lots.map((lot) => lot.id), undefined, adId);
+      await sendChoice(input, "Essa opção não está mais disponível. Escolha novamente em Ver opções:", "choose_lot", event.lots.map((lot) => ({ title: lot.name, description: `${lot.name} — ${brl.format(lot.priceInCents / 100)}` })), event.slug, event.lots.map((lot) => lot.id), undefined, adId);
       return true;
     }
-    await sendStep(input,
-      `Você escolheu ${selected.name} para ${event.title}. Quantos ingressos deseja? Responda com um número de ${Math.max(selected.minPerOrder || 1, 1)} a ${Math.min(selected.maxPerOrder || 10, selected.available, 10)}.`,
-      "choose_quantity", event.slug, undefined, selected.id, adId);
+    const minimum = Math.max(selected.minPerOrder || 1, 1);
+    const maximum = Math.min(selected.maxPerOrder || 10, selected.available, 10);
+    await sendWhatsAppListMessage({
+      to: input.phone, organizationId: input.organizationId,
+      text: `Você escolheu ${selected.name} para ${event.title}. Quantos ingressos deseja?`,
+      buttonText: "Quantidade",
+      rows: Array.from({ length: maximum - minimum + 1 }, (_, index) => {
+        const quantity = minimum + index;
+        return { id: String(quantity), title: `${quantity} ingresso${quantity > 1 ? "s" : ""}` };
+      }),
+      source: SALES_SOURCE,
+      metadata: { step: "choose_quantity", eventSlug: event.slug, lotId: selected.id, ...(adId ? { adId } : {}) }
+    });
     return true;
   }
   if (session.step === "choose_quantity") {
@@ -110,7 +132,7 @@ export async function processAdSalesJourney(input: Inbound): Promise<boolean> {
     const minimum = Math.max(lot.minPerOrder || 1, 1);
     const maximum = Math.min(lot.maxPerOrder || 10, lot.available, 10);
     if (quantity < minimum || quantity > maximum) {
-      await sendStep(input, `Para ${lot.name}, escolha entre ${minimum} e ${maximum} ingressos.`, "choose_quantity", event.slug, undefined, lot.id, adId);
+      await sendStep(input, `Para ${lot.name}, escolha entre ${minimum} e ${maximum} ingressos. Você pode responder com o número desejado.`, "choose_quantity", event.slug, undefined, lot.id, adId);
       return true;
     }
     const url = buildAdSalesCheckoutUrl({ eventSlug: event.slug, lotId: lot.id, quantity, adId });

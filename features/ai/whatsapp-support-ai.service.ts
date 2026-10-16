@@ -35,6 +35,7 @@ type MetaTextMessage = {
   timestamp?: string;
   type?: string;
   text?: { body?: string };
+  interactive?: { list_reply?: { id?: string; title?: string }; button_reply?: { id?: string; title?: string } };
 };
 
 type MetaWebhookPayload = {
@@ -44,6 +45,12 @@ type MetaWebhookPayload = {
     }>;
   }>;
 };
+
+export function normalizedWhatsAppInteractiveChoice(message: MetaTextMessage): string | null {
+  const reply = message.interactive?.list_reply || message.interactive?.button_reply;
+  if (!reply) return null;
+  return reply.id && /^\d{1,2}$/.test(reply.id) ? reply.id : reply.title || reply.id || null;
+}
 
 function isEnabled() {
   return /^(1|true|yes|on)$/i.test(
@@ -955,7 +962,12 @@ async function processInboundMessage(message: MetaTextMessage) {
 export async function processWhatsAppSupportAiPayload(payload: unknown) {
   const body = payload as MetaWebhookPayload;
   const messages = body.entry?.flatMap((entry) => entry.changes?.flatMap((change) => change.value?.messages || []) || []) || [];
-  for (const message of messages) await processInboundMessage(message);
+  for (const message of messages) {
+    const choice = normalizedWhatsAppInteractiveChoice(message);
+    await processInboundMessage(choice && message.type === "interactive"
+      ? { ...message, type: "text", text: { body: choice } }
+      : message);
+  }
 }
 
 export const WHATSAPP_AI_SOURCE = AI_SOURCE;

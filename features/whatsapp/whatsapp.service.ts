@@ -674,6 +674,60 @@ export async function sendWhatsAppUrlButtonMessage(input: {
   return payload;
 }
 
+export async function sendWhatsAppListMessage(input: {
+  to: string;
+  text: string;
+  buttonText: string;
+  rows: Array<{ id: string; title: string; description?: string }>;
+  organizationId: string;
+  source?: string;
+  metadata?: Record<string, unknown>;
+}) {
+  const config = getWhatsAppConfig();
+  if (!config.token || !config.phoneNumberId) throw new Error("WhatsApp Business API nao configurada.");
+  if (!input.rows.length || input.rows.length > 10) throw new Error("A lista do WhatsApp deve ter de 1 a 10 opções.");
+  const to = formatPhone(input.to);
+  const payloadMetadata = {
+    ...(input.source ? { source: input.source } : {}),
+    ...(input.metadata || {}),
+    list: { buttonText: input.buttonText, rows: input.rows }
+  };
+  try {
+    const response = await fetch(`https://graph.facebook.com/${getWhatsAppApiVersion()}/${config.phoneNumberId}/messages`, {
+      method: "POST",
+      signal: AbortSignal.timeout(15_000),
+      headers: { Authorization: `Bearer ${config.token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messaging_product: "whatsapp", recipient_type: "individual", to, type: "interactive",
+        interactive: {
+          type: "list", body: { text: input.text },
+          action: { button: input.buttonText, sections: [{ title: "Opções disponíveis", rows: input.rows }] }
+        }
+      })
+    });
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      const parsedError = parseWhatsAppApiError(detail);
+      throw new Error(parsedError.message || `WhatsApp API retornou HTTP ${response.status}.`);
+    }
+    const payload = (await response.json()) as WhatsAppApiResponse;
+    await recordWhatsAppMessageLog({
+      to, textContent: input.text,
+      context: { type: WhatsAppMessageType.BULK, organizationId: input.organizationId },
+      status: WhatsAppMessageStatus.SENT,
+      providerMessageId: extractProviderMessageId(payload), payloadMetadata
+    });
+    return payload;
+  } catch (error) {
+    await recordWhatsAppMessageLog({
+      to, textContent: input.text,
+      context: { type: WhatsAppMessageType.BULK, organizationId: input.organizationId },
+      status: WhatsAppMessageStatus.FAILED, errorMessage: normalizeError(error), payloadMetadata
+    });
+    throw error;
+  }
+}
+
 export type WhatsAppMediaKind = "audio" | "document" | "image" | "video";
 
 export async function sendWhatsAppMediaMessage(input: {
@@ -887,7 +941,7 @@ export async function handleWhatsAppMetaWebhook(payload: unknown) {
     const origin = classifyWhatsAppInboundOrigin(message);
     await recordWhatsAppMessageLog({
       to: message.from,
-      textContent: message.text?.body || reactionText || media?.caption || null,
+      textContent: message.text?.body || message.interactive?.list_reply?.title || message.interactive?.button_reply?.title || reactionText || media?.caption || null,
       context: {
         type: WhatsAppMessageType.WEBHOOK,
         organizationId

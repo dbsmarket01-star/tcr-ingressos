@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const logs: Array<{ payload: Record<string, unknown> }> = [];
 const sentButtons: Array<{ url: string; buttonText: string; metadata?: Record<string, unknown> }> = [];
+const sentLists: Array<{ rows: Array<{ id: string; title: string }>; metadata?: Record<string, unknown> }> = [];
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -38,14 +39,20 @@ vi.mock("@/features/whatsapp/whatsapp.service", () => ({
   sendWhatsAppUrlButtonMessage: vi.fn(async (input: { url: string; buttonText: string; source?: string; metadata?: Record<string, unknown> }) => {
     sentButtons.push(input);
     logs.push({ payload: { source: input.source, ...input.metadata } });
+  }),
+  sendWhatsAppListMessage: vi.fn(async (input: { rows: Array<{ id: string; title: string }>; source?: string; metadata?: Record<string, unknown> }) => {
+    sentLists.push(input);
+    logs.push({ payload: { source: input.source, ...input.metadata } });
   })
 }));
 
 import { isAuthorizedAdSalesTestKeyword, processAdSalesJourney } from "@/features/whatsapp/ad-sales-journey";
+import { prisma } from "@/lib/prisma";
 
 beforeEach(() => {
   logs.length = 0;
   sentButtons.length = 0;
+  sentLists.length = 0;
   process.env.WHATSAPP_SALES_PILOT_AD_IDS = "123";
   process.env.WHATSAPP_SALES_TEST_PHONES = "5511999999999";
 });
@@ -61,9 +68,15 @@ describe("WhatsApp ad-sales journey", () => {
     expect(await processAdSalesJourney({ ...base, text: "Quero conhecer", origin: { kind: "meta_ad", adId: "999" } })).toBe(false);
     expect(await processAdSalesJourney({ ...base, text: "Quero tirar uma dúvida no site da TCR", origin: { kind: "meta_ad", adId: "123" } })).toBe(false);
     expect(await processAdSalesJourney({ ...base, text: "Olá", origin: { kind: "meta_ad", adId: "123" } })).toBe(true);
+    expect(sentLists).toHaveLength(1);
+    expect(sentLists[0].rows).toHaveLength(2);
+    expect(prisma.whatsAppMessageLog.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ status: { in: ["SENT", "DELIVERED", "READ"] } })
+    }));
     expect(logs.at(-1)?.payload.step).toBe("choose_event");
     expect(await processAdSalesJourney({ ...base, text: "1" })).toBe(true);
     expect(logs.at(-1)?.payload.eventSlug).toBe("geriatricus-em-suzano-2026");
+    expect(sentLists.at(-1)?.rows[0].title).toContain("CADEIRA PRATA");
     expect(await processAdSalesJourney({ ...base, text: "1" })).toBe(true);
     expect(logs.at(-1)?.payload.step).toBe("choose_quantity");
     expect(await processAdSalesJourney({ ...base, text: "2" })).toBe(true);
