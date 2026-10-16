@@ -211,6 +211,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
 
   const checkoutError = typeof query.checkoutError === "string" ? query.checkoutError : null;
   const tracking = getTrackingParamsFromSearch(query, `/evento/${event.slug}`);
+  const isWhatsAppSalesCheckout = tracking.utmSource?.toLowerCase() === "whatsapp";
   const totalQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalQrCodes = selectedItems.reduce(
     (sum, item) => sum + item.quantity * Math.max(item.lot.admissionsPerUnit, 1),
@@ -322,11 +323,12 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
         <Link className="checkoutBackLink" href={`/evento/${event.slug}#ingressos`}>
           Voltar para ingressos
         </Link>
-        <div className="checkoutFlowGrid">
-          <aside className="checkoutCartPanel" aria-label="Resumo do carrinho">
+        <div className={`checkoutFlowGrid${isWhatsAppSalesCheckout ? " checkoutFlowGridWhatsApp" : ""}`}>
+          <aside className="checkoutCartPanel" id="resumo" aria-label="Resumo do carrinho">
             <div className="checkoutCartHeader">
-              <span className="eyebrow">Seu carrinho</span>
+              <span className="eyebrow">{isWhatsAppSalesCheckout ? "Resumo da sua compra" : "Seu carrinho"}</span>
               <h1>{event.title}</h1>
+              {isWhatsAppSalesCheckout ? <p>Confira seu ingresso e o valor total antes de informar seus dados.</p> : null}
               {isFeeFree ? (
                 <div className="zeroFeeCheckoutMessage">
                   <strong>Taxa zero</strong>

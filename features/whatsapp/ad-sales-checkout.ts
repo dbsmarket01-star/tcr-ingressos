@@ -20,6 +20,6 @@ export function buildAdSalesCheckoutUrl(input: {
   url.searchParams.set("utm_medium", "meta_ads");
   url.searchParams.set("utm_campaign", "geriatricus_whatsapp_piloto");
   if (input.adId && /^\d{1,30}$/.test(input.adId)) url.searchParams.set("utm_content", input.adId);
-  url.hash = "cadastro";
+  url.hash = "resumo";
   return url.toString();
 }

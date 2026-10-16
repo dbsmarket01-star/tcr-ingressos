@@ -686,6 +686,9 @@ export async function sendWhatsAppListMessage(input: {
   const config = getWhatsAppConfig();
   if (!config.token || !config.phoneNumberId) throw new Error("WhatsApp Business API nao configurada.");
   if (!input.rows.length || input.rows.length > 10) throw new Error("A lista do WhatsApp deve ter de 1 a 10 opções.");
+  if (input.text.length > 1024 || input.buttonText.length > 20 || input.rows.some((row) =>
+    !row.id || row.id.length > 200 || !row.title || row.title.length > 24 || (row.description?.length || 0) > 72
+  )) throw new Error("Uma opção do WhatsApp excede o limite de tamanho da Meta.");
   const to = formatPhone(input.to);
   const payloadMetadata = {
     ...(input.source ? { source: input.source } : {}),

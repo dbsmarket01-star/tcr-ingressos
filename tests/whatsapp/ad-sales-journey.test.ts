@@ -46,7 +46,7 @@ vi.mock("@/features/whatsapp/whatsapp.service", () => ({
   })
 }));
 
-import { isAuthorizedAdSalesTestKeyword, processAdSalesJourney } from "@/features/whatsapp/ad-sales-journey";
+import { formatSalesLotChoice, isAuthorizedAdSalesTestKeyword, processAdSalesJourney } from "@/features/whatsapp/ad-sales-journey";
 import { prisma } from "@/lib/prisma";
 
 beforeEach(() => {
@@ -64,6 +64,16 @@ afterEach(() => {
 describe("WhatsApp ad-sales journey", () => {
   const base = { organizationId: "tcr", phone: "5511999999999" };
 
+  it("shows short, complete sector names and base price plus fees", () => {
+    expect(formatSalesLotChoice({ name: "CADEIRA PRATA - SOLIDÁRIO", priceInCents: 12790 })).toEqual({
+      title: "Prata · Solidário", description: "R$ 127,90 + taxas"
+    });
+    expect(formatSalesLotChoice({ name: "SETOR OURO - MEIA ENTRADA", priceInCents: 13790 }).title).toBe("Ouro · Meia-entrada");
+    expect(formatSalesLotChoice({ name: "PRIMEIRA FILEIRA - EXCLUSIVO", priceInCents: 49790 })).toEqual({
+      title: "Primeira Fileira", description: "Exclusivo · R$ 497,90 + taxas"
+    });
+  });
+
   it("routes only the approved ad, then opens the selected checkout with quantity", async () => {
     expect(await processAdSalesJourney({ ...base, text: "Quero conhecer", origin: { kind: "meta_ad", adId: "999" } })).toBe(false);
     expect(await processAdSalesJourney({ ...base, text: "Quero tirar uma dúvida no site da TCR", origin: { kind: "meta_ad", adId: "123" } })).toBe(false);
@@ -76,7 +86,7 @@ describe("WhatsApp ad-sales journey", () => {
     expect(logs.at(-1)?.payload.step).toBe("choose_event");
     expect(await processAdSalesJourney({ ...base, text: "1" })).toBe(true);
     expect(logs.at(-1)?.payload.eventSlug).toBe("geriatricus-em-suzano-2026");
-    expect(sentLists.at(-1)?.rows[0].title).toContain("CADEIRA PRATA");
+    expect(sentLists.at(-1)?.rows[0].title).toBe("Prata · Solidário");
     expect(await processAdSalesJourney({ ...base, text: "1" })).toBe(true);
     expect(logs.at(-1)?.payload.step).toBe("choose_quantity");
     expect(await processAdSalesJourney({ ...base, text: "2" })).toBe(true);

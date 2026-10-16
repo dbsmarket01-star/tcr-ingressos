@@ -26227,6 +26227,16 @@ small,
   grid-template-columns: minmax(300px, 430px) minmax(0, 1fr);
 }
 
+.checkoutFlowGrid.checkoutFlowGridWhatsApp {
+  grid-template-columns: minmax(0, 760px);
+  justify-content: center;
+}
+
+.checkoutFlowGridWhatsApp .checkoutCartPanel {
+  position: static;
+  scroll-margin-top: 92px;
+}
+
 .checkoutCartPanel,
 .checkoutRegistrationPanel {
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);

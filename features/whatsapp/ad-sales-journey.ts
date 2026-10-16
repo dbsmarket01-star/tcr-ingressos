@@ -8,6 +8,18 @@ const SALES_SOURCE = "TCR_WHATSAPP_AD_SALES";
 const SESSION_MS = 30 * 60_000;
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
+export function formatSalesLotChoice(lot: { name: string; priceInCents: number }) {
+  const normalized = lot.name.replace(/^(CADEIRA|SETOR)\s+/i, "").trim();
+  const [sector, kind] = normalized.split(/\s+-\s+/, 2);
+  const sectorLabel = sector.toLocaleLowerCase("pt-BR").replace(/(^|\s)\S/g, (letter) => letter.toLocaleUpperCase("pt-BR"));
+  const kindLabel = kind?.toLocaleLowerCase("pt-BR").replace("meia entrada", "meia-entrada");
+  const title = kindLabel && kindLabel !== "exclusivo" ? `${sectorLabel} · ${kindLabel[0].toLocaleUpperCase("pt-BR")}${kindLabel.slice(1)}` : sectorLabel;
+  return {
+    title,
+    description: `${kindLabel === "exclusivo" ? "Exclusivo · " : ""}${brl.format(lot.priceInCents / 100)} + taxas`
+  };
+}
+
 type Inbound = { organizationId: string; phone: string; text: string; origin?: { kind?: string; adId?: string | null } };
 type Session = { step?: string; eventSlug?: string; lotId?: string; adId?: string; options?: string[]; source?: string };
 
@@ -59,7 +71,7 @@ async function sendChoice(input: Inbound, text: string, step: string, rows: Arra
     organizationId: input.organizationId,
     text,
     buttonText: "Ver opções",
-    rows: rows.map((row, index) => ({ id: String(index + 1), title: row.title.slice(0, 24), description: row.description?.slice(0, 72) })),
+    rows: rows.map((row, index) => ({ id: String(index + 1), title: row.title, description: row.description })),
     source: SALES_SOURCE,
     metadata: { step, ...(eventSlug ? { eventSlug } : {}), ...(options ? { options } : {}), ...(lotId ? { lotId } : {}), ...(adId ? { adId } : {}) }
   });
@@ -82,7 +94,7 @@ export async function processAdSalesJourney(input: Inbound): Promise<boolean> {
   if (!session || session.step === "done" || authorizedTest) {
     await sendChoice(input,
       "Que bom ter você aqui! Qual evento Geriatricus deseja conhecer? Toque em Ver opções para escolher. Se preferir atendimento humano, escreva 'falar com atendente'.",
-      "choose_event", events.map((event) => ({ title: event.title })), undefined, events.map((event) => event.slug), undefined, adId);
+      "choose_event", events.map((event) => ({ title: event.slug.includes("suzano") ? "Suzano" : "Santo André", description: event.title })), undefined, events.map((event) => event.slug), undefined, adId);
     return true;
   }
 
@@ -90,12 +102,12 @@ export async function processAdSalesJourney(input: Inbound): Promise<boolean> {
     if (!/^\d+$/.test(choice)) return false;
     const selected = events.find((event) => event.slug === session.options?.[Number(choice) - 1]);
     if (!selected) {
-      await sendChoice(input, "Escolha um dos eventos disponíveis:", "choose_event", events.map((event) => ({ title: event.title })), undefined, events.map((event) => event.slug), undefined, adId);
+      await sendChoice(input, "Escolha um dos eventos disponíveis:", "choose_event", events.map((event) => ({ title: event.slug.includes("suzano") ? "Suzano" : "Santo André", description: event.title })), undefined, events.map((event) => event.slug), undefined, adId);
       return true;
     }
     await sendChoice(input,
-      `${selected.title}: escolha seu ingresso em Ver opções. Os valores exibidos são base; taxas e total final aparecerão no checkout.`,
-      "choose_lot", selected.lots.map((lot) => ({ title: lot.name, description: `${lot.name} — ${brl.format(lot.priceInCents / 100)}` })), selected.slug, selected.lots.map((lot) => lot.id), undefined, adId);
+      `${selected.title}\nEscolha seu ingresso em Ver opções. Cada valor aparece com “+ taxas”; o total exato estará no resumo antes de informar seus dados.`,
+      "choose_lot", selected.lots.map(formatSalesLotChoice), selected.slug, selected.lots.map((lot) => lot.id), undefined, adId);
     return true;
   }
 
@@ -105,7 +117,7 @@ export async function processAdSalesJourney(input: Inbound): Promise<boolean> {
     if (!/^\d+$/.test(choice)) return false;
     const selected = event.lots.find((lot) => lot.id === session.options?.[Number(choice) - 1]);
     if (!selected) {
-      await sendChoice(input, "Essa opção não está mais disponível. Escolha novamente em Ver opções:", "choose_lot", event.lots.map((lot) => ({ title: lot.name, description: `${lot.name} — ${brl.format(lot.priceInCents / 100)}` })), event.slug, event.lots.map((lot) => lot.id), undefined, adId);
+      await sendChoice(input, "Essa opção não está mais disponível. Escolha novamente em Ver opções:", "choose_lot", event.lots.map(formatSalesLotChoice), event.slug, event.lots.map((lot) => lot.id), undefined, adId);
       return true;
     }
     const minimum = Math.max(selected.minPerOrder || 1, 1);
@@ -140,7 +152,7 @@ export async function processAdSalesJourney(input: Inbound): Promise<boolean> {
       to: input.phone,
       organizationId: input.organizationId,
       eventId: event.id,
-      text: `${quantity} ingresso(s) ${lot.name} para ${event.title}. Toque no botão para conferir o valor final, informar seus dados e pagar no site seguro da TCR. A disponibilidade será confirmada no checkout.`,
+      text: `${quantity} ingresso(s) · ${lot.name}\nValor dos ingressos: ${brl.format(lot.priceInCents * quantity / 100)} + taxas.\n\nToque em Comprar ingresso para ver primeiro o resumo completo e, abaixo, informar seus dados no site seguro da TCR.`,
       buttonText: "Comprar ingresso",
       url,
       source: SALES_SOURCE,

@@ -14,6 +14,7 @@ describe("WhatsApp sales checkout deep link", () => {
     expect(url.searchParams.get("lotId")).toBe("cma1234567890123456789012");
     expect(url.searchParams.get("quantity_cma1234567890123456789012")).toBe("2");
     expect(url.searchParams.get("utm_content")).toBe("123456789");
+    expect(url.hash).toBe("#resumo");
   });
 
   it("rejects non-pilot events and invalid quantities", () => {
