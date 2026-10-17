@@ -1,3 +1,5 @@
+import { normalizeEventLotOrder } from "@/features/lots/lot-order.service";
+import { orderTicketLots, orderTicketOptions } from "@/features/lots/lot-order";
 import { EventStatus, OrderStatus, PaymentStatus, Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 import { getDefaultOrganizationId } from "@/features/organizations/organization.service";
@@ -477,7 +479,7 @@ export async function getEventOrderDemographics(
 }
 
 export async function getPublicEventBySlug(slug: string, organizationId: string) {
-  return prisma.event.findFirst({
+  const event = await prisma.event.findFirst({
     where: {
       organizationId,
       slug,
@@ -507,6 +509,8 @@ export async function getPublicEventBySlug(slug: string, organizationId: string)
       }
     }
   });
+  if (event) event.lots = orderTicketLots(event.lots).map(lot => ({ ...lot, typeOptions: orderTicketOptions(lot.typeOptions) }));
+  return event;
 }
 
 export async function getEventSeoBySlug(slug: string, organizationId: string) {
@@ -830,6 +834,8 @@ export async function duplicateEvent(eventId: string) {
         });
       }
     }
+
+    await normalizeEventLotOrder(tx, duplicatedEvent.id);
 
     const highlightedLotId = event.highlightedLotId ? lotIdMap.get(event.highlightedLotId) : null;
 

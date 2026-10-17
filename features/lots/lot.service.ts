@@ -1,3 +1,4 @@
+import { lockEventLotOrder, normalizeEventLotOrder } from "./lot-order.service";
 import { LotStatus, Prisma, TicketLotOptionStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { TicketLotInput, TicketLotPricingInput } from "./lot.schema";
@@ -163,6 +164,7 @@ async function syncTicketLotOptions(
 
 export async function createTicketLot(input: TicketLotInput & { status: LotStatus }) {
   return prisma.$transaction(async (tx) => {
+    await lockEventLotOrder(tx, input.eventId);
     const salesWindow = await getTicketSalesWindow(tx, input.eventId);
     const hotelId = await resolveHotelIdForLot(tx, input);
     const optionLabels = input.hasTypeOptions ? parseTypeOptionLabels(input.typeOptionsText) : [];
@@ -171,9 +173,11 @@ export async function createTicketLot(input: TicketLotInput & { status: LotStatu
       throw new Error("Informe pelo menos um tipo/camarote para este ingresso.");
     }
 
+    const lastLot = await tx.ticketLot.aggregate({ where: { eventId: input.eventId }, _max: { sortOrder: true } });
     const lot = await tx.ticketLot.create({
       data: {
         eventId: input.eventId,
+        sortOrder: (lastLot._max.sortOrder ?? -1) + 1,
         hotelId,
         name: input.name,
         description: input.description || null,
@@ -202,18 +206,25 @@ export async function createTicketLot(input: TicketLotInput & { status: LotStatu
       await syncTicketLotOptions(tx, lot.id, optionLabels);
     }
 
-    return lot;
+    await normalizeEventLotOrder(tx, input.eventId);
+    return tx.ticketLot.findUniqueOrThrow({ where: { id: lot.id } });
   });
 }
 
 export async function updateTicketLotStatus(lotId: string, status: LotStatus) {
-  return prisma.ticketLot.update({
+  return prisma.$transaction(async tx => {
+    const lot = await tx.ticketLot.findUniqueOrThrow({ where: { id: lotId } });
+    await lockEventLotOrder(tx, lot.eventId);
+    await tx.ticketLot.update({
     where: { id: lotId },
     data: {
       status,
       ...(status === LotStatus.SOLD_OUT ? { saleBadge: "SOLD_OUT" } : {}),
       ...(status === LotStatus.ACTIVE ? { saleBadge: "NONE" } : {})
     }
+  });
+    await normalizeEventLotOrder(tx, lot.eventId);
+    return tx.ticketLot.findUniqueOrThrow({ where: { id: lotId } });
   });
 }
 
@@ -244,6 +255,7 @@ export async function getTicketLotForEdit(eventId: string, lotId: string) {
 
 export async function updateTicketLot(lotId: string, input: TicketLotInput & { status: LotStatus }) {
   return prisma.$transaction(async (tx) => {
+    await lockEventLotOrder(tx, input.eventId);
     const salesWindow = await getTicketSalesWindow(tx, input.eventId);
 
     const lot = await tx.ticketLot.findUnique({
@@ -251,6 +263,7 @@ export async function updateTicketLot(lotId: string, input: TicketLotInput & { s
         id: lotId
       },
       select: {
+        eventId: true,
         soldQuantity: true,
         reservedQuantity: true,
         typeOptions: {
@@ -265,7 +278,7 @@ export async function updateTicketLot(lotId: string, input: TicketLotInput & { s
       }
     });
 
-    if (!lot) {
+    if (!lot || lot.eventId !== input.eventId) {
       throw new Error("Lote nao encontrado.");
     }
 
@@ -334,7 +347,8 @@ export async function updateTicketLot(lotId: string, input: TicketLotInput & { s
       }
     }
 
-    return updatedLot;
+    await normalizeEventLotOrder(tx, input.eventId);
+    return tx.ticketLot.findUniqueOrThrow({ where: { id: updatedLot.id } });
   });
 }
 
@@ -342,7 +356,10 @@ export async function updateTicketLotPricing(
   lotId: string,
   input: TicketLotPricingInput
 ) {
-  return prisma.ticketLot.update({
+  return prisma.$transaction(async tx => {
+    const lot = await tx.ticketLot.findUniqueOrThrow({ where: { id: lotId } });
+    await lockEventLotOrder(tx, lot.eventId);
+    await tx.ticketLot.update({
     where: { id: lotId },
     data: {
       priceInCents: input.priceInCents,
@@ -352,5 +369,8 @@ export async function updateTicketLotPricing(
       cardInterestBpsPerInstallment: input.cardInterestBpsPerInstallment,
       cardInterestStartsAtInstallment: input.cardInterestStartsAtInstallment
     }
+  });
+    await normalizeEventLotOrder(tx, lot.eventId);
+    return tx.ticketLot.findUniqueOrThrow({ where: { id: lotId } });
   });
 }

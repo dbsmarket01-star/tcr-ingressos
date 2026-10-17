@@ -17,3 +17,15 @@ Antes de resolver conflitos, preserve o trabalho existente e integre as funciona
 Antes de qualquer alteração, otimização, implementação ou publicação, confira o estado do Git e se outro chat do projeto está trabalhando na mesma área ou preparando um deploy. Quando houver sobreposição, converse com a outra frente para dividir arquivos e responsabilidades ou definir a ordem de integração. Não sobrescreva mudanças alheias, não faça deploys simultâneos e não assuma que um chat ocioso deixou o checkout livre: verifique também os arquivos modificados e não rastreados.
 
 Ao terminar, informe às outras frentes envolvidas quais arquivos e commits foram alterados e se há publicação em andamento ou concluída. Compartilhe atualizações úteis para coordenação; nenhuma frente deve declarar uma funcionalidade publicada apenas por ter concluído sua implementação local.
+
+## Ordem obrigatória dos ingressos
+
+Regra solicitada pelo usuário em 17/10/2026: ao cadastrar, importar, duplicar, reativar ou alterar ingressos, conferir a ordem de todos os lotes ativos do evento antes de concluir.
+
+- Manter juntas todas as categorias de um mesmo setor (solidário, meia-entrada, inteira, duplo etc.), sem intercalar setores. Preservar a sequência de setores aprovada para cada evento; em Rodrigo Teaser em Marília: Bronze, Prata, Ouro e Primeira Fileira.
+- Atribuir posições `sortOrder` explícitas e únicas entre os lotes ativos do evento. Ao inserir uma categoria, reorganizar as posições necessárias; não reutilizar posições nem depender da data de criação para desempatar.
+- Ordenar mesas e camarotes numerados por número, sem mudar sua numeração, disponibilidade ou vínculo com vendas existentes.
+- Preservar preços, estoques, taxas, pedidos e status ao corrigir somente a ordem. Não reativar ingressos pausados sem solicitação.
+- Verificar a sequência final no banco e na página pública, considerando a revalidação do cache, antes de informar que a alteração está concluída.
+
+A aplicação também normaliza a ordem ao salvar, reativar e duplicar lotes, com serialização por evento e proteção na leitura pública. Importações devem usar os serviços de lotes ou chamar `lockEventLotOrder` e `normalizeEventLotOrder` na mesma transação; não gravar posições diretamente sem essa validação.
