@@ -5,7 +5,7 @@ import { EventSectionNav } from "@/components/admin/EventSectionNav";
 import { CopyButton } from "@/components/forms/CopyButton";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { countEventPageVisits } from "@/features/analytics/page-visit.service";
-import { getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
+import { canAccessArea, getAdminAllowedEventIds, requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { duplicateEventAction, updateEventStatusAction } from "@/features/events/event.actions";
 import { getEventCapacity, getEventForManagement, getEventOrderDemographics } from "@/features/events/event.service";
 import { getLeadOriginBucket } from "@/features/tracking/tracking";
@@ -639,7 +639,7 @@ export default async function EventManagementPage({ params, searchParams }: Even
           </div>
         </section>
 
-        <EventSectionNav active="overview" event={event} />
+        <EventSectionNav active="overview" event={event} showBuyersReport={canAccessArea(admin.role, "REPORTS")} />
 
         <section className="eventOverviewKpiGrid">
           {quickStats.map((item) => (

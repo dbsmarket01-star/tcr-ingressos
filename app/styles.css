@@ -13461,6 +13461,65 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   padding: 12px;
 }
 
+.eventBuyersReport {
+  display: grid;
+  gap: 18px;
+}
+
+.eventBuyersReportHero,
+.eventBuyersReportFilters,
+.eventBuyersReportResults {
+  background: #fff;
+  border: 1px solid #dce9e4;
+  border-radius: 18px;
+  box-shadow: 0 14px 30px rgba(18, 36, 48, 0.045);
+  padding: 22px;
+}
+
+.eventBuyersReportHero {
+  align-items: center;
+  background: radial-gradient(circle at top right, rgba(var(--brand-rgb), 0.16), transparent 45%), #fff;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.eventBuyersReportHero h1 { margin: 5px 0 9px; }
+.eventBuyersReportHero p { color: #586b76; margin: 0; max-width: 720px; }
+.eventBuyersReportHeroActions { align-items: flex-end; display: grid; flex: 0 0 auto; gap: 3px; text-align: right; }
+.eventBuyersReportHeroActions strong { color: var(--brand); font-size: 28px; line-height: 1; }
+.eventBuyersReportHeroActions span { color: #64748b; font-size: 12px; font-weight: 700; }
+.eventBuyersReportHeroActions .button { margin-top: 10px; }
+
+.eventBuyersReportFilterGrid { display: grid; gap: 14px; grid-template-columns: minmax(240px, 1.5fr) repeat(2, minmax(190px, 1fr)); }
+.eventBuyersReportFilterGrid label { color: #334155; display: grid; font-size: 13px; font-weight: 750; gap: 7px; }
+.eventBuyersReportFilterGrid input,
+.eventBuyersReportFilterGrid select { background: #f8fbfa; border: 1px solid #d7e5df; border-radius: 10px; color: #172b36; min-height: 42px; padding: 9px 12px; width: 100%; }
+.eventBuyersReportColumns { border-top: 1px solid #e4ece8; margin-top: 20px; padding-top: 17px; }
+.eventBuyersReportColumns summary { color: #172b36; cursor: pointer; font-size: 14px; font-weight: 800; }
+.eventBuyersReportColumnGrid { display: grid; gap: 10px 14px; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); margin-top: 16px; }
+.eventBuyersReportColumnGrid label { align-items: center; background: #f7faf8; border: 1px solid #e0ebe5; border-radius: 9px; color: #334155; display: flex; font-size: 13px; gap: 9px; min-height: 39px; padding: 7px 10px; }
+.eventBuyersReportColumnGrid input { accent-color: var(--brand); height: 16px; width: 16px; }
+.eventBuyersReportFilterActions { align-items: center; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.eventBuyersReportFilterActions small { color: #64748b; margin-left: auto; max-width: 460px; }
+.eventBuyersReportResultsHeader { align-items: flex-end; display: flex; justify-content: space-between; margin-bottom: 16px; }
+.eventBuyersReportResultsHeader h2 { margin: 4px 0 0; }
+.eventBuyersReportResultsHeader > span { color: #64748b; font-size: 13px; font-weight: 700; }
+.eventBuyersReportTableWrap { overflow-x: auto; }
+.eventBuyersReportTable { min-width: max-content; width: 100%; }
+.eventBuyersReportTable th,
+.eventBuyersReportTable td { max-width: 300px; min-width: 125px; overflow-wrap: anywhere; }
+.eventBuyersReportEmpty { background: #f8fbfa; border: 1px dashed #cbded4; border-radius: 12px; color: #64748b; padding: 36px; text-align: center; }
+.eventBuyersReportPagination { align-items: center; display: flex; justify-content: space-between; margin-top: 18px; }
+.eventBuyersReportPagination > span { color: #64748b; font-size: 13px; font-weight: 700; }
+
+@media (max-width: 850px) {
+  .eventBuyersReportHero { align-items: stretch; flex-direction: column; }
+  .eventBuyersReportHeroActions { align-items: start; text-align: left; }
+  .eventBuyersReportFilterGrid { grid-template-columns: 1fr; }
+  .eventBuyersReportFilterActions small { margin-left: 0; width: 100%; }
+}
+
 .adminMetricsDense {
   margin-bottom: 18px;
 }

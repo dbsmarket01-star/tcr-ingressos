@@ -13,6 +13,7 @@ type EventSectionKey =
   | "check-in"
   | "financial-controls"
   | "statistics-report"
+  | "buyers-report"
   | "geography-report"
   | "tracking-links"
   | "heatmap"
@@ -21,6 +22,7 @@ type EventSectionKey =
 
 type EventSectionNavProps = {
   active: EventSectionKey;
+  showBuyersReport?: boolean;
   event: {
     id: string;
     leadCaptureEnabled?: boolean | null;
@@ -49,6 +51,7 @@ const eventSections: Array<{
   { key: "tracking-links", label: "Links rastreáveis", description: "Parceiros e UTMs", icon: "link", href: (event) => `/admin/events/${event.id}` },
   { key: "sales-potential", label: "Potencial de vendas", description: "Projeção e estoque", icon: "trend", href: (event) => `/admin/finance?eventId=${event.id}` },
   { key: "statistics-report", label: "Relatório de estatísticas", description: "Controle por ingresso", icon: "bar", href: (event) => `/admin/reports/lots?eventId=${event.id}` },
+  { key: "buyers-report", label: "Relatórios · compradores", description: "Lista e exportação por ingresso", icon: "list", href: (event) => `/admin/events/${event.id}/reports/buyers` },
   { key: "financial-controls", label: "Controle financeiro", description: "Custos do evento", icon: "wallet", href: (event) => `/admin/finance?eventId=${event.id}` },
   { key: "geography-report", label: "Mapa de vendas", description: "Cidades e regiões", icon: "map-pin", href: (event) => `/admin/events/${event.id}` },
   { key: "heatmap", label: "Mapa de calor", description: "Cliques e navegação", icon: "flame", href: (event) => `/admin/events/${event.id}` },
@@ -92,7 +95,7 @@ function EventNavIcon({ type }: { type: string }) {
   );
 }
 
-export function EventSectionNav({ active, event }: EventSectionNavProps) {
+export function EventSectionNav({ active, event, showBuyersReport = true }: EventSectionNavProps) {
   const activeSection = eventSections.find((section) => section.key === active) ?? eventSections[0];
 
   if (active !== "overview") {
@@ -114,7 +117,7 @@ export function EventSectionNav({ active, event }: EventSectionNavProps) {
 
   return (
     <nav className="eventSectionNav eventSectionNavGrid" aria-label="Seções do evento">
-      {eventSections.map((section) => {
+      {eventSections.filter((section) => section.key !== "buyers-report" || showBuyersReport).map((section) => {
         const isActive = section.key === active;
         const content = (
           <>
