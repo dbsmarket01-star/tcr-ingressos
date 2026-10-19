@@ -15,6 +15,7 @@ export const buyerReportFields = {
   participantCpf: "CPF do participante",
   ticketType: "Ingresso / categoria",
   sector: "Setor",
+  admissionQuantity: "Ingressos nesta linha",
   quantityInOrder: "Quantidade no pedido",
   ticketStatus: "Status do ingresso",
   paidAt: "Data da compra"
@@ -31,7 +32,7 @@ export type BuyerReportFilters = {
 
 export const defaultBuyerReportFields: BuyerReportField[] = [
   "orderCode", "buyerName", "buyerEmail", "buyerPhone", "participantName",
-  "ticketType", "sector", "quantityInOrder"
+  "ticketType", "sector", "admissionQuantity"
 ];
 
 const ticketSelect = {
@@ -70,7 +71,12 @@ export function buyerReportWhere(eventId: string, filters: BuyerReportFilters): 
   const search = filters.search;
   return {
     eventId,
-    order: { status: "PAID" },
+    order: {
+      status: "PAID",
+      // A provider refund can be recorded before the order/tickets finish changing state.
+      // Never expose that purchase as an active sale in this report during that window.
+      OR: [{ payment: null }, { payment: { status: { not: "REFUNDED" } } }]
+    },
     ...(filters.lotId ? { lotId: filters.lotId } : {}),
     ...(filters.status === "valid" ? { status: { in: ["ACTIVE", "USED"] as TicketStatus[] } } : {}),
     ...(filters.status === "used" ? { status: "USED" as TicketStatus } : {}),
@@ -140,6 +146,7 @@ export function buyerReportCell(ticket: BuyerReportTicket, field: BuyerReportFie
     case "participantCpf": return participant?.document || "";
     case "ticketType": return ticket.lotOption?.label ? `${ticket.lot.name} — ${ticket.lotOption.label}` : ticket.lot.name;
     case "sector": return sectorFromLotName(ticket.lot.name);
+    case "admissionQuantity": return "1";
     case "quantityInOrder": return String(ticket.orderItem.quantity * Math.max(ticket.orderItem.admissionsPerUnit, 1));
     case "ticketStatus": return ticket.status === "ACTIVE" ? "Válido" : ticket.status === "USED" ? "Utilizado" : ticket.status === "CANCELED" ? "Cancelado" : "Inválido";
     case "paidAt": return ticket.order.paidAt ? new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" }).format(ticket.order.paidAt) : "";

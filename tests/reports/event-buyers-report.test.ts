@@ -40,7 +40,10 @@ describe("event buyers report", () => {
     expect(where).toMatchObject({
       eventId: "event-1",
       lotId: "lot-1",
-      order: { status: "PAID" },
+      order: {
+        status: "PAID",
+        OR: [{ payment: null }, { payment: { status: { not: "REFUNDED" } } }]
+      },
       status: { in: ["ACTIVE", "USED"] }
     });
     expect(where.OR).toHaveLength(10);
@@ -52,6 +55,7 @@ describe("event buyers report", () => {
     expect(buyerReportCell(ticket, "participantName")).toBe("Participante A");
     expect(buyerReportCell(ticket, "buyerCpf")).toBe("98765432100");
     expect(buyerReportCell(ticket, "participantCpf")).toBe("12345678900");
+    expect(buyerReportCell(ticket, "admissionQuantity")).toBe("1");
     expect(buyerReportCell(ticket, "quantityInOrder")).toBe("2");
     expect(buyerReportCell(ticket, "sector")).toBe("ARQUIBANCADA");
     expect(buyerReportCell({ ...ticket, participant: null }, "participantName")).toBe("");
