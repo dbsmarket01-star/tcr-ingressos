@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WhatsAppMessageType } from "@prisma/client";
 const db = vi.hoisted(() => ({
+  $queryRaw: vi.fn(),
   whatsAppMessageLog: { findMany: vi.fn() },
   order: { findMany: vi.fn() },
   adminAuditLog: { findMany: vi.fn() }
@@ -16,6 +17,7 @@ const message = {
 beforeEach(() => {
   vi.clearAllMocks(); clearCrmWhatsAppInboxCache();
   db.whatsAppMessageLog.findMany.mockResolvedValue([message]);
+  db.$queryRaw.mockResolvedValue([message]);
   db.order.findMany.mockResolvedValue([]); db.adminAuditLog.findMany.mockResolvedValue([]);
 });
 describe("AI messages in WhatsApp admin", () => {
@@ -27,6 +29,11 @@ describe("AI messages in WhatsApp admin", () => {
     expect(db.whatsAppMessageLog.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ organizationId: "org_test", type: { in: expect.arrayContaining(["AI_ASSISTANT"]) } })
     }));
+    expect(inbox[0].latestMessage).toBe("Resposta da IA");
+  });
+  it("loads a dated inbox from representative messages", async () => {
+    const inbox = await getCrmWhatsAppInbox({ organizationId: "org_test", startAt: new Date("2026-09-30T00:00:00Z") });
+    expect(db.$queryRaw).toHaveBeenCalledOnce();
     expect(inbox[0].latestMessage).toBe("Resposta da IA");
   });
   it("renders an existing AI response in the conversation without suppressing it", async () => {

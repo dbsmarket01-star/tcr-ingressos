@@ -1042,6 +1042,8 @@ model WhatsAppMessageLog {
   updatedAt         DateTime              @updatedAt
 
   @@index([organizationId, createdAt])
+  @@index([organizationId, status, createdAt(sort: Desc)], map: "whatsapp_log_org_status_created_idx")
+  @@index([organizationId, recipientPhone, createdAt(sort: Desc)], map: "whatsapp_log_org_phone_created_idx")
   @@index([eventId, createdAt])
   @@index([orderId])
   @@index([leadId])

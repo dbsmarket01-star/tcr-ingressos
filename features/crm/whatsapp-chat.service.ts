@@ -1,4 +1,4 @@
-import { OrderStatus, Prisma, WhatsAppMessageType } from "@prisma/client";
+import { OrderStatus, Prisma, WhatsAppMessageStatus, WhatsAppMessageType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { resolveWhatsAppAiConversationMode } from "@/features/ai/whatsapp-support-ai.service";
 import { conversationMembership, isHumanReply, isRefundRequest } from "@/features/crm/whatsapp-inbox-classification";
@@ -200,6 +200,80 @@ const inboxCache = new Map<string, { expiresAt: number; promise: Promise<InboxRe
 // webhook, mas manter a lista antiga por alguns segundos.
 const INBOX_CACHE_MS = 750;
 
+type InboxMessage = {
+  id: string;
+  orderId: string | null;
+  eventId: string | null;
+  recipientName: string | null;
+  recipientPhone: string | null;
+  type: WhatsAppMessageType;
+  status: WhatsAppMessageStatus;
+  templateName: string | null;
+  payload: Prisma.JsonValue | null;
+  webhookPayload: Prisma.JsonValue | null;
+  createdAt: Date;
+};
+
+/**
+ * The inbox needs the newest message of each kind, not every historical payload.
+ * Do the grouping in Postgres and return at most a handful of rows per contact.
+ * Refund candidates are additionally returned so the existing JS classifier
+ * remains the source of truth for accented/word-boundary matching.
+ */
+async function loadInboxRepresentativeMessages(input: {
+  organizationId: string;
+  allowedEventIds?: EventScope;
+  startAt?: Date;
+  endAt?: Date;
+}): Promise<InboxMessage[]> {
+  if (input.allowedEventIds && input.allowedEventIds.length === 0) return [];
+  const dateFilter = Prisma.sql`${input.startAt ? Prisma.sql`AND m."createdAt" >= ${input.startAt}` : Prisma.empty}
+    ${input.endAt ? Prisma.sql`AND m."createdAt" < ${input.endAt}` : Prisma.empty}`;
+  const scopeExpression = input.allowedEventIds
+    ? Prisma.sql`bool_or("eventId" IN (${Prisma.join(input.allowedEventIds)})
+        OR order_event_id IN (${Prisma.join(input.allowedEventIds)}))`
+    : Prisma.sql`true`;
+
+  return prisma.$queryRaw<InboxMessage[]>(Prisma.sql`
+    WITH base AS MATERIALIZED (
+      SELECT m."id", m."orderId", m."eventId", m."recipientName", m."recipientPhone",
+             m."type", m."status", m."templateName", m."payload", m."webhookPayload",
+             m."createdAt", o."eventId" AS order_event_id,
+             CASE WHEN left(phone.digits, 2) = '55' AND length(phone.digits) >= 12
+                  THEN substring(phone.digits FROM 3) ELSE phone.digits END AS phone_key
+      FROM "WhatsAppMessageLog" m
+      LEFT JOIN "Order" o ON o."id" = m."orderId"
+      LEFT JOIN "Customer" c ON c."id" = o."customerId"
+      CROSS JOIN LATERAL (
+        SELECT regexp_replace(coalesce(m."recipientPhone", c."phone", ''), '[^0-9]', '', 'g') AS digits
+      ) phone
+      WHERE m."organizationId" = ${input.organizationId} ${dateFilter}
+    ), grouped AS (
+      SELECT phone_key,
+             ${scopeExpression} AS in_scope,
+             (array_agg("id" ORDER BY "createdAt" DESC, "id" DESC))[1] AS latest_id,
+             (array_agg("id" ORDER BY "createdAt" DESC, "id" DESC) FILTER (WHERE "status" = 'RECEIVED'))[1] AS inbound_id,
+             (array_agg("id" ORDER BY "createdAt" DESC, "id" DESC) FILTER (WHERE "status" <> 'RECEIVED'))[1] AS outbound_id,
+             (array_agg("id" ORDER BY "createdAt" DESC, "id" DESC) FILTER (WHERE "recipientName" IS NOT NULL AND "recipientName" <> ''))[1] AS name_id,
+             (array_agg("id" ORDER BY "createdAt" DESC, "id" DESC) FILTER (WHERE "orderId" IS NOT NULL))[1] AS order_id,
+             (array_agg("id" ORDER BY "createdAt" DESC, "id" DESC) FILTER (WHERE "type" = 'CART_ABANDONMENT' AND "status" <> 'FAILED'))[1] AS cart_id,
+             (array_agg("id" ORDER BY "createdAt" DESC, "id" DESC) FILTER (WHERE "type" = 'BULK' AND "status" <> 'FAILED' AND "payload"->>'humanAdminUserId' IS NOT NULL))[1] AS human_id
+      FROM base WHERE phone_key <> '' GROUP BY phone_key
+    ), chosen AS (
+      SELECT DISTINCT unnest(array_remove(ARRAY[latest_id, inbound_id, outbound_id, name_id, order_id, cart_id, human_id], NULL)) AS id
+      FROM grouped WHERE in_scope
+      UNION
+      SELECT b."id" FROM base b JOIN grouped g ON g.phone_key = b.phone_key AND g.in_scope
+      WHERE b."status" = 'RECEIVED'
+        AND (coalesce(b."payload"::text, '') || coalesce(b."webhookPayload"::text, '')) ~* '(estorn|reembols|devol|cancel)'
+    )
+    SELECT m."id", m."orderId", m."eventId", m."recipientName", m."recipientPhone",
+           m."type", m."status", m."templateName", m."payload", m."webhookPayload", m."createdAt"
+    FROM "WhatsAppMessageLog" m JOIN chosen ON chosen.id = m."id"
+    ORDER BY m."createdAt" DESC, m."id" DESC
+  `);
+}
+
 async function loadCrmWhatsAppInbox(input: {
   organizationId: string;
   allowedEventIds?: EventScope;
@@ -207,38 +281,22 @@ async function loadCrmWhatsAppInbox(input: {
   startAt?: Date;
   endAt?: Date;
 }) {
-  const scopedOutbound = await prisma.whatsAppMessageLog.findMany({
-    where: {
-      organizationId: input.organizationId,
-      type: {
-        in: [...KNOWN_WHATSAPP_TYPES]
-      },
-      ...(input.startAt || input.endAt
-        ? {
-            createdAt: {
-              ...(input.startAt ? { gte: input.startAt } : {}),
-              ...(input.endAt ? { lt: input.endAt } : {})
-            }
-          }
-        : {})
-    },
-    orderBy: { createdAt: "desc" },
-    // Historical tabs must not silently lose older conversations at a fixed row cap.
-    ...(input.startAt || input.endAt ? { take: 5000 } : {}),
-    select: {
-      id: true,
-      orderId: true,
-      eventId: true,
-      recipientName: true,
-      recipientPhone: true,
-      type: true,
-      status: true,
-      templateName: true,
-      payload: true,
-      webhookPayload: true,
-      createdAt: true
-    }
-  });
+  const startedAt = Date.now();
+  // For a bounded date range the representative query avoids transferring
+  // every webhook payload. For the full archive the indexed legacy query is
+  // still faster until a persistent per-conversation projection is introduced.
+  const scopedOutbound = input.startAt || input.endAt
+    ? await loadInboxRepresentativeMessages(input)
+    : await prisma.whatsAppMessageLog.findMany({
+        where: { organizationId: input.organizationId, type: { in: [...KNOWN_WHATSAPP_TYPES] } },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true, orderId: true, eventId: true, recipientName: true,
+          recipientPhone: true, type: true, status: true, templateName: true,
+          payload: true, webhookPayload: true, createdAt: true
+        }
+      });
+  const representativeMs = Date.now() - startedAt;
   const orderIds = Array.from(new Set(scopedOutbound.map((message) => message.orderId).filter(Boolean))) as string[];
   const loggedPhoneCandidates = Array.from(
     new Set(scopedOutbound.flatMap((message) => candidatePhones(message.recipientPhone)))
@@ -313,6 +371,7 @@ async function loadCrmWhatsAppInbox(input: {
       select: { recipientPhone: true, status: true, payload: true, webhookPayload: true, templateName: true }
     }) : Promise.resolve([])
   ]);
+  const relatedMs = Date.now() - startedAt - representativeMs;
   const orderById = new Map(orders.map((order) => [order.id, order]));
   const orderByPhone = new Map<string, (typeof phoneOrders)[number]>();
   const paidPhones = new Set<string>();
@@ -363,10 +422,12 @@ async function loadCrmWhatsAppInbox(input: {
     if (log.action === "WHATSAPP_CONVERSATION_HIDDEN") hiddenPhones.add(key);
   }
   const allowedKeys = new Set<string>();
+  const alreadyScopedInSql = Boolean(input.allowedEventIds && (input.startAt || input.endAt));
 
   for (const message of scopedOutbound) {
     const order = message.orderId ? orderById.get(message.orderId) : null;
     if (
+      !alreadyScopedInSql &&
       input.allowedEventIds &&
       !order &&
       (!message.eventId || !input.allowedEventIds.includes(message.eventId))
@@ -396,7 +457,7 @@ async function loadCrmWhatsAppInbox(input: {
   }
 
   const search = String(input.search || "").trim().toLocaleLowerCase("pt-BR");
-  return Array.from(groups.entries())
+  const result = Array.from(groups.entries())
     .map(([key, group]) => {
       const messages = group.messages.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
       const latest = messages.at(-1)!;
@@ -457,6 +518,16 @@ async function loadCrmWhatsAppInbox(input: {
         .some((value) => String(value).toLocaleLowerCase("pt-BR").includes(search));
     })
     .sort((a, b) => b.latestAt.getTime() - a.latestAt.getTime());
+  if (process.env.TCR_WHATSAPP_PROFILE === "1") {
+    console.info("[WhatsApp inbox timing]", {
+      representativeMs,
+      relatedMs,
+      composeMs: Date.now() - startedAt - representativeMs - relatedMs,
+      representativeRows: scopedOutbound.length,
+      conversations: result.length
+    });
+  }
+  return result;
 }
 
 export function clearCrmWhatsAppInboxCache(organizationId?: string) {
