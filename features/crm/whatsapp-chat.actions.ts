@@ -123,7 +123,8 @@ export async function sendCrmWhatsAppMessage(formData: FormData) {
         eventId: conversation.contact.eventId,
         orderId: conversation.contact.orderId,
         leadId: conversation.contact.leadId,
-        recipientName: conversation.contact.name
+        recipientName: conversation.contact.name,
+        metadata: { humanAdminUserId: admin.id }
       });
     } else {
       const sent = await sendTextMessageOnce({
@@ -148,6 +149,20 @@ export async function sendCrmWhatsAppMessage(formData: FormData) {
         }).catch((error) => console.error("[WhatsApp knowledge] Falha ao propor regra", error)));
       }
     }
+    const key = conversation.contact.phone.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
+    await prisma.adminAuditLog.create({
+      data: {
+        adminUserId: admin.id,
+        action: "WHATSAPP_HUMAN_REPLIED",
+        entityType: "WHATSAPP_CONVERSATION",
+        entityId: `${admin.organizationId}:${key}`,
+        metadata: { phone: conversation.contact.phone }
+      }
+    }).catch((error) => {
+      // A mensagem já foi aceita pela Meta e carrega humanAdminUserId no log.
+      // Uma falha secundária de auditoria não deve induzir o operador a reenviá-la.
+      console.error("[WhatsApp human history] Falha ao registrar auditoria", error);
+    });
     await setWhatsAppAiConversationState({
       organizationId: admin.organizationId,
       phone: conversation.contact.phone,
@@ -214,6 +229,33 @@ export async function setCrmWhatsAppFollowUp(formData: FormData) {
   });
   clearCrmWhatsAppInboxCache(admin.organizationId);
   redirect(buildRedirect({ phone, status: "ok", message: enabled ? "Conversa movida para Em atendimento / Follow-up." : "Conversa removida do Follow-up." }));
+}
+
+export async function setCrmWhatsAppRefundCategory(formData: FormData) {
+  const admin = await requirePermission("CRM");
+  const phone = getFormText(formData, "phone");
+  const enabled = getFormText(formData, "enabled") === "true";
+  const key = phone.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
+  if (!key) redirect(buildRedirect({ status: "erro", message: "Conversa sem telefone válido." }));
+  const conversation = await getCrmWhatsAppConversation({
+    phone,
+    organizationId: admin.organizationId,
+    allowedEventIds: getAdminAllowedEventIds(admin)
+  });
+  if (!conversation.contact?.phone || conversation.messages.length === 0) {
+    redirect(buildRedirect({ status: "erro", message: "Conversa não encontrada." }));
+  }
+  await prisma.adminAuditLog.create({
+    data: {
+      adminUserId: admin.id,
+      action: enabled ? "WHATSAPP_REFUND_ENABLED" : "WHATSAPP_REFUND_DISABLED",
+      entityType: "WHATSAPP_CONVERSATION",
+      entityId: `${admin.organizationId}:${key}`,
+      metadata: { phone }
+    }
+  });
+  clearCrmWhatsAppInboxCache(admin.organizationId);
+  redirect(buildRedirect({ phone, status: "ok", message: enabled ? "Conversa classificada como estorno." : "Conversa removida da categoria Estorno." }));
 }
 
 export async function sendCrmWhatsAppApprovedTemplate(formData: FormData) {
