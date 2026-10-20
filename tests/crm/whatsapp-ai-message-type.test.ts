@@ -17,7 +17,7 @@ const message = {
 beforeEach(() => {
   vi.clearAllMocks(); clearCrmWhatsAppInboxCache();
   db.whatsAppMessageLog.findMany.mockResolvedValue([message]);
-  db.$queryRaw.mockResolvedValue([message]);
+  db.$queryRaw.mockResolvedValueOnce([{ id: message.id, phone_key: "11999999999" }]).mockResolvedValueOnce([]);
   db.order.findMany.mockResolvedValue([]); db.adminAuditLog.findMany.mockResolvedValue([]);
 });
 describe("AI messages in WhatsApp admin", () => {
@@ -26,14 +26,13 @@ describe("AI messages in WhatsApp admin", () => {
   });
   it("includes AI messages in the inbox query and renders their preview", async () => {
     const inbox = await getCrmWhatsAppInbox({ organizationId: "org_test" });
-    expect(db.whatsAppMessageLog.findMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: expect.objectContaining({ organizationId: "org_test", type: { in: expect.arrayContaining(["AI_ASSISTANT"]) } })
-    }));
+    expect(db.$queryRaw).toHaveBeenCalledTimes(2);
+    expect(db.whatsAppMessageLog.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ organizationId: "org_test", id: { in: [message.id] } }) }));
     expect(inbox[0].latestMessage).toBe("Resposta da IA");
   });
   it("loads a dated inbox from representative messages", async () => {
     const inbox = await getCrmWhatsAppInbox({ organizationId: "org_test", startAt: new Date("2026-09-30T00:00:00Z") });
-    expect(db.$queryRaw).toHaveBeenCalledOnce();
+    expect(db.$queryRaw).toHaveBeenCalledTimes(2);
     expect(inbox[0].latestMessage).toBe("Resposta da IA");
   });
   it("renders an existing AI response in the conversation without suppressing it", async () => {

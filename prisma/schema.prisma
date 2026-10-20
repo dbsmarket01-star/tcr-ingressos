@@ -912,6 +912,7 @@ model Customer {
 
   @@index([email])
   @@index([document])
+  @@index([phone], map: "customer_phone_whatsapp_idx")
   @@index([city, state])
 }
 

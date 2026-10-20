@@ -5,8 +5,6 @@ import { conversationMembership, isHumanReply, isRefundRequest } from "@/feature
 
 type EventScope = string[] | null | undefined;
 
-const KNOWN_WHATSAPP_TYPES = Object.values(WhatsAppMessageType);
-
 export async function getCrmWhatsAppNotificationSnapshot(input: {
   organizationId: string;
   allowedEventIds?: EventScope;
@@ -234,11 +232,11 @@ async function loadInboxRepresentativeMessages(input: {
         OR order_event_id IN (${Prisma.join(input.allowedEventIds)}))`
     : Prisma.sql`true`;
 
-  return prisma.$queryRaw<InboxMessage[]>(Prisma.sql`
+  const [representatives, candidates] = await Promise.all([
+    prisma.$queryRaw<Array<{ id: string; phone_key: string }>>(Prisma.sql`
     WITH base AS MATERIALIZED (
       SELECT m."id", m."orderId", m."eventId", m."recipientName", m."recipientPhone",
-             m."type", m."status", m."templateName", m."payload", m."webhookPayload",
-             m."createdAt", o."eventId" AS order_event_id,
+             m."type", m."status", m."createdAt", o."eventId" AS order_event_id,
              CASE WHEN left(phone.digits, 2) = '55' AND length(phone.digits) >= 12
                   THEN substring(phone.digits FROM 3) ELSE phone.digits END AS phone_key
       FROM "WhatsAppMessageLog" m
@@ -256,22 +254,39 @@ async function loadInboxRepresentativeMessages(input: {
              (array_agg("id" ORDER BY "createdAt" DESC, "id" DESC) FILTER (WHERE "status" <> 'RECEIVED'))[1] AS outbound_id,
              (array_agg("id" ORDER BY "createdAt" DESC, "id" DESC) FILTER (WHERE "recipientName" IS NOT NULL AND "recipientName" <> ''))[1] AS name_id,
              (array_agg("id" ORDER BY "createdAt" DESC, "id" DESC) FILTER (WHERE "orderId" IS NOT NULL))[1] AS order_id,
-             (array_agg("id" ORDER BY "createdAt" DESC, "id" DESC) FILTER (WHERE "type" = 'CART_ABANDONMENT' AND "status" <> 'FAILED'))[1] AS cart_id,
-             (array_agg("id" ORDER BY "createdAt" DESC, "id" DESC) FILTER (WHERE "type" = 'BULK' AND "status" <> 'FAILED' AND "payload"->>'humanAdminUserId' IS NOT NULL))[1] AS human_id
+             (array_agg("id" ORDER BY "createdAt" DESC, "id" DESC) FILTER (WHERE "type" = 'CART_ABANDONMENT' AND "status" <> 'FAILED'))[1] AS cart_id
       FROM base WHERE phone_key <> '' GROUP BY phone_key
-    ), chosen AS (
-      SELECT DISTINCT unnest(array_remove(ARRAY[latest_id, inbound_id, outbound_id, name_id, order_id, cart_id, human_id], NULL)) AS id
-      FROM grouped WHERE in_scope
-      UNION
-      SELECT b."id" FROM base b JOIN grouped g ON g.phone_key = b.phone_key AND g.in_scope
-      WHERE b."status" = 'RECEIVED'
-        AND (coalesce(b."payload"::text, '') || coalesce(b."webhookPayload"::text, '')) ~* '(estorn|reembols|devol|cancel)'
     )
-    SELECT m."id", m."orderId", m."eventId", m."recipientName", m."recipientPhone",
-           m."type", m."status", m."templateName", m."payload", m."webhookPayload", m."createdAt"
-    FROM "WhatsAppMessageLog" m JOIN chosen ON chosen.id = m."id"
-    ORDER BY m."createdAt" DESC, m."id" DESC
-  `);
+    SELECT unnest(array_remove(ARRAY[latest_id, inbound_id, outbound_id, name_id, order_id, cart_id], NULL)) AS id,
+           phone_key
+    FROM grouped WHERE in_scope
+    `),
+    prisma.$queryRaw<Array<{ id: string; recipientPhone: string | null }>>(Prisma.sql`
+      SELECT m."id", m."recipientPhone"
+      FROM "WhatsAppMessageLog" m
+      WHERE m."organizationId" = ${input.organizationId} ${dateFilter}
+        AND (
+          (m."type" = 'BULK' AND m."status" <> 'FAILED' AND m."payload"->>'humanAdminUserId' IS NOT NULL)
+          OR (m."status" = 'RECEIVED' AND
+            (coalesce(m."payload"::text, '') || coalesce(m."webhookPayload"::text, '')) ~* '(estorn|reembols|devol|cancel)')
+        )
+    `)
+  ]);
+  const scopedKeys = new Set(representatives.map((row) => row.phone_key));
+  const ids = Array.from(new Set([
+    ...representatives.map((row) => row.id),
+    ...candidates.filter((row) => scopedKeys.has(conversationPhoneKey(row.recipientPhone))).map((row) => row.id)
+  ]));
+  if (!ids.length) return [];
+  return prisma.whatsAppMessageLog.findMany({
+    where: { id: { in: ids }, organizationId: input.organizationId },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    select: {
+      id: true, orderId: true, eventId: true, recipientName: true,
+      recipientPhone: true, type: true, status: true, templateName: true,
+      payload: true, webhookPayload: true, createdAt: true
+    }
+  });
 }
 
 async function loadCrmWhatsAppInbox(input: {
@@ -282,20 +297,7 @@ async function loadCrmWhatsAppInbox(input: {
   endAt?: Date;
 }) {
   const startedAt = Date.now();
-  // For a bounded date range the representative query avoids transferring
-  // every webhook payload. For the full archive the indexed legacy query is
-  // still faster until a persistent per-conversation projection is introduced.
-  const scopedOutbound = input.startAt || input.endAt
-    ? await loadInboxRepresentativeMessages(input)
-    : await prisma.whatsAppMessageLog.findMany({
-        where: { organizationId: input.organizationId, type: { in: [...KNOWN_WHATSAPP_TYPES] } },
-        orderBy: { createdAt: "desc" },
-        select: {
-          id: true, orderId: true, eventId: true, recipientName: true,
-          recipientPhone: true, type: true, status: true, templateName: true,
-          payload: true, webhookPayload: true, createdAt: true
-        }
-      });
+  const scopedOutbound = await loadInboxRepresentativeMessages(input);
   const representativeMs = Date.now() - startedAt;
   const orderIds = Array.from(new Set(scopedOutbound.map((message) => message.orderId).filter(Boolean))) as string[];
   const loggedPhoneCandidates = Array.from(
@@ -422,7 +424,7 @@ async function loadCrmWhatsAppInbox(input: {
     if (log.action === "WHATSAPP_CONVERSATION_HIDDEN") hiddenPhones.add(key);
   }
   const allowedKeys = new Set<string>();
-  const alreadyScopedInSql = Boolean(input.allowedEventIds && (input.startAt || input.endAt));
+  const alreadyScopedInSql = Boolean(input.allowedEventIds);
 
   for (const message of scopedOutbound) {
     const order = message.orderId ? orderById.get(message.orderId) : null;
