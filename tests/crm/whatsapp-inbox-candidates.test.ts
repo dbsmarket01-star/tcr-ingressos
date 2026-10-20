@@ -1,6 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
-import { buildInboxCandidateQuery } from "@/features/crm/whatsapp-chat.service";
+import { readFileSync } from "node:fs";
+import { buildInboxCandidateQuery, buildIndexedInboxCandidateQuery } from "@/features/crm/whatsapp-chat.service";
 
 const db = new PGlite();
 afterAll(async () => db.close());
@@ -53,6 +54,30 @@ describe("WhatsApp inbox candidate query", () => {
     const query = buildInboxCandidateQuery({organizationId:"org-boundary",startAt:new Date("2026-10-19T10:00:00Z"),endAt:new Date("2026-10-20T00:00:00Z")});
     const result = await db.query<{id:string}>(query.text,query.values);
     expect(result.rows.map(row=>row.id)).toEqual(["b-tie-z","b-in","b-cart","b-human","b-order","b-name"]);
+  });
+
+  it("keeps the persisted index equal to the historical query through inserts, updates and deletes", async () => {
+    const migration = readFileSync("prisma/migrations/20261020230000_whatsapp_conversation_candidates/migration.sql", "utf8")
+      .replace(/CREATE INDEX CONCURRENTLY/g, "CREATE INDEX");
+    await db.exec(migration);
+    async function expectParity(org: string) {
+      const oldQuery = buildInboxCandidateQuery({ organizationId: org });
+      const indexedQuery = buildIndexedInboxCandidateQuery(org);
+      const [oldRows, indexedRows] = await Promise.all([
+        db.query<{ id: string }>(oldQuery.text, oldQuery.values),
+        db.query<{ id: string }>(indexedQuery.text, indexedQuery.values)
+      ]);
+      expect(indexedRows.rows.map((row) => row.id)).toEqual(oldRows.rows.map((row) => row.id));
+    }
+    await expectParity("org");
+    await expectParity("org-boundary");
+    await db.query(`INSERT INTO "WhatsAppMessageLog" (id, "organizationId", "recipientPhone", type, status, payload, "createdAt") VALUES ('a7','org','+55 (11) 99999-9999','BULK','RECEIVED','{"text":{"body":"Quero reembolso"}}','2026-10-20T10:06:00Z')`);
+    await expectParity("org");
+    await db.query(`UPDATE "WhatsAppMessageLog" SET status='SENT', "recipientPhone"='5511888888888' WHERE id='a7'`);
+    await expectParity("org");
+    await expectParity("org-boundary");
+    await db.query(`DELETE FROM "WhatsAppMessageLog" WHERE id='a7'`);
+    await expectParity("org");
   });
 
 });

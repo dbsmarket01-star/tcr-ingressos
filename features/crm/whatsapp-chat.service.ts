@@ -285,6 +285,17 @@ export function buildInboxCandidateQuery(input: {
   `;
 }
 
+export function buildIndexedInboxCandidateQuery(organizationId: string) {
+  return Prisma.sql`
+    SELECT m.id, m."orderId", m."eventId", m."recipientName", m."recipientPhone", m.type, m.status, m."templateName", m.payload, m."webhookPayload", m."createdAt"
+    FROM "WhatsAppConversationCandidates" c
+    CROSS JOIN LATERAL unnest(c."messageIds") AS selected(id)
+    JOIN "WhatsAppMessageLog" m ON m.id = selected.id
+    WHERE c."organizationId" = ${organizationId}
+    ORDER BY m."createdAt" DESC, m.id DESC
+  `;
+}
+
 async function loadInboxMessageCandidates(input: {
   organizationId: string;
   startAt?: Date;
@@ -292,7 +303,17 @@ async function loadInboxMessageCandidates(input: {
 }): Promise<InboxMessage[]> {
   // Select only the rows needed to classify each conversation. Pulling every
   // JSON payload from the full message history made every tab click expensive.
-  return prisma.$queryRaw<InboxMessage[]>(buildInboxCandidateQuery(input));
+  if (input.startAt || input.endAt) {
+    return prisma.$queryRaw<InboxMessage[]>(buildInboxCandidateQuery(input));
+  }
+  try {
+    return await prisma.$queryRaw<InboxMessage[]>(buildIndexedInboxCandidateQuery(input.organizationId));
+  } catch (error) {
+    // A deploy can briefly precede the migration. Keep the existing inbox available.
+    const details = error && typeof error === "object" ? error as { code?: unknown; meta?: { code?: unknown } } : {};
+    if (details.code !== "42P01" && !(details.code === "P2010" && details.meta?.code === "42P01")) throw error;
+    return prisma.$queryRaw<InboxMessage[]>(buildInboxCandidateQuery(input));
+  }
 }
 
 async function loadCrmWhatsAppInbox(input: {
@@ -302,7 +323,9 @@ async function loadCrmWhatsAppInbox(input: {
   startAt?: Date;
   endAt?: Date;
 }) {
+  const startedAt = Date.now();
   const scopedOutbound = await loadInboxMessageCandidates(input);
+  const candidatesMs = Date.now() - startedAt;
   const orderIds = Array.from(new Set(scopedOutbound.map((message) => message.orderId).filter(Boolean))) as string[];
   const loggedPhoneCandidates = Array.from(
     new Set(scopedOutbound.flatMap((message) => candidatePhones(message.recipientPhone)))
@@ -460,7 +483,7 @@ async function loadCrmWhatsAppInbox(input: {
   }
 
   const search = String(input.search || "").trim().toLocaleLowerCase("pt-BR");
-  return Array.from(groups.entries())
+  const inbox = Array.from(groups.entries())
     .map(([key, group]) => {
       const messages = group.messages.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
       const latest = messages.at(-1)!;
@@ -521,6 +544,17 @@ async function loadCrmWhatsAppInbox(input: {
         .some((value) => String(value).toLocaleLowerCase("pt-BR").includes(search));
     })
     .sort((a, b) => b.latestAt.getTime() - a.latestAt.getTime());
+  const totalMs = Date.now() - startedAt;
+  if (totalMs > 1500) {
+    console.warn("[whatsapp-inbox] slow load", {
+      organizationId: input.organizationId,
+      period: input.startAt || input.endAt ? "filtered" : "all",
+      candidatesMs,
+      totalMs,
+      conversations: inbox.length
+    });
+  }
+  return inbox;
 }
 
 export function clearCrmWhatsAppInboxCache(organizationId?: string) {
