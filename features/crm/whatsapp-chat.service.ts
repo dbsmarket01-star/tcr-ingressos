@@ -80,6 +80,7 @@ export async function getCrmWhatsAppNotificationDelta(input: {
       at: row.createdAt.toISOString(),
       name: row.recipientName || "Contato",
       message: messageContent(row),
+      media: mediaFromPayload(row.payload) || mediaFromPayload(row.webhookPayload),
       phone: row.recipientPhone
     })),
     hasMore: rows.length > 100
@@ -750,6 +751,8 @@ export async function getCrmWhatsAppConversation(input: {
   phone?: string;
   organizationId: string;
   allowedEventIds?: EventScope;
+  beforeAt?: Date;
+  beforeId?: string;
 }) {
   const order = input.orderCode
     ? await findOrderContact({
@@ -774,7 +777,9 @@ export async function getCrmWhatsAppConversation(input: {
       contact: null,
       messages: [],
       hiddenFailureCount: 0,
-      canReply: false
+      canReply: false,
+      historyHasMore: false,
+      historyCursor: null
     };
   }
 
@@ -802,15 +807,20 @@ export async function getCrmWhatsAppConversation(input: {
     where: {
       organizationId: input.organizationId,
       ...(input.allowedEventIds ? { eventId: { in: input.allowedEventIds } } : {}),
-      OR: messageFilters
+      OR: messageFilters,
+      ...(input.beforeAt && input.beforeId ? { AND: [{ OR: [
+        { createdAt: { lt: input.beforeAt } },
+        { createdAt: input.beforeAt, id: { lt: input.beforeId } }
+      ] }] } : {})
     },
-    orderBy: {
-      createdAt: "desc"
-    },
-    take: 80
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: 81
   });
+  const historyHasMore = rawMessages.length > 80;
+  if (historyHasMore) rawMessages.pop();
   rawMessages.reverse();
-  const newestVisibleTechnicalFailureId = rawMessages
+  const oldestRawMessage = rawMessages[0];
+  const newestVisibleTechnicalFailureId = input.beforeAt ? undefined : rawMessages
     .filter(isRepeatedTechnicalFailure)
     .at(-1)?.id;
   const messages = rawMessages.filter((message) => {
@@ -851,6 +861,8 @@ export async function getCrmWhatsAppConversation(input: {
       errorDetails: errorDetailsFromPayload(message.webhookPayload)
     })),
     hiddenFailureCount,
-    canReply: canReplyFrom(messages)
+    canReply: canReplyFrom(messages),
+    historyHasMore,
+    historyCursor: oldestRawMessage ? { at: oldestRawMessage.createdAt.toISOString(), id: oldestRawMessage.id } : null
   };
 }

@@ -13,6 +13,7 @@ type NotificationSnapshot = {
   at: string;
   name: string;
   message: string;
+  media: { kind: string; url: string | null; fileName: string | null; mimeType: string | null; caption: string | null } | null;
   phone: string | null;
 };
 

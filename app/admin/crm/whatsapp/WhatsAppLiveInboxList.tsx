@@ -67,7 +67,11 @@ export function WhatsAppLiveInboxList({
         const updated: Item = existing
           ? { ...existing, latestAt, latestMessage: message.message, latestInboundAt: latestAt, latestInboundId: message.id, latestInboundMessage: message.message, hasUnread: true, unreadQueue: true, needsReply: true, canReply: true, lastDirection: "inbound" }
           : { key, name: message.name, phone: message.phone || "", eventTitle: "Conversa pelo WhatsApp", orderCode: null, latestMessage: message.message, latestAt, latestInboundAt: latestAt, latestInboundId: message.id, latestInboundMessage: message.message, needsReply: true, hasUnread: true, unreadQueue: true, hasHumanReply: false, isRefund: false, followUp: false, isClosed: false, abandonedWithoutReturn: false, canReply: true, lastDirection: "inbound", lastOutboundAt: null, aiMode: "ACTIVE" };
-        return [updated, ...current.filter((item) => item.key !== key)].sort((a, b) => b.latestAt.getTime() - a.latestAt.getTime());
+        const term = String(search || "").trim().toLocaleLowerCase("pt-BR");
+        if (term && ![updated.name, updated.phone, updated.eventTitle, updated.orderCode, updated.latestMessage].some((value) => String(value || "").toLocaleLowerCase("pt-BR").includes(term))) {
+          return current.filter((item) => item.key !== key);
+        }
+        return [updated, ...current.filter((item) => item.key !== key)];
       });
     };
     const onRead = (event: Event) => {
@@ -78,7 +82,11 @@ export function WhatsAppLiveInboxList({
     const onOutbound = (event: Event) => {
       const detail = (event as CustomEvent<{ phone?: string; message?: string }>).detail;
       const key = phoneKey(detail?.phone);
-      setItems((current) => current.map((item) => item.key === key ? { ...item, latestAt: new Date(), latestMessage: detail.message || "Mensagem enviada", lastDirection: "outbound" as const, hasHumanReply: true, hasUnread: false, unreadQueue: false, needsReply: false } : item).sort((a, b) => b.latestAt.getTime() - a.latestAt.getTime()));
+      setItems((current) => {
+        const item = current.find((candidate) => candidate.key === key);
+        if (!item) return current;
+        return [{ ...item, latestAt: new Date(), latestMessage: detail.message || "Mensagem enviada", lastDirection: "outbound" as const, hasHumanReply: true, hasUnread: false, unreadQueue: false, needsReply: false }, ...current.filter((candidate) => candidate.key !== key)];
+      });
     };
     window.addEventListener("tcr:whatsapp-inbound", onIncoming);
     window.addEventListener("tcr:whatsapp-read", onRead);
@@ -88,7 +96,7 @@ export function WhatsAppLiveInboxList({
       window.removeEventListener("tcr:whatsapp-read", onRead);
       window.removeEventListener("tcr:whatsapp-outbound", onOutbound);
     };
-  }, []);
+  }, [search]);
 
   useEffect(() => {
     window.dispatchEvent(new CustomEvent("tcr:whatsapp-unread-count", { detail: { count: items.filter((item) => item.hasUnread).length } }));
