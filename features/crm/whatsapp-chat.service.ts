@@ -1,10 +1,11 @@
-import { OrderStatus, Prisma, WhatsAppMessageType } from "@prisma/client";
+import { OrderStatus, Prisma, WhatsAppMessageType, type WhatsAppMessageLog } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { resolveWhatsAppAiConversationMode } from "@/features/ai/whatsapp-support-ai.service";
 import { conversationMembership, isHumanReply, isRefundRequest } from "@/features/crm/whatsapp-inbox-classification";
 
 type EventScope = string[] | null | undefined;
 
+type InboxMessage = Pick<WhatsAppMessageLog, "id" | "orderId" | "eventId" | "recipientName" | "recipientPhone" | "type" | "status" | "templateName" | "payload" | "webhookPayload" | "createdAt">;
 const KNOWN_WHATSAPP_TYPES = Object.values(WhatsAppMessageType);
 
 export async function getCrmWhatsAppNotificationSnapshot(input: {
@@ -20,7 +21,7 @@ export async function getCrmWhatsAppNotificationSnapshot(input: {
       status: "RECEIVED",
       ...(input.allowedEventIds ? { eventId: { in: input.allowedEventIds } } : {})
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     select: {
       id: true,
       recipientName: true,
@@ -42,6 +43,47 @@ export async function getCrmWhatsAppNotificationSnapshot(input: {
         phone: latestInbound.recipientPhone
       }
     : null;
+}
+
+export async function getCrmWhatsAppNotificationDelta(input: {
+  organizationId: string;
+  allowedEventIds?: EventScope;
+  afterAt: Date;
+  afterId: string;
+}) {
+  const rows = await prisma.whatsAppMessageLog.findMany({
+    where: {
+      organizationId: input.organizationId,
+      status: "RECEIVED",
+      ...(input.allowedEventIds ? { eventId: { in: input.allowedEventIds } } : {}),
+      OR: [
+        { createdAt: { gt: input.afterAt } },
+        { createdAt: input.afterAt, id: { gt: input.afterId } }
+      ]
+    },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    take: 101,
+    select: {
+      id: true,
+      recipientName: true,
+      recipientPhone: true,
+      payload: true,
+      webhookPayload: true,
+      createdAt: true,
+      status: true,
+      templateName: true
+    }
+  });
+  return {
+    messages: rows.slice(0, 100).map((row) => ({
+      id: row.id,
+      at: row.createdAt.toISOString(),
+      name: row.recipientName || "Contato",
+      message: messageContent(row),
+      phone: row.recipientPhone
+    })),
+    hasMore: rows.length > 100
+  };
 }
 
 function normalizeDigits(value?: string | null) {
@@ -200,6 +242,51 @@ const inboxCache = new Map<string, { expiresAt: number; promise: Promise<InboxRe
 // webhook, mas manter a lista antiga por alguns segundos.
 const INBOX_CACHE_MS = 750;
 
+export function buildInboxCandidateQuery(input: {
+  organizationId: string;
+  startAt?: Date;
+  endAt?: Date;
+}) {
+  const dateFilter = Prisma.sql`${input.startAt ? Prisma.sql`AND "createdAt" >= ${input.startAt}` : Prisma.empty} ${input.endAt ? Prisma.sql`AND "createdAt" < ${input.endAt}` : Prisma.empty}`;
+  return Prisma.sql`
+    WITH normalized AS (
+      SELECT m.*, CASE WHEN left(digits, 2) = '55' AND length(digits) >= 12 THEN substring(digits from 3) ELSE digits END AS conversation_key
+      FROM "WhatsAppMessageLog" m
+      CROSS JOIN LATERAL (SELECT regexp_replace(coalesce(m."recipientPhone", ''), '[^0-9]', '', 'g') AS digits) phone
+      WHERE m."organizationId" = ${input.organizationId} AND m.type IN (${Prisma.join(KNOWN_WHATSAPP_TYPES)}) ${dateFilter}
+    ), ranked AS (
+      SELECT *,
+        row_number() OVER (PARTITION BY conversation_key ORDER BY "createdAt" DESC, id DESC) AS latest_rank,
+        row_number() OVER (PARTITION BY conversation_key, (status = 'RECEIVED') ORDER BY "createdAt" DESC, id DESC) AS direction_rank,
+        row_number() OVER (PARTITION BY conversation_key, (type = 'CART_ABANDONMENT' AND status <> 'FAILED') ORDER BY "createdAt" DESC, id DESC) AS cart_rank,
+        row_number() OVER (PARTITION BY conversation_key, (type = 'BULK' AND status <> 'FAILED' AND nullif(payload->>'humanAdminUserId', '') IS NOT NULL) ORDER BY "createdAt" DESC, id DESC) AS human_rank,
+        row_number() OVER (PARTITION BY conversation_key, ("orderId" IS NOT NULL) ORDER BY "createdAt" DESC, id DESC) AS order_rank,
+        row_number() OVER (PARTITION BY conversation_key, ("recipientName" IS NOT NULL) ORDER BY "createdAt" DESC, id DESC) AS name_rank
+      FROM normalized
+      WHERE conversation_key <> ''
+    )
+    SELECT id, "orderId", "eventId", "recipientName", "recipientPhone", type, status, "templateName", payload, "webhookPayload", "createdAt"
+    FROM ranked
+    WHERE latest_rank = 1 OR direction_rank = 1
+      OR (type = 'CART_ABANDONMENT' AND status <> 'FAILED' AND cart_rank = 1)
+      OR (type = 'BULK' AND status <> 'FAILED' AND nullif(payload->>'humanAdminUserId', '') IS NOT NULL AND human_rank = 1)
+      OR ("orderId" IS NOT NULL AND order_rank = 1)
+      OR ("recipientName" IS NOT NULL AND name_rank = 1)
+      OR (status = 'RECEIVED' AND (coalesce(payload::text, '') || coalesce("webhookPayload"::text, '')) ~* 'estorn|reembols|devol|cancel')
+    ORDER BY "createdAt" DESC, id DESC
+  `;
+}
+
+async function loadInboxMessageCandidates(input: {
+  organizationId: string;
+  startAt?: Date;
+  endAt?: Date;
+}): Promise<InboxMessage[]> {
+  // Select only the rows needed to classify each conversation. Pulling every
+  // JSON payload from the full message history made every tab click expensive.
+  return prisma.$queryRaw<InboxMessage[]>(buildInboxCandidateQuery(input));
+}
+
 async function loadCrmWhatsAppInbox(input: {
   organizationId: string;
   allowedEventIds?: EventScope;
@@ -207,38 +294,7 @@ async function loadCrmWhatsAppInbox(input: {
   startAt?: Date;
   endAt?: Date;
 }) {
-  const scopedOutbound = await prisma.whatsAppMessageLog.findMany({
-    where: {
-      organizationId: input.organizationId,
-      type: {
-        in: [...KNOWN_WHATSAPP_TYPES]
-      },
-      ...(input.startAt || input.endAt
-        ? {
-            createdAt: {
-              ...(input.startAt ? { gte: input.startAt } : {}),
-              ...(input.endAt ? { lt: input.endAt } : {})
-            }
-          }
-        : {})
-    },
-    orderBy: { createdAt: "desc" },
-    // Historical tabs must not silently lose older conversations at a fixed row cap.
-    ...(input.startAt || input.endAt ? { take: 5000 } : {}),
-    select: {
-      id: true,
-      orderId: true,
-      eventId: true,
-      recipientName: true,
-      recipientPhone: true,
-      type: true,
-      status: true,
-      templateName: true,
-      payload: true,
-      webhookPayload: true,
-      createdAt: true
-    }
-  });
+  const scopedOutbound = await loadInboxMessageCandidates(input);
   const orderIds = Array.from(new Set(scopedOutbound.map((message) => message.orderId).filter(Boolean))) as string[];
   const loggedPhoneCandidates = Array.from(
     new Set(scopedOutbound.flatMap((message) => candidatePhones(message.recipientPhone)))
@@ -703,6 +759,7 @@ export async function getCrmWhatsAppConversation(input: {
   const rawMessages = await prisma.whatsAppMessageLog.findMany({
     where: {
       organizationId: input.organizationId,
+      ...(input.allowedEventIds ? { eventId: { in: input.allowedEventIds } } : {}),
       OR: messageFilters
     },
     orderBy: {
