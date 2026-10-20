@@ -1,6 +1,7 @@
 import { OrderStatus, Prisma, WhatsAppMessageType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { resolveWhatsAppAiConversationMode } from "@/features/ai/whatsapp-support-ai.service";
+import { conversationMembership, isHumanReply, isRefundRequest } from "@/features/crm/whatsapp-inbox-classification";
 
 type EventScope = string[] | null | undefined;
 
@@ -85,12 +86,6 @@ function textFromPayload(payload: Prisma.JsonValue | null | undefined) {
   }
 
   return typeof data.body === "string" ? data.body : null;
-}
-
-function payloadSource(payload: Prisma.JsonValue | null | undefined) {
-  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
-  const source = (payload as { source?: unknown }).source;
-  return typeof source === "string" ? source : null;
 }
 
 function templatePreview(payload: Prisma.JsonValue | null | undefined, templateName?: string | null) {
@@ -228,7 +223,8 @@ async function loadCrmWhatsAppInbox(input: {
         : {})
     },
     orderBy: { createdAt: "desc" },
-    take: 5000,
+    // Historical tabs must not silently lose older conversations at a fixed row cap.
+    ...(input.startAt || input.endAt ? { take: 5000 } : {}),
     select: {
       id: true,
       orderId: true,
@@ -251,7 +247,7 @@ async function loadCrmWhatsAppInbox(input: {
     .map((message) => conversationPhoneKey(message.recipientPhone))
     .filter((key): key is string => Boolean(key))
     .map((key) => `${input.organizationId}:${key}`)));
-  const [orders, phoneOrders, aiStateLogs, workflowLogs] = await Promise.all([
+  const [orders, phoneOrders, aiStateLogs, workflowLogs, historicalHumanReplies, historicalRefundRequests] = await Promise.all([
     orderIds.length ? prisma.order.findMany({
         where: {
           id: { in: orderIds },
@@ -297,10 +293,24 @@ async function loadCrmWhatsAppInbox(input: {
       where: {
         entityType: "WHATSAPP_CONVERSATION",
         entityId: { in: conversationEntityIds },
-        action: { in: ["WHATSAPP_CONVERSATION_READ", "WHATSAPP_FOLLOWUP_ENABLED", "WHATSAPP_FOLLOWUP_DISABLED", "WHATSAPP_CONVERSATION_HIDDEN"] }
+        action: { in: ["WHATSAPP_CONVERSATION_READ", "WHATSAPP_FOLLOWUP_ENABLED", "WHATSAPP_FOLLOWUP_DISABLED", "WHATSAPP_CONVERSATION_HIDDEN", "WHATSAPP_HUMAN_REPLIED", "WHATSAPP_REFUND_ENABLED", "WHATSAPP_REFUND_DISABLED"] }
       },
       orderBy: { createdAt: "desc" },
       select: { action: true, entityId: true, metadata: true, createdAt: true }
+    }) : Promise.resolve([]),
+    (input.startAt || input.endAt) && loggedPhoneCandidates.length ? prisma.whatsAppMessageLog.findMany({
+      where: {
+        organizationId: input.organizationId,
+        recipientPhone: { in: loggedPhoneCandidates },
+        type: "BULK",
+        status: { not: "FAILED" },
+        payload: { path: ["humanAdminUserId"], not: Prisma.JsonNull }
+      },
+      select: { recipientPhone: true, type: true, status: true, payload: true, createdAt: true }
+    }) : Promise.resolve([]),
+    (input.startAt || input.endAt) && loggedPhoneCandidates.length ? prisma.whatsAppMessageLog.findMany({
+      where: { organizationId: input.organizationId, recipientPhone: { in: loggedPhoneCandidates }, status: "RECEIVED" },
+      select: { recipientPhone: true, status: true, payload: true, webhookPayload: true, templateName: true }
     }) : Promise.resolve([])
   ]);
   const orderById = new Map(orders.map((order) => [order.id, order]));
@@ -319,19 +329,36 @@ async function loadCrmWhatsAppInbox(input: {
     aiModeByPhone.set(key, resolveWhatsAppAiConversationMode({ action: log.action, metadata: log.metadata }));
   }
   const latestReadAtByPhone = new Map<string, Date>();
-  const hasEverBeenRead = new Set<string>();
   const followUpByPhone = new Map<string, boolean>();
+  const refundByPhone = new Map<string, boolean>();
+  const refundRequestPhones = new Set<string>();
+  for (const message of historicalRefundRequests) {
+    const phoneKey = conversationPhoneKey(message.recipientPhone);
+    if (phoneKey && isRefundRequest(messageContent(message))) refundRequestPhones.add(phoneKey);
+  }
+  const humanRepliedPhones = new Set<string>();
+  for (const message of historicalHumanReplies) {
+    const phoneKey = conversationPhoneKey(message.recipientPhone);
+    if (phoneKey && isHumanReply(message)) humanRepliedPhones.add(phoneKey);
+  }
   const hiddenPhones = new Set<string>();
   for (const log of workflowLogs) {
     if (!log.entityId) continue;
     const key = log.entityId.slice(`${input.organizationId}:`.length);
     if (!key) continue;
     if (log.action === "WHATSAPP_CONVERSATION_READ") {
-      hasEverBeenRead.add(key);
-      if (!latestReadAtByPhone.has(key)) latestReadAtByPhone.set(key, log.createdAt);
+      if (!latestReadAtByPhone.has(key)) {
+        const metadata = log.metadata && typeof log.metadata === "object" && !Array.isArray(log.metadata) ? log.metadata as Record<string, unknown> : {};
+        const readThroughAt = typeof metadata.readThroughAt === "string" ? new Date(metadata.readThroughAt) : null;
+        latestReadAtByPhone.set(key, readThroughAt && !Number.isNaN(readThroughAt.getTime()) ? readThroughAt : log.createdAt);
+      }
     }
     if ((log.action === "WHATSAPP_FOLLOWUP_ENABLED" || log.action === "WHATSAPP_FOLLOWUP_DISABLED") && !followUpByPhone.has(key)) {
       followUpByPhone.set(key, log.action === "WHATSAPP_FOLLOWUP_ENABLED");
+    }
+    if (log.action === "WHATSAPP_HUMAN_REPLIED") humanRepliedPhones.add(key);
+    if ((log.action === "WHATSAPP_REFUND_ENABLED" || log.action === "WHATSAPP_REFUND_DISABLED") && !refundByPhone.has(key)) {
+      refundByPhone.set(key, log.action === "WHATSAPP_REFUND_ENABLED");
     }
     if (log.action === "WHATSAPP_CONVERSATION_HIDDEN") hiddenPhones.add(key);
   }
@@ -377,23 +404,21 @@ async function loadCrmWhatsAppInbox(input: {
       const order = (latestOrderMessage?.orderId ? orderById.get(latestOrderMessage.orderId) : null) || orderByPhone.get(key);
       const latestInbound = [...messages].reverse().find((message) => message.status === "RECEIVED");
       const latestOutbound = [...messages].reverse().find((message) => message.status !== "RECEIVED");
-      const latestHumanOutbound = [...messages]
-        .reverse()
-        .find(
-          (message) =>
-            message.type === "BULK" &&
-            message.status !== "FAILED" &&
-            payloadSource(message.payload) !== "TCR_WHATSAPP_AI"
-        );
+      const latestHumanOutbound = [...messages].reverse().find(isHumanReply);
       const name = order?.customer.name || [...messages].reverse().find((message) => message.recipientName)?.recipientName || "Contato";
       const eventTitle = order?.event.title || "Conversa pelo WhatsApp";
       const auditedReadAt = latestReadAtByPhone.get(key);
       const latestReadAt = [auditedReadAt, latestHumanOutbound?.createdAt]
         .filter((value): value is Date => Boolean(value))
         .sort((left, right) => right.getTime() - left.getTime())[0];
-      const wasAlreadyAttended = hasEverBeenRead.has(key) || Boolean(latestHumanOutbound);
-      const hasUnread = Boolean(latestInbound && (!latestReadAt || latestInbound.createdAt > latestReadAt));
-      const unreadQueue = hasUnread && !wasAlreadyAttended;
+      const refundRequest = messages.some((message) => message.status === "RECEIVED" && isRefundRequest(messageContent(message)));
+      const flags = conversationMembership({
+        latestInboundAt: latestInbound?.createdAt || null,
+        latestReadAt: latestReadAt || null,
+        hasHumanReply: humanRepliedPhones.has(key) || Boolean(latestHumanOutbound),
+        isRefund: refundByPhone.get(key) ?? (refundRequestPhones.has(key) || refundRequest),
+        now: new Date()
+      });
       const cartMessage = [...messages].reverse().find((message) => message.type === "CART_ABANDONMENT" && message.status !== "FAILED");
       const hasPaidOrder = paidPhones.has(key);
       const abandonedWithoutReturn = Boolean(
@@ -410,13 +435,15 @@ async function loadCrmWhatsAppInbox(input: {
         latestInboundId: latestInbound?.id || null,
         latestInboundAt: latestInbound?.createdAt || null,
         latestInboundMessage: latestInbound ? messageContent(latestInbound) : null,
-        needsReply: hasUnread,
-        hasUnread,
-        unreadQueue,
+        needsReply: flags.unread,
+        hasUnread: flags.unread,
+        unreadQueue: flags.unread,
+        hasHumanReply: flags.human,
+        isRefund: flags.refund,
         followUp: followUpByPhone.get(key) || false,
         isClosed: hasPaidOrder,
         abandonedWithoutReturn,
-        canReply: Boolean(latestInbound && Date.now() - latestInbound.createdAt.getTime() < 24 * 60 * 60 * 1000),
+        canReply: flags.canReply,
         lastDirection: latest.status === "RECEIVED" ? ("inbound" as const) : ("outbound" as const),
         lastOutboundAt: latestOutbound?.createdAt || null,
         aiMode: aiModeByPhone.get(key) || "ACTIVE"
