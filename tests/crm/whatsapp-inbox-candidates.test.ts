@@ -8,9 +8,10 @@ afterAll(async () => db.close());
 describe("WhatsApp inbox candidate query", () => {
   it("keeps the latest message, inbound, cart, human reply, order and refund without loading every log", async () => {
     await db.exec(`
+      CREATE TYPE "WhatsAppMessageType" AS ENUM ('AI_ASSISTANT', 'PURCHASE_APPROVED', 'CART_ABANDONMENT', 'BULK', 'WEBHOOK');
       CREATE TABLE "WhatsAppMessageLog" (
         id text PRIMARY KEY, "organizationId" text, "orderId" text, "eventId" text,
-        "recipientName" text, "recipientPhone" text, type text, status text,
+        "recipientName" text, "recipientPhone" text, type "WhatsAppMessageType", status text,
         "templateName" text, payload jsonb, "webhookPayload" jsonb, "createdAt" timestamptz
       );
     `);

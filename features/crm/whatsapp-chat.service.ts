@@ -253,7 +253,7 @@ export function buildInboxCandidateQuery(input: {
       SELECT m.*, CASE WHEN left(digits, 2) = '55' AND length(digits) >= 12 THEN substring(digits from 3) ELSE digits END AS conversation_key
       FROM "WhatsAppMessageLog" m
       CROSS JOIN LATERAL (SELECT regexp_replace(coalesce(m."recipientPhone", ''), '[^0-9]', '', 'g') AS digits) phone
-      WHERE m."organizationId" = ${input.organizationId} AND m.type IN (${Prisma.join(KNOWN_WHATSAPP_TYPES)}) ${dateFilter}
+      WHERE m."organizationId" = ${input.organizationId} AND m.type::text IN (${Prisma.join(KNOWN_WHATSAPP_TYPES)}) ${dateFilter}
     ), ranked AS (
       SELECT *,
         row_number() OVER (PARTITION BY conversation_key ORDER BY "createdAt" DESC, id DESC) AS latest_rank,
