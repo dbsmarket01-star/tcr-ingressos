@@ -7,7 +7,7 @@ function escaped(value: string) {
 function text(value: string, x: number, y: number, size = 11, bold = false) {
   return `BT /${bold ? "B" : "R"} ${size} Tf ${x} ${y} Td (${escaped(value)}) Tj ET`;
 }
-export function buildEventSectorPdf(report: { event: { title: string }; rows: SectorTotal[]; total: number; revenueInCents?: number; groups?: Array<{ title: string; rows: SectorTotal[]; total: number; revenueInCents?: number }>; filters?: string[] }, issuedAt = new Date()) {
+export function buildEventSectorPdf(report: { event: { title: string }; rows: SectorTotal[]; total: number; revenueInCents?: number; groups?: Array<{ title: string; rows: SectorTotal[]; total: number; revenueInCents?: number; solidarityTotal?: number }>; filters?: string[]; grouping?: "category" }, issuedAt = new Date()) {
   const money = (value = 0) => `R$ ${(value / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const pages: string[] = [];
   let commands: string[] = [];
@@ -25,7 +25,7 @@ export function buildEventSectorPdf(report: { event: { title: string }; rows: Se
     rect(0, 829, 595, 13, green);
     label("TCR INGRESSOS", 36, 801, 11, true, green);
     label(`EMISSÃO ${date} | Brasília`, 330, 801, 8, false, muted);
-    label("Ingressos por setor", 36, 769, 23, true);
+    label(report.grouping === "category" ? "Ingressos por categoria" : "Ingressos por setor", 36, 769, 23, true);
     label(report.groups ? "Consolidado por evento e período" : "Consolidado do evento", 36, 750, 10, false, muted);
     y = 726;
     for (const filter of report.filters ?? []) {
@@ -40,13 +40,13 @@ export function buildEventSectorPdf(report: { event: { title: string }; rows: Se
     lines.forEach((line, i) => label(line, 48, y - 22 - i * 17, 12, true, "1 1 1"));
     y -= height;
     rect(36, y - 22, 523, 22, "0.90 0.94 0.92");
-    label("SETOR", 48, y - 15, 8, true, muted);
+    label(report.grouping === "category" ? "INGRESSO / CATEGORIA" : "SETOR", 48, y - 15, 8, true, muted);
     label("INGRESSOS", 359, y - 15, 8, true, muted);
     label("VALOR EM INGRESSOS", 443, y - 15, 8, true, muted);
     y -= 22;
   };
   newPage();
-  const groups = report.groups ?? [{ title: report.event.title, rows: report.rows, total: report.total, revenueInCents: report.revenueInCents }];
+  const groups = report.groups ?? [{ title: report.event.title, rows: report.rows, total: report.total, revenueInCents: report.revenueInCents, solidarityTotal: 0 }];
   for (const group of groups) {
     if (y - wrap(group.title, 65).length * 17 < 160) newPage();
     groupHeading(group.title);
@@ -62,12 +62,18 @@ export function buildEventSectorPdf(report: { event: { title: string }; rows: Se
       label(amount, 545 - amount.length * 5.5, y - 18, 10, true);
       y -= height;
     });
-    if (y < 110) { newPage(); groupHeading(`${group.title} (continuação)`); }
+    if (y < (report.grouping === "category" ? 140 : 110)) { newPage(); groupHeading(`${group.title} (continuação)`); }
     rect(36, y - 29, 523, 29, "0.85 0.92 0.88");
     label(`TOTAL DO EVENTO: ${group.total.toLocaleString("pt-BR")} INGRESSOS`, 48, y - 19, 10, true, green);
     const subtotal = money(group.revenueInCents);
     label(subtotal, 545 - subtotal.length * 5.5, y - 19, 10, true, green);
-    y -= 45;
+    y -= 29;
+    if (report.grouping === "category") {
+      rect(36, y - 24, 523, 24, "0.94 0.97 0.95");
+      label(`TOTAL DE INGRESSOS SOLIDÁRIOS: ${(group.solidarityTotal ?? 0).toLocaleString("pt-BR")}`, 48, y - 16, 9, true, green);
+      y -= 24;
+    }
+    y -= 16;
   }
   if (!groups.length) { label("Nenhum ingresso vendido válido nos filtros selecionados.", 36, y, 10); y -= 28; }
   if (y < 125) newPage();
@@ -79,7 +85,7 @@ export function buildEventSectorPdf(report: { event: { title: string }; rows: Se
   const objects = ["<< /Type /Catalog /Pages 2 0 R >>", "", "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>", "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"];
   const pageIds: number[] = [];
   pages.forEach((page, index) => {
-    page += `\n${muted} rg\n${text("Pedidos pagos | Ingressos válidos, incluindo cortesias e utilizados.", 36, 52, 8)}\n${text("Categorias agrupadas. Reservas e cancelados excluídos.", 36, 40, 8)}\n${text(`Página ${index + 1} de ${pages.length}`, 476, 30, 8)}`;
+    page += `\n${muted} rg\n${text("Pedidos pagos | Ingressos válidos, incluindo cortesias e utilizados.", 36, 52, 8)}\n${text(report.grouping === "category" ? "Categorias separadas. Solidários já incluídos nos totais. Reservas e cancelados excluídos." : "Categorias agrupadas. Reservas e cancelados excluídos.", 36, 40, 8)}\n${text(`Página ${index + 1} de ${pages.length}`, 476, 30, 8)}`;
     const streamId = objects.length + 1;
     objects.push(`<< /Length ${Buffer.byteLength(page, "latin1")} >>\nstream\n${page}\nendstream`);
     pageIds.push(objects.length + 1);

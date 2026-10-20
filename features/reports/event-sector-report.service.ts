@@ -2,7 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { allocateSectorRevenue, consolidateSectors, sectorFromLotName } from "./event-sector-report";
 
-export async function getEventSectorReport(organizationId: string, eventId: string, allowedEventIds?: string[] | null, filter?: { orderWhere: Prisma.OrderWhereInput; lotId?: string }) {
+export async function getEventSectorReport(organizationId: string, eventId: string, allowedEventIds?: string[] | null, filter?: { orderWhere: Prisma.OrderWhereInput; lotId?: string; grouping?: "category" }) {
   if (allowedEventIds && !allowedEventIds.includes(eventId)) return null;
   const event = await prisma.event.findFirst({
     where: { id: eventId, organizationId },
@@ -43,6 +43,7 @@ export async function getEventSectorReport(organizationId: string, eventId: stri
   const isPrivateBox = (lot: typeof event.lots[number]) => /\bcamarote\b/i.test(lot.name)
     && !/compartilhado/i.test(lot.name);
   const boxName = (label: string) => /\bcamarote\b/i.test(label) ? label : `CAMAROTE ${label}`;
+  let solidarityTotal = 0;
   const entries = (filter ? [] : event.lots).flatMap(lot => {
     const names = isPrivateBox(lot) && lot.typeOptions.length
       ? lot.typeOptions.map(option => boxName(option.label))
@@ -54,14 +55,17 @@ export async function getEventSectorReport(organizationId: string, eventId: stri
     const option = lot?.typeOptions.find(option => option.id === row.lotOptionId);
     // A numbered private box is its own sector, even when its physical section is shared.
     const privateBox = lot && isPrivateBox(lot);
-    const name = privateBox && option ? boxName(option.label)
+    const name = filter?.grouping === "category" && lot
+      ? `${lot.name}${option ? ` - ${option.label}` : ""}`
+      : privateBox && option ? boxName(option.label)
       : (row.seatId && seatNames.get(row.seatId))
         || (lot ? (privateBox && lot.typeOptions.length ? `${lotSector(lot)} - SEM NUMERAÇÃO IDENTIFICADA` : lotSector(lot)) : "SEM SETOR IDENTIFICADO");
+    if (lot && /\bsolidari[oa]s?\b/i.test(`${lot.name} ${option?.label ?? ""}`.normalize("NFD").replace(/[\u0300-\u036f]/g, ""))) solidarityTotal += row._count._all;
     entries.push({ name, quantity: row._count._all });
     revenueEntries.push({ name, amount: revenues.get(row) ?? 0 });
   }
   const result = consolidateSectors(entries);
   const revenueRows = consolidateSectors(revenueEntries.map(entry => ({ name: entry.name, quantity: entry.amount }))).rows;
   const rows = result.rows.map(row => ({ ...row, revenueInCents: revenueRows.find(value => value.name === row.name)?.quantity ?? 0 }));
-  return { event, ...result, rows, revenueInCents: rows.reduce((sum, row) => sum + row.revenueInCents, 0) };
+  return { event, ...result, rows, solidarityTotal, revenueInCents: rows.reduce((sum, row) => sum + row.revenueInCents, 0) };
 }

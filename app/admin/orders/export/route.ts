@@ -426,6 +426,7 @@ function buildOrdersPdf(orders: OrderExportRow[], filtersLabel: string, filters:
 
 function getFiltersFromUrl(url: URL): AdminOrderFilters {
   return {
+    eventActivity: url.searchParams.get("eventActivity") || undefined,
     eventId: url.searchParams.get("eventId") || undefined,
     lotId: url.searchParams.get("lotId") || undefined,
     status: url.searchParams.get("status") || undefined,
@@ -444,9 +445,10 @@ export async function GET(request: Request) {
   if (url.searchParams.get("report") === "sectors") {
     const report = await getOrdersSectorReport(filters, admin.organizationId, getAdminAllowedEventIds(admin));
     const pdf = buildEventSectorPdf({
-      event: { title: "Vendas por evento e setor no período" }, rows: [], ...report,
+      grouping: "category", event: { title: "Vendas por evento e categoria no período" }, rows: [], ...report,
       filters: [
         `Período: ${filters.startDate || "início"} a ${filters.endDate || "hoje"} (Brasília).`,
+        ...(filters.eventActivity === "active" ? ["Eventos: ativos / atuais e futuros."] : filters.eventActivity === "inactive" ? ["Eventos: inativos / encerrados ou passados."] : []),
         `Status: ${orderStatusLabels[filters.status || ""] || "Todos"}. Apenas pedidos pagos contam como vendas.`,
         ...(filters.lotId ? ["Filtro de ingresso/lote aplicado: somente ingressos desse lote."] : []),
         ...(filters.city || filters.state ? [`Local: ${filters.city || "todas as cidades"} / ${filters.state || "todos os estados"}`] : []),
@@ -455,7 +457,7 @@ export async function GET(request: Request) {
     });
     return new NextResponse(pdf, { headers: {
       "Content-Type": "application/pdf", "Cache-Control": "private, no-store",
-      "Content-Disposition": `attachment; filename="ingressos-por-evento-setor-${new Date().toISOString().slice(0, 10)}.pdf"`
+      "Content-Disposition": `attachment; filename="ingressos-por-evento-categoria-${new Date().toISOString().slice(0, 10)}.pdf"`
     } });
   }
   const orders = await listOrdersForCsvExport(filters, admin.organizationId, getAdminAllowedEventIds(admin));

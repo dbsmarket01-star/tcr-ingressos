@@ -13,8 +13,8 @@ export async function getOrdersSectorReport(filters: AdminOrderFilters, organiza
   });
   const groups = [];
   for (const event of events) {
-    const report = await getEventSectorReport(organizationId, event.id, allowedEventIds, { orderWhere, lotId: filters.lotId });
-    if (report && report.total > 0) groups.push({ title: report.event.title, rows: report.rows, total: report.total, revenueInCents: report.revenueInCents });
+    const report = await getEventSectorReport(organizationId, event.id, allowedEventIds, { orderWhere, lotId: filters.lotId, grouping: "category" });
+    if (report && report.total > 0) groups.push({ title: report.event.title, solidarityTotal: report.solidarityTotal, rows: report.rows, total: report.total, revenueInCents: report.revenueInCents });
   }
   return { groups, revenueInCents: groups.reduce((sum, group) => sum + group.revenueInCents, 0), total: groups.reduce((sum, group) => sum + group.total, 0) };
 }

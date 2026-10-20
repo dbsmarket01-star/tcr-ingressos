@@ -1,3 +1,4 @@
+import { OrdersEventFilter } from "@/components/admin/OrdersEventFilter";
 import Link from "next/link";
 import { OrdersDatePreset } from "@/components/admin/OrdersDatePreset";
 import { AdminShell } from "@/components/admin/AdminShell";
@@ -40,6 +41,7 @@ const paymentStatusLabels: Record<string, string> = {
 };
 
 type OrderSearchParams = {
+  eventActivity?: string;
   report?: string;
   eventId?: string;
   status?: string;
@@ -539,17 +541,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                   })}
                 </div>
               </label>
-              <label className="field">
-                <span>Evento</span>
-                <select name="eventId" defaultValue={params.eventId || ""}>
-                  <option value="">Todos os eventos</option>
-                  {events.map((event) => (
-                    <option value={event.id} key={event.id}>
-                      {event.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <OrdersEventFilter key={`${params.eventActivity || "all"}:${params.eventId || "all"}`} events={events} eventId={params.eventId} eventActivity={params.eventActivity} />
               <label className="field">
                 <span>Cidade (opcional)</span>
                 <select name="city" defaultValue={params.city || ""}>
@@ -600,7 +592,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               <label className="field">
                 <span>Tipo de relatório</span>
                 <select name="report" defaultValue={params.report === "sectors" ? "sectors" : "summary"}>
-                  <option value="sectors">Ingressos por evento e setor</option>
+                  <option value="sectors">Ingressos por evento e categoria</option>
                   <option value="summary">Resumo financeiro por evento</option>
                 </select>
               </label>

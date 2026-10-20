@@ -1,9 +1,11 @@
+import { activeOrderEventWhere, orderEventActivityWhere } from "./event-activity";
 import { EventStatus, OrderStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { expirePendingOrders } from "./order.service";
 import { allocateOrderAmountsAfterRefund } from "@/features/finance/order-refund-allocation";
 
 export type AdminOrderFilters = {
+  eventActivity?: string;
   eventId?: string;
   lotId?: string;
   status?: string;
@@ -142,6 +144,7 @@ function buildOrderWhere(
     : {};
   const eventWhere: Prisma.EventWhereInput = {
     ...buildOrderEventWhere(organizationId, allowedEventIds),
+    AND: [orderEventActivityWhere(filters.eventActivity)],
     ...(filters.city ? { city: filters.city } : {}),
     ...(filters.state ? { state: filters.state } : {})
   };
@@ -245,16 +248,19 @@ export async function listOrderFilterEventsScoped(allowedEventIds?: EventScope) 
 }
 
 export async function listOrderFilterEventsForOrganization(organizationId: string, allowedEventIds?: EventScope) {
-  return prisma.event.findMany({
-    where: buildOrderEventWhere(organizationId, allowedEventIds),
-    orderBy: [{ startsAt: "desc" }, { title: "asc" }],
-    select: {
-      id: true,
-      title: true,
-      city: true,
-      state: true
-    }
-  });
+  const [events, active] = await Promise.all([
+    prisma.event.findMany({
+      where: buildOrderEventWhere(organizationId, allowedEventIds),
+      orderBy: [{ startsAt: "desc" }, { title: "asc" }],
+      select: { id: true, title: true, city: true, state: true }
+    }),
+    prisma.event.findMany({
+      where: { AND: [buildOrderEventWhere(organizationId, allowedEventIds), activeOrderEventWhere()] },
+      select: { id: true }
+    })
+  ]);
+  const activeIds = new Set(active.map(event => event.id));
+  return events.map(event => ({ ...event, active: activeIds.has(event.id) }));
 }
 
 export async function listAdminOrders(
