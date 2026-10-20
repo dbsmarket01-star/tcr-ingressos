@@ -248,32 +248,40 @@ export function buildInboxCandidateQuery(input: {
   endAt?: Date;
 }) {
   const dateFilter = Prisma.sql`${input.startAt ? Prisma.sql`AND "createdAt" >= ${input.startAt}` : Prisma.empty} ${input.endAt ? Prisma.sql`AND "createdAt" < ${input.endAt}` : Prisma.empty}`;
+  // Rank narrow rows once; fetch JSON payloads only after selecting candidates.
+  // The filtered positions preserve the latest message for every inbox signal.
   return Prisma.sql`
-    WITH normalized AS (
-      SELECT m.*, CASE WHEN left(digits, 2) = '55' AND length(digits) >= 12 THEN substring(digits from 3) ELSE digits END AS conversation_key
+    WITH normalized AS MATERIALIZED (
+      SELECT m.id, m."createdAt",
+        CASE WHEN left(digits, 2) = '55' AND length(digits) >= 12 THEN substring(digits from 3) ELSE digits END AS conversation_key,
+        status = 'RECEIVED' AS inbound,
+        type = 'CART_ABANDONMENT' AND status <> 'FAILED' AS cart,
+        type = 'BULK' AND status <> 'FAILED' AND nullif(payload->>'humanAdminUserId', '') IS NOT NULL AS human,
+        "orderId" IS NOT NULL AS has_order,
+        "recipientName" IS NOT NULL AS has_name,
+        status = 'RECEIVED' AND (coalesce(payload::text, '') || coalesce("webhookPayload"::text, '')) ~* 'estorn|reembols|devol|cancel' AS refund
       FROM "WhatsAppMessageLog" m
       CROSS JOIN LATERAL (SELECT regexp_replace(coalesce(m."recipientPhone", ''), '[^0-9]', '', 'g') AS digits) phone
       WHERE m."organizationId" = ${input.organizationId} AND m.type::text IN (${Prisma.join(KNOWN_WHATSAPP_TYPES)}) ${dateFilter}
-    ), ranked AS (
-      SELECT *,
-        row_number() OVER (PARTITION BY conversation_key ORDER BY "createdAt" DESC, id DESC) AS latest_rank,
-        row_number() OVER (PARTITION BY conversation_key, (status = 'RECEIVED') ORDER BY "createdAt" DESC, id DESC) AS direction_rank,
-        row_number() OVER (PARTITION BY conversation_key, (type = 'CART_ABANDONMENT' AND status <> 'FAILED') ORDER BY "createdAt" DESC, id DESC) AS cart_rank,
-        row_number() OVER (PARTITION BY conversation_key, (type = 'BULK' AND status <> 'FAILED' AND nullif(payload->>'humanAdminUserId', '') IS NOT NULL) ORDER BY "createdAt" DESC, id DESC) AS human_rank,
-        row_number() OVER (PARTITION BY conversation_key, ("orderId" IS NOT NULL) ORDER BY "createdAt" DESC, id DESC) AS order_rank,
-        row_number() OVER (PARTITION BY conversation_key, ("recipientName" IS NOT NULL) ORDER BY "createdAt" DESC, id DESC) AS name_rank
-      FROM normalized
-      WHERE conversation_key <> ''
+    ), ranked AS MATERIALIZED (
+      SELECT *, row_number() OVER (PARTITION BY conversation_key ORDER BY "createdAt" DESC, id DESC) AS position
+      FROM normalized WHERE conversation_key <> ''
+    ), candidates AS (
+      SELECT conversation_key,
+        min(position) FILTER (WHERE inbound) AS inbound_position,
+        min(position) FILTER (WHERE NOT inbound) AS outbound_position,
+        min(position) FILTER (WHERE cart) AS cart_position,
+        min(position) FILTER (WHERE human) AS human_position,
+        min(position) FILTER (WHERE has_order) AS order_position,
+        min(position) FILTER (WHERE has_name) AS name_position
+      FROM ranked GROUP BY conversation_key
     )
-    SELECT id, "orderId", "eventId", "recipientName", "recipientPhone", type, status, "templateName", payload, "webhookPayload", "createdAt"
-    FROM ranked
-    WHERE latest_rank = 1 OR direction_rank = 1
-      OR (type = 'CART_ABANDONMENT' AND status <> 'FAILED' AND cart_rank = 1)
-      OR (type = 'BULK' AND status <> 'FAILED' AND nullif(payload->>'humanAdminUserId', '') IS NOT NULL AND human_rank = 1)
-      OR ("orderId" IS NOT NULL AND order_rank = 1)
-      OR ("recipientName" IS NOT NULL AND name_rank = 1)
-      OR (status = 'RECEIVED' AND (coalesce(payload::text, '') || coalesce("webhookPayload"::text, '')) ~* 'estorn|reembols|devol|cancel')
-    ORDER BY "createdAt" DESC, id DESC
+    SELECT m.id, m."orderId", m."eventId", m."recipientName", m."recipientPhone", m.type, m.status, m."templateName", m.payload, m."webhookPayload", m."createdAt"
+    FROM ranked r
+    JOIN candidates c ON c.conversation_key = r.conversation_key
+    JOIN "WhatsAppMessageLog" m ON m.id = r.id
+    WHERE r.position = 1 OR r.position IN (c.inbound_position, c.outbound_position, c.cart_position, c.human_position, c.order_position, c.name_position) OR r.refund
+    ORDER BY m."createdAt" DESC, m.id DESC
   `;
 }
 

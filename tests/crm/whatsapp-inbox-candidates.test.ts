@@ -34,4 +34,25 @@ describe("WhatsApp inbox candidate query", () => {
     const scopedResult = await db.query<{ id: string }>(scoped.text, scoped.values);
     expect(scopedResult.rows.map((row) => row.id).sort()).toEqual(["a6"]);
   });
+  it("preserves name/order history, normalized phones, ties and date boundaries", async () => {
+    const rows = [
+      ["b-name", "5511888888888", "2026-10-19T10:00:00Z", "SENT", "BULK", "Nome", null, null],
+      ["b-order", "+55 (11) 88888-8888", "2026-10-19T11:00:00Z", "SENT", "BULK", null, "order", null],
+      ["b-human", "11888888888", "2026-10-19T12:00:00Z", "SENT", "BULK", null, null, {humanAdminUserId:"admin"}],
+      ["b-failed", "5511888888888", "2026-10-19T13:00:00Z", "FAILED", "BULK", null, null, {humanAdminUserId:"admin"}],
+      ["b-cart", "5511888888888", "2026-10-19T14:00:00Z", "SENT", "CART_ABANDONMENT", null, null, null],
+      ["b-in", "5511888888888", "2026-10-19T15:00:00Z", "RECEIVED", "BULK", null, null, null],
+      ["b-tie-a", "5511888888888", "2026-10-19T16:00:00Z", "SENT", "BULK", null, null, null],
+      ["b-tie-z", "5511888888888", "2026-10-19T16:00:00Z", "SENT", "BULK", null, null, null],
+      ["b-empty", "", "2026-10-19T17:00:00Z", "SENT", "BULK", null, null, null],
+      ["b-end", "5511888888888", "2026-10-20T00:00:00Z", "SENT", "BULK", null, null, null]
+    ];
+    for (const [id, phone, date, status, type, name, order, payload] of rows) {
+      await db.query(`INSERT INTO "WhatsAppMessageLog" (id, "organizationId", "recipientPhone", "createdAt", status, type, "recipientName", "orderId", payload) VALUES ($1,'org-boundary',$2,$3,$4,$5,$6,$7,$8)`, [id, phone, date, status, type, name, order, payload ? JSON.stringify(payload) : null]);
+    }
+    const query = buildInboxCandidateQuery({organizationId:"org-boundary",startAt:new Date("2026-10-19T10:00:00Z"),endAt:new Date("2026-10-20T00:00:00Z")});
+    const result = await db.query<{id:string}>(query.text,query.values);
+    expect(result.rows.map(row=>row.id)).toEqual(["b-tie-z","b-in","b-cart","b-human","b-order","b-name"]);
+  });
+
 });
