@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { setCrmWhatsAppFollowUp, setCrmWhatsAppRefundCategory } from "@/features/crm/whatsapp-chat.actions";
+import { shouldClearUnread } from "@/features/crm/whatsapp-inbox-classification";
 import type { getCrmWhatsAppInbox } from "@/features/crm/whatsapp-chat.service";
 
 type Item = Awaited<ReturnType<typeof getCrmWhatsAppInbox>>[number];
@@ -70,8 +71,9 @@ export function WhatsAppLiveInboxList({
       });
     };
     const onRead = (event: Event) => {
-      const key = phoneKey((event as CustomEvent<{ phone?: string }>).detail?.phone);
-      setItems((current) => current.map((item) => item.key === key ? { ...item, hasUnread: false, unreadQueue: false, needsReply: false } : item));
+      const detail = (event as CustomEvent<{ phone?: string; messageId?: string }>).detail;
+      const key = phoneKey(detail?.phone);
+      setItems((current) => current.map((item) => item.key === key && shouldClearUnread(item.latestInboundId, detail.messageId) ? { ...item, hasUnread: false, unreadQueue: false, needsReply: false } : item));
     };
     const onOutbound = (event: Event) => {
       const detail = (event as CustomEvent<{ phone?: string; message?: string }>).detail;

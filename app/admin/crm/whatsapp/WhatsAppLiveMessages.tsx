@@ -22,6 +22,14 @@ export function WhatsAppLiveMessages({ phone }: { phone: string | null | undefin
     return () => window.removeEventListener("tcr:whatsapp-inbound", onIncoming);
   }, [key]);
   useEffect(() => {
+    const onRead = (event: Event) => {
+      const detail = (event as CustomEvent<{ phone?: string; messageId?: string }>).detail;
+      if (phoneKey(detail?.phone) === key && detail.messageId === unreadMessageId) setUnreadMessageId(null);
+    };
+    window.addEventListener("tcr:whatsapp-read", onRead);
+    return () => window.removeEventListener("tcr:whatsapp-read", onRead);
+  }, [key, unreadMessageId]);
+  useEffect(() => {
     if (!messages.length) return;
     const panel = document.querySelector(".crmWhatsappMessages");
     panel?.scrollTo({ top: panel.scrollHeight, behavior: "smooth" });
@@ -33,7 +41,7 @@ export function WhatsAppLiveMessages({ phone }: { phone: string | null | undefin
       const response = await fetch("/api/admin/crm/whatsapp/read", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone, messageId: unreadMessageId }) });
       if (response.ok) {
         setUnreadMessageId(null);
-        window.dispatchEvent(new CustomEvent("tcr:whatsapp-read", { detail: { phone } }));
+        window.dispatchEvent(new CustomEvent("tcr:whatsapp-read", { detail: { phone, messageId: unreadMessageId } }));
       }
     } finally { setMarking(false); }
   }

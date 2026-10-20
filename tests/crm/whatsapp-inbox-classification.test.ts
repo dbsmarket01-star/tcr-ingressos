@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { conversationMembership, isHumanReply, isRefundRequest, isUnreadConversation } from "@/features/crm/whatsapp-inbox-classification";
+import { conversationMembership, isHumanReply, isRefundRequest, isUnreadConversation, shouldClearUnread } from "@/features/crm/whatsapp-inbox-classification";
 
 describe("classificação independente da caixa de entrada", () => {
-  it("abrir uma conversa não muda o estado de leitura; somente a marcação posterior o muda", () => {
+  it("o estado lido acompanha a confirmação persistida da mensagem aberta e não apaga uma nova", () => {
     const inbound = new Date("2026-10-20T12:00:00Z");
     expect(isUnreadConversation(inbound, null)).toBe(true);
     expect(isUnreadConversation(inbound, new Date("2026-10-20T12:01:00Z"))).toBe(false);
     expect(isUnreadConversation(new Date("2026-10-20T12:02:00Z"), new Date("2026-10-20T12:01:00Z"))).toBe(true);
+    expect(shouldClearUnread("mensagem-aberta", "mensagem-aberta")).toBe(true);
+    expect(shouldClearUnread("mensagem-nova", "mensagem-aberta")).toBe(false);
+    expect(shouldClearUnread(null, "mensagem-aberta")).toBe(false);
   });
 
   it("reconhece resposta humana mesmo sem solicitação do cliente ou após 24 horas", () => {

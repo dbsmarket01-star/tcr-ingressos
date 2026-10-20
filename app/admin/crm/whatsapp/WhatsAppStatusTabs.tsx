@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type Counts = { all: number; unread: number; human: number; refund: number; followup: number; closed: number; abandoned: number };
@@ -10,6 +11,7 @@ const tabs: Array<[keyof Counts, string]> = [
 ];
 
 export function WhatsAppStatusTabs({ initialStatus, initialCounts, period }: { initialStatus: string; initialCounts: Counts; period: string }) {
+  const router = useRouter();
   const [status, setStatus] = useState(initialStatus);
   const [counts, setCounts] = useState(initialCounts);
   useEffect(() => setCounts(initialCounts), [initialCounts]);
@@ -30,7 +32,7 @@ export function WhatsAppStatusTabs({ initialStatus, initialCounts, period }: { i
     if (next === "all") url.searchParams.delete("status"); else url.searchParams.set("status", next);
     if ((next === "human" || next === "refund") && period === "today") {
       url.searchParams.set("period", "all");
-      window.location.assign(url.toString());
+      router.push(`${url.pathname}${url.search}`);
       return;
     }
     window.history.pushState(null, "", url);

@@ -18,6 +18,10 @@ export function isUnreadConversation(latestInboundAt: Date | null, latestReadAt:
   return Boolean(latestInboundAt && (!latestReadAt || latestInboundAt > latestReadAt));
 }
 
+export function shouldClearUnread(latestInboundId: string | null, readMessageId: string | null | undefined) {
+  return Boolean(latestInboundId && readMessageId && latestInboundId === readMessageId);
+}
+
 export function conversationMembership(input: {
   latestInboundAt: Date | null;
   latestReadAt: Date | null;
