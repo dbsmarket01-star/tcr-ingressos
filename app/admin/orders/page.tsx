@@ -600,7 +600,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 Exportar PDF
               </button>
             </div>
-            <p className="muted">O relatório por setor conta ingressos válidos de pedidos pagos, pela data do pagamento. Categorias são somadas; camarotes fechados são separados por número. Outros status não entram como vendas.</p>
+            <p className="muted">O relatório por categoria separa cada ingresso e mostra o total de solidários por evento. Conta ingressos válidos de pedidos pagos, pela data do pagamento; mesas e camarotes mantêm sua identificação. O filtro de situação considera os eventos ativos hoje, independentemente do período de vendas.</p>
           </form>
         </section>
 
