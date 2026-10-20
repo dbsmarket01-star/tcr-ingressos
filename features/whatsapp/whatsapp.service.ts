@@ -745,6 +745,7 @@ export async function sendWhatsAppMediaMessage(input: {
   orderId?: string | null;
   leadId?: string | null;
   recipientName?: string | null;
+  metadata?: Record<string, unknown>;
 }) {
   const config = getWhatsAppConfig();
   let to = input.to || null;
@@ -772,7 +773,7 @@ export async function sendWhatsAppMediaMessage(input: {
       context: { type: WhatsAppMessageType.BULK, organizationId: input.organizationId, eventId: input.eventId, orderId: input.orderId, leadId: input.leadId, recipientName: input.recipientName },
       status: WhatsAppMessageStatus.SENT,
       providerMessageId: extractProviderMessageId(payload),
-      payloadMetadata: { media: { kind: input.kind, url: input.mediaUrl, fileName: input.fileName || null, mimeType: input.mimeType || null } }
+      payloadMetadata: { media: { kind: input.kind, url: input.mediaUrl, fileName: input.fileName || null, mimeType: input.mimeType || null }, ...(input.metadata || {}) }
     });
     return payload;
   } catch (error) {
@@ -782,7 +783,7 @@ export async function sendWhatsAppMediaMessage(input: {
       context: { type: WhatsAppMessageType.BULK, organizationId: input.organizationId, eventId: input.eventId, orderId: input.orderId, leadId: input.leadId, recipientName: input.recipientName },
       status: WhatsAppMessageStatus.FAILED,
       errorMessage: normalizeError(error),
-      payloadMetadata: { media: { kind: input.kind, url: input.mediaUrl, fileName: input.fileName || null, mimeType: input.mimeType || null } },
+      payloadMetadata: { media: { kind: input.kind, url: input.mediaUrl, fileName: input.fileName || null, mimeType: input.mimeType || null }, ...(input.metadata || {}) },
       webhookPayload: error instanceof Error && "providerPayload" in error ? (error as Error & { providerPayload?: unknown }).providerPayload : undefined
     });
     throw error;

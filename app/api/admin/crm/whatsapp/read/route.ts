@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requirePermission } from "@/features/auth/auth.service";
+import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { clearCrmWhatsAppInboxCache } from "@/features/crm/whatsapp-chat.service";
 import { prisma } from "@/lib/prisma";
 
@@ -11,6 +11,18 @@ export async function POST(request: NextRequest) {
   const phone = String(body.phone || "");
   const key = phone.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
   if (!key || !body.messageId) return NextResponse.json({ ok: false }, { status: 400 });
+
+  const message = await prisma.whatsAppMessageLog.findFirst({
+    where: {
+      id: body.messageId,
+      organizationId: admin.organizationId,
+      status: "RECEIVED",
+      ...(getAdminAllowedEventIds(admin) ? { eventId: { in: getAdminAllowedEventIds(admin)! } } : {})
+    },
+    select: { recipientPhone: true, createdAt: true }
+  });
+  const messageKey = String(message?.recipientPhone || "").replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
+  if (!message || messageKey !== key) return NextResponse.json({ ok: false }, { status: 404 });
 
   const alreadyRead = await prisma.adminAuditLog.findFirst({
     where: {
@@ -28,7 +40,7 @@ export async function POST(request: NextRequest) {
         action: "WHATSAPP_CONVERSATION_READ",
         entityType: "WHATSAPP_CONVERSATION",
         entityId: `${admin.organizationId}:${key}`,
-        metadata: { messageId: body.messageId, phone }
+        metadata: { messageId: body.messageId, phone, readThroughAt: message.createdAt.toISOString() }
       }
     });
   }
