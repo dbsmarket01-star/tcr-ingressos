@@ -1,24 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 
 const SOUND_STORAGE_KEY = "tcr-whatsapp-notification-sound";
 const VOLUME_STORAGE_KEY = "tcr-whatsapp-notification-volume";
-const LAST_MESSAGE_STORAGE_KEY = "tcr-whatsapp-last-inbound-message";
 const FOREGROUND_POLL_MS = 1_000;
 const BACKGROUND_POLL_MS = 5_000;
 const DEFAULT_VOLUME = 85;
 
 type NotificationSnapshot = {
-  latestInbound?: {
-    id?: string | null;
-    at?: string | null;
-    name?: string | null;
-    message?: string | null;
-    phone?: string | null;
-  } | null;
-  unreadCount?: number;
+  id: string;
+  at: string;
+  name: string;
+  message: string;
+  phone: string | null;
 };
 
 type AudioWindow = Window & {
@@ -83,17 +78,17 @@ async function playNotificationSound(volume: number) {
 
 export function WhatsAppNotificationWatcher({
   latestInboundId,
+  latestInboundAt,
   unreadCount,
   refreshOnNewInbound
 }: {
   latestInboundId: string | null;
+  latestInboundAt: string | null;
   unreadCount: number;
   refreshOnNewInbound: boolean;
 }) {
-  const router = useRouter();
-  const initialized = useRef(false);
   const pollInFlight = useRef(false);
-  const pendingNotification = useRef<NotificationSnapshot["latestInbound"]>(null);
+  const cursor = useRef({ at: latestInboundAt || new Date().toISOString(), id: latestInboundId || "0" });
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const [liveUnreadCount, setLiveUnreadCount] = useState(unreadCount);
@@ -109,65 +104,56 @@ export function WhatsAppNotificationWatcher({
   useEffect(() => setLiveUnreadCount(unreadCount), [unreadCount]);
 
   useEffect(() => {
+    const updateCount = (event: Event) => {
+      const count = (event as CustomEvent<{ count: number }>).detail?.count;
+      if (Number.isFinite(count)) setLiveUnreadCount(count);
+    };
+    window.addEventListener("tcr:whatsapp-unread-count", updateCount);
+    return () => window.removeEventListener("tcr:whatsapp-unread-count", updateCount);
+  }, []);
+
+  useEffect(() => {
     let stopped = false;
     let timer: number | undefined;
 
     async function poll() {
       if (stopped || pollInFlight.current) return;
       pollInFlight.current = true;
+      let hasMore = false;
       try {
-        const response = await fetch("/api/admin/crm/whatsapp/notifications", {
+        const query = new URLSearchParams({ afterAt: cursor.current.at, afterId: cursor.current.id });
+        const response = await fetch(`/api/admin/crm/whatsapp/updates?${query}`, {
           cache: "no-store",
           headers: { Accept: "application/json" }
         });
         if (!response.ok) return;
-        const snapshot = (await response.json()) as NotificationSnapshot;
-        // The exact counter arrives with the server-rendered inbox. The polling
-        // endpoint intentionally returns only the newest inbound message so it
-        // stays cheap and cannot overload the database every second.
-        if (typeof snapshot.unreadCount === "number") {
-          setLiveUnreadCount(snapshot.unreadCount);
+        const delta = (await response.json()) as { messages: NotificationSnapshot[]; hasMore: boolean };
+        hasMore = delta.hasMore;
+        for (const message of delta.messages) {
+          cursor.current = { at: message.at, id: message.id };
+          if (refreshOnNewInbound) window.dispatchEvent(new CustomEvent("tcr:whatsapp-inbound", { detail: message }));
         }
-        const nextId = snapshot.latestInbound?.id;
-        if (!nextId) return;
-        const previousId = window.sessionStorage.getItem(LAST_MESSAGE_STORAGE_KEY);
-        if (!previousId) {
-          window.sessionStorage.setItem(LAST_MESSAGE_STORAGE_KEY, nextId);
-          return;
-        }
-        if (previousId === nextId) return;
-        if (pendingNotification.current?.id === nextId) return;
-
-        if (!refreshOnNewInbound) {
-          // A mensagem nova não pertence ao período exibido (por exemplo,
-          // "Ontem"). Notifique, mas não recarregue a lista antiga em loop.
-          window.sessionStorage.setItem(LAST_MESSAGE_STORAGE_KEY, nextId);
+        const last = delta.messages.at(-1);
+        if (last) {
           if (soundEnabled) void playNotificationSound(volume);
           if (document.hidden && "Notification" in window && Notification.permission === "granted") {
-            const notification = new Notification(snapshot.latestInbound?.name || "Nova mensagem no WhatsApp", {
-              body: snapshot.latestInbound?.message || "Você recebeu uma nova mensagem na Central de Conversas.",
+            const notification = new Notification(last.name || "Nova mensagem no WhatsApp", {
+              body: last.message || "Você recebeu uma nova mensagem na Central de Conversas.",
               icon: "/favicon.ico",
-              tag: `tcr-whatsapp-${nextId}`
+              tag: `tcr-whatsapp-${last.id}`
             });
             notification.onclick = () => {
               window.focus();
-              window.location.href = `/admin/crm/whatsapp?period=today&phone=${encodeURIComponent(snapshot.latestInbound?.phone || "")}`;
+              window.location.href = `/admin/crm/whatsapp?period=today&phone=${encodeURIComponent(last.phone || "")}`;
               notification.close();
             };
           }
-          return;
         }
-
-        // Guarde a mensagem, mas somente avise depois que o refresh realmente
-        // entregar a conversa nova para a tela. Assim o som nunca chega antes
-        // da mensagem visível e o operador não procura uma conversa ainda antiga.
-        pendingNotification.current = snapshot.latestInbound;
-        router.refresh();
       } catch {
         // Uma falha transitória não interrompe as próximas verificações.
       } finally {
         pollInFlight.current = false;
-        if (!stopped) timer = window.setTimeout(poll, document.hidden ? BACKGROUND_POLL_MS : FOREGROUND_POLL_MS);
+        if (!stopped) timer = window.setTimeout(poll, hasMore ? 0 : document.hidden ? BACKGROUND_POLL_MS : FOREGROUND_POLL_MS);
       }
     }
 
@@ -176,36 +162,7 @@ export function WhatsAppNotificationWatcher({
       stopped = true;
       if (timer) window.clearTimeout(timer);
     };
-  }, [router, soundEnabled, volume, refreshOnNewInbound]);
-
-  useEffect(() => {
-    if (!latestInboundId) return;
-    const lastMessageId = window.sessionStorage.getItem(LAST_MESSAGE_STORAGE_KEY);
-    if (!initialized.current) {
-      initialized.current = true;
-      window.sessionStorage.setItem(LAST_MESSAGE_STORAGE_KEY, latestInboundId);
-      return;
-    }
-    if (lastMessageId === latestInboundId) return;
-    window.sessionStorage.setItem(LAST_MESSAGE_STORAGE_KEY, latestInboundId);
-    if (soundEnabled) void playNotificationSound(volume);
-    const pending = pendingNotification.current?.id === latestInboundId ? pendingNotification.current : null;
-    pendingNotification.current = null;
-    if (document.hidden && "Notification" in window && Notification.permission === "granted") {
-      const notification = new Notification(pending?.name || "Nova mensagem no WhatsApp", {
-        body: pending?.message || "Você recebeu uma nova mensagem na Central de Conversas.",
-        icon: "/favicon.ico",
-        tag: `tcr-whatsapp-${latestInboundId}`
-      });
-      notification.onclick = () => {
-        window.focus();
-        if (pending?.phone) {
-          window.location.href = `/admin/crm/whatsapp?phone=${encodeURIComponent(pending.phone)}`;
-        }
-        notification.close();
-      };
-    }
-  }, [latestInboundId, soundEnabled, volume]);
+  }, [soundEnabled, volume, refreshOnNewInbound]);
 
   async function toggleSound() {
     const next = !soundEnabled;

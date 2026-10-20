@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { sendCrmWhatsAppMessage } from "@/features/crm/whatsapp-chat.actions";
 
 type WhatsAppComposerProps = { canReply: boolean; leadId: string; orderCode: string; phone: string };
@@ -16,7 +15,6 @@ function ComposerIcon({ name }: { name: "smile" | "clip" | "mic" | "send" | "sto
 }
 
 export function WhatsAppComposer({ canReply, leadId, orderCode, phone }: WhatsAppComposerProps) {
-  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mediaInputRef = useRef<HTMLInputElement>(null);
@@ -90,7 +88,7 @@ export function WhatsAppComposer({ canReply, leadId, orderCode, phone }: WhatsAp
     setRecordedAudio(null);
     setSelectedFile("");
     setSending(false);
-    router.refresh();
+    window.dispatchEvent(new CustomEvent("tcr:whatsapp-outbound", { detail: { phone, message: text || `📎 ${file?.name || "Arquivo enviado"}` } }));
     window.setTimeout(() => setOptimisticText(""), 2500);
   }
 

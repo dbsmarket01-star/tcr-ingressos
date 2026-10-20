@@ -912,6 +912,7 @@ model Customer {
 
   @@index([email])
   @@index([document])
+  @@index([phone])
   @@index([city, state])
 }
 
@@ -1042,6 +1043,8 @@ model WhatsAppMessageLog {
   updatedAt         DateTime              @updatedAt
 
   @@index([organizationId, createdAt])
+  @@index([organizationId, status, createdAt, id])
+  @@index([organizationId, recipientPhone, createdAt])
   @@index([eventId, createdAt])
   @@index([orderId])
   @@index([leadId])
