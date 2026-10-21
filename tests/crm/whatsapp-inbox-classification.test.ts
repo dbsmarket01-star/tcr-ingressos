@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { conversationMembership, isHumanReply, isRefundRequest, isUnreadConversation, shouldClearUnread } from "@/features/crm/whatsapp-inbox-classification";
+import { conversationMembership, isHumanReply, isRefundRequest, isUnreadConversation, resolveOperationalQueue, shouldClearUnread } from "@/features/crm/whatsapp-inbox-classification";
 
 describe("classificação independente da caixa de entrada", () => {
   it("o estado lido acompanha a confirmação persistida da mensagem aberta e não apaga uma nova", () => {
@@ -35,5 +35,22 @@ describe("classificação independente da caixa de entrada", () => {
       isRefund: true,
       now: new Date("2026-10-20T10:00:00Z")
     })).toEqual({ unread: false, human: true, refund: true, canReply: false });
+  });
+
+  it("mantém uma conversa na fila IA mesmo após a leitura e após resposta humana anterior", () => {
+    const inbound = new Date("2026-10-21T15:00:00Z");
+    expect(resolveOperationalQueue({ latestInboundAt: inbound, aiMode: "ACTIVE", refund: false, manual: null })).toBe("ai");
+    expect(resolveOperationalQueue({ latestInboundAt: inbound, aiMode: "HANDOFF", refund: false, manual: null })).toBe("human");
+    expect(resolveOperationalQueue({ latestInboundAt: inbound, aiMode: "ACTIVE", refund: true, manual: null })).toBe("refund");
+  });
+
+  it("só conclui por ação manual e reabre ao receber nova mensagem", () => {
+    const manual = { queue: "all", at: new Date("2026-10-21T15:00:00Z") };
+    expect(resolveOperationalQueue({ latestInboundAt: new Date("2026-10-21T14:00:00Z"), aiMode: "ACTIVE", refund: false, manual })).toBe("all");
+    expect(resolveOperationalQueue({ latestInboundAt: new Date("2026-10-21T16:00:00Z"), aiMode: "ACTIVE", refund: false, manual })).toBe("ai");
+    expect(resolveOperationalQueue({ latestInboundAt: new Date("2026-10-20T14:00:00Z"), aiMode: "ACTIVE", refund: false, manual: null })).toBe("all");
+    expect(resolveOperationalQueue({ latestInboundAt: new Date("2026-10-21T16:00:00Z"), aiMode: "ACTIVE", refund: false, manual: { ...manual, queue: "followup" } })).toBe("followup");
+    expect(resolveOperationalQueue({ latestInboundAt: new Date("2026-10-21T16:00:00Z"), aiMode: "HANDOFF", refund: false, manual: { ...manual, queue: "followup" } })).toBe("human");
+    expect(resolveOperationalQueue({ latestInboundAt: new Date("2026-10-21T16:00:00Z"), aiMode: "ACTIVE", refund: false, manual: { ...manual, queue: "refund" } })).toBe("refund");
   });
 });

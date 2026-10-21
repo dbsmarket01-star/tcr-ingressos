@@ -261,38 +261,24 @@ export async function setCrmWhatsAppRefundCategory(formData: FormData) {
 export async function moveCrmWhatsAppConversation(formData: FormData) {
   const admin = await requirePermission("CRM");
   const phone = getFormText(formData, "phone");
-  const destination = getFormText(formData, "destination");
-  if (!["all", "human", "refund", "followup", "closed"].includes(destination)) {
-    redirect(buildRedirect({ status: "erro", message: "Destino inválido." }));
+  const queue = getFormText(formData, "queue");
+  const key = phone.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
+  if (!key || !["all", "ai", "human", "refund", "followup", "closed"].includes(queue)) {
+    return { ok: false, message: "Destino ou telefone inválido." };
   }
-  const conversation = await getCrmWhatsAppConversation({
-    phone,
-    organizationId: admin.organizationId,
-    allowedEventIds: getAdminAllowedEventIds(admin)
-  });
+  const conversation = await getCrmWhatsAppConversation({ phone, organizationId: admin.organizationId, allowedEventIds: getAdminAllowedEventIds(admin) });
   if (!conversation.contact?.phone || conversation.messages.length === 0) {
-    redirect(buildRedirect({ status: "erro", message: "Conversa não encontrada." }));
+    return { ok: false, message: "Conversa não encontrada." };
   }
-  const key = conversation.contact.phone.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
-  const actions = [destination === "human" ? "WHATSAPP_HUMAN_QUEUE_VISIBLE" : "WHATSAPP_HUMAN_QUEUE_HIDDEN"];
-  if (destination === "refund") actions.push("WHATSAPP_REFUND_ENABLED");
-  if (destination === "followup") actions.push("WHATSAPP_FOLLOWUP_ENABLED");
-  if (destination === "closed") actions.push("WHATSAPP_CLOSED_ENABLED");
-  await prisma.adminAuditLog.createMany({
-    data: actions.map((action) => ({
-      adminUserId: admin.id,
-      action,
-      entityType: "WHATSAPP_CONVERSATION",
-      entityId: `${admin.organizationId}:${key}`,
-      metadata: { phone: conversation.contact!.phone, destination }
-    }))
-  });
+  await prisma.adminAuditLog.create({ data: {
+    adminUserId: admin.id,
+    action: "WHATSAPP_QUEUE_MOVED",
+    entityType: "WHATSAPP_CONVERSATION",
+    entityId: `${admin.organizationId}:${key}`,
+    metadata: { phone, queue }
+  } });
   clearCrmWhatsAppInboxCache(admin.organizationId);
-  const query = new URLSearchParams({ phone: conversation.contact.phone, period: "all", notice: destination === "all"
-    ? "Conversa retirada da fila de Atendimento humano; histórico preservado em Todos."
-    : `Conversa organizada em ${destination === "human" ? "Atendimento humano" : destination === "refund" ? "Estorno" : destination === "followup" ? "Em atendimento / Follow-up" : "Fechados"}.` });
-  if (destination !== "all") query.set("status", destination);
-  redirect(`/admin/crm/whatsapp?${query}`);
+  return { ok: true, message: queue === "all" ? "Conversa concluída e mantida em Todos." : "Conversa movida de fila." };
 }
 
 export async function sendCrmWhatsAppApprovedTemplate(formData: FormData) {

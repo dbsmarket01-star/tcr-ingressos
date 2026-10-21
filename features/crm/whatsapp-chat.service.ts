@@ -1,7 +1,7 @@
 import { OrderStatus, Prisma, WhatsAppMessageType, type WhatsAppMessageLog } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { resolveWhatsAppAiConversationMode } from "@/features/ai/whatsapp-support-ai.service";
-import { conversationMembership, isHumanReply, isRefundRequest } from "@/features/crm/whatsapp-inbox-classification";
+import { conversationMembership, isHumanReply, isRefundRequest, resolveOperationalQueue } from "@/features/crm/whatsapp-inbox-classification";
 
 type EventScope = string[] | null | undefined;
 
@@ -381,7 +381,7 @@ async function loadCrmWhatsAppInbox(input: {
       where: {
         entityType: "WHATSAPP_CONVERSATION",
         entityId: { in: conversationEntityIds },
-        action: { in: ["WHATSAPP_CONVERSATION_READ", "WHATSAPP_FOLLOWUP_ENABLED", "WHATSAPP_FOLLOWUP_DISABLED", "WHATSAPP_CONVERSATION_HIDDEN", "WHATSAPP_HUMAN_REPLIED", "WHATSAPP_REFUND_ENABLED", "WHATSAPP_REFUND_DISABLED", "WHATSAPP_HUMAN_QUEUE_HIDDEN", "WHATSAPP_HUMAN_QUEUE_VISIBLE", "WHATSAPP_CLOSED_ENABLED", "WHATSAPP_CLOSED_DISABLED"] }
+        action: { in: ["WHATSAPP_CONVERSATION_READ", "WHATSAPP_FOLLOWUP_ENABLED", "WHATSAPP_FOLLOWUP_DISABLED", "WHATSAPP_CONVERSATION_HIDDEN", "WHATSAPP_HUMAN_REPLIED", "WHATSAPP_REFUND_ENABLED", "WHATSAPP_REFUND_DISABLED", "WHATSAPP_HUMAN_QUEUE_HIDDEN", "WHATSAPP_HUMAN_QUEUE_VISIBLE", "WHATSAPP_CLOSED_ENABLED", "WHATSAPP_CLOSED_DISABLED", "WHATSAPP_QUEUE_MOVED"] }
       },
       orderBy: { createdAt: "desc" },
       select: { action: true, entityId: true, metadata: true, createdAt: true }
@@ -421,6 +421,7 @@ async function loadCrmWhatsAppInbox(input: {
   const refundByPhone = new Map<string, boolean>();
   const humanQueueHiddenByPhone = new Map<string, boolean>();
   const closedByPhone = new Map<string, boolean>();
+  const manualQueueByPhone = new Map<string, { queue: string; at: Date }>();
   const refundRequestPhones = new Set<string>();
   for (const message of historicalRefundRequests) {
     const phoneKey = conversationPhoneKey(message.recipientPhone);
@@ -447,6 +448,17 @@ async function loadCrmWhatsAppInbox(input: {
       followUpByPhone.set(key, log.action === "WHATSAPP_FOLLOWUP_ENABLED");
     }
     if (log.action === "WHATSAPP_HUMAN_REPLIED") humanRepliedPhones.add(key);
+    if (log.action === "WHATSAPP_QUEUE_MOVED" && !manualQueueByPhone.has(key)) {
+      const metadata = log.metadata && typeof log.metadata === "object" && !Array.isArray(log.metadata) ? log.metadata as Record<string, unknown> : {};
+      if (typeof metadata.queue === "string") manualQueueByPhone.set(key, { queue: metadata.queue, at: log.createdAt });
+    }
+    // Compatibilidade com as movimentações já persistidas pela versão anterior do menu.
+    if (!manualQueueByPhone.has(key) && ["WHATSAPP_HUMAN_QUEUE_HIDDEN", "WHATSAPP_HUMAN_QUEUE_VISIBLE", "WHATSAPP_CLOSED_ENABLED"].includes(log.action)) {
+      const metadata = log.metadata && typeof log.metadata === "object" && !Array.isArray(log.metadata) ? log.metadata as Record<string, unknown> : {};
+      if (typeof metadata.destination === "string" && ["all", "human", "refund", "followup", "closed"].includes(metadata.destination)) {
+        manualQueueByPhone.set(key, { queue: metadata.destination, at: log.createdAt });
+      }
+    }
     if ((log.action === "WHATSAPP_REFUND_ENABLED" || log.action === "WHATSAPP_REFUND_DISABLED") && !refundByPhone.has(key)) {
       refundByPhone.set(key, log.action === "WHATSAPP_REFUND_ENABLED");
     }
@@ -515,6 +527,16 @@ async function loadCrmWhatsAppInbox(input: {
         isRefund: refundByPhone.get(key) ?? (refundRequestPhones.has(key) || refundRequest),
         now: new Date()
       });
+      const manual = manualQueueByPhone.get(key) || null;
+      const refundSinceConclusion = manual?.queue === "all" && latestInbound?.createdAt && latestInbound.createdAt > manual.at
+        ? messages.some((message) => message.status === "RECEIVED" && message.createdAt > manual.at && isRefundRequest(messageContent(message)))
+        : flags.refund;
+      const queue = resolveOperationalQueue({
+        latestInboundAt: latestInbound?.createdAt || null,
+        aiMode: aiModeByPhone.get(key) || "ACTIVE",
+        refund: refundSinceConclusion,
+        manual
+      });
       const cartMessage = [...messages].reverse().find((message) => message.type === "CART_ABANDONMENT" && message.status !== "FAILED");
       const hasPaidOrder = paidPhones.has(key);
       const abandonedWithoutReturn = Boolean(
@@ -534,6 +556,7 @@ async function loadCrmWhatsAppInbox(input: {
         needsReply: flags.unread,
         hasUnread: flags.unread,
         unreadQueue: flags.unread,
+        queue,
         hasHumanReply: flags.human,
         humanQueueHidden: humanQueueHiddenByPhone.get(key) || false,
         isRefund: flags.refund,

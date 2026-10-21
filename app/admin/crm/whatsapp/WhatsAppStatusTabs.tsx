@@ -3,9 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-type Counts = { all: number; unread: number; human: number; refund: number; followup: number; closed: number; abandoned: number };
+type Counts = { all: number; ai: number; human: number; refund: number; followup: number; closed: number; abandoned: number };
 const tabs: Array<[keyof Counts, string]> = [
-  ["all", "Todos"], ["unread", "Não lidos"], ["human", "Atendimento humano"],
+  ["all", "Todos"], ["ai", "Atendimento IA"], ["human", "Atendimento humano"],
   ["refund", "Estorno"], ["followup", "Em atendimento / Follow-up"],
   ["closed", "Fechados"], ["abandoned", "Carrinho abandonado sem retorno"]
 ];

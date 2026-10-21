@@ -22,6 +22,21 @@ export function shouldClearUnread(latestInboundId: string | null, readMessageId:
   return Boolean(latestInboundId && readMessageId && latestInboundId === readMessageId);
 }
 
+export function resolveOperationalQueue(input: {
+  latestInboundAt: Date | null;
+  aiMode: "ACTIVE" | "PAUSED" | "HANDOFF";
+  refund: boolean;
+  manual: { queue: string; at: Date } | null;
+}) {
+  const { latestInboundAt, aiMode, refund, manual } = input;
+  if (manual?.queue === "refund") return "refund";
+  if (manual && (!latestInboundAt || latestInboundAt <= manual.at)) return manual.queue;
+  if (refund) return "refund";
+  if (aiMode !== "ACTIVE") return "human";
+  if (manual?.queue === "followup" || manual?.queue === "closed") return manual.queue;
+  return latestInboundAt && latestInboundAt >= new Date("2026-10-21T00:00:00-03:00") ? "ai" : "all";
+}
+
 export function conversationMembership(input: {
   latestInboundAt: Date | null;
   latestReadAt: Date | null;

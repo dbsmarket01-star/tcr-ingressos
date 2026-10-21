@@ -51,28 +51,28 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
     ? getCrmWhatsAppConversation({ orderCode: params.orderCode, leadId: params.leadId, phone: params.phone, organizationId: admin.organizationId, allowedEventIds })
     : null;
   const rawInbox = await inboxPromise;
-  const activeStatus = ["unread", "human", "refund", "followup", "closed", "abandoned"].includes(params.status || "") ? params.status! : "all";
+  const activeStatus = ["ai", "unread", "human", "refund", "followup", "closed", "abandoned"].includes(params.status || "") ? params.status === "unread" ? "ai" : params.status! : "all";
   const counters = {
     all: rawInbox.length,
-    unread: rawInbox.filter((item) => item.unreadQueue).length,
-    human: rawInbox.filter((item) => item.hasHumanReply && !item.humanQueueHidden).length,
-    refund: rawInbox.filter((item) => item.isRefund).length,
-    followup: rawInbox.filter((item) => item.followUp).length,
-    closed: rawInbox.filter((item) => item.isClosed).length,
+    ai: rawInbox.filter((item) => item.queue === "ai").length,
+    human: rawInbox.filter((item) => item.queue === "human").length,
+    refund: rawInbox.filter((item) => item.queue === "refund").length,
+    followup: rawInbox.filter((item) => item.queue === "followup").length,
+    closed: rawInbox.filter((item) => item.queue === "closed").length,
     abandoned: rawInbox.filter((item) => item.abandonedWithoutReturn).length
   };
   const visualUnreadCount = rawInbox.filter((item) => item.hasUnread).length;
   const inbox = rawInbox.filter((item) =>
-    activeStatus === "unread"
-      ? item.unreadQueue
+    activeStatus === "ai"
+      ? item.queue === "ai"
       : activeStatus === "human"
-        ? item.hasHumanReply && !item.humanQueueHidden
+        ? item.queue === "human"
         : activeStatus === "refund"
-          ? item.isRefund
+          ? item.queue === "refund"
         : activeStatus === "followup"
-          ? item.followUp
+          ? item.queue === "followup"
           : activeStatus === "closed"
-            ? item.isClosed
+            ? item.queue === "closed"
             : activeStatus === "abandoned"
               ? item.abandonedWithoutReturn
               : true
