@@ -56,7 +56,7 @@ export function AdminSideNav({ groups, compact = false }: AdminSideNavProps) {
                 return (
                   <Link
                     href={item.href}
-                    prefetch={false}
+                    prefetch={item.href === "/admin" || item.href === "/admin/crm" || item.href === "/admin/crm/whatsapp" || item.href === "/admin/events"}
                     onPointerEnter={() => prefetchOnIntent(item.href)}
                     onFocus={() => prefetchOnIntent(item.href)}
                     onClick={(event) => {
@@ -72,7 +72,7 @@ export function AdminSideNav({ groups, compact = false }: AdminSideNavProps) {
                     aria-current={active ? "page" : undefined}
                     className={`${active ? "active" : ""}${pendingHref === item.href ? " isPending" : ""}`}
                   >
-                    <strong>{pendingHref === item.href ? `Abrindo ${item.label}...` : item.label}</strong>
+                    <strong>{item.label}</strong>
                     <span>{item.description}</span>
                   </Link>
                 );

@@ -2,6 +2,7 @@ import { AdminRole } from "@prisma/client";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 
 const COOKIE_NAME = "ingresaas_admin_session";
@@ -175,7 +176,7 @@ export async function clearAdminSession() {
   LEGACY_COOKIE_NAMES.forEach((cookieName) => cookieStore.delete(cookieName));
 }
 
-export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
+export const getCurrentAdmin = cache(async (): Promise<CurrentAdmin | null> => {
   const cookieStore = await cookies();
   const token =
     cookieStore.get(COOKIE_NAME)?.value ||
@@ -217,7 +218,7 @@ export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
   }
 
   return admin as CurrentAdmin;
-}
+});
 
 export async function requireAdmin() {
   const admin = await getCurrentAdmin();

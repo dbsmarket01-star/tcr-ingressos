@@ -26,8 +26,11 @@ export async function AdminShell({
     getCurrentOrganizationContext()
   ]);
   const navGroups = admin ? getAdminNavGroupsForRole(admin.role, { isPlatformHost: currentOrganizationContext.isPlatformHost }) : [];
-  const adminOrganization =
-    admin?.organizationId ? await getOrganizationBrandingById(admin.organizationId) : currentOrganizationContext.organization;
+  const adminOrganization = admin?.organizationId === currentOrganizationContext.organization.id
+    ? currentOrganizationContext.organization
+    : admin?.organizationId
+      ? await getOrganizationBrandingById(admin.organizationId)
+      : currentOrganizationContext.organization;
   const isPlatformHost = currentOrganizationContext.isPlatformHost;
   const brandName = isPlatformHost
     ? currentOrganizationContext.platformName

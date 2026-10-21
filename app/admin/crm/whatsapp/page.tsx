@@ -79,13 +79,13 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
   );
   const requestedLimit = Number(params.limit || 120);
   const displayLimit = Number.isFinite(requestedLimit) ? Math.min(Math.max(Math.trunc(requestedLimit), 60), 600) : 120;
-  const latestInbound = await latestInboundPromise;
   const selectedInboxItem = params.orderCode || params.leadId || params.phone ? null : inbox[0] || rawInbox[0] || null;
   const selectedOrderCode = params.orderCode || selectedInboxItem?.orderCode || undefined;
   const selectedPhone = params.phone || selectedInboxItem?.phone || undefined;
-  const conversation = selectedConversationPromise
-    ? await selectedConversationPromise
-    : await getCrmWhatsAppConversation({ orderCode: selectedOrderCode, leadId: params.leadId, phone: selectedPhone, organizationId: admin.organizationId, allowedEventIds });
+  const [latestInbound, conversation] = await Promise.all([
+    latestInboundPromise,
+    selectedConversationPromise || getCrmWhatsAppConversation({ orderCode: selectedOrderCode, leadId: params.leadId, phone: selectedPhone, organizationId: admin.organizationId, allowedEventIds })
+  ]);
   const contact = conversation.contact;
   const selectedContactKey = String(contact?.phone || "").replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
   const selectedHasUnread = rawInbox.find((item) => item.key === selectedContactKey)?.hasUnread || false;
