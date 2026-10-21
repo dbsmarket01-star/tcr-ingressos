@@ -966,12 +966,21 @@ export async function handleWhatsAppMetaWebhook(payload: unknown) {
     const mappedStatus = mapWebhookStatus(status.status);
     const eventDate = dateFromMetaTimestamp(status.timestamp);
     const errorMessage = extractErrorMessage(status);
+    // Meta may deliver webhooks out of order. A late failure must not undo
+    // proof of delivery, and a late "sent" must not undo a failure or read.
+    const eligibleStatuses = mappedStatus === WhatsAppMessageStatus.READ
+      ? [WhatsAppMessageStatus.SENT, WhatsAppMessageStatus.FAILED, WhatsAppMessageStatus.DELIVERED, WhatsAppMessageStatus.READ]
+      : mappedStatus === WhatsAppMessageStatus.DELIVERED
+        ? [WhatsAppMessageStatus.SENT, WhatsAppMessageStatus.FAILED, WhatsAppMessageStatus.DELIVERED]
+        : mappedStatus === WhatsAppMessageStatus.FAILED
+          ? [WhatsAppMessageStatus.SENT, WhatsAppMessageStatus.FAILED]
+          : [WhatsAppMessageStatus.SENT];
     const data: Prisma.WhatsAppMessageLogUpdateManyMutationInput = {
       status: mappedStatus,
       webhookPayload: toJson(status),
       ...(mappedStatus === WhatsAppMessageStatus.SENT ? { sentAt: eventDate } : {}),
-      ...(mappedStatus === WhatsAppMessageStatus.DELIVERED ? { deliveredAt: eventDate } : {}),
-      ...(mappedStatus === WhatsAppMessageStatus.READ ? { readAt: eventDate } : {}),
+      ...(mappedStatus === WhatsAppMessageStatus.DELIVERED ? { deliveredAt: eventDate, failedAt: null, errorMessage: null } : {}),
+      ...(mappedStatus === WhatsAppMessageStatus.READ ? { readAt: eventDate, failedAt: null, errorMessage: null } : {}),
       ...(mappedStatus === WhatsAppMessageStatus.FAILED ? { failedAt: eventDate, errorMessage } : {})
     };
 
@@ -991,12 +1000,20 @@ export async function handleWhatsAppMetaWebhook(payload: unknown) {
 
     const result = await prisma.whatsAppMessageLog.updateMany({
       where: {
-        providerMessageId
+        providerMessageId,
+        status: { in: eligibleStatuses }
       },
       data
     });
 
     if (result.count === 0) {
+      // Zero can also mean a stale event was deliberately ignored. In that
+      // case do not create a second log row for the same provider message.
+      const existing = await prisma.whatsAppMessageLog.findFirst({
+        where: { providerMessageId },
+        select: { id: true }
+      });
+      if (existing) continue;
       await recordWhatsAppMessageLog({
         to: status.recipient_id,
         context: {
