@@ -73,6 +73,29 @@ export function WhatsAppLiveInboxList({
   }, []);
 
   useEffect(() => {
+    let active = true;
+    const settleAiOutcome = async (messageId: string, key: string) => {
+      for (let attempt = 0; attempt < 12 && active; attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1_500));
+        if (!active) return;
+        try {
+          const response = await fetch(`/api/admin/crm/whatsapp/ai-outcome?messageId=${encodeURIComponent(messageId)}`, { cache: "no-store" });
+          if (!response.ok) return;
+          const result = await response.json() as { status: string | null; mode: string };
+          if (!result.status && result.mode !== "DISABLED") continue;
+          if (result.status === "PROCESSING") continue;
+          const mode = result.mode === "ACTIVE" || result.mode === "HANDOFF" ? result.mode : "PAUSED";
+          setItems((current) => current.map((item) => {
+            if (item.key !== key || item.latestInboundId !== messageId) return item;
+            const queue = item.queue === "refund" ? "refund" : mode !== "ACTIVE" ? "human" : ["followup", "closed"].includes(item.queue) ? item.queue : "ai";
+            return { ...item, aiMode: mode, queue };
+          }));
+          return;
+        } catch {
+          // Falha transitória: a próxima tentativa consulta o resultado persistido.
+        }
+      }
+    };
     const onIncoming = (event: Event) => {
       const message = (event as CustomEvent<Incoming>).detail;
       const key = phoneKey(message.phone);
@@ -90,6 +113,7 @@ export function WhatsAppLiveInboxList({
         }
         return [updated, ...current.filter((item) => item.key !== key)];
       });
+      void settleAiOutcome(message.id, key);
     };
     const onRead = (event: Event) => {
       const detail = (event as CustomEvent<{ phone?: string; messageId?: string }>).detail;
@@ -109,6 +133,7 @@ export function WhatsAppLiveInboxList({
     window.addEventListener("tcr:whatsapp-read", onRead);
     window.addEventListener("tcr:whatsapp-outbound", onOutbound);
     return () => {
+      active = false;
       window.removeEventListener("tcr:whatsapp-inbound", onIncoming);
       window.removeEventListener("tcr:whatsapp-read", onRead);
       window.removeEventListener("tcr:whatsapp-outbound", onOutbound);
