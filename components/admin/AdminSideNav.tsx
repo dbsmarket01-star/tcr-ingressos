@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import type { AdminNavGroup } from "@/lib/navigation";
 
 type AdminSideNavProps = {
@@ -19,9 +20,26 @@ function isActiveLink(pathname: string, href: string) {
 
 export function AdminSideNav({ groups, compact = false }: AdminSideNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const prefetched = useRef(new Map<string, number>());
+  const [pending, setPending] = useState<{ href: string; from: string } | null>(null);
+  const pendingHref = pending?.from === pathname ? pending.href : null;
+
+  useEffect(() => {
+    if (!pendingHref) return;
+    // An interrupted navigation must not leave the menu looking busy forever.
+    const timeout = window.setTimeout(() => setPending(null), 12_000);
+    return () => window.clearTimeout(timeout);
+  }, [pendingHref]);
+
+  function prefetchOnIntent(href: string) {
+    if (href === pathname || Date.now() - (prefetched.current.get(href) || 0) < 30_000) return;
+    prefetched.current.set(href, Date.now());
+    router.prefetch(href);
+  }
 
   return (
-    <nav className="sideNav" aria-label="Navegacao administrativa">
+    <nav className="sideNav" aria-label="Navegacao administrativa" aria-busy={Boolean(pendingHref)}>
       {groups.map((group) => {
         const hasActiveItem = group.items.some((item) => isActiveLink(pathname, item.href));
 
@@ -36,8 +54,25 @@ export function AdminSideNav({ groups, compact = false }: AdminSideNavProps) {
                 const active = isActiveLink(pathname, item.href);
 
                 return (
-                  <Link href={item.href} onClick={(event) => event.currentTarget.closest("details.adminMobileMenu")?.removeAttribute("open")} key={item.href} aria-current={active ? "page" : undefined} className={active ? "active" : undefined}>
-                    <strong>{item.label}</strong>
+                  <Link
+                    href={item.href}
+                    prefetch={false}
+                    onPointerEnter={() => prefetchOnIntent(item.href)}
+                    onFocus={() => prefetchOnIntent(item.href)}
+                    onClick={(event) => {
+                      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                      event.currentTarget.closest("details.adminMobileMenu")?.removeAttribute("open");
+                      if (item.href === pathname) {
+                        event.preventDefault();
+                        return;
+                      }
+                      setPending({ href: item.href, from: pathname });
+                    }}
+                    key={item.href}
+                    aria-current={active ? "page" : undefined}
+                    className={`${active ? "active" : ""}${pendingHref === item.href ? " isPending" : ""}`}
+                  >
+                    <strong>{pendingHref === item.href ? `Abrindo ${item.label}...` : item.label}</strong>
                     <span>{item.description}</span>
                   </Link>
                 );

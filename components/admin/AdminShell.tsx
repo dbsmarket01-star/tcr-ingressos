@@ -21,8 +21,10 @@ export async function AdminShell({
   headerVariant = "default",
   hideSidebarIntro = false
 }: AdminShellProps) {
-  const admin = await getCurrentAdmin();
-  const currentOrganizationContext = await getCurrentOrganizationContext();
+  const [admin, currentOrganizationContext] = await Promise.all([
+    getCurrentAdmin(),
+    getCurrentOrganizationContext()
+  ]);
   const navGroups = admin ? getAdminNavGroupsForRole(admin.role, { isPlatformHost: currentOrganizationContext.isPlatformHost }) : [];
   const adminOrganization =
     admin?.organizationId ? await getOrganizationBrandingById(admin.organizationId) : currentOrganizationContext.organization;

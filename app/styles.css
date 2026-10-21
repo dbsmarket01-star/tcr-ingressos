@@ -2750,6 +2750,36 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   background: rgba(255, 255, 255, 0.1);
 }
 
+.sideNav a:focus-visible,
+.sideNavGroup summary:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
+
+.sideNav a.isPending {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.sideNav a.isPending::after {
+  animation: adminNavSpin 0.7s linear infinite;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  content: "";
+  height: 12px;
+  margin-left: auto;
+  width: 12px;
+}
+
+@keyframes adminNavSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sideNav a.isPending::after { animation: none; }
+}
+
 .sideNav a:hover::before,
 .sideNav a.active::before {
   opacity: 1;
