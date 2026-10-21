@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { setCrmWhatsAppFollowUp, setCrmWhatsAppRefundCategory } from "@/features/crm/whatsapp-chat.actions";
+import { moveCrmWhatsAppConversation, setCrmWhatsAppFollowUp, setCrmWhatsAppRefundCategory } from "@/features/crm/whatsapp-chat.actions";
 import { shouldClearUnread } from "@/features/crm/whatsapp-inbox-classification";
 import type { getCrmWhatsAppInbox } from "@/features/crm/whatsapp-chat.service";
 
@@ -23,6 +23,7 @@ function dayLabel(value: Date) {
 
 function statusLabel(item: Item) {
   if (item.aiMode === "HANDOFF") return "Atendente solicitado";
+  if (item.closedManually) return "Atendimento fechado";
   if (item.isClosed) return "Compra confirmada";
   if (item.followUp) return "Follow-up";
   if (item.abandonedWithoutReturn) return "Carrinho sem retorno";
@@ -66,7 +67,7 @@ export function WhatsAppLiveInboxList({
         const latestAt = new Date(message.at);
         const updated: Item = existing
           ? { ...existing, latestAt, latestMessage: message.message, latestInboundAt: latestAt, latestInboundId: message.id, latestInboundMessage: message.message, hasUnread: true, unreadQueue: true, needsReply: true, canReply: true, lastDirection: "inbound" }
-          : { key, name: message.name, phone: message.phone || "", eventTitle: "Conversa pelo WhatsApp", orderCode: null, latestMessage: message.message, latestAt, latestInboundAt: latestAt, latestInboundId: message.id, latestInboundMessage: message.message, needsReply: true, hasUnread: true, unreadQueue: true, hasHumanReply: false, isRefund: false, followUp: false, isClosed: false, abandonedWithoutReturn: false, canReply: true, lastDirection: "inbound", lastOutboundAt: null, aiMode: "ACTIVE" };
+          : { key, name: message.name, phone: message.phone || "", eventTitle: "Conversa pelo WhatsApp", orderCode: null, latestMessage: message.message, latestAt, latestInboundAt: latestAt, latestInboundId: message.id, latestInboundMessage: message.message, needsReply: true, hasUnread: true, unreadQueue: true, hasHumanReply: false, humanQueueHidden: false, isRefund: false, followUp: false, isClosed: false, closedManually: false, abandonedWithoutReturn: false, canReply: true, lastDirection: "inbound", lastOutboundAt: null, aiMode: "ACTIVE" };
         const term = String(search || "").trim().toLocaleLowerCase("pt-BR");
         if (term && ![updated.name, updated.phone, updated.eventTitle, updated.orderCode, updated.latestMessage].some((value) => String(value || "").toLocaleLowerCase("pt-BR").includes(term))) {
           return current.filter((item) => item.key !== key);
@@ -103,7 +104,7 @@ export function WhatsAppLiveInboxList({
     window.dispatchEvent(new CustomEvent("tcr:whatsapp-counters", { detail: {
       all: items.length,
       unread: items.filter((item) => item.unreadQueue).length,
-      human: items.filter((item) => item.hasHumanReply).length,
+      human: items.filter((item) => item.hasHumanReply && !item.humanQueueHidden).length,
       refund: items.filter((item) => item.isRefund).length,
       followup: items.filter((item) => item.followUp).length,
       closed: items.filter((item) => item.isClosed).length,
@@ -111,7 +112,7 @@ export function WhatsAppLiveInboxList({
     } }));
   }, [items]);
 
-  const filtered = useMemo(() => items.filter((item) => currentStatus === "unread" ? item.unreadQueue : currentStatus === "human" ? item.hasHumanReply : currentStatus === "refund" ? item.isRefund : currentStatus === "followup" ? item.followUp : currentStatus === "closed" ? item.isClosed : currentStatus === "abandoned" ? item.abandonedWithoutReturn : true), [items, currentStatus]);
+  const filtered = useMemo(() => items.filter((item) => currentStatus === "unread" ? item.unreadQueue : currentStatus === "human" ? item.hasHumanReply && !item.humanQueueHidden : currentStatus === "refund" ? item.isRefund : currentStatus === "followup" ? item.followUp : currentStatus === "closed" ? item.isClosed : currentStatus === "abandoned" ? item.abandonedWithoutReturn : true), [items, currentStatus]);
   const visible = useMemo(() => filtered.slice(0, limit), [filtered, limit]);
   let lastDay = "";
   return <nav className="crmWhatsappInboxList" aria-label="Conversas do WhatsApp">
@@ -142,9 +143,18 @@ export function WhatsAppLiveInboxList({
             <span className="crmWhatsappInboxCopy"><span className="crmWhatsappInboxName"><strong>{item.name}</strong><time>{timeLabel(item.latestAt)}</time></span><span className="crmWhatsappInboxPreview">{item.lastDirection === "outbound" ? "Você: " : ""}{item.latestMessage}</span><span className="crmWhatsappInboxTags"><small>{statusLabel(item)}</small><small>{tags[0]}</small>{tags[1] ? <small>{tags[1]}</small> : null}</span></span>
             {item.hasUnread ? <i title="Mensagem nova ainda não visualizada">1</i> : null}
           </Link>
-          <details className="crmWhatsappInboxMenu"><summary aria-label={`Opções de ${item.name}`}>⋮</summary>
-            <form action={setCrmWhatsAppFollowUp}><input name="phone" type="hidden" value={item.phone}/><input name="enabled" type="hidden" value={item.followUp ? "false" : "true"}/><button type="submit">{item.followUp ? "Remover de Em atendimento / Follow-up" : "Mover para Em atendimento / Follow-up"}</button></form>
-            <form action={setCrmWhatsAppRefundCategory}><input name="phone" type="hidden" value={item.phone}/><input name="enabled" type="hidden" value={item.isRefund ? "false" : "true"}/><button type="submit">{item.isRefund ? "Remover da categoria Estorno" : "Classificar como Estorno"}</button></form>
+          <details className="crmWhatsappInboxMenu"><summary aria-label={`Opções de ${item.name}`}>⋮</summary><div className="crmWhatsappInboxMenuActions">
+            {currentStatus === "human" ? ([
+              ["all", "Mover para Todos"], ["refund", "Mover para Estorno"],
+              ["followup", "Mover para Em atendimento / Follow-up"], ["closed", "Mover para Fechados"]
+            ] as const).map(([destination, label]) => <form action={moveCrmWhatsAppConversation} key={destination}><input name="phone" type="hidden" value={item.phone}/><input name="destination" type="hidden" value={destination}/><button type="submit">{label}</button></form>) : null}
+            {currentStatus !== "human" && item.hasHumanReply && item.humanQueueHidden ? <form action={moveCrmWhatsAppConversation}><input name="phone" type="hidden" value={item.phone}/><input name="destination" type="hidden" value="human"/><button type="submit">Restaurar em Atendimento humano</button></form> : null}
+            {currentStatus !== "human" && currentStatus !== "followup" && !item.followUp ? <form action={setCrmWhatsAppFollowUp}><input name="phone" type="hidden" value={item.phone}/><input name="enabled" type="hidden" value="true"/><button type="submit">Adicionar a Follow-up</button></form> : null}
+            {currentStatus === "followup" && item.followUp ? <form action={setCrmWhatsAppFollowUp}><input name="phone" type="hidden" value={item.phone}/><input name="enabled" type="hidden" value="false"/><button type="submit">Remover de Follow-up</button></form> : null}
+            {currentStatus !== "human" && currentStatus !== "refund" && !item.isRefund ? <form action={setCrmWhatsAppRefundCategory}><input name="phone" type="hidden" value={item.phone}/><input name="enabled" type="hidden" value="true"/><button type="submit">Classificar como Estorno</button></form> : null}
+            {currentStatus === "refund" && item.isRefund ? <form action={setCrmWhatsAppRefundCategory}><input name="phone" type="hidden" value={item.phone}/><input name="enabled" type="hidden" value="false"/><button type="submit">Remover de Estorno</button></form> : null}
+            {currentStatus !== "human" && currentStatus !== "closed" && !item.isClosed ? <form action={moveCrmWhatsAppConversation}><input name="phone" type="hidden" value={item.phone}/><input name="destination" type="hidden" value="closed"/><button type="submit">Mover para Fechados</button></form> : null}
+          </div>
           </details>
         </div>
       </div>;

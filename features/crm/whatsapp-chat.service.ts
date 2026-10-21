@@ -381,7 +381,7 @@ async function loadCrmWhatsAppInbox(input: {
       where: {
         entityType: "WHATSAPP_CONVERSATION",
         entityId: { in: conversationEntityIds },
-        action: { in: ["WHATSAPP_CONVERSATION_READ", "WHATSAPP_FOLLOWUP_ENABLED", "WHATSAPP_FOLLOWUP_DISABLED", "WHATSAPP_CONVERSATION_HIDDEN", "WHATSAPP_HUMAN_REPLIED", "WHATSAPP_REFUND_ENABLED", "WHATSAPP_REFUND_DISABLED"] }
+        action: { in: ["WHATSAPP_CONVERSATION_READ", "WHATSAPP_FOLLOWUP_ENABLED", "WHATSAPP_FOLLOWUP_DISABLED", "WHATSAPP_CONVERSATION_HIDDEN", "WHATSAPP_HUMAN_REPLIED", "WHATSAPP_REFUND_ENABLED", "WHATSAPP_REFUND_DISABLED", "WHATSAPP_HUMAN_QUEUE_HIDDEN", "WHATSAPP_HUMAN_QUEUE_VISIBLE", "WHATSAPP_CLOSED_ENABLED", "WHATSAPP_CLOSED_DISABLED"] }
       },
       orderBy: { createdAt: "desc" },
       select: { action: true, entityId: true, metadata: true, createdAt: true }
@@ -419,6 +419,8 @@ async function loadCrmWhatsAppInbox(input: {
   const latestReadAtByPhone = new Map<string, Date>();
   const followUpByPhone = new Map<string, boolean>();
   const refundByPhone = new Map<string, boolean>();
+  const humanQueueHiddenByPhone = new Map<string, boolean>();
+  const closedByPhone = new Map<string, boolean>();
   const refundRequestPhones = new Set<string>();
   for (const message of historicalRefundRequests) {
     const phoneKey = conversationPhoneKey(message.recipientPhone);
@@ -447,6 +449,12 @@ async function loadCrmWhatsAppInbox(input: {
     if (log.action === "WHATSAPP_HUMAN_REPLIED") humanRepliedPhones.add(key);
     if ((log.action === "WHATSAPP_REFUND_ENABLED" || log.action === "WHATSAPP_REFUND_DISABLED") && !refundByPhone.has(key)) {
       refundByPhone.set(key, log.action === "WHATSAPP_REFUND_ENABLED");
+    }
+    if ((log.action === "WHATSAPP_HUMAN_QUEUE_HIDDEN" || log.action === "WHATSAPP_HUMAN_QUEUE_VISIBLE") && !humanQueueHiddenByPhone.has(key)) {
+      humanQueueHiddenByPhone.set(key, log.action === "WHATSAPP_HUMAN_QUEUE_HIDDEN");
+    }
+    if ((log.action === "WHATSAPP_CLOSED_ENABLED" || log.action === "WHATSAPP_CLOSED_DISABLED") && !closedByPhone.has(key)) {
+      closedByPhone.set(key, log.action === "WHATSAPP_CLOSED_ENABLED");
     }
     if (log.action === "WHATSAPP_CONVERSATION_HIDDEN") hiddenPhones.add(key);
   }
@@ -527,9 +535,11 @@ async function loadCrmWhatsAppInbox(input: {
         hasUnread: flags.unread,
         unreadQueue: flags.unread,
         hasHumanReply: flags.human,
+        humanQueueHidden: humanQueueHiddenByPhone.get(key) || false,
         isRefund: flags.refund,
         followUp: followUpByPhone.get(key) || false,
-        isClosed: hasPaidOrder,
+        isClosed: closedByPhone.get(key) ?? hasPaidOrder,
+        closedManually: closedByPhone.get(key) === true,
         abandonedWithoutReturn,
         canReply: flags.canReply,
         lastDirection: latest.status === "RECEIVED" ? ("inbound" as const) : ("outbound" as const),

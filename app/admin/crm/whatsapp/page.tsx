@@ -12,7 +12,7 @@ import { WhatsAppConversationPanel } from "./WhatsAppConversationPanel";
 
 export const dynamic = "force-dynamic";
 
-type CrmWhatsAppPageProps = { searchParams?: Promise<{ endDate?: string; leadId?: string; limit?: string; message?: string; orderCode?: string; period?: string; phone?: string; search?: string; startDate?: string; status?: string }> };
+type CrmWhatsAppPageProps = { searchParams?: Promise<{ endDate?: string; leadId?: string; limit?: string; message?: string; notice?: string; orderCode?: string; period?: string; phone?: string; search?: string; startDate?: string; status?: string }> };
 function SearchIcon() { return <svg aria-hidden="true" className="crmWaIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>; }
 const initials = (name?: string | null) => String(name || "WA").split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 const CRM_TIME_ZONE = "America/Sao_Paulo";
@@ -55,7 +55,7 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
   const counters = {
     all: rawInbox.length,
     unread: rawInbox.filter((item) => item.unreadQueue).length,
-    human: rawInbox.filter((item) => item.hasHumanReply).length,
+    human: rawInbox.filter((item) => item.hasHumanReply && !item.humanQueueHidden).length,
     refund: rawInbox.filter((item) => item.isRefund).length,
     followup: rawInbox.filter((item) => item.followUp).length,
     closed: rawInbox.filter((item) => item.isClosed).length,
@@ -66,7 +66,7 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
     activeStatus === "unread"
       ? item.unreadQueue
       : activeStatus === "human"
-        ? item.hasHumanReply
+        ? item.hasHumanReply && !item.humanQueueHidden
         : activeStatus === "refund"
           ? item.isRefund
         : activeStatus === "followup"
@@ -103,6 +103,7 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
       <WhatsAppStatusTabs initialStatus={activeStatus} initialCounts={counters} period={selectedPeriod.period}/>
       <WhatsAppPeriodBar status={activeStatus} period={selectedPeriod.period} start={selectedPeriod.start} end={selectedPeriod.end} search={params.search}/>
       {params.status === "erro" || params.status === "ok" ? <div className={`crmWhatsappFeedback ${params.status === "erro" ? "isError" : "isSuccess"}`}>{params.message || "Mensagem enviada."}</div> : null}
+      {params.notice ? <div className="crmWhatsappFeedback isSuccess">{params.notice}</div> : null}
 
       <section className="crmWhatsappShell">
         <aside className="crmWhatsappInboxPanel">

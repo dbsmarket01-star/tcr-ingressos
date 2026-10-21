@@ -338,7 +338,7 @@
 .crmWhatsappInboxMenu summary { align-items: center; border-radius: 8px; color: #64748b; cursor: pointer; display: flex; font-size: 20px; height: 30px; justify-content: center; list-style: none; width: 28px; }
 .crmWhatsappInboxMenu summary::-webkit-details-marker { display: none; }
 .crmWhatsappInboxMenu[open] summary { background: #e8f5ef; color: #087a46; }
-.crmWhatsappInboxMenu form { background: #fff; border: 1px solid #dbe5df; border-radius: 10px; box-shadow: 0 12px 30px rgba(15, 23, 42, .16); padding: 6px; position: absolute; right: 0; top: 34px; width: 245px; }
+.crmWhatsappInboxMenuActions { background: #fff; border: 1px solid #dbe5df; border-radius: 10px; box-shadow: 0 12px 30px rgba(15, 23, 42, .16); padding: 6px; position: absolute; right: 0; top: 34px; width: 245px; }
 .crmWhatsappInboxMenu button { background: transparent; border: 0; border-radius: 7px; color: #172033; cursor: pointer; font-size: 12px; font-weight: 750; padding: 10px; text-align: left; width: 100%; }
 .crmWhatsappInboxMenu button:hover { background: #effaf5; color: #087a46; }
 .crmWhatsappFeedback { margin: -5px 0 0; }

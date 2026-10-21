@@ -34,4 +34,16 @@ describe("AI messages in WhatsApp admin", () => {
     expect(result.messages).toEqual([expect.objectContaining({ content: "Resposta da IA", direction: "outbound" })]);
     expect(db.whatsAppMessageLog.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ organizationId: "org_test" }) }));
   });
+  it("keeps human reply history while explicit placement removes it from the human queue", async () => {
+    const humanMessage = { ...message, id: "human-message", type: "BULK", payload: { text: "Atendimento", humanAdminUserId: "admin-1" } };
+    db.$queryRaw.mockResolvedValue([humanMessage]);
+    db.whatsAppMessageLog.findMany.mockResolvedValue([humanMessage]);
+    db.adminAuditLog.findMany.mockImplementation(({ where }) =>
+      where.action?.in?.includes("WHATSAPP_HUMAN_QUEUE_HIDDEN") ? [
+        { action: "WHATSAPP_HUMAN_QUEUE_HIDDEN", entityId: "org_test:11999999999", metadata: {}, createdAt: new Date("2026-10-20T12:00:00Z") },
+        { action: "WHATSAPP_CLOSED_ENABLED", entityId: "org_test:11999999999", metadata: {}, createdAt: new Date("2026-10-20T12:00:00Z") }
+      ] : []);
+    const inbox = await getCrmWhatsAppInbox({ organizationId: "org_test" });
+    expect(inbox[0]).toMatchObject({ hasHumanReply: true, humanQueueHidden: true, isClosed: true, closedManually: true });
+  });
 });
