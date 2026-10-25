@@ -17,7 +17,11 @@ type Lot = { id: string; name: string; description: string | null; priceInCents:
 export function isSorocabaAdGreeting(text: string) {
   const normalized = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/[.!?]+$/, "").trim();
   if (/^(?:(?:e\s+em|e|eh|em|na cidade de|cidade de|fica em|o evento e em)\s+)?sorocaba$/.test(normalized)) return true;
-  return /\brodrigo\s+(?:teaser|tiser|tizer|tise|tis)\b/.test(normalized) && /\bsorocaba\b/.test(normalized);
+  if (/\brodrigo\s+(?:teaser|tiser|tizer|tise|tis)\b/.test(normalized) && /\bsorocaba\b/.test(normalized)) return true;
+  // After the generic ad greeting, customers often identify the event by city
+  // and ask for tickets in the same sentence. Route that to the button flow.
+  return /\bsorocaba\b/.test(normalized) && isSorocabaTicketInfoIntent(normalized) &&
+    !/\b(?:piracicaba|marilia|taubate|ribeirao pires|sao caetano|mogi das cruzes)\b/.test(normalized);
 }
 
 export function isSorocabaTicketInfoIntent(text: string) {

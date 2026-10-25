@@ -9,8 +9,11 @@ describe("jornada de vendas de Sorocaba", () => {
     expect(isSorocabaAdGreeting("Rodrigo Teaser em Sorocaba")).toBe(true);
     expect(isSorocabaAdGreeting("Sorocaba")).toBe(true);
     expect(isSorocabaAdGreeting("  SOROCABA  ")).toBe(true);
+    expect(isSorocabaAdGreeting("Ingressos e valores para Sorocaba")).toBe(true);
+    expect(isSorocabaAdGreeting("Quais os preços dos ingressos em Sorocaba?")).toBe(true);
     expect(isSorocabaAdGreeting("Quero saber se tem evento em Sorocaba")).toBe(false);
     expect(isSorocabaAdGreeting("Sorocaba, por favor")).toBe(false);
+    expect(isSorocabaAdGreeting("Ingressos e valores em Sorocaba e Piracicaba")).toBe(false);
     expect(isSorocabaAdGreeting("Quero ingressos para Rodrigo Teaser em Piracicaba")).toBe(false);
     expect(isSorocabaAdGreeting("Rodrigo Tizer em Piracicaba")).toBe(false);
   });
