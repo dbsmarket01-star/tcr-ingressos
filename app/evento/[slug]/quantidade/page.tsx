@@ -3,6 +3,11 @@ import { notFound } from "next/navigation";
 import { getCachedPublicEventBySlugInOrganization } from "@/features/events/event.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { effectiveLotMaxPerOrder, SOROCABA_EVENT_SLUG } from "@/features/orders/sorocaba-quantity-limit";
+import { calculateAsaasSplitsForOrder, sumAsaasSplitsInCents } from "@/features/payments/asaas-split.service";
+import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
+import { finalizeOrganizationPublicPriceInCents, getEffectiveFixedOrderFeeInCents, getEffectiveServiceFeeBps, isFeeFreeOrganization } from "@/features/pricing/organization-pricing-policy";
+import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
+import { listPaymentSplitRules } from "@/features/settings/split-settings.service";
 import { QuantityPicker } from "./QuantityPicker";
 import styles from "./quantity.module.css";
 
@@ -32,6 +37,28 @@ export default async function EventQuantityPage({ params, searchParams }: Props)
   const min = Math.max(1, lot.minPerOrder);
   if (max < min) notFound();
 
+  const [companySettings, splitRules] = await Promise.all([
+    getCompanySettingsByOrganizationId(organization.organization.id),
+    listPaymentSplitRules(organization.organization.id)
+  ]);
+  const organizationSlug = organization.organization.slug;
+  const effectiveSplitRules = isFeeFreeOrganization(organizationSlug, event.slug) ? [] : splitRules.filter((rule) => rule.isActive);
+  const effectiveFixedOrderFeeInCents = getEffectiveFixedOrderFeeInCents(organizationSlug, companySettings.pixTransactionFeeInCents, event.slug);
+  const serviceFeeBps = getEffectiveServiceFeeBps(organizationSlug, lot.serviceFeeBps, event.slug);
+  const pricesByQuantity = Array.from({ length: max - min + 1 }, (_, index) => {
+    const quantity = min + index;
+    const ticketsInCents = lot.priceInCents * quantity;
+    const configuredFeeInCents = calculateServiceFeeInCents(lot.priceInCents, quantity, serviceFeeBps);
+    const splitsInCents = sumAsaasSplitsInCents(calculateAsaasSplitsForOrder([
+      { quantity, totalInCents: ticketsInCents, admissionsPerUnit: lot.admissionsPerUnit }
+    ], effectiveSplitRules));
+    const totalInCents = finalizeOrganizationPublicPriceInCents(
+      organizationSlug,
+      ticketsInCents + Math.max(configuredFeeInCents, splitsInCents) + effectiveFixedOrderFeeInCents
+    );
+    return { quantity, ticketsInCents, feeInCents: totalInCents - ticketsInCents, totalInCents };
+  });
+
   const checkoutParams = new URLSearchParams({
     lotId: lot.id,
     utm_source: "whatsapp",
@@ -55,9 +82,9 @@ export default async function EventQuantityPage({ params, searchParams }: Props)
           </div>
           <QuantityPicker
             lotName={lot.name}
-            priceInCents={lot.priceInCents}
             min={min}
             max={max}
+            pricesByQuantity={pricesByQuantity}
             checkoutPath={`/evento/${slug}/checkout?${checkoutParams.toString()}`}
           />
         </div>
