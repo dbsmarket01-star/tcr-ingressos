@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
-import { clearCrmWhatsAppInboxCache, getCrmWhatsAppConversation } from "@/features/crm/whatsapp-chat.service";
+import { clearCrmWhatsAppInboxCache, getCrmWhatsAppConversation, getCrmWhatsAppInbox } from "@/features/crm/whatsapp-chat.service";
 import { sendCartAbandonmentWhatsApp, sendWhatsAppMediaMessage, sendWhatsAppTextMessage, type WhatsAppMediaKind } from "@/features/whatsapp/whatsapp.service";
 import { setWhatsAppAiConversationState } from "@/features/ai/whatsapp-support-ai.service";
 import { savePublicMediaUpload } from "@/features/uploads/local-upload.service";
@@ -263,12 +263,16 @@ export async function moveCrmWhatsAppConversation(formData: FormData) {
   const phone = getFormText(formData, "phone");
   const queue = getFormText(formData, "queue");
   const key = phone.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
-  if (!key || !["all", "ai", "human", "refund", "followup", "closed"].includes(queue)) {
+  if (!key || !["all", "ai", "human", "refund", "followup", "closed", "meta"].includes(queue)) {
     return { ok: false, message: "Destino ou telefone inválido." };
   }
   const conversation = await getCrmWhatsAppConversation({ phone, organizationId: admin.organizationId, allowedEventIds: getAdminAllowedEventIds(admin) });
   if (!conversation.contact?.phone || conversation.messages.length === 0) {
     return { ok: false, message: "Conversa não encontrada." };
+  }
+  if (queue === "meta") {
+    const inbox = await getCrmWhatsAppInbox({ organizationId: admin.organizationId, allowedEventIds: getAdminAllowedEventIds(admin) });
+    if (!inbox.some((item) => item.key === key && item.metaSales)) return { ok: false, message: "Esta conversa não tem autovenda de anúncio Meta confirmada." };
   }
   await prisma.adminAuditLog.create({ data: {
     adminUserId: admin.id,

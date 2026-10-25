@@ -23,6 +23,8 @@ export async function GET(request: NextRequest) {
   const payload = message.webhookPayload && typeof message.webhookPayload === "object" && !Array.isArray(message.webhookPayload)
     ? message.webhookPayload as Record<string, unknown> : {};
   const ai = payload._ai && typeof payload._ai === "object" && !Array.isArray(payload._ai) ? payload._ai as Record<string, unknown> : {};
+  const origin = payload._tcrOrigin && typeof payload._tcrOrigin === "object" && !Array.isArray(payload._tcrOrigin) ? payload._tcrOrigin as Record<string, unknown> : {};
   const state = await getWhatsAppAiConversationState(admin.organizationId, message.recipientPhone);
-  return NextResponse.json({ status: typeof ai.status === "string" ? ai.status : null, mode: state.mode, phone: message.recipientPhone }, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json({ status: typeof ai.status === "string" ? ai.status : null, mode: state.mode, phone: message.recipientPhone,
+    metaSales: origin.kind === "meta_ad" && ["sorocaba_sales", "ad_sales"].includes(String(ai.topic || "")) }, { headers: { "Cache-Control": "no-store" } });
 }

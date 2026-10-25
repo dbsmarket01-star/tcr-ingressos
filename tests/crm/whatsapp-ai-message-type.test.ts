@@ -46,4 +46,12 @@ describe("AI messages in WhatsApp admin", () => {
     const inbox = await getCrmWhatsAppInbox({ organizationId: "org_test" });
     expect(inbox[0]).toMatchObject({ hasHumanReply: true, humanQueueHidden: true, isClosed: true, closedManually: true });
   });
+  it("shows confirmed ad autovenda in Anúncios Meta without mixing ordinary WhatsApp", async () => {
+    db.$queryRaw.mockResolvedValue([message]);
+    db.whatsAppMessageLog.findMany.mockImplementation(({ where }) => where?.OR?.some((part: { payload?: { path?: string[] } }) => part.payload?.path?.[0] === "source")
+      ? [{ recipientPhone: message.recipientPhone, payload: { source: "TCR_SOROCABA_SALES", paidAd: true, step: "done" }, createdAt: message.createdAt }]
+      : [message]);
+    const inbox = await getCrmWhatsAppInbox({ organizationId: "org_test" });
+    expect(inbox[0]).toMatchObject({ queue: "meta", metaSales: true, metaSalesStage: "Link de compra enviado" });
+  });
 });

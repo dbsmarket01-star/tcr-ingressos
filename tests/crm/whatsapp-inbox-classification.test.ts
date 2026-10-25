@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { conversationMembership, isHumanReply, isRefundRequest, isUnreadConversation, resolveOperationalQueue, shouldClearUnread } from "@/features/crm/whatsapp-inbox-classification";
+import { conversationMembership, isHumanReply, isRefundRequest, isUnreadConversation, metaSalesStage, resolveOperationalQueue, shouldClearUnread } from "@/features/crm/whatsapp-inbox-classification";
 
 describe("classificação independente da caixa de entrada", () => {
   it("o estado lido acompanha a confirmação persistida da mensagem aberta e não apaga uma nova", () => {
@@ -52,5 +52,15 @@ describe("classificação independente da caixa de entrada", () => {
     expect(resolveOperationalQueue({ latestInboundAt: new Date("2026-10-21T16:00:00Z"), aiMode: "ACTIVE", refund: false, manual: { ...manual, queue: "followup" } })).toBe("followup");
     expect(resolveOperationalQueue({ latestInboundAt: new Date("2026-10-21T16:00:00Z"), aiMode: "HANDOFF", refund: false, manual: { ...manual, queue: "followup" } })).toBe("human");
     expect(resolveOperationalQueue({ latestInboundAt: new Date("2026-10-21T16:00:00Z"), aiMode: "ACTIVE", refund: false, manual: { ...manual, queue: "refund" } })).toBe("refund");
+  });
+
+  it("só coloca a autovenda confirmada de anúncio Meta na fila própria e transfere pedidos humanos", () => {
+    const inbound = new Date("2026-10-25T12:00:00Z");
+    expect(metaSalesStage({ source: "TCR_SOROCABA_SALES", paidAd: true, step: "done" })).toBe("Link de compra enviado");
+    expect(metaSalesStage({ source: "TCR_SOROCABA_SALES", paidAd: false, step: "done" })).toBeNull();
+    expect(metaSalesStage({ source: "TCR_WHATSAPP_AD_SALES", adId: "123456", step: "menu" })).toBe("Vendo setores");
+    expect(resolveOperationalQueue({ latestInboundAt: inbound, aiMode: "ACTIVE", refund: false, metaSales: true, manual: null })).toBe("meta");
+    expect(resolveOperationalQueue({ latestInboundAt: inbound, aiMode: "HANDOFF", refund: false, metaSales: true, manual: null })).toBe("human");
+    expect(resolveOperationalQueue({ latestInboundAt: inbound, aiMode: "ACTIVE", refund: false, metaSales: true, manual: { queue: "all", at: new Date("2026-10-25T12:01:00Z") } })).toBe("all");
   });
 });

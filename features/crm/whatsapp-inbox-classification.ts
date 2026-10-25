@@ -26,15 +26,31 @@ export function resolveOperationalQueue(input: {
   latestInboundAt: Date | null;
   aiMode: "ACTIVE" | "PAUSED" | "HANDOFF";
   refund: boolean;
+  metaSales?: boolean;
   manual: { queue: string; at: Date } | null;
 }) {
-  const { latestInboundAt, aiMode, refund, manual } = input;
+  const { latestInboundAt, aiMode, refund, metaSales, manual } = input;
   if (manual?.queue === "refund") return "refund";
   if (manual && (!latestInboundAt || latestInboundAt <= manual.at)) return manual.queue;
   if (refund) return "refund";
   if (aiMode !== "ACTIVE") return "human";
   if (manual?.queue === "followup" || manual?.queue === "closed") return manual.queue;
+  if (metaSales) return "meta";
   return latestInboundAt && latestInboundAt >= new Date("2026-10-21T00:00:00-03:00") ? "ai" : "all";
+}
+
+export function metaSalesStage(payload: unknown): string | null {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+  const data = payload as Record<string, unknown>;
+  const verifiedSorocaba = data.source === "TCR_SOROCABA_SALES" && data.paidAd === true;
+  const verifiedPilot = data.source === "TCR_WHATSAPP_AD_SALES" && typeof data.adId === "string" && /^\d{1,30}$/.test(data.adId);
+  if (!verifiedSorocaba && !verifiedPilot) return null;
+  const step = typeof data.step === "string" ? data.step : "";
+  if (["done", "checkout"].includes(step)) return "Link de compra enviado";
+  if (["option", "quantity", "choose_quantity"].includes(step)) return "Escolhendo ingresso";
+  if (["lot", "menu", "choose_lot"].includes(step)) return "Vendo setores";
+  if (step === "choose_event") return "Escolhendo evento";
+  return "Iniciou atendimento";
 }
 
 export function conversationMembership(input: {

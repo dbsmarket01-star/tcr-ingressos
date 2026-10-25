@@ -3,11 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-type Counts = { all: number; ai: number; human: number; refund: number; followup: number; closed: number; abandoned: number };
+type Counts = { all: number; ai: number; human: number; refund: number; followup: number; closed: number; abandoned: number; meta: number };
 const tabs: Array<[keyof Counts, string]> = [
   ["all", "Todos"], ["ai", "Atendimento IA"], ["human", "Atendimento humano"],
   ["refund", "Estorno"], ["followup", "Em atendimento / Follow-up"],
-  ["closed", "Fechados"], ["abandoned", "Carrinho abandonado sem retorno"]
+  ["closed", "Fechados"], ["abandoned", "Carrinho abandonado sem retorno"], ["meta", "Anúncios Meta"]
 ];
 
 export function WhatsAppStatusTabs({ initialStatus, initialCounts, period }: { initialStatus: string; initialCounts: Counts; period: string }) {
@@ -30,7 +30,7 @@ export function WhatsAppStatusTabs({ initialStatus, initialCounts, period }: { i
   function select(next: string) {
     const url = new URL(window.location.href);
     if (next === "all") url.searchParams.delete("status"); else url.searchParams.set("status", next);
-    if ((next === "human" || next === "refund") && period === "today") {
+    if ((next === "human" || next === "refund" || next === "meta") && period === "today") {
       url.searchParams.set("period", "all");
       router.push(`${url.pathname}${url.search}`);
       return;

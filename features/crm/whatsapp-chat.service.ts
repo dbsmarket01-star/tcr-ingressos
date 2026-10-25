@@ -1,7 +1,7 @@
 import { OrderStatus, Prisma, WhatsAppMessageType, type WhatsAppMessageLog } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { resolveWhatsAppAiConversationMode } from "@/features/ai/whatsapp-support-ai.service";
-import { conversationMembership, isHumanReply, isRefundRequest, resolveOperationalQueue } from "@/features/crm/whatsapp-inbox-classification";
+import { conversationMembership, isHumanReply, isRefundRequest, metaSalesStage, resolveOperationalQueue } from "@/features/crm/whatsapp-inbox-classification";
 
 type EventScope = string[] | null | undefined;
 
@@ -335,7 +335,7 @@ async function loadCrmWhatsAppInbox(input: {
     .map((message) => conversationPhoneKey(message.recipientPhone))
     .filter((key): key is string => Boolean(key))
     .map((key) => `${input.organizationId}:${key}`)));
-  const [orders, phoneOrders, aiStateLogs, workflowLogs, historicalHumanReplies, historicalRefundRequests] = await Promise.all([
+  const [orders, phoneOrders, aiStateLogs, workflowLogs, historicalHumanReplies, historicalRefundRequests, metaSalesLogs] = await Promise.all([
     orderIds.length ? prisma.order.findMany({
         where: {
           id: { in: orderIds },
@@ -364,6 +364,9 @@ async function loadCrmWhatsAppInbox(input: {
       select: {
         code: true,
         status: true,
+        utmSource: true,
+        utmMedium: true,
+        utmTerm: true,
         customer: { select: { name: true, phone: true } },
         event: { select: { title: true } }
       }
@@ -399,15 +402,39 @@ async function loadCrmWhatsAppInbox(input: {
     (input.startAt || input.endAt) && loggedPhoneCandidates.length ? prisma.whatsAppMessageLog.findMany({
       where: { organizationId: input.organizationId, recipientPhone: { in: loggedPhoneCandidates }, status: "RECEIVED" },
       select: { recipientPhone: true, status: true, payload: true, webhookPayload: true, templateName: true }
+    }) : Promise.resolve([]),
+    loggedPhoneCandidates.length ? prisma.whatsAppMessageLog.findMany({
+      where: {
+        organizationId: input.organizationId,
+        recipientPhone: { in: loggedPhoneCandidates },
+        type: "BULK",
+        status: { in: ["SENT", "DELIVERED", "READ"] },
+        OR: [
+          { payload: { path: ["source"], equals: "TCR_SOROCABA_SALES" } },
+          { payload: { path: ["source"], equals: "TCR_WHATSAPP_AD_SALES" } }
+        ]
+      },
+      orderBy: { createdAt: "desc" },
+      select: { recipientPhone: true, payload: true, createdAt: true }
     }) : Promise.resolve([])
   ]);
   const orderById = new Map(orders.map((order) => [order.id, order]));
   const orderByPhone = new Map<string, (typeof phoneOrders)[number]>();
   const paidPhones = new Set<string>();
+  const paidWhatsAppPhones = new Set<string>();
   for (const order of phoneOrders) {
     const key = conversationPhoneKey(order.customer.phone);
     if (key && !orderByPhone.has(key)) orderByPhone.set(key, order);
     if (key && order.status === OrderStatus.PAID) paidPhones.add(key);
+    if (key && order.status === OrderStatus.PAID && order.utmSource?.toLowerCase() === "whatsapp" &&
+      order.utmMedium?.toLowerCase() === "meta_ads" && order.utmTerm === "verified_meta_referral") paidWhatsAppPhones.add(key);
+  }
+  const metaSalesByPhone = new Map<string, string>();
+  for (const log of metaSalesLogs) {
+    const key = conversationPhoneKey(log.recipientPhone);
+    if (!key || metaSalesByPhone.has(key)) continue;
+    const stage = metaSalesStage(log.payload);
+    if (stage) metaSalesByPhone.set(key, stage);
   }
   const aiModeByPhone = new Map<string, "ACTIVE" | "PAUSED" | "HANDOFF">();
   for (const log of aiStateLogs) {
@@ -528,6 +555,7 @@ async function loadCrmWhatsAppInbox(input: {
         now: new Date()
       });
       const manual = manualQueueByPhone.get(key) || null;
+      const metaSales = metaSalesByPhone.has(key);
       const refundSinceConclusion = manual?.queue === "all" && latestInbound?.createdAt && latestInbound.createdAt > manual.at
         ? messages.some((message) => message.status === "RECEIVED" && message.createdAt > manual.at && isRefundRequest(messageContent(message)))
         : flags.refund;
@@ -535,6 +563,7 @@ async function loadCrmWhatsAppInbox(input: {
         latestInboundAt: latestInbound?.createdAt || null,
         aiMode: aiModeByPhone.get(key) || "ACTIVE",
         refund: refundSinceConclusion,
+        metaSales,
         manual
       });
       const cartMessage = [...messages].reverse().find((message) => message.type === "CART_ABANDONMENT" && message.status !== "FAILED");
@@ -557,6 +586,8 @@ async function loadCrmWhatsAppInbox(input: {
         hasUnread: flags.unread,
         unreadQueue: flags.unread,
         queue,
+        metaSales,
+        metaSalesStage: paidWhatsAppPhones.has(key) ? "Compra confirmada" : metaSalesByPhone.get(key) || null,
         hasHumanReply: flags.human,
         humanQueueHidden: humanQueueHiddenByPhone.get(key) || false,
         isRefund: flags.refund,

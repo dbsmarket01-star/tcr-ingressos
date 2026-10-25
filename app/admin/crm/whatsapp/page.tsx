@@ -51,7 +51,7 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
     ? getCrmWhatsAppConversation({ orderCode: params.orderCode, leadId: params.leadId, phone: params.phone, organizationId: admin.organizationId, allowedEventIds })
     : null;
   const rawInbox = await inboxPromise;
-  const activeStatus = ["ai", "unread", "human", "refund", "followup", "closed", "abandoned"].includes(params.status || "") ? params.status === "unread" ? "ai" : params.status! : "all";
+  const activeStatus = ["ai", "unread", "human", "refund", "followup", "closed", "abandoned", "meta"].includes(params.status || "") ? params.status === "unread" ? "ai" : params.status! : "all";
   const counters = {
     all: rawInbox.length,
     ai: rawInbox.filter((item) => item.queue === "ai").length,
@@ -59,7 +59,8 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
     refund: rawInbox.filter((item) => item.queue === "refund").length,
     followup: rawInbox.filter((item) => item.queue === "followup").length,
     closed: rawInbox.filter((item) => item.queue === "closed").length,
-    abandoned: rawInbox.filter((item) => item.abandonedWithoutReturn).length
+    abandoned: rawInbox.filter((item) => item.abandonedWithoutReturn).length,
+    meta: rawInbox.filter((item) => item.queue === "meta").length
   };
   const visualUnreadCount = rawInbox.filter((item) => item.hasUnread).length;
   const inbox = rawInbox.filter((item) =>
@@ -73,6 +74,8 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
           ? item.queue === "followup"
           : activeStatus === "closed"
             ? item.queue === "closed"
+            : activeStatus === "meta"
+              ? item.queue === "meta"
             : activeStatus === "abandoned"
               ? item.abandonedWithoutReturn
               : true
