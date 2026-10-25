@@ -11,6 +11,7 @@ import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButt
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrganization } from "@/features/events/event.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
+import { effectiveLotMaxPerOrder } from "@/features/orders/sorocaba-quantity-limit";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { listPaymentSplitRules } from "@/features/settings/split-settings.service";
 import { calculateAsaasSplitsForOrder, sumAsaasSplitsInCents } from "@/features/payments/asaas-split.service";
@@ -523,7 +524,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                     ? lot.salesEndsAt.getTime() - Date.now() <= 24 * 60 * 60 * 1000
                     : false;
                   const isHighlighted = lot.id === highlightedLotId;
-                  const maxQuantity = Math.max(0, Math.min(lot.maxPerOrder, available));
+                  const maxQuantity = Math.max(0, Math.min(effectiveLotMaxPerOrder(event.slug, lot), available));
                   const highlightStyle = getTicketHighlightStyle(lot.highlightColor);
 
                   return (

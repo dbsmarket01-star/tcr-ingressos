@@ -21,6 +21,7 @@ import { calculateAsaasSplitsForOrder, sumAsaasSplitsInCents } from "@/features/
 import { sendCartAbandonmentWhatsApp } from "@/features/whatsapp/whatsapp.service";
 import { isValidCpf, onlyDocumentDigits } from "@/lib/document-validation";
 import type { CheckoutOrderInput } from "./order.schema";
+import { effectiveLotMaxPerOrder, validateSorocabaOrderQuantity } from "./sorocaba-quantity-limit";
 
 const FALLBACK_ORDER_RESERVATION_MINUTES = 120;
 const CART_ABANDONMENT_DELAY_MS = 15 * 60 * 1000;
@@ -252,6 +253,8 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
         throw new Error("Evento indisponivel para compra.");
       }
 
+      validateSorocabaOrderQuantity(event.slug, selectedItems.map((item) => item.quantity));
+
       const existingCustomer = await tx.customer.findFirst({
         where: {
           email: input.buyerEmail,
@@ -349,7 +352,7 @@ export async function createCheckoutOrder(input: CheckoutOrderInput, organizatio
           throw new Error("Lote indisponivel para compra.");
         }
 
-        if (item.quantity < lot.minPerOrder || item.quantity > lot.maxPerOrder) {
+        if (item.quantity < lot.minPerOrder || item.quantity > effectiveLotMaxPerOrder(event.slug, lot)) {
           throw new Error(`Quantidade invalida para ${lot.name}.`);
         }
 

@@ -1,4 +1,13 @@
 import { PILOT_EVENT_SLUGS } from "@/features/whatsapp/ad-sales-catalog";
+import { SOROCABA_EVENT_SLUG } from "@/features/orders/sorocaba-quantity-limit";
+
+export function buildSorocabaQuantityUrl(input: { lotId: string; adId?: string | null }) {
+  if (!/^[a-zA-Z0-9_-]{8,80}$/.test(input.lotId)) throw new Error("Ingresso inválido.");
+  const url = new URL(`/evento/${SOROCABA_EVENT_SLUG}/quantidade`, "https://www.tcringressos.app.br");
+  url.searchParams.set("lotId", input.lotId);
+  if (input.adId && /^\d{1,30}$/.test(input.adId)) url.searchParams.set("adId", input.adId);
+  return url.toString();
+}
 
 export function buildAdSalesCheckoutUrl(input: {
   eventSlug: string;
@@ -12,7 +21,8 @@ export function buildAdSalesCheckoutUrl(input: {
     throw new Error("Evento fora do piloto de vendas no WhatsApp.");
   }
   if (!/^[a-zA-Z0-9_-]{8,80}$/.test(input.lotId)) throw new Error("Ingresso inválido.");
-  if (!Number.isSafeInteger(input.quantity) || input.quantity < 1 || input.quantity > 10) {
+  const maxQuantity = input.eventSlug === SOROCABA_EVENT_SLUG ? 20 : 10;
+  if (!Number.isSafeInteger(input.quantity) || input.quantity < 1 || input.quantity > maxQuantity) {
     throw new Error("Quantidade inválida.");
   }
   const url = new URL(`/evento/${input.eventSlug}/checkout`, "https://www.tcringressos.app.br");

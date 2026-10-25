@@ -106,13 +106,13 @@ describe("fluxo completo de Sorocaba sem envio real", () => {
     expect(lists[2].rows.every((row) => row.title.length <= 24 && (row.description?.length || 0) <= 72)).toBe(true);
 
     expect(await processSorocabaSalesJourney({ ...base, text: lists[2].rows[0].title })).toBe(true);
-    expect(lists[3].text).toContain("*Quantos ingressos você deseja?*");
-    expect(lists[3].text).toContain("Necessário comprovar o direito à meia-entrada");
-    expect(await processSorocabaSalesJourney({ ...base, text: "2 ingressos" })).toBe(true);
     expect(buttons).toHaveLength(1);
-    expect(buttons[0].text).toContain("*Valor dos ingressos:* R$ 295,80 + taxas");
-    const checkout = new URL(buttons[0].url);
-    expect(checkout.searchParams.get("quantity_lot-prata-meia-123")).toBe("2");
+    expect(buttons[0].text).toContain("Necessário comprovar o direito à meia-entrada");
+    expect(buttons[0].text).toContain("Escolha de *1 a 20 ingressos*");
+    expect(buttons[0].metadata.step).toBe("done");
+    const quantityPage = new URL(buttons[0].url);
+    expect(quantityPage.pathname).toBe("/evento/rodrigo-teaser-em-sorocaba-2026/quantidade");
+    expect(quantityPage.searchParams.get("lotId")).toBe("lot-prata-meia-123");
   });
 
   it("pagina as 15 mesas e preserva o número escolhido no checkout", async () => {

@@ -1,6 +1,7 @@
 import { Prisma, WhatsAppMessageType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { buildAdSalesCheckoutUrl } from "@/features/whatsapp/ad-sales-checkout";
+import { buildAdSalesCheckoutUrl, buildSorocabaQuantityUrl } from "@/features/whatsapp/ad-sales-checkout";
+import { effectiveLotMaxPerOrder } from "@/features/orders/sorocaba-quantity-limit";
 import { sendWhatsAppListMessage, sendWhatsAppMediaMessage, sendWhatsAppTextMessage, sendWhatsAppUrlButtonMessage } from "@/features/whatsapp/whatsapp.service";
 
 const SLUG = "rodrigo-teaser-em-sorocaba-2026";
@@ -234,11 +235,15 @@ export async function processSorocabaSalesJourney(input: Inbound): Promise<boole
         "Escolher número", rows, "option", { lotId: lot.id, page: 0 });
       return true;
     }
-    const minimum = Math.max(1, lot.minPerOrder);
-    const maximum = Math.min(10, lot.maxPerOrder, lot.available);
-    await list(input, `${sorocabaLotLine(lot)}\n\n*Quantos ingressos você deseja?*`, "Quantidade",
-      Array.from({ length: maximum - minimum + 1 }, (_, index) => ({ id: String(minimum + index), title: `${minimum + index} ingresso${minimum + index > 1 ? "s" : ""}` })),
-      "quantity", { lotId: lot.id });
+    const maximum = Math.min(effectiveLotMaxPerOrder(SLUG, { ...lot, hasTypeOptions: false }), lot.available);
+    if (maximum < Math.max(1, lot.minPerOrder)) {
+      await text(input, "Este ingresso não tem quantidade suficiente para o pedido mínimo agora. Responda *menu* para escolher outro setor.", "info");
+      return true;
+    }
+    await sendWhatsAppUrlButtonMessage({ to: input.phone, organizationId: input.organizationId, eventId: event.id,
+      text: `${sorocabaLotLine(lot)}\n\nEscolha de *${Math.max(1, lot.minPerOrder)} a ${maximum} ingressos* no controle − / +. Você verá o resumo e as taxas antes de pagar.`,
+      buttonText: "Escolher quantidade", url: buildSorocabaQuantityUrl({ lotId: lot.id, adId: input.origin?.adId }),
+      source: SOURCE, metadata: { step: "done", eventSlug: SLUG, lotId: lot.id } });
     return true;
   }
 
@@ -270,7 +275,7 @@ export async function processSorocabaSalesJourney(input: Inbound): Promise<boole
     const lot = event.lots.find((item) => item.id === session.lotId);
     const quantity = Number(input.text.trim().match(/^\d+/)?.[0]);
     if (!lot || !Number.isInteger(quantity) || quantity < Math.max(1, lot.minPerOrder) ||
-        quantity > Math.min(10, lot.maxPerOrder, lot.available)) return false;
+        quantity > Math.min(effectiveLotMaxPerOrder(SLUG, { ...lot, hasTypeOptions: false }), lot.available)) return false;
     const url = buildAdSalesCheckoutUrl({ eventSlug: SLUG, lotId: lot.id, quantity, adId: input.origin?.adId });
     await sendWhatsAppUrlButtonMessage({ to: input.phone, organizationId: input.organizationId, eventId: event.id,
       text: `*Sua escolha:* ${quantity} ingresso(s)\n${lot.name}\n\n*Valor dos ingressos:* ${money.format(lot.priceInCents * quantity / 100)} + taxas.\n\nToque em *Comprar ingresso* para conferir o resumo e o total antes de pagar.`,

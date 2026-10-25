@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildAdSalesCheckoutUrl } from "@/features/whatsapp/ad-sales-checkout";
+import { buildAdSalesCheckoutUrl, buildSorocabaQuantityUrl } from "@/features/whatsapp/ad-sales-checkout";
 
 describe("WhatsApp sales checkout deep link", () => {
   it("opens the existing checkout with one lot and quantity, not a new payment flow", () => {
@@ -20,5 +20,13 @@ describe("WhatsApp sales checkout deep link", () => {
   it("rejects non-pilot events and invalid quantities", () => {
     expect(() => buildAdSalesCheckoutUrl({ eventSlug: "other", lotId: "cma1234567890123456789012", quantity: 1 })).toThrow();
     expect(() => buildAdSalesCheckoutUrl({ eventSlug: "geriatricus-em-santo-andre-2026", lotId: "cma1234567890123456789012", quantity: 0 })).toThrow();
+  });
+
+  it("opens the compact Sorocaba quantity page and caps direct checkout at 20", () => {
+    const url = new URL(buildSorocabaQuantityUrl({ lotId: "cma1234567890123456789012", adId: "123" }));
+    expect(url.pathname).toBe("/evento/rodrigo-teaser-em-sorocaba-2026/quantidade");
+    expect(url.searchParams.get("adId")).toBe("123");
+    expect(() => buildAdSalesCheckoutUrl({ eventSlug: "rodrigo-teaser-em-sorocaba-2026", lotId: "cma1234567890123456789012", quantity: 21 })).toThrow();
+    expect(buildAdSalesCheckoutUrl({ eventSlug: "rodrigo-teaser-em-sorocaba-2026", lotId: "cma1234567890123456789012", quantity: 20 })).toContain("quantity_cma1234567890123456789012=20");
   });
 });

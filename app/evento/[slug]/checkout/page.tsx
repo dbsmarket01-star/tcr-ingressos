@@ -10,6 +10,7 @@ import { getBuyerProfile } from "@/features/customer-auth/google-buyer.service";
 import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrganization } from "@/features/events/event.service";
 import { getHotelRoomsPerUnit } from "@/features/hospitality/hotel-lot-rules";
 import { createCheckoutOrderAction } from "@/features/orders/order.actions";
+import { effectiveLotMaxPerOrder } from "@/features/orders/sorocaba-quantity-limit";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import {
@@ -170,7 +171,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
     }
 
     const available = getAvailableLotQuantity(lot);
-    const maxQuantity = Math.max(0, Math.min(lot.maxPerOrder, available));
+    const maxQuantity = Math.max(0, Math.min(effectiveLotMaxPerOrder(event.slug, lot), available));
     const selectedSeatIds = allParams(query[`seatId_${lot.id}`]).map((seatId) => seatId.trim()).filter(Boolean);
     const selectedTypeOptionId = firstParam(query[`lotOption_${lot.id}`])?.trim() || "";
     const selectedTypeOption = lot.hasTypeOptions
