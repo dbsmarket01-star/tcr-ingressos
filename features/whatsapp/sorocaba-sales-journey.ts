@@ -15,8 +15,8 @@ type Session = { step?: string; group?: string; lotId?: string; optionId?: strin
 type Lot = { id: string; name: string; description: string | null; priceInCents: number; available: number; minPerOrder: number; maxPerOrder: number; admissionsPerUnit: number; options: Array<{ id: string; label: string }> };
 
 export function isSorocabaAdGreeting(text: string) {
-  const normalized = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
-  if (normalized === "sorocaba") return true;
+  const normalized = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/[.!?]+$/, "").trim();
+  if (/^(?:(?:e\s+em|e|eh|em|na cidade de|cidade de|fica em|o evento e em)\s+)?sorocaba$/.test(normalized)) return true;
   return /\brodrigo\s+(?:teaser|tiser|tizer|tise|tis)\b/.test(normalized) && /\bsorocaba\b/.test(normalized);
 }
 

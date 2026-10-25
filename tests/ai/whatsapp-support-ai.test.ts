@@ -6,6 +6,7 @@ import {
   isGenericEventAdGreeting,
   isHumanHandoffRequest,
   isIncompleteRodrigoEventReply,
+  isLegacySorocabaNumberedMenu,
   normalizedWhatsAppInteractiveChoice,
   parseWhatsAppAiDecision,
   resolvedHandoffReply,
@@ -58,6 +59,11 @@ describe("exact checkout installment quotes", () => {
 });
 
 describe("WhatsApp support AI", () => {
+  it("bloqueia o menu numérico antigo de Sorocaba sem interferir em outros eventos", () => {
+    expect(isLegacySorocabaNumberedMenu("Rodrigo Teaser em Sorocaba. 1) ingressos, setores e valores 2) mesas e camarotes 3) pagamento e taxas")).toBe(true);
+    expect(isLegacySorocabaNumberedMenu("Rodrigo Teaser em Sorocaba. Toque em Ver opções para escolher seu ingresso.")).toBe(false);
+    expect(isLegacySorocabaNumberedMenu("Rodrigo Teaser em Piracicaba. 1) ingressos, setores e valores 2) mesas e camarotes")).toBe(false);
+  });
   it("pede artista e cidade para a saudação genérica sem supor o evento do anúncio", () => {
     expect(isGenericEventAdGreeting("Olá! Posso ter mais informações sobre isso?")).toBe(true);
     expect(isGenericEventAdGreeting("Posso ter mais informações sobre isso?")).toBe(true);

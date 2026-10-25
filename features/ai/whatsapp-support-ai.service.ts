@@ -95,6 +95,25 @@ export function isIncompleteRodrigoEventReply(value?: string | null) {
   return /^rodrigo(?: (?:teaser|tiser|tizer|tise|tis))?$/.test(normalizeIntent(value));
 }
 
+export function isLegacySorocabaNumberedMenu(value?: string | null) {
+  const reply = normalizeIntent(value);
+  return reply.includes("rodrigo teaser em sorocaba") &&
+    /(?:^|\s)1 ingressos setores e valores(?:\s|$)/.test(reply) &&
+    /(?:^|\s)2 mesas e camarotes(?:\s|$)/.test(reply);
+}
+
+async function hasRecentLegacySorocabaMenu(organizationId: string, phone: string) {
+  const digits = normalizeDigits(phone);
+  const logs = await prisma.whatsAppMessageLog.findMany({
+    where: { organizationId, recipientPhone: { in: [phone, digits, `+${digits}`] },
+      type: "BULK", status: { in: ["SENT", "DELIVERED", "READ"] },
+      payload: { path: ["source"], equals: AI_SOURCE },
+      createdAt: { gte: new Date(Date.now() - 24 * 60 * 60_000) } },
+    select: { payload: true }, orderBy: { createdAt: "desc" }, take: 5
+  });
+  return logs.some((log) => isLegacySorocabaNumberedMenu((log.payload as Prisma.JsonObject | null)?.text as string | undefined));
+}
+
 type PublishedTicketEvent = {
   title: string;
   tickets: Array<{ name: string; options?: string[]; availableUnits: number }>;
@@ -925,6 +944,16 @@ async function processInboundMessage(message: MetaTextMessage) {
     await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "COMPLETED", outcome: "AUTO_REPLY", topic: "sorocaba_sales" });
     return;
   }
+  if (/^[1-4]$/.test(message.text.body.trim()) &&
+      await hasRecentLegacySorocabaMenu(inbound.organizationId, message.from) &&
+      await processSorocabaSalesJourney({ organizationId: inbound.organizationId,
+        phone: message.from, text: "Sorocaba",
+        origin: { kind: typeof origin.kind === "string" ? origin.kind : undefined,
+          adId: typeof origin.adId === "string" ? origin.adId : null } })) {
+    await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload,
+      status: "COMPLETED", outcome: "AUTO_REPLY", topic: "sorocaba_sales" });
+    return;
+  }
   const usage = await monthlyUsageAllowed(inbound.organizationId);
   if (!usage.allowed) {
     await setWhatsAppAiConversationState({
@@ -951,6 +980,18 @@ async function processInboundMessage(message: MetaTextMessage) {
       decision: modelDecision,
       events: context.activeEvents
     });
+    if (decision.outcome === "AUTO_REPLY" && isLegacySorocabaNumberedMenu(decision.reply) &&
+        await processSorocabaSalesJourney({
+          organizationId: inbound.organizationId,
+          phone: message.from,
+          text: "Sorocaba",
+          origin: { kind: typeof origin.kind === "string" ? origin.kind : undefined,
+            adId: typeof origin.adId === "string" ? origin.adId : null }
+        })) {
+      await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload,
+        status: "COMPLETED", outcome: "AUTO_REPLY", topic: "sorocaba_sales" });
+      return;
+    }
     if (decision.outcome === "HANDOFF") {
       await setWhatsAppAiConversationState({
         organizationId: inbound.organizationId,

@@ -64,7 +64,7 @@ vi.mock("@/features/whatsapp/whatsapp.service", () => ({
   })
 }));
 
-import { processSorocabaSalesJourney } from "@/features/whatsapp/sorocaba-sales-journey";
+import { isSorocabaAdGreeting, processSorocabaSalesJourney } from "@/features/whatsapp/sorocaba-sales-journey";
 
 const base = { organizationId: "tcr", phone: "5521984456499" };
 const greeting = "Olá, vim pelo anúncio do Rodrigo Teaser em Sorocaba e tenho interesse no evento";
@@ -72,6 +72,12 @@ const greeting = "Olá, vim pelo anúncio do Rodrigo Teaser em Sorocaba e tenho 
 beforeEach(() => { logs.length = 0; lists.length = 0; buttons.length = 0; media.length = 0; sendOrder.length = 0; phoneSessionAvailable = true; });
 
 describe("fluxo completo de Sorocaba sem envio real", () => {
+  it("reconhece respostas naturais sobre a cidade sem confundir outros eventos", () => {
+    expect(isSorocabaAdGreeting("É em Sorocaba.")).toBe(true);
+    expect(isSorocabaAdGreeting("Cidade de Sorocaba")).toBe(true);
+    expect(isSorocabaAdGreeting("Rodrigo Tizer em Sorocaba")).toBe(true);
+    expect(isSorocabaAdGreeting("Outro evento em Sorocaba")).toBe(false);
+  });
   it("inicia o mesmo menu de vendas com a palavra-chave Sorocaba", async () => {
     expect(await processSorocabaSalesJourney({ ...base, text: "Sorocaba" })).toBe(true);
     expect(lists[0].text).toContain("*Rodrigo Teaser em Sorocaba*");
