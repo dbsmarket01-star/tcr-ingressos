@@ -133,6 +133,7 @@ describe("fluxo completo de Sorocaba sem envio real", () => {
     expect(await processSorocabaSalesJourney({ ...base, text: "🎟️ Tipos de ingresso" })).toBe(true);
     expect(media).toHaveLength(1);
     expect(media[0].mediaUrl).toContain("20261024082407.png");
+    expect(media[0].caption).toBe("Mapa ilustrativo do evento Rodrigo Teaser em Sorocaba.");
     expect(sendOrder.slice(0, 3)).toEqual(["list", "map", "list"]);
     expect(lists[1].rows).toHaveLength(5);
     expect(lists[1].text).toContain("*Agora escolha a opção que mais combina com você.*");

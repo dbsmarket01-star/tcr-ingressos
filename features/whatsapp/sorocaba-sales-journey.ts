@@ -180,7 +180,7 @@ async function showSectorMenu(input: Inbound, event: NonNullable<Awaited<ReturnT
     try {
       await sendWhatsAppMediaMessage({
         to: input.phone, kind: "image", mediaUrl: mapUrl,
-        caption: `🗺️ *Mapa do evento: ${event.title}*\n\nSe a prévia aparecer embaçada no WhatsApp, toque na imagem para carregá-la ou abra o mapa original em alta qualidade: ${mapUrl}\n\nImagem ilustrativa; a disponibilidade é confirmada na escolha do ingresso.`,
+        caption: `Mapa ilustrativo do evento ${event.title}.`,
         organizationId: input.organizationId, eventId: event.id,
         metadata: { source: SOURCE, step: "map_preview", eventSlug: SLUG, paidAd: input.origin?.kind === "meta_ad", adId: input.origin?.adId ?? null }
       });
