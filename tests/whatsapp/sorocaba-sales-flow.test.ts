@@ -1,0 +1,97 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const logs: Array<{ payload: Record<string, unknown> }> = [];
+const lists: Array<{ text: string; rows: Array<{ id: string; title: string }>; metadata: Record<string, unknown> }> = [];
+const buttons: Array<{ text: string; url: string; metadata: Record<string, unknown> }> = [];
+
+const lot = (id: string, name: string, priceInCents: number, options: string[] = []) => ({
+  id, name, priceInCents, status: "ACTIVE", saleBadge: "NONE", totalQuantity: options.length || 100,
+  reservedQuantity: 0, soldQuantity: 0, minPerOrder: 1, maxPerOrder: 10,
+  admissionsPerUnit: name.includes("MESA") ? 4 : 1, salesStartsAt: null, salesEndsAt: null,
+  hasTypeOptions: options.length > 0,
+  typeOptions: options.map((label, index) => ({ id: `option-${index + 1}-12345678`, label, status: "ACTIVE", soldQuantity: 0, reservedQuantity: 0 }))
+});
+
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    event: { findFirst: vi.fn(async () => ({
+      id: "event-sorocaba", title: "Rodrigo Teaser em Sorocaba", startsAt: new Date("2026-12-01T00:00:00Z"),
+      venueName: "Clube Recreativo de Sorocaba", venueAddress: "Rua Francisco Paulo Braion, 650",
+      salesStartsAt: null, salesEndsAt: null,
+      lots: [
+        lot("lot-prata-meia-123", "CADEIRA PRATA - MEIA ENTRADA", 14790),
+        lot("lot-prata-solidario-123", "CADEIRA PRATA - SOLIDÁRIO", 15790),
+        lot("lot-ouro-meia-123", "CADEIRA OURO - MEIA ENTRADA", 17790),
+        lot("lot-mesa-12345678", "MESA PARA 04 PESSOAS", 119790,
+          Array.from({ length: 15 }, (_, index) => `MESA ${index + 16}`))
+      ]
+    })) },
+    whatsAppMessageLog: { findMany: vi.fn(async () => [...logs].reverse()) }
+  }
+}));
+
+vi.mock("@/features/whatsapp/whatsapp.service", () => ({
+  sendWhatsAppTextMessage: vi.fn(async (input: { text: string; source: string; metadata: Record<string, unknown> }) => {
+    logs.push({ payload: { source: input.source, ...input.metadata } });
+  }),
+  sendWhatsAppListMessage: vi.fn(async (input: { text: string; rows: Array<{ id: string; title: string }>; source: string; metadata: Record<string, unknown> }) => {
+    lists.push(input);
+    logs.push({ payload: { source: input.source, ...input.metadata } });
+  }),
+  sendWhatsAppUrlButtonMessage: vi.fn(async (input: { text: string; url: string; source: string; metadata: Record<string, unknown> }) => {
+    buttons.push(input);
+    logs.push({ payload: { source: input.source, ...input.metadata } });
+  })
+}));
+
+import { processSorocabaSalesJourney } from "@/features/whatsapp/sorocaba-sales-journey";
+
+const base = { organizationId: "tcr", phone: "5521984456499" };
+const greeting = "Olá, vim pelo anúncio do Rodrigo Teaser em Sorocaba e tenho interesse no evento";
+
+beforeEach(() => { logs.length = 0; lists.length = 0; buttons.length = 0; });
+
+describe("fluxo completo de Sorocaba sem envio real", () => {
+  it("abre o menu, mostra os preços da Prata separados e leva a meia-entrada ao checkout", async () => {
+    expect(await processSorocabaSalesJourney({ ...base, text: greeting })).toBe(true);
+    expect(lists[0].text).toContain("*Rodrigo Teaser em Sorocaba*");
+    expect(lists[0].text).toContain("*Como posso ajudar você a escolher seu ingresso?*");
+    expect(lists[0].rows).toHaveLength(7);
+
+    expect(await processSorocabaSalesJourney({ ...base, text: "⚪ Cadeira Prata" })).toBe(true);
+    expect(lists[1].text).toContain("*CADEIRA PRATA - MEIA ENTRADA*\nR$ 147,90 + taxas");
+    expect(lists[1].text).toContain("*CADEIRA PRATA - SOLIDÁRIO*\nR$ 157,90 + taxas");
+    expect(lists[1].text).not.toContain("CADEIRA OURO");
+    expect(lists[1].rows).toHaveLength(2);
+
+    expect(await processSorocabaSalesJourney({ ...base, text: lists[1].rows[0].title })).toBe(true);
+    expect(lists[2].text).toContain("*Quantos ingressos você deseja?*");
+    expect(await processSorocabaSalesJourney({ ...base, text: "2 ingressos" })).toBe(true);
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0].text).toContain("*Valor dos ingressos:* R$ 295,80 + taxas");
+    const checkout = new URL(buttons[0].url);
+    expect(checkout.searchParams.get("quantity_lot-prata-meia-123")).toBe("2");
+  });
+
+  it("pagina as 15 mesas e preserva o número escolhido no checkout", async () => {
+    await processSorocabaSalesJourney({ ...base, text: greeting });
+    expect(await processSorocabaSalesJourney({ ...base, text: "🟠 Mesas" })).toBe(true);
+    expect(await processSorocabaSalesJourney({ ...base, text: "MESA PARA 04 PESSOAS" })).toBe(true);
+    expect(lists.at(-1)?.rows).toHaveLength(10);
+    expect(lists.at(-1)?.rows.at(-1)?.title).toBe("Ver mais números");
+    expect(await processSorocabaSalesJourney({ ...base, text: "Ver mais números" })).toBe(true);
+    expect(lists.at(-1)?.rows[0].title).toBe("MESA 25");
+    expect(await processSorocabaSalesJourney({ ...base, text: "MESA 30" })).toBe(true);
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0].text).toContain("*Sua escolha:* MESA 30");
+    const checkout = new URL(buttons[0].url);
+    expect(checkout.searchParams.get("lotOption_lot-mesa-12345678")).toBe("option-15-12345678");
+  });
+
+  it("deixa uma pergunta livre para a IA e permite voltar ao menu", async () => {
+    await processSorocabaSalesJourney({ ...base, text: greeting });
+    expect(await processSorocabaSalesJourney({ ...base, text: "Tem estacionamento?" })).toBe(false);
+    expect(await processSorocabaSalesJourney({ ...base, text: "menu" })).toBe(true);
+    expect(lists).toHaveLength(2);
+  });
+});

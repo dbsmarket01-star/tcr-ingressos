@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sendWhatsAppTextMessage } from "@/features/whatsapp/whatsapp.service";
 import { isAuthorizedAdSalesTestKeyword, processAdSalesJourney } from "@/features/whatsapp/ad-sales-journey";
+import { isSorocabaAdGreeting, processSorocabaSalesJourney } from "@/features/whatsapp/sorocaba-sales-journey";
 import { calculateServiceFeeInCents } from "@/features/pricing/pricing";
 import {
   calculateCardChargeInCents,
@@ -834,7 +835,10 @@ async function processInboundMessage(message: MetaTextMessage) {
   const authorizedSalesTest = isAuthorizedAdSalesTestKeyword({
     organizationId: inbound.organizationId, phone: message.from, text: message.text.body
   });
-  if (authorizedSalesTest && !shouldProcessWhatsAppAiState(state)) {
+  const retrySorocabaAfterAiFailure = isSorocabaAdGreeting(message.text.body) &&
+    state.mode === "HANDOFF" &&
+    state.reason === "A IA não conseguiu responder com segurança; atendimento humano solicitado.";
+  if ((authorizedSalesTest || retrySorocabaAfterAiFailure) && !shouldProcessWhatsAppAiState(state)) {
     await setWhatsAppAiConversationState({
       organizationId: inbound.organizationId, phone: message.from,
       mode: "ACTIVE", reason: "Teste autorizado da jornada de vendas por WhatsApp."
@@ -881,6 +885,18 @@ async function processInboundMessage(message: MetaTextMessage) {
     }
   })) {
     await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "COMPLETED", outcome: "AUTO_REPLY", topic: "ad_sales" });
+    return;
+  }
+  if (await processSorocabaSalesJourney({
+    organizationId: inbound.organizationId,
+    phone: message.from,
+    text: message.text.body,
+    origin: {
+      kind: typeof origin.kind === "string" ? origin.kind : undefined,
+      adId: typeof origin.adId === "string" ? origin.adId : null
+    }
+  })) {
+    await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "COMPLETED", outcome: "AUTO_REPLY", topic: "sorocaba_sales" });
     return;
   }
   const usage = await monthlyUsageAllowed(inbound.organizationId);
