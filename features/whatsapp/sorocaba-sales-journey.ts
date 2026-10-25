@@ -20,6 +20,11 @@ export function isSorocabaAdGreeting(text: string) {
   return /\brodrigo\s+(?:teaser|tiser|tizer|tise|tis)\b/.test(normalized) && /\bsorocaba\b/.test(normalized);
 }
 
+export function isSorocabaTicketInfoIntent(text: string) {
+  const normalized = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return /\b(ingresso|ingressos|preco|precos|valor|valores|setor|setores)\b/.test(normalized);
+}
+
 export function sorocabaGroup(name: string) {
   const value = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
   if (value.includes("PRATA")) return "prata";
@@ -227,13 +232,20 @@ export async function processSorocabaSalesJourney(input: Inbound): Promise<boole
 
   if (session.step === "intro") {
     const selected = choice(input.text, introRows);
-    if (selected === "tipos") { await showSectorMenu(input, event); return true; }
+    if (selected === "tipos" || isSorocabaTicketInfoIntent(input.text)) { await showSectorMenu(input, event); return true; }
     return false;
   }
 
   if (session.step === "menu") {
     const selected = choice(input.text, menuRows);
-    if (!selected) return false;
+    if (!selected) {
+      if (isSorocabaTicketInfoIntent(input.text)) {
+        await list(input, "*Claro! Os valores variam conforme o setor e o tipo de ingresso.* Escolha abaixo uma categoria para ver preços e disponibilidade:",
+          "Escolher setor", menuRows, "menu");
+        return true;
+      }
+      return false;
+    }
     const lots = event.lots.filter((lot) => sorocabaGroup(lot.name) === selected);
     if (!lots.length) {
       await text(input, "*Essa categoria está indisponível no momento.*\n\nResponda *menu* para conhecer as outras opções ou escreva sua dúvida. Vou ajudar você a encontrar a melhor alternativa.", "info");

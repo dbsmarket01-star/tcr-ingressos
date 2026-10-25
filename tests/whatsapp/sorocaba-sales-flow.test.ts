@@ -64,7 +64,7 @@ vi.mock("@/features/whatsapp/whatsapp.service", () => ({
   })
 }));
 
-import { isSorocabaAdGreeting, processSorocabaSalesJourney } from "@/features/whatsapp/sorocaba-sales-journey";
+import { isSorocabaAdGreeting, isSorocabaTicketInfoIntent, processSorocabaSalesJourney } from "@/features/whatsapp/sorocaba-sales-journey";
 
 const base = { organizationId: "tcr", phone: "5521984456499" };
 const greeting = "Olá, vim pelo anúncio do Rodrigo Teaser em Sorocaba e tenho interesse no evento";
@@ -77,6 +77,16 @@ describe("fluxo completo de Sorocaba sem envio real", () => {
     expect(isSorocabaAdGreeting("Cidade de Sorocaba")).toBe(true);
     expect(isSorocabaAdGreeting("Rodrigo Tizer em Sorocaba")).toBe(true);
     expect(isSorocabaAdGreeting("Outro evento em Sorocaba")).toBe(false);
+  });
+  it("responde perguntas comuns de preço dentro do menu interativo", async () => {
+    expect(isSorocabaTicketInfoIntent("Qual o valor?" )).toBe(true);
+    expect(isSorocabaTicketInfoIntent("Quero saber o preço dos ingressos")).toBe(true);
+    expect(isSorocabaTicketInfoIntent("Tem estacionamento?")).toBe(false);
+    await processSorocabaSalesJourney({ ...base, text: greeting });
+    expect(await processSorocabaSalesJourney({ ...base, text: "Quais são os ingressos?" })).toBe(true);
+    expect(media).toHaveLength(1);
+    expect(await processSorocabaSalesJourney({ ...base, text: "Qual o valor?" })).toBe(true);
+    expect(lists.at(-1)?.text).toContain("Os valores variam conforme o setor");
   });
   it("inicia o mesmo menu de vendas com a palavra-chave Sorocaba", async () => {
     expect(await processSorocabaSalesJourney({ ...base, text: "Sorocaba" })).toBe(true);
