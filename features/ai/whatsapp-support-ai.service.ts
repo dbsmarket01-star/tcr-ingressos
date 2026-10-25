@@ -868,7 +868,11 @@ async function processInboundMessage(message: MetaTextMessage) {
   const retrySorocabaAfterAiFailure = isSorocabaAdGreeting(message.text.body) &&
     state.mode === "HANDOFF" &&
     state.reason === "A IA não conseguiu responder com segurança; atendimento humano solicitado.";
-  if ((authorizedSalesTest || retrySorocabaAfterAiFailure) && !shouldProcessWhatsAppAiState(state)) {
+  const retryLegacySorocabaAfterAiFailure = /^[1-4]$/.test(message.text.body.trim()) &&
+    state.mode === "HANDOFF" &&
+    state.reason === "A IA não conseguiu responder com segurança; atendimento humano solicitado." &&
+    await hasRecentLegacySorocabaMenu(inbound.organizationId, message.from);
+  if ((authorizedSalesTest || retrySorocabaAfterAiFailure || retryLegacySorocabaAfterAiFailure) && !shouldProcessWhatsAppAiState(state)) {
     await setWhatsAppAiConversationState({
       organizationId: inbound.organizationId, phone: message.from,
       mode: "ACTIVE", reason: "Teste autorizado da jornada de vendas por WhatsApp."
