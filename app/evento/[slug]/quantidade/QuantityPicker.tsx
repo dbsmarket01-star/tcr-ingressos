@@ -26,7 +26,7 @@ export function QuantityPicker({ lotName, priceInCents, min, max, checkoutPath }
       <div className={styles.controls}>
         <button type="button" className={styles.control} aria-label="Diminuir quantidade"
           disabled={quantity <= min} onClick={() => setQuantity((current) => Math.max(min, current - 1))}>−</button>
-        <output className={styles.count} aria-live="polite" aria-label={`${quantity} ingressos`}>{quantity}</output>
+        <output className={styles.count} aria-live="polite" aria-label={`${quantity} ${quantity === 1 ? "ingresso" : "ingressos"}`}>{quantity}</output>
         <button type="button" className={styles.control} aria-label="Aumentar quantidade"
           disabled={quantity >= max} onClick={() => setQuantity((current) => Math.min(max, current + 1))}>+</button>
       </div>
