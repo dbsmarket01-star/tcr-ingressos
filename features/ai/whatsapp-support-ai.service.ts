@@ -86,6 +86,15 @@ function normalizeIntent(value?: string | null) {
     .trim();
 }
 
+export function isGenericEventAdGreeting(value?: string | null) {
+  const normalized = normalizeIntent(value);
+  return normalized === "ola posso ter mais informacoes sobre isso" || normalized === "posso ter mais informacoes sobre isso";
+}
+
+export function isIncompleteRodrigoEventReply(value?: string | null) {
+  return /^rodrigo(?: (?:teaser|tiser|tizer|tise|tis))?$/.test(normalizeIntent(value));
+}
+
 type PublishedTicketEvent = {
   title: string;
   tickets: Array<{ name: string; options?: string[]; availableUnits: number }>;
@@ -737,6 +746,7 @@ REGRAS CRITICAS
 13. Quando hasPreviousAiReply for falso e a resposta for AUTO_REPLY, termine com: "Se preferir, escreva falar com atendente."
 14. Quando o cliente pedir uma pessoa ou atendente, use HANDOFF. O sistema tambem possui uma deteccao direta para esse pedido.
 15. ${pendingHumanRequest ? "Existe um pedido anterior de atendimento humano, mas nenhum atendente entrou na conversa. Se a nova duvida puder ser respondida com seguranca pelo contexto, use AUTO_REPLY normalmente. Nao use HANDOFF apenas por causa do pedido anterior; o sistema oferecera o atendente novamente depois da resposta." : "Nao existe pedido anterior pendente de atendimento humano."}
+16. Se a resposta anterior pediu o nome do artista/evento e a cidade, nao adivinhe o evento a partir de uma resposta incompleta. Pergunte apenas o dado que falta; se a resposta continuar ambigua, confirme artista e cidade. Nao ofereca menu numerado de eventos supostos.
 
 SAIDA
 AUTO_REPLY quando puder responder com seguranca.
@@ -872,6 +882,20 @@ async function processInboundMessage(message: MetaTextMessage) {
       topic: "atendimento_humano",
       reason: "Cliente solicitou atendimento humano."
     });
+    return;
+  }
+  if (isGenericEventAdGreeting(message.text.body) || isIncompleteRodrigoEventReply(message.text.body)) {
+    const reply = isGenericEventAdGreeting(message.text.body)
+      ? "Olá! Sou a assistente virtual da TCR Ingressos 😊 Qual é o nome do artista ou evento e em qual cidade ele acontece? Assim posso te passar os ingressos e detalhes certos. Se preferir, escreva falar com atendente."
+      : "Você se refere ao Rodrigo Teaser? Pode me confirmar a cidade do evento para eu te mostrar os ingressos certos?";
+    await sendWhatsAppTextMessage({
+      to: message.from,
+      text: reply,
+      organizationId: inbound.organizationId,
+      source: AI_SOURCE,
+      metadata: { outcome: "AUTO_REPLY", topic: "identificar_evento", inboundProviderMessageId: message.id }
+    });
+    await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "COMPLETED", outcome: "AUTO_REPLY", topic: "identificar_evento" });
     return;
   }
   const inboundPayload = jsonObject(inbound.webhookPayload);

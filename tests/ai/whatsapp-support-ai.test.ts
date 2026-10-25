@@ -3,7 +3,9 @@ import {
   buildExactCardInstallmentOptions,
   guardPublishedHalfPriceAnswer,
   humanPauseUntil,
+  isGenericEventAdGreeting,
   isHumanHandoffRequest,
+  isIncompleteRodrigoEventReply,
   normalizedWhatsAppInteractiveChoice,
   parseWhatsAppAiDecision,
   resolvedHandoffReply,
@@ -56,6 +58,14 @@ describe("exact checkout installment quotes", () => {
 });
 
 describe("WhatsApp support AI", () => {
+  it("pede artista e cidade para a saudação genérica sem supor o evento do anúncio", () => {
+    expect(isGenericEventAdGreeting("Olá! Posso ter mais informações sobre isso?")).toBe(true);
+    expect(isGenericEventAdGreeting("Posso ter mais informações sobre isso?")).toBe(true);
+    expect(isGenericEventAdGreeting("Quero informações sobre Rodrigo Teaser em Sorocaba")).toBe(false);
+    expect(isIncompleteRodrigoEventReply("Rodrigo Tizer")).toBe(true);
+    expect(isIncompleteRodrigoEventReply("Rodrigo")).toBe(true);
+    expect(isIncompleteRodrigoEventReply("Rodrigo Tizer em Sorocaba")).toBe(false);
+  });
   it("converts list button replies to the selected option number", () => {
     expect(normalizedWhatsAppInteractiveChoice({ type: "interactive", interactive: { list_reply: { id: "2", title: "Geriatricus em Santo André" } } })).toBe("2");
     expect(normalizedWhatsAppInteractiveChoice({ type: "interactive", interactive: { button_reply: { id: "support", title: "Falar com atendente" } } })).toBe("Falar com atendente");
