@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const logs: Array<{ payload: Record<string, unknown> }> = [];
 const lists: Array<{ text: string; rows: Array<{ id: string; title: string }>; metadata: Record<string, unknown> }> = [];
 const buttons: Array<{ text: string; url: string; metadata: Record<string, unknown> }> = [];
+const media: Array<{ kind: string; mediaUrl: string; caption: string; metadata: Record<string, unknown> }> = [];
+const sendOrder: string[] = [];
 
 const lot = (id: string, name: string, priceInCents: number, options: string[] = []) => ({
   id, name, priceInCents, status: "ACTIVE", saleBadge: "NONE", totalQuantity: options.length || 100,
@@ -17,6 +19,7 @@ vi.mock("@/lib/prisma", () => ({
     event: { findFirst: vi.fn(async () => ({
       id: "event-sorocaba", title: "Rodrigo Teaser em Sorocaba", startsAt: new Date("2026-12-01T00:00:00Z"),
       venueName: "Clube Recreativo de Sorocaba", venueAddress: "Rua Francisco Paulo Braion, 650",
+      eventMapImageUrl: "https://www.phsis.com.br/files/20/image/20261024082407.png",
       salesStartsAt: null, salesEndsAt: null,
       lots: [
         lot("lot-prata-meia-123", "CADEIRA PRATA - MEIA ENTRADA", 14790),
@@ -35,12 +38,18 @@ vi.mock("@/features/whatsapp/whatsapp.service", () => ({
     logs.push({ payload: { source: input.source, ...input.metadata } });
   }),
   sendWhatsAppListMessage: vi.fn(async (input: { text: string; rows: Array<{ id: string; title: string }>; source: string; metadata: Record<string, unknown> }) => {
+    sendOrder.push("list");
     lists.push(input);
     logs.push({ payload: { source: input.source, ...input.metadata } });
   }),
   sendWhatsAppUrlButtonMessage: vi.fn(async (input: { text: string; url: string; source: string; metadata: Record<string, unknown> }) => {
     buttons.push(input);
     logs.push({ payload: { source: input.source, ...input.metadata } });
+  }),
+  sendWhatsAppMediaMessage: vi.fn(async (input: { kind: string; mediaUrl: string; caption: string; metadata: Record<string, unknown> }) => {
+    sendOrder.push("map");
+    media.push(input);
+    logs.push({ payload: { ...input.metadata } });
   })
 }));
 
@@ -49,23 +58,31 @@ import { processSorocabaSalesJourney } from "@/features/whatsapp/sorocaba-sales-
 const base = { organizationId: "tcr", phone: "5521984456499" };
 const greeting = "Olá, vim pelo anúncio do Rodrigo Teaser em Sorocaba e tenho interesse no evento";
 
-beforeEach(() => { logs.length = 0; lists.length = 0; buttons.length = 0; });
+beforeEach(() => { logs.length = 0; lists.length = 0; buttons.length = 0; media.length = 0; sendOrder.length = 0; });
 
 describe("fluxo completo de Sorocaba sem envio real", () => {
   it("abre o menu, mostra os preços da Prata separados e leva a meia-entrada ao checkout", async () => {
     expect(await processSorocabaSalesJourney({ ...base, text: greeting })).toBe(true);
     expect(lists[0].text).toContain("*Rodrigo Teaser em Sorocaba*");
-    expect(lists[0].text).toContain("*Como posso ajudar você a escolher seu ingresso?*");
-    expect(lists[0].rows).toHaveLength(7);
+    expect(lists[0].text).toContain("*Como posso ajudar?*");
+    expect(lists[0].rows).toHaveLength(3);
+    expect(media).toHaveLength(0);
+
+    expect(await processSorocabaSalesJourney({ ...base, text: "🎟️ Tipos de ingresso" })).toBe(true);
+    expect(media).toHaveLength(1);
+    expect(media[0].mediaUrl).toContain("20261024082407.png");
+    expect(sendOrder.slice(0, 3)).toEqual(["list", "map", "list"]);
+    expect(lists[1].rows).toHaveLength(7);
+    expect(lists[1].text).toContain("*Agora escolha a opção que mais combina com você.*");
 
     expect(await processSorocabaSalesJourney({ ...base, text: "⚪ Cadeira Prata" })).toBe(true);
-    expect(lists[1].text).toContain("*CADEIRA PRATA - MEIA ENTRADA*\nR$ 147,90 + taxas");
-    expect(lists[1].text).toContain("*CADEIRA PRATA - SOLIDÁRIO*\nR$ 157,90 + taxas");
-    expect(lists[1].text).not.toContain("CADEIRA OURO");
-    expect(lists[1].rows).toHaveLength(2);
+    expect(lists[2].text).toContain("*CADEIRA PRATA - MEIA ENTRADA*\nR$ 147,90 + taxas");
+    expect(lists[2].text).toContain("*CADEIRA PRATA - SOLIDÁRIO*\nR$ 157,90 + taxas");
+    expect(lists[2].text).not.toContain("CADEIRA OURO");
+    expect(lists[2].rows).toHaveLength(2);
 
-    expect(await processSorocabaSalesJourney({ ...base, text: lists[1].rows[0].title })).toBe(true);
-    expect(lists[2].text).toContain("*Quantos ingressos você deseja?*");
+    expect(await processSorocabaSalesJourney({ ...base, text: lists[2].rows[0].title })).toBe(true);
+    expect(lists[3].text).toContain("*Quantos ingressos você deseja?*");
     expect(await processSorocabaSalesJourney({ ...base, text: "2 ingressos" })).toBe(true);
     expect(buttons).toHaveLength(1);
     expect(buttons[0].text).toContain("*Valor dos ingressos:* R$ 295,80 + taxas");
@@ -75,6 +92,7 @@ describe("fluxo completo de Sorocaba sem envio real", () => {
 
   it("pagina as 15 mesas e preserva o número escolhido no checkout", async () => {
     await processSorocabaSalesJourney({ ...base, text: greeting });
+    await processSorocabaSalesJourney({ ...base, text: "🎟️ Tipos de ingresso" });
     expect(await processSorocabaSalesJourney({ ...base, text: "🟠 Mesas" })).toBe(true);
     expect(await processSorocabaSalesJourney({ ...base, text: "MESA PARA 04 PESSOAS" })).toBe(true);
     expect(lists.at(-1)?.rows).toHaveLength(10);
@@ -90,8 +108,9 @@ describe("fluxo completo de Sorocaba sem envio real", () => {
 
   it("deixa uma pergunta livre para a IA e permite voltar ao menu", async () => {
     await processSorocabaSalesJourney({ ...base, text: greeting });
+    await processSorocabaSalesJourney({ ...base, text: "🎟️ Tipos de ingresso" });
     expect(await processSorocabaSalesJourney({ ...base, text: "Tem estacionamento?" })).toBe(false);
     expect(await processSorocabaSalesJourney({ ...base, text: "menu" })).toBe(true);
-    expect(lists).toHaveLength(2);
+    expect(lists).toHaveLength(3);
   });
 });

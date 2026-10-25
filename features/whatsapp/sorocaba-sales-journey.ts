@@ -1,7 +1,7 @@
 import { Prisma, WhatsAppMessageType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { buildAdSalesCheckoutUrl } from "@/features/whatsapp/ad-sales-checkout";
-import { sendWhatsAppListMessage, sendWhatsAppTextMessage, sendWhatsAppUrlButtonMessage } from "@/features/whatsapp/whatsapp.service";
+import { sendWhatsAppListMessage, sendWhatsAppMediaMessage, sendWhatsAppTextMessage, sendWhatsAppUrlButtonMessage } from "@/features/whatsapp/whatsapp.service";
 
 const SLUG = "rodrigo-teaser-em-sorocaba-2026";
 const SOURCE = "TCR_SOROCABA_SALES";
@@ -38,7 +38,7 @@ async function loadEvent(organizationId: string) {
   const event = await prisma.event.findFirst({
     where: { organizationId, slug: SLUG, status: "PUBLISHED", startsAt: { gt: new Date() } },
     select: {
-      id: true, title: true, startsAt: true, venueName: true, venueAddress: true,
+      id: true, title: true, startsAt: true, venueName: true, venueAddress: true, eventMapImageUrl: true,
       salesStartsAt: true, salesEndsAt: true,
       lots: { orderBy: [{ sortOrder: "asc" }, { id: "asc" }], select: {
         id: true, name: true, priceInCents: true, status: true, saleBadge: true,
@@ -104,6 +104,12 @@ const menuRows = [
   { id: "pagamento", title: "💳 Pagamento" }
 ];
 
+const introRows = [
+  { id: "tipos", title: "🎟️ Tipos de ingresso", description: "Ver o mapa e escolher um setor" },
+  { id: "local", title: "📍 Local e horário" },
+  { id: "pagamento", title: "💳 Pagamento" }
+];
+
 function choice(input: string, rows: Array<{ id: string; title?: string }>) {
   const value = input.trim();
   if (/^\d+$/.test(value)) return rows[Number(value) - 1]?.id || null;
@@ -112,8 +118,32 @@ function choice(input: string, rows: Array<{ id: string; title?: string }>) {
 
 async function mainMenu(input: Inbound, event: NonNullable<Awaited<ReturnType<typeof loadEvent>>>) {
   await list(input,
-    `Olá! Que bom ter você aqui. Sou a assistente virtual da TCR Ingressos. 🎟️\n\n*${event.title}*\n📅 ${dateTime.format(event.startsAt)}\n📍 ${event.venueName}\n\n*Como posso ajudar você a escolher seu ingresso?*\nToque em “Ver opções” para conferir setores, valores e outras informações. Também pode escrever sua dúvida livremente.\n\nSe preferir falar com nossa equipe, escreva *falar com atendente*.`,
-    "Ver opções", menuRows, "menu");
+    `Olá! Que bom ter você aqui. Sou a assistente virtual da TCR Ingressos. 🎟️\n\n*${event.title}*\n📅 ${dateTime.format(event.startsAt)}\n📍 ${event.venueName}\n\n*Como posso ajudar?*\nToque em “Ver opções” e escolha *Tipos de ingresso* para receber o mapa do evento antes de selecionar seu setor. Também pode escrever sua dúvida livremente.\n\nSe preferir falar com nossa equipe, escreva *falar com atendente*.`,
+    "Ver opções", introRows, "intro");
+}
+
+async function showSectorMenu(input: Inbound, event: NonNullable<Awaited<ReturnType<typeof loadEvent>>>) {
+  const mapUrl = event.eventMapImageUrl?.trim();
+  let mapSent = false;
+  if (mapUrl && /^https:\/\/[^\s]+$/i.test(mapUrl)) {
+    try {
+      await sendWhatsAppMediaMessage({
+        to: input.phone, kind: "image", mediaUrl: mapUrl,
+        caption: `🗺️ *Mapa do evento: ${event.title}*\n\nVeja a localização dos setores, mesas e camarotes. Imagem ilustrativa; a disponibilidade é confirmada na escolha do ingresso.`,
+        organizationId: input.organizationId, eventId: event.id,
+        metadata: { source: SOURCE, step: "map_preview", eventSlug: SLUG }
+      });
+      mapSent = true;
+    } catch (error) {
+      console.error("[WhatsApp Sorocaba] Não foi possível enviar o mapa como imagem", error);
+    }
+  }
+  if (!mapSent) {
+    await text(input, `🗺️ Veja o mapa do evento na página oficial: https://www.tcringressos.app.br/evento/${SLUG}`, "map_preview");
+  }
+  await list(input,
+    "*Agora escolha a opção que mais combina com você.* 🎟️\n\nVeja os setores, valores e ingressos disponíveis. Toque em “Escolher opção” para continuar:",
+    "Escolher opção", menuRows, "menu");
 }
 
 /** Returns false for a free-form question so the regular humanized AI can answer it. */
@@ -126,6 +156,20 @@ export async function processSorocabaSalesJourney(input: Inbound): Promise<boole
   if (!event) return false;
   if (greeting || !session) { await mainMenu(input, event); return true; }
   if (/^menu$/i.test(input.text.trim())) { await mainMenu(input, event); return true; }
+
+  if (session.step === "intro") {
+    const selected = choice(input.text, introRows);
+    if (selected === "tipos") { await showSectorMenu(input, event); return true; }
+    if (selected === "local") {
+      await text(input, `*${event.title}*\n\n📅 *Data e horário:* ${dateTime.format(event.startsAt)}\n📍 *Local:* ${event.venueName}\n${event.venueAddress}\n\nPara ver o mapa e os ingressos, responda *menu* e escolha *Tipos de ingresso*.`, "info");
+      return true;
+    }
+    if (selected === "pagamento") {
+      await text(input, "*Pagamento e taxas* 💳\n\nOs valores dos ingressos são mostrados *+ taxas*. No checkout seguro da TCR você confere as formas de pagamento e o total antes de finalizar.\n\nPara ver o mapa e escolher seu setor, responda *menu* e escolha *Tipos de ingresso*.", "info");
+      return true;
+    }
+    return false;
+  }
 
   if (session.step === "menu") {
     const selected = choice(input.text, menuRows);
