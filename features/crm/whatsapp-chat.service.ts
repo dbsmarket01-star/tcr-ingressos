@@ -1,12 +1,36 @@
 import { OrderStatus, Prisma, WhatsAppMessageType, type WhatsAppMessageLog } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { resolveWhatsAppAiConversationMode } from "@/features/ai/whatsapp-support-ai.service";
-import { conversationMembership, isHumanReply, isRefundRequest, isReplyToRecentDirectMetaAd, metaSalesStage, resolveOperationalQueue } from "@/features/crm/whatsapp-inbox-classification";
+import { conversationMembership, isDirectMetaWhatsAppAdInbound, isHumanReply, isRefundRequest, isReplyToRecentDirectMetaAd, metaSalesStage, resolveOperationalQueue } from "@/features/crm/whatsapp-inbox-classification";
 
 type EventScope = string[] | null | undefined;
 
 type InboxMessage = Pick<WhatsAppMessageLog, "id" | "orderId" | "eventId" | "recipientName" | "recipientPhone" | "type" | "status" | "templateName" | "payload" | "webhookPayload" | "createdAt">;
 const KNOWN_WHATSAPP_TYPES = Object.values(WhatsAppMessageType);
+
+export async function getCrmMetaWhatsAppSalesSummary(input: {
+  organizationId: string;
+  allowedEventIds?: EventScope;
+  startAt?: Date;
+  endAt?: Date;
+}) {
+  const result = await prisma.order.aggregate({
+    where: {
+      status: OrderStatus.PAID,
+      utmSource: { equals: "whatsapp", mode: "insensitive" },
+      utmMedium: { equals: "meta_ads", mode: "insensitive" },
+      utmTerm: "verified_meta_referral",
+      event: { organizationId: input.organizationId,
+        ...(input.allowedEventIds ? { id: { in: input.allowedEventIds } } : {}) },
+      paidAt: { ...(input.startAt ? { gte: input.startAt } : {}),
+        ...(input.endAt ? { lt: input.endAt } : {}) }
+    },
+    _count: { _all: true },
+    _sum: { totalInCents: true, refundedInCents: true }
+  });
+  return { paidOrders: result._count._all,
+    paidAmountInCents: Math.max(0, (result._sum.totalInCents || 0) - (result._sum.refundedInCents || 0)) };
+}
 
 export async function getCrmWhatsAppNotificationSnapshot(input: {
   organizationId: string;
@@ -40,7 +64,8 @@ export async function getCrmWhatsAppNotificationSnapshot(input: {
         at: latestInbound.createdAt,
         name: latestInbound.recipientName || "Contato",
         message: messageContent(latestInbound),
-        phone: latestInbound.recipientPhone
+        phone: latestInbound.recipientPhone,
+        metaAd: isDirectMetaWhatsAppAdInbound(latestInbound.webhookPayload)
       }
     : null;
 }
@@ -80,6 +105,7 @@ export async function getCrmWhatsAppNotificationDelta(input: {
       at: row.createdAt.toISOString(),
       name: row.recipientName || "Contato",
       message: messageContent(row),
+      metaAd: isDirectMetaWhatsAppAdInbound(row.webhookPayload),
       media: mediaFromPayload(row.payload) || mediaFromPayload(row.webhookPayload),
       phone: row.recipientPhone
     })),
@@ -575,7 +601,7 @@ async function loadCrmWhatsAppInbox(input: {
         now: new Date()
       });
       const manual = manualQueueByPhone.get(key) || null;
-      const metaSales = metaSalesByPhone.has(key);
+      const metaSales = directMetaAdByPhone.has(key);
       const refundSinceConclusion = manual?.queue === "all" && latestInbound?.createdAt && latestInbound.createdAt > manual.at
         ? messages.some((message) => message.status === "RECEIVED" && message.createdAt > manual.at && isRefundRequest(messageContent(message)))
         : flags.refund;
@@ -607,7 +633,7 @@ async function loadCrmWhatsAppInbox(input: {
         unreadQueue: flags.unread,
         queue,
         metaSales,
-        metaSalesStage: paidWhatsAppPhones.has(key) ? "Compra confirmada" : metaSalesByPhone.get(key) || null,
+        metaSalesStage: paidWhatsAppPhones.has(key) ? "Compra confirmada" : metaSalesByPhone.get(key) || (metaSales ? "Iniciou atendimento" : null),
         hasHumanReply: flags.human,
         humanQueueHidden: humanQueueHiddenByPhone.get(key) || false,
         isRefund: flags.refund,

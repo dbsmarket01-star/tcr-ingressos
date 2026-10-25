@@ -13,6 +13,7 @@ import { calculateAsaasSplitsForOrder, sumAsaasSplitsInCents } from "@/features/
 import { getEffectivePaymentFeeSettings, getEffectiveServiceFeeBps } from "@/features/pricing/organization-pricing-policy";
 import { getCreditCardInstallmentLimitForEvent } from "@/lib/payment-installments";
 import { loadApprovedSupportKnowledge } from "@/features/ai/whatsapp-support-knowledge.service";
+import { classifyWhatsAppInboundOrigin, type WhatsAppInboundOrigin } from "@/features/whatsapp/inbound-origin";
 
 const AI_SOURCE = "TCR_WHATSAPP_AI";
 const DEFAULT_MODEL = "gpt-5.4-mini";
@@ -112,6 +113,34 @@ async function hasRecentLegacySorocabaMenu(organizationId: string, phone: string
     select: { payload: true }, orderBy: { createdAt: "desc" }, take: 5
   });
   return logs.some((log) => isLegacySorocabaNumberedMenu((log.payload as Prisma.JsonObject | null)?.text as string | undefined));
+}
+
+export async function verifiedAdOriginForConversation(input: {
+  organizationId: string;
+  phone: string;
+  current: WhatsAppInboundOrigin;
+}): Promise<WhatsAppInboundOrigin> {
+  if (input.current.kind === "meta_ad") return input.current;
+  const phones = phoneCandidates(input.phone);
+  const referral = await prisma.whatsAppMessageLog.findFirst({
+    where: { organizationId: input.organizationId, recipientPhone: { in: phones }, status: "RECEIVED",
+      createdAt: { gte: new Date(Date.now() - 24 * 60 * 60_000) },
+      OR: [
+        { webhookPayload: { path: ["_tcrOrigin", "kind"], equals: "meta_ad" } },
+        { webhookPayload: { path: ["referral", "source_type"], equals: "ad" } }
+      ] },
+    orderBy: { createdAt: "desc" }, select: { webhookPayload: true }
+  });
+  const payload = referral?.webhookPayload;
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return input.current;
+  const data = payload as Prisma.JsonObject;
+  const origin = data._tcrOrigin;
+  if (origin && typeof origin === "object" && !Array.isArray(origin) &&
+      (origin as Prisma.JsonObject).kind === "meta_ad") {
+    const adId = (origin as Prisma.JsonObject).adId;
+    return { kind: "meta_ad", adId: typeof adId === "string" ? adId : null };
+  }
+  return classifyWhatsAppInboundOrigin(data as { referral?: { source_type?: unknown; source_id?: unknown } });
 }
 
 type PublishedTicketEvent = {
@@ -923,14 +952,17 @@ async function processInboundMessage(message: MetaTextMessage) {
   }
   const inboundPayload = jsonObject(inbound.webhookPayload);
   const origin = jsonObject(inboundPayload._tcrOrigin as Prisma.JsonValue | null);
+  const verifiedOrigin = await verifiedAdOriginForConversation({
+    organizationId: inbound.organizationId, phone: message.from,
+    current: origin.kind === "meta_ad"
+      ? { kind: "meta_ad", adId: typeof origin.adId === "string" ? origin.adId : null }
+      : classifyWhatsAppInboundOrigin(inboundPayload as { referral?: { source_type?: unknown; source_id?: unknown } })
+  });
   if (await processAdSalesJourney({
     organizationId: inbound.organizationId,
     phone: message.from,
     text: message.text.body,
-    origin: {
-      kind: typeof origin.kind === "string" ? origin.kind : undefined,
-      adId: typeof origin.adId === "string" ? origin.adId : null
-    }
+    origin: verifiedOrigin
   })) {
     await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "COMPLETED", outcome: "AUTO_REPLY", topic: "ad_sales" });
     return;
@@ -940,10 +972,7 @@ async function processInboundMessage(message: MetaTextMessage) {
     phone: message.from,
     text: message.text.body,
     replyToMessageId: message.context?.id,
-    origin: {
-      kind: typeof origin.kind === "string" ? origin.kind : undefined,
-      adId: typeof origin.adId === "string" ? origin.adId : null
-    }
+    origin: verifiedOrigin
   })) {
     await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "COMPLETED", outcome: "AUTO_REPLY", topic: "sorocaba_sales" });
     return;
@@ -952,8 +981,7 @@ async function processInboundMessage(message: MetaTextMessage) {
       await hasRecentLegacySorocabaMenu(inbound.organizationId, message.from) &&
       await processSorocabaSalesJourney({ organizationId: inbound.organizationId,
         phone: message.from, text: "Sorocaba",
-        origin: { kind: typeof origin.kind === "string" ? origin.kind : undefined,
-          adId: typeof origin.adId === "string" ? origin.adId : null } })) {
+        origin: verifiedOrigin })) {
     await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload,
       status: "COMPLETED", outcome: "AUTO_REPLY", topic: "sorocaba_sales" });
     return;
@@ -989,8 +1017,7 @@ async function processInboundMessage(message: MetaTextMessage) {
           organizationId: inbound.organizationId,
           phone: message.from,
           text: "Sorocaba",
-          origin: { kind: typeof origin.kind === "string" ? origin.kind : undefined,
-            adId: typeof origin.adId === "string" ? origin.adId : null }
+          origin: verifiedOrigin
         })) {
       await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload,
         status: "COMPLETED", outcome: "AUTO_REPLY", topic: "sorocaba_sales" });

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
-import { getCrmWhatsAppConversation, getCrmWhatsAppInbox, getCrmWhatsAppNotificationSnapshot } from "@/features/crm/whatsapp-chat.service";
+import { getCrmMetaWhatsAppSalesSummary, getCrmWhatsAppConversation, getCrmWhatsAppInbox, getCrmWhatsAppNotificationSnapshot } from "@/features/crm/whatsapp-chat.service";
 import { getWhatsAppAiConversationState } from "@/features/ai/whatsapp-support-ai.service";
 import { WhatsAppNotificationWatcher } from "./WhatsAppNotificationWatcher";
 import { WhatsAppLiveInboxList } from "./WhatsAppLiveInboxList";
@@ -46,12 +46,17 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
   const selectedPeriod = resolvePeriod(params);
   const inboxPromise = getCrmWhatsAppInbox({ organizationId: admin.organizationId, allowedEventIds, search: params.search, startAt: selectedPeriod.startAt, endAt: selectedPeriod.endAt });
   const latestInboundPromise = getCrmWhatsAppNotificationSnapshot({ organizationId: admin.organizationId, allowedEventIds });
+  const activeStatus = ["ai", "unread", "human", "refund", "followup", "closed", "abandoned", "meta"].includes(params.status || "") ? params.status === "unread" ? "ai" : params.status! : "all";
+  const metaSalesSummaryPromise = activeStatus === "meta"
+    ? getCrmMetaWhatsAppSalesSummary({ organizationId: admin.organizationId, allowedEventIds,
+        startAt: selectedPeriod.startAt, endAt: selectedPeriod.endAt })
+    : Promise.resolve(null);
   const hasExplicitSelection = Boolean(params.orderCode || params.leadId || params.phone);
   const selectedConversationPromise = hasExplicitSelection
     ? getCrmWhatsAppConversation({ orderCode: params.orderCode, leadId: params.leadId, phone: params.phone, organizationId: admin.organizationId, allowedEventIds })
     : null;
   const rawInbox = await inboxPromise;
-  const activeStatus = ["ai", "unread", "human", "refund", "followup", "closed", "abandoned", "meta"].includes(params.status || "") ? params.status === "unread" ? "ai" : params.status! : "all";
+  const metaSalesSummary = await metaSalesSummaryPromise;
   const counters = {
     all: rawInbox.length,
     ai: rawInbox.filter((item) => item.queue === "ai").length,
@@ -105,6 +110,10 @@ export default async function CrmWhatsAppPage({ searchParams }: CrmWhatsAppPageP
 
       <WhatsAppStatusTabs initialStatus={activeStatus} initialCounts={counters} period={selectedPeriod.period}/>
       <WhatsAppPeriodBar status={activeStatus} period={selectedPeriod.period} start={selectedPeriod.start} end={selectedPeriod.end} search={params.search}/>
+      {metaSalesSummary ? <div className="crmWhatsappFeedback isSuccess" role="status">
+        Anúncios Meta · {metaSalesSummary.paidOrders} pedido(s) pago(s) · {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(metaSalesSummary.paidAmountInCents / 100)} recebidos (estornos descontados).{" "}
+        <Link href="/admin/orders?origin=paid_whatsapp&status=PAID">Ver pedidos atribuídos</Link>
+      </div> : null}
       {params.status === "erro" || params.status === "ok" ? <div className={`crmWhatsappFeedback ${params.status === "erro" ? "isError" : "isSuccess"}`}>{params.message || "Mensagem enviada."}</div> : null}
       {params.notice ? <div className="crmWhatsappFeedback isSuccess">{params.notice}</div> : null}
 

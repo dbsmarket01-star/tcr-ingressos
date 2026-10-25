@@ -3,12 +3,12 @@ import { WhatsAppMessageType } from "@prisma/client";
 const db = vi.hoisted(() => ({
   $queryRaw: vi.fn(),
   whatsAppMessageLog: { findMany: vi.fn() },
-  order: { findMany: vi.fn() },
+  order: { findMany: vi.fn(), aggregate: vi.fn() },
   adminAuditLog: { findMany: vi.fn() }
 }));
 vi.mock("@/lib/prisma", () => ({ prisma: db }));
 vi.mock("@/features/ai/whatsapp-support-ai.service", () => ({ resolveWhatsAppAiConversationMode: vi.fn(() => "ACTIVE") }));
-import { clearCrmWhatsAppInboxCache, getCrmWhatsAppConversation, getCrmWhatsAppInbox } from "@/features/crm/whatsapp-chat.service";
+import { clearCrmWhatsAppInboxCache, getCrmMetaWhatsAppSalesSummary, getCrmWhatsAppConversation, getCrmWhatsAppInbox } from "@/features/crm/whatsapp-chat.service";
 const message = {
   id: "ai-message", orderId: null, eventId: null, recipientName: "Contato teste", recipientPhone: "5511999999999",
   type: "AI_ASSISTANT", status: "SENT", templateName: null, payload: { text: "Resposta da IA" },
@@ -21,6 +21,25 @@ beforeEach(() => {
   db.order.findMany.mockResolvedValue([]); db.adminAuditLog.findMany.mockResolvedValue([]);
 });
 describe("AI messages in WhatsApp admin", () => {
+  it("mede somente pedidos pagos atribuídos ao anúncio, descontando estornos", async () => {
+    db.order.aggregate.mockResolvedValue({ _count: { _all: 2 }, _sum: { totalInCents: 30000, refundedInCents: 5000 } });
+    const result = await getCrmMetaWhatsAppSalesSummary({ organizationId: "org_test" });
+    expect(result).toEqual({ paidOrders: 2, paidAmountInCents: 25000 });
+    expect(db.order.aggregate).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({
+      utmSource: { equals: "whatsapp", mode: "insensitive" }, utmMedium: { equals: "meta_ads", mode: "insensitive" },
+      utmTerm: "verified_meta_referral"
+    }) }));
+  });
+  it("coloca o lead com referral no filtro Meta antes da primeira etapa de autovenda", async () => {
+    db.$queryRaw.mockResolvedValue([message]);
+    db.whatsAppMessageLog.findMany.mockImplementation(({ where }) => {
+      if (where?.OR?.some((part: { webhookPayload?: { path?: string[] } }) => part.webhookPayload?.path?.[0] === "referral"))
+        return [{ recipientPhone: message.recipientPhone, webhookPayload: { referral: { source_type: "ad", source_id: "123" } }, createdAt: message.createdAt }];
+      return [];
+    });
+    const inbox = await getCrmWhatsAppInbox({ organizationId: "org_test" });
+    expect(inbox[0]).toMatchObject({ queue: "meta", metaSales: true, metaSalesStage: "Iniciou atendimento" });
+  });
   it("generates a Prisma client that recognizes the existing database value", () => {
     expect(Object.values(WhatsAppMessageType)).toContain("AI_ASSISTANT");
   });

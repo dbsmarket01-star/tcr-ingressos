@@ -7,7 +7,7 @@ import { isRefundRequest, shouldClearUnread } from "@/features/crm/whatsapp-inbo
 import type { getCrmWhatsAppInbox } from "@/features/crm/whatsapp-chat.service";
 
 type Item = Awaited<ReturnType<typeof getCrmWhatsAppInbox>>[number];
-type Incoming = { id: string; at: string; name: string; message: string; phone: string | null };
+type Incoming = { id: string; at: string; name: string; message: string; phone: string | null; metaAd?: boolean };
 type Period = { period: string; start: string; end: string };
 const phoneKey = (value: string | null | undefined) => String(value || "").replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
 const timeLabel = (value: Date) => new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }).format(value);
@@ -107,8 +107,8 @@ export function WhatsAppLiveInboxList({
         const latestAt = new Date(message.at);
         const refundRequest = isRefundRequest(message.message);
         const updated: Item = existing
-          ? { ...existing, latestAt, latestMessage: message.message, latestInboundAt: latestAt, latestInboundId: message.id, latestInboundMessage: message.message, hasUnread: true, unreadQueue: true, needsReply: true, canReply: true, isRefund: existing.isRefund || refundRequest, queue: refundRequest ? "refund" : ["refund", "followup", "closed"].includes(existing.queue) ? existing.queue : existing.aiMode === "ACTIVE" ? existing.metaSales ? "meta" : "ai" : "human", lastDirection: "inbound" }
-          : { key, name: message.name, phone: message.phone || "", eventTitle: "Conversa pelo WhatsApp", orderCode: null, latestMessage: message.message, latestAt, latestInboundAt: latestAt, latestInboundId: message.id, latestInboundMessage: message.message, needsReply: true, hasUnread: true, unreadQueue: true, queue: refundRequest ? "refund" : "ai", metaSales: false, metaSalesStage: null, hasHumanReply: false, humanQueueHidden: false, isRefund: refundRequest, followUp: false, isClosed: false, closedManually: false, abandonedWithoutReturn: false, canReply: true, lastDirection: "inbound", lastOutboundAt: null, aiMode: "ACTIVE" };
+          ? { ...existing, latestAt, latestMessage: message.message, latestInboundAt: latestAt, latestInboundId: message.id, latestInboundMessage: message.message, hasUnread: true, unreadQueue: true, needsReply: true, canReply: true, metaSales: existing.metaSales || message.metaAd === true, metaSalesStage: existing.metaSalesStage || (message.metaAd ? "Iniciou atendimento" : null), isRefund: existing.isRefund || refundRequest, queue: refundRequest ? "refund" : ["refund", "followup", "closed"].includes(existing.queue) ? existing.queue : existing.aiMode === "ACTIVE" ? existing.metaSales || message.metaAd ? "meta" : "ai" : "human", lastDirection: "inbound" }
+          : { key, name: message.name, phone: message.phone || "", eventTitle: "Conversa pelo WhatsApp", orderCode: null, latestMessage: message.message, latestAt, latestInboundAt: latestAt, latestInboundId: message.id, latestInboundMessage: message.message, needsReply: true, hasUnread: true, unreadQueue: true, queue: refundRequest ? "refund" : message.metaAd ? "meta" : "ai", metaSales: message.metaAd === true, metaSalesStage: message.metaAd ? "Iniciou atendimento" : null, hasHumanReply: false, humanQueueHidden: false, isRefund: refundRequest, followUp: false, isClosed: false, closedManually: false, abandonedWithoutReturn: false, canReply: true, lastDirection: "inbound", lastOutboundAt: null, aiMode: "ACTIVE" };
         const term = String(search || "").trim().toLocaleLowerCase("pt-BR");
         if (term && ![updated.name, updated.phone, updated.eventTitle, updated.orderCode, updated.latestMessage].some((value) => String(value || "").toLocaleLowerCase("pt-BR").includes(term))) {
           return current.filter((item) => item.key !== key);

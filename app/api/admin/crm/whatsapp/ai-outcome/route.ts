@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { getWhatsAppAiConversationState } from "@/features/ai/whatsapp-support-ai.service";
 import { prisma } from "@/lib/prisma";
+import { isDirectMetaWhatsAppAdInbound } from "@/features/crm/whatsapp-inbox-classification";
 
 export const dynamic = "force-dynamic";
 
@@ -26,5 +27,5 @@ export async function GET(request: NextRequest) {
   const origin = payload._tcrOrigin && typeof payload._tcrOrigin === "object" && !Array.isArray(payload._tcrOrigin) ? payload._tcrOrigin as Record<string, unknown> : {};
   const state = await getWhatsAppAiConversationState(admin.organizationId, message.recipientPhone);
   return NextResponse.json({ status: typeof ai.status === "string" ? ai.status : null, mode: state.mode, phone: message.recipientPhone,
-    metaSales: origin.kind === "meta_ad" && ["sorocaba_sales", "ad_sales"].includes(String(ai.topic || "")) }, { headers: { "Cache-Control": "no-store" } });
+    metaSales: isDirectMetaWhatsAppAdInbound(payload) || origin.kind === "meta_ad" }, { headers: { "Cache-Control": "no-store" } });
 }
