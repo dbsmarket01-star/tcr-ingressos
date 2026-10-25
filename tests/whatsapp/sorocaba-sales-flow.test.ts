@@ -72,6 +72,10 @@ const greeting = "Olá, vim pelo anúncio do Rodrigo Teaser em Sorocaba e tenho 
 beforeEach(() => { logs.length = 0; lists.length = 0; buttons.length = 0; media.length = 0; sendOrder.length = 0; phoneSessionAvailable = true; });
 
 describe("fluxo completo de Sorocaba sem envio real", () => {
+  it("inicia o mesmo menu de vendas com a palavra-chave Sorocaba", async () => {
+    expect(await processSorocabaSalesJourney({ ...base, text: "Sorocaba" })).toBe(true);
+    expect(lists[0].text).toContain("*Rodrigo Teaser em Sorocaba*");
+  });
   it("preserva a origem comprovada do anúncio durante a conversa", async () => {
     await processSorocabaSalesJourney({ ...base, text: greeting, origin: { kind: "meta_ad", adId: "123456" } });
     await processSorocabaSalesJourney({ ...base, text: "🎟️ Tipos de ingresso" });
