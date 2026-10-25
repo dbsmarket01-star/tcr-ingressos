@@ -5,6 +5,7 @@ const lists: Array<{ text: string; rows: Array<{ id: string; title: string; desc
 const buttons: Array<{ text: string; url: string; metadata: Record<string, unknown> }> = [];
 const media: Array<{ kind: string; mediaUrl: string; caption: string; metadata: Record<string, unknown> }> = [];
 const sendOrder: string[] = [];
+let phoneSessionAvailable = true;
 
 const lot = (id: string, name: string, priceInCents: number, options: string[] = []) => ({
   id, name, description: name.includes("SOLIDÁRIO")
@@ -34,7 +35,11 @@ vi.mock("@/lib/prisma", () => ({
           Array.from({ length: 15 }, (_, index) => `MESA ${index + 16}`))
       ]
     })) },
-    whatsAppMessageLog: { findMany: vi.fn(async () => [...logs].reverse()) }
+    whatsAppMessageLog: {
+      findMany: vi.fn(async () => phoneSessionAvailable ? [...logs].reverse() : []),
+      findFirst: vi.fn(async ({ where }: { where: { providerMessageId?: string } }) =>
+        where.providerMessageId === "sent-intro-message" ? logs[0] : null)
+    }
   }
 }));
 
@@ -63,21 +68,29 @@ import { processSorocabaSalesJourney } from "@/features/whatsapp/sorocaba-sales-
 const base = { organizationId: "tcr", phone: "5521984456499" };
 const greeting = "Olá, vim pelo anúncio do Rodrigo Teaser em Sorocaba e tenho interesse no evento";
 
-beforeEach(() => { logs.length = 0; lists.length = 0; buttons.length = 0; media.length = 0; sendOrder.length = 0; });
+beforeEach(() => { logs.length = 0; lists.length = 0; buttons.length = 0; media.length = 0; sendOrder.length = 0; phoneSessionAvailable = true; });
 
 describe("fluxo completo de Sorocaba sem envio real", () => {
+  it("mantém Sorocaba ao tocar na opção mesmo sem localizar a sessão pelo telefone", async () => {
+    await processSorocabaSalesJourney({ ...base, text: greeting });
+    phoneSessionAvailable = false;
+    expect(await processSorocabaSalesJourney({ ...base, text: "🎟️ Tipos de ingresso", replyToMessageId: "sent-intro-message" })).toBe(true);
+    expect(media).toHaveLength(1);
+    expect(lists.at(-1)?.rows[0].title).toBe("⚪ Cadeira Prata");
+  });
   it("abre o menu, mostra os preços da Prata separados e leva a meia-entrada ao checkout", async () => {
     expect(await processSorocabaSalesJourney({ ...base, text: greeting })).toBe(true);
     expect(lists[0].text).toContain("*Rodrigo Teaser em Sorocaba*");
     expect(lists[0].text).toContain("*Como posso ajudar?*");
-    expect(lists[0].rows).toHaveLength(3);
+    expect(lists[0].rows).toHaveLength(1);
+    expect(lists[0].rows[0].title).toBe("🎟️ Tipos de ingresso");
     expect(media).toHaveLength(0);
 
     expect(await processSorocabaSalesJourney({ ...base, text: "🎟️ Tipos de ingresso" })).toBe(true);
     expect(media).toHaveLength(1);
     expect(media[0].mediaUrl).toContain("20261024082407.png");
     expect(sendOrder.slice(0, 3)).toEqual(["list", "map", "list"]);
-    expect(lists[1].rows).toHaveLength(7);
+    expect(lists[1].rows).toHaveLength(5);
     expect(lists[1].text).toContain("*Agora escolha a opção que mais combina com você.*");
 
     expect(await processSorocabaSalesJourney({ ...base, text: "⚪ Cadeira Prata" })).toBe(true);

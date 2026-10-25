@@ -9,7 +9,7 @@ const SESSION_MS = 24 * 60 * 60_000;
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const dateTime = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
-type Inbound = { organizationId: string; phone: string; text: string; origin?: { kind?: string; adId?: string | null } };
+type Inbound = { organizationId: string; phone: string; text: string; replyToMessageId?: string | null; origin?: { kind?: string; adId?: string | null } };
 type Session = { step?: string; group?: string; lotId?: string; optionId?: string; source?: string; eventSlug?: string; page?: number };
 type Lot = { id: string; name: string; description: string | null; priceInCents: number; available: number; minPerOrder: number; maxPerOrder: number; admissionsPerUnit: number; options: Array<{ id: string; label: string }> };
 
@@ -107,12 +107,23 @@ async function loadEvent(organizationId: string) {
 }
 
 async function latestSession(input: Inbound): Promise<Session | null> {
+  if (input.replyToMessageId) {
+    const repliedTo = await prisma.whatsAppMessageLog.findFirst({
+      where: { organizationId: input.organizationId, providerMessageId: input.replyToMessageId,
+        type: WhatsAppMessageType.BULK, payload: { path: ["source"], equals: SOURCE },
+        status: { in: ["SENT", "DELIVERED", "READ"] },
+        createdAt: { gte: new Date(Date.now() - SESSION_MS) } },
+      select: { payload: true }
+    });
+    if (repliedTo?.payload) return repliedTo.payload as Session;
+  }
   const normalized = input.phone.replace(/\D/g, "");
   const logs = await prisma.whatsAppMessageLog.findMany({
     where: { organizationId: input.organizationId, recipientPhone: { in: [input.phone, normalized, `+${normalized}`] },
-      type: WhatsAppMessageType.BULK, status: { in: ["SENT", "DELIVERED", "READ"] },
+      type: WhatsAppMessageType.BULK, payload: { path: ["source"], equals: SOURCE },
+      status: { in: ["SENT", "DELIVERED", "READ"] },
       createdAt: { gte: new Date(Date.now() - SESSION_MS) } },
-    select: { payload: true }, orderBy: { createdAt: "desc" }, take: 30
+    select: { payload: true }, orderBy: { createdAt: "desc" }, take: 1
   });
   for (const log of logs) {
     const payload = log.payload as Prisma.JsonObject | null;
@@ -137,15 +148,11 @@ const menuRows = [
   { id: "ouro", title: "🟡 Cadeira Ouro", description: "Meia-entrada e solidário" },
   { id: "primeira", title: "🟢 Primeira Fileira", description: "Ingresso exclusivo" },
   { id: "mesa", title: "🟠 Mesas", description: "Mesas para quatro pessoas" },
-  { id: "camarote", title: "🟣 Camarotes", description: "Compartilhado ou fechado" },
-  { id: "local", title: "📍 Local e horário" },
-  { id: "pagamento", title: "💳 Pagamento" }
+  { id: "camarote", title: "🟣 Camarotes", description: "Compartilhado ou fechado" }
 ];
 
 const introRows = [
-  { id: "tipos", title: "🎟️ Tipos de ingresso", description: "Ver o mapa e escolher um setor" },
-  { id: "local", title: "📍 Local e horário" },
-  { id: "pagamento", title: "💳 Pagamento" }
+  { id: "tipos", title: "🎟️ Tipos de ingresso", description: "Ver o mapa e escolher um setor" }
 ];
 
 function choice(input: string, rows: Array<{ id: string; title?: string }>) {
@@ -198,28 +205,12 @@ export async function processSorocabaSalesJourney(input: Inbound): Promise<boole
   if (session.step === "intro") {
     const selected = choice(input.text, introRows);
     if (selected === "tipos") { await showSectorMenu(input, event); return true; }
-    if (selected === "local") {
-      await text(input, `*${event.title}*\n\n📅 *Data e horário:* ${dateTime.format(event.startsAt)}\n📍 *Local:* ${event.venueName}\n${event.venueAddress}\n\nPara ver o mapa e os ingressos, responda *menu* e escolha *Tipos de ingresso*.`, "info");
-      return true;
-    }
-    if (selected === "pagamento") {
-      await text(input, "*Pagamento e taxas* 💳\n\nOs valores dos ingressos são mostrados *+ taxas*. No checkout seguro da TCR você confere as formas de pagamento e o total antes de finalizar.\n\nPara ver o mapa e escolher seu setor, responda *menu* e escolha *Tipos de ingresso*.", "info");
-      return true;
-    }
     return false;
   }
 
   if (session.step === "menu") {
     const selected = choice(input.text, menuRows);
     if (!selected) return false;
-    if (selected === "local") {
-      await text(input, `*${event.title}*\n\n📅 *Data e horário:* ${dateTime.format(event.startsAt)}\n📍 *Local:* ${event.venueName}\n${event.venueAddress}\n\nQuer conhecer os ingressos? Responda *menu*. Se preferir, escreva sua dúvida.`, "info");
-      return true;
-    }
-    if (selected === "pagamento") {
-      await text(input, "*Pagamento e taxas* 💳\n\nOs valores que mostramos aqui são dos ingressos, *+ taxas*. No checkout seguro da TCR você confere as formas de pagamento disponíveis e o *total antes de finalizar* — sem compromisso.\n\nPara ver os setores e escolher seu ingresso, responda *menu*. Se tiver alguma dúvida, pode perguntar por aqui.", "info");
-      return true;
-    }
     const lots = event.lots.filter((lot) => sorocabaGroup(lot.name) === selected);
     if (!lots.length) {
       await text(input, "*Essa categoria está indisponível no momento.*\n\nResponda *menu* para conhecer as outras opções ou escreva sua dúvida. Vou ajudar você a encontrar a melhor alternativa.", "info");

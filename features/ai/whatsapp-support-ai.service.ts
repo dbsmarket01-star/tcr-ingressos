@@ -37,6 +37,7 @@ type MetaTextMessage = {
   type?: string;
   text?: { body?: string };
   interactive?: { list_reply?: { id?: string; title?: string }; button_reply?: { id?: string; title?: string } };
+  context?: { id?: string };
 };
 
 type MetaWebhookPayload = {
@@ -891,6 +892,7 @@ async function processInboundMessage(message: MetaTextMessage) {
     organizationId: inbound.organizationId,
     phone: message.from,
     text: message.text.body,
+    replyToMessageId: message.context?.id,
     origin: {
       kind: typeof origin.kind === "string" ? origin.kind : undefined,
       adId: typeof origin.adId === "string" ? origin.adId : null
