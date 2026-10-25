@@ -31,6 +31,7 @@ vi.mock("@/lib/prisma", () => ({
         lot("lot-prata-meia-123", "CADEIRA PRATA - MEIA ENTRADA", 14790),
         lot("lot-prata-solidario-123", "CADEIRA PRATA - SOLIDÁRIO", 15790),
         lot("lot-ouro-meia-123", "CADEIRA OURO - MEIA ENTRADA", 17790),
+        lot("lot-primeira-123", "PRIMEIRA FILEIRA - EXCLUSIVO", 59790),
         lot("lot-mesa-12345678", "MESA PARA 04 PESSOAS", 119790,
           Array.from({ length: 15 }, (_, index) => `MESA ${index + 16}`))
       ]
@@ -71,6 +72,16 @@ const greeting = "Olá, vim pelo anúncio do Rodrigo Teaser em Sorocaba e tenho 
 beforeEach(() => { logs.length = 0; lists.length = 0; buttons.length = 0; media.length = 0; sendOrder.length = 0; phoneSessionAvailable = true; });
 
 describe("fluxo completo de Sorocaba sem envio real", () => {
+  it("abre o seletor de quantidade da Primeira Fileira direto ao escolher o setor", async () => {
+    await processSorocabaSalesJourney({ ...base, text: greeting });
+    await processSorocabaSalesJourney({ ...base, text: "🎟️ Tipos de ingresso" });
+    expect(await processSorocabaSalesJourney({ ...base, text: "🟢 Primeira Fileira" })).toBe(true);
+    expect(lists).toHaveLength(2);
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0].text).toContain("PRIMEIRA FILEIRA - EXCLUSIVO");
+    expect(buttons[0].text).toContain("1 a 20 ingressos");
+    expect(buttons[0].url).toContain("/evento/rodrigo-teaser-em-sorocaba-2026/quantidade?lotId=lot-primeira-123");
+  });
   it("mantém Sorocaba ao tocar na opção mesmo sem localizar a sessão pelo telefone", async () => {
     await processSorocabaSalesJourney({ ...base, text: greeting });
     phoneSessionAvailable = false;

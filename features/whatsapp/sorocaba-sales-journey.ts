@@ -192,6 +192,25 @@ async function showSectorMenu(input: Inbound, event: NonNullable<Awaited<ReturnT
     "Escolher opção", menuRows, "menu");
 }
 
+async function showChosenLot(input: Inbound, event: NonNullable<Awaited<ReturnType<typeof loadEvent>>>, lot: Lot) {
+  if (lot.options.length) {
+    const rows: Array<{ id: string; title: string; description?: string }> = lot.options.slice(0, 9).map((option) => ({ id: option.id, title: option.label, description: `${money.format(lot.priceInCents / 100)} + taxas` }));
+    if (lot.options.length > 9) rows.push({ id: "more", title: "Ver mais números", description: "Outras mesas disponíveis" });
+    await list(input, `${sorocabaLotLine(lot)}\n\n*Escolha o número disponível.* Cada unidade dá acesso a ${lot.admissionsPerUnit} pessoa(s).`,
+      "Escolher número", rows, "option", { lotId: lot.id, page: 0 });
+    return;
+  }
+  const maximum = Math.min(effectiveLotMaxPerOrder(SLUG, { ...lot, hasTypeOptions: false }), lot.available);
+  if (maximum < Math.max(1, lot.minPerOrder)) {
+    await text(input, "Este ingresso não tem quantidade suficiente para o pedido mínimo agora. Responda *menu* para escolher outro setor.", "info");
+    return;
+  }
+  await sendWhatsAppUrlButtonMessage({ to: input.phone, organizationId: input.organizationId, eventId: event.id,
+    text: `${sorocabaLotLine(lot)}\n\nEscolha de *${Math.max(1, lot.minPerOrder)} a ${maximum} ingressos* no controle − / +. Você verá o resumo e as taxas antes de pagar.`,
+    buttonText: "Escolher quantidade", url: buildSorocabaQuantityUrl({ lotId: lot.id, adId: input.origin?.adId }),
+    source: SOURCE, metadata: { step: "done", eventSlug: SLUG, lotId: lot.id } });
+}
+
 /** Returns false for a free-form question so the regular humanized AI can answer it. */
 export async function processSorocabaSalesJourney(input: Inbound): Promise<boolean> {
   const session = await latestSession(input);
@@ -217,6 +236,10 @@ export async function processSorocabaSalesJourney(input: Inbound): Promise<boole
       await text(input, "*Essa categoria está indisponível no momento.*\n\nResponda *menu* para conhecer as outras opções ou escreva sua dúvida. Vou ajudar você a encontrar a melhor alternativa.", "info");
       return true;
     }
+    if (selected === "primeira" && lots.length === 1) {
+      await showChosenLot(input, event, lots[0]);
+      return true;
+    }
     await list(input, `*Ingressos disponíveis*\n\n${lots.map(sorocabaLotLine).join("\n\n")}\n\n*Qual você prefere?* Toque em “Escolher ingresso”. O total com taxas aparece no checkout antes do pagamento.`,
       "Escolher ingresso", lots.map((lot) => ({ id: lot.id, title: sorocabaLotChoiceTitle(lot.name), description: sorocabaLotChoiceDescription(lot) })),
       "lot", { group: selected });
@@ -228,22 +251,7 @@ export async function processSorocabaSalesJourney(input: Inbound): Promise<boole
     const selectedId = choice(input.text, lots.map((entry) => ({ id: entry.id, title: sorocabaLotChoiceTitle(entry.name) })));
     const lot = lots.find((item) => item.id === selectedId || item.name.toLocaleLowerCase("pt-BR") === input.text.trim().toLocaleLowerCase("pt-BR"));
     if (!lot) return false;
-    if (lot.options.length) {
-      const rows: Array<{ id: string; title: string; description?: string }> = lot.options.slice(0, 9).map((option) => ({ id: option.id, title: option.label, description: `${money.format(lot.priceInCents / 100)} + taxas` }));
-      if (lot.options.length > 9) rows.push({ id: "more", title: "Ver mais números", description: "Outras mesas disponíveis" });
-      await list(input, `${sorocabaLotLine(lot)}\n\n*Escolha o número disponível.* Cada unidade dá acesso a ${lot.admissionsPerUnit} pessoa(s).`,
-        "Escolher número", rows, "option", { lotId: lot.id, page: 0 });
-      return true;
-    }
-    const maximum = Math.min(effectiveLotMaxPerOrder(SLUG, { ...lot, hasTypeOptions: false }), lot.available);
-    if (maximum < Math.max(1, lot.minPerOrder)) {
-      await text(input, "Este ingresso não tem quantidade suficiente para o pedido mínimo agora. Responda *menu* para escolher outro setor.", "info");
-      return true;
-    }
-    await sendWhatsAppUrlButtonMessage({ to: input.phone, organizationId: input.organizationId, eventId: event.id,
-      text: `${sorocabaLotLine(lot)}\n\nEscolha de *${Math.max(1, lot.minPerOrder)} a ${maximum} ingressos* no controle − / +. Você verá o resumo e as taxas antes de pagar.`,
-      buttonText: "Escolher quantidade", url: buildSorocabaQuantityUrl({ lotId: lot.id, adId: input.origin?.adId }),
-      source: SOURCE, metadata: { step: "done", eventSlug: SLUG, lotId: lot.id } });
+    await showChosenLot(input, event, lot);
     return true;
   }
 
