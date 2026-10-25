@@ -11,7 +11,7 @@ const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL
 const dateTime = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
 type Inbound = { organizationId: string; phone: string; text: string; replyToMessageId?: string | null; origin?: { kind?: string; adId?: string | null } };
-type Session = { step?: string; group?: string; lotId?: string; optionId?: string; source?: string; eventSlug?: string; page?: number };
+type Session = { step?: string; group?: string; lotId?: string; optionId?: string; source?: string; eventSlug?: string; page?: number; paidAd?: boolean; adId?: string | null };
 type Lot = { id: string; name: string; description: string | null; priceInCents: number; available: number; minPerOrder: number; maxPerOrder: number; admissionsPerUnit: number; options: Array<{ id: string; label: string }> };
 
 export function isSorocabaAdGreeting(text: string) {
@@ -135,13 +135,13 @@ async function latestSession(input: Inbound): Promise<Session | null> {
 
 async function text(input: Inbound, body: string, step: string, extra: Record<string, unknown> = {}) {
   await sendWhatsAppTextMessage({ to: input.phone, organizationId: input.organizationId, text: body,
-    source: SOURCE, metadata: { step, eventSlug: SLUG, ...extra } });
+    source: SOURCE, metadata: { step, eventSlug: SLUG, paidAd: input.origin?.kind === "meta_ad", adId: input.origin?.adId ?? null, ...extra } });
 }
 
 async function list(input: Inbound, body: string, buttonText: string,
   rows: Array<{ id: string; title: string; description?: string }>, step: string, extra: Record<string, unknown> = {}) {
   await sendWhatsAppListMessage({ to: input.phone, organizationId: input.organizationId,
-    text: body, buttonText, rows, source: SOURCE, metadata: { step, eventSlug: SLUG, ...extra } });
+    text: body, buttonText, rows, source: SOURCE, metadata: { step, eventSlug: SLUG, paidAd: input.origin?.kind === "meta_ad", adId: input.origin?.adId ?? null, ...extra } });
 }
 
 const menuRows = [
@@ -177,7 +177,7 @@ async function showSectorMenu(input: Inbound, event: NonNullable<Awaited<ReturnT
         to: input.phone, kind: "image", mediaUrl: mapUrl,
         caption: `🗺️ *Mapa do evento: ${event.title}*\n\nSe a prévia aparecer embaçada no WhatsApp, toque na imagem para carregá-la ou abra o mapa original em alta qualidade: ${mapUrl}\n\nImagem ilustrativa; a disponibilidade é confirmada na escolha do ingresso.`,
         organizationId: input.organizationId, eventId: event.id,
-        metadata: { source: SOURCE, step: "map_preview", eventSlug: SLUG }
+        metadata: { source: SOURCE, step: "map_preview", eventSlug: SLUG, paidAd: input.origin?.kind === "meta_ad", adId: input.origin?.adId ?? null }
       });
       mapSent = true;
     } catch (error) {
@@ -207,13 +207,16 @@ async function showChosenLot(input: Inbound, event: NonNullable<Awaited<ReturnTy
   }
   await sendWhatsAppUrlButtonMessage({ to: input.phone, organizationId: input.organizationId, eventId: event.id,
     text: `${sorocabaLotLine(lot)}\n\nEscolha de *${Math.max(1, lot.minPerOrder)} a ${maximum} ingressos* no controle − / +. Você verá o resumo e as taxas antes de pagar.`,
-    buttonText: "Escolher quantidade", url: buildSorocabaQuantityUrl({ lotId: lot.id, adId: input.origin?.adId }),
-    source: SOURCE, metadata: { step: "done", eventSlug: SLUG, lotId: lot.id } });
+    buttonText: "Escolher quantidade", url: buildSorocabaQuantityUrl({ lotId: lot.id, adId: input.origin?.adId, paidAd: input.origin?.kind === "meta_ad" }),
+    source: SOURCE, metadata: { step: "done", eventSlug: SLUG, lotId: lot.id, paidAd: input.origin?.kind === "meta_ad", adId: input.origin?.adId ?? null } });
 }
 
 /** Returns false for a free-form question so the regular humanized AI can answer it. */
 export async function processSorocabaSalesJourney(input: Inbound): Promise<boolean> {
   const session = await latestSession(input);
+  if (session?.paidAd && input.origin?.kind !== "meta_ad") {
+    input = { ...input, origin: { kind: "meta_ad", adId: session.adId ?? null } };
+  }
   const greeting = isSorocabaAdGreeting(input.text);
   if (!session && !greeting) return false;
   if (/^(sair|cancelar|parar|falar com (atendente|suporte))$/i.test(input.text.trim())) return false;
@@ -272,10 +275,10 @@ export async function processSorocabaSalesJourney(input: Inbound): Promise<boole
     }
     const option = lot.options.find((item) => item.id === selected);
     if (!option) return false;
-    const url = buildAdSalesCheckoutUrl({ eventSlug: SLUG, lotId: lot.id, lotOptionId: option.id, quantity: 1, adId: input.origin?.adId });
+    const url = buildAdSalesCheckoutUrl({ eventSlug: SLUG, lotId: lot.id, lotOptionId: option.id, quantity: 1, adId: input.origin?.adId, paidAd: input.origin?.kind === "meta_ad" });
     await sendWhatsAppUrlButtonMessage({ to: input.phone, organizationId: input.organizationId, eventId: event.id,
       text: `*Sua escolha:* ${option.label}\n${lot.name}\n\n*Valor:* ${money.format(lot.priceInCents / 100)} + taxas · ${lot.admissionsPerUnit} pessoas.\n\nToque em *Comprar ingresso* para conferir o resumo, as taxas e a disponibilidade final antes de pagar.`,
-      buttonText: "Comprar ingresso", url, source: SOURCE, metadata: { step: "done", eventSlug: SLUG, lotId: lot.id, optionId: option.id } });
+      buttonText: "Comprar ingresso", url, source: SOURCE, metadata: { step: "done", eventSlug: SLUG, lotId: lot.id, optionId: option.id, paidAd: input.origin?.kind === "meta_ad", adId: input.origin?.adId ?? null } });
     return true;
   }
 
@@ -284,10 +287,10 @@ export async function processSorocabaSalesJourney(input: Inbound): Promise<boole
     const quantity = Number(input.text.trim().match(/^\d+/)?.[0]);
     if (!lot || !Number.isInteger(quantity) || quantity < Math.max(1, lot.minPerOrder) ||
         quantity > Math.min(effectiveLotMaxPerOrder(SLUG, { ...lot, hasTypeOptions: false }), lot.available)) return false;
-    const url = buildAdSalesCheckoutUrl({ eventSlug: SLUG, lotId: lot.id, quantity, adId: input.origin?.adId });
+    const url = buildAdSalesCheckoutUrl({ eventSlug: SLUG, lotId: lot.id, quantity, adId: input.origin?.adId, paidAd: input.origin?.kind === "meta_ad" });
     await sendWhatsAppUrlButtonMessage({ to: input.phone, organizationId: input.organizationId, eventId: event.id,
       text: `*Sua escolha:* ${quantity} ingresso(s)\n${lot.name}\n\n*Valor dos ingressos:* ${money.format(lot.priceInCents * quantity / 100)} + taxas.\n\nToque em *Comprar ingresso* para conferir o resumo e o total antes de pagar.`,
-      buttonText: "Comprar ingresso", url, source: SOURCE, metadata: { step: "done", eventSlug: SLUG, lotId: lot.id, quantity } });
+      buttonText: "Comprar ingresso", url, source: SOURCE, metadata: { step: "done", eventSlug: SLUG, lotId: lot.id, quantity, paidAd: input.origin?.kind === "meta_ad", adId: input.origin?.adId ?? null } });
     return true;
   }
   return false;

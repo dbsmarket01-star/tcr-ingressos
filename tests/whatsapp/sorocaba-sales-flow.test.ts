@@ -72,6 +72,14 @@ const greeting = "Olá, vim pelo anúncio do Rodrigo Teaser em Sorocaba e tenho 
 beforeEach(() => { logs.length = 0; lists.length = 0; buttons.length = 0; media.length = 0; sendOrder.length = 0; phoneSessionAvailable = true; });
 
 describe("fluxo completo de Sorocaba sem envio real", () => {
+  it("preserva a origem comprovada do anúncio durante a conversa", async () => {
+    await processSorocabaSalesJourney({ ...base, text: greeting, origin: { kind: "meta_ad", adId: "123456" } });
+    await processSorocabaSalesJourney({ ...base, text: "🎟️ Tipos de ingresso" });
+    await processSorocabaSalesJourney({ ...base, text: "🟢 Primeira Fileira" });
+    const quantityPage = new URL(buttons[0].url);
+    expect(quantityPage.searchParams.get("paidAd")).toBe("1");
+    expect(quantityPage.searchParams.get("adId")).toBe("123456");
+  });
   it("abre o seletor de quantidade da Primeira Fileira direto ao escolher o setor", async () => {
     await processSorocabaSalesJourney({ ...base, text: greeting });
     await processSorocabaSalesJourney({ ...base, text: "🎟️ Tipos de ingresso" });

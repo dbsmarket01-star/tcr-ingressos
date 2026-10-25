@@ -14,6 +14,7 @@ export type AdminOrderFilters = {
   endDate?: string;
   city?: string;
   state?: string;
+  origin?: string;
 };
 
 type EventScope = string[] | null | undefined;
@@ -151,6 +152,11 @@ function buildOrderWhere(
 
   return {
     event: eventWhere,
+    ...(filters.origin === "paid_whatsapp" ? {
+      utmSource: { equals: "whatsapp", mode: "insensitive" as const },
+      utmMedium: { equals: "meta_ads", mode: "insensitive" as const },
+      utmTerm: "verified_meta_referral"
+    } : {}),
     ...(filters.eventId ? { eventId: filters.eventId } : {}),
     ...(filters.lotId ? { items: { some: { lotId: filters.lotId } } } : {}),
     ...(status ? { status } : {}),

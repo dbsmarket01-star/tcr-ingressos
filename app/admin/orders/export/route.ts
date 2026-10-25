@@ -434,7 +434,8 @@ function getFiltersFromUrl(url: URL): AdminOrderFilters {
     startDate: url.searchParams.get("startDate") || undefined,
     endDate: url.searchParams.get("endDate") || undefined,
     city: url.searchParams.get("city") || undefined,
-    state: url.searchParams.get("state") || undefined
+    state: url.searchParams.get("state") || undefined,
+    origin: url.searchParams.get("origin") || undefined
   };
 }
 
@@ -450,6 +451,7 @@ export async function GET(request: Request) {
         `Período: ${filters.startDate || "início"} a ${filters.endDate || "hoje"} (Brasília).`,
         ...(filters.eventActivity === "active" ? ["Eventos: ativos / atuais e futuros."] : filters.eventActivity === "inactive" ? ["Eventos: inativos / encerrados ou passados."] : []),
         `Status: ${orderStatusLabels[filters.status || ""] || "Todos"}. Apenas pedidos pagos contam como vendas.`,
+        ...(filters.origin === "paid_whatsapp" ? ["Origem: WhatsApp · anúncio (UTM)."] : []),
         ...(filters.lotId ? ["Filtro de ingresso/lote aplicado: somente ingressos desse lote."] : []),
         ...(filters.city || filters.state ? [`Local: ${filters.city || "todas as cidades"} / ${filters.state || "todos os estados"}`] : []),
         ...(filters.search ? [`Busca: ${filters.search.slice(0, 120)}`] : [])
@@ -471,7 +473,8 @@ export async function GET(request: Request) {
   const filterSummary = [
     filters.status ? orderStatusLabels[filters.status] || filters.status : "Todos os status",
     filters.city || "todas as cidades",
-    filters.state || "todos os estados"
+    filters.state || "todos os estados",
+    filters.origin === "paid_whatsapp" ? "WhatsApp · anúncio" : "todas as origens"
   ].join(" | ");
   const report = {
     filters: {

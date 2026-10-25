@@ -14,7 +14,19 @@ describe("WhatsApp sales checkout deep link", () => {
     expect(url.searchParams.get("lotId")).toBe("cma1234567890123456789012");
     expect(url.searchParams.get("quantity_cma1234567890123456789012")).toBe("2");
     expect(url.searchParams.get("utm_content")).toBe("123456789");
+    expect(url.searchParams.get("utm_term")).toBe("verified_meta_referral");
     expect(url.hash).toBe("#resumo");
+  });
+
+  it("does not claim paid-ad origin for an ordinary WhatsApp conversation", () => {
+    const url = new URL(buildAdSalesCheckoutUrl({
+      eventSlug: "geriatricus-em-suzano-2026",
+      lotId: "cma1234567890123456789012",
+      quantity: 1,
+      paidAd: false
+    }));
+    expect(url.searchParams.get("utm_medium")).toBe("organic");
+    expect(url.searchParams.get("utm_term")).toBeNull();
   });
 
   it("rejects non-pilot events and invalid quantities", () => {

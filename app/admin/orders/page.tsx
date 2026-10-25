@@ -50,6 +50,7 @@ type OrderSearchParams = {
   endDate?: string;
   city?: string;
   state?: string;
+  origin?: string;
 };
 
 type OrdersPageProps = {
@@ -575,6 +576,13 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                   ))}
                 </select>
               </label>
+              <label className="field">
+                <span>Origem da venda</span>
+                <select name="origin" defaultValue={params.origin === "paid_whatsapp" ? "paid_whatsapp" : ""}>
+                  <option value="">Todas as origens</option>
+                  <option value="paid_whatsapp">WhatsApp · anúncio</option>
+                </select>
+              </label>
             </div>
 
             <label className="field ordersSearchField">
@@ -600,7 +608,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 Exportar PDF
               </button>
             </div>
-            <p className="muted">O relatório por categoria separa cada ingresso e mostra o total de solidários por evento. Conta ingressos válidos de pedidos pagos, pela data do pagamento; mesas e camarotes mantêm sua identificação. O filtro de situação considera os eventos ativos hoje, independentemente do período de vendas.</p>
+            <p className="muted">O relatório por categoria separa cada ingresso e mostra o total de solidários por evento. Conta ingressos válidos de pedidos pagos, pela data do pagamento; mesas e camarotes mantêm sua identificação. O filtro de situação considera os eventos ativos hoje, independentemente do período de vendas. A origem WhatsApp · anúncio conta apenas pedidos com indicação registrada de encaminhamento de anúncio da Meta; pedidos antigos sem essa confirmação não são atribuídos automaticamente.</p>
           </form>
         </section>
 
@@ -625,6 +633,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                   return <details className="ordersMobileCard" key={order.id}>
                     <summary>
                       <span className="ordersMobileCardHeading"><strong>{order.customer.name}</strong><span className={`ordersStatusBadge ${orderStatusClasses[order.status] ?? "neutral"}`}>{orderStatusLabels[order.status] ?? order.status}</span></span>
+                      {order.utmSource?.toLowerCase() === "whatsapp" && order.utmMedium?.toLowerCase() === "meta_ads" && order.utmTerm === "verified_meta_referral" ? <span className="ordersSourceBadge">WhatsApp · anúncio</span> : null}
                       <span className="ordersMobileEvent">{order.event.title}</span>
                       <span className="ordersMobileCardTotals"><span>{admissions} {pluralizeTicket(admissions)} · {payment.title}</span><strong>{formatCurrency(breakdown.ticketSubtotalInCents)}</strong></span>
                       <span className="ordersMobileCardFoot"><small>{formatDateTime(referenceDate)}</small><span>Detalhes <b aria-hidden="true">⌄</b></span></span>
@@ -666,6 +675,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                       <tr key={order.id}>
                         <td className="ordersCodeCell" data-label="Pedido">
                           <strong>{order.code}</strong>
+                          {order.utmSource?.toLowerCase() === "whatsapp" && order.utmMedium?.toLowerCase() === "meta_ads" && order.utmTerm === "verified_meta_referral" ? <span className="ordersSourceBadge">WhatsApp · anúncio</span> : null}
                         </td>
                         <td className="ordersCustomerCell" data-label="Cliente">
                           <strong>{order.customer.name}</strong>

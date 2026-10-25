@@ -16,12 +16,12 @@ export const preferredRegion = "gru1";
 
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ lotId?: string; adId?: string }>;
+  searchParams: Promise<{ lotId?: string; adId?: string; paidAd?: string }>;
 };
 
 export default async function EventQuantityPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const { lotId, adId } = await searchParams;
+  const { lotId, adId, paidAd } = await searchParams;
   if (slug !== SOROCABA_EVENT_SLUG || !lotId) notFound();
 
   const organization = await getCurrentOrganizationContext();
@@ -62,9 +62,10 @@ export default async function EventQuantityPage({ params, searchParams }: Props)
   const checkoutParams = new URLSearchParams({
     lotId: lot.id,
     utm_source: "whatsapp",
-    utm_medium: "meta_ads",
+    utm_medium: paidAd === "1" ? "meta_ads" : "organic",
     utm_campaign: "rodrigo_sorocaba_whatsapp"
   });
+  if (paidAd === "1") checkoutParams.set("utm_term", "verified_meta_referral");
   if (adId && /^\d{1,30}$/.test(adId)) checkoutParams.set("utm_content", adId);
 
   return (
