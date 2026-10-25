@@ -48,9 +48,18 @@ describe("AI messages in WhatsApp admin", () => {
   });
   it("shows confirmed ad autovenda in Anúncios Meta without mixing ordinary WhatsApp", async () => {
     db.$queryRaw.mockResolvedValue([message]);
-    db.whatsAppMessageLog.findMany.mockImplementation(({ where }) => where?.OR?.some((part: { payload?: { path?: string[] } }) => part.payload?.path?.[0] === "source")
-      ? [{ recipientPhone: message.recipientPhone, payload: { source: "TCR_SOROCABA_SALES", paidAd: true, step: "done" }, createdAt: message.createdAt }]
-      : [message]);
+    let hasDirectAdReferral = false;
+    db.whatsAppMessageLog.findMany.mockImplementation(({ where }) => {
+      if (where?.OR?.some((part: { payload?: { path?: string[] } }) => part.payload?.path?.[0] === "source"))
+        return [{ recipientPhone: message.recipientPhone, payload: { source: "TCR_SOROCABA_SALES", paidAd: true, step: "done" }, createdAt: message.createdAt }];
+      if (where?.OR?.some((part: { webhookPayload?: { path?: string[] } }) => part.webhookPayload?.path?.[0] === "referral"))
+        return hasDirectAdReferral ? [{ recipientPhone: message.recipientPhone, webhookPayload: { referral: { source_type: "ad", source_id: "123" } } }] : [];
+      return [message];
+    });
+    const siteInbox = await getCrmWhatsAppInbox({ organizationId: "org_test" });
+    expect(siteInbox[0]).toMatchObject({ queue: "all", metaSales: false });
+    hasDirectAdReferral = true;
+    clearCrmWhatsAppInboxCache();
     const inbox = await getCrmWhatsAppInbox({ organizationId: "org_test" });
     expect(inbox[0]).toMatchObject({ queue: "meta", metaSales: true, metaSalesStage: "Link de compra enviado" });
   });

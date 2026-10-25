@@ -1,7 +1,7 @@
 import { OrderStatus, Prisma, WhatsAppMessageType, type WhatsAppMessageLog } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { resolveWhatsAppAiConversationMode } from "@/features/ai/whatsapp-support-ai.service";
-import { conversationMembership, isHumanReply, isRefundRequest, metaSalesStage, resolveOperationalQueue } from "@/features/crm/whatsapp-inbox-classification";
+import { conversationMembership, isDirectMetaWhatsAppAdInbound, isHumanReply, isRefundRequest, metaSalesStage, resolveOperationalQueue } from "@/features/crm/whatsapp-inbox-classification";
 
 type EventScope = string[] | null | undefined;
 
@@ -335,7 +335,7 @@ async function loadCrmWhatsAppInbox(input: {
     .map((message) => conversationPhoneKey(message.recipientPhone))
     .filter((key): key is string => Boolean(key))
     .map((key) => `${input.organizationId}:${key}`)));
-  const [orders, phoneOrders, aiStateLogs, workflowLogs, historicalHumanReplies, historicalRefundRequests, metaSalesLogs] = await Promise.all([
+  const [orders, phoneOrders, aiStateLogs, workflowLogs, historicalHumanReplies, historicalRefundRequests, metaSalesLogs, directMetaAdInbounds] = await Promise.all([
     orderIds.length ? prisma.order.findMany({
         where: {
           id: { in: orderIds },
@@ -416,6 +416,18 @@ async function loadCrmWhatsAppInbox(input: {
       },
       orderBy: { createdAt: "desc" },
       select: { recipientPhone: true, payload: true, createdAt: true }
+    }) : Promise.resolve([]),
+    loggedPhoneCandidates.length ? prisma.whatsAppMessageLog.findMany({
+      where: {
+        organizationId: input.organizationId,
+        recipientPhone: { in: loggedPhoneCandidates },
+        status: "RECEIVED",
+        OR: [
+          { webhookPayload: { path: ["_tcrOrigin", "kind"], equals: "meta_ad" } },
+          { webhookPayload: { path: ["referral", "source_type"], equals: "ad" } }
+        ]
+      },
+      select: { recipientPhone: true, webhookPayload: true }
     }) : Promise.resolve([])
   ]);
   const orderById = new Map(orders.map((order) => [order.id, order]));
@@ -430,9 +442,13 @@ async function loadCrmWhatsAppInbox(input: {
       order.utmMedium?.toLowerCase() === "meta_ads" && order.utmTerm === "verified_meta_referral") paidWhatsAppPhones.add(key);
   }
   const metaSalesByPhone = new Map<string, string>();
+  const directMetaAdPhones = new Set(directMetaAdInbounds
+    .filter((log) => isDirectMetaWhatsAppAdInbound(log.webhookPayload))
+    .map((log) => conversationPhoneKey(log.recipientPhone))
+    .filter((key): key is string => Boolean(key)));
   for (const log of metaSalesLogs) {
     const key = conversationPhoneKey(log.recipientPhone);
-    if (!key || metaSalesByPhone.has(key)) continue;
+    if (!key || !directMetaAdPhones.has(key) || metaSalesByPhone.has(key)) continue;
     const stage = metaSalesStage(log.payload);
     if (stage) metaSalesByPhone.set(key, stage);
   }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { conversationMembership, isHumanReply, isRefundRequest, isUnreadConversation, metaSalesStage, resolveOperationalQueue, shouldClearUnread } from "@/features/crm/whatsapp-inbox-classification";
+import { conversationMembership, isDirectMetaWhatsAppAdInbound, isHumanReply, isRefundRequest, isUnreadConversation, metaSalesStage, resolveOperationalQueue, shouldClearUnread } from "@/features/crm/whatsapp-inbox-classification";
 
 describe("classificação independente da caixa de entrada", () => {
   it("o estado lido acompanha a confirmação persistida da mensagem aberta e não apaga uma nova", () => {
@@ -62,5 +62,13 @@ describe("classificação independente da caixa de entrada", () => {
     expect(resolveOperationalQueue({ latestInboundAt: inbound, aiMode: "ACTIVE", refund: false, metaSales: true, manual: null })).toBe("meta");
     expect(resolveOperationalQueue({ latestInboundAt: inbound, aiMode: "HANDOFF", refund: false, metaSales: true, manual: null })).toBe("human");
     expect(resolveOperationalQueue({ latestInboundAt: inbound, aiMode: "ACTIVE", refund: false, metaSales: true, manual: { queue: "all", at: new Date("2026-10-25T12:01:00Z") } })).toBe("all");
+  });
+
+  it("exige o referral de anúncio direto ao WhatsApp, não apenas uma mensagem de autovenda vinda do site", () => {
+    expect(isDirectMetaWhatsAppAdInbound({ referral: { source_type: "ad", source_id: "123" } })).toBe(true);
+    expect(isDirectMetaWhatsAppAdInbound({ _tcrOrigin: { kind: "meta_ad", adId: "123" } })).toBe(true);
+    expect(isDirectMetaWhatsAppAdInbound({ _tcrOrigin: { kind: "support_default" } })).toBe(false);
+    expect(isDirectMetaWhatsAppAdInbound({ text: { body: "Vim pelo anúncio" } })).toBe(false);
+    expect(isDirectMetaWhatsAppAdInbound(null)).toBe(false);
   });
 });

@@ -53,6 +53,18 @@ export function metaSalesStage(payload: unknown): string | null {
   return "Iniciou atendimento";
 }
 
+/** A sales bot response alone does not prove that the customer clicked a WhatsApp ad. */
+export function isDirectMetaWhatsAppAdInbound(webhookPayload: unknown): boolean {
+  if (!webhookPayload || typeof webhookPayload !== "object" || Array.isArray(webhookPayload)) return false;
+  const data = webhookPayload as Record<string, unknown>;
+  const referral = data.referral;
+  if (referral && typeof referral === "object" && !Array.isArray(referral) &&
+    (referral as Record<string, unknown>).source_type === "ad") return true;
+  const origin = data._tcrOrigin;
+  return Boolean(origin && typeof origin === "object" && !Array.isArray(origin) &&
+    (origin as Record<string, unknown>).kind === "meta_ad");
+}
+
 export function conversationMembership(input: {
   latestInboundAt: Date | null;
   latestReadAt: Date | null;
