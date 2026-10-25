@@ -1,7 +1,7 @@
 import { OrderStatus, Prisma, WhatsAppMessageType, type WhatsAppMessageLog } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { resolveWhatsAppAiConversationMode } from "@/features/ai/whatsapp-support-ai.service";
-import { conversationMembership, isDirectMetaWhatsAppAdInbound, isHumanReply, isRefundRequest, metaSalesStage, resolveOperationalQueue } from "@/features/crm/whatsapp-inbox-classification";
+import { conversationMembership, isHumanReply, isRefundRequest, isReplyToRecentDirectMetaAd, metaSalesStage, resolveOperationalQueue } from "@/features/crm/whatsapp-inbox-classification";
 
 type EventScope = string[] | null | undefined;
 
@@ -427,7 +427,7 @@ async function loadCrmWhatsAppInbox(input: {
           { webhookPayload: { path: ["referral", "source_type"], equals: "ad" } }
         ]
       },
-      select: { recipientPhone: true, webhookPayload: true }
+      select: { recipientPhone: true, webhookPayload: true, createdAt: true }
     }) : Promise.resolve([])
   ]);
   const orderById = new Map(orders.map((order) => [order.id, order]));
@@ -442,13 +442,17 @@ async function loadCrmWhatsAppInbox(input: {
       order.utmMedium?.toLowerCase() === "meta_ads" && order.utmTerm === "verified_meta_referral") paidWhatsAppPhones.add(key);
   }
   const metaSalesByPhone = new Map<string, string>();
-  const directMetaAdPhones = new Set(directMetaAdInbounds
-    .filter((log) => isDirectMetaWhatsAppAdInbound(log.webhookPayload))
-    .map((log) => conversationPhoneKey(log.recipientPhone))
-    .filter((key): key is string => Boolean(key)));
+  const directMetaAdByPhone = new Map<string, typeof directMetaAdInbounds>();
+  for (const log of directMetaAdInbounds) {
+    const key = conversationPhoneKey(log.recipientPhone);
+    if (key) directMetaAdByPhone.set(key, [...(directMetaAdByPhone.get(key) || []), log]);
+  }
   for (const log of metaSalesLogs) {
     const key = conversationPhoneKey(log.recipientPhone);
-    if (!key || !directMetaAdPhones.has(key) || metaSalesByPhone.has(key)) continue;
+    if (!key || metaSalesByPhone.has(key) || !isReplyToRecentDirectMetaAd({
+      reply: log,
+      referrals: directMetaAdByPhone.get(key) || []
+    })) continue;
     const stage = metaSalesStage(log.payload);
     if (stage) metaSalesByPhone.set(key, stage);
   }

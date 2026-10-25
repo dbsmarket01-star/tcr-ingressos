@@ -53,7 +53,7 @@ describe("AI messages in WhatsApp admin", () => {
       if (where?.OR?.some((part: { payload?: { path?: string[] } }) => part.payload?.path?.[0] === "source"))
         return [{ recipientPhone: message.recipientPhone, payload: { source: "TCR_SOROCABA_SALES", paidAd: true, step: "done" }, createdAt: message.createdAt }];
       if (where?.OR?.some((part: { webhookPayload?: { path?: string[] } }) => part.webhookPayload?.path?.[0] === "referral"))
-        return hasDirectAdReferral ? [{ recipientPhone: message.recipientPhone, webhookPayload: { referral: { source_type: "ad", source_id: "123" } } }] : [];
+        return hasDirectAdReferral ? [{ recipientPhone: message.recipientPhone, webhookPayload: { referral: { source_type: "ad", source_id: "123" } }, createdAt: new Date(message.createdAt.getTime() - 60_000) }] : [];
       return [message];
     });
     const siteInbox = await getCrmWhatsAppInbox({ organizationId: "org_test" });

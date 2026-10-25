@@ -65,6 +65,25 @@ export function isDirectMetaWhatsAppAdInbound(webhookPayload: unknown): boolean 
     (origin as Record<string, unknown>).kind === "meta_ad");
 }
 
+export function isReplyToRecentDirectMetaAd(input: {
+  reply: { createdAt: Date; payload: unknown };
+  referrals: Array<{ createdAt: Date; webhookPayload: unknown }>;
+}): boolean {
+  const reply = input.reply.payload && typeof input.reply.payload === "object" && !Array.isArray(input.reply.payload)
+    ? input.reply.payload as Record<string, unknown> : {};
+  return input.referrals.some((entry) => {
+    if (!isDirectMetaWhatsAppAdInbound(entry.webhookPayload)) return false;
+    const elapsed = input.reply.createdAt.getTime() - entry.createdAt.getTime();
+    if (elapsed < 0 || elapsed > 24 * 60 * 60 * 1000) return false;
+    const inbound = entry.webhookPayload as Record<string, unknown>;
+    const referral = inbound.referral && typeof inbound.referral === "object" && !Array.isArray(inbound.referral)
+      ? inbound.referral as Record<string, unknown> : {};
+    const sourceId = typeof referral.source_id === "string" ? referral.source_id : null;
+    const replyAdId = typeof reply.adId === "string" ? reply.adId : null;
+    return !sourceId || !replyAdId || sourceId === replyAdId;
+  });
+}
+
 export function conversationMembership(input: {
   latestInboundAt: Date | null;
   latestReadAt: Date | null;

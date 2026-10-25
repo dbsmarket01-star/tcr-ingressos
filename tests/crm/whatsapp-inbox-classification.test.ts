@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { conversationMembership, isDirectMetaWhatsAppAdInbound, isHumanReply, isRefundRequest, isUnreadConversation, metaSalesStage, resolveOperationalQueue, shouldClearUnread } from "@/features/crm/whatsapp-inbox-classification";
+import { conversationMembership, isDirectMetaWhatsAppAdInbound, isHumanReply, isRefundRequest, isReplyToRecentDirectMetaAd, isUnreadConversation, metaSalesStage, resolveOperationalQueue, shouldClearUnread } from "@/features/crm/whatsapp-inbox-classification";
 
 describe("classificação independente da caixa de entrada", () => {
   it("o estado lido acompanha a confirmação persistida da mensagem aberta e não apaga uma nova", () => {
@@ -70,5 +70,15 @@ describe("classificação independente da caixa de entrada", () => {
     expect(isDirectMetaWhatsAppAdInbound({ _tcrOrigin: { kind: "support_default" } })).toBe(false);
     expect(isDirectMetaWhatsAppAdInbound({ text: { body: "Vim pelo anúncio" } })).toBe(false);
     expect(isDirectMetaWhatsAppAdInbound(null)).toBe(false);
+  });
+
+  it("não mistura anúncio antigo ou de outra campanha com uma nova conversa pelo site", () => {
+    const reply = { createdAt: new Date("2026-10-25T12:00:00Z"), payload: { adId: "123" } };
+    const directAd = { createdAt: new Date("2026-10-25T11:59:00Z"), webhookPayload: { referral: { source_type: "ad", source_id: "123" } } };
+    expect(isReplyToRecentDirectMetaAd({ reply, referrals: [directAd] })).toBe(true);
+    expect(isReplyToRecentDirectMetaAd({ reply, referrals: [] })).toBe(false);
+    expect(isReplyToRecentDirectMetaAd({ reply, referrals: [{ ...directAd, createdAt: new Date("2026-10-23T11:59:00Z") }] })).toBe(false);
+    expect(isReplyToRecentDirectMetaAd({ reply, referrals: [{ ...directAd, createdAt: new Date("2026-10-25T12:01:00Z") }] })).toBe(false);
+    expect(isReplyToRecentDirectMetaAd({ reply, referrals: [{ ...directAd, webhookPayload: { referral: { source_type: "ad", source_id: "456" } } }] })).toBe(false);
   });
 });
