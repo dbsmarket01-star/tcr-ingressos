@@ -619,6 +619,16 @@ export async function sendWhatsAppTextMessage(input: {
   }
 }
 
+export function isOfficialWhatsAppPurchaseUrl(rawUrl: string) {
+  try {
+    const destination = new URL(rawUrl);
+    return destination.protocol === "https:" && destination.hostname === "www.tcringressos.app.br" &&
+      /^\/evento\/[^/]+\/(?:checkout|quantidade)$/.test(destination.pathname);
+  } catch {
+    return false;
+  }
+}
+
 export async function sendWhatsAppUrlButtonMessage(input: {
   to: string;
   text: string;
@@ -631,11 +641,10 @@ export async function sendWhatsAppUrlButtonMessage(input: {
 }) {
   const config = getWhatsAppConfig();
   if (!config.token || !config.phoneNumberId) throw new Error("WhatsApp Business API nao configurada.");
-  const destination = new URL(input.url);
-  if (destination.protocol !== "https:" || destination.hostname !== "www.tcringressos.app.br" ||
-      !/^\/evento\/[^/]+\/checkout$/.test(destination.pathname)) {
-    throw new Error("O botão de compra deve abrir somente o checkout oficial da TCR.");
+  if (!isOfficialWhatsAppPurchaseUrl(input.url)) {
+    throw new Error("O botão de compra deve abrir somente o checkout ou seletor de quantidade oficial da TCR.");
   }
+  const destination = new URL(input.url);
   const to = formatPhone(input.to);
   const response = await fetch(`https://graph.facebook.com/${getWhatsAppApiVersion()}/${config.phoneNumberId}/messages`, {
     method: "POST",
