@@ -76,6 +76,11 @@ describe("fluxo completo de Sorocaba sem envio real", () => {
     expect(await processSorocabaSalesJourney({ ...base, text: "Sorocaba" })).toBe(true);
     expect(lists[0].text).toContain("*Rodrigo Teaser em Sorocaba*");
   });
+  it("inicia o menu interativo quando o cliente escreve Rodrigo Tizer em Sorocaba", async () => {
+    expect(await processSorocabaSalesJourney({ ...base, text: "Rodrigo Tizer em Sorocaba" })).toBe(true);
+    expect(lists[0].text).toContain("*Rodrigo Teaser em Sorocaba*");
+    expect(lists[0].rows.some((row) => row.title.includes("Tipos de ingresso"))).toBe(true);
+  });
   it("preserva a origem comprovada do anúncio durante a conversa", async () => {
     await processSorocabaSalesJourney({ ...base, text: greeting, origin: { kind: "meta_ad", adId: "123456" } });
     await processSorocabaSalesJourney({ ...base, text: "🎟️ Tipos de ingresso" });

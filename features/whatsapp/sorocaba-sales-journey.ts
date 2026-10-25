@@ -17,8 +17,7 @@ type Lot = { id: string; name: string; description: string | null; priceInCents:
 export function isSorocabaAdGreeting(text: string) {
   const normalized = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
   if (normalized === "sorocaba") return true;
-  return /rodrigo\s+(teaser|tise|tis)/.test(normalized) && /sorocaba/.test(normalized) &&
-    /(anuncio|interesse|ingresso|informac)/.test(normalized);
+  return /\brodrigo\s+(?:teaser|tiser|tizer|tise|tis)\b/.test(normalized) && /\bsorocaba\b/.test(normalized);
 }
 
 export function sorocabaGroup(name: string) {

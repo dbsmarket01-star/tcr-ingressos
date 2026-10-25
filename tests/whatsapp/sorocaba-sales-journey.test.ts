@@ -5,11 +5,14 @@ import { buildAdSalesCheckoutUrl } from "@/features/whatsapp/ad-sales-checkout";
 describe("jornada de vendas de Sorocaba", () => {
   it("identifica a mensagem do anúncio mesmo sem o identificador do anúncio", () => {
     expect(isSorocabaAdGreeting("Olá, vim pelo anúncio do Rodrigo Tis em Sorocaba e tenho interesse no evento")).toBe(true);
+    expect(isSorocabaAdGreeting("Rodrigo Tizer em Sorocaba")).toBe(true);
+    expect(isSorocabaAdGreeting("Rodrigo Teaser em Sorocaba")).toBe(true);
     expect(isSorocabaAdGreeting("Sorocaba")).toBe(true);
     expect(isSorocabaAdGreeting("  SOROCABA  ")).toBe(true);
     expect(isSorocabaAdGreeting("Quero saber se tem evento em Sorocaba")).toBe(false);
     expect(isSorocabaAdGreeting("Sorocaba, por favor")).toBe(false);
     expect(isSorocabaAdGreeting("Quero ingressos para Rodrigo Teaser em Piracicaba")).toBe(false);
+    expect(isSorocabaAdGreeting("Rodrigo Tizer em Piracicaba")).toBe(false);
   });
 
   it("agrupa setores e apresenta somente o preço do ingresso mais taxas", () => {
