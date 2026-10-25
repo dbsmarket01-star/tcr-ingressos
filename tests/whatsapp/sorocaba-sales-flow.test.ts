@@ -1,13 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const logs: Array<{ payload: Record<string, unknown> }> = [];
-const lists: Array<{ text: string; rows: Array<{ id: string; title: string }>; metadata: Record<string, unknown> }> = [];
+const lists: Array<{ text: string; rows: Array<{ id: string; title: string; description?: string }>; metadata: Record<string, unknown> }> = [];
 const buttons: Array<{ text: string; url: string; metadata: Record<string, unknown> }> = [];
 const media: Array<{ kind: string; mediaUrl: string; caption: string; metadata: Record<string, unknown> }> = [];
 const sendOrder: string[] = [];
 
 const lot = (id: string, name: string, priceInCents: number, options: string[] = []) => ({
-  id, name, priceInCents, status: "ACTIVE", saleBadge: "NONE", totalQuantity: options.length || 100,
+  id, name, description: name.includes("SOLIDÁRIO")
+    ? "Setor com cadeiras, atrás da Cadeira Ouro. Levar 1 kg de alimento não perecível para doação; não serão aceitos sal, açúcar, farinha ou fubá."
+    : name.includes("MEIA ENTRADA")
+      ? "Setor com cadeiras, atrás da Cadeira Ouro. Necessário comprovar o direito à meia-entrada."
+      : null,
+  priceInCents, status: "ACTIVE", saleBadge: "NONE", totalQuantity: options.length || 100,
   reservedQuantity: 0, soldQuantity: 0, minPerOrder: 1, maxPerOrder: 10,
   admissionsPerUnit: name.includes("MESA") ? 4 : 1, salesStartsAt: null, salesEndsAt: null,
   hasTypeOptions: options.length > 0,
@@ -37,7 +42,7 @@ vi.mock("@/features/whatsapp/whatsapp.service", () => ({
   sendWhatsAppTextMessage: vi.fn(async (input: { text: string; source: string; metadata: Record<string, unknown> }) => {
     logs.push({ payload: { source: input.source, ...input.metadata } });
   }),
-  sendWhatsAppListMessage: vi.fn(async (input: { text: string; rows: Array<{ id: string; title: string }>; source: string; metadata: Record<string, unknown> }) => {
+  sendWhatsAppListMessage: vi.fn(async (input: { text: string; rows: Array<{ id: string; title: string; description?: string }>; source: string; metadata: Record<string, unknown> }) => {
     sendOrder.push("list");
     lists.push(input);
     logs.push({ payload: { source: input.source, ...input.metadata } });
@@ -78,11 +83,18 @@ describe("fluxo completo de Sorocaba sem envio real", () => {
     expect(await processSorocabaSalesJourney({ ...base, text: "⚪ Cadeira Prata" })).toBe(true);
     expect(lists[2].text).toContain("*CADEIRA PRATA - MEIA ENTRADA*\nR$ 147,90 + taxas");
     expect(lists[2].text).toContain("*CADEIRA PRATA - SOLIDÁRIO*\nR$ 157,90 + taxas");
+    expect(lists[2].text).toContain("Levar 1 kg de alimento não perecível");
+    expect(lists[2].text).toContain("Necessário comprovar o direito à meia-entrada");
     expect(lists[2].text).not.toContain("CADEIRA OURO");
     expect(lists[2].rows).toHaveLength(2);
+    expect(lists[2].text.length).toBeLessThanOrEqual(1024);
+    expect(lists[2].rows.map((row) => row.title)).toEqual(["Prata · Meia-entrada", "Prata · Solidário"]);
+    expect(lists[2].rows[1].description).toContain("1 kg de alimento");
+    expect(lists[2].rows.every((row) => row.title.length <= 24 && (row.description?.length || 0) <= 72)).toBe(true);
 
     expect(await processSorocabaSalesJourney({ ...base, text: lists[2].rows[0].title })).toBe(true);
     expect(lists[3].text).toContain("*Quantos ingressos você deseja?*");
+    expect(lists[3].text).toContain("Necessário comprovar o direito à meia-entrada");
     expect(await processSorocabaSalesJourney({ ...base, text: "2 ingressos" })).toBe(true);
     expect(buttons).toHaveLength(1);
     expect(buttons[0].text).toContain("*Valor dos ingressos:* R$ 295,80 + taxas");

@@ -11,7 +11,7 @@ const dateTime = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo
 
 type Inbound = { organizationId: string; phone: string; text: string; origin?: { kind?: string; adId?: string | null } };
 type Session = { step?: string; group?: string; lotId?: string; optionId?: string; source?: string; eventSlug?: string; page?: number };
-type Lot = { id: string; name: string; priceInCents: number; available: number; minPerOrder: number; maxPerOrder: number; admissionsPerUnit: number; options: Array<{ id: string; label: string }> };
+type Lot = { id: string; name: string; description: string | null; priceInCents: number; available: number; minPerOrder: number; maxPerOrder: number; admissionsPerUnit: number; options: Array<{ id: string; label: string }> };
 
 export function isSorocabaAdGreeting(text: string) {
   const normalized = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -29,9 +29,47 @@ export function sorocabaGroup(name: string) {
   return "outros";
 }
 
-export function sorocabaLotLine(lot: Pick<Lot, "name" | "priceInCents" | "admissionsPerUnit">) {
+export function sorocabaLotLine(lot: Pick<Lot, "name" | "description" | "priceInCents" | "admissionsPerUnit">) {
   const badge = ({ prata: "⚪", ouro: "🟡", primeira: "🟢", mesa: "🟠", camarote: "🟣", outros: "🎟️" } as const)[sorocabaGroup(lot.name)];
-  return `${badge} *${lot.name}*\n${money.format(lot.priceInCents / 100)} + taxas${lot.admissionsPerUnit > 1 ? ` · ${lot.admissionsPerUnit} pessoas` : ""}`;
+  const details = lot.description?.trim();
+  return `${badge} *${lot.name}*\n${money.format(lot.priceInCents / 100)} + taxas${lot.admissionsPerUnit > 1 ? ` · ${lot.admissionsPerUnit} pessoas` : ""}${details ? `\n${details}` : ""}`;
+}
+
+/** WhatsApp list titles have a 24-character limit; keep each category legible without cutting words. */
+export function sorocabaLotChoiceTitle(name: string) {
+  const group = sorocabaGroup(name);
+  const upper = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+  if (group === "prata" || group === "ouro") {
+    const sector = group === "prata" ? "Prata" : "Ouro";
+    if (upper.includes("MEIA")) return `${sector} · Meia-entrada`;
+    if (upper.includes("SOLIDARIO")) return `${sector} · Solidário`;
+  }
+  if (group === "primeira") return "Primeira fileira";
+  if (group === "mesa") return "Mesa para 4 pessoas";
+  if (group === "camarote") {
+    const number = upper.match(/CAMAROTE\s+(\d+)/)?.[1];
+    if (upper.includes("COMPARTILHADO")) return number ? `Camarote ${number} compart.` : "Camarote compartilhado";
+    if (upper.includes("FECHADO")) {
+      const places = upper.match(/(?:PARA\s+)?(\d+)\s+PESSOAS/)?.[1];
+      return places ? `Camarote fechado ${places}p` : "Camarote fechado";
+    }
+  }
+  const words = name.trim().split(/\s+/);
+  let title = "";
+  for (const word of words) {
+    if (`${title}${title ? " " : ""}${word}`.length > 24) break;
+    title += `${title ? " " : ""}${word}`;
+  }
+  return title || name.slice(0, 24);
+}
+
+function sorocabaLotChoiceDescription(lot: Lot) {
+  const price = `${money.format(lot.priceInCents / 100)} + taxas`;
+  const description = lot.description || "";
+  if (/1\s*kg/i.test(description)) return `${price} · levar 1 kg de alimento`;
+  if (/comprovar/i.test(description)) return `${price} · comprovar meia-entrada`;
+  if (/em p[eé]/i.test(description)) return `${price} · setor em pé`;
+  return price;
 }
 
 async function loadEvent(organizationId: string) {
@@ -41,7 +79,7 @@ async function loadEvent(organizationId: string) {
       id: true, title: true, startsAt: true, venueName: true, venueAddress: true, eventMapImageUrl: true,
       salesStartsAt: true, salesEndsAt: true,
       lots: { orderBy: [{ sortOrder: "asc" }, { id: "asc" }], select: {
-        id: true, name: true, priceInCents: true, status: true, saleBadge: true,
+        id: true, name: true, description: true, priceInCents: true, status: true, saleBadge: true,
         totalQuantity: true, reservedQuantity: true, soldQuantity: true,
         minPerOrder: true, maxPerOrder: true, admissionsPerUnit: true,
         salesStartsAt: true, salesEndsAt: true, hasTypeOptions: true,
@@ -58,7 +96,7 @@ async function loadEvent(organizationId: string) {
     lot.totalQuantity - lot.reservedQuantity - lot.soldQuantity > 0 &&
     (!lot.salesStartsAt || lot.salesStartsAt <= now) && (!lot.salesEndsAt || lot.salesEndsAt > now))
     .map((lot) => ({
-      id: lot.id, name: lot.name, priceInCents: lot.priceInCents,
+      id: lot.id, name: lot.name, description: lot.description, priceInCents: lot.priceInCents,
       available: lot.totalQuantity - lot.reservedQuantity - lot.soldQuantity,
       minPerOrder: lot.minPerOrder, maxPerOrder: lot.maxPerOrder,
       admissionsPerUnit: lot.admissionsPerUnit,
@@ -188,14 +226,14 @@ export async function processSorocabaSalesJourney(input: Inbound): Promise<boole
       return true;
     }
     await list(input, `*Ingressos disponíveis*\n\n${lots.map(sorocabaLotLine).join("\n\n")}\n\n*Qual você prefere?* Toque em “Escolher ingresso”. O total com taxas aparece no checkout antes do pagamento.`,
-      "Escolher ingresso", lots.map((lot) => ({ id: lot.id, title: lot.name.slice(0, 24), description: `${money.format(lot.priceInCents / 100)} + taxas` })),
+      "Escolher ingresso", lots.map((lot) => ({ id: lot.id, title: sorocabaLotChoiceTitle(lot.name), description: sorocabaLotChoiceDescription(lot) })),
       "lot", { group: selected });
     return true;
   }
 
   if (session.step === "lot") {
     const lots = event.lots.filter((lot) => sorocabaGroup(lot.name) === session.group);
-    const selectedId = choice(input.text, lots.map((entry) => ({ id: entry.id, title: entry.name.slice(0, 24) })));
+    const selectedId = choice(input.text, lots.map((entry) => ({ id: entry.id, title: sorocabaLotChoiceTitle(entry.name) })));
     const lot = lots.find((item) => item.id === selectedId || item.name.toLocaleLowerCase("pt-BR") === input.text.trim().toLocaleLowerCase("pt-BR"));
     if (!lot) return false;
     if (lot.options.length) {

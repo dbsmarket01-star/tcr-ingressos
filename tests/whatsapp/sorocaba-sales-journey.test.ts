@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isSorocabaAdGreeting, sorocabaGroup, sorocabaLotLine } from "@/features/whatsapp/sorocaba-sales-journey";
+import { isSorocabaAdGreeting, sorocabaGroup, sorocabaLotChoiceTitle, sorocabaLotLine } from "@/features/whatsapp/sorocaba-sales-journey";
 import { buildAdSalesCheckoutUrl } from "@/features/whatsapp/ad-sales-checkout";
 
 describe("jornada de vendas de Sorocaba", () => {
@@ -14,8 +14,19 @@ describe("jornada de vendas de Sorocaba", () => {
     expect(sorocabaGroup("PRIMEIRA FILEIRA - EXCLUSIVO")).toBe("primeira");
     expect(sorocabaGroup("MESA PARA 04 PESSOAS")).toBe("mesa");
     expect(sorocabaGroup("CAMAROTE 05 - COMPARTILHADO")).toBe("camarote");
-    expect(sorocabaLotLine({ name: "CADEIRA PRATA - MEIA ENTRADA", priceInCents: 14790, admissionsPerUnit: 1 }))
+    expect(sorocabaLotLine({ name: "CADEIRA PRATA - MEIA ENTRADA", description: null, priceInCents: 14790, admissionsPerUnit: 1 }))
       .toBe("⚪ *CADEIRA PRATA - MEIA ENTRADA*\nR$ 147,90 + taxas");
+  });
+
+  it("mostra títulos completos dentro do limite da Meta e explica a regra do ingresso", () => {
+    expect(sorocabaLotChoiceTitle("CADEIRA PRATA - MEIA ENTRADA")).toBe("Prata · Meia-entrada");
+    expect(sorocabaLotChoiceTitle("CADEIRA PRATA - SOLIDÁRIO")).toBe("Prata · Solidário");
+    expect(sorocabaLotChoiceTitle("CAMAROTE 05 - COMPARTILHADO")).toBe("Camarote 05 compart.");
+    expect(sorocabaLotChoiceTitle("CAMAROTE FECHADO PARA 08 PESSOAS")).toBe("Camarote fechado 08p");
+    expect(sorocabaLotLine({
+      name: "CADEIRA PRATA - SOLIDÁRIO", priceInCents: 15790, admissionsPerUnit: 1,
+      description: "Setor com cadeiras, atrás da Cadeira Ouro. Levar 1 kg de alimento não perecível para doação."
+    })).toContain("Levar 1 kg de alimento não perecível");
   });
 
   it("leva a opção numerada correta para o checkout", () => {
