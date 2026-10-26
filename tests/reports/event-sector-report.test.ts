@@ -50,6 +50,32 @@ describe("event sector report", () => {
     expect(report?.total).toBe(29);
     expect(db.ticket.groupBy.mock.calls.at(-1)?.[0].by).toContain("lotOptionId");
   });
+  it("does not list an unsold camarote option as a sale", async () => {
+    db.event.findFirst.mockResolvedValue({ id: "event", title: "Rodrigo Teaser em São Caetano do Sul", slug: "sao-caetano", lots: [
+      { id: "box", name: "CAMAROTE PARA 10 PESSOAS", typeOptions: [{ id: "m3", label: "M3" }, { id: "m8", label: "M8" }], seatSections: [] },
+      { id: "empty", name: "PISTA - MEIA", typeOptions: [], seatSections: [] }
+    ] });
+    db.ticket.groupBy.mockResolvedValue([{ lotId: "box", seatId: null, lotOptionId: "m3", orderItemId: "sold", _count: { _all: 10 } }]);
+    db.orderItem.findMany.mockResolvedValueOnce([{ id: "sold", totalInCents: 147900, order: { totalInCents: 147900, refundedInCents: 0 } }]);
+    const report = await getEventSectorReport("org", "event");
+    expect(report?.rows).toEqual([{ name: "CAMAROTE M3", quantity: 10, revenueInCents: 147900 }]);
+    expect(report?.total).toBe(10);
+    const pdf = buildEventSectorPdf(report!).toString("latin1");
+    expect(pdf).toContain("CAMAROTE M3");
+    expect(pdf).not.toContain("CAMAROTE M8");
+    expect(pdf).not.toContain("PISTA");
+  });
+  it("does not list any configured sector when the event has no paid admissions", async () => {
+    db.event.findFirst.mockResolvedValue({ id: "event", title: "Evento sem vendas", slug: "sem-vendas", lots: [
+      { id: "lot", name: "CAMAROTE M8", typeOptions: [], seatSections: [] }
+    ] });
+    db.ticket.groupBy.mockResolvedValue([]);
+    db.orderItem.findMany.mockResolvedValueOnce([]);
+    const report = await getEventSectorReport("org", "event");
+    expect(report?.rows).toEqual([]);
+    expect(report?.total).toBe(0);
+    expect(buildEventSectorPdf(report!).toString("latin1")).not.toContain("CAMAROTE M8");
+  });
   it("allocates package revenue once and preserves cents across sectors", async () => {
     expect(allocateSectorRevenue(10000, [1, 1, 1])).toEqual([3333, 3334, 3333]);
     expect(allocateSectorRevenue(0, [10])).toEqual([0]);

@@ -44,12 +44,9 @@ export async function getEventSectorReport(organizationId: string, eventId: stri
     && !/compartilhado/i.test(lot.name);
   const boxName = (label: string) => /\bcamarote\b/i.test(label) ? label : `CAMAROTE ${label}`;
   let solidarityTotal = 0;
-  const entries = (filter ? [] : event.lots).flatMap(lot => {
-    const names = isPrivateBox(lot) && lot.typeOptions.length
-      ? lot.typeOptions.map(option => boxName(option.label))
-      : lot.seatSections.length ? lot.seatSections.map(section => section.name) : [lotSector(lot)];
-    return names.map(name => ({ name, quantity: 0 }));
-  });
+  // This is a sales report, not an inventory report. Only issued admissions
+  // from paid orders may create a row; unsold lots/options must stay out.
+  const entries: Array<{ name: string; quantity: number }> = [];
   for (const row of counts) {
     const lot = lots.get(row.lotId);
     const option = lot?.typeOptions.find(option => option.id === row.lotOptionId);
