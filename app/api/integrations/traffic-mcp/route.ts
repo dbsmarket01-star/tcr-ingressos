@@ -46,7 +46,15 @@ function unauthorized() {
 }
 
 export async function POST(request: Request) {
-  if (!isTrafficReportAuthorized(request)) return unauthorized();
+  if (!isTrafficReportAuthorized(request)) {
+    // Diagnostic metadata only: never log the credential or any request body.
+    console.warn("[traffic-mcp] Unauthorized request", {
+      hasAuthorization: request.headers.has("authorization"),
+      bearerScheme: /^Bearer /i.test(request.headers.get("authorization") ?? ""),
+      hasApiKey: request.headers.has("x-api-key")
+    });
+    return unauthorized();
+  }
   try {
     const response = await handler.fetch(request);
     response.headers.set("Cache-Control", "no-store");
