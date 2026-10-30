@@ -5,7 +5,9 @@ Ele expõe apenas `listar_eventos` e `vendas_por_evento`; não oferece escrita n
 CPF, telefone, e-mail ou pedidos individuais. A organização é sempre a TCR Ingressos.
 
 O acesso requer o segredo servidor `TRAFFIC_REPORT_API_TOKEN` (mínimo de 32 caracteres),
-enviado no cabeçalho `Authorization: Bearer <segredo>`. O segredo deve existir como variável
+enviado no cabeçalho `Authorization: Bearer <segredo>`. Por compatibilidade com cabeçalhos
+fixos do Claude, o valor hexadecimal do segredo sem o prefixo `Bearer` também é aceito.
+O segredo deve existir como variável
 Secret de produção na Vercel e nunca ser colocado no repositório, URL ou mensagem de chat.
 Sem o segredo configurado, o endpoint responde 401. Para revogar o acesso, rotacione ou
 remova esse segredo na Vercel e desconecte o conector no Claude.

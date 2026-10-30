@@ -34,6 +34,16 @@ describe("traffic MCP access", () => {
     expect(response.status).toBe(401);
   });
 
+  it("accepts the same dedicated secret sent as a raw authorization value", async () => {
+    const rawToken = "a".repeat(96);
+    process.env.TRAFFIC_REPORT_API_TOKEN = rawToken;
+    const response = await POST(new Request("https://example.test/api/integrations/traffic-mcp", {
+      method: "POST", headers: { Authorization: rawToken, "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: {} })
+    }));
+    expect(response.status).toBe(200);
+  });
+
   it("answers the MCP initialize handshake and lists read-only tools", async () => {
     process.env.TRAFFIC_REPORT_API_TOKEN = token;
     const url = "https://example.test/api/integrations/traffic-mcp";

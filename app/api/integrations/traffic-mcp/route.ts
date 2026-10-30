@@ -51,6 +51,7 @@ export async function POST(request: Request) {
     console.warn("[traffic-mcp] Unauthorized request", {
       hasAuthorization: request.headers.has("authorization"),
       bearerScheme: /^Bearer /i.test(request.headers.get("authorization") ?? ""),
+      authorizationLength: request.headers.get("authorization")?.length ?? 0,
       hasApiKey: request.headers.has("x-api-key")
     });
     return unauthorized();
