@@ -26,6 +26,7 @@
     "worker:whatsapp": "node node_modules/tsx/dist/cli.mjs scripts/whatsapp-campaign-worker.ts --run"
   },
   "dependencies": {
+    "@modelcontextprotocol/server": "^2.4.0",
     "@prisma/client": "6.19.3",
     "@zxing/browser": "^0.1.5",
     "bcryptjs": "3.0.3",
