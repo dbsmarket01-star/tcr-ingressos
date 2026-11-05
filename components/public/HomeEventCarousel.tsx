@@ -19,6 +19,7 @@ type ShowcaseEvent = {
 
 type HomeEventCarouselProps = {
   events: ShowcaseEvent[];
+  trackingQuery?: string;
 };
 
 const carouselAutoRotationMs = 5000;
@@ -69,7 +70,7 @@ function formatPrice(valueInCents?: number) {
   }).format(valueInCents / 100)}`;
 }
 
-export function HomeEventCarousel({ events }: HomeEventCarouselProps) {
+export function HomeEventCarousel({ events, trackingQuery }: HomeEventCarouselProps) {
   const railRef = useRef<HTMLDivElement | null>(null);
   const autoRotationIntervalRef = useRef<number | null>(null);
   const hasCarouselControls = events.length > 1;
@@ -177,7 +178,7 @@ export function HomeEventCarousel({ events }: HomeEventCarouselProps) {
                 {event.city}, {event.state}
               </p>
               <strong>{formatPrice(event.lots[0]?.priceInCents)}</strong>
-              <Link className="tcrEventCardButton" href={`/evento/${event.slug}`}>
+              <Link className="tcrEventCardButton" href={`/evento/${event.slug}${trackingQuery ? `?${trackingQuery}` : ""}`}>
                 <span>Ver ingressos</span>
                 <ArrowIcon />
               </Link>

@@ -15,6 +15,12 @@ type HomePageProps = {
     success?: string;
     error?: string;
     q?: string;
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    utm_content?: string;
+    utm_term?: string;
+    ref?: string;
   }>;
 };
 
@@ -254,6 +260,11 @@ export default async function Home({ searchParams }: HomePageProps) {
   const organizationContext = await getCurrentOrganizationContext();
   const isPlatformHost = organizationContext.isPlatformHost;
   const query = searchParams ? await searchParams : {};
+  const eventTrackingParams = new URLSearchParams();
+  for (const key of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "ref"] as const) {
+    const value = query[key];
+    if (typeof value === "string" && value.trim()) eventTrackingParams.set(key, value.trim().slice(0, 240));
+  }
 
   if (isPlatformHost) {
     const platformLeadMessage = getPlatformLeadMessage(query.success, query.error);
@@ -564,7 +575,7 @@ export default async function Home({ searchParams }: HomePageProps) {
             <h2>Próximos eventos</h2>
           </div>
         </div>
-        <HomeEventCarousel events={events} />
+        <HomeEventCarousel events={events} trackingQuery={eventTrackingParams.toString()} />
       </section>
 
       <section className="container" id="como-funciona">
