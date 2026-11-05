@@ -12,6 +12,7 @@ const prismaMock = {
     findUniqueOrThrow: vi.fn()
   },
   order: {
+    findMany: vi.fn(),
     update: vi.fn(),
     updateMany: vi.fn()
   },
@@ -82,6 +83,7 @@ describe("payment webhook conflict handling", () => {
     prismaMock.paymentRefund.findUnique.mockResolvedValue(null);
     prismaMock.seatReservation.findMany.mockResolvedValue([]);
     prismaMock.orderSeat.findMany.mockResolvedValue([]);
+    prismaMock.order.findMany.mockResolvedValue([]);
     sendTicketsEmailMock.mockResolvedValue({
       provider: "resend",
       providerId: "email_expired",

@@ -88,6 +88,10 @@ type AsaasPaymentResponse = {
   bankSlipUrl?: string;
   status?: string;
   externalReference?: string;
+  billingType?: string;
+  value?: number;
+  installment?: string;
+  installmentCount?: number;
   errors?: Array<{ description?: string }>;
 };
 
@@ -453,6 +457,16 @@ export class AsaasPaymentProvider implements PaymentProvider {
     return this.request<AsaasPaymentStatusResponse>(`/payments/${paymentId}`, {
       method: "GET"
     });
+  }
+
+  async findPaymentsByOrderCode(orderCode: string): Promise<AsaasPaymentStatusResponse[]> {
+    const response = await this.request<{ data?: AsaasPaymentStatusResponse[] }>(
+      `/payments?externalReference=${encodeURIComponent(orderCode)}&limit=100`,
+      { method: "GET" }
+    );
+
+    // Never trust a search response alone to attach a charge to an order.
+    return (response.data || []).filter((payment) => payment.externalReference === orderCode);
   }
 }
 

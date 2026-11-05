@@ -28,6 +28,7 @@ import {
 } from "@/features/pricing/organization-pricing-policy";
 import { getAsaasProvider, getPaymentProvider } from "./payment-provider";
 import type { PaymentOrganizationContext } from "./payment-organization-config";
+import { getPaymentProviderNameForOrganization } from "./payment-organization-config";
 import type { CreditCardPaymentInput as CreditCardFormInput } from "./credit-card.schema";
 
 type WebhookPayload = {
@@ -728,6 +729,82 @@ function wait(milliseconds: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
 }
 
+async function recoverUnlinkedAsaasPayment(orderCode: string) {
+  const order = await prisma.order.findUnique({
+    where: { code: orderCode },
+    include: {
+      payment: true,
+      event: { include: { organization: { select: paymentOrganizationSelect } } }
+    }
+  });
+
+  if (!order?.payment || order.payment.externalId || order.payment.provider !== "SIMULATED" ||
+      (order.status !== OrderStatus.PENDING_PAYMENT && order.status !== OrderStatus.EXPIRED && order.status !== OrderStatus.CANCELED)) {
+    return false;
+  }
+
+  if (getPaymentProviderNameForOrganization(order.event.organization) !== "ASAAS") return false;
+
+  const asaas = getAsaasProvider(order.event.organization);
+  const charges = await asaas.findPaymentsByOrderCode(orderCode);
+  if (charges.length === 0) return false;
+
+  // Several rows are valid only for one complete card installment plan. Two
+  // independent charges for the same order require manual reconciliation.
+  const installment = charges[0].installment;
+  if (charges.length > 1 && (!installment || charges.some((charge) => charge.installment !== installment) ||
+      (charges[0].installmentCount && charges.length !== charges[0].installmentCount))) {
+    throw new Error(`Cobranças ambíguas no Asaas para ${orderCode}.`);
+  }
+
+  const statuses = charges.map((charge) => mapAsaasPaymentStatus(charge.status));
+  if (statuses.some((status) => status === "REFUNDED") ||
+      (charges.length > 1 && statuses.some((status) => status !== "APPROVED"))) {
+    throw new Error(`Parcelamento incompleto ou estornado no Asaas para ${orderCode}.`);
+  }
+
+  const amountInCents = charges.reduce((sum, charge) => sum + Math.round((charge.value || 0) * 100), 0);
+  if (!charges[0].id || amountInCents <= 0) {
+    throw new Error(`Cobrança sem identificador ou valor no Asaas para ${orderCode}.`);
+  }
+
+  const cardInterestInCents = charges[0].billingType === "CREDIT_CARD"
+    ? Math.max(amountInCents - order.subtotalInCents - order.serviceFeeInCents + order.discountInCents, 0)
+    : order.cardInterestInCents;
+  const status = statuses.every((item) => item === "APPROVED") ? "APPROVED" : statuses[0];
+
+  const claimed = await prisma.$transaction(async (tx) => {
+    const result = await tx.payment.updateMany({
+      where: { id: order.payment!.id, provider: "SIMULATED", externalId: null },
+      data: {
+        provider: "ASAAS",
+        externalId: charges[0].id,
+        status: order.status === OrderStatus.PENDING_PAYMENT ? PaymentStatus.PENDING : order.payment!.status,
+        amountInCents,
+        rawPayload: charges[0] as Prisma.InputJsonValue
+      }
+    });
+    if (result.count !== 1) return false;
+    await tx.order.update({
+      where: { id: order.id },
+      data: { totalInCents: amountInCents, cardInterestInCents }
+    });
+    return true;
+  });
+
+  if (claimed) {
+    await handlePaymentWebhook({
+      externalId: charges[0].id,
+      orderCode,
+      provider: "ASAAS",
+      status,
+      rawPayload: charges[0]
+    });
+  }
+
+  return claimed;
+}
+
 export async function reconcileAsaasPayments(
   options?: ReconcileAsaasPaymentsOptions
 ): Promise<AsaasPaymentReconciliationResult> {
@@ -894,6 +971,45 @@ export async function reconcileAsaasPayments(
     }
   }
 
+  // A card may have been charged before the subsequent local payment update
+  // failed. Such orders still look SIMULATED and were invisible to the normal
+  // reconciliation above. Search by the immutable order reference instead.
+  if (!result.rateLimited) {
+    const unlinkedOrders = await prisma.order.findMany({
+      where: {
+        createdAt: { gte: since },
+        status: { in: [OrderStatus.PENDING_PAYMENT, OrderStatus.EXPIRED, OrderStatus.CANCELED] },
+        payment: { is: { provider: "SIMULATED", externalId: null } },
+        ...(options?.organizationId ? { event: { organizationId: options.organizationId } } : {})
+      },
+      select: { code: true },
+      orderBy: { createdAt: "desc" },
+      take: Math.min(limit, 50)
+    });
+
+    for (const order of unlinkedOrders) {
+      try {
+        await wait(requestDelayMs);
+        result.checked += 1;
+        if (await recoverUnlinkedAsaasPayment(order.code)) {
+          result.synced += 1;
+          const updated = await prisma.order.findUnique({ where: { code: order.code }, select: { status: true } });
+          if (updated?.status === OrderStatus.PAID) result.approved += 1;
+          else result.pending += 1;
+        } else {
+          result.skipped += 1;
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        result.errors.push({ orderCode: order.code, externalId: "", message });
+        if (isAsaasRateLimitError(message)) {
+          result.rateLimited = true;
+          break;
+        }
+      }
+    }
+  }
+
   return result;
 }
 
@@ -961,6 +1077,12 @@ export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & {
 
   if (Math.ceil(cardTotalInCents / input.installments) < MIN_CARD_INSTALLMENT_AMOUNT_IN_CENTS) {
     throw new Error("Não foi possível cobrar cartão: cada parcela precisa ser de pelo menos R$ 5,00.");
+  }
+
+  // A previous attempt may have succeeded at Asaas but failed before the local
+  // write. Reattach it instead of charging the customer's card a second time.
+  if (await recoverUnlinkedAsaasPayment(order.code)) {
+    return prisma.payment.findUniqueOrThrow({ where: { id: order.payment.id } });
   }
 
   const asaas = getAsaasProvider(order.event.organization);
