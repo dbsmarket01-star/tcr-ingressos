@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const findAsaasWebhookOrganizationMock = vi.fn();
 const handlePaymentWebhookMock = vi.fn();
+const recoverUnlinkedAsaasPaymentMock = vi.fn();
 const syncAsaasPaymentByExternalIdMock = vi.fn();
 const organizationFindManyMock = vi.fn();
 const getAsaasWebhookTokenForOrganizationMock = vi.fn();
@@ -9,6 +10,7 @@ const getAsaasWebhookTokenForOrganizationMock = vi.fn();
 vi.mock("@/features/payments/payment.service", () => ({
   findAsaasWebhookOrganization: findAsaasWebhookOrganizationMock,
   handlePaymentWebhook: handlePaymentWebhookMock,
+  recoverUnlinkedAsaasPayment: recoverUnlinkedAsaasPaymentMock,
   syncAsaasPaymentByExternalId: syncAsaasPaymentByExternalIdMock
 }));
 
@@ -46,6 +48,7 @@ describe("Asaas payment webhook route", () => {
     vi.clearAllMocks();
 
     findAsaasWebhookOrganizationMock.mockResolvedValue(null);
+    recoverUnlinkedAsaasPaymentMock.mockResolvedValue(false);
     syncAsaasPaymentByExternalIdMock.mockResolvedValue({
       handled: false,
       reason: "not_found"

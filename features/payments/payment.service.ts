@@ -729,7 +729,7 @@ function wait(milliseconds: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
 }
 
-async function recoverUnlinkedAsaasPayment(orderCode: string) {
+export async function recoverUnlinkedAsaasPayment(orderCode: string) {
   const order = await prisma.order.findUnique({
     where: { code: orderCode },
     include: {
@@ -752,8 +752,8 @@ async function recoverUnlinkedAsaasPayment(orderCode: string) {
   // Several rows are valid only for one complete card installment plan. Two
   // independent charges for the same order require manual reconciliation.
   const installment = charges[0].installment;
-  if (charges.length > 1 && (!installment || charges.some((charge) => charge.installment !== installment) ||
-      (charges[0].installmentCount && charges.length !== charges[0].installmentCount))) {
+  if ((charges[0].installmentCount && charges.length !== charges[0].installmentCount) ||
+      (charges.length > 1 && (!installment || charges.some((charge) => charge.installment !== installment)))) {
     throw new Error(`Cobranças ambíguas no Asaas para ${orderCode}.`);
   }
 
