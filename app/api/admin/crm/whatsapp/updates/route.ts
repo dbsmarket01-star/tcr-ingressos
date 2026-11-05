@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
+import { canAccessArea, getAdminAllowedEventIds, getCurrentAdmin } from "@/features/auth/auth.service";
 import { getCrmWhatsAppNotificationDelta } from "@/features/crm/whatsapp-chat.service";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const admin = await requirePermission("CRM");
+  const admin = await getCurrentAdmin();
+  if (!admin) return NextResponse.json({ error: "Sua sessão expirou.", code: "SESSION_EXPIRED" }, { status: 401, headers: { "Cache-Control": "no-store" } });
+  if (!canAccessArea(admin.role, "CRM")) return NextResponse.json({ error: "Acesso ao CRM não autorizado." }, { status: 403 });
   const afterAt = new Date(request.nextUrl.searchParams.get("afterAt") || "");
   const afterId = request.nextUrl.searchParams.get("afterId") || "";
   if (Number.isNaN(afterAt.getTime()) || !afterId || afterId.length > 100) {

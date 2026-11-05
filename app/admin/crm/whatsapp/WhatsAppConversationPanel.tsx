@@ -54,6 +54,7 @@ export function WhatsAppConversationPanel({ initialConversation, initialAiState,
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState("");
   const [error, setError] = useState("");
+  const [sessionExpired, setSessionExpired] = useState(false);
   const requestId = useRef(0);
   const historyScrollAnchor = useRef<{ height: number; top: number } | null>(null);
   const activeRequestId = useRef<number | null>(null);
@@ -66,6 +67,7 @@ export function WhatsAppConversationPanel({ initialConversation, initialAiState,
     selectionRef.current = next;
     setSelection(next);
     setError("");
+    setSessionExpired(false);
     setHistoryError("");
     setHistoryLoading(false);
     historyScrollAnchor.current = null;
@@ -76,7 +78,9 @@ export function WhatsAppConversationPanel({ initialConversation, initialAiState,
     if (next.leadId) query.set("leadId", next.leadId);
     try {
       const response = await fetch(`/api/admin/crm/whatsapp/conversation?${query}`, { cache: "no-store" });
+      if (response.status === 401) { setSessionExpired(true); throw new Error("Sua sessão expirou. Entre novamente para continuar o atendimento."); }
       if (!response.ok) throw new Error("Não foi possível abrir a conversa. Tente novamente.");
+      if (!response.headers.get("content-type")?.includes("application/json")) throw new Error("O servidor não retornou a conversa. Atualize a página e tente novamente.");
       const data = await response.json() as { conversation: Conversation; aiState: AiState };
       if (id !== requestId.current) return;
       const resolvedSelection = { ...next, phone: data.conversation.contact?.phone || next.phone };
@@ -114,7 +118,9 @@ export function WhatsAppConversationPanel({ initialConversation, initialAiState,
     setHistoryError("");
     try {
       const response = await fetch(`/api/admin/crm/whatsapp/conversation?${query}`, { cache: "no-store" });
+      if (response.status === 401) { setSessionExpired(true); throw new Error("Sua sessão expirou. Entre novamente para consultar o histórico."); }
       if (!response.ok) throw new Error("Não foi possível carregar mensagens anteriores.");
+      if (!response.headers.get("content-type")?.includes("application/json")) throw new Error("O servidor não retornou o histórico. Atualize a página e tente novamente.");
       const data = await response.json() as { conversation: Conversation };
       if (id !== requestId.current) return;
       const container = document.querySelector<HTMLElement>(".crmWhatsappMessages");
@@ -141,6 +147,15 @@ export function WhatsAppConversationPanel({ initialConversation, initialAiState,
     if (container) container.scrollTop = anchor.top + container.scrollHeight - anchor.height;
     historyScrollAnchor.current = null;
   }, [conversation.messages]);
+
+  useEffect(() => {
+    const expired = () => {
+      setSessionExpired(true);
+      setError("Sua sessão expirou. Entre novamente para continuar o atendimento.");
+    };
+    window.addEventListener("tcr:whatsapp-session-expired", expired);
+    return () => window.removeEventListener("tcr:whatsapp-session-expired", expired);
+  }, []);
 
   useEffect(() => {
     const select = (event: Event) => {
@@ -198,7 +213,7 @@ export function WhatsAppConversationPanel({ initialConversation, initialAiState,
   let lastDay = "";
   return <div className="crmWhatsappConversation">
     <WhatsAppMessageScroller conversationKey={`${contact?.phone || "empty"}:${conversation.messages.at(-1)?.id || "none"}`}/>
-    {error ? <div className="crmWhatsappFeedback isError" role="alert">{error}</div> : null}
+    {error ? <div className="crmWhatsappFeedback isError" role="alert">{error} {sessionExpired ? <a href="/login">Entrar novamente</a> : null}</div> : null}
     {loading ? <div className="crmWhatsappNotice" role="status">Abrindo conversa…</div> : null}
     {contact?.phone && hasUnread && !loading && phoneKey(contact.phone) === phoneKey(selectedPhone) ? <WhatsAppReadMarker key={`${contact.phone}:${[...conversation.messages].reverse().find((message) => message.direction === "inbound")?.id || "none"}`} phone={contact.phone} messageId={[...conversation.messages].reverse().find((message) => message.direction === "inbound")?.id || null}/> : null}
     <header className="crmWhatsappConversationHeader"><div className="crmWhatsappContactIdentity"><span className="crmWhatsappContactAvatar">{initials(contact?.name)}</span><span><strong>{contact?.name || "Selecione uma conversa"}</strong><small>{contact?.phone || "Caixa de entrada do WhatsApp"}</small></span></div><div className="crmWhatsappContactTags">{eventTags[0] ? <span>{eventTags[0]}</span> : null}{eventTags[1] ? <span>{eventTags[1]}</span> : null}{contact ? <span className="isBuyer">• Comprador</span> : null}</div><div className="crmWhatsappConversationActions">{contact ? <Link href={contact.orderCode ? `/admin/crm?search=${encodeURIComponent(contact.orderCode)}` : "/admin/crm"}>Ver no Kanban</Link> : null}{contact ? <form action={setCrmWhatsAppAiMode}><input name="orderCode" type="hidden" value={selection.orderCode || ""}/><input name="leadId" type="hidden" value={selection.leadId || ""}/><input name="phone" type="hidden" value={selectedPhone}/><input name="mode" type="hidden" value={aiState.mode === "ACTIVE" ? "PAUSED" : "ACTIVE"}/><button title={aiState.reason || ""} type="submit" style={{ appearance: "none", background: aiState.mode === "ACTIVE" ? "#ecfdf5" : aiState.mode === "HANDOFF" ? "#fff7ed" : "#fff", border: `1px solid ${aiState.mode === "ACTIVE" ? "#34d399" : aiState.mode === "HANDOFF" ? "#fb923c" : "#cbd5e1"}`, borderRadius: 10, color: aiState.mode === "ACTIVE" ? "#047857" : aiState.mode === "HANDOFF" ? "#c2410c" : "#334155", cursor: "pointer", fontSize: 12, fontWeight: 800, minHeight: 36, padding: "0 12px" }}>{aiState.mode === "ACTIVE" ? "IA atendendo" : aiState.mode === "HANDOFF" ? "Atendente solicitado" : "Ativar IA"}</button></form> : null}<span className={conversation.canReply ? "isOpen" : "isClosed"}>{conversation.canReply ? "Atendimento aberto" : "Fora da janela de 24h"}</span></div></header>

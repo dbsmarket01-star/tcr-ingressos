@@ -128,7 +128,12 @@ export function WhatsAppNotificationWatcher({
           cache: "no-store",
           headers: { Accept: "application/json" }
         });
-        if (!response.ok) return;
+        if (response.status === 401) {
+          window.dispatchEvent(new Event("tcr:whatsapp-session-expired"));
+          stopped = true;
+          return;
+        }
+        if (!response.ok || !response.headers.get("content-type")?.includes("application/json")) return;
         const delta = (await response.json()) as { messages: NotificationSnapshot[]; hasMore: boolean };
         hasMore = delta.hasMore;
         for (const message of delta.messages) {

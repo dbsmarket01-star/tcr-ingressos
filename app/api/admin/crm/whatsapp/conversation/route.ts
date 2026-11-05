@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
+import { canAccessArea, getAdminAllowedEventIds, getCurrentAdmin } from "@/features/auth/auth.service";
 import { getCrmWhatsAppConversation } from "@/features/crm/whatsapp-chat.service";
 import { getWhatsAppAiConversationState } from "@/features/ai/whatsapp-support-ai.service";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const admin = await requirePermission("CRM");
+  const admin = await getCurrentAdmin();
+  if (!admin) return NextResponse.json({ error: "Sua sessão expirou. Entre novamente para continuar o atendimento.", code: "SESSION_EXPIRED" }, { status: 401, headers: { "Cache-Control": "no-store" } });
+  if (!canAccessArea(admin.role, "CRM")) return NextResponse.json({ error: "Acesso ao CRM não autorizado." }, { status: 403 });
   const phone = request.nextUrl.searchParams.get("phone") || undefined;
   const orderCode = request.nextUrl.searchParams.get("orderCode") || undefined;
   const leadId = request.nextUrl.searchParams.get("leadId") || undefined;
