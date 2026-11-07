@@ -39,7 +39,10 @@ function formatEventDate(value: Date) {
 export function buildEventSeo(event: EventSeoInput) {
   const date = formatEventDate(event.startsAt);
   const location = `${event.venueName}, ${event.city}-${event.state}`;
-  const automaticTitle = compactText(`${event.title} | Ingressos oficiais`, 58);
+  const shortDate = new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit", month: "2-digit", timeZone: BRAZIL_TIME_ZONE
+  }).format(event.startsAt);
+  const automaticTitle = compactText(`${event.title} – ${shortDate} | Ingressos oficiais`, 70);
   const automaticDescription = compactText(
     `${event.subtitle ? `${event.subtitle}. ` : ""}Compre ingressos para ${event.title} em ${date}, no ${location}. ${event.description}`,
     155

@@ -1,20 +1,22 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
+import { getCanonicalPublicBaseUrl } from "@/features/seo/public-url";
 
 export const dynamic = "force-dynamic";
 
-function getAppUrl() {
-  return (process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || "http://localhost:3000").replace(/\/$/, "");
-}
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const appUrl = getAppUrl();
+  const context = await getCurrentOrganizationContext();
+  const appUrl = getCanonicalPublicBaseUrl(context);
+  const now = new Date();
   let events: Array<{ slug: string; updatedAt: Date }> = [];
 
   try {
     events = await prisma.event.findMany({
       where: {
-        status: "PUBLISHED"
+        organizationId: context.organization.id,
+        status: "PUBLISHED",
+        OR: [{ endsAt: { gte: now } }, { endsAt: null, startsAt: { gte: now } }]
       },
       orderBy: {
         startsAt: "desc"
@@ -31,7 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     {
       url: appUrl,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "daily",
       priority: 0.8
     },

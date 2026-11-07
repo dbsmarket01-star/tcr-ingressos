@@ -24,6 +24,8 @@ import {
   isFeeFreeOrganization
 } from "@/features/pricing/organization-pricing-policy";
 import { buildEventSeo } from "@/features/seo/event-seo";
+import { buildEventJsonLd } from "@/features/seo/event-jsonld";
+import { getCanonicalPublicBaseUrl } from "@/features/seo/public-url";
 import { getTrackingParamsFromSearch } from "@/features/tracking/tracking";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { imageCropStyle, parseImageCrop } from "@/lib/image-crop";
@@ -215,18 +217,22 @@ export async function generateMetadata({ params }: Pick<EventPageProps, "params"
   }
 
   const seo = buildEventSeo(event);
+  const canonicalUrl = `${getCanonicalPublicBaseUrl(organizationContext)}${seo.canonicalPath}`;
 
   return {
     title: seo.title,
     description: seo.description,
     keywords: seo.keywords,
+    metadataBase: new URL(getCanonicalPublicBaseUrl(organizationContext)),
+    robots: { index: true, follow: true },
     alternates: {
-      canonical: seo.canonicalPath
+      canonical: canonicalUrl
     },
     openGraph: {
       title: seo.title,
       description: seo.description,
       type: "website",
+      url: canonicalUrl,
       images: seo.image ? [{ url: seo.image }] : undefined
     },
     twitter: {
@@ -320,9 +326,12 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const eventDirections = buildEventDirections(event);
   const descriptionParagraphs = getEditorialParagraphs(event.description);
   const importantInfoTopics = getImportantInfoTopics(event.importantInfo);
+  const baseUrl = getCanonicalPublicBaseUrl(organizationContext);
+  const eventJsonLd = buildEventJsonLd(event, event.lots, `${baseUrl}/evento/${event.slug}`, organizationContext.brandName, baseUrl);
 
   return (
     <main className="shell">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd).replace(/</gu, "\\u003c") }} />
       {event.googleTagManagerId ? (
         <>
           <Script id="public-gtm-script" strategy="afterInteractive">

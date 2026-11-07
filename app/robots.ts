@@ -1,11 +1,10 @@
 import type { MetadataRoute } from "next";
+import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
+import { getCanonicalPublicBaseUrl } from "@/features/seo/public-url";
 
-function getAppUrl() {
-  return (process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || "http://localhost:3000").replace(/\/$/, "");
-}
-
-export default function robots(): MetadataRoute.Robots {
-  const appUrl = getAppUrl();
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const context = await getCurrentOrganizationContext();
+  const appUrl = getCanonicalPublicBaseUrl(context);
 
   return {
     rules: {
