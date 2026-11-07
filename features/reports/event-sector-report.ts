@@ -1,6 +1,7 @@
 /** Categories and purchase packaging are not physical sectors. Unknown names are preserved. */
 export function sectorFromLotName(name: string) {
   const sector = name.normalize("NFC").toLocaleUpperCase("pt-BR")
+    .replace(/\bBLACK\s+NOVEMBER\b/gu, " ")
     .replace(/\b(?:MEIA(?:[\s-]+ENTRADA)?|INTEIRA|CORTESIA|ESTUDANTE|PCD|PROMOCIONAL|SOLID[ÁA]RI[OA]|DUPLO|INDIVIDUAL|EXCLUSIVO|COMPARTILHADO)\b/gu, " ")
     .replace(/\bPARA\s+\d+\s+PESSOAS\b/gu, " ")
     .replace(/\b\d+\s+LUGARES\b/gu, " ")

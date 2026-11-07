@@ -10,6 +10,7 @@ describe("event sector report", () => {
     const entries = ["MEIA ENTRADA", "INTEIRA", "CORTESIA", "ESTUDANTE", "PCD", "PROMOCIONAL", "SOLIDÁRIO"].map(category => ({ name: sectorFromLotName(`TERRAÇO NORTE - ${category}`), quantity: 2 }));
     expect(consolidateSectors(entries)).toEqual({ rows: [{ name: "TERRAÇO NORTE", quantity: 14 }], total: 14 });
     expect(sectorFromLotName("CADEIRA OURO DUPLO - SOLIDÁRIO")).toBe("CADEIRA OURO");
+    expect(sectorFromLotName("CADEIRA OURO - BLACK NOVEMBER")).toBe("CADEIRA OURO");
     expect(sectorFromLotName("CAMAROTE 18 - COMPARTILHADO")).toBe("CAMAROTE 18");
     expect(sectorFromLotName("MESA VIP - 4 LUGARES")).toBe("MESA VIP");
     expect(sectorFromLotName("CORTESIA")).toBe("SEM SETOR IDENTIFICADO");
