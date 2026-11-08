@@ -46,7 +46,10 @@ export async function generateMetadata(): Promise<Metadata> {
     title: organizationContext.isPlatformHost ? organizationContext.platformName : organizationContext.brandName,
     description: organizationContext.isPlatformHost
       ? `${organizationContext.platformName} é a plataforma SaaS que sustenta várias bilheterias com domínio, equipe, eventos, pedidos e check-in próprios.`
-      : `Bilheteria oficial da ${organizationContext.brandName} para venda de ingressos, pedidos, check-in e operação de eventos.`
+      : `Bilheteria oficial da ${organizationContext.brandName} para venda de ingressos, pedidos, check-in e operação de eventos.`,
+    ...(organizationContext.organization.slug === "tcr-ingressos"
+      ? { verification: { google: "ql-tXO3OjTZ8K2j6IDYKfNkdtWt2bENQ3JEIAq_cnNY" } }
+      : {})
   };
 }
 
