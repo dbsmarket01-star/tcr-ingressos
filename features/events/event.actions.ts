@@ -209,6 +209,7 @@ export async function createEventAction(formData: FormData) {
 
   revalidatePath("/admin/events");
   revalidatePath("/");
+  revalidatePath("/sitemap.xml");
   revalidatePath(`/evento/${parsed.data.slug}`);
   revalidatePath(`/evento/${parsed.data.slug}/checkout`);
   revalidatePath(`/lista/${parsed.data.slug}`);
@@ -347,6 +348,7 @@ export async function updateEventAction(formData: FormData) {
   revalidatePath(`/admin/events/${eventId}`);
   revalidatePath(`/admin/events/${eventId}/leads`);
   revalidatePath("/");
+  revalidatePath("/sitemap.xml");
   revalidatePath(`/evento/${parsed.data.slug}`);
   revalidatePath(`/evento/${parsed.data.slug}/checkout`);
   revalidatePath(`/lista/${parsed.data.slug}`);
@@ -379,6 +381,7 @@ export async function updateEventStatusAction(formData: FormData) {
   revalidatePath("/admin/events");
   revalidatePath(`/admin/events/${eventId}`);
   revalidatePath("/");
+  revalidatePath("/sitemap.xml");
   if (eventSlug) {
     revalidatePath(`/evento/${eventSlug}`);
     revalidatePath(`/lista/${eventSlug}`);
@@ -420,6 +423,7 @@ export async function duplicateEventAction(formData: FormData) {
   revalidatePath("/admin/events");
   revalidatePath("/admin/audit");
   revalidatePath("/");
+  revalidatePath("/sitemap.xml");
   revalidatePath(`/evento/${duplicatedEvent.slug}`);
   revalidatePath(`/lista/${duplicatedEvent.slug}`);
   revalidatePath(`/lista/${duplicatedEvent.slug}/obrigado`);

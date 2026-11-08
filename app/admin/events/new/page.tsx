@@ -51,7 +51,8 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           <div className="grid twoColumns">
             <label className="field">
               <span>Nome do evento</span>
-              <input name="title" placeholder="Ex: Conferencia de Lideranca 2026" required />
+              <input name="title" placeholder="Ex: Rodrigo Teaser em Sorocaba" required />
+              <small>Use o nome do artista ou evento. A cidade, a data e o local compõem o SEO automaticamente.</small>
             </label>
             <label className="field">
               <span>Slug público</span>
@@ -642,7 +643,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
             <div>
               <span className="sectionEyebrow">Opcional</span>
               <h2>SEO do evento</h2>
-              <p className="muted">Se você não preencher nada aqui, o sistema já monta o básico sozinho.</p>
+              <p className="muted">Ao publicar, o sistema cria título, descrição, página indexável, dados estruturados e entrada no sitemap automaticamente.</p>
             </div>
           </summary>
           <label className="field">
@@ -663,7 +664,7 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
           <label className="field">
             <span>Palavras-chave</span>
             <input name="seoKeywords" maxLength={300} placeholder="fernandinho, ingressos, salvador, show gospel" />
-            <small>Separe por virgula.</small>
+            <small>Opcional. O Google não usa esta metatag para posicionar páginas; priorize nome do artista, cidade e local no conteúdo do evento.</small>
           </label>
           <div className="mediaUploadGrid">
             <ImageUploadField

@@ -39,12 +39,16 @@ function formatEventDate(value: Date) {
 export function buildEventSeo(event: EventSeoInput) {
   const date = formatEventDate(event.startsAt);
   const location = `${event.venueName}, ${event.city}-${event.state}`;
+  const eventName = event.title.trim();
+  const titleWithCity = eventName.toLocaleLowerCase("pt-BR").includes(event.city.trim().toLocaleLowerCase("pt-BR"))
+    ? eventName
+    : `${eventName} em ${event.city}`;
   const shortDate = new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit", month: "2-digit", timeZone: BRAZIL_TIME_ZONE
   }).format(event.startsAt);
-  const automaticTitle = compactText(`${event.title} – ${shortDate} | Ingressos oficiais`, 70);
+  const automaticTitle = compactText(`${titleWithCity} – ${shortDate} | Ingressos oficiais`, 70);
   const automaticDescription = compactText(
-    `${event.subtitle ? `${event.subtitle}. ` : ""}Compre ingressos para ${event.title} em ${date}, no ${location}. ${event.description}`,
+    `${event.subtitle ? `${event.subtitle}. ` : ""}Compre ingressos para ${titleWithCity} em ${date}, no ${location}. ${event.description}`,
     155
   );
   const keywords = event.seoKeywords
