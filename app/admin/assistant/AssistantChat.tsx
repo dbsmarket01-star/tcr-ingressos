@@ -1,10 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { assistantAcknowledgement } from "@/features/assistant/assistant-request";
 import styles from "./assistant.module.css";
 
-type ChatMessage = { id: string; role: "user" | "assistant"; text: string; createdAt: string };
+type ChatMessage = { id: string; role: "user" | "assistant"; text: string; createdAt: string; authorName?: string | null; imageId?: string | null; imageName?: string | null; previewUrl?: string };
 type Proposal = { kind: "PRICE_CHANGE"; id: string; eventTitle: string; lotName: string; oldPriceInCents: number; newPriceInCents: number }
   | { kind: "EVENT_STATUS_CHANGE"; id: string; eventTitle: string; oldStatus: "PUBLISHED" | "UNPUBLISHED"; newStatus: "PUBLISHED" | "UNPUBLISHED" };
 
@@ -16,22 +16,76 @@ export function AssistantChat({ name }: { name: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [input, setInput] = useState("");
+  const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState("today");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [nextBefore, setNextBefore] = useState<string | null>(null);
+  const [loadingOlder, setLoadingOlder] = useState(false);
   const [error, setError] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetch("/api/admin/assistant", { cache: "no-store" })
-      .then(async (response) => {
+    if (!image) { setImagePreview(""); return; }
+    const url = URL.createObjectURL(image);
+    setImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [image]);
+
+  function chooseImage(event: ChangeEvent<HTMLInputElement>) {
+    const selected = event.target.files?.[0] || null;
+    if (!selected) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(selected.type) || selected.size > 5 * 1024 * 1024) {
+      setError("Envie uma imagem JPG, PNG ou WEBP de até 5 MB.");
+      event.target.value = "";
+      return;
+    }
+    setError(""); setImage(selected);
+  }
+
+  useEffect(() => {
+    if (period === "date" && !selectedDate) { setMessages([]); setLoading(false); return; }
+    let active = true;
+    const params = new URLSearchParams({ period });
+    if (period === "date") params.set("date", selectedDate);
+    setLoading(true); setMessages([]); setNextBefore(null);
+    async function refresh(initial: boolean) {
+      try {
+        const response = await fetch(`/api/admin/assistant?${params}`, { cache: "no-store" });
         const body = await response.json();
         if (!response.ok) throw new Error(body.error || "Não foi possível carregar a conversa.");
-        setMessages(body.messages || []);
+        if (!active) return;
+        setMessages((current) => initial ? body.messages || [] : [...new Map([...current, ...(body.messages || [])].map((item: ChatMessage) => [item.id, item])).values()]
+          .sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
+        if (initial) setNextBefore(body.nextBefore || null);
         setProposal(body.proposal || null);
-      })
-      .catch((cause) => setError(cause instanceof Error ? cause.message : "Falha ao carregar a conversa."))
-      .finally(() => setLoading(false));
-  }, []);
+      } catch (cause) {
+        if (active) setError(cause instanceof Error ? cause.message : "Falha ao carregar a conversa.");
+      } finally { if (initial && active) setLoading(false); }
+    }
+    void refresh(true);
+    const timer = period === "today" ? window.setInterval(() => void refresh(false), 15_000) : null;
+    return () => { active = false; if (timer) window.clearInterval(timer); };
+  }, [period, selectedDate]);
+
+  async function loadOlder() {
+    if (!nextBefore || loadingOlder) return;
+    setLoadingOlder(true);
+    try {
+      const params = new URLSearchParams({ period, before: nextBefore });
+      if (period === "date") params.set("date", selectedDate);
+      const response = await fetch(`/api/admin/assistant?${params}`, { cache: "no-store" });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "Não foi possível carregar mensagens anteriores.");
+      setMessages((current) => [...new Map([...(body.messages || []), ...current].map((item: ChatMessage) => [item.id, item])).values()]
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
+      setNextBefore(body.nextBefore || null);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Falha ao carregar mensagens anteriores."); }
+    finally { setLoadingOlder(false); }
+  }
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -39,19 +93,27 @@ export function AssistantChat({ name }: { name: string }) {
 
   async function send(event: FormEvent) {
     event.preventDefault();
-    const text = input.trim();
+    const text = input.trim() || (image ? "Analise esta imagem e me diga o que encontrou." : "");
     if (!text || busy) return;
     setInput(""); setError(""); setBusy(true); setProposal(null);
-    const optimistic: ChatMessage = { id: `local-${Date.now()}`, role: "user", text, createdAt: new Date().toISOString() };
+    const optimistic: ChatMessage = { id: `local-${Date.now()}`, role: "user", text, createdAt: new Date().toISOString(), previewUrl: imagePreview, imageName: image?.name };
     const acknowledgement: ChatMessage = { id: `ack-${Date.now()}`, role: "assistant", text: assistantAcknowledgement(text), createdAt: new Date().toISOString() };
     setMessages((current) => [...current, optimistic, acknowledgement]);
     try {
-      const response = await fetch("/api/admin/assistant", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "message", message: text }) });
+      const payload = new FormData();
+      payload.set("type", "message"); payload.set("message", text);
+      if (image) payload.set("image", image);
+      const response = await fetch("/api/admin/assistant", { method: "POST", body: payload });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || "Não consegui responder agora.");
-      setMessages((current) => [...current.filter((item) => item.id !== acknowledgement.id), body.message]);
+      setMessages((current) => [...current.filter((item) => item.id !== acknowledgement.id && item.id !== optimistic.id), body.userMessage || optimistic, body.message]);
+      setImage(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       setProposal(body.proposal || null);
+      if (period !== "today") setPeriod("today");
     } catch (cause) {
+      setMessages((current) => current.filter((item) => item.id !== acknowledgement.id && item.id !== optimistic.id));
+      setInput(text === "Analise esta imagem e me diga o que encontrou." && image ? "" : text);
       setError(cause instanceof Error ? cause.message : "Falha ao enviar o pedido.");
     } finally { setBusy(false); }
   }
@@ -83,15 +145,17 @@ export function AssistantChat({ name }: { name: string }) {
     <div className={styles.layout}>
       <section className={styles.chat} aria-label="Conversa com o Assistente IA">
         <header className={styles.chatHeader}><span className={styles.avatar} aria-hidden="true">✦</span><div className={styles.headerTitle}><span className={styles.headerEyebrow}>Central de operação · TCR Ingressos</span><strong>Assistente IA</strong><small>Converse sobre seus eventos e ingressos</small></div><span className={styles.headerBadge}>Nenhuma mudança sem confirmação</span></header>
+        <div className={styles.historyFilter}><span>Histórico compartilhado da equipe</span><label htmlFor="assistant-period">Período</label><select id="assistant-period" value={period} onChange={(event) => setPeriod(event.target.value)}><option value="today">Hoje</option><option value="yesterday">Ontem</option><option value="last7">Últimos 7 dias</option><option value="date">Escolher data</option><option value="all">Todo o histórico</option></select>{period === "date" ? <input type="date" aria-label="Data da conversa" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} /> : null}</div>
         <div className={styles.messages} aria-live="polite">
+          {nextBefore ? <button type="button" className={styles.olderButton} onClick={loadOlder} disabled={loadingOlder}>{loadingOlder ? "Carregando..." : "Carregar mensagens anteriores"}</button> : null}
           {!loading && messages.length === 0 ? <div className={styles.welcome}><span aria-hidden="true">✦</span><h2>Como posso ajudar, {name.split(" ")[0]}?</h2><p>Escreva o que precisa em linguagem natural. Posso consultar os dados e, quando houver uma mudança disponível, mostrar uma proposta para você revisar.</p></div> : null}
-          {messages.map((message) => <article key={message.id} className={`${styles.bubble} ${message.role === "user" ? styles.user : styles.assistant}`}><p>{message.text}</p><time>{new Date(message.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</time></article>)}
+          {messages.map((message) => <article key={message.id} className={`${styles.bubble} ${message.role === "user" ? styles.user : styles.assistant}`}>{message.role === "user" && message.authorName ? <small className={styles.authorName}>{message.authorName}</small> : null}<p>{message.text}</p>{message.imageId || message.previewUrl ? <img className={styles.messageImage} src={message.previewUrl || `/api/admin/assistant?imageId=${encodeURIComponent(message.imageId || "")}`} alt={message.imageName || "Imagem anexada"} loading="lazy" /> : null}<time>{new Date(message.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</time></article>)}
           {busy ? <div className={styles.thinking}>Consultando as informações do sistema...</div> : null}
           {proposal ? <section className={styles.proposal}><span className={styles.proposalLabel}>Alteração aguardando confirmação</span><h3>{proposal.eventTitle}</h3>{proposal.kind === "PRICE_CHANGE" ? <><p>{proposal.lotName}</p><div className={styles.priceChange}><span>{money(proposal.oldPriceInCents)}</span><b>→</b><strong>{money(proposal.newPriceInCents)}</strong></div></> : <><p>Status do evento</p><div className={styles.priceChange}><span>{proposal.oldStatus === "PUBLISHED" ? "No ar" : "Inativo"}</span><b>→</b><strong>{proposal.newStatus === "PUBLISHED" ? "No ar" : "Inativo (fora do ar)"}</strong></div></>}<div className={styles.proposalActions}><button type="button" onClick={confirm} disabled={busy}>Confirmar alteração</button><button type="button" onClick={discard} disabled={busy}>Cancelar</button></div></section> : null}
           <div ref={bottomRef} />
         </div>
         {error ? <div className={styles.error} role="alert">{error}</div> : null}
-        <form className={styles.composer} onSubmit={send}><label className={styles.srOnly} htmlFor="assistant-prompt">Escreva sua solicitação</label><div className={styles.composerField}><textarea id="assistant-prompt" rows={2} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} placeholder="Escreva sua pergunta ou solicitação..." maxLength={2000} disabled={busy} /><small>Enter para enviar · Shift + Enter para pular linha</small></div><button type="submit" disabled={!input.trim() || busy}>Enviar <span aria-hidden="true">↗</span></button></form>
+        <form className={styles.composer} onSubmit={send}><input ref={fileInputRef} className={styles.srOnly} type="file" accept="image/jpeg,image/png,image/webp" onChange={chooseImage} aria-label="Selecionar imagem ou print" disabled={busy} /><button className={styles.attachButton} type="button" onClick={() => fileInputRef.current?.click()} disabled={busy} aria-label="Anexar imagem ou print">＋</button><label className={styles.srOnly} htmlFor="assistant-prompt">Escreva sua solicitação</label><div className={styles.composerField}>{image ? <div className={styles.selectedImage}><img src={imagePreview} alt="Prévia do print selecionado" /><span>{image.name}</span><button type="button" onClick={() => { setImage(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} aria-label="Remover imagem">×</button></div> : null}<textarea id="assistant-prompt" rows={2} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} placeholder="Escreva sua pergunta ou solicitação..." maxLength={2000} disabled={busy} /><small>Enter para enviar · Shift + Enter para pular linha · JPG/PNG/WEBP até 5 MB</small></div><button type="submit" disabled={(!input.trim() && !image) || busy}>Enviar <span aria-hidden="true">↗</span></button></form>
       </section>
     </div>
   );

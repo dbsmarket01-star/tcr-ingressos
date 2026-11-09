@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { canAccessArea, canAccessEvent, getCurrentAdmin } from "@/features/auth/auth.service";
-import { answerAssistant, discardAssistantProposal, getAssistantProposal, getPendingAssistantProposal, listAssistantMessages, saveAssistantConfirmation } from "@/features/assistant/admin-assistant.service";
+import { answerAssistant, discardAssistantProposal, getAssistantImage, getAssistantProposal, getPendingAssistantProposal, listAssistantMessages, saveAssistantConfirmation } from "@/features/assistant/admin-assistant.service";
+import { prepareAssistantImage } from "@/features/assistant/assistant-image";
 import { updateTicketLotPricing } from "@/features/lots/lot.service";
 import { updateEventStatus } from "@/features/events/event.service";
 import { ticketLotPricingSchema } from "@/features/lots/lot.schema";
@@ -20,11 +21,24 @@ function error(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const admin = await authorizedAdmin();
   if (!admin) return error("Acesso não autorizado.", 403);
-  const [messages, proposal] = await Promise.all([listAssistantMessages(admin), getPendingAssistantProposal(admin)]);
-  return NextResponse.json({ messages, proposal });
+  const imageId = request.nextUrl.searchParams.get("imageId");
+  if (imageId) {
+    if (imageId.length > 100) return error("Imagem inválida.");
+    const bytes = await getAssistantImage(admin, imageId);
+    if (!bytes) return error("Imagem não encontrada.", 404);
+    return new NextResponse(new Uint8Array(bytes), { headers: {
+      "Content-Type": "image/jpeg", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"
+    } });
+  }
+  const { searchParams } = request.nextUrl;
+  const [history, proposal] = await Promise.all([
+    listAssistantMessages(admin, { period: searchParams.get("period") || "today", date: searchParams.get("date") || "", before: searchParams.get("before") || "" }),
+    getPendingAssistantProposal(admin)
+  ]);
+  return NextResponse.json({ ...history, proposal });
 }
 
 export async function POST(request: NextRequest) {
@@ -32,16 +46,22 @@ export async function POST(request: NextRequest) {
   if (!admin) return error("Acesso não autorizado.", 403);
   const origin = request.headers.get("origin");
   if (origin && new URL(origin).host !== request.headers.get("host")) return error("Origem inválida.", 403);
-  const body = await request.json().catch(() => null);
+  const isMultipart = request.headers.get("content-type")?.startsWith("multipart/form-data") || false;
+  const body = isMultipart ? await request.formData().catch(() => null) : await request.json().catch(() => null);
   if (!body || typeof body !== "object") return error("Pedido inválido.");
+  const field = (name: string) => body instanceof FormData ? body.get(name) : (body as Record<string, unknown>)[name];
 
-  if (body.type === "message") {
-    const message = String(body.message || "").trim();
+  if (field("type") === "message") {
+    const candidate = field("image");
+    if (candidate && !(candidate instanceof File)) return error("Imagem inválida.");
+    const message = String(field("message") || (candidate ? "Analise esta imagem e me diga o que encontrou." : "")).trim();
     if (!message || message.length > 2000) return error("Escreva um pedido com até 2.000 caracteres.");
     try {
-      return NextResponse.json(await answerAssistant(admin, message));
+      const image = candidate instanceof File ? await prepareAssistantImage(candidate) : undefined;
+      return NextResponse.json(await answerAssistant(admin, message, image));
     } catch (cause) {
       console.error("[admin-assistant] Falha ao responder", cause);
+      if (cause instanceof Error && /^(Envie|O arquivo|Imagem inválida|A imagem)/.test(cause.message)) return error(cause.message);
       if (cause instanceof Error && cause.message.includes("credit_balance_exhausted")) {
         return error("O Assistente IA está temporariamente indisponível: a conta da API OpenAI está sem crédito. Nenhuma alteração foi feita.", 503);
       }
@@ -51,7 +71,7 @@ export async function POST(request: NextRequest) {
 
   if (body.type === "confirm") {
     if (!canAccessArea(admin.role, "EVENTS")) return error("Seu perfil pode consultar o assistente, mas não alterar eventos ou ingressos.", 403);
-    const proposalId = String(body.proposalId || "").trim();
+    const proposalId = String(field("proposalId") || "").trim();
     if (!proposalId) return error("Proposta não informada.");
     const proposal = await getAssistantProposal(admin, proposalId);
     if (!proposal) return error("Proposta não encontrada ou sem autorização.", 404);
@@ -117,8 +137,8 @@ export async function POST(request: NextRequest) {
       return error("Não consegui confirmar a alteração. Confira o preço do ingresso antes de tentar novamente.", 503);
     }
   }
-  if (body.type === "discard") {
-    const proposalId = String(body.proposalId || "").trim();
+  if (field("type") === "discard") {
+    const proposalId = String(field("proposalId") || "").trim();
     if (!proposalId) return error("Proposta não informada.");
     await discardAssistantProposal(admin, proposalId);
     return NextResponse.json({ ok: true });
