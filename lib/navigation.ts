@@ -84,6 +84,12 @@ export const adminNavItems: AdminNavItem[] = [
     area: "SUPPORT"
   },
   {
+    href: "/admin/assistant",
+    label: "Assistente IA",
+    description: "Solicite consultas e alterações de eventos",
+    area: "SUPPORT"
+  },
+  {
     href: "/admin/check-in",
     label: "Check-in",
     description: "Validação e entrada do evento",
@@ -191,7 +197,7 @@ export const adminNavGroups: AdminNavGroup[] = [
     description: "Evento e atendimento",
     defaultOpen: true,
     items: adminNavItems.filter((item) =>
-      ["/admin/support", "/admin/check-in"].includes(item.href)
+      ["/admin/support", "/admin/assistant", "/admin/check-in"].includes(item.href)
     )
   },
   {
