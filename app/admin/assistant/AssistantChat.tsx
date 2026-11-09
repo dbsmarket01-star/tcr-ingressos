@@ -31,7 +31,9 @@ export function AssistantChat({ name }: { name: string }) {
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }), [messages, busy, proposal]);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, busy, proposal]);
 
   async function send(event: FormEvent) {
     event.preventDefault();
