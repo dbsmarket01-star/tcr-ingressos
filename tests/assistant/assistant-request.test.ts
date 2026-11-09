@@ -16,4 +16,10 @@ describe("assistant conversation requests", () => {
     expect(isReadOnlyAssistantRequest("Altere o Ouro Meia para R$ 157,90")).toBe(false);
     expect(assistantAcknowledgement("Altere o Ouro Meia para R$ 157,90")).toContain("sua confirmação");
   });
+
+  it("allows an explicit event pause while protecting unrelated data", () => {
+    const message = "Retire do ar o evento Rodrigo Teaser em Ribeirão Pires. Não altere ingressos nem outros eventos.";
+    expect(isReadOnlyAssistantRequest(message)).toBe(false);
+    expect(assistantAcknowledgement(message)).toContain("sua confirmação");
+  });
 });
