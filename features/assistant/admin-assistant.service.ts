@@ -56,24 +56,31 @@ export type AssistantProposal = {
   newStatus: "PUBLISHED" | "UNPUBLISHED";
 };
 
-export const assistantEventFields = ["title", "subtitle", "description", "startsAt", "doorsOpenAt", "endsAt", "venueName", "venueAddress", "city", "state", "bannerUrl", "eventMapImageUrl", "eventMapNotes", "importantInfo", "seoTitle", "seoDescription"] as const;
+export const assistantEventFields = ["title", "subtitle", "description", "startsAt", "doorsOpenAt", "endsAt", "salesStartsAt", "salesEndsAt", "venueName", "venueAddress", "city", "state", "bannerUrl", "eventMapImageUrl", "eventMapNotes", "eventMapTemplate", "googleMapsUrl", "importantInfo", "seoTitle", "seoDescription", "seoKeywords", "seoImageUrl", "supportWhatsappUrl", "conversionSocialProofText", "conversionUrgencyText", "conversionCtaText"] as const;
 export type AssistantEventField = typeof assistantEventFields[number];
 export type AssistantEventChange = { field: AssistantEventField; oldValue: string; value: string };
 
 export function validateAssistantEventValue(field: AssistantEventField, value: string): string | null {
   if (typeof value !== "string" || value.length > 5000) return null;
-  if (["startsAt", "doorsOpenAt", "endsAt"].includes(field)) {
+  if (["startsAt", "doorsOpenAt", "endsAt", "salesStartsAt", "salesEndsAt"].includes(field)) {
     if (!value && field !== "startsAt") return "";
     if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return null;
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? null : date.toISOString();
   }
-  if (["bannerUrl", "eventMapImageUrl"].includes(field)) {
+  if (["bannerUrl", "eventMapImageUrl", "seoImageUrl", "googleMapsUrl", "supportWhatsappUrl"].includes(field)) {
     if (!value) return "";
-    try { return new URL(value).protocol === "https:" ? value : null; } catch { return null; }
+    try {
+      const url = new URL(value);
+      if (url.protocol !== "https:") return null;
+      if (field === "supportWhatsappUrl" && !["wa.me", "api.whatsapp.com"].includes(url.hostname)) return null;
+      if (field === "googleMapsUrl" && !(/(^|\.)google\./.test(url.hostname) || ["maps.app.goo.gl", "goo.gl"].includes(url.hostname))) return null;
+      return value;
+    } catch { return null; }
   }
+  if (field === "eventMapTemplate") return ["AUTO", "AUDITORIUM", "THEATER", "WAREHOUSE", "CLUB", "FREE"].includes(value) ? value : null;
   if (field === "state") return /^[A-Za-z]{2}$/.test(value) ? value.toUpperCase() : null;
-  const limit = field === "seoTitle" ? 70 : field === "seoDescription" ? 180 : field === "eventMapNotes" ? 500 : field === "title" ? 160 : 5000;
+  const limit = field === "seoTitle" ? 70 : field === "seoDescription" ? 180 : field === "seoKeywords" ? 300 : field === "eventMapNotes" ? 500 : field === "conversionSocialProofText" ? 120 : field === "conversionUrgencyText" ? 140 : field === "conversionCtaText" ? 60 : field === "title" ? 160 : 5000;
   const minimum = field === "title" ? 3 : field === "venueAddress" ? 5 : ["venueName", "city"].includes(field) ? 2 : 0;
   if (value.length > limit || value.trim().length < minimum) return null;
   return value.trim();
@@ -141,8 +148,12 @@ export function rankAssistantEvent(message: string, event: { title: string; city
   const title = normalized(event.title);
   const words = title.split(/[^a-z0-9]+/).filter((word) => word.length > 3 && !["para", "show", "evento"].includes(word));
   const localDate = formatAssistantEventDate(event.startsAt).slice(0, 10);
+  const [day, month, year] = localDate.split("/");
+  const monthName = ["", "janeiro", "fevereiro", "marco", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"][Number(month)];
+  const namedDate = new RegExp(`\\b${Number(day)}(?:\\s+de)?\\s+${monthName}(?:\\s+de)?\\s+${year}\\b`);
+  const dated = query.includes(localDate) || query.includes(`${day}/${month}`) || namedDate.test(query);
   return (query.includes(`/evento/${normalized(event.slug)}`) ? 50 : 0)
-    + (query.includes(localDate) ? 20 : 0)
+    + (dated ? 20 : 0)
     + (city && query.includes(city) ? 8 : 0) + words.filter((word) => query.includes(word)).length;
 }
 
@@ -264,7 +275,7 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
     .filter((item) => item.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
   const eventDetails = rankedEvents.length ? await prisma.event.findMany({
     where: { organizationId: admin.organizationId, id: { in: rankedEvents.map((item) => item.event.id) } },
-    select: { id: true, title: true, subtitle: true, description: true, city: true, state: true, slug: true, startsAt: true, doorsOpenAt: true, endsAt: true, venueName: true, venueAddress: true, bannerUrl: true, eventMapImageUrl: true, eventMapNotes: true, importantInfo: true, seoTitle: true, seoDescription: true, updatedAt: true, status: true,
+    select: { id: true, title: true, subtitle: true, description: true, city: true, state: true, slug: true, startsAt: true, doorsOpenAt: true, endsAt: true, salesStartsAt: true, salesEndsAt: true, venueName: true, venueAddress: true, bannerUrl: true, eventMapImageUrl: true, eventMapNotes: true, eventMapTemplate: true, googleMapsUrl: true, importantInfo: true, seoTitle: true, seoDescription: true, seoKeywords: true, seoImageUrl: true, supportWhatsappUrl: true, conversionSocialProofText: true, conversionUrgencyText: true, conversionCtaText: true, updatedAt: true, status: true,
       lots: { select: { id: true, name: true, description: true, priceInCents: true, status: true, totalQuantity: true, soldQuantity: true, reservedQuantity: true, serviceFeeBps: true, sortOrder: true }, orderBy: { sortOrder: "asc" } } }
   }) : [];
   // A print-only request does not need the entire event catalog. Sending that catalog
@@ -272,6 +283,12 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
   const contextEvents = rankedEvents.length
     ? rankedEvents.map((item) => item.event)
     : image ? [] : eventIndex.slice(0, 25);
+  if (!readOnly && currentRanks.length > 1 && currentRanks[0].score === currentRanks[1].score) {
+    const candidates = currentRanks.map(({ event }) => `${event.title} — ${formatAssistantEventDate(event.startsAt)} — ${event.status} — ID ${event.id}`).join("\n");
+    const text = `Encontrei mais de um evento possível. Antes de alterar qualquer coisa, confirme qual é o correto pelo nome, data ou ID:\n${candidates}`;
+    const saved = await saveMessage(admin, "assistant", text);
+    return { userMessage, message: { id: saved.id, role: "assistant" as const, text, createdAt: saved.createdAt.toISOString() }, proposal: null };
+  }
   if (!readOnly && savedImage && rankedEvents.length) {
     const first = rankedEvents[0];
     const second = rankedEvents[1];
@@ -365,7 +382,7 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
           { type: "input_text", text: JSON.stringify({ request: message, readOnly,
             recentConversation: previousMessages.slice(-4).map((item) => ({ role: item.role, text: item.text.slice(0, 700) })),
             events: contextEvents.map(({ startsAt, ...event }) => ({ ...event, startsAtBrazil: formatAssistantEventDate(startsAt) })),
-            eventDetails: eventDetails.map(({ startsAt, doorsOpenAt, endsAt, updatedAt, ...event }) => ({ ...event, startsAtBrazil: formatAssistantEventDate(startsAt), startsAtIso: startsAt.toISOString(), doorsOpenAtIso: doorsOpenAt?.toISOString() || "", endsAtIso: endsAt?.toISOString() || "", updatedAtIso: updatedAt.toISOString() })), legacyPage }) },
+            eventDetails: eventDetails.map(({ startsAt, doorsOpenAt, endsAt, salesStartsAt, salesEndsAt, updatedAt, ...event }) => ({ ...event, startsAtBrazil: formatAssistantEventDate(startsAt), startsAtIso: startsAt.toISOString(), doorsOpenAtIso: doorsOpenAt?.toISOString() || "", endsAtIso: endsAt?.toISOString() || "", salesStartsAtIso: salesStartsAt?.toISOString() || "", salesEndsAtIso: salesEndsAt?.toISOString() || "", updatedAtIso: updatedAt.toISOString() })), legacyPage }) },
           ...(image ? [{ type: "input_image", image_url: `data:${image.mime};base64,${image.data}`, detail: "high" }] : [])
         ] }
       ],

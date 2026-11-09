@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
     }
     if (proposal.kind === "EVENT_DETAILS_CHANGE") {
       const event = await prisma.event.findFirst({ where: { id: proposal.eventId, organizationId: admin.organizationId },
-        select: { id: true, slug: true, title: true, updatedAt: true, startsAt: true, endsAt: true, doorsOpenAt: true, bannerUrl: true, eventMapImageUrl: true } });
+        select: { id: true, slug: true, title: true, updatedAt: true, startsAt: true, endsAt: true, doorsOpenAt: true, salesStartsAt: true, salesEndsAt: true, bannerUrl: true, eventMapImageUrl: true } });
       if (!event) return error("Evento não encontrado.", 404);
       if (event.updatedAt.toISOString() !== proposal.expectedUpdatedAt) return error("O evento mudou desde a proposta. Peça uma nova conferência.", 409);
       const data: Prisma.EventUpdateManyMutationInput = {};
@@ -131,19 +131,22 @@ export async function POST(request: NextRequest) {
           }
         }
         if (value === null) return error("Campo proposto inválido.");
-        if (["startsAt", "doorsOpenAt", "endsAt"].includes(change.field)) {
+        if (["startsAt", "doorsOpenAt", "endsAt", "salesStartsAt", "salesEndsAt"].includes(change.field)) {
           (data as Record<string, unknown>)[change.field] = value ? new Date(value) : null;
         } else {
           (data as Record<string, unknown>)[change.field] = value || (["title", "venueName", "venueAddress", "city", "state"].includes(change.field) ? value : null);
         }
       }
       const nextStart = data.startsAt instanceof Date ? data.startsAt : event.startsAt;
-      const nextEnd = data.endsAt instanceof Date ? data.endsAt : event.endsAt;
+      const nextEnd = "endsAt" in data ? (data.endsAt instanceof Date ? data.endsAt : null) : event.endsAt;
       if (nextEnd && nextEnd < nextStart) return error("O fim do evento não pode ser anterior ao início.");
+      const nextSalesStart = "salesStartsAt" in data ? (data.salesStartsAt instanceof Date ? data.salesStartsAt : null) : event.salesStartsAt;
+      const nextSalesEnd = "salesEndsAt" in data ? (data.salesEndsAt instanceof Date ? data.salesEndsAt : null) : event.salesEndsAt;
+      if (nextSalesStart && nextSalesEnd && nextSalesEnd < nextSalesStart) return error("O fim das vendas não pode ser anterior ao início.");
       try {
         const updated = await prisma.event.updateMany({ where: { id: event.id, organizationId: admin.organizationId, updatedAt: event.updatedAt }, data });
         if (updated.count !== 1) return error("O evento mudou durante a confirmação. Peça uma nova conferência.", 409);
-        const verified = await prisma.event.findUnique({ where: { id: event.id }, select: { id: true, slug: true, title: true, subtitle: true, description: true, startsAt: true, doorsOpenAt: true, endsAt: true, venueName: true, venueAddress: true, city: true, state: true, bannerUrl: true, eventMapImageUrl: true, eventMapNotes: true, importantInfo: true, seoTitle: true, seoDescription: true } });
+        const verified = await prisma.event.findUnique({ where: { id: event.id }, select: { id: true, slug: true, title: true, subtitle: true, description: true, startsAt: true, doorsOpenAt: true, endsAt: true, salesStartsAt: true, salesEndsAt: true, venueName: true, venueAddress: true, city: true, state: true, bannerUrl: true, eventMapImageUrl: true, eventMapNotes: true, eventMapTemplate: true, googleMapsUrl: true, importantInfo: true, seoTitle: true, seoDescription: true, seoKeywords: true, seoImageUrl: true, supportWhatsappUrl: true, conversionSocialProofText: true, conversionUrgencyText: true, conversionCtaText: true } });
         if (!verified || proposal.changes.some((change) => {
           const actual = verified[change.field];
           return (actual instanceof Date ? actual.toISOString() : String(actual ?? "")) !==

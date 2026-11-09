@@ -11,6 +11,7 @@ describe("assistant image and event date", () => {
     };
     expect(formatAssistantEventDate(event.startsAt)).toBe("20/11/2026 21:00");
     expect(rankAssistantEvent("Fernandinho 20/11/2026", event)).toBeGreaterThan(rankAssistantEvent("Fernandinho 21/11/2026", event));
+    expect(rankAssistantEvent("Fernandinho 20 de novembro de 2026", event)).toBeGreaterThan(rankAssistantEvent("Fernandinho 21 de novembro de 2026", event));
     expect(rankAssistantEvent("https://www.tcringressos.app.br/evento/fernandinho-santo-andre-2026", event)).toBeGreaterThan(50);
   });
 

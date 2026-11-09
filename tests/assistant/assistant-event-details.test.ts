@@ -20,5 +20,9 @@ describe("assistant event details validation", () => {
     expect(validateAssistantEventValue("city", "A")).toBeNull();
     expect(validateAssistantEventValue("state", "sp")).toBe("SP");
     expect(validateAssistantEventValue("seoTitle", "a".repeat(71))).toBeNull();
+    expect(validateAssistantEventValue("eventMapTemplate", "CLUB")).toBe("CLUB");
+    expect(validateAssistantEventValue("eventMapTemplate", "UNKNOWN")).toBeNull();
+    expect(validateAssistantEventValue("supportWhatsappUrl", "https://example.com/chat")).toBeNull();
+    expect(validateAssistantEventValue("supportWhatsappUrl", "https://wa.me/5511999999999")).toBe("https://wa.me/5511999999999");
   });
 });
