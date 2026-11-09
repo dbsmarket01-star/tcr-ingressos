@@ -2,6 +2,8 @@ import { lockEventLotOrder, normalizeEventLotOrder } from "./lot-order.service";
 import { LotStatus, Prisma, TicketLotOptionStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { TicketLotInput, TicketLotPricingInput } from "./lot.schema";
+import { ticketLotPricingSchema } from "./lot.schema";
+import type { AssistantLotChange } from "@/features/assistant/admin-assistant.service";
 
 async function resolveHotelIdForLot(
   tx: Prisma.TransactionClient,
@@ -373,4 +375,38 @@ export async function updateTicketLotPricing(
     await normalizeEventLotOrder(tx, lot.eventId);
     return tx.ticketLot.findUniqueOrThrow({ where: { id: lotId } });
   });
+}
+
+/** Apply an assistant proposal atomically, with a fresh-state check under the event lock. */
+export async function applyAssistantLotChanges(eventId: string, changes: AssistantLotChange[]) {
+  return prisma.$transaction(async (tx) => {
+    await lockEventLotOrder(tx, eventId);
+    const event = await tx.event.findUniqueOrThrow({ where: { id: eventId }, select: { startsAt: true, endsAt: true } });
+    const current = await tx.ticketLot.findMany({ where: { eventId } });
+    const byId = new Map(current.map((lot) => [lot.id, lot]));
+    const touched = new Set<string>();
+    for (const change of changes) {
+      const source = byId.get(change.operation === "CREATE" ? change.templateLotId : change.lotId);
+      if (!source) throw new Error("Ingresso ou modelo não existe mais neste evento.");
+      if (change.operation === "UPDATE") {
+        if (touched.has(source.id)) throw new Error("Ingresso repetido na proposta.");
+        touched.add(source.id);
+        if (source.name !== change.oldName || (source.description || "") !== change.oldDescription || source.priceInCents !== change.oldPriceInCents || source.totalQuantity !== change.oldTotalQuantity || source.status !== change.oldStatus) throw new Error("O ingresso mudou desde a proposta. Peça nova conferência.");
+        if (change.totalQuantity < source.soldQuantity + source.reservedQuantity) throw new Error("Estoque inferior aos ingressos vendidos ou reservados.");
+        if (source.hasTypeOptions && change.totalQuantity !== source.totalQuantity) throw new Error("Estoque de ingresso com opções deve ser alterado no cadastro completo.");
+      }
+      if (!change.name?.trim() || change.name.length > 160 || change.description.length > 4000 || !Number.isSafeInteger(change.totalQuantity) || change.totalQuantity < 1 || !["ACTIVE", "PAUSED", "DRAFT", "SOLD_OUT"].includes(change.status)) throw new Error("Dados do ingresso inválidos.");
+      const pricing = ticketLotPricingSchema.safeParse({ priceInCents: change.priceInCents, serviceFeeBps: source.serviceFeeBps, pixDiscountPercentBps: source.pixDiscountPercentBps, pixDiscountFixedInCents: source.pixDiscountFixedInCents, cardInterestBpsPerInstallment: source.cardInterestBpsPerInstallment, cardInterestStartsAtInstallment: source.cardInterestStartsAtInstallment });
+      if (!pricing.success) throw new Error(pricing.error.issues[0]?.message || "Preço inválido.");
+      if (change.operation === "UPDATE") {
+        await tx.ticketLot.update({ where: { id: source.id }, data: { name: change.name.trim(), description: change.description || null, priceInCents: change.priceInCents, totalQuantity: change.totalQuantity, status: change.status, ...(change.status === "ACTIVE" ? { saleBadge: "NONE" } : change.status === "SOLD_OUT" ? { saleBadge: "SOLD_OUT" } : {}) } });
+      } else {
+        if (source.hasTypeOptions || source.hasHotel || await tx.seatSection.count({ where: { ticketLotId: source.id } })) throw new Error("Este modelo tem configuração especial; use o cadastro completo de ingressos.");
+        const last = await tx.ticketLot.aggregate({ where: { eventId }, _max: { sortOrder: true } });
+        await tx.ticketLot.create({ data: { eventId, name: change.name.trim(), description: change.description || null, priceInCents: change.priceInCents, totalQuantity: change.totalQuantity, status: change.status, sortOrder: (last._max.sortOrder ?? -1) + 1, highlightColor: source.highlightColor, saleBadge: "NONE", descriptionAsList: source.descriptionAsList, churchQuestionEnabled: source.churchQuestionEnabled, admissionsPerUnit: source.admissionsPerUnit, serviceFeeBps: source.serviceFeeBps, pixDiscountPercentBps: source.pixDiscountPercentBps, pixDiscountFixedInCents: source.pixDiscountFixedInCents, cardInterestBpsPerInstallment: source.cardInterestBpsPerInstallment, cardInterestStartsAtInstallment: source.cardInterestStartsAtInstallment, minPerOrder: source.minPerOrder, maxPerOrder: source.maxPerOrder, salesStartsAt: null, salesEndsAt: event.endsAt || event.startsAt } });
+      }
+    }
+    await normalizeEventLotOrder(tx, eventId);
+    return tx.ticketLot.findMany({ where: { eventId, status: LotStatus.ACTIVE }, orderBy: { sortOrder: "asc" }, select: { id: true, sortOrder: true } });
+  }, { timeout: 20_000 });
 }
