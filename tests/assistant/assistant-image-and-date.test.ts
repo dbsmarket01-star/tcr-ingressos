@@ -18,8 +18,8 @@ describe("assistant image and event date", () => {
     const png = await sharp({ create: { width: 80, height: 80, channels: 3, background: "#0b7b4f" } }).png().toBuffer();
     const valid = new File([new Uint8Array(png)], "print.png", { type: "image/png" });
     const prepared = await prepareAssistantImage(valid);
-    expect(prepared.mime).toBe("image/jpeg");
-    expect(Buffer.from(prepared.data, "base64").subarray(0, 3).toString("hex")).toBe("ffd8ff");
+    expect(prepared.mime).toBe("image/png");
+    expect(Buffer.from(prepared.data, "base64").subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
     await expect(prepareAssistantImage(new File(["not a png"], "fake.png", { type: "image/png" })))
       .rejects.toThrow("não corresponde");
   });

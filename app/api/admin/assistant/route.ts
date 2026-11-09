@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { canAccessArea, canAccessEvent, getCurrentAdmin } from "@/features/auth/auth.service";
-import { answerAssistant, discardAssistantProposal, getAssistantImage, getAssistantProposal, getPendingAssistantProposal, listAssistantMessages, saveAssistantConfirmation } from "@/features/assistant/admin-assistant.service";
+import { answerAssistant, discardAssistantProposal, getAssistantImage, getAssistantProposal, getPendingAssistantProposal, listAssistantMessages, saveAssistantConfirmation, validateAssistantEventValue } from "@/features/assistant/admin-assistant.service";
 import { prepareAssistantImage } from "@/features/assistant/assistant-image";
 import { applyAssistantLotChanges, applyAssistantLotOrder, updateTicketLotPricing } from "@/features/lots/lot.service";
-import { updateEventStatus } from "@/features/events/event.service";
+import { createEvent, updateEventStatus } from "@/features/events/event.service";
+import { eventDraftSchema } from "@/features/events/event.schema";
 import { ticketLotPricingSchema } from "@/features/lots/lot.schema";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
+import { savePublicImageUpload } from "@/features/uploads/local-upload.service";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -82,9 +85,86 @@ export async function POST(request: NextRequest) {
     if (!proposalId) return error("Proposta não informada.");
     const proposal = await getAssistantProposal(admin, proposalId);
     if (!proposal) return error("Proposta não encontrada ou sem autorização.", 404);
-    if (!canAccessEvent(admin, proposal.eventId)) return error("Você não tem acesso a este evento.", 403);
+    if (proposal.kind !== "EVENT_CREATE" && !canAccessEvent(admin, proposal.eventId)) return error("Você não tem acesso a este evento.", 403);
     const previouslyResolved = await prisma.adminAuditLog.findFirst({ where: { action: { in: ["ADMIN_ASSISTANT_APPLIED", "ADMIN_ASSISTANT_DISCARDED"] }, entityType: "ADMIN_ASSISTANT", entityId: proposal.id }, select: { id: true } });
     if (previouslyResolved) return error("Esta proposta já foi concluída ou cancelada.", 409);
+    if (proposal.kind === "EVENT_CREATE") {
+      const draft = proposal.draft;
+      const start = validateAssistantEventValue("startsAt", draft.startsAt);
+      const banner = validateAssistantEventValue("bannerUrl", draft.bannerUrl);
+      const map = validateAssistantEventValue("eventMapImageUrl", draft.eventMapImageUrl);
+      const parsed = eventDraftSchema.safeParse({ ...draft, startsAt: start, bannerUrl: banner, eventMapImageUrl: map });
+      if (!start || banner === null || map === null || !parsed.success) return error("Dados do rascunho inválidos; solicite uma nova proposta.");
+      if (await prisma.event.findFirst({ where: { organizationId: admin.organizationId, slug: parsed.data.slug }, select: { id: true } })) return error("Já existe um evento com este endereço. Solicite outro slug.", 409);
+      try {
+        const event = await createEvent({ ...parsed.data, status: "DRAFT" }, admin.organizationId);
+        const verified = await prisma.event.findUnique({ where: { id: event.id }, select: { id: true, title: true, slug: true, status: true } });
+        if (!verified || verified.status !== "DRAFT" || verified.title !== draft.title) throw new Error("Rascunho não confirmado após a gravação.");
+        revalidatePath("/admin/events");
+        revalidatePath(`/admin/events/${event.id}`);
+        const text = `Rascunho criado e confirmado: ${verified.title}. ID ${verified.id}. Ele não foi publicado; revise banner, mapa, ingressos e informações antes de colocá-lo no ar.`;
+        const message = await saveAssistantConfirmation(admin, proposal, text);
+        return NextResponse.json({ message });
+      } catch (cause) {
+        console.error("[admin-assistant] Falha ao criar evento", cause);
+        return error("Não consegui confirmar o cadastro do rascunho. Confira a lista de eventos antes de tentar novamente.", 503);
+      }
+    }
+    if (proposal.kind === "EVENT_DETAILS_CHANGE") {
+      const event = await prisma.event.findFirst({ where: { id: proposal.eventId, organizationId: admin.organizationId },
+        select: { id: true, slug: true, title: true, updatedAt: true, startsAt: true, endsAt: true, doorsOpenAt: true, bannerUrl: true, eventMapImageUrl: true } });
+      if (!event) return error("Evento não encontrado.", 404);
+      if (event.updatedAt.toISOString() !== proposal.expectedUpdatedAt) return error("O evento mudou desde a proposta. Peça uma nova conferência.", 409);
+      const data: Prisma.EventUpdateManyMutationInput = {};
+      for (const change of proposal.changes) {
+        let value = validateAssistantEventValue(change.field, change.value);
+        if (value === null && ["bannerUrl", "eventMapImageUrl"].includes(change.field) && /^assistant-image:[a-z0-9]+$/.test(change.value)) {
+          const image = await getAssistantImage(admin, change.value.slice("assistant-image:".length));
+          if (!image) return error("A imagem anexada não está mais disponível.", 404);
+          try {
+            const extension = image.mime === "image/png" ? "png" : image.mime === "image/webp" ? "webp" : "jpg";
+            value = await savePublicImageUpload(new File([new Uint8Array(image.bytes)], `assistente.${extension}`, { type: image.mime }),
+              `events/${event.slug}/${change.field === "bannerUrl" ? "banner" : "map"}`);
+          } catch (cause) {
+            console.error("[admin-assistant] Falha ao enviar imagem", cause);
+            return error("Não consegui salvar a imagem. Nenhuma alteração do evento foi feita.", 503);
+          }
+        }
+        if (value === null) return error("Campo proposto inválido.");
+        if (["startsAt", "doorsOpenAt", "endsAt"].includes(change.field)) {
+          (data as Record<string, unknown>)[change.field] = value ? new Date(value) : null;
+        } else {
+          (data as Record<string, unknown>)[change.field] = value || (["title", "venueName", "venueAddress", "city", "state"].includes(change.field) ? value : null);
+        }
+      }
+      const nextStart = data.startsAt instanceof Date ? data.startsAt : event.startsAt;
+      const nextEnd = data.endsAt instanceof Date ? data.endsAt : event.endsAt;
+      if (nextEnd && nextEnd < nextStart) return error("O fim do evento não pode ser anterior ao início.");
+      try {
+        const updated = await prisma.event.updateMany({ where: { id: event.id, organizationId: admin.organizationId, updatedAt: event.updatedAt }, data });
+        if (updated.count !== 1) return error("O evento mudou durante a confirmação. Peça uma nova conferência.", 409);
+        const verified = await prisma.event.findUnique({ where: { id: event.id }, select: { id: true, slug: true, title: true, subtitle: true, description: true, startsAt: true, doorsOpenAt: true, endsAt: true, venueName: true, venueAddress: true, city: true, state: true, bannerUrl: true, eventMapImageUrl: true, eventMapNotes: true, importantInfo: true, seoTitle: true, seoDescription: true } });
+        if (!verified || proposal.changes.some((change) => {
+          const actual = verified[change.field];
+          return (actual instanceof Date ? actual.toISOString() : String(actual ?? "")) !==
+            (change.value.startsWith("assistant-image:") ? String((data as Record<string, unknown>)[change.field] ?? "") : change.value);
+        })) throw new Error("Alteração não confirmada após a gravação.");
+        revalidatePath("/admin/events");
+        revalidatePath(`/admin/events/${event.id}`);
+        revalidatePath("/");
+        revalidatePath("/sitemap.xml");
+        for (const slug of new Set([event.slug, verified.slug])) {
+          revalidatePath(`/evento/${slug}`);
+          revalidatePath(`/evento/${slug}/checkout`);
+        }
+        const text = `Alteração confirmada em ${verified.title}: ${proposal.changes.map((change) => change.field).join(", ")}. Conferi os valores salvos no sistema.`;
+        const message = await saveAssistantConfirmation(admin, proposal, text);
+        return NextResponse.json({ message });
+      } catch (cause) {
+        console.error("[admin-assistant] Falha ao alterar detalhes do evento", cause);
+        return error("Não consegui confirmar todos os dados do evento. Confira o painel antes de tentar novamente.", 503);
+      }
+    }
     if (proposal.kind === "LOT_ORDER_CHANGE") {
       const event = await prisma.event.findFirst({ where: { id: proposal.eventId, organizationId: admin.organizationId },
         select: { id: true, slug: true, title: true } });
