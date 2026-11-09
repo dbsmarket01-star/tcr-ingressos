@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { canAccessArea, canAccessEvent, getCurrentAdmin } from "@/features/auth/auth.service";
 import { answerAssistant, discardAssistantProposal, getAssistantProposal, getPendingAssistantProposal, listAssistantMessages, saveAssistantConfirmation } from "@/features/assistant/admin-assistant.service";
 import { updateTicketLotPricing } from "@/features/lots/lot.service";
+import { updateEventStatus } from "@/features/events/event.service";
 import { ticketLotPricingSchema } from "@/features/lots/lot.schema";
 import { prisma } from "@/lib/prisma";
 
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (body.type === "confirm") {
-    if (!canAccessArea(admin.role, "EVENTS")) return error("Seu perfil pode consultar o assistente, mas não alterar ingressos.", 403);
+    if (!canAccessArea(admin.role, "EVENTS")) return error("Seu perfil pode consultar o assistente, mas não alterar eventos ou ingressos.", 403);
     const proposalId = String(body.proposalId || "").trim();
     if (!proposalId) return error("Proposta não informada.");
     const proposal = await getAssistantProposal(admin, proposalId);
@@ -57,6 +58,34 @@ export async function POST(request: NextRequest) {
     if (!canAccessEvent(admin, proposal.eventId)) return error("Você não tem acesso a este evento.", 403);
     const previouslyResolved = await prisma.adminAuditLog.findFirst({ where: { action: { in: ["ADMIN_ASSISTANT_APPLIED", "ADMIN_ASSISTANT_DISCARDED"] }, entityType: "ADMIN_ASSISTANT", entityId: proposal.id }, select: { id: true } });
     if (previouslyResolved) return error("Esta proposta já foi concluída ou cancelada.", 409);
+    if (proposal.kind === "EVENT_STATUS_CHANGE") {
+      const event = await prisma.event.findFirst({
+        where: { id: proposal.eventId, organizationId: admin.organizationId },
+        select: { id: true, title: true, slug: true, status: true }
+      });
+      if (!event) return error("Evento não encontrado.", 404);
+      if (event.status !== proposal.oldStatus) return error("O status mudou desde a proposta. Peça uma nova conferência.", 409);
+      try {
+        await updateEventStatus(event.id, proposal.newStatus);
+        const verified = await prisma.event.findUnique({ where: { id: event.id }, select: { status: true } });
+        if (verified?.status !== proposal.newStatus) throw new Error("Status não confirmado após a gravação.");
+        revalidatePath("/admin/events");
+        revalidatePath(`/admin/events/${event.id}`);
+        revalidatePath("/");
+        revalidatePath("/sitemap.xml");
+        revalidatePath(`/evento/${event.slug}`);
+        revalidatePath(`/evento/${event.slug}/checkout`);
+        revalidatePath(`/lista/${event.slug}`);
+        const text = proposal.newStatus === "UNPUBLISHED"
+          ? `Alteração confirmada: ${event.title} foi retirado do ar e está inativo. Conferi o status salvo no sistema. Ingressos e vendas existentes foram preservados.`
+          : `Alteração confirmada: ${event.title} foi publicado. Conferi o status salvo no sistema.`;
+        const message = await saveAssistantConfirmation(admin, proposal, text);
+        return NextResponse.json({ message });
+      } catch (cause) {
+        console.error("[admin-assistant] Falha ao alterar status do evento", cause);
+        return error("Não consegui confirmar o status do evento. Confira a página do evento antes de tentar novamente.", 503);
+      }
+    }
     const lot = await prisma.ticketLot.findFirst({
       where: { id: proposal.lotId, eventId: proposal.eventId, event: { organizationId: admin.organizationId } },
       select: { id: true, name: true, priceInCents: true, serviceFeeBps: true, pixDiscountPercentBps: true,

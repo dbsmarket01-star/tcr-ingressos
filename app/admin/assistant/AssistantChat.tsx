@@ -5,7 +5,8 @@ import { assistantAcknowledgement } from "@/features/assistant/assistant-request
 import styles from "./assistant.module.css";
 
 type ChatMessage = { id: string; role: "user" | "assistant"; text: string; createdAt: string };
-type Proposal = { id: string; eventTitle: string; lotName: string; oldPriceInCents: number; newPriceInCents: number };
+type Proposal = { kind: "PRICE_CHANGE"; id: string; eventTitle: string; lotName: string; oldPriceInCents: number; newPriceInCents: number }
+  | { kind: "EVENT_STATUS_CHANGE"; id: string; eventTitle: string; oldStatus: "PUBLISHED" | "UNPUBLISHED"; newStatus: "PUBLISHED" | "UNPUBLISHED" };
 
 function money(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -86,7 +87,7 @@ export function AssistantChat({ name }: { name: string }) {
           {!loading && messages.length === 0 ? <div className={styles.welcome}><span aria-hidden="true">✦</span><h2>Como posso ajudar, {name.split(" ")[0]}?</h2><p>Escreva o que precisa em linguagem natural. Posso consultar os dados e, quando houver uma mudança disponível, mostrar uma proposta para você revisar.</p></div> : null}
           {messages.map((message) => <article key={message.id} className={`${styles.bubble} ${message.role === "user" ? styles.user : styles.assistant}`}><p>{message.text}</p><time>{new Date(message.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</time></article>)}
           {busy ? <div className={styles.thinking}>Consultando as informações do sistema...</div> : null}
-          {proposal ? <section className={styles.proposal}><span className={styles.proposalLabel}>Alteração aguardando confirmação</span><h3>{proposal.eventTitle}</h3><p>{proposal.lotName}</p><div className={styles.priceChange}><span>{money(proposal.oldPriceInCents)}</span><b>→</b><strong>{money(proposal.newPriceInCents)}</strong></div><div className={styles.proposalActions}><button type="button" onClick={confirm} disabled={busy}>Confirmar alteração</button><button type="button" onClick={discard} disabled={busy}>Cancelar</button></div></section> : null}
+          {proposal ? <section className={styles.proposal}><span className={styles.proposalLabel}>Alteração aguardando confirmação</span><h3>{proposal.eventTitle}</h3>{proposal.kind === "PRICE_CHANGE" ? <><p>{proposal.lotName}</p><div className={styles.priceChange}><span>{money(proposal.oldPriceInCents)}</span><b>→</b><strong>{money(proposal.newPriceInCents)}</strong></div></> : <><p>Status do evento</p><div className={styles.priceChange}><span>{proposal.oldStatus === "PUBLISHED" ? "No ar" : "Inativo"}</span><b>→</b><strong>{proposal.newStatus === "PUBLISHED" ? "No ar" : "Inativo (fora do ar)"}</strong></div></>}<div className={styles.proposalActions}><button type="button" onClick={confirm} disabled={busy}>Confirmar alteração</button><button type="button" onClick={discard} disabled={busy}>Cancelar</button></div></section> : null}
           <div ref={bottomRef} />
         </div>
         {error ? <div className={styles.error} role="alert">{error}</div> : null}

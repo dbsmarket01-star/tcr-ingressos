@@ -26,6 +26,7 @@ vi.mock("@/features/assistant/admin-assistant.service", () => ({
   getPendingAssistantProposal: vi.fn(), listAssistantMessages: vi.fn(), saveAssistantConfirmation: mocks.saveAssistantConfirmation
 }));
 vi.mock("@/features/lots/lot.service", () => ({ updateTicketLotPricing: mocks.updatePricing }));
+vi.mock("@/features/events/event.service", () => ({ updateEventStatus: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: {
   organization: { findUnique: async () => ({ slug: "tcr-ingressos" }) },
   adminAuditLog: { findFirst: mocks.findResolved },
