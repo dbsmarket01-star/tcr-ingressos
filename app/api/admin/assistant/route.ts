@@ -41,11 +41,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(await answerAssistant(admin, message));
     } catch (cause) {
       console.error("[admin-assistant] Falha ao responder", cause);
+      if (cause instanceof Error && cause.message.includes("credit_balance_exhausted")) {
+        return error("O Assistente IA está temporariamente indisponível: a conta da API OpenAI está sem crédito. Nenhuma alteração foi feita.", 503);
+      }
       return error("Não consegui processar o pedido agora. Nenhuma alteração foi feita.", 503);
     }
   }
 
   if (body.type === "confirm") {
+    if (!canAccessArea(admin.role, "EVENTS")) return error("Seu perfil pode consultar o assistente, mas não alterar ingressos.", 403);
     const proposalId = String(body.proposalId || "").trim();
     if (!proposalId) return error("Proposta não informada.");
     const proposal = await getAssistantProposal(admin, proposalId);
