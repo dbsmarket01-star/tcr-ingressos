@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getAdminAllowedEventIds, type CurrentAdmin } from "@/features/auth/auth.service";
 import { isReadOnlyAssistantRequest } from "@/features/assistant/assistant-request";
+import { answerReadOnlyTicketQuestion } from "@/features/assistant/assistant-direct-answer";
 
 export type AssistantProposal = {
   id: string;
@@ -117,6 +118,13 @@ export async function answerAssistant(admin: CurrentAdmin, message: string) {
     select: { id: true, title: true, city: true, startsAt: true, status: true,
       lots: { select: { id: true, name: true, priceInCents: true, status: true, totalQuantity: true, soldQuantity: true }, orderBy: { sortOrder: "asc" } } }
   }) : [];
+  if (readOnly) {
+    const directAnswer = answerReadOnlyTicketQuestion(message, rankedEvents, eventDetails);
+    if (directAnswer) {
+      const saved = await saveMessage(admin, "assistant", directAnswer);
+      return { message: { id: saved.id, role: "assistant" as const, text: directAnswer, createdAt: saved.createdAt.toISOString() }, proposal: null };
+    }
+  }
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) throw new Error("A chave da IA não está configurada nesta bilheteria.");
   const response = await fetch("https://api.openai.com/v1/responses", {
