@@ -18,6 +18,12 @@ export function AssistantChat({ name }: { name: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  function useExample(text: string) {
+    setInput(text);
+    inputRef.current?.focus();
+  }
 
   useEffect(() => {
     fetch("/api/admin/assistant", { cache: "no-store" })
@@ -79,18 +85,18 @@ export function AssistantChat({ name }: { name: string }) {
   return (
     <div className={styles.layout}>
       <section className={styles.chat} aria-label="Conversa com o Assistente IA">
-        <header className={styles.chatHeader}><span className={styles.avatar}>✦</span><div><strong>Assistente IA da TCR</strong><small>Consultas reais e alterações com sua confirmação</small></div></header>
+        <header className={styles.chatHeader}><span className={styles.avatar} aria-hidden="true">✦</span><div className={styles.headerTitle}><span className={styles.headerEyebrow}>Central de operação · TCR Ingressos</span><strong>Assistente IA</strong><small>Consulte eventos e revise propostas antes de confirmar</small></div><span className={styles.headerBadge}>Alterações com confirmação</span></header>
         <div className={styles.messages} aria-live="polite">
-          {!loading && messages.length === 0 ? <div className={styles.welcome}><span>✦</span><h2>Como posso ajudar, {name.split(" ")[0]}?</h2><p>Descreva a alteração ou envie o link de um evento antigo. Vou conferir os dados antes de propor qualquer ação.</p></div> : null}
+          {!loading && messages.length === 0 ? <div className={styles.welcome}><span aria-hidden="true">✦</span><h2>Como posso ajudar, {name.split(" ")[0]}?</h2><p>Descreva a alteração ou envie o link de um evento antigo. Vou conferir os dados antes de propor qualquer ação.</p></div> : null}
           {messages.map((message) => <article key={message.id} className={`${styles.bubble} ${message.role === "user" ? styles.user : styles.assistant}`}><p>{message.text}</p><time>{new Date(message.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</time></article>)}
           {busy ? <div className={styles.thinking}>Conferindo os dados...</div> : null}
           {proposal ? <section className={styles.proposal}><span className={styles.proposalLabel}>Alteração aguardando confirmação</span><h3>{proposal.eventTitle}</h3><p>{proposal.lotName}</p><div className={styles.priceChange}><span>{money(proposal.oldPriceInCents)}</span><b>→</b><strong>{money(proposal.newPriceInCents)}</strong></div><div className={styles.proposalActions}><button type="button" onClick={confirm} disabled={busy}>Confirmar alteração</button><button type="button" onClick={discard} disabled={busy}>Cancelar</button></div></section> : null}
           <div ref={bottomRef} />
         </div>
         {error ? <div className={styles.error} role="alert">{error}</div> : null}
-        <form className={styles.composer} onSubmit={send}><label className={styles.srOnly} htmlFor="assistant-prompt">Escreva sua solicitação</label><textarea id="assistant-prompt" rows={2} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} placeholder="Ex.: Altere o Ouro Meia do evento de Sorocaba para R$ 157,90" maxLength={2000} disabled={busy} /><button type="submit" disabled={!input.trim() || busy}>Enviar</button></form>
+        <form className={styles.composer} onSubmit={send}><label className={styles.srOnly} htmlFor="assistant-prompt">Escreva sua solicitação</label><div className={styles.composerField}><textarea ref={inputRef} id="assistant-prompt" rows={2} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} placeholder="Peça uma consulta ou alteração de ingresso..." maxLength={2000} disabled={busy} /><small>Enter para enviar · Shift + Enter para pular linha</small></div><button type="submit" disabled={!input.trim() || busy}>Enviar <span aria-hidden="true">↗</span></button></form>
       </section>
-      <aside className={styles.help}><span className={styles.eyebrow}>Comece por aqui</span><h2>Peça como você pediria a um colega</h2><p>O assistente consulta os eventos da sua bilheteria. Mudanças de preço aparecem primeiro como proposta; nada é alterado só por enviar uma mensagem.</p><div className={styles.example}><strong>Consultar</strong><span>“Quais ingressos estão ativos no evento de Sorocaba?”</span></div><div className={styles.example}><strong>Alterar preço</strong><span>“Mude o Ouro Meia de Sorocaba para R$ 157,90.”</span></div><div className={styles.example}><strong>Analisar link</strong><span>“Confira este link do site antigo e me diga os dados do evento.”</span></div><p className={styles.note}>Criação completa por link, mapas e outras alterações ainda não são executadas automaticamente nesta primeira versão. O assistente deve informar isso claramente.</p></aside>
+      <aside className={styles.help}><span className={styles.eyebrow}>Sua área de trabalho</span><h2>O que você pode pedir</h2><p>Escolha um exemplo para levar o texto ao chat ou escreva com suas palavras.</p><button type="button" className={styles.example} onClick={() => useExample("Quais ingressos estão ativos no evento Rodrigo Teaser em Sorocaba?")}><span className={styles.exampleIcon} aria-hidden="true">⌕</span><span><strong>Consultar ingressos</strong><small>Veja categorias, preços e disponibilidade.</small></span><span className={styles.exampleArrow} aria-hidden="true">↗</span></button><button type="button" className={styles.example} onClick={() => useExample("Mude o preço do ingresso Ouro Meia do evento Rodrigo Teaser em Sorocaba para R$ 157,90.")}><span className={styles.exampleIcon} aria-hidden="true">R$</span><span><strong>Alterar preço</strong><small>Confira a proposta antes de salvar.</small></span><span className={styles.exampleArrow} aria-hidden="true">↗</span></button><button type="button" className={styles.example} onClick={() => useExample("Confira este link do site antigo e me diga os dados do evento: ")}><span className={styles.exampleIcon} aria-hidden="true">↗</span><span><strong>Analisar link</strong><small>Cole o endereço público do evento antigo.</small></span><span className={styles.exampleArrow} aria-hidden="true">↗</span></button><div className={styles.note}><strong>Antes de executar</strong><p>O assistente só salva uma mudança de preço após sua confirmação. Criação de eventos, mapas e outras alterações ainda não são automáticas.</p></div></aside>
     </div>
   );
 }
