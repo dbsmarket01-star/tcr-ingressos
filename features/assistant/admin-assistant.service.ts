@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getAdminAllowedEventIds, type CurrentAdmin } from "@/features/auth/auth.service";
 import { isReadOnlyAssistantRequest } from "@/features/assistant/assistant-request";
 import { answerReadOnlyTicketQuestion } from "@/features/assistant/assistant-direct-answer";
+import { activeSolidarityLots, isPauseSolidarityRequest } from "@/features/assistant/assistant-solidarity";
 import type { AssistantImage } from "@/features/assistant/assistant-image";
 
 export type AssistantProposal = {
@@ -220,6 +221,37 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
   const contextEvents = rankedEvents.length
     ? rankedEvents.map((item) => item.event)
     : image ? [] : eventIndex.slice(0, 25);
+  if (!readOnly && !image && isPauseSolidarityRequest(message) && currentRanks.length) {
+    const first = currentRanks[0];
+    const second = currentRanks[1];
+    const event = second?.score === first.score ? null : eventDetails.find((item) => item.id === first.event.id);
+    if (event) {
+      const active = activeSolidarityLots(event.lots);
+      if (active.length === 0) {
+        const text = `Conferi todos os setores de ${event.title}: não há ingresso solidário ativo. Nenhum outro tipo de ingresso foi alterado.`;
+        const saved = await saveMessage(admin, "assistant", text);
+        return { userMessage, message: { id: saved.id, role: "assistant" as const, text, createdAt: saved.createdAt.toISOString() }, proposal: null };
+      }
+      if (active.length <= 20) {
+        const changes: AssistantLotChange[] = active.map((lot) => ({
+          operation: "UPDATE", lotId: lot.id, templateLotId: "", oldName: lot.name,
+          oldDescription: lot.description || "", oldPriceInCents: lot.priceInCents,
+          oldTotalQuantity: lot.totalQuantity, oldStatus: lot.status, name: lot.name,
+          description: lot.description || "", priceInCents: lot.priceInCents,
+          totalQuantity: lot.totalQuantity, status: "PAUSED"
+        }));
+        const row = await prisma.adminAuditLog.create({ data: { adminUserId: admin.id,
+          action: "ADMIN_ASSISTANT_PROPOSAL", entityType: "ADMIN_ASSISTANT",
+          metadata: { kind: "LOT_CHANGES", organizationId: admin.organizationId,
+            eventId: event.id, eventTitle: event.title, changes } } });
+        const proposal: AssistantProposal = { kind: "LOT_CHANGES", id: row.id,
+          eventId: event.id, eventTitle: event.title, changes };
+        const text = `Encontrei ${active.length} ingresso(s) solidário(s) ainda ativo(s) em ${event.title}: ${active.map((lot) => lot.name).join(", ")}. Vou pausar somente esses ingressos, sem mexer nas meias-entradas ou demais categorias. Confira a proposta abaixo antes de confirmar.`;
+        const saved = await saveMessage(admin, "assistant", text);
+        return { userMessage, message: { id: saved.id, role: "assistant" as const, text, createdAt: saved.createdAt.toISOString() }, proposal };
+      }
+    }
+  }
   if (readOnly && !image) {
     const directAnswer = answerReadOnlyTicketQuestion(message, rankedEvents, eventDetails);
     if (directAnswer) {
