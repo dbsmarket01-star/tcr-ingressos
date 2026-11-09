@@ -28,10 +28,10 @@ export async function GET(request: NextRequest) {
   const imageId = request.nextUrl.searchParams.get("imageId");
   if (imageId) {
     if (imageId.length > 100) return error("Imagem inválida.");
-    const bytes = await getAssistantImage(admin, imageId);
-    if (!bytes) return error("Imagem não encontrada.", 404);
-    return new NextResponse(new Uint8Array(bytes), { headers: {
-      "Content-Type": "image/jpeg", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"
+    const image = await getAssistantImage(admin, imageId);
+    if (!image) return error("Imagem não encontrada.", 404);
+    return new NextResponse(new Uint8Array(image.bytes), { headers: {
+      "Content-Type": image.mime, "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"
     } });
   }
   const { searchParams } = request.nextUrl;

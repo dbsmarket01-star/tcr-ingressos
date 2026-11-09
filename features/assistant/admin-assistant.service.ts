@@ -171,8 +171,8 @@ export async function getAssistantImage(admin: CurrentAdmin, id: string) {
   });
   const meta = row?.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
     ? row.metadata as Record<string, unknown> : null;
-  if (!meta || meta.organizationId !== admin.organizationId || meta.mime !== "image/jpeg" || typeof meta.data !== "string") return null;
-  return Buffer.from(meta.data, "base64");
+  if (!meta || meta.organizationId !== admin.organizationId || !["image/jpeg", "image/png", "image/webp"].includes(String(meta.mime)) || typeof meta.data !== "string") return null;
+  return { bytes: Buffer.from(meta.data, "base64"), mime: String(meta.mime) };
 }
 
 async function saveMessage(admin: CurrentAdmin, role: "user" | "assistant", text: string, image?: { id: string; name: string }) {

@@ -39,8 +39,8 @@ export function AssistantChat({ name }: { name: string }) {
   function chooseImage(event: ChangeEvent<HTMLInputElement>) {
     const selected = event.target.files?.[0] || null;
     if (!selected) return;
-    if (!["image/jpeg", "image/png", "image/webp"].includes(selected.type) || selected.size > 5 * 1024 * 1024) {
-      setError("Envie uma imagem JPG, PNG ou WEBP de até 5 MB.");
+    if (!["image/jpeg", "image/png", "image/webp"].includes(selected.type) || selected.size > 2 * 1024 * 1024) {
+      setError("Envie uma imagem JPG, PNG ou WEBP de até 2 MB.");
       event.target.value = "";
       return;
     }
@@ -156,7 +156,7 @@ export function AssistantChat({ name }: { name: string }) {
           <div ref={bottomRef} />
         </div>
         {error ? <div className={styles.error} role="alert">{error}</div> : null}
-        <form className={styles.composer} onSubmit={send}><input ref={fileInputRef} className={styles.srOnly} type="file" accept="image/jpeg,image/png,image/webp" onChange={chooseImage} aria-label="Selecionar imagem ou print" disabled={busy} /><button className={styles.attachButton} type="button" onClick={() => fileInputRef.current?.click()} disabled={busy} aria-label="Anexar imagem ou print">＋</button><label className={styles.srOnly} htmlFor="assistant-prompt">Escreva sua solicitação</label><div className={styles.composerField}>{image ? <div className={styles.selectedImage}><img src={imagePreview} alt="Prévia do print selecionado" /><span>{image.name}</span><button type="button" onClick={() => { setImage(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} aria-label="Remover imagem">×</button></div> : null}<textarea id="assistant-prompt" rows={2} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} placeholder="Escreva sua pergunta ou solicitação..." maxLength={2000} disabled={busy} /><small>Enter para enviar · Shift + Enter para pular linha · JPG/PNG/WEBP até 5 MB</small></div><button type="submit" disabled={(!input.trim() && !image) || busy}>Enviar <span aria-hidden="true">↗</span></button></form>
+        <form className={styles.composer} onSubmit={send}><input ref={fileInputRef} className={styles.srOnly} type="file" accept="image/jpeg,image/png,image/webp" onChange={chooseImage} aria-label="Selecionar imagem ou print" disabled={busy} /><button className={styles.attachButton} type="button" onClick={() => fileInputRef.current?.click()} disabled={busy} aria-label="Anexar imagem ou print">＋</button><label className={styles.srOnly} htmlFor="assistant-prompt">Escreva sua solicitação</label><div className={styles.composerField}>{image ? <div className={styles.selectedImage}><img src={imagePreview} alt="Prévia do print selecionado" /><span>{image.name}</span><button type="button" onClick={() => { setImage(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} aria-label="Remover imagem">×</button></div> : null}<textarea id="assistant-prompt" rows={2} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} placeholder="Escreva sua pergunta ou solicitação..." maxLength={2000} disabled={busy} /><small>Enter para enviar · Shift + Enter para pular linha · JPG/PNG/WEBP até 2 MB</small></div><button type="submit" disabled={(!input.trim() && !image) || busy}>Enviar <span aria-hidden="true">↗</span></button></form>
       </section>
     </div>
   );
