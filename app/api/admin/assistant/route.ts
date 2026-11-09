@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { canAccessArea, canAccessEvent, getCurrentAdmin } from "@/features/auth/auth.service";
 import { answerAssistant, discardAssistantProposal, getAssistantImage, getAssistantProposal, getPendingAssistantProposal, listAssistantMessages, saveAssistantConfirmation } from "@/features/assistant/admin-assistant.service";
 import { prepareAssistantImage } from "@/features/assistant/assistant-image";
-import { applyAssistantLotChanges, updateTicketLotPricing } from "@/features/lots/lot.service";
+import { applyAssistantLotChanges, applyAssistantLotOrder, updateTicketLotPricing } from "@/features/lots/lot.service";
 import { updateEventStatus } from "@/features/events/event.service";
 import { ticketLotPricingSchema } from "@/features/lots/lot.schema";
 import { prisma } from "@/lib/prisma";
@@ -85,6 +85,23 @@ export async function POST(request: NextRequest) {
     if (!canAccessEvent(admin, proposal.eventId)) return error("Você não tem acesso a este evento.", 403);
     const previouslyResolved = await prisma.adminAuditLog.findFirst({ where: { action: { in: ["ADMIN_ASSISTANT_APPLIED", "ADMIN_ASSISTANT_DISCARDED"] }, entityType: "ADMIN_ASSISTANT", entityId: proposal.id }, select: { id: true } });
     if (previouslyResolved) return error("Esta proposta já foi concluída ou cancelada.", 409);
+    if (proposal.kind === "LOT_ORDER_CHANGE") {
+      const event = await prisma.event.findFirst({ where: { id: proposal.eventId, organizationId: admin.organizationId },
+        select: { id: true, slug: true, title: true } });
+      if (!event) return error("Evento não encontrado.", 404);
+      try {
+        const verified = await applyAssistantLotOrder(event.id, proposal.expectedIds, proposal.desiredIds);
+        revalidatePath(`/evento/${event.slug}`);
+        revalidatePath(`/evento/${event.slug}/checkout`);
+        revalidatePath(`/admin/events/${event.id}/lots`);
+        const text = `Ordem gravada e conferida para ${event.title}: ${verified.length} ingressos visíveis, sem posições repetidas. Setores e categorias seguem a sequência aprovada; preços, estoques, cores, status e vendas foram preservados.`;
+        const message = await saveAssistantConfirmation(admin, proposal, text);
+        return NextResponse.json({ message });
+      } catch (cause) {
+        console.error("[admin-assistant] Falha ao ordenar ingressos", cause);
+        return error(cause instanceof Error ? cause.message : "Não consegui confirmar a ordem dos ingressos.", 409);
+      }
+    }
     if (proposal.kind === "LOT_CHANGES") {
       const event = await prisma.event.findFirst({ where: { id: proposal.eventId, organizationId: admin.organizationId }, select: { id: true, slug: true, title: true } });
       if (!event) return error("Evento não encontrado.", 404);

@@ -4,9 +4,19 @@ import { getAdminAllowedEventIds, type CurrentAdmin } from "@/features/auth/auth
 import { isReadOnlyAssistantRequest } from "@/features/assistant/assistant-request";
 import { answerReadOnlyTicketQuestion } from "@/features/assistant/assistant-direct-answer";
 import { activeSolidarityLots, isPauseSolidarityRequest } from "@/features/assistant/assistant-solidarity";
+import { isTicketOrderRequest, proposedTicketOrder } from "@/features/assistant/assistant-lot-order";
+import { orderTicketLots } from "@/features/lots/lot-order";
 import type { AssistantImage } from "@/features/assistant/assistant-image";
 
 export type AssistantProposal = {
+  kind: "LOT_ORDER_CHANGE";
+  id: string;
+  eventId: string;
+  eventTitle: string;
+  expectedIds: string[];
+  desiredIds: string[];
+  orderedNames: string[];
+} | {
   kind: "LOT_CHANGES";
   id: string;
   eventId: string;
@@ -221,6 +231,31 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
   const contextEvents = rankedEvents.length
     ? rankedEvents.map((item) => item.event)
     : image ? [] : eventIndex.slice(0, 25);
+  if (!readOnly && isTicketOrderRequest(message) && rankedEvents.length) {
+    const [first, second] = rankedEvents;
+    const event = second?.score === first.score ? null : eventDetails.find((item) => item.id === first.event.id);
+    if (event) {
+      const visible = orderTicketLots(event.lots.filter((lot) => lot.status === "ACTIVE" || lot.status === "SOLD_OUT"));
+      const desired = proposedTicketOrder(event.lots);
+      const expectedIds = visible.map((lot) => lot.id);
+      const desiredIds = desired.map((lot) => lot.id);
+      if (desiredIds.join("|") === expectedIds.join("|")) {
+        const text = `Conferi a ordem de ${event.title}: os ingressos visíveis já estão agrupados por setor e, em cada setor, seguem Meia Entrada, Black November e Inteira. Nenhuma alteração foi feita.`;
+        const saved = await saveMessage(admin, "assistant", text);
+        return { userMessage, message: { id: saved.id, role: "assistant" as const, text, createdAt: saved.createdAt.toISOString() }, proposal: null };
+      }
+      const orderedNames = desired.map((lot) => lot.name);
+      const row = await prisma.adminAuditLog.create({ data: { adminUserId: admin.id,
+        action: "ADMIN_ASSISTANT_PROPOSAL", entityType: "ADMIN_ASSISTANT",
+        metadata: { kind: "LOT_ORDER_CHANGE", organizationId: admin.organizationId,
+          eventId: event.id, eventTitle: event.title, expectedIds, desiredIds, orderedNames } } });
+      const proposal: AssistantProposal = { kind: "LOT_ORDER_CHANGE", id: row.id,
+        eventId: event.id, eventTitle: event.title, expectedIds, desiredIds, orderedNames };
+      const text = `Encontrei a ordem incorreta em ${event.title}. Vou alterar a posição real dos ingressos, mantendo os setores na sequência atual e colocando Meia Entrada, Black November e Inteira nessa ordem dentro de cada setor. Preços, estoque, cores, status e vendas serão preservados. Confira a sequência na proposta antes de confirmar.`;
+      const saved = await saveMessage(admin, "assistant", text);
+      return { userMessage, message: { id: saved.id, role: "assistant" as const, text, createdAt: saved.createdAt.toISOString() }, proposal };
+    }
+  }
   if (!readOnly && !image && isPauseSolidarityRequest(message) && currentRanks.length) {
     const first = currentRanks[0];
     const second = currentRanks[1];
@@ -347,6 +382,14 @@ export async function getAssistantProposal(admin: CurrentAdmin, id: string): Pro
   if (Date.now() - row.createdAt.getTime() > 60 * 60 * 1000) return null;
   const meta = row.metadata as Prisma.JsonObject;
   if (meta.organizationId !== admin.organizationId) return null;
+  if (meta.kind === "LOT_ORDER_CHANGE") {
+    if (!Array.isArray(meta.expectedIds) || !Array.isArray(meta.desiredIds) || !Array.isArray(meta.orderedNames) ||
+      meta.expectedIds.length !== meta.desiredIds.length || meta.desiredIds.length !== meta.orderedNames.length ||
+      meta.desiredIds.length > 200) return null;
+    return { kind: "LOT_ORDER_CHANGE", id: row.id, eventId: String(meta.eventId || ""),
+      eventTitle: String(meta.eventTitle || ""), expectedIds: meta.expectedIds.map(String),
+      desiredIds: meta.desiredIds.map(String), orderedNames: meta.orderedNames.map(String) };
+  }
   if (meta.kind === "LOT_CHANGES") {
     if (!Array.isArray(meta.changes) || meta.changes.length < 1 || meta.changes.length > 20) return null;
     return { kind: "LOT_CHANGES", id: row.id, eventId: String(meta.eventId || ""), eventTitle: String(meta.eventTitle || ""), changes: meta.changes as AssistantLotChange[] };

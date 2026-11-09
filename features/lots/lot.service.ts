@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import type { TicketLotInput, TicketLotPricingInput } from "./lot.schema";
 import { ticketLotPricingSchema } from "./lot.schema";
 import type { AssistantLotChange } from "@/features/assistant/admin-assistant.service";
+import { orderTicketLots } from "./lot-order";
 
 async function resolveHotelIdForLot(
   tx: Prisma.TransactionClient,
@@ -408,5 +409,29 @@ export async function applyAssistantLotChanges(eventId: string, changes: Assista
     }
     await normalizeEventLotOrder(tx, eventId);
     return tx.ticketLot.findMany({ where: { eventId, status: LotStatus.ACTIVE }, orderBy: { sortOrder: "asc" }, select: { id: true, sortOrder: true } });
+  }, { timeout: 20_000 });
+}
+
+/** Reorder visible tickets only; preserve every ticket's identity, sale state and pricing. */
+export async function applyAssistantLotOrder(eventId: string, expectedIds: string[], desiredIds: string[]) {
+  return prisma.$transaction(async (tx) => {
+    await lockEventLotOrder(tx, eventId);
+    const lots = await tx.ticketLot.findMany({ where: { eventId }, select: { id: true, name: true, status: true, sortOrder: true, createdAt: true } });
+    const visible = orderTicketLots(lots.filter((lot) => lot.status === "ACTIVE" || lot.status === "SOLD_OUT"));
+    const currentIds = visible.map((lot) => lot.id);
+    if (currentIds.join("|") !== expectedIds.join("|")) throw new Error("A ordem dos ingressos mudou desde a proposta. Peça nova conferência.");
+    if (new Set(desiredIds).size !== currentIds.length || desiredIds.length !== currentIds.length ||
+      desiredIds.some((id) => !currentIds.includes(id))) throw new Error("A lista proposta não contém exatamente os ingressos visíveis do evento.");
+    const hidden = lots.filter((lot) => lot.status !== "ACTIVE" && lot.status !== "SOLD_OUT")
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id));
+    for (const [sortOrder, id] of [...desiredIds, ...hidden.map((lot) => lot.id)].entries()) {
+      await tx.ticketLot.update({ where: { id }, data: { sortOrder } });
+    }
+    await normalizeEventLotOrder(tx, eventId);
+    const verified = await tx.ticketLot.findMany({ where: { eventId, status: { in: [LotStatus.ACTIVE, LotStatus.SOLD_OUT] } },
+      orderBy: { sortOrder: "asc" }, select: { id: true, sortOrder: true } });
+    if (verified.map((lot) => lot.id).join("|") !== desiredIds.join("|")) throw new Error("A ordem gravada não corresponde à proposta.");
+    if (new Set(verified.map((lot) => lot.sortOrder)).size !== verified.length) throw new Error("A ordem gravada contém posições repetidas.");
+    return verified;
   }, { timeout: 20_000 });
 }
