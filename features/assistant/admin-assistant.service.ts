@@ -161,6 +161,25 @@ export function requestedLotColor(message: string) {
   return candidates.length === 1 ? candidates[0][1] : null;
 }
 
+export function ownAssistantContext<T extends { authorId: string | null }>(messages: T[], adminId: string) {
+  return messages.filter((item) => item.authorId === adminId);
+}
+
+async function listOwnAssistantContext(admin: CurrentAdmin) {
+  const rows = await prisma.adminAuditLog.findMany({
+    where: { action: "ADMIN_ASSISTANT_MESSAGE", entityType: "ADMIN_ASSISTANT", adminUserId: admin.id,
+      metadata: { path: ["organizationId"], equals: admin.organizationId } },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 12,
+    select: { id: true, metadata: true }
+  });
+  return rows.reverse().map((row) => {
+    const meta = row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
+      ? row.metadata as Record<string, unknown> : {};
+    return { id: row.id, authorId: admin.id, role: meta.role === "assistant" ? "assistant" as const : "user" as const,
+      text: String(meta.text || "") };
+  });
+}
+
 export function formatAssistantEventDate(value: Date) {
   const parts = new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric",
@@ -288,19 +307,21 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
   const userMessage = { id: savedUser.id, role: "user" as const, text: message,
     imageId: savedImage?.id || null, imageName: image?.name || null, createdAt: savedUser.createdAt.toISOString() };
   const allowedEventIds = getAdminAllowedEventIds(admin);
-  const [eventIndex, legacyPage, history] = await Promise.all([
+  const [eventIndex, legacyPage, previousMessages] = await Promise.all([
     prisma.event.findMany({
       where: { organizationId: admin.organizationId, ...(allowedEventIds ? { id: { in: allowedEventIds } } : {}) },
       orderBy: { updatedAt: "desc" },
       select: { id: true, title: true, city: true, slug: true, startsAt: true, status: true }
     }),
     readLegacyPage(message),
-    listAssistantMessages(admin, { period: "all" })
+    listOwnAssistantContext(admin)
   ]);
-  const previousMessages = history.messages;
+  // The visible transcript belongs to the team, but interpretation uses a separate,
+  // per-operator query so a busy shared history cannot evict the active context.
   const currentRanks = eventIndex.map((event) => ({ event, score: rankAssistantEvent(message, event) }))
     .filter((item) => item.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
-  const context = previousMessages.slice(-5).map((item) => item.text).join(" ");
+  const context = [...previousMessages].reverse().find((item) => item.id !== savedUser.id &&
+    item.role === "user" && eventIndex.some((event) => rankAssistantEvent(item.text, event) > 0))?.text || "";
   const rankedEvents = currentRanks.length ? currentRanks : eventIndex.map((event) => ({ event, score: rankAssistantEvent(context, event) }))
     .filter((item) => item.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
   const eventDetails = rankedEvents.length ? await prisma.event.findMany({

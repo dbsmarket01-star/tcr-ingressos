@@ -4,7 +4,7 @@ function normalize(value: string) {
 
 export function isPauseSolidarityRequest(message: string) {
   const text = normalize(message);
-  return /\b(pausar|pause|desativar|desative|suspender|suspenda)\b/.test(text)
+  return /\b(pausar|pause|desativar|desative|suspender|suspenda|tira|tire|retira|retire|remova|remove)\b/.test(text)
     && /\bsolidari(?:o|os|a|as)\b/.test(text);
 }
 
