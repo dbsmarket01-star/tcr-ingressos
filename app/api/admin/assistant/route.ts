@@ -9,6 +9,7 @@ import { ticketLotPricingSchema } from "@/features/lots/lot.schema";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 120;
 
 async function authorizedAdmin() {
   const admin = await getCurrentAdmin();
@@ -64,6 +65,12 @@ export async function POST(request: NextRequest) {
       if (cause instanceof Error && /^(Envie|O arquivo|Imagem inválida|A imagem)/.test(cause.message)) return error(cause.message);
       if (cause instanceof Error && cause.message.includes("credit_balance_exhausted")) {
         return error("O Assistente IA está temporariamente indisponível: a conta da API OpenAI está sem crédito. Nenhuma alteração foi feita.", 503);
+      }
+      if (cause instanceof Error && cause.name === "TimeoutError") {
+        return error("A análise demorou mais que o esperado. Tente enviar um recorte menor do print; nenhuma alteração foi feita.", 504);
+      }
+      if (cause instanceof Error && cause.message.startsWith("A IA retornou HTTP")) {
+        return error(`${cause.message} Nenhuma alteração foi feita.`, 503);
       }
       return error("Não consegui processar o pedido agora. Nenhuma alteração foi feita.", 503);
     }

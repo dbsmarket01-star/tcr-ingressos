@@ -215,6 +215,11 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
     select: { id: true, title: true, city: true, slug: true, startsAt: true, status: true,
       lots: { select: { id: true, name: true, description: true, priceInCents: true, status: true, totalQuantity: true, soldQuantity: true, reservedQuantity: true, serviceFeeBps: true, sortOrder: true }, orderBy: { sortOrder: "asc" } } }
   }) : [];
+  // A print-only request does not need the entire event catalog. Sending that catalog
+  // with the image made the vision call slow and prone to the 25-second timeout.
+  const contextEvents = rankedEvents.length
+    ? rankedEvents.map((item) => item.event)
+    : image ? [] : eventIndex.slice(0, 25);
   if (readOnly && !image) {
     const directAnswer = answerReadOnlyTicketQuestion(message, rankedEvents, eventDetails);
     if (directAnswer) {
@@ -225,7 +230,7 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) throw new Error("A chave da IA não está configurada nesta bilheteria.");
   const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST", signal: AbortSignal.timeout(25_000),
+    method: "POST", signal: AbortSignal.timeout(image ? 90_000 : 45_000),
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: process.env.ADMIN_ASSISTANT_MODEL?.trim() || process.env.OPENAI_CHAT_MODEL?.trim() || "gpt-5.4-mini",
@@ -235,7 +240,7 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
         { role: "user", content: [
           { type: "input_text", text: JSON.stringify({ request: message, readOnly,
             recentConversation: previousMessages.slice(-4).map((item) => ({ role: item.role, text: item.text.slice(0, 700) })),
-            events: eventIndex.map(({ startsAt, ...event }) => ({ ...event, startsAtBrazil: formatAssistantEventDate(startsAt) })),
+            events: contextEvents.map(({ startsAt, ...event }) => ({ ...event, startsAtBrazil: formatAssistantEventDate(startsAt) })),
             eventDetails: eventDetails.map(({ startsAt, ...event }) => ({ ...event, startsAtBrazil: formatAssistantEventDate(startsAt) })), legacyPage }) },
           ...(image ? [{ type: "input_image", image_url: `data:${image.mime};base64,${image.data}`, detail: "high" }] : [])
         ] }
