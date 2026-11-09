@@ -14,7 +14,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: {
   event: { findMany: mocks.findEvents }
 } }));
 
-import { answerAssistant } from "@/features/assistant/admin-assistant.service";
+import { answerAssistant, hasExplicitFirstLotPricing } from "@/features/assistant/admin-assistant.service";
 
 function decision(serviceFeeBps: number | undefined) {
   return { reply: "Vou criar o primeiro ingresso.", action: "LOT_CHANGES", eventId: "event-1", lotId: "",
@@ -23,6 +23,19 @@ function decision(serviceFeeBps: number | undefined) {
 }
 
 describe("assistant first lot proposal", () => {
+  it("requires the user's words to specify fee and card rules, not just the model output", () => {
+    expect(hasExplicitFirstLotPricing("Crie um ingresso de R$ 100 com 100 unidades")).toBe(false);
+    expect(hasExplicitFirstLotPricing("taxa 15%, cartão 2% desde 2 parcelas")).toBe(true);
+  });
+
+  it("rejects fees fabricated by the model when the user did not specify them", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "test-only-placeholder");
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue({ ok: true, json: async () => ({ output_text: JSON.stringify(decision(1500)) }) } as Response);
+    try {
+      const result = await answerAssistant({ id: "admin-1", role: "OWNER", organizationId: "org-1" } as Parameters<typeof answerAssistant>[0], "Crie Pista inteira no Show Teste em Sorocaba por R$ 100, estoque 100");
+      expect(result.proposal).toBeNull();
+    } finally { fetchSpy.mockRestore(); vi.unstubAllEnvs(); }
+  });
   it("proposes a first ticket only with explicit fee settings", async () => {
     vi.stubEnv("OPENAI_API_KEY", "test-only-placeholder");
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue({ ok: true, json: async () => ({ output_text: JSON.stringify(decision(1500)) }) } as Response);

@@ -10,7 +10,7 @@ type Proposal = { kind: "PRICE_CHANGE"; id: string; eventTitle: string; lotName:
   | { kind: "EVENT_DETAILS_CHANGE"; id: string; eventTitle: string; changes: Array<{ field: string; oldValue: string; value: string }> }
   | { kind: "EVENT_STATUS_CHANGE"; id: string; eventTitle: string; oldStatus: "PUBLISHED" | "UNPUBLISHED"; newStatus: "PUBLISHED" | "UNPUBLISHED" }
   | { kind: "LOT_ORDER_CHANGE"; id: string; eventTitle: string; orderedNames: string[] }
-  | { kind: "LOT_CHANGES"; id: string; eventTitle: string; changes: Array<{ operation: "CREATE" | "UPDATE"; oldName: string; name: string; oldPriceInCents: number; priceInCents: number; oldTotalQuantity: number; totalQuantity: number; oldStatus: string; status: string; description: string }> };
+  | { kind: "LOT_CHANGES"; id: string; eventTitle: string; changes: Array<{ operation: "CREATE" | "UPDATE"; oldName: string; name: string; oldPriceInCents: number; priceInCents: number; oldTotalQuantity: number; totalQuantity: number; oldStatus: string; status: string; description: string; oldHighlightColor?: string; highlightColor?: string }> };
 
 function money(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

@@ -97,11 +97,13 @@ export type AssistantLotChange = {
   oldPriceInCents: number;
   oldTotalQuantity: number;
   oldStatus: string;
+  oldHighlightColor?: string;
   name: string;
   description: string;
   priceInCents: number;
   totalQuantity: number;
   status: "ACTIVE" | "PAUSED" | "DRAFT" | "SOLD_OUT";
+  highlightColor?: string;
   serviceFeeBps?: number;
   cardInterestBpsPerInstallment?: number;
   cardInterestStartsAtInstallment?: number;
@@ -136,6 +138,27 @@ function extractResponseText(payload: unknown): string {
 
 function normalized(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+export function hasExplicitFirstLotPricing(message: string) {
+  const text = normalized(message);
+  return /taxa[^\n]{0,70}\d+(?:[.,]\d+)?\s*%/.test(text)
+    && /(juros|cartao)[^\n]{0,70}\d+(?:[.,]\d+)?\s*%/.test(text)
+    && /(a partir|desde|inicio|comeca)[^\n]{0,35}(?:\d+|primeira|segunda|terceira)[^\n]{0,25}parcela|parcela[^\n]{0,25}(?:\d+|primeira|segunda|terceira)/.test(text);
+}
+
+export function requestedLotColor(message: string) {
+  if (!/\bcor\b|\bcolorir\b|\bdestaque\b/i.test(message)) return null;
+  const hex = message.match(/#[0-9a-fA-F]{6}\b/);
+  if (hex) return hex[0].toUpperCase();
+  const text = normalized(message.split(/\bpara\b/i).at(-1) || message);
+  const colors: Record<string, string> = {
+    amarelo: "#E8B528", dourado: "#D4A017", ouro: "#D4A017", prata: "#A8ADB5",
+    verde: "#24865D", azul: "#2563EB", vermelho: "#DC3545", roxo: "#7546A8",
+    laranja: "#E67E22", rosa: "#D95F9F", marrom: "#8B5E3C"
+  };
+  const candidates = Object.entries(colors).filter(([name]) => new RegExp(`\\b${name}\\b`).test(text));
+  return candidates.length === 1 ? candidates[0][1] : null;
 }
 
 export function formatAssistantEventDate(value: Date) {
@@ -283,7 +306,7 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
   const eventDetails = rankedEvents.length ? await prisma.event.findMany({
     where: { organizationId: admin.organizationId, id: { in: rankedEvents.map((item) => item.event.id) } },
     select: { id: true, title: true, subtitle: true, description: true, city: true, state: true, slug: true, startsAt: true, doorsOpenAt: true, endsAt: true, salesStartsAt: true, salesEndsAt: true, venueName: true, venueAddress: true, bannerUrl: true, eventMapImageUrl: true, eventMapNotes: true, eventMapTemplate: true, googleMapsUrl: true, importantInfo: true, seoTitle: true, seoDescription: true, seoKeywords: true, seoImageUrl: true, supportWhatsappUrl: true, conversionSocialProofText: true, conversionUrgencyText: true, conversionCtaText: true, updatedAt: true, status: true,
-      lots: { select: { id: true, name: true, description: true, priceInCents: true, status: true, totalQuantity: true, soldQuantity: true, reservedQuantity: true, serviceFeeBps: true, sortOrder: true }, orderBy: { sortOrder: "asc" } } }
+      lots: { select: { id: true, name: true, description: true, priceInCents: true, status: true, totalQuantity: true, soldQuantity: true, reservedQuantity: true, serviceFeeBps: true, sortOrder: true, highlightColor: true }, orderBy: { sortOrder: "asc" } } }
   }) : [];
   // A print-only request does not need the entire event catalog. Sending that catalog
   // with the image made the vision call slow and prone to the 25-second timeout.
@@ -295,6 +318,34 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
     const text = `Encontrei mais de um evento possível. Antes de alterar qualquer coisa, confirme qual é o correto pelo nome, data ou ID:\n${candidates}`;
     const saved = await saveMessage(admin, "assistant", text);
     return { userMessage, message: { id: saved.id, role: "assistant" as const, text, createdAt: saved.createdAt.toISOString() }, proposal: null };
+  }
+  const color = requestedLotColor(message);
+  if (!readOnly && !image && color && currentRanks.length) {
+    const event = eventDetails.find((item) => item.id === currentRanks[0].event.id);
+    const matches = event?.lots.filter((lot) => normalized(message).includes(normalized(lot.name)))
+      .sort((a, b) => b.name.length - a.name.length) || [];
+    const lot = matches.length && (matches.length === 1 || matches[0].name.length > matches[1].name.length) ? matches[0] : null;
+    if (event && lot) {
+      if (lot.highlightColor === color) {
+        const text = `${lot.name} já está com a cor ${color} em ${event.title}. Nenhuma alteração foi feita.`;
+        const saved = await saveMessage(admin, "assistant", text);
+        return { userMessage, message: { id: saved.id, role: "assistant" as const, text, createdAt: saved.createdAt.toISOString() }, proposal: null };
+      }
+      const changes: AssistantLotChange[] = [{ operation: "UPDATE", lotId: lot.id, templateLotId: "",
+        oldName: lot.name, oldDescription: lot.description || "", oldPriceInCents: lot.priceInCents,
+        oldTotalQuantity: lot.totalQuantity, oldStatus: lot.status, oldHighlightColor: lot.highlightColor || "",
+        name: lot.name, description: lot.description || "", priceInCents: lot.priceInCents,
+        totalQuantity: lot.totalQuantity, status: lot.status as AssistantLotChange["status"], highlightColor: color }];
+      const row = await prisma.adminAuditLog.create({ data: { adminUserId: admin.id,
+        action: "ADMIN_ASSISTANT_PROPOSAL", entityType: "ADMIN_ASSISTANT",
+        metadata: { kind: "LOT_CHANGES", organizationId: admin.organizationId,
+          eventId: event.id, eventTitle: event.title, changes } } });
+      const proposal: AssistantProposal = { kind: "LOT_CHANGES", id: row.id,
+        eventId: event.id, eventTitle: event.title, changes };
+      const text = `Encontrei ${lot.name} em ${event.title}. Vou mudar somente sua cor de destaque para ${color}; preço, estoque e status serão preservados. Confira a proposta antes de confirmar.`;
+      const saved = await saveMessage(admin, "assistant", text);
+      return { userMessage, message: { id: saved.id, role: "assistant" as const, text, createdAt: saved.createdAt.toISOString() }, proposal };
+    }
   }
   if (!readOnly && savedImage && rankedEvents.length) {
     const first = rankedEvents[0];
@@ -451,7 +502,7 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
         const source = event.lots.find((lot) => lot.id === (item.operation === "CREATE" ? item.templateLotId : item.lotId));
         const directCreate = item.operation === "CREATE" && !item.templateLotId && event.lots.length === 0;
         const explicitPricing = [item.serviceFeeBps, item.cardInterestBpsPerInstallment, item.cardInterestStartsAtInstallment].every(Number.isSafeInteger);
-        const directPricing = directCreate && explicitPricing && ticketLotPricingSchema.safeParse({
+        const directPricing = directCreate && explicitPricing && hasExplicitFirstLotPricing(message) && ticketLotPricingSchema.safeParse({
           priceInCents: item.priceInCents, serviceFeeBps: item.serviceFeeBps,
           cardInterestBpsPerInstallment: item.cardInterestBpsPerInstallment,
           cardInterestStartsAtInstallment: item.cardInterestStartsAtInstallment
