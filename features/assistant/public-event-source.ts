@@ -62,3 +62,21 @@ export async function fetchPublicEventHtml(raw: string) {
     req.end();
   });
 }
+
+/** Bounded, DNS-pinned image read; redirects are never followed. */
+export async function fetchPublicImageBytes(raw: string) {
+  const url = parsePublicEventUrl(raw);
+  const addresses = await lookup(url.hostname, { all: true, family: 4 });
+  if (!addresses.length || addresses.some(({ address }) => !isPublicIpv4(address))) throw new Error("Mídia aponta para endereço não público.");
+  return new Promise<Buffer>((resolve, reject) => {
+    const req = request({ host: addresses[0].address, port: 443, servername: url.hostname,
+      path: `${url.pathname}${url.search}`, timeout: 8000,
+      headers: { host: url.hostname, accept: "image/*", "accept-encoding": "identity" } }, res => {
+      if (res.statusCode !== 200 || !String(res.headers["content-type"]).startsWith("image/")) { res.resume(); reject(new Error("A mídia não retornou uma imagem HTTP 200.")); return; }
+      const chunks: Buffer[] = []; let size = 0;
+      res.on("data", (chunk: Buffer) => { size += chunk.length; if (size > 8 * 1024 * 1024) { req.destroy(new Error("Imagem acima de 8 MB.")); return; } chunks.push(chunk); });
+      res.on("end", () => resolve(Buffer.concat(chunks))); res.on("error", reject);
+    });
+    req.on("timeout", () => req.destroy(new Error("Tempo excedido ao ler mídia."))); req.on("error", reject); req.end();
+  });
+}

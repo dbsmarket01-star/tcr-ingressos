@@ -126,14 +126,14 @@ export async function listCachedPublishedEventShowcase(limit = 6, organizationId
 }
 
 // TCR events share one Meta dataset. Keep the credential in the database, never in source code.
-async function getTcrMetaTracking(organizationId: string) {
-  const organization = await prisma.organization.findUnique({
+async function getTcrMetaTracking(organizationId: string, db: Pick<Prisma.TransactionClient, "organization" | "event"> = prisma) {
+  const organization = await db.organization.findUnique({
     where: { id: organizationId },
     select: { slug: true }
   });
   if (organization?.slug !== "tcr-ingressos") return null;
 
-  const reference = await prisma.event.findFirst({
+  const reference = await db.event.findFirst({
     where: { id: "evt_rodrigo_teaser_piracicaba_2026", organizationId },
     select: { metaPixelId: true, metaConversionsApiToken: true }
   });
@@ -143,8 +143,8 @@ async function getTcrMetaTracking(organizationId: string) {
   return reference;
 }
 
-export async function createEvent(input: EventDraftInput & { status: EventStatus }, organizationId: string) {
-  const tcrTracking = await getTcrMetaTracking(organizationId);
+export async function createEvent(input: EventDraftInput & { status: EventStatus }, organizationId: string, tx?: Prisma.TransactionClient) {
+  const tcrTracking = await getTcrMetaTracking(organizationId, tx || prisma);
   const data: Prisma.EventCreateInput = {
     organization: {
       connect: {
@@ -217,7 +217,7 @@ export async function createEvent(input: EventDraftInput & { status: EventStatus
     highlightedLotId: input.highlightedLotId || null
   };
 
-  return prisma.event.create({ data });
+  return (tx || prisma).event.create({ data });
 }
 
 export async function getEventForManagement(
@@ -652,14 +652,14 @@ export async function updateEvent(eventId: string, input: EventDraftInput & { st
   });
 }
 
-export async function updateEventStatus(eventId: string, status: EventStatus) {
+export async function updateEventStatus(eventId: string, status: EventStatus, expectedStatus?: EventStatus) {
   const existingEvent = await prisma.event.findUniqueOrThrow({
     where: { id: eventId },
     select: { organizationId: true }
   });
   const tcrTracking = await getTcrMetaTracking(existingEvent.organizationId);
   return prisma.event.update({
-    where: { id: eventId },
+    where: { id: eventId, ...(expectedStatus ? { status: expectedStatus } : {}) },
     data: {
       status,
       ...(tcrTracking ? {

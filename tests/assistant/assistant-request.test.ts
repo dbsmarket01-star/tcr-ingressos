@@ -1,5 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { assistantAcknowledgement, isReadOnlyAssistantRequest } from "@/features/assistant/assistant-request";
+import { assistantAcknowledgement, assistantSourceRequest, isReadOnlyAssistantRequest } from "@/features/assistant/assistant-request";
+
+describe("source reference continuation", () => {
+  const history = [
+    { role: "user", text: "Veja https://tcringressos.com.br/antigo" },
+    { role: "user", text: "Agora https://tcringressos.com.br/atual" },
+    { role: "assistant", text: "Outra URL https://example.com/untrusted" }
+  ];
+  it("reuses only the latest user source for an explicit follow-up", () => {
+    expect(assistantSourceRequest("No link antigo, há estoque?", history)).toContain("https://tcringressos.com.br/atual");
+    expect(assistantSourceRequest("Compare a referência anterior", history)).not.toContain("example.com");
+  });
+  it("does not attach an old source to unrelated requests or replace a new URL", () => {
+    expect(assistantSourceRequest("Pause Show Teste", history)).toBe("Pause Show Teste");
+    expect(assistantSourceRequest("Veja https://tcringressos.com.br/novo", history)).toBe("Veja https://tcringressos.com.br/novo");
+  });
+});
 
 describe("assistant conversation requests", () => {
   it.each([
@@ -31,4 +47,26 @@ describe("assistant conversation requests", () => {
     expect(isReadOnlyAssistantRequest("Chat, quero que você organize os ingressos sem mudar os preços.")).toBe(false);
     expect(isReadOnlyAssistantRequest("Pode organizar os ingressos sem alterar as vendas?")).toBe(false);
   });
+});
+
+describe("audit: consultation versus confirmation", () => {
+  it.each([
+    "No Show Teste, mude o preço para R$ 100. Não altere nada antes de eu confirmar.",
+    "Crie um rascunho, sem salvar até eu confirmar.",
+    "Organize os ingressos sem mudar nenhum outro dado. Se já estiverem corretos, não grave nada."
+  ])("allows preparing a proposal: %s", (message) => expect(isReadOnlyAssistantRequest(message)).toBe(false));
+  it.each([
+    "Altere o preço? Não altere nada, é só uma pergunta.",
+    "Apenas analise o banner do evento neste print.",
+    "Somente investigue o mapa, não salve nada."
+  ])("does not propose a mutation: %s", (message) => expect(isReadOnlyAssistantRequest(message)).toBe(true));
+});
+
+import { requestedAssistantImageField } from "@/features/assistant/assistant-request";
+it("distinguishes reference prints from replacement artwork", () => {
+  expect(requestedAssistantImageField("Use o print como referência para conferir o mapa")).toBeNull();
+  expect(requestedAssistantImageField("Veja se o banner está legível")).toBeNull();
+  expect(requestedAssistantImageField("Use esta imagem como banner do evento")).toBe("bannerUrl");
+  expect(requestedAssistantImageField("Substitua o mapa por esta imagem")).toBe("eventMapImageUrl");
+  expect(requestedAssistantImageField("Troque o banner e o mapa")).toBeNull();
 });

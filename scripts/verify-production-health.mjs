@@ -3,16 +3,19 @@ import process from "node:process";
 const targets = [
   ["Site publico", "https://www.tcringressos.app.br/"],
   ["Saude da API", "https://www.tcringressos.app.br/api/health"],
-  ["Painel do produtor", "https://produtor.tcringressos.app.br/admin/crm/whatsapp"]
+  ["Painel do produtor", "https://produtor.tcringressos.app.br/admin/crm/whatsapp"],
+  ["API da assistente (acesso anônimo bloqueado)", "https://produtor.tcringressos.app.br/api/admin/assistant", 403]
 ];
 
 let failed = false;
-for (const [label, url] of targets) {
+for (const [label, url, expectedStatus] of targets) {
   try {
     const startedAt = Date.now();
     const response = await fetch(url, { redirect: "manual", signal: AbortSignal.timeout(15_000) });
     const elapsed = Date.now() - startedAt;
-    const accepted = response.status >= 200 && response.status < 400;
+    const accepted = expectedStatus
+      ? response.status === expectedStatus && response.headers.get("content-type")?.includes("application/json") && (await response.json()).error === "Acesso não autorizado."
+      : response.status >= 200 && response.status < 400;
     console.log(`${accepted ? "OK" : "FALHA"} ${label}: HTTP ${response.status} em ${elapsed} ms`);
     if (!accepted) failed = true;
   } catch (error) {

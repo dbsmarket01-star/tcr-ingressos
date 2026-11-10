@@ -16,6 +16,10 @@ export const assistantInvestigationTools = [
     strict: true, parameters: { type: "object", properties: { eventId: { type: "string" } }, required: ["eventId"], additionalProperties: false }
   },
   {
+    type: "function", name: "inspect_public_event", description: "Fetch the actual public page of an authorized event. Returns HTTP status and rendered HTML text as evidence; drafts normally return 404. Never assumes that database status alone proves public visibility.",
+    strict: true, parameters: { type: "object", properties: { eventId: { type: "string" } }, required: ["eventId"], additionalProperties: false }
+  },
+  {
     type: "function", name: "find_code_files", description: "Find source-code paths in the deployed TCR commit by filename/path. Read-only; never includes environment files.",
     strict: true, parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"], additionalProperties: false }
   },
@@ -67,9 +71,23 @@ export async function executeAssistantInvestigationTool(admin: CurrentAdmin, cal
       select: { id: true, title: true, slug: true, city: true, state: true, startsAt: true, status: true,
         venueName: true, venueAddress: true, description: true, eventMapImageUrl: true, bannerUrl: true,
         lots: { orderBy: { sortOrder: "asc" }, select: { id: true, name: true, description: true, priceInCents: true, status: true,
-          sortOrder: true, totalQuantity: true, soldQuantity: true, reservedQuantity: true, highlightColor: true, serviceFeeBps: true } } }
+          salesStartsAt: true, salesEndsAt: true, saleBadge: true, hasTypeOptions: true, sortOrder: true, totalQuantity: true, soldQuantity: true, reservedQuantity: true, highlightColor: true, serviceFeeBps: true } } }
     });
     return JSON.stringify(event ? { event } : { error: "Evento não encontrado." });
+  }
+
+  if (call.name === "inspect_public_event") {
+    const eventId = String(args.eventId || "");
+    if (!eventId || (allowedEventIds && !allowedEventIds.includes(eventId))) return JSON.stringify({ error: "Evento fora do escopo autorizado." });
+    const event = await prisma.event.findFirst({ where: { id: eventId, organizationId: admin.organizationId }, select: { slug: true } });
+    if (!event) return JSON.stringify({ error: "Evento não encontrado." });
+    const url = `https://www.tcringressos.app.br/evento/${encodeURIComponent(event.slug)}`;
+    const response = await fetch(url, { signal: AbortSignal.timeout(8000), cache: "no-store", redirect: "manual" });
+    if (!response.ok) return JSON.stringify({ url, status: response.status, publicPageAvailable: false });
+    const html = await response.text();
+    const text = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ").replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+    return JSON.stringify({ url, status: response.status, text: text.slice(0, 20000), truncated: text.length > 20000 });
   }
 
   if (call.name === "find_code_files") {

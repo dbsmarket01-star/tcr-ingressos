@@ -1,3 +1,6 @@
+import { claimAssistantResolution } from "@/features/assistant/assistant-resolution";
+import { importPlanSchema, type ImportProposal } from "@/features/assistant/assistant-event-import";
+import { executeEventImport, findImportDuplicates, verifyImportedPublicPage } from "@/features/assistant/assistant-import-execution";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { canAccessArea, canAccessEvent, getCurrentAdmin } from "@/features/auth/auth.service";
@@ -79,15 +82,49 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  if (body.type === "confirm") {
+  if (field("type") === "prepareImport") {
+    if (admin.role !== "OWNER") return error("A importação exige acesso de proprietário.", 403);
+    const setup = await getAssistantProposal(admin, String(field("proposalId") || ""));
+    if (!setup || setup.kind !== "EVENT_IMPORT_SETUP") return error("Revisão não encontrada. Leia a referência novamente.", 409);
+    const settings = field("settings");
+    if (!settings || typeof settings !== "object") return error("Preencha as informações da importação.");
+    const parsed = importPlanSchema.safeParse({ ...settings, source: setup.source });
+    if (!parsed.success) return error(parsed.error.issues.map(issue => `${issue.path.join(".")}: ${issue.message}`).join("; "));
+    if ((await findImportDuplicates(admin.organizationId, { ...setup.source, city: parsed.data.city })).length) return error("Já existe um evento correspondente. Nenhuma duplicata será criada.", 409);
+    if (!await claimAssistantResolution(admin, setup.id, "ADMIN_ASSISTANT_PROCESSING")) return error("Esta revisão já foi processada. Atualize a conversa.", 409);
+    const row = await prisma.adminAuditLog.create({ data: { adminUserId: admin.id, action: "ADMIN_ASSISTANT_PROPOSAL", entityType: "ADMIN_ASSISTANT", metadata: JSON.parse(JSON.stringify({ kind: "EVENT_IMPORT", organizationId: admin.organizationId, plan: parsed.data })) } });
+    const proposal: ImportProposal = { kind: "EVENT_IMPORT", id: row.id, eventId: "", eventTitle: parsed.data.source.title, plan: parsed.data };
+    return NextResponse.json({ proposal });
+  }
+  if (field("type") === "confirm") {
     if (!canAccessArea(admin.role, "EVENTS")) return error("Seu perfil pode consultar o assistente, mas não alterar eventos ou ingressos.", 403);
     const proposalId = String(field("proposalId") || "").trim();
     if (!proposalId) return error("Proposta não informada.");
     const proposal = await getAssistantProposal(admin, proposalId);
     if (!proposal) return error("Proposta não encontrada ou sem autorização.", 404);
-    if (proposal.kind !== "EVENT_CREATE" && !canAccessEvent(admin, proposal.eventId)) return error("Você não tem acesso a este evento.", 403);
+    if (proposal.kind === "EVENT_IMPORT_SETUP") return error("Complete a revisão antes de confirmar.");
+    if (proposal.kind === "EVENT_IMPORT" && admin.role !== "OWNER") return error("A importação exige acesso de proprietário.", 403);
+    if (proposal.kind !== "EVENT_CREATE" && proposal.kind !== "EVENT_IMPORT" && !canAccessEvent(admin, proposal.eventId)) return error("Você não tem acesso a este evento.", 403);
     const previouslyResolved = await prisma.adminAuditLog.findFirst({ where: { action: { in: ["ADMIN_ASSISTANT_APPLIED", "ADMIN_ASSISTANT_DISCARDED"] }, entityType: "ADMIN_ASSISTANT", entityId: proposal.id }, select: { id: true } });
     if (previouslyResolved) return error("Esta proposta já foi concluída ou cancelada.", 409);
+    if (!await claimAssistantResolution(admin, proposal.id, "ADMIN_ASSISTANT_PROCESSING")) return error("Esta proposta já foi processada ou está em processamento. Confira o resultado; se houve falha, solicite uma nova proposta.", 409);
+    if (proposal.kind === "EVENT_IMPORT") {
+      try {
+        const imported = await executeEventImport(admin.organizationId, proposal.id, proposal.plan);
+        revalidatePath("/admin/events"); revalidatePath(`/evento/${imported.slug}`); revalidatePath("/");
+        const publicCheck = await verifyImportedPublicPage(admin.organizationId, imported.slug, proposal.plan);
+        const text = `Importação salva e conferida no banco: ${proposal.eventTitle}. ID ${imported.id}. ${proposal.plan.source.tickets.length} tipos de ingresso. Status ${imported.status}. ${proposal.plan.source.mapUrl ? "Banner e mapa copiados e verificados por conteúdo." : "Banner copiado e verificado; ausência de mapa confirmada pelo operador."} ${publicCheck.detail} ${proposal.plan.publish ? publicCheck.url : ""}${publicCheck.ok ? "" : " A verificação pública está pendente; não repita a criação."}`;
+        const message = await saveAssistantConfirmation(admin, proposal, text);
+        return NextResponse.json({ message, verificationPending: !publicCheck.ok });
+      } catch (cause) {
+        const committed = await prisma.adminAuditLog.findUnique({ where: { id: `assistant-import-result:${proposal.id}` }, select: { metadata: true } });
+        if (committed) return error("O cadastro foi salvo, mas a resposta final falhou. Confira Congressos e eventos; não repita a importação.", 503);
+        console.error("[admin-assistant] Importação não concluída", cause);
+        const safeMessage = cause instanceof Error && /^(A fonte|Já existe|Outro cadastro|A data|Configure armazenamento|A mídia|A imagem|Mídia local|Imagem acima|Use mídia|Tempo excedido|Cadastro não|Ingresso divergente|O pixel)/.test(cause.message)
+          ? cause.message : "Importação não confirmada. Nenhum evento parcial foi publicado. Confira o histórico antes de tentar novamente.";
+        return error(safeMessage, 409);
+      }
+    }
     if (proposal.kind === "EVENT_CREATE") {
       const draft = proposal.draft;
       const start = validateAssistantEventValue("startsAt", draft.startsAt);
@@ -209,7 +246,7 @@ export async function POST(request: NextRequest) {
       if (!event) return error("Evento não encontrado.", 404);
       if (event.status !== proposal.oldStatus) return error("O status mudou desde a proposta. Peça uma nova conferência.", 409);
       try {
-        await updateEventStatus(event.id, proposal.newStatus);
+        await updateEventStatus(event.id, proposal.newStatus, proposal.oldStatus);
         const verified = await prisma.event.findUnique({ where: { id: event.id }, select: { status: true } });
         if (verified?.status !== proposal.newStatus) throw new Error("Status não confirmado após a gravação.");
         revalidatePath("/admin/events");
@@ -246,7 +283,7 @@ export async function POST(request: NextRequest) {
     });
     if (!pricing.success) return error(pricing.error.issues[0]?.message || "Preço inválido.");
     try {
-      await updateTicketLotPricing(lot.id, pricing.data);
+      await updateTicketLotPricing(lot.id, pricing.data, proposal.oldPriceInCents);
       const verified = await prisma.ticketLot.findUnique({ where: { id: lot.id }, select: { priceInCents: true } });
       if (verified?.priceInCents !== proposal.newPriceInCents) throw new Error("Preço não confirmado após a gravação.");
       revalidatePath(`/evento/${lot.event.slug}`);
@@ -263,7 +300,7 @@ export async function POST(request: NextRequest) {
   if (field("type") === "discard") {
     const proposalId = String(field("proposalId") || "").trim();
     if (!proposalId) return error("Proposta não informada.");
-    await discardAssistantProposal(admin, proposalId);
+    if (!await discardAssistantProposal(admin, proposalId)) return error("A proposta já foi cancelada, está em processamento ou não está mais disponível.", 409);
     return NextResponse.json({ ok: true });
   }
   return error("Operação não reconhecida.");

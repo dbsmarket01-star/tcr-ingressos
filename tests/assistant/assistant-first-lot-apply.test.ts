@@ -41,3 +41,8 @@ describe("assistant first lot apply", () => {
     expect(mocks.create).not.toHaveBeenCalled();
   });
 });
+
+it("rejects duplicate names in one creation proposal", async () => {
+  vi.clearAllMocks();
+  await expect(applyAssistantLotChanges("event-1", [directChange(), { ...directChange(), name: "  Pista inteira  " }])).rejects.toThrow("Já existe um ingresso");
+});

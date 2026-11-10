@@ -65,3 +65,7 @@ describe("assistant first lot proposal", () => {
     } finally { fetchSpy.mockRestore(); vi.unstubAllEnvs(); }
   });
 });
+
+it("understands Portuguese ordinal installment notation", () => {
+  expect(explicitFirstLotPricing("Taxa de bilheteria 10%, juros do cartão 2% por parcela a partir da 2ª parcela")).toEqual({ serviceFeeBps: 1000, cardInterestBpsPerInstallment: 200, cardInterestStartsAtInstallment: 2 });
+});

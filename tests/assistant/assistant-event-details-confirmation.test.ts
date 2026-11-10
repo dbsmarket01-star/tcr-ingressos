@@ -33,6 +33,8 @@ vi.mock("@/lib/prisma", () => ({ prisma: {
 } }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
+vi.mock("@/features/assistant/assistant-resolution", () => ({ claimAssistantResolution: vi.fn(async () => true) }));
+
 import { POST } from "@/app/api/admin/assistant/route";
 
 const request = () => new NextRequest("https://produtor.tcringressos.app.br/api/admin/assistant", {
