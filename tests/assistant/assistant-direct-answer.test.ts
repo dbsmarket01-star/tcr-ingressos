@@ -20,6 +20,12 @@ describe("direct read-only ticket answer", () => {
     expect(answerReadOnlyTicketQuestion("Consulte o preço, sem alterar", [], [])).toContain("Informe o nome do evento");
   });
 
+  it("routes a code investigation mentioning tickets to repository tools", () => {
+    expect(answerReadOnlyTicketQuestion(
+      "Investigue no código qual arquivo implementa a listagem pública de ingressos do evento.", ranked, details
+    )).toBeNull();
+  });
+
   it("lists the actual order instead of merging sector names into one ticket", () => {
     const ordered = [{ ...details[0], lots: [
       { name: "PISTA - MEIA ENTRADA", priceInCents: 13790, status: "ACTIVE" },
