@@ -481,11 +481,13 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
     };
   let input: unknown[] = requestBody.input;
   let decision: AssistantDecision | null = null;
-  for (let round = 0; round < 5; round++) {
+  for (let round = 0; round < 4; round++) {
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST", signal: AbortSignal.timeout(image ? 90_000 : 45_000),
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ ...requestBody, input })
+      // The last pass must synthesize an answer from the evidence already
+      // collected, even if a source was unavailable. Never loop endlessly.
+      body: JSON.stringify({ ...requestBody, input, tool_choice: round === 3 ? "none" : "auto" })
     });
     if (!response.ok) {
       const body = await response.json().catch(() => null) as { error?: { code?: string; type?: string } } | null;
