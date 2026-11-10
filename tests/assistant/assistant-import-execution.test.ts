@@ -1,0 +1,25 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { parseLegacyImport, fingerprintImport, type ImportPlan } from "@/features/assistant/assistant-event-import";
+const state = vi.hoisted(() => ({ source: null as unknown, duplicates: [] as unknown[], lots: [] as any[], drift: false, tx: {} as any, copied: 0 }));
+vi.mock("sharp", () => ({ default: () => ({ metadata: async () => ({ width:100,height:50,format:"png" }) }) }));
+vi.mock("@/features/assistant/assistant-event-import", async original => ({ ...await original<typeof import("@/features/assistant/assistant-event-import")>(), readImportSource: async () => state.source }));
+vi.mock("@/features/assistant/public-event-source", async original => ({ ...await original<typeof import("@/features/assistant/public-event-source")>(), fetchPublicImageBytes: async () => Buffer.from("verified-image"), fetchPublicEventHtml: vi.fn() }));
+vi.mock("@/features/uploads/local-upload.service", () => ({ savePublicImageUpload: async () => `https://storage.example.org/image-${++state.copied}.png` }));
+vi.mock("@/features/events/event.service", () => ({ createEvent: vi.fn(async (_input, _org, tx) => { expect(tx).toBe(state.tx); return {id:"new-event"}; }) }));
+vi.mock("@/features/lots/lot.service", () => ({ createTicketLot: vi.fn(async (input, tx) => { expect(tx).toBe(state.tx);state.lots.push({...input,id:`lot-${state.lots.length}`,typeOptions:[]});return state.lots.at(-1); }) }));
+vi.mock("@/features/lots/lot-order.service", () => ({ lockEventLotOrder: vi.fn(), normalizeEventLotOrder: vi.fn() }));
+vi.mock("@/lib/prisma", () => ({ prisma: { event: {findMany: async()=>state.duplicates}, $transaction: vi.fn(async fn=>fn(state.tx)) } }));
+import { executeEventImport } from "@/features/assistant/assistant-import-execution";
+import { createEvent } from "@/features/events/event.service";
+import { prisma } from "@/lib/prisma";
+const source = parseLegacyImport(readFileSync(new URL("./fixtures/import-event.html",import.meta.url),"utf8"),"https://tcringressos.com.br/ficticio"); source.fingerprint=fingerprintImport(source);
+const plan:ImportPlan = {source,startsAt:"2035-12-12T19:00:00-03:00",city:"São Paulo",state:"SP",venueName:"Auditório",venueAddress:"Rua Exemplo, 100",publish:true,noMapConfirmed:false,reviewed:true,serviceFeeBps:1000,cardInterestBpsPerInstallment:0,cardInterestStartsAtInstallment:2,minPerOrder:1,maxPerOrder:10,tickets:source.tickets.map(t=>({quantity:10,admissionsPerUnit:1,options:[],description:"Descrição confirmada",descriptionReviewed:true,priceInCents:t.priceInCents}))};
+beforeEach(()=>{vi.clearAllMocks();state.source=source;state.duplicates=[];state.lots=[];state.copied=0;state.drift=false;state.tx={$executeRaw:vi.fn(),event:{findMany:async()=>[],findUniqueOrThrow:async()=>({lots:state.drift?[]:state.lots,bannerUrl:"https://storage.example.org/image-1.png",eventMapImageUrl:"https://storage.example.org/image-2.png"}),update:vi.fn(async ({data})=>({id:"new-event",slug:"test-event",status:data.status}))},adminAuditLog:{create:vi.fn()}};});
+describe("atomic import execution",()=>{
+ it("uses real service boundaries inside one transaction, verifies before publishing and records durable result",async()=>{const result=await executeEventImport("org","proposal",plan);expect(result.status).toBe("PUBLISHED");expect(createEvent).toHaveBeenCalledWith(expect.objectContaining({status:"DRAFT"}),"org",state.tx);expect(state.tx.event.update).toHaveBeenCalledOnce();expect(state.tx.adminAuditLog.create).toHaveBeenCalledWith(expect.objectContaining({data:expect.objectContaining({id:"assistant-import-result:proposal"})}));expect(state.lots).toHaveLength(2);});
+ it("does not create when the source changed",async()=>{state.source={...source,fingerprint:"changed"};await expect(executeEventImport("org","p",plan)).rejects.toThrow("fonte mudou");expect(prisma.$transaction).not.toHaveBeenCalled();});
+ it("does not create a duplicate even with different case or accents",async()=>{state.duplicates=[{title:"Show Ficticio de Auditoria",city:"Sao Paulo"}];await expect(executeEventImport("org","p",plan)).rejects.toThrow("existe");expect(createEvent).not.toHaveBeenCalled();});
+ it("never publishes if stored tickets differ",async()=>{state.drift=true;await expect(executeEventImport("org","p",plan)).rejects.toThrow("verificação");expect(state.tx.event.update).not.toHaveBeenCalled();expect(state.tx.adminAuditLog.create).not.toHaveBeenCalled();});
+ it("honors explicit draft-only choice",async()=>{const result=await executeEventImport("org","p",{...plan,publish:false});expect(result.status).toBe("DRAFT");});
+});

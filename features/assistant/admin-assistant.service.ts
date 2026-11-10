@@ -1,4 +1,6 @@
 import { claimAssistantResolution } from "@/features/assistant/assistant-resolution";
+import { importRequested, sourceUrl, readImportSource, importSourceSchema, importPlanSchema, type ImportProposal } from "./assistant-event-import";
+import { findImportDuplicates } from "./assistant-import-execution";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getAdminAllowedEventIds, type CurrentAdmin } from "@/features/auth/auth.service";
@@ -15,7 +17,7 @@ import { assistantInvestigationTools, executeAssistantInvestigationTool } from "
 
 export type AssistantEventDraft = { title: string; slug: string; description: string; startsAt: string; venueName: string; venueAddress: string; city: string; state: string; bannerUrl: string; eventMapImageUrl: string };
 
-export type AssistantProposal = {
+export type AssistantProposal = ImportProposal | {
   kind: "EVENT_CREATE";
   id: string;
   eventId: string;
@@ -324,6 +326,21 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
   const savedUser = await saveMessage(admin, "user", message, savedImage ? { id: savedImage.id, name: image!.name } : undefined);
   const userMessage = { id: savedUser.id, role: "user" as const, text: message,
     imageId: savedImage?.id || null, imageName: image?.name || null, createdAt: savedUser.createdAt.toISOString() };
+  if (!readOnly && importRequested(message) && sourceUrl(message)) {
+    if (admin.role !== "OWNER") throw new Error("A importação de eventos exige acesso de proprietário.");
+    const source = await readImportSource(sourceUrl(message)!);
+    const duplicates = await findImportDuplicates(admin.organizationId, source);
+    let proposal: ImportProposal | null = null;
+    const text = duplicates.length
+      ? `Já existe cadastro correspondente a ${source.title}. Não criei duplicata nem alterei ingressos. Confira: ${duplicates.map(event => `${event.title} — ${formatAssistantEventDate(event.startsAt)} — ${event.status} — ID ${event.id}`).join("; ")}. Se for outra edição, confirme a identidade no cadastro completo.`
+      : `Li a referência de ${source.title}: ${source.tickets.length} tipos de ingresso, ${source.bannerUrl ? "banner encontrado" : "banner ausente"} e ${source.mapUrl ? "mapa encontrado" : "mapa ausente"}. Complete as informações não comprovadas abaixo e revise a proposta. Nada foi cadastrado ainda.`;
+    if (!duplicates.length) {
+      const row = await prisma.adminAuditLog.create({ data: { adminUserId: admin.id, action: "ADMIN_ASSISTANT_PROPOSAL", entityType: "ADMIN_ASSISTANT", metadata: { kind: "EVENT_IMPORT_SETUP", organizationId: admin.organizationId, source } } });
+      proposal = { kind: "EVENT_IMPORT_SETUP", id: row.id, eventId: "", eventTitle: source.title, source };
+    }
+    const saved = await saveMessage(admin, "assistant", text);
+    return { userMessage, message: { id: saved.id, role: "assistant" as const, text, createdAt: saved.createdAt.toISOString() }, proposal };
+  }
   const allowedEventIds = getAdminAllowedEventIds(admin);
   const previousMessages = await listOwnAssistantContext(admin);
   const [eventIndex, legacyPage] = await Promise.all([
@@ -655,6 +672,14 @@ export async function getAssistantProposal(admin: CurrentAdmin, id: string): Pro
   if (Date.now() - row.createdAt.getTime() > 60 * 60 * 1000) return null;
   const meta = row.metadata as Prisma.JsonObject;
   if (meta.organizationId !== admin.organizationId) return null;
+  if (meta.kind === "EVENT_IMPORT_SETUP") {
+    const parsed = importSourceSchema.safeParse(meta.source);
+    return parsed.success ? { kind: "EVENT_IMPORT_SETUP", id: row.id, eventId: "", eventTitle: parsed.data.title, source: parsed.data } : null;
+  }
+  if (meta.kind === "EVENT_IMPORT") {
+    const parsed = importPlanSchema.safeParse(meta.plan);
+    return parsed.success ? { kind: "EVENT_IMPORT", id: row.id, eventId: "", eventTitle: parsed.data.source.title, plan: parsed.data } : null;
+  }
   if (meta.kind === "LOT_ORDER_CHANGE") {
     if (!Array.isArray(meta.expectedIds) || !Array.isArray(meta.desiredIds) || !Array.isArray(meta.orderedNames) ||
       meta.expectedIds.length !== meta.desiredIds.length || meta.desiredIds.length !== meta.orderedNames.length ||

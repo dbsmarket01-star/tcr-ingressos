@@ -165,8 +165,8 @@ async function syncTicketLotOptions(
   }
 }
 
-export async function createTicketLot(input: TicketLotInput & { status: LotStatus }) {
-  return prisma.$transaction(async (tx) => {
+export async function createTicketLot(input: TicketLotInput & { status: LotStatus }, transaction?: Prisma.TransactionClient) {
+  const execute = async (tx: Prisma.TransactionClient) => {
     await lockEventLotOrder(tx, input.eventId);
     const salesWindow = await getTicketSalesWindow(tx, input.eventId);
     const hotelId = await resolveHotelIdForLot(tx, input);
@@ -211,7 +211,8 @@ export async function createTicketLot(input: TicketLotInput & { status: LotStatu
 
     await normalizeEventLotOrder(tx, input.eventId);
     return tx.ticketLot.findUniqueOrThrow({ where: { id: lot.id } });
-  });
+  };
+  return transaction ? execute(transaction) : prisma.$transaction(execute);
 }
 
 export async function updateTicketLotStatus(lotId: string, status: LotStatus) {

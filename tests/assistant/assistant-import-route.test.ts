@@ -1,0 +1,25 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
+import { readFileSync } from "node:fs";
+import { parseLegacyImport, type ImportPlan } from "@/features/assistant/assistant-event-import";
+const mocks=vi.hoisted(()=>({role:"OWNER",proposal:null as any,create:vi.fn(async()=>({id:"prepared"})),execute:vi.fn(async()=>({id:"created",slug:"ficticio",status:"PUBLISHED"})),claim:vi.fn(async()=>true),save:vi.fn(async()=>({id:"message",text:"Salvo"})),duplicates:vi.fn(async()=>[]),committed:false}));
+vi.mock("@/features/auth/auth.service",()=>({canAccessArea:()=>true,canAccessEvent:()=>true,getCurrentAdmin:async()=>({id:"owner",role:mocks.role,organizationId:"org"})}));
+vi.mock("@/features/assistant/admin-assistant.service",()=>({getAssistantProposal:async()=>mocks.proposal,saveAssistantConfirmation:mocks.save}));
+vi.mock("@/features/assistant/assistant-resolution",()=>({claimAssistantResolution:mocks.claim}));
+vi.mock("@/features/assistant/assistant-import-execution",()=>({executeEventImport:mocks.execute,findImportDuplicates:mocks.duplicates,verifyImportedPublicPage:async()=>({ok:true,url:"https://www.tcringressos.app.br/evento/ficticio",detail:"HTTP 200"})}));
+vi.mock("@/lib/prisma",()=>({prisma:{organization:{findUnique:async()=>({slug:"tcr-ingressos"})},adminAuditLog:{create:mocks.create,findFirst:async()=>null,findUnique:async()=>mocks.committed?{metadata:{eventId:"created"}}:null}}}));
+vi.mock("@/features/events/event.service",()=>({createEvent:vi.fn(),updateEventStatus:vi.fn()}));
+vi.mock("@/features/lots/lot.service",()=>({applyAssistantLotChanges:vi.fn(),applyAssistantLotOrder:vi.fn(),updateTicketLotPricing:vi.fn()}));
+vi.mock("next/cache",()=>({revalidatePath:vi.fn()}));
+import {POST} from "@/app/api/admin/assistant/route";
+const source=parseLegacyImport(readFileSync(new URL("./fixtures/import-event.html",import.meta.url),"utf8"),"https://tcringressos.com.br/ficticio");
+const plan:ImportPlan={source,startsAt:"2035-12-12T19:00:00-03:00",city:"São Paulo",state:"SP",venueName:"Auditório",venueAddress:"Rua Exemplo, 100",publish:true,noMapConfirmed:false,reviewed:true,serviceFeeBps:1000,cardInterestBpsPerInstallment:0,cardInterestStartsAtInstallment:2,minPerOrder:1,maxPerOrder:10,tickets:source.tickets.map(t=>({quantity:10,admissionsPerUnit:1,options:[],description:"Conferida",descriptionReviewed:true,priceInCents:t.priceInCents}))};
+const req=(type:string,settings?:unknown)=>new NextRequest("https://produtor.tcringressos.app.br/api/admin/assistant",{method:"POST",headers:{"content-type":"application/json",host:"produtor.tcringressos.app.br",origin:"https://produtor.tcringressos.app.br"},body:JSON.stringify({type,proposalId:"p",settings})});
+beforeEach(()=>{vi.clearAllMocks();mocks.role="OWNER";mocks.proposal={kind:"EVENT_IMPORT_SETUP",id:"p",source,eventTitle:source.title,eventId:""};mocks.claim.mockResolvedValue(true);mocks.committed=false;});
+describe("import API authorization and confirmation",()=>{
+ it("prepares from the persisted source, ignoring forged client source fields",async()=>{const response=await POST(req("prepareImport",{...plan,source:{...source,title:"Forged"}}));expect(response.status).toBe(200);expect((await response.json()).proposal.plan.source.title).toBe(source.title);expect(mocks.execute).not.toHaveBeenCalled();});
+ it("cannot confirm an incomplete setup",async()=>{expect((await POST(req("confirm"))).status).toBe(400);expect(mocks.claim).not.toHaveBeenCalled();});
+ it("blocks a non-owner even if ordinary event editing is allowed",async()=>{mocks.role="STAFF";expect((await POST(req("prepareImport",plan))).status).toBe(403);});
+ it("executes only once after confirmation",async()=>{mocks.proposal={kind:"EVENT_IMPORT",id:"p",eventId:"",eventTitle:source.title,plan};expect((await POST(req("confirm"))).status).toBe(200);expect(mocks.execute).toHaveBeenCalledWith("org","p",plan);mocks.claim.mockResolvedValue(false);expect((await POST(req("confirm"))).status).toBe(409);expect(mocks.execute).toHaveBeenCalledTimes(1);});
+ it("reports a committed import after lost final response without repeating execution",async()=>{mocks.proposal={kind:"EVENT_IMPORT",id:"p",eventId:"",eventTitle:source.title,plan};mocks.save.mockRejectedValueOnce(new Error("connection lost"));mocks.committed=true;const response=await POST(req("confirm"));expect(response.status).toBe(503);expect((await response.json()).error).toContain("cadastro foi salvo");});
+});
