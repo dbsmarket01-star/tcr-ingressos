@@ -399,6 +399,7 @@ export async function applyAssistantLotChanges(eventId: string, changes: Assista
     const names = new Set(current.map((lot) => normalizedName(lot.name)));
     const expectedCreated: Array<{ id: string; change: AssistantLotChange; serviceFeeBps: number }> = [];
     const expectedColors: Array<{ id: string; color: string }> = [];
+    const expectedUpdates: Array<{ id: string; change: AssistantLotChange }> = [];
     for (const change of changes) {
       const source = byId.get(change.operation === "CREATE" ? change.templateLotId : change.lotId);
       const directCreate = change.operation === "CREATE" && !change.templateLotId && current.length === 0;
@@ -408,6 +409,10 @@ export async function applyAssistantLotChanges(eventId: string, changes: Assista
         if (touched.has(source.id)) throw new Error("Ingresso repetido na proposta.");
         touched.add(source.id);
         if (source.name !== change.oldName || (source.description || "") !== change.oldDescription || source.priceInCents !== change.oldPriceInCents || source.totalQuantity !== change.oldTotalQuantity || source.status !== change.oldStatus || (change.oldHighlightColor !== undefined && (source.highlightColor || "") !== change.oldHighlightColor) || (change.oldServiceFeeBps !== undefined && source.serviceFeeBps !== change.oldServiceFeeBps)) throw new Error("O ingresso mudou desde a proposta. Peça nova conferência.");
+        const nextName = normalizedName(change.name);
+        if (nextName !== normalizedName(source.name) && names.has(nextName)) throw new Error("Já existe um ingresso com esse nome neste evento.");
+        names.delete(normalizedName(source.name)); names.add(nextName);
+        expectedUpdates.push({ id: source.id, change });
         if (change.totalQuantity < source.soldQuantity + source.reservedQuantity) throw new Error("Estoque inferior aos ingressos vendidos ou reservados.");
         if (source.hasTypeOptions && change.totalQuantity !== source.totalQuantity) throw new Error("Estoque de ingresso com opções deve ser alterado no cadastro completo.");
       }
@@ -430,6 +435,10 @@ export async function applyAssistantLotChanges(eventId: string, changes: Assista
       }
     }
     await normalizeEventLotOrder(tx, eventId);
+    for (const { id, change } of expectedUpdates) {
+      const saved = await tx.ticketLot.findUniqueOrThrow({ where: { id } });
+      if (saved.name !== change.name.trim() || (saved.description || "") !== change.description || saved.priceInCents !== change.priceInCents || saved.totalQuantity !== change.totalQuantity || saved.status !== change.status) throw new Error("O ingresso atualizado não corresponde à proposta.");
+    }
     for (const expected of expectedColors) {
       const saved = await tx.ticketLot.findUniqueOrThrow({ where: { id: expected.id }, select: { highlightColor: true } });
       if (saved.highlightColor !== expected.color) throw new Error("A cor do ingresso não foi confirmada após a gravação.");

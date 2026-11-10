@@ -16,6 +16,7 @@ vi.mock("@/features/assistant/admin-assistant.service", () => ({ answerAssistant
 vi.mock("@/features/lots/lot.service", () => ({ applyAssistantLotChanges: mocks.apply, updateTicketLotPricing: vi.fn() }));
 vi.mock("@/features/events/event.service", () => ({ updateEventStatus: vi.fn() }));
 vi.mock("@/lib/prisma", () => ({ prisma: { organization: { findUnique: async () => ({ slug: "tcr-ingressos" }) }, adminAuditLog: { findFirst: async () => null }, event: { findFirst: mocks.event } } }));
+vi.mock("@/features/assistant/assistant-public-verification",()=>({verifyAssistantPublicTickets:async()=>({ok:true,detail:"Página conferida",url:"https://www.tcringressos.app.br/evento/fernandinho"})}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 vi.mock("@/features/assistant/assistant-resolution", () => ({ claimAssistantResolution: vi.fn(async () => true) }));

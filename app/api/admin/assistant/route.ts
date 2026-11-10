@@ -1,3 +1,4 @@
+import { verifyAssistantPublicTickets } from "@/features/assistant/assistant-public-verification";
 import { claimAssistantResolution } from "@/features/assistant/assistant-resolution";
 import { importPlanSchema, type ImportProposal } from "@/features/assistant/assistant-event-import";
 import { executeEventImport, findImportDuplicates, verifyImportedPublicPage } from "@/features/assistant/assistant-import-execution";
@@ -214,7 +215,8 @@ export async function POST(request: NextRequest) {
         revalidatePath(`/evento/${event.slug}`);
         revalidatePath(`/evento/${event.slug}/checkout`);
         revalidatePath(`/admin/events/${event.id}/lots`);
-        const text = `Ordem gravada e conferida no banco para ${event.title}: ${verified.length} ingressos visíveis, sem posições repetidas. O cache da página pública foi invalidado; confira a sequência nela antes de considerar a atualização concluída. Preços, estoques, cores, status e vendas foram preservados.`;
+        const publicCheck = await verifyAssistantPublicTickets(admin.organizationId, event.id);
+        const text = `Ordem gravada e conferida no banco para ${event.title}: ${verified.length} ingressos visíveis, sem posições repetidas. ${publicCheck.detail} ${publicCheck.url} Preços, estoques, cores, status e vendas foram preservados.`;
         const message = await saveAssistantConfirmation(admin, proposal, text);
         return NextResponse.json({ message });
       } catch (cause) {
@@ -230,7 +232,8 @@ export async function POST(request: NextRequest) {
         revalidatePath(`/evento/${event.slug}`);
         revalidatePath(`/evento/${event.slug}/checkout`);
         revalidatePath(`/admin/events/${event.id}/lots`);
-        const text = `Confirmei no sistema ${proposal.changes.length} alteração(ões) de ingresso em ${event.title}. Confira a lista atualizada no painel e na página pública.`;
+        const publicCheck = await verifyAssistantPublicTickets(admin.organizationId, event.id);
+        const text = `Confirmei no sistema ${proposal.changes.length} alteração(ões) de ingresso em ${event.title}. ${publicCheck.detail} ${publicCheck.url}`;
         const message = await saveAssistantConfirmation(admin, proposal, text);
         return NextResponse.json({ message });
       } catch (cause) {
@@ -289,7 +292,8 @@ export async function POST(request: NextRequest) {
       revalidatePath(`/evento/${lot.event.slug}`);
       revalidatePath(`/admin/events/${proposal.eventId}/lots`);
       const formatted = (value: number) => (value / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-      const text = `Alteração confirmada: ${lot.event.title} — ${lot.name}. Preço anterior ${formatted(proposal.oldPriceInCents)}; novo preço ${formatted(proposal.newPriceInCents)}. Conferi o valor salvo no sistema.`;
+      const publicCheck = await verifyAssistantPublicTickets(admin.organizationId, proposal.eventId);
+      const text = `Alteração confirmada: ${lot.event.title} — ${lot.name}. Preço anterior ${formatted(proposal.oldPriceInCents)}; novo preço ${formatted(proposal.newPriceInCents)}. Conferi o valor salvo no sistema. ${publicCheck.detail} ${publicCheck.url}`;
       const message = await saveAssistantConfirmation(admin, proposal, text);
       return NextResponse.json({ message });
     } catch (cause) {

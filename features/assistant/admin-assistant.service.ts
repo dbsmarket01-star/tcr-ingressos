@@ -7,7 +7,7 @@ import { getAdminAllowedEventIds, type CurrentAdmin } from "@/features/auth/auth
 import { assistantSourceRequest, isReadOnlyAssistantRequest, requestedAssistantImageField } from "@/features/assistant/assistant-request";
 import { answerReadOnlyTicketQuestion } from "@/features/assistant/assistant-direct-answer";
 import { activeSolidarityLots, isPauseSolidarityRequest } from "@/features/assistant/assistant-solidarity";
-import { isTicketOrderRequest, proposedTicketOrder } from "@/features/assistant/assistant-lot-order";
+import { isTicketOrderRequest, resolveTicketOrder } from "@/features/assistant/assistant-lot-order";
 import { orderTicketLots } from "@/features/lots/lot-order";
 import { ticketLotPricingSchema } from "@/features/lots/lot.schema";
 import { fetchPublicEventHtml, parsePublicEventUrl } from "@/features/assistant/public-event-source";
@@ -204,7 +204,7 @@ export function formatAssistantEventDate(value: Date) {
   return `${part("day")}/${part("month")}/${part("year")} ${part("hour")}:${part("minute")}`;
 }
 
-export function rankAssistantEvent(message: string, event: { title: string; city: string; slug: string; startsAt: Date }) {
+export function rankAssistantEvent(message: string, event: { id?: string; title: string; city: string; slug: string; startsAt: Date }) {
   const query = normalized(message);
   const city = normalized(event.city);
   const title = normalized(event.title);
@@ -214,7 +214,8 @@ export function rankAssistantEvent(message: string, event: { title: string; city
   const monthName = ["", "janeiro", "fevereiro", "marco", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"][Number(month)];
   const namedDate = new RegExp(`\\b${Number(day)}(?:\\s+de)?\\s+${monthName}(?:\\s+de)?\\s+${year}\\b`);
   const dated = query.includes(localDate) || query.includes(`${day}/${month}`) || namedDate.test(query);
-  return (query.includes(`/evento/${normalized(event.slug)}`) ? 50 : 0)
+  return (event.id && query.includes(normalized(event.id)) ? 100 : 0)
+    + (query.includes(`/evento/${normalized(event.slug)}`) ? 50 : 0)
     + (dated ? 20 : 0)
     + (city && query.includes(city) ? 8 : 0) + words.filter((word) => query.includes(word)).length;
 }
@@ -447,11 +448,16 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
     const event = second?.score === first.score ? null : eventDetails.find((item) => item.id === first.event.id);
     if (event) {
       const visible = orderTicketLots(event.lots.filter((lot) => lot.status === "ACTIVE" || lot.status === "SOLD_OUT"));
-      const desired = proposedTicketOrder(event.lots);
+      const resolved = resolveTicketOrder(event.lots, message);
+      if (resolved.error) {
+        const saved = await saveMessage(admin, "assistant", resolved.error);
+        return { userMessage, message: { id: saved.id, role: "assistant" as const, text: resolved.error, createdAt: saved.createdAt.toISOString() }, proposal: null };
+      }
+      const desired = resolved.lots;
       const expectedIds = visible.map((lot) => lot.id);
       const desiredIds = desired.map((lot) => lot.id);
       if (desiredIds.join("|") === expectedIds.join("|")) {
-        const text = `Conferi a ordem de ${event.title}: os ingressos visíveis já estão agrupados por setor e, dentro de cada setor, seguem os preços do menor para o maior; categorias empatadas seguem a prioridade aprovada. Nenhuma alteração foi feita.`;
+        const text = `Conferi a ordem de ${event.title}: a sequência atual já corresponde à organização solicitada. Nenhuma alteração foi feita.`;
         const saved = await saveMessage(admin, "assistant", text);
         return { userMessage, message: { id: saved.id, role: "assistant" as const, text, createdAt: saved.createdAt.toISOString() }, proposal: null };
       }
@@ -462,7 +468,7 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
           eventId: event.id, eventTitle: event.title, expectedIds, desiredIds, orderedNames } } });
       const proposal: AssistantProposal = { kind: "LOT_ORDER_CHANGE", id: row.id,
         eventId: event.id, eventTitle: event.title, expectedIds, desiredIds, orderedNames };
-      const text = `Encontrei a ordem incorreta em ${event.title}. Vou alterar a posição real dos ingressos, mantendo a sequência dos setores e ordenando por preço dentro de cada setor. Em caso de empate, Meia Entrada vem antes de Black November e Inteira. Preços, estoque, cores, status e vendas serão preservados. Confira a sequência na proposta antes de confirmar.`;
+      const text = `Encontrei a ordem incorreta em ${event.title}. ${resolved.explanation} Preços, estoque, cores, status e vendas serão preservados. Confira a sequência na proposta antes de confirmar.`;
       const saved = await saveMessage(admin, "assistant", text);
       return { userMessage, message: { id: saved.id, role: "assistant" as const, text, createdAt: saved.createdAt.toISOString() }, proposal };
     }
@@ -624,6 +630,7 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
           cardInterestStartsAtInstallment: item.cardInterestStartsAtInstallment
         }).success;
         if ((!source && !directPricing) || (item.operation === "UPDATE" && (!source || ids.has(source.id))) || !item.name?.trim() || item.name.length > 160 || item.description?.length > 4000 || !Number.isSafeInteger(item.priceInCents) || item.priceInCents < 1000 || !Number.isSafeInteger(item.totalQuantity) || item.totalQuantity < 1 || !["ACTIVE", "PAUSED", "DRAFT", "SOLD_OUT"].includes(item.status) || (item.operation === "UPDATE" && source && item.totalQuantity < source.soldQuantity + source.reservedQuantity)) { changes.length = 0; break; }
+        if (item.operation === "UPDATE" && source && source.status === "PAUSED" && item.status !== "PAUSED" && requestedStatus !== "ACTIVE") { changes.length = 0; break; }
         if (item.operation === "UPDATE" && source) ids.add(source.id);
         changes.push({ operation: item.operation, lotId: item.operation === "UPDATE" ? source!.id : "", templateLotId: item.operation === "CREATE" ? source?.id || "" : "", oldName: item.operation === "UPDATE" ? source!.name : "", oldDescription: item.operation === "UPDATE" ? source!.description || "" : "", oldPriceInCents: item.operation === "UPDATE" ? source!.priceInCents : 0, oldTotalQuantity: item.operation === "UPDATE" ? source!.totalQuantity : 0, oldStatus: item.operation === "UPDATE" ? source!.status : "", ...(item.operation === "UPDATE" && source && color && item.highlightColor?.toUpperCase() === color ? { oldHighlightColor: source.highlightColor || "", highlightColor: color } : {}), name: item.name.trim(), description: item.description || "", priceInCents: item.priceInCents, totalQuantity: item.totalQuantity, status: item.status as AssistantLotChange["status"], ...(item.operation === "UPDATE" && requestedFee !== undefined && source ? { oldServiceFeeBps: source.serviceFeeBps, serviceFeeBps: requestedFee } : {}), ...(directCreate ? { serviceFeeBps: item.serviceFeeBps, cardInterestBpsPerInstallment: item.cardInterestBpsPerInstallment, cardInterestStartsAtInstallment: item.cardInterestStartsAtInstallment } : {}) });
       }
