@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import sharp from "sharp";
+import { fileTypeFromBuffer } from "file-type";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createEvent } from "@/features/events/event.service";
@@ -25,9 +25,10 @@ export async function findImportDuplicates(organizationId: string, source: Pick<
 const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 export async function copyImportImage(url: string, folder: string) {
   const bytes = await fetchPublicImageBytes(url);
-  const metadata = await sharp(bytes, { limitInputPixels: 40_000_000 }).metadata();
-  if (!metadata.width || !metadata.height || !["png", "jpeg", "webp"].includes(metadata.format || "")) throw new Error("Use mídia JPG, PNG ou WEBP válida.");
-  const uploaded = await savePublicImageUpload(new File([new Uint8Array(bytes)], `source.${metadata.format}`, { type: `image/${metadata.format}` }), folder);
+  // Preserve source bytes; native image decoders are not available in every serverless bundle.
+  const detected = await fileTypeFromBuffer(bytes);
+  if (!detected || !["image/png", "image/jpeg", "image/webp"].includes(detected.mime)) throw new Error("Use mídia JPG, PNG ou WEBP válida.");
+  const uploaded = await savePublicImageUpload(new File([new Uint8Array(bytes)], `source.${detected.ext}`, { type: detected.mime }), folder);
   if (process.env.NODE_ENV === "development" && uploaded?.startsWith("/uploads/")) {
     const root = path.resolve(process.cwd(), "public/uploads");
     const file = path.resolve(process.cwd(), `public${uploaded}`);

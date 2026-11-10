@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { parseLegacyImport, fingerprintImport, type ImportPlan } from "@/features/assistant/assistant-event-import";
 const state = vi.hoisted(() => ({ source: null as unknown, duplicates: [] as unknown[], lots: [] as any[], drift: false, tx: {} as any, copied: 0 }));
-vi.mock("sharp", () => ({ default: () => ({ metadata: async () => ({ width:100,height:50,format:"png" }) }) }));
+vi.mock("file-type", () => ({ fileTypeFromBuffer: async () => ({ ext:"png",mime:"image/png" }) }));
 vi.mock("@/features/assistant/assistant-event-import", async original => ({ ...await original<typeof import("@/features/assistant/assistant-event-import")>(), readImportSource: async () => state.source }));
 vi.mock("@/features/assistant/public-event-source", async original => ({ ...await original<typeof import("@/features/assistant/public-event-source")>(), fetchPublicImageBytes: async () => Buffer.from("verified-image"), fetchPublicEventHtml: vi.fn() }));
 vi.mock("@/features/uploads/local-upload.service", () => ({ savePublicImageUpload: async () => `https://storage.example.org/image-${++state.copied}.png` }));
