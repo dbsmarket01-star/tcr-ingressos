@@ -5,7 +5,7 @@ function normalize(value: string) {
 export function isReadOnlyAssistantRequest(message: string) {
   const request = normalize(message).trim();
   // A restriction on other fields must not cancel an explicit change request.
-  if (/^(?:por favor[,\s]+)?(?:retire|tire|pause|despublique|publique|reative|deixe|altere|mude|modifique|aumente|reduza)\b/.test(request)) return false;
+  if (/^(?:por favor[,\s]+)?(?:retire|tire|pause|despublique|publique|reative|deixe|altere|mude|modifique|aumente|reduza|organize|ordene|reordene|corrija|ajuste|coloque|crie|adicione)\b/.test(request)) return false;
   return /\b(nao\s+(?:altere|mude|modifique|faca\s+alteracoes)|sem\s+(?:alterar|mudar|modificar)|(?:so|apenas|somente)\s+(?:consulte|consultar|consulta|informe|informar))\b/.test(request);
 }
 

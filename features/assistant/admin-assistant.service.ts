@@ -404,7 +404,7 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
       const expectedIds = visible.map((lot) => lot.id);
       const desiredIds = desired.map((lot) => lot.id);
       if (desiredIds.join("|") === expectedIds.join("|")) {
-        const text = `Conferi a ordem de ${event.title}: os ingressos visíveis já estão agrupados por setor e, em cada setor, seguem Meia Entrada, Black November e Inteira. Nenhuma alteração foi feita.`;
+        const text = `Conferi a ordem de ${event.title}: os ingressos visíveis já estão agrupados por setor e, dentro de cada setor, seguem os preços do menor para o maior; categorias empatadas seguem a prioridade aprovada. Nenhuma alteração foi feita.`;
         const saved = await saveMessage(admin, "assistant", text);
         return { userMessage, message: { id: saved.id, role: "assistant" as const, text, createdAt: saved.createdAt.toISOString() }, proposal: null };
       }

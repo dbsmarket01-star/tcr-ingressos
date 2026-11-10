@@ -22,4 +22,10 @@ describe("assistant conversation requests", () => {
     expect(isReadOnlyAssistantRequest(message)).toBe(false);
     expect(assistantAcknowledgement(message)).toContain("sua confirmação");
   });
+
+  it("keeps an ordering request actionable when the user protects other fields", () => {
+    const message = "Organize os ingressos por preço dentro de cada setor, sem mudar nenhum outro dado.";
+    expect(isReadOnlyAssistantRequest(message)).toBe(false);
+    expect(assistantAcknowledgement(message)).toContain("sua confirmação");
+  });
 });
