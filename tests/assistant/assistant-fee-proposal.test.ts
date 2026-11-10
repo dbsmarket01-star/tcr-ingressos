@@ -13,3 +13,11 @@ describe("explicit ticket fee proposal", () => {
     if (result.proposal?.kind === "LOT_CHANGES") expect(result.proposal.changes[0].serviceFeeBps).toBe(fee);
   });
 });
+
+it("does not lose a requested price change when a color is requested together", async () => {
+  vi.stubEnv("OPENAI_API_KEY", "test-placeholder");
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ output_text: JSON.stringify({ reply: "Proposta", action: "LOT_CHANGES", eventId: "event", changes: [{ operation: "UPDATE", lotId: "lot", templateLotId: "", name: "PISTA", description: "Teste", priceInCents: 11000, totalQuantity: 10, status: "PAUSED", highlightColor: "#24865D", serviceFeeBps: 1000, cardInterestBpsPerInstallment: 0, cardInterestStartsAtInstallment: 1 }] }) }), { status: 200 }));
+  const result = await answerAssistant({ id: "admin", organizationId: "org" } as never, "Mude a cor do ingresso PISTA no Show Auditoria para #24865D e o preço para R$ 110");
+  expect(result.proposal?.kind).toBe("LOT_CHANGES");
+  if (result.proposal?.kind === "LOT_CHANGES") expect(result.proposal.changes[0]).toMatchObject({ priceInCents: 11000, highlightColor: "#24865D" });
+});

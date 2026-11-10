@@ -18,3 +18,14 @@ export function assistantAcknowledgement(message: string) {
     ? "Entendi. Vou conferir os dados e não farei nenhuma alteração."
     : "Entendi. Vou conferir os dados. Se houver alguma mudança, mostrarei a proposta para sua confirmação antes de salvar.";
 }
+
+/** A print used as evidence is not an instruction to replace event artwork. */
+export function requestedAssistantImageField(message: string): "bannerUrl" | "eventMapImageUrl" | null {
+  const text = normalize(message);
+  const banner = /\bbanner\b|\bcapa\b|\barte\b/.test(text);
+  const map = /\bmapa\b/.test(text);
+  if (banner === map) return null;
+  const replace = /\b(troque|trocar|substitua|substituir|altere|alterar|atualize|atualizar|coloque|colocar|aplique|aplicar)\b/.test(text);
+  const useAsArtwork = /\b(?:use|usar)\b.*\b(?:como|para|no|na)\b.*\b(?:banner|capa|arte|mapa)\b/.test(text) && !/\breferencia\b/.test(text);
+  return replace || useAsArtwork ? (banner ? "bannerUrl" : "eventMapImageUrl") : null;
+}

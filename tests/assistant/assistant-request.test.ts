@@ -45,3 +45,12 @@ describe("audit: consultation versus confirmation", () => {
     "Somente investigue o mapa, não salve nada."
   ])("does not propose a mutation: %s", (message) => expect(isReadOnlyAssistantRequest(message)).toBe(true));
 });
+
+import { requestedAssistantImageField } from "@/features/assistant/assistant-request";
+it("distinguishes reference prints from replacement artwork", () => {
+  expect(requestedAssistantImageField("Use o print como referência para conferir o mapa")).toBeNull();
+  expect(requestedAssistantImageField("Veja se o banner está legível")).toBeNull();
+  expect(requestedAssistantImageField("Use esta imagem como banner do evento")).toBe("bannerUrl");
+  expect(requestedAssistantImageField("Substitua o mapa por esta imagem")).toBe("eventMapImageUrl");
+  expect(requestedAssistantImageField("Troque o banner e o mapa")).toBeNull();
+});

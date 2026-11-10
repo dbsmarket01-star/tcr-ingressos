@@ -56,4 +56,18 @@ describe("assistant event proposal", () => {
     } finally { fetchSpy.mockRestore(); vi.unstubAllEnvs(); }
   });
 
+  it("uses the supplied external link instead of the previous event for ticket queries", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "test-only-placeholder");
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
+      if (String(url).includes("tcringressos.com.br")) return new Response("<title>Evento externo</title><p>Pista R$ 50,00</p>", { status: 200 });
+      return new Response(JSON.stringify({ output_text: JSON.stringify({ reply: "Na referência: Evento externo, Pista R$ 50,00.", action: "NONE" }) }), { status: 200 });
+    });
+    try {
+      const result = await answerAssistant({ id: "admin-1", role: "OWNER", organizationId: "org-1" } as never,
+        "Somente consulta: leia https://tcringressos.com.br/referencia e informe os ingressos de pista");
+      expect(result.message.text).toContain("Evento externo");
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    } finally { fetchSpy.mockRestore(); vi.unstubAllEnvs(); }
+  });
+
 });
