@@ -30,3 +30,10 @@ export function requestedAssistantImageField(message: string): "bannerUrl" | "ev
   const useAsArtwork = /\b(?:use|usar)\b.*\b(?:como|para|no|na)\b.*\b(?:banner|capa|arte|mapa)\b/.test(text) && !/\breferencia\b/.test(text);
   return replace || useAsArtwork ? (banner ? "bannerUrl" : "eventMapImageUrl") : null;
 }
+export function assistantSourceRequest(message: string, history: Array<{ role: string; text: string }>): string {
+  if (/https?:\/\//i.test(message)) return message;
+  if (!/\b(?:(?:link|referencia|pagina|site)\s+(?:antig[oa]|anterior)|mesm[oa]\s+(?:link|referencia|pagina)|(?:nesse|desse)\s+link)\b/.test(normalize(message))) return message;
+  const previous = [...history].reverse().find((item) => item.role === "user" && /https?:\/\//i.test(item.text));
+  const url = previous?.text.match(/https?:\/\/[^\s<>]+/i)?.[0];
+  return url ? `${message}\nReferência anterior: ${url}` : message;
+}
