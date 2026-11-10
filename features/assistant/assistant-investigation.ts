@@ -26,7 +26,7 @@ export const assistantInvestigationTools = [
 ] as const;
 
 function safeSourcePath(path: string) {
-  if (!/^[a-zA-Z0-9_./@+ -]+$/.test(path) || path.startsWith("/") || path.split("/").some((part) => !part || part === "." || part === "..")) return false;
+  if (!/^[a-zA-Z0-9_./@+ \[\]-]+$/.test(path) || path.startsWith("/") || path.split("/").some((part) => !part || part === "." || part === "..")) return false;
   if (/(^|\/)(\.env[^/]*|\.git|node_modules|\.next|private|secrets?)(\/|$)/i.test(path)) return false;
   return /\.(tsx?|jsx?|json|md|prisma|css|sql|ya?ml)$/.test(path);
 }

@@ -5,6 +5,7 @@ describe("assistant code investigation boundaries", () => {
   it("allows repository source paths", () => {
     expect(assistantSourcePathIsSafe("features/assistant/admin-assistant.service.ts")).toBe(true);
     expect(assistantSourcePathIsSafe("app/api/admin/assistant/route.ts")).toBe(true);
+    expect(assistantSourcePathIsSafe("app/evento/[slug]/page.tsx")).toBe(true);
   });
 
   it("rejects secrets and path traversal", () => {
