@@ -77,7 +77,14 @@ export async function executeAssistantInvestigationTool(admin: CurrentAdmin, cal
     if (query.length < 2) return JSON.stringify({ error: "Informe pelo menos dois caracteres do nome ou caminho." });
     const ref = process.env.VERCEL_GIT_COMMIT_SHA || "main";
     const tree = await githubJson<{ tree?: Array<{ path?: string; type?: string }>; truncated?: boolean }>(`git/trees/${encodeURIComponent(ref)}?recursive=1`);
-    const files = (tree.tree || []).filter((item) => item.type === "blob" && item.path && safeSourcePath(item.path) && item.path.toLowerCase().includes(query)).slice(0, 50).map((item) => item.path);
+    const normalized = query.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const publicEventQuestion = /\/evento|pagina publica|evento publico|ingressos.*evento|lotes.*evento/.test(normalized);
+    const terms = normalized.split(/[^a-z0-9]+/).filter((term) => term.length >= 3);
+    const candidates = (tree.tree || []).filter((item) => item.type === "blob" && item.path && safeSourcePath(item.path)).map((item) => item.path!);
+    const direct = candidates.filter((path) => path.toLowerCase().includes(query));
+    const semantic = publicEventQuestion ? candidates.filter((path) => path.startsWith("app/evento/[slug]/") || path.startsWith("features/events/") || path.startsWith("features/lots/")) : [];
+    const tokenMatches = candidates.filter((path) => terms.some((term) => path.toLowerCase().includes(term)));
+    const files = [...new Set([...direct, ...semantic, ...tokenMatches])].slice(0, 50);
     return JSON.stringify({ ref, files, truncated: Boolean(tree.truncated) });
   }
 
