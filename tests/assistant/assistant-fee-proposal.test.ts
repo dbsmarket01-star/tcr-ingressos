@@ -21,3 +21,11 @@ it("does not lose a requested price change when a color is requested together", 
   expect(result.proposal?.kind).toBe("LOT_CHANGES");
   if (result.proposal?.kind === "LOT_CHANGES") expect(result.proposal.changes[0]).toMatchObject({ priceInCents: 11000, highlightColor: "#24865D" });
 });
+
+it("prepares an exact status change without making the model reconstruct prices or stock", async () => {
+  const fetch = vi.spyOn(globalThis, "fetch");
+  const result = await answerAssistant({ id: "admin", organizationId: "org" } as never, "Reative o ingresso PISTA no Show Auditoria. Preserve preço, estoque, cor e taxas.");
+  expect(result.proposal?.kind).toBe("LOT_CHANGES");
+  if (result.proposal?.kind === "LOT_CHANGES") expect(result.proposal.changes[0]).toMatchObject({ status: "ACTIVE", priceInCents: 10000, totalQuantity: 10, name: "PISTA" });
+  expect(fetch).not.toHaveBeenCalled();
+});

@@ -5,7 +5,7 @@
   "scripts": {
     "postinstall": "node ./node_modules/prisma/build/index.js generate",
     "dev": "next dev",
-    "build": "npm run test:payment-safety && npm run test:finance-safety && npm run test:whatsapp-safety && node ./node_modules/prisma/build/index.js generate && node ./node_modules/next/dist/bin/next build",
+    "build": "npm run test:assistant-safety && npm run test:payment-safety && npm run test:finance-safety && npm run test:whatsapp-safety && node ./node_modules/prisma/build/index.js generate && node ./node_modules/next/dist/bin/next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
@@ -23,7 +23,8 @@
     "finance:reconcile": "node ./node_modules/tsx/dist/cli.mjs scripts/reconcile-producer-closing.ts",
     "test:finance-safety": "node ./node_modules/vitest/vitest.mjs run tests/finance tests/payments/payment-webhook-idempotency.test.ts tests/payments/payment-webhook-conflict.test.ts tests/payments/asaas-webhook-route.test.ts",
     "test:whatsapp-safety": "node ./node_modules/vitest/vitest.mjs run tests/ai/whatsapp-support-ai.test.ts tests/crm/whatsapp-ai-message-type.test.ts tests/crm/whatsapp-recent-conversation.test.ts tests/orders/cart-abandonment-send-safety.test.ts tests/orders/cart-recovery-report.test.ts tests/whatsapp",
-    "worker:whatsapp": "node node_modules/tsx/dist/cli.mjs scripts/whatsapp-campaign-worker.ts --run"
+    "worker:whatsapp": "node node_modules/tsx/dist/cli.mjs scripts/whatsapp-campaign-worker.ts --run",
+    "test:assistant-safety": "node ./node_modules/vitest/vitest.mjs run tests/assistant"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.4.0",

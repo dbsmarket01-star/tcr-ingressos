@@ -357,6 +357,32 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
     const saved = await saveMessage(admin, "assistant", text);
     return { userMessage, message: { id: saved.id, role: "assistant" as const, text, createdAt: saved.createdAt.toISOString() }, proposal: null };
   }
+  const statusRequest = normalized(message).split(/\b(?:preserve|mantenha)\b/)[0];
+  const requestedStatus = /\b(?:pause|pausar|desative|desativar)\b/.test(statusRequest) ? "PAUSED"
+    : /\b(?:reative|reativar)\b/.test(statusRequest) ? "ACTIVE" : null;
+  if (!readOnly && !image && requestedStatus && currentRanks.length &&
+      !/\b(?:preco|valor|cor|estoque|quantidade|taxa|descricao|nome|crie|mude|altere)\b/.test(statusRequest)) {
+    const event = eventDetails.find((item) => item.id === currentRanks[0].event.id);
+    const matches = event?.lots.filter((lot) => normalized(message).includes(normalized(lot.name)))
+      .sort((a, b) => b.name.length - a.name.length) || [];
+    const lot = matches.length && (matches.length === 1 || matches[0].name.length > matches[1].name.length) ? matches[0] : null;
+    if (event && lot) {
+      let proposal: AssistantProposal | null = null;
+      if (lot.status !== requestedStatus) {
+        const changes: AssistantLotChange[] = [{ operation: "UPDATE", lotId: lot.id, templateLotId: "",
+          oldName: lot.name, oldDescription: lot.description || "", oldPriceInCents: lot.priceInCents,
+          oldTotalQuantity: lot.totalQuantity, oldStatus: lot.status, name: lot.name,
+          description: lot.description || "", priceInCents: lot.priceInCents, totalQuantity: lot.totalQuantity, status: requestedStatus }];
+        const row = await prisma.adminAuditLog.create({ data: { adminUserId: admin.id, action: "ADMIN_ASSISTANT_PROPOSAL", entityType: "ADMIN_ASSISTANT",
+          metadata: { kind: "LOT_CHANGES", organizationId: admin.organizationId, eventId: event.id, eventTitle: event.title, changes } } });
+        proposal = { kind: "LOT_CHANGES", id: row.id, eventId: event.id, eventTitle: event.title, changes };
+      }
+      const text = proposal ? `Vou ${requestedStatus === "PAUSED" ? "pausar" : "reativar"} somente ${lot.name} em ${event.title}. Preço, estoque, cor e taxas serão preservados. Confira a proposta antes de confirmar.`
+        : `${lot.name} já está ${requestedStatus === "PAUSED" ? "pausado" : "ativo"} em ${event.title}. Nenhuma alteração foi feita.`;
+      const saved = await saveMessage(admin, "assistant", text);
+      return { userMessage, message: { id: saved.id, role: "assistant" as const, text, createdAt: saved.createdAt.toISOString() }, proposal };
+    }
+  }
   const color = requestedLotColor(message);
   if (!readOnly && !image && color && currentRanks.length && !/\b(preco|valor|estoque|quantidade|taxa|nome|descricao|pause|reative)\b/.test(normalized(message))) {
     const event = eventDetails.find((item) => item.id === currentRanks[0].event.id);

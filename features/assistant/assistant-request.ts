@@ -6,6 +6,7 @@ export function isReadOnlyAssistantRequest(message: string) {
   const request = normalize(message).trim()
     .replace(/(?:nao\s+(?:altere|mude|modifique|salve|grave|execute)(?:\s+nada|\s+alteracoes)?|sem\s+(?:alterar|mudar|salvar|gravar|executar)(?:\s+nada|\s+alteracoes)?)\s+(?:antes\s+(?:de\s+)?(?:eu\s+)?confirmar|ate\s+(?:eu\s+)?confirmar|sem\s+(?:minha\s+)?confirmacao)/g, "")
     .replace(/se ja estiverem corretos,?\s*nao grave nada/g, "");
+  if (/^(?:por favor[, ]+)?nao\b/.test(request)) return true;
   if (/\b(?:nao (?:altere|mude|modifique|grave|salve) nada|(?:so|apenas|somente) (?:analise|consulte|consulta|investigue))\b/.test(request)) return true;
   // A restriction on other fields must not cancel an explicit change request.
   const actionPrefix = /^(?:(?:chat|assistente)[,!\s]+)?(?:(?:por favor|pode|voce pode|quero que voce|eu quero que voce|preciso que voce|eu preciso que voce|me ajude a)[,\s]+)*(?:retire|tire|pause|despublique|publique|reative|deixe|altere|mude|modifique|aumente|reduza|organize|organizar|ordene|ordenar|reordene|reordenar|corrija|corrigir|ajuste|ajustar|coloque|colocar|crie|criar|adicione|adicionar)\b/;
