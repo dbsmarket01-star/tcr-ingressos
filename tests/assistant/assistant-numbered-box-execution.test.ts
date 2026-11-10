@@ -1,0 +1,17 @@
+import {beforeEach,expect,it,vi} from "vitest";
+const s=vi.hoisted(()=>({lots:[] as any[],event:{id:'event',title:'Audit',slug:'audit'},failVerify:false,locks:0}));
+vi.mock("@/features/lots/lot-order.service",()=>({lockEventLotOrder:async()=>{s.locks++},normalizeEventLotOrder:async()=>{s.lots.forEach((l,i)=>l.sortOrder=i)}}));
+vi.mock("@/lib/prisma",()=>({prisma:{$transaction:async(fn:any)=>{const backup=structuredClone(s.lots);try{return await fn({event:{findFirst:async({where}:any)=>where.organizationId==='org'?s.event:null,findUnique:async()=>({...s.event,startsAt:new Date('2027-03-20'),endsAt:null}),findUniqueOrThrow:async()=>({...s.event,startsAt:new Date('2027-03-20'),endsAt:null})},ticketLot:{findMany:async()=>s.lots,aggregate:async()=>({_max:{sortOrder:s.lots.length-1}}),create:async({data}:any)=>{const l={...data,id:`lot${s.lots.length}`,typeOptions:[],soldQuantity:0,reservedQuantity:0};s.lots.push(l);return l},findUniqueOrThrow:async({where}:any)=>{const l=s.lots.find(l=>l.id===where.id);return s.failVerify?{...l,totalQuantity:999}:l}},ticketLotOption:{create:async({data}:any)=>{s.lots.find(l=>l.id===data.lotId).typeOptions.push({...data,soldQuantity:0,reservedQuantity:0})}}})}catch(e){s.lots=backup;throw e}}}}));
+import {createAssistantNumberedBoxes} from '@/features/lots/assistant-numbered-box.service';
+const plan={eventId:'event',eventTitle:'Audit',numbers:[19,17,18],admissionsPerUnit:10,priceInCents:149790,description:'',serviceFeeBps:2000,cardInterestBpsPerInstallment:400,cardInterestStartsAtInstallment:2,status:'ACTIVE' as const};
+beforeEach(()=>{s.lots=[{id:'existing',name:'PISTA',typeOptions:[],priceInCents:10000,soldQuantity:7,reservedQuantity:2,status:'ACTIVE',sortOrder:0}];s.failVerify=false;s.locks=0;});
+it('creates three uniquely numbered units with 30 admissions and preserves existing sales',async()=>{
+ const existing=structuredClone(s.lots[0]);const result=await createAssistantNumberedBoxes('org',plan);
+ expect(result.lot).toMatchObject({totalQuantity:3,admissionsPerUnit:10,hasTypeOptions:true,priceInCents:149790,serviceFeeBps:2000,cardInterestBpsPerInstallment:400,cardInterestStartsAtInstallment:2,highlightColor:'#2563EB',minPerOrder:1,maxPerOrder:1});
+ expect(result.lot.typeOptions.map((o:any)=>o.label)).toEqual(['Camarote 17','Camarote 18','Camarote 19']);expect(s.lots[0]).toEqual(existing);expect(s.locks).toBeGreaterThan(0);
+});
+it('refuses a repeated execution without duplicating options',async()=>{await createAssistantNumberedBoxes('org',plan);await expect(createAssistantNumberedBoxes('org',plan)).rejects.toThrow('Já existe');expect(s.lots).toHaveLength(2)});
+it('does not recreate a number belonging to a paused or sold box',async()=>{s.lots.push({id:'box',name:'CAMAROTE VIP',status:'PAUSED',typeOptions:[{label:'Camarote 17',soldQuantity:1}]});await expect(createAssistantNumberedBoxes('org',plan)).rejects.toThrow('já existe');expect(s.lots).toHaveLength(2)});
+it('rolls back a mismatched readback',async()=>{s.failVerify=true;await expect(createAssistantNumberedBoxes('org',plan)).rejects.toThrow('revertida');expect(s.lots).toHaveLength(1)});
+it('enforces organization ownership',async()=>{await expect(createAssistantNumberedBoxes('other',plan)).rejects.toThrow('não está disponível');expect(s.lots).toHaveLength(1)});
+it('rejects unsafe capacity before touching storage',async()=>{await expect(createAssistantNumberedBoxes('org',{...plan,admissionsPerUnit:0})).rejects.toThrow();expect(s.locks).toBe(0)});

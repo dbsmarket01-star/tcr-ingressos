@@ -1,3 +1,5 @@
+import { finishNumberedBoxDraft } from "@/features/assistant/assistant-numbered-box.service";
+import { createAssistantNumberedBoxes } from "@/features/lots/assistant-numbered-box.service";
 import { verifyAssistantPublicTickets } from "@/features/assistant/assistant-public-verification";
 import { claimAssistantResolution } from "@/features/assistant/assistant-resolution";
 import { importPlanSchema, type ImportProposal } from "@/features/assistant/assistant-event-import";
@@ -206,6 +208,20 @@ export async function POST(request: NextRequest) {
         return error("Não consegui confirmar todos os dados do evento. Confira o painel antes de tentar novamente.", 503);
       }
     }
+    if (proposal.kind === "NUMBERED_BOX_CREATE") {
+      try {
+        const result = await createAssistantNumberedBoxes(admin.organizationId, proposal.plan);
+        revalidatePath(`/evento/${result.event.slug}`);
+        revalidatePath(`/evento/${result.event.slug}/checkout`);
+        revalidatePath(`/admin/events/${result.event.id}/lots`);
+        const publicCheck = await verifyAssistantPublicTickets(admin.organizationId, result.event.id);
+        const text = `Criação conferida no banco em ${result.event.title}: camarotes ${proposal.plan.numbers.join(", ")}, uma unidade de cada número, ${result.lot.admissionsPerUnit} ingressos por unidade. Estoque: ${result.lot.totalQuantity} camarotes; capacidade: ${result.lot.totalQuantity * result.lot.admissionsPerUnit} pessoas. ${publicCheck.detail} ${publicCheck.url}`;
+        return NextResponse.json({ message: await saveAssistantConfirmation(admin, proposal, text) });
+      } catch (cause) {
+        console.error("[admin-assistant] Falha ao criar camarotes", cause);
+        return error(cause instanceof Error ? cause.message : "Não consegui concluir a criação. Confira o cadastro antes de tentar novamente.", 409);
+      }
+    }
     if (proposal.kind === "LOT_ORDER_CHANGE") {
       const event = await prisma.event.findFirst({ where: { id: proposal.eventId, organizationId: admin.organizationId },
         select: { id: true, slug: true, title: true } });
@@ -304,7 +320,9 @@ export async function POST(request: NextRequest) {
   if (field("type") === "discard") {
     const proposalId = String(field("proposalId") || "").trim();
     if (!proposalId) return error("Proposta não informada.");
+    const discardedProposal = await getAssistantProposal(admin, proposalId);
     if (!await discardAssistantProposal(admin, proposalId)) return error("A proposta já foi cancelada, está em processamento ou não está mais disponível.", 409);
+    if (discardedProposal?.kind === "NUMBERED_BOX_CREATE") await finishNumberedBoxDraft(admin);
     return NextResponse.json({ ok: true });
   }
   return error("Operação não reconhecida.");

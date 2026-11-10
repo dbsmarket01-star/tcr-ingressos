@@ -1,3 +1,5 @@
+import { numberedBoxPlanSchema, type NumberedBoxProposal } from "./assistant-numbered-box";
+import { handleNumberedBoxRequest, finishNumberedBoxDraft } from "./assistant-numbered-box.service";
 import { claimAssistantResolution } from "@/features/assistant/assistant-resolution";
 import { importRequested, sourceUrl, readImportSource, importSourceSchema, importPlanSchema, type ImportProposal } from "./assistant-event-import";
 import { findImportDuplicates } from "./assistant-import-execution";
@@ -17,7 +19,7 @@ import { assistantInvestigationTools, executeAssistantInvestigationTool } from "
 
 export type AssistantEventDraft = { title: string; slug: string; description: string; startsAt: string; venueName: string; venueAddress: string; city: string; state: string; bannerUrl: string; eventMapImageUrl: string };
 
-export type AssistantProposal = ImportProposal | {
+export type AssistantProposal = ImportProposal | NumberedBoxProposal | {
   kind: "EVENT_CREATE";
   id: string;
   eventId: string;
@@ -352,6 +354,13 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
     }),
     readLegacyPage(assistantSourceRequest(message, previousMessages))
   ]);
+  if (!readOnly && !image && !legacyPage) {
+    const numbered = await handleNumberedBoxRequest(admin, message, eventIndex, rankAssistantEvent);
+    if (numbered) {
+      const saved = await saveMessage(admin, "assistant", numbered.text);
+      return { userMessage, message: { id: saved.id, role: "assistant" as const, text: numbered.text, createdAt: saved.createdAt.toISOString() }, proposal: numbered.proposal };
+    }
+  }
   // The visible transcript belongs to the team, but interpretation uses a separate,
   // per-operator query so a busy shared history cannot evict the active context.
   const currentRanks = (legacyPage ? [] : eventIndex).map((event) => ({ event, score: rankAssistantEvent(message, event) }))
@@ -687,6 +696,10 @@ export async function getAssistantProposal(admin: CurrentAdmin, id: string): Pro
     const parsed = importPlanSchema.safeParse(meta.plan);
     return parsed.success ? { kind: "EVENT_IMPORT", id: row.id, eventId: "", eventTitle: parsed.data.source.title, plan: parsed.data } : null;
   }
+  if (meta.kind === "NUMBERED_BOX_CREATE") {
+    const parsed = numberedBoxPlanSchema.safeParse(meta.plan);
+    return parsed.success ? { kind: "NUMBERED_BOX_CREATE", id: row.id, eventId: parsed.data.eventId, eventTitle: parsed.data.eventTitle, plan: parsed.data } : null;
+  }
   if (meta.kind === "LOT_ORDER_CHANGE") {
     if (!Array.isArray(meta.expectedIds) || !Array.isArray(meta.desiredIds) || !Array.isArray(meta.orderedNames) ||
       meta.expectedIds.length !== meta.desiredIds.length || meta.desiredIds.length !== meta.orderedNames.length ||
@@ -747,6 +760,7 @@ export async function discardAssistantProposal(admin: CurrentAdmin, id: string) 
 }
 
 export async function saveAssistantConfirmation(admin: CurrentAdmin, proposal: AssistantProposal, text: string) {
+  if (proposal.kind === "NUMBERED_BOX_CREATE") await finishNumberedBoxDraft(admin);
   await prisma.adminAuditLog.create({
     data: { adminUserId: admin.id, action: "ADMIN_ASSISTANT_APPLIED", entityType: "ADMIN_ASSISTANT", entityId: proposal.id,
       metadata: { organizationId: admin.organizationId, ...proposal } }
