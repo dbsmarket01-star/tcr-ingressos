@@ -572,7 +572,7 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
 }
 
 export async function getAssistantProposal(admin: CurrentAdmin, id: string): Promise<AssistantProposal | null> {
-  const row = await prisma.adminAuditLog.findFirst({ where: { id, action: "ADMIN_ASSISTANT_PROPOSAL", entityType: "ADMIN_ASSISTANT" } });
+  const row = await prisma.adminAuditLog.findFirst({ where: { id, action: "ADMIN_ASSISTANT_PROPOSAL", entityType: "ADMIN_ASSISTANT", adminUserId: admin.id } });
   if (!row || !row.metadata || typeof row.metadata !== "object" || Array.isArray(row.metadata)) return null;
   if (Date.now() - row.createdAt.getTime() > 60 * 60 * 1000) return null;
   const meta = row.metadata as Prisma.JsonObject;
@@ -619,7 +619,7 @@ export async function getAssistantProposal(admin: CurrentAdmin, id: string): Pro
 
 export async function getPendingAssistantProposal(admin: CurrentAdmin) {
   const row = await prisma.adminAuditLog.findFirst({
-    where: { action: "ADMIN_ASSISTANT_PROPOSAL", entityType: "ADMIN_ASSISTANT",
+    where: { action: "ADMIN_ASSISTANT_PROPOSAL", entityType: "ADMIN_ASSISTANT", adminUserId: admin.id,
       metadata: { path: ["organizationId"], equals: admin.organizationId } },
     orderBy: { createdAt: "desc" }, select: { id: true }
   });
