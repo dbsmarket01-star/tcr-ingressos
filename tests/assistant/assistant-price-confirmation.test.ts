@@ -34,6 +34,9 @@ vi.mock("@/lib/prisma", () => ({ prisma: {
 } }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
+vi.mock("@/features/assistant/assistant-resolution", () => ({ claimAssistantResolution: vi.fn(async () => true) }));
+
+import { claimAssistantResolution } from "@/features/assistant/assistant-resolution";
 import { POST } from "@/app/api/admin/assistant/route";
 
 function request() {
@@ -72,4 +75,11 @@ describe("assistant price confirmation", () => {
     expect(response.status).toBe(403);
     expect(mocks.updatePricing).not.toHaveBeenCalled();
   });
+  it("refuses a second confirmation before changing the price", async () => {
+    vi.mocked(claimAssistantResolution).mockResolvedValueOnce(false);
+    expect((await POST(request())).status).toBe(409);
+    expect(mocks.updatePricing).not.toHaveBeenCalled();
+    expect(mocks.saveAssistantConfirmation).not.toHaveBeenCalled();
+  });
+
 });

@@ -32,3 +32,16 @@ describe("assistant conversation requests", () => {
     expect(isReadOnlyAssistantRequest("Pode organizar os ingressos sem alterar as vendas?")).toBe(false);
   });
 });
+
+describe("audit: consultation versus confirmation", () => {
+  it.each([
+    "No Show Teste, mude o preço para R$ 100. Não altere nada antes de eu confirmar.",
+    "Crie um rascunho, sem salvar até eu confirmar.",
+    "Organize os ingressos sem mudar nenhum outro dado. Se já estiverem corretos, não grave nada."
+  ])("allows preparing a proposal: %s", (message) => expect(isReadOnlyAssistantRequest(message)).toBe(false));
+  it.each([
+    "Altere o preço? Não altere nada, é só uma pergunta.",
+    "Apenas analise o banner do evento neste print.",
+    "Somente investigue o mapa, não salve nada."
+  ])("does not propose a mutation: %s", (message) => expect(isReadOnlyAssistantRequest(message)).toBe(true));
+});

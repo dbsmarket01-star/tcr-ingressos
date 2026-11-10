@@ -652,14 +652,14 @@ export async function updateEvent(eventId: string, input: EventDraftInput & { st
   });
 }
 
-export async function updateEventStatus(eventId: string, status: EventStatus) {
+export async function updateEventStatus(eventId: string, status: EventStatus, expectedStatus?: EventStatus) {
   const existingEvent = await prisma.event.findUniqueOrThrow({
     where: { id: eventId },
     select: { organizationId: true }
   });
   const tcrTracking = await getTcrMetaTracking(existingEvent.organizationId);
   return prisma.event.update({
-    where: { id: eventId },
+    where: { id: eventId, ...(expectedStatus ? { status: expectedStatus } : {}) },
     data: {
       status,
       ...(tcrTracking ? {

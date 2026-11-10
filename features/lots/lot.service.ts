@@ -357,11 +357,19 @@ export async function updateTicketLot(lotId: string, input: TicketLotInput & { s
 
 export async function updateTicketLotPricing(
   lotId: string,
-  input: TicketLotPricingInput
+  input: TicketLotPricingInput,
+  expectedPriceInCents?: number
 ) {
   return prisma.$transaction(async tx => {
     const lot = await tx.ticketLot.findUniqueOrThrow({ where: { id: lotId } });
     await lockEventLotOrder(tx, lot.eventId);
+    if (expectedPriceInCents !== undefined) {
+      const current = await tx.ticketLot.findUniqueOrThrow({ where: { id: lotId } });
+      if (current.priceInCents !== expectedPriceInCents) throw new Error("O preço mudou durante a confirmação. Solicite uma nova proposta.");
+      await tx.ticketLot.update({ where: { id: lotId }, data: { priceInCents: input.priceInCents } });
+      await normalizeEventLotOrder(tx, lot.eventId);
+      return tx.ticketLot.findUniqueOrThrow({ where: { id: lotId } });
+    }
     await tx.ticketLot.update({
     where: { id: lotId },
     data: {
@@ -386,6 +394,8 @@ export async function applyAssistantLotChanges(eventId: string, changes: Assista
     const current = await tx.ticketLot.findMany({ where: { eventId } });
     const byId = new Map(current.map((lot) => [lot.id, lot]));
     const touched = new Set<string>();
+    const normalizedName = (name: string) => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().replace(/\s+/g, " ").toLowerCase();
+    const names = new Set(current.map((lot) => normalizedName(lot.name)));
     const expectedCreated: Array<{ id: string; change: AssistantLotChange; serviceFeeBps: number }> = [];
     const expectedColors: Array<{ id: string; color: string }> = [];
     for (const change of changes) {
@@ -396,20 +406,22 @@ export async function applyAssistantLotChanges(eventId: string, changes: Assista
         if (!source) throw new Error("Ingresso não existe mais neste evento.");
         if (touched.has(source.id)) throw new Error("Ingresso repetido na proposta.");
         touched.add(source.id);
-        if (source.name !== change.oldName || (source.description || "") !== change.oldDescription || source.priceInCents !== change.oldPriceInCents || source.totalQuantity !== change.oldTotalQuantity || source.status !== change.oldStatus || (change.oldHighlightColor !== undefined && (source.highlightColor || "") !== change.oldHighlightColor)) throw new Error("O ingresso mudou desde a proposta. Peça nova conferência.");
+        if (source.name !== change.oldName || (source.description || "") !== change.oldDescription || source.priceInCents !== change.oldPriceInCents || source.totalQuantity !== change.oldTotalQuantity || source.status !== change.oldStatus || (change.oldHighlightColor !== undefined && (source.highlightColor || "") !== change.oldHighlightColor) || (change.oldServiceFeeBps !== undefined && source.serviceFeeBps !== change.oldServiceFeeBps)) throw new Error("O ingresso mudou desde a proposta. Peça nova conferência.");
         if (change.totalQuantity < source.soldQuantity + source.reservedQuantity) throw new Error("Estoque inferior aos ingressos vendidos ou reservados.");
         if (source.hasTypeOptions && change.totalQuantity !== source.totalQuantity) throw new Error("Estoque de ingresso com opções deve ser alterado no cadastro completo.");
       }
       if (!change.name?.trim() || change.name.length > 160 || change.description.length > 4000 || !Number.isSafeInteger(change.totalQuantity) || change.totalQuantity < 1 || !["ACTIVE", "PAUSED", "DRAFT", "SOLD_OUT"].includes(change.status)) throw new Error("Dados do ingresso inválidos.");
       if (change.highlightColor !== undefined && !/^#[0-9a-fA-F]{6}$/.test(change.highlightColor)) throw new Error("Cor do ingresso inválida.");
-      const pricing = ticketLotPricingSchema.safeParse({ priceInCents: change.priceInCents, serviceFeeBps: directCreate ? change.serviceFeeBps : source?.serviceFeeBps, pixDiscountPercentBps: source?.pixDiscountPercentBps, pixDiscountFixedInCents: source?.pixDiscountFixedInCents, cardInterestBpsPerInstallment: directCreate ? change.cardInterestBpsPerInstallment : source?.cardInterestBpsPerInstallment, cardInterestStartsAtInstallment: directCreate ? change.cardInterestStartsAtInstallment : source?.cardInterestStartsAtInstallment });
+      const pricing = ticketLotPricingSchema.safeParse({ priceInCents: change.priceInCents, serviceFeeBps: change.serviceFeeBps ?? source?.serviceFeeBps, pixDiscountPercentBps: source?.pixDiscountPercentBps, pixDiscountFixedInCents: source?.pixDiscountFixedInCents, cardInterestBpsPerInstallment: directCreate ? change.cardInterestBpsPerInstallment : source?.cardInterestBpsPerInstallment, cardInterestStartsAtInstallment: directCreate ? change.cardInterestStartsAtInstallment : source?.cardInterestStartsAtInstallment });
       if (!pricing.success) throw new Error(pricing.error.issues[0]?.message || "Preço inválido.");
       if (directCreate && (![change.serviceFeeBps, change.cardInterestBpsPerInstallment, change.cardInterestStartsAtInstallment].every(Number.isSafeInteger))) throw new Error("Informe taxa de bilheteria e regras do cartão para o primeiro ingresso.");
       if (change.operation === "UPDATE") {
         if (!source) throw new Error("Ingresso não existe mais neste evento.");
-        await tx.ticketLot.update({ where: { id: source.id }, data: { name: change.name.trim(), description: change.description || null, priceInCents: change.priceInCents, totalQuantity: change.totalQuantity, status: change.status, ...(change.highlightColor !== undefined ? { highlightColor: change.highlightColor } : {}), ...(change.status !== source.status && change.status === "ACTIVE" ? { saleBadge: "NONE" } : change.status !== source.status && change.status === "SOLD_OUT" ? { saleBadge: "SOLD_OUT" } : {}) } });
+        await tx.ticketLot.update({ where: { id: source.id }, data: { name: change.name.trim(), description: change.description || null, priceInCents: change.priceInCents, totalQuantity: change.totalQuantity, status: change.status, ...(change.serviceFeeBps !== undefined ? { serviceFeeBps: pricing.data.serviceFeeBps } : {}), ...(change.highlightColor !== undefined ? { highlightColor: change.highlightColor } : {}), ...(change.status !== source.status && change.status === "ACTIVE" ? { saleBadge: "NONE" } : change.status !== source.status && change.status === "SOLD_OUT" ? { saleBadge: "SOLD_OUT" } : {}) } });
         if (change.highlightColor !== undefined) expectedColors.push({ id: source.id, color: change.highlightColor });
       } else {
+        if (names.has(normalizedName(change.name))) throw new Error("Já existe um ingresso com esse nome no evento. Atualize o existente ou use um nome diferente.");
+        names.add(normalizedName(change.name));
         if (source && (source.hasTypeOptions || source.hasHotel || await tx.seatSection.count({ where: { ticketLotId: source.id } }) || await tx.seat.count({ where: { ticketLotId: source.id } }))) throw new Error("Este modelo tem configuração especial; use o cadastro completo de ingressos.");
         const last = await tx.ticketLot.aggregate({ where: { eventId }, _max: { sortOrder: true } });
         const created = await tx.ticketLot.create({ data: { eventId, name: change.name.trim(), description: change.description || null, priceInCents: change.priceInCents, totalQuantity: change.totalQuantity, status: change.status, sortOrder: (last._max.sortOrder ?? -1) + 1, highlightColor: source?.highlightColor || null, saleBadge: "NONE", descriptionAsList: source?.descriptionAsList ?? false, churchQuestionEnabled: source?.churchQuestionEnabled ?? false, admissionsPerUnit: source?.admissionsPerUnit ?? 1, serviceFeeBps: pricing.data.serviceFeeBps, pixDiscountPercentBps: source?.pixDiscountPercentBps ?? 0, pixDiscountFixedInCents: source?.pixDiscountFixedInCents ?? 0, cardInterestBpsPerInstallment: pricing.data.cardInterestBpsPerInstallment, cardInterestStartsAtInstallment: pricing.data.cardInterestStartsAtInstallment, minPerOrder: source?.minPerOrder ?? 1, maxPerOrder: source?.maxPerOrder ?? 10, salesStartsAt: null, salesEndsAt: event.endsAt || event.startsAt } });

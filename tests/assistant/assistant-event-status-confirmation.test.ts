@@ -34,6 +34,8 @@ vi.mock("@/lib/prisma", () => ({ prisma: {
 } }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
+vi.mock("@/features/assistant/assistant-resolution", () => ({ claimAssistantResolution: vi.fn(async () => true) }));
+
 import { POST } from "@/app/api/admin/assistant/route";
 
 function request() {
@@ -52,7 +54,7 @@ describe("assistant event status confirmation", () => {
   it("unpublishes only the selected event and verifies the saved status", async () => {
     const response = await POST(request());
     expect(response.status).toBe(200);
-    expect(mocks.updateStatus).toHaveBeenCalledWith("event-1", "UNPUBLISHED");
+    expect(mocks.updateStatus).toHaveBeenCalledWith("event-1", "UNPUBLISHED", "PUBLISHED");
     expect(mocks.readEvent).toHaveBeenCalledOnce();
     expect(mocks.saveConfirmation).toHaveBeenCalledOnce();
   });

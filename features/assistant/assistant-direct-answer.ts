@@ -21,6 +21,7 @@ export function answerReadOnlyTicketQuestion(
   const query = normalize(question);
   // Code-investigation requests must reach the model's repository tools. A
   // mention of "ingressos" in that request is not a ticket-price question.
+  if (/pagina publica|site publico|no site/.test(query)) return null;
   if (/\b(codigo|repositorio|arquivo|arquivos|implementa|implementacao|funcao|componente|fonte)\b/.test(query)) return null;
   if (!/\b(ingressos?|lotes?|setores?|categorias?|precos?|valores?)\b/.test(query)) return null;
   if (!ranked.length) return "Vou apenas consultar, sem alterar nada. Informe o nome do evento e a cidade para eu localizar os ingressos corretos.";

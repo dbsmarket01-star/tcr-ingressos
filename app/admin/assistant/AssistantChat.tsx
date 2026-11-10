@@ -10,7 +10,7 @@ type Proposal = { kind: "PRICE_CHANGE"; id: string; eventTitle: string; lotName:
   | { kind: "EVENT_DETAILS_CHANGE"; id: string; eventTitle: string; changes: Array<{ field: string; oldValue: string; value: string }> }
   | { kind: "EVENT_STATUS_CHANGE"; id: string; eventTitle: string; oldStatus: "PUBLISHED" | "UNPUBLISHED"; newStatus: "PUBLISHED" | "UNPUBLISHED" }
   | { kind: "LOT_ORDER_CHANGE"; id: string; eventTitle: string; orderedNames: string[] }
-  | { kind: "LOT_CHANGES"; id: string; eventTitle: string; changes: Array<{ operation: "CREATE" | "UPDATE"; oldName: string; name: string; oldPriceInCents: number; priceInCents: number; oldTotalQuantity: number; totalQuantity: number; oldStatus: string; status: string; description: string; oldHighlightColor?: string; highlightColor?: string }> };
+  | { kind: "LOT_CHANGES"; id: string; eventTitle: string; changes: Array<{ operation: "CREATE" | "UPDATE"; oldName: string; name: string; oldPriceInCents: number; priceInCents: number; oldTotalQuantity: number; totalQuantity: number; oldStatus: string; status: string; description: string; oldHighlightColor?: string; highlightColor?: string; oldServiceFeeBps?: number; serviceFeeBps?: number; cardInterestBpsPerInstallment?: number; cardInterestStartsAtInstallment?: number }> };
 
 function money(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -31,6 +31,9 @@ export function AssistantChat({ name }: { name: string }) {
   const [error, setError] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const busyRef = useRef(false);
+  const operationVersion = useRef(0);
+  busyRef.current = busy;
 
   useEffect(() => {
     if (!image) { setImagePreview(""); return; }
@@ -57,11 +60,12 @@ export function AssistantChat({ name }: { name: string }) {
     if (period === "date") params.set("date", selectedDate);
     setLoading(true); setMessages([]); setNextBefore(null);
     async function refresh(initial: boolean) {
+      const version = operationVersion.current;
       try {
         const response = await fetch(`/api/admin/assistant?${params}`, { cache: "no-store" });
         const body = await response.json();
         if (!response.ok) throw new Error(body.error || "Não foi possível carregar a conversa.");
-        if (!active) return;
+        if (!active || busyRef.current || version !== operationVersion.current) return;
         setMessages((current) => initial ? body.messages || [] : [...new Map([...current, ...(body.messages || [])].map((item: ChatMessage) => [item.id, item])).values()]
           .sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
         if (initial) setNextBefore(body.nextBefore || null);
@@ -99,6 +103,7 @@ export function AssistantChat({ name }: { name: string }) {
     event.preventDefault();
     const text = input.trim() || (image ? "Analise esta imagem e me diga o que encontrou." : "");
     if (!text || busy) return;
+    operationVersion.current++;
     setInput(""); setError(""); setBusy(true); setProposal(null);
     const optimistic: ChatMessage = { id: `local-${Date.now()}`, role: "user", text, createdAt: new Date().toISOString(), previewUrl: imagePreview, imageName: image?.name };
     const acknowledgement: ChatMessage = { id: `ack-${Date.now()}`, role: "assistant", text: assistantAcknowledgement(text), createdAt: new Date().toISOString() };
@@ -110,7 +115,7 @@ export function AssistantChat({ name }: { name: string }) {
       const response = await fetch("/api/admin/assistant", { method: "POST", body: payload });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || "Não consegui responder agora.");
-      setMessages((current) => [...current.filter((item) => item.id !== acknowledgement.id && item.id !== optimistic.id), body.userMessage || optimistic, body.message]);
+      setMessages((current) => [...current.filter((item) => item.id !== acknowledgement.id && item.id !== optimistic.id), body.userMessage || optimistic, body.message].filter((item, index, list) => list.findIndex((other) => other.id === item.id) === index));
       setImage(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       setProposal(body.proposal || null);
@@ -124,6 +129,7 @@ export function AssistantChat({ name }: { name: string }) {
 
   async function confirm() {
     if (!proposal || busy) return;
+    operationVersion.current++;
     setError(""); setBusy(true);
     try {
       const response = await fetch("/api/admin/assistant", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "confirm", proposalId: proposal.id }) });
@@ -139,10 +145,14 @@ export function AssistantChat({ name }: { name: string }) {
   async function discard() {
     if (!proposal || busy) return;
     const proposalId = proposal.id;
+    operationVersion.current++;
+    setBusy(true);
     setProposal(null);
     try {
-      await fetch("/api/admin/assistant", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "discard", proposalId }) });
-    } catch { setError("Não foi possível cancelar a proposta. Atualize a página para conferir."); }
+      const response = await fetch("/api/admin/assistant", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "discard", proposalId }) });
+      if (!response.ok) throw new Error("Cancelamento não confirmado.");
+    } catch { setProposal(proposal); setError("Não foi possível cancelar a proposta. Atualize a página para conferir."); }
+    finally { setBusy(false); }
   }
 
   return (
@@ -155,7 +165,7 @@ export function AssistantChat({ name }: { name: string }) {
           {!loading && messages.length === 0 ? <div className={styles.welcome}><span aria-hidden="true">✦</span><h2>Como posso ajudar, {name.split(" ")[0]}?</h2><p>Escreva o que precisa em linguagem natural. Posso consultar os dados e, quando houver uma mudança disponível, mostrar uma proposta para você revisar.</p></div> : null}
           {messages.map((message) => <article key={message.id} className={`${styles.bubble} ${message.role === "user" ? styles.user : styles.assistant}`}>{message.role === "user" && message.authorName ? <small className={styles.authorName}>{message.authorName}</small> : null}<p>{message.text}</p>{message.imageId || message.previewUrl ? <img className={styles.messageImage} src={message.previewUrl || `/api/admin/assistant?imageId=${encodeURIComponent(message.imageId || "")}`} alt={message.imageName || "Imagem anexada"} loading="lazy" /> : null}<time>{new Date(message.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</time></article>)}
           {busy ? <div className={styles.thinking}>Consultando as informações do sistema...</div> : null}
-          {proposal ? <section className={styles.proposal}><span className={styles.proposalLabel}>Alteração aguardando confirmação</span><h3>{proposal.eventTitle}</h3>{proposal.kind === "PRICE_CHANGE" ? <><p>{proposal.lotName}</p><div className={styles.priceChange}><span>{money(proposal.oldPriceInCents)}</span><b>→</b><strong>{money(proposal.newPriceInCents)}</strong></div></> : proposal.kind === "EVENT_CREATE" ? <><p>Novo evento em rascunho — não ficará público</p><p>{proposal.draft.city}/{proposal.draft.state} · {new Date(proposal.draft.startsAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</p><p>{proposal.draft.venueName} · {proposal.draft.venueAddress}</p><small>Endereço: /evento/{proposal.draft.slug} · Banner: {proposal.draft.bannerUrl ? "URL incluída" : "pendente"} · Mapa: {proposal.draft.eventMapImageUrl ? "URL incluída" : "pendente"}</small></> : proposal.kind === "EVENT_STATUS_CHANGE" ? <><p>Status do evento</p><div className={styles.priceChange}><span>{proposal.oldStatus === "PUBLISHED" ? "No ar" : "Inativo"}</span><b>→</b><strong>{proposal.newStatus === "PUBLISHED" ? "No ar" : "Inativo (fora do ar)"}</strong></div></> : proposal.kind === "LOT_ORDER_CHANGE" ? <><p>Nova ordem de exibição:</p><ol>{proposal.orderedNames.map((name, index) => <li key={`${index}-${name}`}>{name}</li>)}</ol></> : proposal.kind === "EVENT_DETAILS_CHANGE" ? proposal.changes.map((change, index) => <div key={index}><p>{change.field}</p><div className={styles.priceChange}><span>{change.oldValue || "(vazio)"}</span><b>→</b><strong>{change.value || "(remover)"}</strong></div></div>) : proposal.changes.map((change, index) => <div key={index}><p>{change.operation === "CREATE" ? "Criar ingresso" : `Alterar ${change.oldName}`}</p><strong>{change.name}</strong><p>{change.description}</p><div className={styles.priceChange}><span>{change.operation === "CREATE" ? "Novo" : money(change.oldPriceInCents)}</span><b>→</b><strong>{money(change.priceInCents)}</strong></div><small>Estoque: {change.totalQuantity} · Status: {change.status}</small>{change.highlightColor ? <p>Cor de destaque: {change.oldHighlightColor || "sem cor"} → <strong>{change.highlightColor}</strong></p> : null}</div>)}<div className={styles.proposalActions}><button type="button" onClick={confirm} disabled={busy}>Confirmar alteração</button><button type="button" onClick={discard} disabled={busy}>Cancelar</button></div></section> : null}
+          {proposal ? <section className={styles.proposal}><span className={styles.proposalLabel}>Alteração aguardando confirmação</span><h3>{proposal.eventTitle}</h3>{proposal.kind === "PRICE_CHANGE" ? <><p>{proposal.lotName}</p><div className={styles.priceChange}><span>{money(proposal.oldPriceInCents)}</span><b>→</b><strong>{money(proposal.newPriceInCents)}</strong></div></> : proposal.kind === "EVENT_CREATE" ? <><p>Novo evento em rascunho — não ficará público</p><p>{proposal.draft.city}/{proposal.draft.state} · {new Date(proposal.draft.startsAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</p><p>{proposal.draft.venueName} · {proposal.draft.venueAddress}</p><small>Endereço: /evento/{proposal.draft.slug} · Banner: {proposal.draft.bannerUrl ? "URL incluída" : "pendente"} · Mapa: {proposal.draft.eventMapImageUrl ? "URL incluída" : "pendente"}</small></> : proposal.kind === "EVENT_STATUS_CHANGE" ? <><p>Status do evento</p><div className={styles.priceChange}><span>{proposal.oldStatus === "PUBLISHED" ? "No ar" : "Inativo"}</span><b>→</b><strong>{proposal.newStatus === "PUBLISHED" ? "No ar" : "Inativo (fora do ar)"}</strong></div></> : proposal.kind === "LOT_ORDER_CHANGE" ? <><p>Nova ordem de exibição:</p><ol>{proposal.orderedNames.map((name, index) => <li key={`${index}-${name}`}>{name}</li>)}</ol></> : proposal.kind === "EVENT_DETAILS_CHANGE" ? proposal.changes.map((change, index) => <div key={index}><p>{change.field}</p><div className={styles.priceChange}><span>{change.oldValue || "(vazio)"}</span><b>→</b><strong>{change.value || "(remover)"}</strong></div></div>) : proposal.changes.map((change, index) => <div key={index}><p>{change.operation === "CREATE" ? "Criar ingresso" : `Alterar ${change.oldName}`}</p><strong>{change.name}</strong><p>{change.description}</p><div className={styles.priceChange}><span>{change.operation === "CREATE" ? "Novo" : money(change.oldPriceInCents)}</span><b>→</b><strong>{money(change.priceInCents)}</strong></div><small>Estoque: {change.totalQuantity} · Status: {change.status}</small>{change.serviceFeeBps !== undefined ? <p>Taxa de bilheteria: {change.oldServiceFeeBps !== undefined ? `${change.oldServiceFeeBps / 100}% → ` : ""}{change.serviceFeeBps / 100}%</p> : null}{change.cardInterestBpsPerInstallment !== undefined ? <p>Cartão: {change.cardInterestBpsPerInstallment / 100}% por parcela, a partir da {change.cardInterestStartsAtInstallment}ª parcela</p> : null}{change.highlightColor ? <p>Cor de destaque: {change.oldHighlightColor || "sem cor"} → <strong>{change.highlightColor}</strong></p> : null}</div>)}<div className={styles.proposalActions}><button type="button" onClick={confirm} disabled={busy}>Confirmar alteração</button><button type="button" onClick={discard} disabled={busy}>Cancelar</button></div></section> : null}
           <div ref={bottomRef} />
         </div>
         {error ? <div className={styles.error} role="alert">{error}</div> : null}

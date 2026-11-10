@@ -1,3 +1,4 @@
+import { claimAssistantResolution } from "@/features/assistant/assistant-resolution";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { canAccessArea, canAccessEvent, getCurrentAdmin } from "@/features/auth/auth.service";
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  if (body.type === "confirm") {
+  if (field("type") === "confirm") {
     if (!canAccessArea(admin.role, "EVENTS")) return error("Seu perfil pode consultar o assistente, mas não alterar eventos ou ingressos.", 403);
     const proposalId = String(field("proposalId") || "").trim();
     if (!proposalId) return error("Proposta não informada.");
@@ -88,6 +89,7 @@ export async function POST(request: NextRequest) {
     if (proposal.kind !== "EVENT_CREATE" && !canAccessEvent(admin, proposal.eventId)) return error("Você não tem acesso a este evento.", 403);
     const previouslyResolved = await prisma.adminAuditLog.findFirst({ where: { action: { in: ["ADMIN_ASSISTANT_APPLIED", "ADMIN_ASSISTANT_DISCARDED"] }, entityType: "ADMIN_ASSISTANT", entityId: proposal.id }, select: { id: true } });
     if (previouslyResolved) return error("Esta proposta já foi concluída ou cancelada.", 409);
+    if (!await claimAssistantResolution(admin, proposal.id, "ADMIN_ASSISTANT_PROCESSING")) return error("Esta proposta já foi processada ou está em processamento. Confira o resultado; se houve falha, solicite uma nova proposta.", 409);
     if (proposal.kind === "EVENT_CREATE") {
       const draft = proposal.draft;
       const start = validateAssistantEventValue("startsAt", draft.startsAt);
@@ -209,7 +211,7 @@ export async function POST(request: NextRequest) {
       if (!event) return error("Evento não encontrado.", 404);
       if (event.status !== proposal.oldStatus) return error("O status mudou desde a proposta. Peça uma nova conferência.", 409);
       try {
-        await updateEventStatus(event.id, proposal.newStatus);
+        await updateEventStatus(event.id, proposal.newStatus, proposal.oldStatus);
         const verified = await prisma.event.findUnique({ where: { id: event.id }, select: { status: true } });
         if (verified?.status !== proposal.newStatus) throw new Error("Status não confirmado após a gravação.");
         revalidatePath("/admin/events");
@@ -246,7 +248,7 @@ export async function POST(request: NextRequest) {
     });
     if (!pricing.success) return error(pricing.error.issues[0]?.message || "Preço inválido.");
     try {
-      await updateTicketLotPricing(lot.id, pricing.data);
+      await updateTicketLotPricing(lot.id, pricing.data, proposal.oldPriceInCents);
       const verified = await prisma.ticketLot.findUnique({ where: { id: lot.id }, select: { priceInCents: true } });
       if (verified?.priceInCents !== proposal.newPriceInCents) throw new Error("Preço não confirmado após a gravação.");
       revalidatePath(`/evento/${lot.event.slug}`);
@@ -263,7 +265,7 @@ export async function POST(request: NextRequest) {
   if (field("type") === "discard") {
     const proposalId = String(field("proposalId") || "").trim();
     if (!proposalId) return error("Proposta não informada.");
-    await discardAssistantProposal(admin, proposalId);
+    if (!await discardAssistantProposal(admin, proposalId)) return error("A proposta já foi cancelada, está em processamento ou não está mais disponível.", 409);
     return NextResponse.json({ ok: true });
   }
   return error("Operação não reconhecida.");
