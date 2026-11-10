@@ -11,7 +11,7 @@ export function isTicketOrderRequest(message: string) {
     && /\b(ingressos?|lotes?|setores?|meia|inteira|november)\b/.test(text);
 }
 
-/** Keep the event's sector sequence; within each sector follow the requested category order. */
+/** Keep the event's sector sequence; within each sector sort by price, then category. */
 export function proposedTicketOrder<T extends Lot>(lots: T[]): T[] {
   const visible = orderTicketLots(lots.filter((lot) => lot.status === "ACTIVE" || lot.status === "SOLD_OUT"));
   const groups = new Map<string, T[]>();
@@ -27,5 +27,5 @@ export function proposedTicketOrder<T extends Lot>(lots: T[]): T[] {
     return 3;
   };
   return [...groups.values()].flatMap((group) => [...group].sort((a, b) =>
-    rank(a.name) - rank(b.name) || a.priceInCents - b.priceInCents || a.sortOrder - b.sortOrder || a.id.localeCompare(b.id)));
+    a.priceInCents - b.priceInCents || rank(a.name) - rank(b.name) || a.sortOrder - b.sortOrder || a.id.localeCompare(b.id)));
 }

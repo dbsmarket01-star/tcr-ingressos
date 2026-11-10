@@ -415,7 +415,7 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
           eventId: event.id, eventTitle: event.title, expectedIds, desiredIds, orderedNames } } });
       const proposal: AssistantProposal = { kind: "LOT_ORDER_CHANGE", id: row.id,
         eventId: event.id, eventTitle: event.title, expectedIds, desiredIds, orderedNames };
-      const text = `Encontrei a ordem incorreta em ${event.title}. Vou alterar a posição real dos ingressos, mantendo os setores na sequência atual e colocando Meia Entrada, Black November e Inteira nessa ordem dentro de cada setor. Preços, estoque, cores, status e vendas serão preservados. Confira a sequência na proposta antes de confirmar.`;
+      const text = `Encontrei a ordem incorreta em ${event.title}. Vou alterar a posição real dos ingressos, mantendo a sequência dos setores e ordenando por preço dentro de cada setor. Em caso de empate, Meia Entrada vem antes de Black November e Inteira. Preços, estoque, cores, status e vendas serão preservados. Confira a sequência na proposta antes de confirmar.`;
       const saved = await saveMessage(admin, "assistant", text);
       return { userMessage, message: { id: saved.id, role: "assistant" as const, text, createdAt: saved.createdAt.toISOString() }, proposal };
     }

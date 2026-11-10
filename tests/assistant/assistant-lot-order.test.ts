@@ -19,4 +19,14 @@ describe("assistant ticket ordering", () => {
     ];
     expect(proposedTicketOrder(rows).map((item) => item.id)).toEqual(["pm", "pb", "pi", "cm", "cb", "ci"]);
   });
+
+  it("prioritizes the lowest price within a sector, using category only to break ties", () => {
+    const rows = [
+      lot("m", "SETOR OURO - MEIA ENTRADA", 0, 20000),
+      lot("b", "SETOR OURO - BLACK NOVEMBER", 1, 15000),
+      lot("i", "SETOR OURO - INTEIRA", 2, 30000),
+      lot("c", "CAMAROTE 18 - COMPARTILHADO", 3, 18000)
+    ];
+    expect(proposedTicketOrder(rows).map((item) => item.id)).toEqual(["b", "m", "i", "c"]);
+  });
 });
