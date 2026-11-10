@@ -58,13 +58,18 @@ describe("assistant event proposal", () => {
 
   it("uses the supplied external link instead of the previous event for ticket queries", async () => {
     vi.stubEnv("OPENAI_API_KEY", "test-only-placeholder");
-    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (url, init) => {
       if (String(url).includes("tcringressos.com.br")) return new Response("<title>Evento externo</title><p>Pista R$ 50,00</p>", { status: 200 });
+      const sent = JSON.parse(String(init?.body));
+      const context = JSON.parse(sent.input[1].content[0].text);
+      expect(context.recentConversation).toEqual([]);
+      expect(context.eventDetails).toEqual([]);
+      expect(context.sourceMatchingRule).toContain("list_events");
       return new Response(JSON.stringify({ output_text: JSON.stringify({ reply: "Na referência: Evento externo, Pista R$ 50,00.", action: "NONE" }) }), { status: 200 });
     });
     try {
       const result = await answerAssistant({ id: "admin-1", role: "OWNER", organizationId: "org-1" } as never,
-        "Somente consulta: leia https://tcringressos.com.br/referencia e informe os ingressos de pista");
+        "Somente consulta de auditoria Show Teste: leia https://tcringressos.com.br/referencia e informe os ingressos de pista");
       expect(result.message.text).toContain("Evento externo");
       expect(fetchSpy).toHaveBeenCalledTimes(2);
     } finally { fetchSpy.mockRestore(); vi.unstubAllEnvs(); }
