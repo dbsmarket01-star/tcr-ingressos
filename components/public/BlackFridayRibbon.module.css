@@ -1,0 +1,74 @@
+.ribbon {
+  box-sizing: border-box;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  max-width: 1180px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: clamp(12px, 1.3vw, 20px) clamp(16px, 2.2vw, 32px);
+  overflow: hidden;
+  border: 2px solid #d6ab49;
+  border-radius: 10px;
+  background: radial-gradient(ellipse at 50% 0%, #28221b 0%, #101010 48%, #050505 100%);
+  box-shadow: inset 0 0 0 2px #211b10, inset 0 0 28px #c8972212;
+  text-align: center;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.ribbon p {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+  font-weight: 900;
+}
+.ribbon .campaign {
+  padding: 4px clamp(12px, 2vw, 30px) 5px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #da1618, #a90005);
+  color: #fff;
+  font-size: clamp(18px, 2.65vw, 36px);
+  line-height: 1.12;
+  letter-spacing: -.035em;
+  box-shadow: inset 0 1px 0 #ff55554d, 0 2px 8px #0005;
+}
+.ribbon .headline {
+  color: #f5c65d;
+  font-size: clamp(23px, 3.05vw, 42px);
+  line-height: 1.08;
+  letter-spacing: -.04em;
+  text-shadow: 0 2px 1px #000;
+}
+.ribbon .support {
+  color: #fff;
+  font-size: clamp(16px, 2.05vw, 28px);
+  line-height: 1.22;
+  letter-spacing: -.025em;
+}
+.flourish {
+  position: absolute;
+  z-index: 0;
+  inset: 0 auto 0 0;
+  width: 14%;
+  height: 100%;
+  fill: none;
+  stroke: #d9b55d;
+  stroke-width: 1.4;
+  opacity: .72;
+  pointer-events: none;
+}
+.fine { stroke-width: .55; opacity: .6; }
+.right { left: auto; right: 0; transform: scaleX(-1); }
+@media (max-width: 600px) {
+  .ribbon { padding: 9px 12px; gap: 5px; border-radius: 6px; }
+  .ribbon .campaign { font-size: clamp(13px, 4vw, 17px); padding: 4px 10px; line-height: 1.15; border-radius: 6px; }
+  .ribbon .headline { font-size: clamp(18px, 5.3vw, 25px); line-height: 1.08; }
+  .ribbon .support { font-size: 13px; line-height: 1.2; }
+  .flourish { width: 18%; opacity: .5; }
+}

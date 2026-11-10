@@ -1,3 +1,5 @@
+import { BlackFridayRibbon } from "@/components/public/BlackFridayRibbon";
+import { showBlackFridayRibbon } from "@/features/events/black-friday-campaign";
 import Link from "next/link";
 import Image from "next/image";
 import Script from "next/script";
@@ -407,6 +409,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             width={1900}
           />
         </div>
+        {showBlackFridayRibbon(organizationContext.organization.slug, event.startsAt) ? <BlackFridayRibbon /> : null}
         <div className="publicHeroInner">
           <h1>{event.title}</h1>
           {eventLead ? <p className="eventLead">{eventLead}</p> : null}
