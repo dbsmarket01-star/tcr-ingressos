@@ -6,7 +6,8 @@ describe("assistant conversation requests", () => {
     "Qual é o valor do Ouro? Não altere nada.",
     "Veja os ingressos, sem mudar nada",
     "Apenas consulte o evento",
-    "Não faça alterações no preço"
+    "Não faça alterações no preço",
+    "Não organize os ingressos"
   ])("treats %s as read-only", (message) => {
     expect(isReadOnlyAssistantRequest(message)).toBe(true);
     expect(assistantAcknowledgement(message)).toContain("não farei nenhuma alteração");
