@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
         revalidatePath(`/evento/${event.slug}`);
         revalidatePath(`/evento/${event.slug}/checkout`);
         revalidatePath(`/admin/events/${event.id}/lots`);
-        const text = `Ordem gravada e conferida para ${event.title}: ${verified.length} ingressos visíveis, sem posições repetidas. Setores e categorias seguem a sequência aprovada; preços, estoques, cores, status e vendas foram preservados.`;
+        const text = `Ordem gravada e conferida no banco para ${event.title}: ${verified.length} ingressos visíveis, sem posições repetidas. O cache da página pública foi invalidado; confira a sequência nela antes de considerar a atualização concluída. Preços, estoques, cores, status e vendas foram preservados.`;
         const message = await saveAssistantConfirmation(admin, proposal, text);
         return NextResponse.json({ message });
       } catch (cause) {
