@@ -140,11 +140,21 @@ function normalized(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
-export function hasExplicitFirstLotPricing(message: string) {
+export function explicitFirstLotPricing(message: string) {
   const text = normalized(message);
-  return /taxa[^\n]{0,70}\d+(?:[.,]\d+)?\s*%/.test(text)
-    && /(juros|cartao)[^\n]{0,70}\d+(?:[.,]\d+)?\s*%/.test(text)
-    && /(a partir|desde|inicio|comeca)[^\n]{0,35}(?:\d+|primeira|segunda|terceira)[^\n]{0,25}parcela|parcela[^\n]{0,25}(?:\d+|primeira|segunda|terceira)/.test(text);
+  const fee = text.match(/taxa[^\n%]{0,70}?(\d+(?:[.,]\d+)?)\s*%/);
+  const card = text.match(/(?:juros|cartao)[^\n%]{0,70}?(\d+(?:[.,]\d+)?)\s*%/);
+  const start = text.match(/(?:desde|a partir d[ao]?|comeca na?)\s*(\d+|primeira|segunda|terceira)\s*(?:a|o)?\s*parcelas?/);
+  if (!fee || !card || !start) return null;
+  const installment = ({ primeira: 1, segunda: 2, terceira: 3 } as Record<string, number>)[start[1]] ?? Number(start[1]);
+  const serviceFeeBps = Math.round(Number(fee[1].replace(",", ".")) * 100);
+  const cardInterestBpsPerInstallment = Math.round(Number(card[1].replace(",", ".")) * 100);
+  if (![serviceFeeBps, cardInterestBpsPerInstallment, installment].every(Number.isSafeInteger)) return null;
+  return { serviceFeeBps, cardInterestBpsPerInstallment, cardInterestStartsAtInstallment: installment };
+}
+
+export function hasExplicitFirstLotPricing(message: string) {
+  return explicitFirstLotPricing(message) !== null;
 }
 
 export function requestedLotColor(message: string) {
@@ -523,7 +533,10 @@ export async function answerAssistant(admin: CurrentAdmin, message: string, imag
         const source = event.lots.find((lot) => lot.id === (item.operation === "CREATE" ? item.templateLotId : item.lotId));
         const directCreate = item.operation === "CREATE" && !item.templateLotId && event.lots.length === 0;
         const explicitPricing = [item.serviceFeeBps, item.cardInterestBpsPerInstallment, item.cardInterestStartsAtInstallment].every(Number.isSafeInteger);
-        const directPricing = directCreate && explicitPricing && hasExplicitFirstLotPricing(message) && ticketLotPricingSchema.safeParse({
+        const statedPricing = explicitFirstLotPricing(message);
+        const directPricing = directCreate && explicitPricing && statedPricing?.serviceFeeBps === item.serviceFeeBps &&
+          statedPricing.cardInterestBpsPerInstallment === item.cardInterestBpsPerInstallment &&
+          statedPricing.cardInterestStartsAtInstallment === item.cardInterestStartsAtInstallment && ticketLotPricingSchema.safeParse({
           priceInCents: item.priceInCents, serviceFeeBps: item.serviceFeeBps,
           cardInterestBpsPerInstallment: item.cardInterestBpsPerInstallment,
           cardInterestStartsAtInstallment: item.cardInterestStartsAtInstallment
