@@ -6,5 +6,5 @@ export function showBlackFridayRibbon(organizationSlug: string, eventStartsAt: D
   const eventTime = eventStartsAt.getTime();
   const currentTime = now.getTime();
   return organizationSlug === "tcr-ingressos" &&
-    eventTime >= START && eventTime < END && currentTime >= START && currentTime < END;
+    currentTime >= START && currentTime < END && eventTime >= currentTime;
 }
