@@ -66,9 +66,9 @@
 .fine { stroke-width: .55; opacity: .6; }
 .right { left: auto; right: 0; transform: scaleX(-1); }
 @media (max-width: 600px) {
-  .ribbon { padding: 14px 16px 16px; gap: 9px; border-radius: 8px; }
-  .ribbon .campaign { font-size: 19px; padding: 6px 12px; line-height: 1.15; }
-  .ribbon .headline { font-size: clamp(24px, 6.4vw, 34px); line-height: 1.08; }
-  .ribbon .support { font-size: 17px; line-height: 1.25; }
+  .ribbon { padding: 9px 12px; gap: 5px; border-radius: 6px; }
+  .ribbon .campaign { font-size: clamp(13px, 4vw, 17px); padding: 4px 10px; line-height: 1.15; border-radius: 6px; }
+  .ribbon .headline { font-size: clamp(18px, 5.3vw, 25px); line-height: 1.08; }
+  .ribbon .support { font-size: 13px; line-height: 1.2; }
   .flourish { width: 18%; opacity: .5; }
 }
