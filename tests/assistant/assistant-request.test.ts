@@ -27,5 +27,7 @@ describe("assistant conversation requests", () => {
     const message = "Organize os ingressos por preço dentro de cada setor, sem mudar nenhum outro dado.";
     expect(isReadOnlyAssistantRequest(message)).toBe(false);
     expect(assistantAcknowledgement(message)).toContain("sua confirmação");
+    expect(isReadOnlyAssistantRequest("Chat, quero que você organize os ingressos sem mudar os preços.")).toBe(false);
+    expect(isReadOnlyAssistantRequest("Pode organizar os ingressos sem alterar as vendas?")).toBe(false);
   });
 });
