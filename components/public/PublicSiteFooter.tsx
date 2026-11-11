@@ -5,6 +5,7 @@ type PublicSiteFooterProps = {
   brandName: string;
   brandLogoUrl?: string | null;
   supportPhone?: string | null;
+  eventObservation?: string;
   settings: {
     instagramUrl?: string | null;
     facebookUrl?: string | null;
@@ -88,7 +89,7 @@ function MastercardMark() {
   );
 }
 
-export function PublicSiteFooter({ brandName, supportPhone, settings }: PublicSiteFooterProps) {
+export function PublicSiteFooter({ brandName, supportPhone, settings, eventObservation }: PublicSiteFooterProps) {
   const whatsappHref = settings.whatsappUrl || normalizeWhatsappHref(supportPhone);
   const footerDescription = settings.footerDescription?.trim() || "A plataforma oficial para viver grandes experiências.";
   const socialLinks = [
@@ -140,6 +141,11 @@ export function PublicSiteFooter({ brandName, supportPhone, settings }: PublicSi
           </div>
         </div>
       </div>
+      {eventObservation ? (
+        <p className="container publicEventFooterObservation">
+          <strong>Observação:</strong> {eventObservation}
+        </p>
+      ) : null}
     </footer>
   );
 }

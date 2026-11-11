@@ -3474,6 +3474,21 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   text-align: center;
 }
 
+.publicEventFooterObservation {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0 auto;
+  padding: 10px 20px 18px;
+  text-align: center;
+}
+
+.publicEventFooterObservation strong {
+  color: #fff;
+  font-weight: 700;
+}
+
 .ingressaasDonut small {
   font-size: 11px;
   font-weight: 800;

@@ -12,7 +12,7 @@ import { EventMapView } from "@/components/public/EventMapView";
 import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrganization } from "@/features/events/event.service";
-import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
+import { A2_IMERGIDOS_ORGANIZATION_SLUG, getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { effectiveLotMaxPerOrder } from "@/features/orders/sorocaba-quantity-limit";
 import { getCompanySettingsByOrganizationId } from "@/features/settings/company-settings.service";
 import { listPaymentSplitRules } from "@/features/settings/split-settings.service";
@@ -658,7 +658,13 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           </div>
         </section>
       ) : null}
-      <PublicSiteFooter brandName={organizationContext.brandName} settings={publicSocialSettings} />
+      <PublicSiteFooter
+        brandName={organizationContext.brandName}
+        settings={publicSocialSettings}
+        eventObservation={organizationSlug === A2_IMERGIDOS_ORGANIZATION_SLUG
+          ? "Todos os nossos eventos contêm a possibilidade de cancelamentos e adiamentos. Contamos com a compreensão de todos."
+          : undefined}
+      />
       {event.supportWhatsappUrl ? (
         <WhatsappFloatingButton
           href={event.supportWhatsappUrl}
