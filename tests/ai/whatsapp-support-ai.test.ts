@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildExactCardInstallmentOptions,
+  decideOrRefer,
   guardPublishedHalfPriceAnswer,
   humanPauseUntil,
   isGenericEventAdGreeting,
@@ -214,5 +215,17 @@ describe("dúvida respondível após pedido de atendente", () => {
     expect(resolvedHandoffReply("A taxa é de R$ 31,58.")).toBe(
       'A taxa é de R$ 31,58.\n\nSe sua dúvida não ficou resolvida e ainda quiser falar com uma pessoa, escreva novamente "falar com atendente".',
     );
+  });
+});
+
+describe("contingência no atendimento por WhatsApp", () => {
+  it.each([["HTTP 429: no credits remaining", "ia_sem_creditos"], ["Unterminated string in JSON", "ia_indisponivel"]])("encaminha quando o modelo falha: %s", async (error, topic) => {
+    const result = await decideOrRefer(async () => { throw new Error(error); });
+    expect(result).toMatchObject({ outcome: "HANDOFF", topic });
+    expect(result.reply).toContain("equipe da TCR");
+  });
+  it("preserva silêncio intencional", async () => {
+    const decision = { outcome: "SILENT" as const, reply: "", reason: "Reação", topic: "encerramento" };
+    expect(await decideOrRefer(async () => decision)).toEqual(decision);
   });
 });

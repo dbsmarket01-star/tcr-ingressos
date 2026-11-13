@@ -356,6 +356,7 @@ export function parseWhatsAppAiDecision(payload: unknown): AiDecision {
   if (!parsed.outcome || !["AUTO_REPLY", "HANDOFF", "SILENT"].includes(parsed.outcome)) {
     throw new Error("A OpenAI devolveu uma decisao invalida.");
   }
+  if (parsed.outcome !== "SILENT" && !String(parsed.reply || "").trim()) throw new Error("A decisão exige uma resposta ao cliente.");
   return {
     outcome: parsed.outcome,
     reply: String(parsed.reply || "").trim(),
@@ -802,6 +803,22 @@ HANDOFF quando uma pessoa precisar assumir; nesse caso escreva uma mensagem curt
 SILENT quando nenhuma resposta for necessaria.`;
 }
 
+export async function decideOrRefer(decide: () => Promise<AiDecision>): Promise<AiDecision> {
+  try {
+    return await decide();
+  } catch (cause) {
+    const detail = cause instanceof Error ? cause.message : "";
+    const topic = /no credits|insufficient_quota|credit_balance/i.test(detail)
+      ? "ia_sem_creditos" : "ia_indisponivel";
+    console.error("[WhatsApp AI] Decisão indisponível, encaminhando para atendimento", { topic });
+    return {
+      outcome: "HANDOFF", topic,
+      reason: "A IA não conseguiu responder com segurança; atendimento humano solicitado.",
+      reply: "Recebi sua mensagem e encaminhei sua conversa para a equipe da TCR Ingressos. Um atendente poderá continuar por aqui."
+    };
+  }
+}
+
 async function requestDecision(
   userText: string,
   context: Awaited<ReturnType<typeof loadSupportContext>>,
@@ -810,7 +827,7 @@ async function requestDecision(
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) throw new Error("OPENAI_API_KEY nao configurada.");
   const timeoutMs = Number(process.env.OPENAI_CHAT_TIMEOUT_MS || 12_000);
-  const maxOutputTokens = Number(process.env.OPENAI_CHAT_MAX_OUTPUT_TOKENS || 360);
+  const maxOutputTokens = Number(process.env.OPENAI_CHAT_MAX_OUTPUT_TOKENS || 1200);
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     signal: AbortSignal.timeout(Number.isFinite(timeoutMs) ? timeoutMs : 12_000),
@@ -818,7 +835,7 @@ async function requestDecision(
     body: JSON.stringify({
       model: process.env.WHATSAPP_AI_MODEL?.trim() || process.env.OPENAI_CHAT_MODEL?.trim() || DEFAULT_MODEL,
       reasoning: { effort: "low" },
-      max_output_tokens: Number.isFinite(maxOutputTokens) ? maxOutputTokens : 360,
+      max_output_tokens: Number.isFinite(maxOutputTokens) ? maxOutputTokens : 1200,
       input: [
         { role: "developer", content: developerInstructions(pendingHumanRequest) },
         {
@@ -890,123 +907,139 @@ async function processInboundMessage(message: MetaTextMessage) {
   });
   if (!inbound?.organizationId || aiMetadataFromLog(inbound.webhookPayload)) return;
 
-  const state = await getWhatsAppAiConversationState(inbound.organizationId, message.from);
-  const authorizedSalesTest = isAuthorizedAdSalesTestKeyword({
-    organizationId: inbound.organizationId, phone: message.from, text: message.text.body
+  const originalPayload = jsonObject(inbound.webhookPayload);
+  const claim = await prisma.whatsAppMessageLog.updateMany({
+    where: { id: inbound.id, status: "RECEIVED", webhookPayload: { equals: originalPayload as Prisma.InputJsonValue } },
+    data: { webhookPayload: { ...originalPayload, _ai: { status: "PROCESSING", processedAt: new Date().toISOString() } } as Prisma.InputJsonValue }
   });
-  const retrySorocabaAfterAiFailure = isSorocabaAdGreeting(message.text.body) &&
-    state.mode === "HANDOFF" &&
-    state.reason === "A IA não conseguiu responder com segurança; atendimento humano solicitado.";
-  const retryLegacySorocabaAfterAiFailure = /^[1-4]$/.test(message.text.body.trim()) &&
-    state.mode === "HANDOFF" &&
-    state.reason === "A IA não conseguiu responder com segurança; atendimento humano solicitado." &&
-    await hasRecentLegacySorocabaMenu(inbound.organizationId, message.from);
-  if ((authorizedSalesTest || retrySorocabaAfterAiFailure || retryLegacySorocabaAfterAiFailure) && !shouldProcessWhatsAppAiState(state)) {
-    await setWhatsAppAiConversationState({
-      organizationId: inbound.organizationId, phone: message.from,
-      mode: "ACTIVE", reason: "Teste autorizado da jornada de vendas por WhatsApp."
-    });
-  } else if (!shouldProcessWhatsAppAiState(state)) {
-    await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "SKIPPED", reason: state.reason });
-    return;
-  }
-  if (isHumanHandoffRequest(message.text.body)) {
-    const reply =
-      "Claro. Encaminhei sua conversa para um atendente da TCR Ingressos. Nosso atendimento humano responde em horário comercial e continuará por aqui assim que estiver disponível.";
-    await setWhatsAppAiConversationState({
-      organizationId: inbound.organizationId,
-      phone: message.from,
-      mode: "HANDOFF",
-      reason: "Cliente solicitou atendimento humano."
-    });
-    await sendWhatsAppTextMessage({
-      to: message.from,
-      text: reply,
-      organizationId: inbound.organizationId,
-      source: AI_SOURCE,
-      metadata: { outcome: "HANDOFF", topic: "atendimento_humano", inboundProviderMessageId: message.id }
-    });
-    await markInboundAi({
-      id: inbound.id,
-      webhookPayload: inbound.webhookPayload,
-      status: "COMPLETED",
-      outcome: "HANDOFF",
-      topic: "atendimento_humano",
-      reason: "Cliente solicitou atendimento humano."
-    });
-    return;
-  }
-  if (isGenericEventAdGreeting(message.text.body) || isIncompleteRodrigoEventReply(message.text.body)) {
-    const reply = isGenericEventAdGreeting(message.text.body)
-      ? "Olá! Sou a assistente virtual da TCR Ingressos 😊 Qual é o nome do artista ou evento e em qual cidade ele acontece? Assim posso te passar os ingressos e detalhes certos. Se preferir, escreva falar com atendente."
-      : "Você se refere ao Rodrigo Teaser? Pode me confirmar a cidade do evento para eu te mostrar os ingressos certos?";
-    await sendWhatsAppTextMessage({
-      to: message.from,
-      text: reply,
-      organizationId: inbound.organizationId,
-      source: AI_SOURCE,
-      metadata: { outcome: "AUTO_REPLY", topic: "identificar_evento", inboundProviderMessageId: message.id }
-    });
-    await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "COMPLETED", outcome: "AUTO_REPLY", topic: "identificar_evento" });
-    return;
-  }
-  const inboundPayload = jsonObject(inbound.webhookPayload);
-  const origin = jsonObject(inboundPayload._tcrOrigin as Prisma.JsonValue | null);
-  const verifiedOrigin = await verifiedAdOriginForConversation({
-    organizationId: inbound.organizationId, phone: message.from,
-    current: origin.kind === "meta_ad"
-      ? { kind: "meta_ad", adId: typeof origin.adId === "string" ? origin.adId : null }
-      : classifyWhatsAppInboundOrigin(inboundPayload as { referral?: { source_type?: unknown; source_id?: unknown } })
-  });
-  if (await processAdSalesJourney({
-    organizationId: inbound.organizationId,
-    phone: message.from,
-    text: message.text.body,
-    origin: verifiedOrigin
-  })) {
-    await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "COMPLETED", outcome: "AUTO_REPLY", topic: "ad_sales" });
-    return;
-  }
-  if (await processSorocabaSalesJourney({
-    organizationId: inbound.organizationId,
-    phone: message.from,
-    text: message.text.body,
-    replyToMessageId: message.context?.id,
-    origin: verifiedOrigin
-  })) {
-    await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "COMPLETED", outcome: "AUTO_REPLY", topic: "sorocaba_sales" });
-    return;
-  }
-  if (/^[1-4]$/.test(message.text.body.trim()) &&
-      await hasRecentLegacySorocabaMenu(inbound.organizationId, message.from) &&
-      await processSorocabaSalesJourney({ organizationId: inbound.organizationId,
-        phone: message.from, text: "Sorocaba",
-        origin: verifiedOrigin })) {
-    await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload,
-      status: "COMPLETED", outcome: "AUTO_REPLY", topic: "sorocaba_sales" });
-    return;
-  }
-  const usage = await monthlyUsageAllowed(inbound.organizationId);
-  if (!usage.allowed) {
-    await setWhatsAppAiConversationState({
-      organizationId: inbound.organizationId,
-      phone: message.from,
-      mode: "HANDOFF",
-      reason: `Limite mensal da IA atingido (${usage.used}/${usage.limit}).`
-    });
-    await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "SKIPPED", reason: "Limite mensal atingido." });
-    return;
-  }
-
-  await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "PROCESSING" });
+  if (claim.count !== 1) return;
   try {
+    const receivedAt = Number(message.timestamp) * 1000;
+    if (receivedAt > 0 && Date.now() - receivedAt >= 24 * 60 * 60 * 1000) {
+      await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "SKIPPED", reason: "Mensagem recebida fora da janela de resposta de 24 horas." });
+      return;
+    }
+    const state = await getWhatsAppAiConversationState(inbound.organizationId, message.from);
+    const authorizedSalesTest = isAuthorizedAdSalesTestKeyword({
+      organizationId: inbound.organizationId, phone: message.from, text: message.text.body
+    });
+    const retrySorocabaAfterAiFailure = isSorocabaAdGreeting(message.text.body) &&
+      state.mode === "HANDOFF" &&
+      state.reason === "A IA não conseguiu responder com segurança; atendimento humano solicitado.";
+    const retryLegacySorocabaAfterAiFailure = /^[1-4]$/.test(message.text.body.trim()) &&
+      state.mode === "HANDOFF" &&
+      state.reason === "A IA não conseguiu responder com segurança; atendimento humano solicitado." &&
+      await hasRecentLegacySorocabaMenu(inbound.organizationId, message.from);
+    if ((authorizedSalesTest || retrySorocabaAfterAiFailure || retryLegacySorocabaAfterAiFailure) && !shouldProcessWhatsAppAiState(state)) {
+      await setWhatsAppAiConversationState({
+        organizationId: inbound.organizationId, phone: message.from,
+        mode: "ACTIVE", reason: "Teste autorizado da jornada de vendas por WhatsApp."
+      });
+    } else if (!shouldProcessWhatsAppAiState(state)) {
+      await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "SKIPPED", reason: state.reason });
+      return;
+    }
+    if (isHumanHandoffRequest(message.text.body)) {
+      const reply =
+        "Claro. Encaminhei sua conversa para um atendente da TCR Ingressos. Nosso atendimento humano responde em horário comercial e continuará por aqui assim que estiver disponível.";
+      await setWhatsAppAiConversationState({
+        organizationId: inbound.organizationId,
+        phone: message.from,
+        mode: "HANDOFF",
+        reason: "Cliente solicitou atendimento humano."
+      });
+      await sendWhatsAppTextMessage({
+        to: message.from,
+        text: reply,
+        organizationId: inbound.organizationId,
+        source: AI_SOURCE,
+        metadata: { outcome: "HANDOFF", topic: "atendimento_humano", inboundProviderMessageId: message.id }
+      });
+      await markInboundAi({
+        id: inbound.id,
+        webhookPayload: inbound.webhookPayload,
+        status: "COMPLETED",
+        outcome: "HANDOFF",
+        topic: "atendimento_humano",
+        reason: "Cliente solicitou atendimento humano."
+      });
+      return;
+    }
+    if (isGenericEventAdGreeting(message.text.body) || isIncompleteRodrigoEventReply(message.text.body)) {
+      const reply = isGenericEventAdGreeting(message.text.body)
+        ? "Olá! Sou a assistente virtual da TCR Ingressos 😊 Qual é o nome do artista ou evento e em qual cidade ele acontece? Assim posso te passar os ingressos e detalhes certos. Se preferir, escreva falar com atendente."
+        : "Você se refere ao Rodrigo Teaser? Pode me confirmar a cidade do evento para eu te mostrar os ingressos certos?";
+      await sendWhatsAppTextMessage({
+        to: message.from,
+        text: reply,
+        organizationId: inbound.organizationId,
+        source: AI_SOURCE,
+        metadata: { outcome: "AUTO_REPLY", topic: "identificar_evento", inboundProviderMessageId: message.id }
+      });
+      await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "COMPLETED", outcome: "AUTO_REPLY", topic: "identificar_evento" });
+      return;
+    }
+    const inboundPayload = jsonObject(inbound.webhookPayload);
+    const origin = jsonObject(inboundPayload._tcrOrigin as Prisma.JsonValue | null);
+    const verifiedOrigin = await verifiedAdOriginForConversation({
+      organizationId: inbound.organizationId, phone: message.from,
+      current: origin.kind === "meta_ad"
+        ? { kind: "meta_ad", adId: typeof origin.adId === "string" ? origin.adId : null }
+        : classifyWhatsAppInboundOrigin(inboundPayload as { referral?: { source_type?: unknown; source_id?: unknown } })
+    });
+    if (await processAdSalesJourney({
+      organizationId: inbound.organizationId,
+      phone: message.from,
+      text: message.text.body,
+      origin: verifiedOrigin
+    })) {
+      await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "COMPLETED", outcome: "AUTO_REPLY", topic: "ad_sales" });
+      return;
+    }
+    if (await processSorocabaSalesJourney({
+      organizationId: inbound.organizationId,
+      phone: message.from,
+      text: message.text.body,
+      replyToMessageId: message.context?.id,
+      origin: verifiedOrigin
+    })) {
+      await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "COMPLETED", outcome: "AUTO_REPLY", topic: "sorocaba_sales" });
+      return;
+    }
+    if (/^[1-4]$/.test(message.text.body.trim()) &&
+        await hasRecentLegacySorocabaMenu(inbound.organizationId, message.from) &&
+        await processSorocabaSalesJourney({ organizationId: inbound.organizationId,
+          phone: message.from, text: "Sorocaba",
+          origin: verifiedOrigin })) {
+      await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload,
+        status: "COMPLETED", outcome: "AUTO_REPLY", topic: "sorocaba_sales" });
+      return;
+    }
+    const usage = await monthlyUsageAllowed(inbound.organizationId);
+    if (!usage.allowed) {
+      await setWhatsAppAiConversationState({
+        organizationId: inbound.organizationId,
+        phone: message.from,
+        mode: "HANDOFF",
+        reason: `Limite mensal da IA atingido (${usage.used}/${usage.limit}).`
+      });
+      await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "SKIPPED", reason: "Limite mensal atingido." });
+      return;
+    }
+
     const context = await loadSupportContext(inbound.organizationId, message.from);
     const pendingHumanRequest = state.mode === "HANDOFF";
-    const modelDecision = await requestDecision(
-      message.text.body.trim(),
+    const userText = message.text.body.trim();
+    const modelDecision = await decideOrRefer(() => requestDecision(
+      userText,
       context,
       pendingHumanRequest,
-    );
+    ));
+    const currentState = await getWhatsAppAiConversationState(inbound.organizationId, message.from);
+    if (!shouldProcessWhatsAppAiState(currentState)) {
+      await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "SKIPPED", reason: currentState.reason });
+      return;
+    }
     const decision = guardPublishedHalfPriceAnswer({
       customerMessage: message.text.body.trim(),
       decision: modelDecision,
