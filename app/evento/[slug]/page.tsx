@@ -10,6 +10,7 @@ import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
 import { SeatMapTicketSelector } from "@/components/public/SeatMapTicketSelector";
 import { EventMapView } from "@/components/public/EventMapView";
 import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
+import { getSiteEventWhatsappMessage } from "@/features/whatsapp/site-prefilled-message";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { getCachedEventSeoBySlugInOrganization, getCachedPublicEventBySlugInOrganization } from "@/features/events/event.service";
 import { A2_IMERGIDOS_ORGANIZATION_SLUG, getCurrentOrganizationContext } from "@/features/organizations/organization.service";
@@ -668,7 +669,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
       {event.supportWhatsappUrl ? (
         <WhatsappFloatingButton
           href={event.supportWhatsappUrl}
-          prefilledMessage={`Quero tirar uma dúvida no site da TCR Ingressos sobre o evento ${event.title}.`}
+          prefilledMessage={getSiteEventWhatsappMessage(organizationSlug, event.title)}
         />
       ) : null}
     </main>

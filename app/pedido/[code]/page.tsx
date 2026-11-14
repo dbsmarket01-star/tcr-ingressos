@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { CopyButton } from "@/components/forms/CopyButton";
 import { OrderStatusWatcher } from "@/components/orders/OrderStatusWatcher";
 import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
+import { getSiteEventWhatsappMessage } from "@/features/whatsapp/site-prefilled-message";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { getOrderByCode } from "@/features/orders/order.service";
@@ -659,7 +660,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
         <WhatsappFloatingButton
           href={order.event.supportWhatsappUrl}
           label="Precisa de ajuda?"
-          prefilledMessage={`Quero tirar uma dúvida no site da TCR Ingressos sobre o evento ${order.event.title}.`}
+          prefilledMessage={getSiteEventWhatsappMessage(organizationContext.organization.slug, order.event.title)}
         />
       ) : null}
     </main>

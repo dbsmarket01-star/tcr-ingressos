@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { PublicSiteFooter } from "@/components/public/PublicSiteFooter";
 import { WhatsappFloatingButton } from "@/components/public/WhatsappFloatingButton";
+import { getSiteEventWhatsappMessage } from "@/features/whatsapp/site-prefilled-message";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
 import { calculateCouponDiscountInCents, getValidCouponPreviewForEvent } from "@/features/coupons/coupon.service";
 import { getBuyerProfile } from "@/features/customer-auth/google-buyer.service";
@@ -663,7 +664,7 @@ export default async function EventCheckoutPage({ params, searchParams }: Checko
       {event.supportWhatsappUrl ? (
         <WhatsappFloatingButton
           href={event.supportWhatsappUrl}
-          prefilledMessage={`Quero tirar uma dúvida no site da TCR Ingressos sobre o evento ${event.title}.`}
+          prefilledMessage={getSiteEventWhatsappMessage(organizationSlug, event.title)}
         />
       ) : null}
     </main>
