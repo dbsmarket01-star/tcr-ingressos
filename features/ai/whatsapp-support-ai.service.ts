@@ -1,3 +1,4 @@
+import { selectSupportEvent, guardSupportCatalog } from "./whatsapp-catalog-grounding";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sendWhatsAppTextMessage } from "@/features/whatsapp/whatsapp.service";
@@ -798,6 +799,10 @@ REGRAS CRITICAS
 15. ${pendingHumanRequest ? "Existe um pedido anterior de atendimento humano, mas nenhum atendente entrou na conversa. Se a nova duvida puder ser respondida com seguranca pelo contexto, use AUTO_REPLY normalmente. Nao use HANDOFF apenas por causa do pedido anterior; o sistema oferecera o atendente novamente depois da resposta." : "Nao existe pedido anterior pendente de atendimento humano."}
 16. Se a resposta anterior pediu o nome do artista/evento e a cidade, nao adivinhe o evento a partir de uma resposta incompleta. Pergunte apenas o dado que falta; se a resposta continuar ambigua, confirme artista e cidade. Nao ofereca menu numerado de eventos supostos.
 
+CATALOGO
+activeEvents contem somente o evento identificado nas mensagens do cliente. Se estiver vazio, pergunte artista/evento e cidade antes de falar de setores, precos ou disponibilidade.
+Nunca use respostas anteriores, descricoes antigas, conhecimento aprovado ou pedidos historicos para inventar disponibilidade: tickets e availableUnits sao a unica fonte de setores e valores de novas compras. Nao use nomes de setores de outro evento. Nao confunda um preco total com o preco base.
+
 SAIDA
 AUTO_REPLY quando puder responder com seguranca.
 HANDOFF quando uma pessoa precisar assumir; nesse caso escreva uma mensagem curta dizendo que encaminhou para a equipe, sem inventar prazo.
@@ -1033,9 +1038,17 @@ async function processInboundMessage(message: MetaTextMessage) {
     const context = await loadSupportContext(inbound.organizationId, message.from);
     const pendingHumanRequest = state.mode === "HANDOFF" && state.reason === "Cliente solicitou atendimento humano.";
     const userText = message.text.body.trim();
+    const selectedEvent = selectSupportEvent(userText, context.conversation, context.activeEvents);
+    const scopedContext = {
+      ...context,
+      activeEvents: selectedEvent ? [selectedEvent] : [],
+      approvedKnowledge: context.approvedKnowledge.filter(item => !item.eventId || item.eventId === selectedEvent?.id),
+      // Previous answers may contain stale or incorrect prices; retain customer messages only.
+      conversation: context.conversation.filter(item => item.direction === "customer")
+    };
     const modelDecision = await decideOrRefer(() => requestDecision(
       userText,
-      context,
+      scopedContext,
       pendingHumanRequest,
     ));
     const currentState = await getWhatsAppAiConversationState(inbound.organizationId, message.from);
@@ -1043,11 +1056,13 @@ async function processInboundMessage(message: MetaTextMessage) {
       await markInboundAi({ id: inbound.id, webhookPayload: inbound.webhookPayload, status: "SKIPPED", reason: currentState.reason });
       return;
     }
-    const decision = guardPublishedHalfPriceAnswer({
+    const halfPriceDecision = guardPublishedHalfPriceAnswer({
       customerMessage: message.text.body.trim(),
       decision: modelDecision,
-      events: context.activeEvents
+      events: scopedContext.activeEvents
     });
+    const decision = guardSupportCatalog({ decision: halfPriceDecision, event: selectedEvent,
+      customerMessage: userText, hasOrders: context.orders.length > 0 });
     if (decision.outcome === "AUTO_REPLY" && isLegacySorocabaNumberedMenu(decision.reply) &&
         await processSorocabaSalesJourney({
           organizationId: inbound.organizationId,
