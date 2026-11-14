@@ -222,7 +222,8 @@ export function shouldProcessWhatsAppAiMessage(mode: string) {
 
 export function shouldProcessWhatsAppAiState(state: { mode: string; reason?: string | null }) {
   return shouldProcessWhatsAppAiMessage(state.mode) ||
-    (state.mode === "HANDOFF" && state.reason === "Cliente solicitou atendimento humano.");
+    (state.mode === "HANDOFF" && (state.reason === "Cliente solicitou atendimento humano." ||
+      state.reason === "A IA não conseguiu responder com segurança; atendimento humano solicitado."));
 }
 
 export function resolvedHandoffReply(reply: string) {
@@ -827,7 +828,9 @@ async function requestDecision(
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) throw new Error("OPENAI_API_KEY nao configurada.");
   const timeoutMs = Number(process.env.OPENAI_CHAT_TIMEOUT_MS || 12_000);
-  const maxOutputTokens = Number(process.env.OPENAI_CHAT_MAX_OUTPUT_TOKENS || 1200);
+  // WhatsApp needs room for reasoning and the complete structured reply.
+  // Do not inherit the panel assistant's smaller output budget.
+  const maxOutputTokens = Number(process.env.WHATSAPP_AI_MAX_OUTPUT_TOKENS || 1200);
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     signal: AbortSignal.timeout(Number.isFinite(timeoutMs) ? timeoutMs : 12_000),
@@ -1028,7 +1031,7 @@ async function processInboundMessage(message: MetaTextMessage) {
     }
 
     const context = await loadSupportContext(inbound.organizationId, message.from);
-    const pendingHumanRequest = state.mode === "HANDOFF";
+    const pendingHumanRequest = state.mode === "HANDOFF" && state.reason === "Cliente solicitou atendimento humano.";
     const userText = message.text.body.trim();
     const modelDecision = await decideOrRefer(() => requestDecision(
       userText,
@@ -1064,7 +1067,7 @@ async function processInboundMessage(message: MetaTextMessage) {
         reason: decision.reason
       });
     }
-    if (pendingHumanRequest && decision.outcome === "AUTO_REPLY") {
+    if (state.mode === "HANDOFF" && decision.outcome === "AUTO_REPLY") {
       await setWhatsAppAiConversationState({
         organizationId: inbound.organizationId,
         phone: message.from,

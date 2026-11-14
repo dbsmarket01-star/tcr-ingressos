@@ -229,3 +229,11 @@ describe("contingência no atendimento por WhatsApp", () => {
     expect(await decideOrRefer(async () => decision)).toEqual(decision);
   });
 });
+
+
+it("retoma falha técnica em nova mensagem sem liberar pausa humana ou outros encaminhamentos", () => {
+  const reason = "A IA não conseguiu responder com segurança; atendimento humano solicitado.";
+  expect(shouldProcessWhatsAppAiState({ mode: "HANDOFF", reason })).toBe(true);
+  expect(shouldProcessWhatsAppAiState({ mode: "PAUSED", reason })).toBe(false);
+  expect(shouldProcessWhatsAppAiState({ mode: "HANDOFF", reason: "Pagamento não confirmado." })).toBe(false);
+});
