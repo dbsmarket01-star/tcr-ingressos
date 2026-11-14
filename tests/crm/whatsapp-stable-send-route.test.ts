@@ -1,11 +1,17 @@
 import { beforeEach, expect, it, vi } from "vitest";
 
 const send = vi.hoisted(() => vi.fn());
+const auth = vi.hoisted(() => ({ getCurrentAdmin: vi.fn(), canAccessArea: vi.fn() }));
 vi.mock("@/features/crm/whatsapp-chat.actions", () => ({ sendCrmWhatsAppMessage: send }));
+vi.mock("@/features/auth/auth.service", () => auth);
 
 import { POST } from "@/app/api/admin/crm/whatsapp/send/route";
 
-beforeEach(() => send.mockReset());
+beforeEach(() => {
+  send.mockReset();
+  auth.getCurrentAdmin.mockResolvedValue({ role: "OWNER" });
+  auth.canAccessArea.mockReturnValue(true);
+});
 
 function request(origin = "https://produtor.tcringressos.app.br") {
   const data = new FormData();
@@ -28,6 +34,14 @@ it("encaminha o formulário pela rota estável e preserva o resultado", async ()
 it("bloqueia envio de outra origem", async () => {
   const result = await POST(request("https://outro-site.example"));
   expect(result.status).toBe(403);
+  expect(send).not.toHaveBeenCalled();
+});
+
+it("informa sessão expirada sem tentar enviar", async () => {
+  auth.getCurrentAdmin.mockResolvedValue(null);
+  const result = await POST(request());
+  expect(result.status).toBe(401);
+  expect((await result.json()).message).toMatch(/sessão expirou/);
   expect(send).not.toHaveBeenCalled();
 });
 
