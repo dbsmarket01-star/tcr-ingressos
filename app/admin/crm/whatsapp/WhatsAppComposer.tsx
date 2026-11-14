@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { sendCrmWhatsAppMessage } from "@/features/crm/whatsapp-chat.actions";
 
 type WhatsAppComposerProps = { canReply: boolean; leadId: string; orderCode: string; phone: string };
 const EMOJIS = ["😀", "😊", "🙏", "👍", "❤️", "🎉", "✅", "Olá!", "Obrigado!"];
@@ -77,19 +76,31 @@ export function WhatsAppComposer({ canReply, leadId, orderCode, phone }: WhatsAp
     setSending(true);
     setFeedback("");
     setOptimisticText(text || `Enviando ${file?.name || "arquivo"}…`);
-    const result = await sendCrmWhatsAppMessage(formData);
-    if (!result.ok) {
-      setFeedback(result.message);
+    try {
+      // A stable API URL keeps an already-open CRM tab usable after a deployment.
+      // Server Action IDs embedded in an older page can otherwise return a 404.
+      const response = await fetch("/api/admin/crm/whatsapp/send", {
+        method: "POST",
+        body: formData,
+        credentials: "same-origin"
+      });
+      const result = await response.json() as { ok: boolean; message: string };
+      if (!response.ok || !result.ok) {
+        setFeedback(result.message || "Não foi possível enviar. Confira a conversa antes de tentar novamente.");
+        setOptimisticText("");
+        return;
+      }
+      formRef.current?.reset();
+      setRecordedAudio(null);
+      setSelectedFile("");
+      window.dispatchEvent(new CustomEvent("tcr:whatsapp-outbound", { detail: { phone, message: text || `📎 ${file?.name || "Arquivo enviado"}` } }));
+      window.setTimeout(() => setOptimisticText(""), 2500);
+    } catch {
+      setFeedback("Não foi possível confirmar o envio. Confira a conversa antes de tentar novamente.");
       setOptimisticText("");
+    } finally {
       setSending(false);
-      return;
     }
-    formRef.current?.reset();
-    setRecordedAudio(null);
-    setSelectedFile("");
-    setSending(false);
-    window.dispatchEvent(new CustomEvent("tcr:whatsapp-outbound", { detail: { phone, message: text || `📎 ${file?.name || "Arquivo enviado"}` } }));
-    window.setTimeout(() => setOptimisticText(""), 2500);
   }
 
   const disabled = !canReply || !phone || sending;
