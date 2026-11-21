@@ -196,6 +196,20 @@ export async function getOrganizationByHost(host?: string | null) {
     )
   );
 
+  // The legacy sales domain is an additional public host for the same TCR tenant.
+  // Keep publicDomain unchanged until DNS and legacy ticket routes are migrated.
+  if (hostCandidates.includes("tcringressos.com.br")) {
+    return unstable_cache(
+      () =>
+        prisma.organization.findFirst({
+          where: { slug: DEFAULT_ORGANIZATION_SLUG, isActive: true },
+          select: organizationBrandingSelect
+        }),
+      ["tcr-organization-by-public-alias"],
+      { revalidate: 60 }
+    )();
+  }
+
   return unstable_cache(
     async (...lookupHosts: string[]) =>
       prisma.organization.findFirst({

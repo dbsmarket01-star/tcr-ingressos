@@ -38,7 +38,7 @@ function addKnownProjectHostCandidates(hosts: Set<string>) {
       continue;
     }
 
-    if (host === "tcringressos.app.br" || host === "www.tcringressos.app.br" || host === "produtor.tcringressos.app.br" || host.startsWith("tcr-ingressos-")) {
+    if (host === "tcringressos.com.br" || host === "www.tcringressos.com.br" || host === "tcringressos.app.br" || host === "www.tcringressos.app.br" || host === "produtor.tcringressos.app.br" || host.startsWith("tcr-ingressos-")) {
       addHostCandidate(hosts, "tcringressos.app.br");
       addHostCandidate(hosts, "produtor.tcringressos.app.br");
     }

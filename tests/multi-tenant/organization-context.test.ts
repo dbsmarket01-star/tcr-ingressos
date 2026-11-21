@@ -62,6 +62,38 @@ describe("organization context by host", () => {
     expect(context.publicBaseUrl).toBe("https://a2imergidos.com.br");
   });
 
+  it.each(["tcringressos.com.br", "www.tcringressos.com.br"])(
+    "resolves the legacy public alias %s to the existing TCR tenant",
+    async (host) => {
+      prismaMock.organization.findFirst.mockResolvedValue({
+        id: "org_tcr",
+        slug: "tcr-ingressos",
+        name: "TCR Ingressos",
+        publicDomain: "tcringressos.app.br",
+        adminDomain: "produtor.tcringressos.app.br",
+        logoUrl: null,
+        primaryColor: null,
+        secondaryColor: null,
+        supportEmail: null,
+        supportPhone: null,
+        isActive: true
+      });
+
+      const { getOrganizationContextByHost } = await import("@/features/organizations/organization.service");
+      const context = await getOrganizationContextByHost(host);
+
+      expect(prismaMock.organization.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { slug: "tcr-ingressos", isActive: true }
+        })
+      );
+      expect(context.organization.id).toBe("org_tcr");
+      expect(context.isMatchedByHost).toBe(true);
+      expect(context.isAdminHost).toBe(false);
+      expect(context.publicBaseUrl).toBe("https://tcringressos.app.br");
+    }
+  );
+
   it("marks admin host correctly for the matched tenant", async () => {
     const a2Organization = {
       id: "org_a2",
