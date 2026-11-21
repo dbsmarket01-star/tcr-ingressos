@@ -7,10 +7,10 @@ describe("TCR November 2026 ribbon", () => {
     expect(showBlackFridayRibbon("tcr-ingressos", futureEvent, now, "geriatricus-em-santo-andre-2026")).toBe(false);
     expect(showBlackFridayRibbon("tcr-ingressos", futureEvent, now, "geriatricus-em-suzano-2026")).toBe(true);
   });
-  it("hides Black November only for Tunel do Tempo 2027", () => {
+  it("hides Black November for all 2027 events", () => {
     const event = new Date("2027-04-11T00:00:00Z");
     expect(showBlackFridayRibbon("tcr-ingressos", event, now, "tunel-do-tempo-em-santo-andre-2027")).toBe(false);
-    expect(showBlackFridayRibbon("tcr-ingressos", event, now, "another-future-event")).toBe(true);
+    expect(showBlackFridayRibbon("tcr-ingressos", event, now, "another-future-event")).toBe(false);
   });
   it("includes November events even when the UTC date is December", () => {
     expect(showBlackFridayRibbon("tcr-ingressos", new Date("2026-12-01T00:00:00Z"), now)).toBe(true);
