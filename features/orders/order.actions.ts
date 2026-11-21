@@ -6,6 +6,7 @@ import { createPublicOrderUrl, sendOrderPendingPaymentEmail } from "@/features/e
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { assertRateLimit } from "@/features/security/rate-limit";
 import { getFriendlyErrorMessage } from "@/lib/friendly-error";
+import { resolveCheckoutLandingPage } from "./checkout-origin";
 import { checkoutOrderSchema } from "./order.schema";
 import { createCheckoutOrder } from "./order.service";
 
@@ -199,7 +200,10 @@ export async function createCheckoutOrderAction(formData: FormData) {
     utmContent: String(formData.get("utmContent") ?? "").trim() || undefined,
     utmTerm: String(formData.get("utmTerm") ?? "").trim() || undefined,
     referrer: String(formData.get("referrer") ?? "").trim() || undefined,
-    landingPage: String(formData.get("landingPage") ?? "").trim() || undefined,
+    landingPage: resolveCheckoutLandingPage(
+      String(formData.get("landingPage") ?? "").trim() || undefined,
+      headerStore.get("host") || headerStore.get("x-forwarded-host")
+    ),
     metaFbp: String(formData.get("metaFbp") ?? "").trim() || undefined,
     metaFbc: String(formData.get("metaFbc") ?? "").trim() || undefined,
     clientIpAddress: ip,
