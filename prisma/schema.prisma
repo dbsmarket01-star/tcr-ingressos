@@ -319,6 +319,7 @@ model Organization {
   homeListEntries         HomeListEntry[]
   marketingEmailCampaigns MarketingEmailCampaign[]
   paymentSplitRules       PaymentSplitRule[]
+  bioLinkClicks           BioLinkClick[]
 
   @@index([isActive])
 }
@@ -580,6 +581,17 @@ model EventPageVisit {
   @@unique([eventId, pageType, sessionKey, visitedOn])
   @@index([eventId, pageType, visitedOn])
   @@index([pageType, visitedOn])
+}
+
+model BioLinkClick {
+  id             String       @id @default(cuid())
+  organizationId String
+  campaign       String
+  createdAt      DateTime     @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, campaign, createdAt])
 }
 
 model LeadEmailCampaign {
