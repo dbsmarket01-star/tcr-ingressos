@@ -405,7 +405,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             alt={`Banner do evento ${event.title}`}
             height={828}
             priority
-            quality={80}
+            quality={75}
             sizes="(max-width: 768px) 100vw, 1180px"
             width={1900}
           />

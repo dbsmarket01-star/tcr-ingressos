@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const imageUrlSchema = z.string().url().optional().or(z.literal("")).or(z.string().startsWith("/uploads/"));
+const imageUrlSchema = z.string().url().optional().or(z.literal("")).or(z.string().startsWith("/uploads/")).or(z.string().startsWith("/site-antigo/assets/"));
 const imageCropSchema = z.string().max(120).optional();
 const bannerPositionSchema = z
   .enum([
