@@ -1,6 +1,5 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import manifest from "@/data/legacy-site/manifest.json";
@@ -23,20 +22,13 @@ export default async function PublicLegacyArchivePage({ params }: Props) {
     .replaceAll("/admin/site-antigo", "/phsis");
 
   return (
-    <main style={{ minHeight: "100vh", background: "#edf0f2", color: "#1f2937", fontFamily: "Arial, sans-serif" }}>
-      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, padding: "12px 20px", background: "#17212b", color: "white" }}>
-        <div>
-          <strong>Acervo histórico do site antigo da TCR</strong>
-          <div style={{ fontSize: 13, marginTop: 4 }}>Cópia de 21/11/2026 apenas para consulta. Valores e ingressos históricos; compras desativadas.</div>
-        </div>
-        <Link href="/phsis" style={{ color: "white" }}>Início do acervo</Link>
-      </header>
+    <main style={{ minHeight: "100vh", background: "#edf0f2" }}>
       <iframe
         title={event ? `Site antigo: ${event.title}` : "Página inicial do site antigo"}
         srcDoc={html}
         sandbox="allow-top-navigation-by-user-activation"
         referrerPolicy="no-referrer"
-        style={{ display: "block", width: "100%", height: "calc(100vh - 74px)", minHeight: 680, border: 0 }}
+        style={{ display: "block", width: "100%", height: "100vh", border: 0 }}
       />
     </main>
   );
