@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
-import { normalizedHost, proxy } from "@/proxy";
+import { legacyTcrRedirectPath, normalizedHost, proxy } from "@/proxy";
 
 function makeRequest(url: string, host: string, extraHeaders?: Record<string, string>) {
   return new NextRequest(url, {
@@ -12,6 +12,23 @@ function makeRequest(url: string, host: string, extraHeaders?: Record<string, st
 }
 
 describe("multi-tenant proxy isolation", () => {
+  it("redirects known old TCR event links only on the migrated domain", () => {
+    const oldPath = "/0hwVgLowlRH4438I_oGnKWBPB%2AkK2lPQn97fBv8Zo6c%3A";
+    expect(legacyTcrRedirectPath(oldPath)).toBe("/evento/rodrigo-teaser-em-sorocaba-2026");
+    const migrated = proxy(makeRequest(`https://tcringressos.com.br${oldPath}`, "tcringressos.com.br"));
+    expect(migrated.status).toBe(301);
+    expect(migrated.headers.get("location")).toBe("https://tcringressos.com.br/evento/rodrigo-teaser-em-sorocaba-2026");
+    const existing = proxy(makeRequest(`https://tcringressos.app.br${oldPath}`, "tcringressos.app.br"));
+    expect(existing.status).toBe(200);
+    expect(legacyTcrRedirectPath("/%ZZ")).toBeNull();
+  });
+
+  it("sends the old home URL to the new storefront without changing other hosts", () => {
+    const migrated = proxy(makeRequest("https://www.tcringressos.com.br/home", "www.tcringressos.com.br"));
+    expect(migrated.status).toBe(301);
+    expect(migrated.headers.get("location")).toBe("https://www.tcringressos.com.br/");
+    expect(proxy(makeRequest("https://tcringressos.app.br/home", "tcringressos.app.br")).status).toBe(200);
+  });
   it("normalizes forwarded hosts with protocol, port and comma suffix", () => {
     expect(normalizedHost("https://a2imergidos.com.br:443/login, proxy.local")).toBe("a2imergidos.com.br");
   });

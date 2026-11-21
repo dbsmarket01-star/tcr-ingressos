@@ -2,6 +2,28 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const DEFAULT_PLATFORM_DOMAIN = "ingresaas.app.br";
 const LEGACY_PLATFORM_DOMAINS = ["ingressas.app.br"];
+const TCR_LEGACY_EVENT_PATHS: Record<string, string> = {
+  "ovnlwqeQ1nTrEpwwYgt5h6i*EvnxKhLJ88wGE9_HqmQ:": "fernandinho-santo-andre-2026",
+  "0hwVgLowlRH4438I_oGnKbailkaEyKOxd*EACpYKgF8:": "geriatricus-em-santo-andre-2026",
+  "0hwVgLowlRH4438I_oGnKZLEC6tPpb7kqlfiHApapos:": "geriatricus-em-suzano-2026",
+  "0hwVgLowlRH4438I_oGnKTZEwjTa0AyjtvEsx*e1wLM:": "rodrigo-teaser-em-marilia-2026",
+  "0hwVgLowlRH4438I_oGnKfY465tNWRwtAKdF1oWg0Ws:": "rodrigo-teaser-em-taubate-2026",
+  "0hwVgLowlRH4438I_oGnKW3NmayPU*_n2sR605GN9ec:": "rodrigo-teaser-em-piracicaba-2026",
+  "0hwVgLowlRH4438I_oGnKSUWYslKqBDWMG1436FUqW4:": "rodrigo-teaser-em-sao-caetano-do-sul-2026",
+  "0hwVgLowlRH4438I_oGnKWBPB*kK2lPQn97fBv8Zo6c:": "rodrigo-teaser-em-sorocaba-2026",
+  "HDyXwCcXvS6DhuU9I9s_yioj9*wLDONhafKRx59oVGk:": "guilherme-arantes-sao-caetano-do-sul"
+};
+
+export function legacyTcrRedirectPath(pathname: string): string | null {
+  if (pathname === "/home") return "/";
+  try {
+    const legacyId = decodeURIComponent(pathname.slice(1));
+    const slug = TCR_LEGACY_EVENT_PATHS[legacyId];
+    return slug ? `/evento/${slug}` : null;
+  } catch {
+    return null;
+  }
+}
 
 export function normalizedHost(host: string | null) {
   const trimmed = (host || "")
@@ -92,6 +114,10 @@ export function proxy(request: NextRequest) {
       request.nextUrl.hostname
   );
   const isPlatformMasterHost = platformHosts().has(currentHost);
+  if (currentHost === "tcringressos.com.br" || currentHost === "www.tcringressos.com.br") {
+    const destination = legacyTcrRedirectPath(request.nextUrl.pathname);
+    if (destination) return NextResponse.redirect(new URL(destination, request.url), 301);
+  }
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-resolved-host", currentHost);
 
