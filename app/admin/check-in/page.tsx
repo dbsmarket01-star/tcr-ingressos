@@ -25,28 +25,32 @@ const statusLabels = {
   APPROVED: "Válido",
   ALREADY_USED: "Já usado",
   INVALID: "Inválido",
-  CANCELED: "Cancelado"
+  CANCELED: "Cancelado",
+  ERROR: "Falha na validação"
 };
 
 const statusInstructions = {
   APPROVED: "Pode seguir",
   ALREADY_USED: "Bloqueie a entrada",
   INVALID: "Não libere a entrada",
-  CANCELED: "Não libere a entrada"
+  CANCELED: "Não libere a entrada",
+  ERROR: "Não libere ainda"
 };
 
 const statusEyebrows = {
   APPROVED: "Entrada liberada",
   ALREADY_USED: "Alerta · QR Code já usado",
   INVALID: "Alerta · QR Code inválido",
-  CANCELED: "Alerta · Ingresso cancelado"
+  CANCELED: "Alerta · Ingresso cancelado",
+  ERROR: "Alerta · Validação não concluída"
 };
 
 const statusGuidance = {
   APPROVED: "Ingresso válido. Libere o acesso.",
   ALREADY_USED: "Este ingresso já foi validado. Confira o documento ou o pedido.",
   INVALID: "Código não encontrado. Confira o ingresso antes de tentar novamente.",
-  CANCELED: "Este ingresso está cancelado e não permite acesso."
+  CANCELED: "Este ingresso está cancelado e não permite acesso.",
+  ERROR: "A validação não foi concluída. Verifique a conexão antes de tentar novamente."
 };
 
 const emptyStats = {
@@ -81,7 +85,9 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
     selectedEvent ? listRecentCheckIns(admin.organizationId, scopedEventIds) : Promise.resolve([]),
     selectedEvent ? getCheckInStats(admin.organizationId, scopedEventIds) : Promise.resolve(emptyStats)
   ]);
-  const status = result.status as keyof typeof statusLabels | undefined;
+  const status = result.status && result.status in statusLabels
+    ? result.status as keyof typeof statusLabels
+    : undefined;
 
   return (
     <AdminShell
@@ -186,12 +192,12 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
           <article className="checkInMainPanel">
             <>
                 {status ? (
-                  <div className={`checkInCurrentResult checkIn${status}`} aria-live="polite">
+                  <div className={`checkInCurrentResult checkIn${status}`} role="alert" aria-live="assertive">
                     <div className="checkInResultHeadline">
                       <span>{statusEyebrows[status]}</span>
                       <strong>{statusInstructions[status]}</strong>
                     </div>
-                    <p className="checkInResultMessage">{statusGuidance[status]}</p>
+                    <p className="checkInResultMessage">{result.message || statusGuidance[status]}</p>
                     {result.ticket ? (
                       <div className="checkInResultSummary">
                         <span><small>Ingresso</small><strong>{result.ticket}</strong></span>

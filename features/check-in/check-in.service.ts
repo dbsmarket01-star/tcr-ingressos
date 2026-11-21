@@ -4,6 +4,7 @@ import { getPublicTicketUrl } from "@/lib/public-url";
 import type { CurrentAdmin } from "@/features/auth/auth.service";
 import { canAccessEvent } from "@/features/auth/auth.service";
 import { getCheckInDecision } from "./check-in-policy";
+import { getCheckInFeedback, getUnknownCodeFeedback, wrongEventFeedback } from "./check-in-feedback";
 
 export type CheckInResult = {
   status: CheckInStatus;
@@ -78,9 +79,18 @@ export async function validateTicketForCheckIn(
       const decision = getCheckInDecision(ticket ?? undefined);
 
       if (!ticket) {
+        const otherEventTicket = selectedEventId && admin ? await tx.ticket.findFirst({
+          where: {
+            OR: [{ code }, { qrCodeToken: code }],
+            event: { organizationId: admin.organizationId, status: { not: EventStatus.DRAFT } }
+          },
+          select: { eventId: true }
+        }) : null;
         return {
           status: CheckInStatus.INVALID,
-          message: "Ingresso nao encontrado."
+          message: otherEventTicket && otherEventTicket.eventId !== selectedEventId
+            ? wrongEventFeedback
+            : getUnknownCodeFeedback(code)
         };
       }
 
@@ -105,12 +115,7 @@ export async function validateTicketForCheckIn(
 
         return {
           status: decision,
-          message:
-            decision === "ALREADY_USED"
-              ? "Ingresso ja utilizado."
-              : decision === "CANCELED"
-                ? "Ingresso cancelado."
-                : "Ingresso invalido.",
+          message: getCheckInFeedback(decision),
           ticket: {
             code: ticket.code,
             eventTitle: ticket.event.title,

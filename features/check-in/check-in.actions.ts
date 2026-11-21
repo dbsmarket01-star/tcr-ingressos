@@ -35,7 +35,11 @@ export async function validateTicketAction(formData: FormData) {
       codeSuffix,
       error: error instanceof Error ? error.message : String(error)
     });
-    throw error;
+    redirect(`/admin/check-in?${new URLSearchParams({
+      eventId: selectedEventId,
+      status: "ERROR",
+      message: "Não foi possível concluir a validação. Não libere a entrada ainda; confira a conexão e tente novamente. Se aparecer 'já usado', confira o horário do primeiro registro."
+    }).toString()}`);
   }
 
   console.info("[check-in] validation completed", {

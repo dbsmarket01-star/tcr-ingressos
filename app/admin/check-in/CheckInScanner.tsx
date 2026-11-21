@@ -24,6 +24,8 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
   const recoveryAttemptsRef = useRef(0);
   const recoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const frameWatchdogRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const unreadableTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showUnreadableHint, setShowUnreadableHint] = useState(false);
   const [cameraStatus, setCameraStatus] = useState<
     "idle" | "unsupported" | "starting" | "scanning" | "interrupted" | "error"
   >("idle");
@@ -88,6 +90,9 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
     recoveryTimerRef.current = null;
     if (frameWatchdogRef.current) clearInterval(frameWatchdogRef.current);
     frameWatchdogRef.current = null;
+    if (unreadableTimerRef.current) clearTimeout(unreadableTimerRef.current);
+    unreadableTimerRef.current = null;
+    setShowUnreadableHint(false);
     scannerControlsRef.current?.stop();
     scannerControlsRef.current = null;
 
@@ -153,6 +158,7 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
 
     if (!automatic) recoveryAttemptsRef.current = 0;
     cameraWantedRef.current = true;
+    setShowUnreadableHint(false);
 
     const sessionId = cameraSessionRef.current + 1;
     cameraSessionRef.current = sessionId;
@@ -220,6 +226,9 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
       }
 
       setCameraStatus("scanning");
+      unreadableTimerRef.current = setTimeout(() => {
+        if (scanningRef.current && sessionId === cameraSessionRef.current) setShowUnreadableHint(true);
+      }, 8000);
       let lastVideoTime = videoRef.current.currentTime;
       let stalledChecks = 0;
       frameWatchdogRef.current = setInterval(() => {
@@ -303,6 +312,12 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
       {cameraStatus === "interrupted" ? (
         <p className="formHint">
           A câmera ficou sem imagem ou foi interrompida por outra aba. Feche a câmera no outro leitor e toque em Retomar câmera se ela não voltar sozinha.
+        </p>
+      ) : null}
+
+      {cameraStatus === "scanning" && showUnreadableHint ? (
+        <p className="formHint" role="status">
+          Nenhum QR Code foi identificado. Aumente o brilho do ingresso, ajuste foco e distância ou digite o código impresso abaixo. Não libere a entrada sem a confirmação “Entrada liberada”.
         </p>
       ) : null}
 

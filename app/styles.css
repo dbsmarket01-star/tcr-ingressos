@@ -19837,14 +19837,16 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 
 .checkInCurrentResult.checkInALREADY_USED,
 .checkInCurrentResult.checkInINVALID,
-.checkInCurrentResult.checkInCANCELED {
+.checkInCurrentResult.checkInCANCELED,
+.checkInCurrentResult.checkInERROR {
   border-color: #fecdd3;
   color: #0f172a;
 }
 
 .checkInCurrentResult.checkInALREADY_USED .checkInResultHeadline,
 .checkInCurrentResult.checkInINVALID .checkInResultHeadline,
-.checkInCurrentResult.checkInCANCELED .checkInResultHeadline {
+.checkInCurrentResult.checkInCANCELED .checkInResultHeadline,
+.checkInCurrentResult.checkInERROR .checkInResultHeadline {
   background: #fff1f2;
   color: #9f1239;
 }
