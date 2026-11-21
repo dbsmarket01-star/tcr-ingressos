@@ -406,6 +406,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             height={828}
             priority
             quality={75}
+            unoptimized={heroImage.startsWith("/site-antigo/assets/")}
             sizes="(max-width: 768px) 100vw, 1180px"
             width={1900}
           />
