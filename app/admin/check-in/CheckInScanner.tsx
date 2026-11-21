@@ -20,6 +20,10 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
   const scannerControlsRef = useRef<ScannerControls | null>(null);
   const scanningRef = useRef(false);
   const cameraSessionRef = useRef(0);
+  const cameraWantedRef = useRef(false);
+  const recoveryAttemptsRef = useRef(0);
+  const recoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const frameWatchdogRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [cameraStatus, setCameraStatus] = useState<
     "idle" | "unsupported" | "starting" | "scanning" | "interrupted" | "error"
   >("idle");
@@ -33,20 +37,33 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
 
     function releaseCameraWhenPageIsHidden() {
       if (document.visibilityState === "hidden") {
-        stopCamera();
+        // Another check-in tab needs the camera immediately. Remember whether
+        // this operator was scanning so we can reacquire it on return.
+        stopCamera(false, true);
+        if (cameraWantedRef.current) setCameraStatus("interrupted");
+      } else if (cameraWantedRef.current) {
+        scheduleCameraRecovery(150);
       }
     }
 
     function releaseCameraWhenPageIsLeft() {
-      stopCamera(false);
+      stopCamera(false, true);
+    }
+
+    function resumeCameraAfterPageRestore() {
+      if (cameraWantedRef.current && document.visibilityState === "visible") {
+        scheduleCameraRecovery(150);
+      }
     }
 
     document.addEventListener("visibilitychange", releaseCameraWhenPageIsHidden);
     window.addEventListener("pagehide", releaseCameraWhenPageIsLeft);
+    window.addEventListener("pageshow", resumeCameraAfterPageRestore);
 
     return () => {
       document.removeEventListener("visibilitychange", releaseCameraWhenPageIsHidden);
       window.removeEventListener("pagehide", releaseCameraWhenPageIsLeft);
+      window.removeEventListener("pageshow", resumeCameraAfterPageRestore);
       stopCamera(false);
     };
   }, []);
@@ -63,9 +80,14 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
     formRef.current.requestSubmit();
   }
 
-  function stopCamera(updateStatus = true) {
+  function stopCamera(updateStatus = true, preserveIntent = false) {
     cameraSessionRef.current += 1;
     scanningRef.current = false;
+    if (!preserveIntent) cameraWantedRef.current = false;
+    if (recoveryTimerRef.current) clearTimeout(recoveryTimerRef.current);
+    recoveryTimerRef.current = null;
+    if (frameWatchdogRef.current) clearInterval(frameWatchdogRef.current);
+    frameWatchdogRef.current = null;
     scannerControlsRef.current?.stop();
     scannerControlsRef.current = null;
 
@@ -84,10 +106,53 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
     }
   }
 
-  async function startCamera() {
-    if (scanningRef.current || cameraStatus === "starting") {
+  function scheduleCameraRecovery(delayMs: number) {
+    if (!cameraWantedRef.current || document.visibilityState !== "visible") return;
+    if (recoveryTimerRef.current) clearTimeout(recoveryTimerRef.current);
+    recoveryTimerRef.current = setTimeout(() => {
+      recoveryTimerRef.current = null;
+      if (cameraWantedRef.current && document.visibilityState === "visible") void startCamera(true);
+    }, delayMs);
+  }
+
+  function recoverInterruptedCamera() {
+    stopCamera(false, true);
+    setCameraStatus("interrupted");
+    if (recoveryAttemptsRef.current < 1) {
+      recoveryAttemptsRef.current += 1;
+      scheduleCameraRecovery(400);
+    }
+  }
+
+  function waitForCameraFrame(video: HTMLVideoElement, sessionId: number) {
+    return new Promise<void>((resolve, reject) => {
+      const startedAt = Date.now();
+      const timer = setInterval(() => {
+        if (sessionId !== cameraSessionRef.current || document.visibilityState !== "visible") {
+          clearInterval(timer);
+          reject(new Error("Camera session changed"));
+          return;
+        }
+        const stream = video.srcObject;
+        const track = stream instanceof MediaStream ? stream.getVideoTracks()[0] : null;
+        if (track?.readyState === "live" && !track.muted && video.readyState >= 2 && video.videoWidth > 0) {
+          clearInterval(timer);
+          resolve();
+        } else if (Date.now() - startedAt > 3500) {
+          clearInterval(timer);
+          reject(new Error("Camera did not produce a frame"));
+        }
+      }, 100);
+    });
+  }
+
+  async function startCamera(automatic = false) {
+    if (scanningRef.current || document.visibilityState !== "visible") {
       return;
     }
+
+    if (!automatic) recoveryAttemptsRef.current = 0;
+    cameraWantedRef.current = true;
 
     const sessionId = cameraSessionRef.current + 1;
     cameraSessionRef.current = sessionId;
@@ -97,8 +162,9 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
       setCameraStatus("starting");
       await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
 
-      if (!videoRef.current || sessionId !== cameraSessionRef.current) {
-        scanningRef.current = false;
+      if (sessionId !== cameraSessionRef.current) return;
+      if (!videoRef.current) {
+        recoverInterruptedCamera();
         return;
       }
 
@@ -132,6 +198,8 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
       }
 
       scannerControlsRef.current = controls;
+      await waitForCameraFrame(videoRef.current, sessionId);
+      if (sessionId !== cameraSessionRef.current) return;
 
       const stream = videoRef.current.srcObject;
 
@@ -142,8 +210,7 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
           }
 
           console.warn("[check-in-camera] Captura interrompida pelo navegador ou por outra aba");
-          stopCamera(false);
-          setCameraStatus("interrupted");
+          recoverInterruptedCamera();
         };
 
         stream.getVideoTracks().forEach((track) => {
@@ -153,15 +220,28 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
       }
 
       setCameraStatus("scanning");
+      let lastVideoTime = videoRef.current.currentTime;
+      let stalledChecks = 0;
+      frameWatchdogRef.current = setInterval(() => {
+        const video = videoRef.current;
+        if (!video || sessionId !== cameraSessionRef.current || document.visibilityState !== "visible") return;
+        const currentStream = video.srcObject;
+        const track = currentStream instanceof MediaStream ? currentStream.getVideoTracks()[0] : null;
+        const advancing = video.currentTime > lastVideoTime;
+        lastVideoTime = video.currentTime;
+        stalledChecks = track?.readyState === "live" && !track.muted && video.videoWidth > 0 && advancing
+          ? 0 : stalledChecks + 1;
+        if (stalledChecks >= 3) recoverInterruptedCamera();
+      }, 1000);
     } catch (error) {
       if (sessionId === cameraSessionRef.current) {
         console.error("[check-in-camera] Não foi possível manter a câmera ativa", error);
-        stopCamera(false);
-        setCameraStatus(
-          error instanceof DOMException && (error.name === "NotReadableError" || error.name === "AbortError")
-            ? "interrupted"
-            : "error"
-        );
+        if (error instanceof DOMException && (error.name === "NotAllowedError" || error.name === "NotFoundError")) {
+          stopCamera(false);
+          setCameraStatus("error");
+        } else {
+          recoverInterruptedCamera();
+        }
       }
     }
   }
@@ -176,17 +256,23 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
           <h2>Validar ingresso</h2>
           <p>Evento selecionado: {eventTitle}</p>
         </div>
-        <span>{cameraStatus === "scanning" ? "Lendo" : "Pronto"}</span>
+        <span>
+          {cameraStatus === "scanning" ? "Lendo"
+            : cameraStatus === "starting" ? "Reconectando"
+            : cameraStatus === "interrupted" ? "Pausado"
+            : cameraStatus === "error" ? "Câmera indisponível"
+            : "Pronto"}
+        </span>
       </div>
 
       <div className="scannerActions">
         <button
           className="button"
-          onClick={startCamera}
+          onClick={() => void startCamera()}
           type="button"
           disabled={cameraStatus === "starting" || cameraStatus === "scanning"}
         >
-          Abrir câmera
+          {cameraStatus === "interrupted" ? "Retomar câmera" : "Abrir câmera"}
         </button>
         {showCameraPreview ? (
           <button className="secondaryButton" onClick={() => stopCamera()} type="button">
@@ -216,7 +302,7 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
 
       {cameraStatus === "interrupted" ? (
         <p className="formHint">
-          A câmera foi interrompida por outra aba ou sistema. Feche a câmera no outro leitor e toque em Abrir câmera novamente.
+          A câmera ficou sem imagem ou foi interrompida por outra aba. Feche a câmera no outro leitor e toque em Retomar câmera se ela não voltar sozinha.
         </p>
       ) : null}
 
