@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 import { showBlackFridayRibbon } from "../../features/events/black-friday-campaign";
 const now = new Date("2026-11-09T22:00:00-03:00");
 describe("TCR November 2026 ribbon", () => {
+  it("hides the ended Geriatricus Santo Andre promotion without affecting other events", () => {
+    const futureEvent = new Date("2026-11-30T23:00:00Z");
+    expect(showBlackFridayRibbon("tcr-ingressos", futureEvent, now, "geriatricus-em-santo-andre-2026")).toBe(false);
+    expect(showBlackFridayRibbon("tcr-ingressos", futureEvent, now, "geriatricus-em-suzano-2026")).toBe(true);
+  });
   it("includes November events even when the UTC date is December", () => {
     expect(showBlackFridayRibbon("tcr-ingressos", new Date("2026-12-01T00:00:00Z"), now)).toBe(true);
   });

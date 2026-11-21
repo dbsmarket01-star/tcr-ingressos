@@ -410,7 +410,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             width={1900}
           />
         </div>
-        {showBlackFridayRibbon(organizationContext.organization.slug, event.startsAt) ? <BlackFridayRibbon /> : null}
+        {showBlackFridayRibbon(organizationContext.organization.slug, event.startsAt, new Date(), event.slug) ? <BlackFridayRibbon /> : null}
         <div className="publicHeroInner">
           <h1>{event.title}</h1>
           {eventLead ? <p className="eventLead">{eventLead}</p> : null}
