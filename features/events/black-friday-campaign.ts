@@ -7,5 +7,6 @@ export function showBlackFridayRibbon(organizationSlug: string, eventStartsAt: D
   const currentTime = now.getTime();
   return organizationSlug === "tcr-ingressos" &&
     eventSlug !== "geriatricus-em-santo-andre-2026" &&
+    eventSlug !== "tunel-do-tempo-em-santo-andre-2027" &&
     currentTime >= START && currentTime < END && eventTime >= currentTime;
 }
