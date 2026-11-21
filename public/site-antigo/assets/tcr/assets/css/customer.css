@@ -1,0 +1,338 @@
+/*********************************************************************
+CUSTOMERS
+*********************************************************************/
+.box-customer {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    background: var(--box-color);
+    transition: .3s all ease;
+    overflow: hidden;
+}
+
+.customer-sample {
+    display: inline-block;
+    overflow: hidden;
+    text-align: center;
+}
+
+.customer-sample .customer-figure {
+    display: inline-block;
+    border-radius: 50%;
+    border: 10px solid var(--box-figure-border-color);
+    background-color: var(--box-figure-border-color);
+}
+
+.customer-sample .customer-figure > a {
+    background-color: unset;
+    text-decoration: none;
+    position: relative;
+    display: block;
+    list-style: none;
+    width: 120px;
+    height: 120px;
+    border: 0;
+    text-align: center;
+    overflow: hidden;
+    border-radius: 50%;
+    transition: all 1s ease;
+    -o-transition: all 1s ease;
+    -ms-transition: all 1s ease;
+    -moz-transition: all 1s ease;
+    -webkit-transition: all 1s ease;
+}
+
+.customer-sample .customer-figure figure{
+    background: none;
+    position: relative;
+    display: block;
+    padding: 0;
+    border: 0;
+    margin: -1px 0 0;
+    overflow: hidden;
+    text-decoration: none;
+    max-width: 100%;
+    min-height: 100%;
+}
+
+.customer-sample .customer-figure figure img {
+    max-width: 100%;
+    min-height: 100%;
+    border: 0;
+}
+
+.customer-sample .customer-caption {
+    padding: 16px;
+}
+
+.customer-sample .customer-title {
+    font-size: 14px;
+}
+
+.customer-sample .customer-title a {
+    transition: .3s all ease;
+    color: var(--main-link-cross);
+}
+
+.customer-sample .customer-title a:hover {
+    color: var(--main-link-hover);
+}
+
+.customer-sample .customer-description {
+    line-height: 1.5;
+    color: var(--global-palette3);
+}
+
+.customer-sample .customer-text {
+    line-height: 1.5;
+    color: var(--global-palette6);
+}
+
+/********************************************************************/
+
+.customer-quote {
+    display: inline-block;
+    margin-left: 32px;
+    border-radius: 8px;
+    box-shadow: 0 5px 10px 0 rgba(0,0,0,0.8);
+    overflow: hidden;
+}
+
+.customer-quote .customer-figure {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    display: inline-block;
+    border-radius: 50%;
+    box-shadow: 0 5px 23px 0 rgba(0, 0, 0, 0.4);
+    will-change: transform;
+    border: 6px solid var(--box-figure-border-color);
+    background-color: var(--box-figure-border-color);
+}
+
+.customer-quote .customer-figure > a {
+    background-color: unset;
+    text-decoration: none;
+    position: relative;
+    display: block;
+    list-style: none;
+    width: 80px;
+    height: 80px;
+    border: 0;
+    text-align: center;
+    overflow: hidden;
+    border-radius: 50%;
+    transition: all 1s ease;
+    -o-transition: all 1s ease;
+    -ms-transition: all 1s ease;
+    -moz-transition: all 1s ease;
+    -webkit-transition: all 1s ease;
+}
+
+.customer-quote .customer-figure figure{
+    background: none;
+    position: relative;
+    display: block;
+    padding: 0;
+    border: 0;
+    margin: -1px 0 0;
+    overflow: hidden;
+    text-decoration: none;
+    max-width: 100%;
+    min-height: 100%;
+}
+
+.customer-quote .customer-figure figure img {
+    max-width: 100%;
+    min-height: 100%;
+    border: 0;
+}
+
+.customer-quote .customer-caption {
+    padding: 16px 16px 16px 56px;
+    background-color: var(--box-figure-border-color);
+}
+
+.customer-quote .customer-title {
+    font-size: 14px;
+}
+
+.customer-quote .customer-title a {
+    transition: .3s all ease;
+    color: var(--main-link);
+}
+
+.customer-quote .customer-title a:hover {
+    color: var(--main-link-hover);
+}
+
+.customer-quote .customer-description {
+    line-height: 1.5;
+    color: var(--global-palette3);
+}
+
+.customer-quote .customer-text {
+    line-height: 1.5;
+    color: var(--global-palette6);
+}
+
+/********************************************************************/
+
+.customer-big {
+    display: inline-block;
+    overflow: hidden;
+}
+
+.customer-big .customer-figure {
+    display: inline-block;
+    border-radius: 50%;
+    box-shadow: 0 5px 10px 0 rgba(0,0,0,0.8);
+    background-color: var(--box-figure-border-color);
+}
+
+.customer-big .customer-figure > a {
+    background-color: unset;
+    text-decoration: none;
+    position: relative;
+    display: block;
+    list-style: none;
+    width: 200px;
+    height: 200px;
+    border: 0;
+    text-align: center;
+    overflow: hidden;
+    border-radius: 50%;
+    transition: all 1s ease;
+    -o-transition: all 1s ease;
+    -ms-transition: all 1s ease;
+    -moz-transition: all 1s ease;
+    -webkit-transition: all 1s ease;
+}
+
+.customer-big .customer-figure figure{
+    background: none;
+    position: relative;
+    display: block;
+    padding: 0;
+    border: 0;
+    margin: -1px 0 0;
+    overflow: hidden;
+    text-decoration: none;
+    max-width: 100%;
+    min-height: 100%;
+}
+
+.customer-big .customer-figure figure img {
+    max-width: 100%;
+    min-height: 100%;
+    border: 0;
+}
+
+.customer-big .customer-caption {
+    padding: 16px;
+}
+
+.customer-big .customer-title {
+    font-size: 14px;
+}
+
+.customer-big .customer-title a {
+    transition: .3s all ease;
+    color: var(--main-link);
+}
+
+.customer-big .customer-title a:hover {
+    color: var(--main-link-hover);
+}
+
+.customer-big .customer-description {
+    line-height: 1.5;
+    color: var(--global-palette3);
+}
+
+.customer-big .customer-text {
+    line-height: 1.5;
+    color: var(--global-palette6);
+}
+/********************************************************************/
+
+.customer-icon {
+    display: inline-block;
+    overflow: hidden;
+    text-align: center;
+}
+
+.customer-icon .customer-figure {
+    display: inline-block;
+    border-radius: 50%;
+    background-color: transparent;
+}
+
+.customer-icon .customer-figure > a {
+    background-color: unset;
+    text-decoration: none;
+    position: relative;
+    display: block;
+    list-style: none;
+    min-width: 32px;
+    min-height: 32px;
+    border: 0;
+    text-align: center;
+    overflow: hidden;
+    transition: all 1s ease;
+    -o-transition: all 1s ease;
+    -ms-transition: all 1s ease;
+    -moz-transition: all 1s ease;
+    -webkit-transition: all 1s ease;
+}
+
+.customer-icon .customer-figure > a.round {
+    border-radius: 50%;
+}
+
+.customer-icon .customer-figure figure{
+    background: none;
+    position: relative;
+    display: block;
+    padding: 0;
+    border: 0;
+    margin: -1px 0 0;
+    overflow: hidden;
+    text-decoration: none;
+    max-width: 100%;
+    min-height: 100%;
+}
+
+.customer-icon .customer-figure figure img {
+    max-width: 100%;
+    min-height: 100%;
+    border: 0;
+}
+
+.customer-icon .customer-caption {
+    padding: 16px;
+}
+
+.customer-icon .customer-title {
+    font-size: 14px;
+}
+
+.customer-icon .customer-title a {
+    transition: .3s all ease;
+    color: var(--main-link) !important;
+}
+
+.customer-icon .customer-title a:hover {
+    color: var(--main-link-hover) !important;
+}
+
+.customer-icon .customer-description {
+    line-height: 1.5;
+    color: var(--global-palette3);
+}
+
+.customer-icon .customer-text {
+    line-height: 1.5;
+    color: var(--global-palette6);
+}

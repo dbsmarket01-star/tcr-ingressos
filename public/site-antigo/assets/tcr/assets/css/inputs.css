@@ -1,0 +1,723 @@
+/* INPUT STYLES */
+button, input, optgroup, select, textarea{
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    -webkit-box-sizing:border-box;
+    -moz-box-sizing:border-box;
+    box-sizing:border-box;
+}
+button{
+    overflow:visible;
+}
+button,select{
+    text-transform:none;
+}
+button,html input[type=button],input[type=reset],input[type=submit]{
+    -webkit-appearance:button;
+    cursor:pointer;
+}
+button[disabled],html input[disabled]{
+    cursor:default;
+}
+button::-moz-focus-inner,input::-moz-focus-inner{
+    padding:0;
+    border:0;
+}
+.cke_chrome{
+    border-radius: 5px;
+    border-width: thin;
+}
+
+input{
+    line-height:normal;
+}
+input[type=checkbox],input[type=radio]{
+    -webkit-box-sizing:border-box;
+    -moz-box-sizing:border-box;
+    box-sizing:border-box;
+    padding:0;
+}
+input[type=checkbox]~label,input[type=radio]~label, dt, label, a.icon, div.resize{
+    -ms-user-select: none;
+    user-select: none;
+}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+}
+
+input[type=month]::-webkit-calendar-picker-indicator,
+input[type=week]::-webkit-calendar-picker-indicator,
+input[type*=date]::-webkit-calendar-picker-indicator,
+input[type*=time]::-webkit-calendar-picker-indicator{
+    margin-left: 0;
+    cursor: pointer;
+}
+
+input[type=search]{
+    -webkit-box-sizing:content-box;
+    -moz-box-sizing:content-box;
+    box-sizing:content-box;
+    -webkit-appearance:textfield;
+}
+input[type=search]::-webkit-search-cancel-button,
+input[type=search]::-webkit-search-decoration{
+    -webkit-appearance:none;
+}
+legend{
+    padding:0;
+    border:0;
+}
+textarea{
+    overflow:auto;    min-height: 128px;
+}
+optgroup{
+    font-weight:600;
+}
+table{
+    border-spacing:0;
+    border-collapse:collapse;
+}
+td, th{
+    padding:0;
+}
+
+input[type="checkbox"],
+input[type="radio"]{
+    position: absolute;
+    visibility: hidden;
+}
+
+option{
+    display: inline-block;
+    font-size: 14px;
+    color: black;
+}
+
+hr {
+    box-sizing: content-box;
+    height: 1px;
+    overflow: visible;
+    background-color: #777777;
+    width: 100%;
+}
+.panel-container-hr {
+    width: calc(100% - 8px);
+    margin-left: 4px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+body, *, html, form, div {
+    caret-color: transparent !important;
+    caret: unset !important;
+}
+
+input, textarea {
+    caret-color: black !important;
+    caret: black !important;
+}
+
+*[class*='icon'] {
+    position: relative;
+    color: var(--darker);
+}
+*[class*='icon'][href]:hover {
+    color: var(--main-link-hover);
+}
+
+*[class*='icon'] > i {
+    padding: .3rem;
+}
+
+/****************************************************************************************
+ESTILOS DOS INPUTS -> text, password, file, textarea, select
+****************************************************************************************/
+input, textarea, select, .select2-selection{
+    font-size: 16px;
+    outline: 1px transparent !important;
+    border-width: 1px;
+    border-style: solid;
+    padding: 5px 8px 5px 8px;
+    height: 2.4rem;
+    border-radius: 5px;
+    -ms-border-radius: 5px;
+    box-sizing: border-box !important;
+    line-height: 18px;
+}
+
+input[type=text],
+input[type=date],
+input[type=time],
+input[type=datetime-local],
+input[type=month],
+input[type=week],
+input[type=password],
+input[type=file],
+input[type=number],
+textarea,
+select,
+.now-select{
+    width: 100%;
+}
+
+input[type=file]{
+    padding: 10px 8px 5px 8px;
+}
+input[small], textarea[small], select[small], .select2-selection[small]{
+    height: 2rem;
+    font-size: 12px;
+}
+
+input[type=date],
+input[type=time],
+input[type=datetime-local],
+input[type=month],
+input[type=week]{
+    padding-right: 4px;
+}
+
+input[type=text] ~ label,
+input[type=date] ~ label,
+input[type=time] ~ label,
+input[type=datetime-local] ~ label,
+input[type=month] ~ label,
+input[type=week] ~ label,
+input[type=password] ~ label,
+input[type=file] ~ label,
+input[type=number] ~ label,
+textarea ~ label,
+select ~ label,
+.now-select ~ label{
+    position: absolute;
+    top: 0;
+    left: 2px;
+    border-width: 1px;
+    border-style: solid;
+    max-width: calc(100% - 34px);
+    font-size: 9px;
+    vertical-align: middle;
+    font-weight: 500;
+    padding:  1px 6px 2px 6px;
+    outline: none;
+    margin-left: 8px;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    line-height: 9px;
+    border-radius: 6px;
+    text-align: left !important;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis !important;
+    display: block;
+}
+select ~ label,
+.now-select ~ label {
+    padding-right: 16px;
+}
+select ~ label > a,
+.now-select ~ label > a {
+    color: #FFFFFF;
+    text-decoration: none;
+    width: 12px;
+    height: 12px;
+    display: block;
+    float: right;
+    border-width: 1px;
+    border-style: solid;
+    margin-left: 5px;
+    margin-top: 1px;
+    position: absolute;
+    top: calc(50% - 7px);
+    right: 0;
+}
+
+select ~ label > a::before,
+.now-select ~ label > a::before{
+    position: absolute;
+    top: calc(50% - 5px);
+    right: calc(50% - 1px);
+    width: 2px;
+    height: 8px;
+    display: block;
+    background-color: #FFFFFF;
+    content: '';
+}
+
+select ~ label > a::after,
+.now-select ~ label > a::after{
+    position: absolute;
+    top: calc(50% - 2px);
+    right: calc(50% - 4px);
+    width: 8px;
+    height: 2px;
+    display: block;
+    background-color: #FFFFFF;
+    content: '';
+}
+
+input[type="file"]:focus{
+    outline: 5px auto -webkit-focus-ring-color;
+    outline-offset: -2px;
+}
+
+textarea{
+    resize: vertical;
+}
+
+textarea.long-text{
+    height: 120px;
+}
+
+input[data-config*='@money'],
+input[data-config*='@reais'],
+input[data-config*='@numbe'],
+input[data-config*='@time'],
+input[data-config*='@total'],
+input[data-config*='@somas'],
+input[data-config*='@fuel']{
+    text-align: right !important;
+}
+input[onClick]{
+    cursor: pointer;
+}
+input[type-total]{
+    font-size: 45px;
+    height: 86px;
+    padding: 16px 8px;
+}
+
+/****************************************************************************************
+ESTILOS DOS INPUTS -> submit, reset and button
+****************************************************************************************/
+input[type="submit"],
+input[type="reset"],
+input[type="cancel"],
+input[type="button"] {
+    font-size: 14px;
+    vertical-align: middle;
+    font-weight: normal;
+    text-transform:uppercase;
+    outline: none;
+    height: 2.4rem;
+    position: relative;
+    display: inline-block;
+    padding: 3px 12px 1px 12px;
+    border-width: 0;
+    border-style: solid;
+    cursor: pointer;
+    overflow: hidden;
+    text-decoration: none;
+    border-radius: 5px;
+    -ms-border-radius: 5px;
+    transition: all 0.3s;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    -ms-user-select: none;
+}
+
+input[type="submit"][small],
+input[type="button"][small],
+input[type="reset"][small],
+input[type="cancel"][small]{
+    height: 2rem;
+    font-size: 12px;
+}
+
+input.form-button{
+    position: relative;
+    display: inline-block;
+    height: 2.4rem;
+    width: 2.4rem;
+    padding: 6px;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+a.form-button{
+    position: relative;
+    display: inline-block;
+    padding: 2px;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 5px;
+    -ms-border-radius: 5px;
+}
+input[type="submit"].buscar{
+    background-image: url(/site-antigo/assets/tcr/assets/icons/007w.svg);
+    height: 2rem;
+    width: 2rem;
+}
+a.form-button.frame{
+    height: 38px;
+    width: 38px;
+}
+
+/****************************************************************************************
+ESTILOS DOS INPUTS -> Radio and checkbox
+****************************************************************************************/
+
+input[type="checkbox"] ~ label,
+input[type="radio"] ~ label {
+    font-size: 14px;
+    vertical-align: middle;
+    font-weight: normal;
+    outline: none;
+    position: relative;
+    display: flex !important;
+    cursor: pointer;
+    border-radius: 5px;
+    -ms-border-radius: 5px;
+    width: 100%;
+    height: 2.4rem;
+    background-image: none;
+    box-sizing: border-box !important;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis !important;
+    line-height: 18px;
+    padding: 10px 8px 6px 6px;
+    border-width: 1px;
+    border-style: solid;
+}
+input[type="checkbox"][small] ~ label,
+input[type="radio"][small] ~ label {
+    height: 2rem;
+    font-size: 12px;
+    line-height: 12px;
+    padding-top: 8px;
+}
+
+input[check-imput] ~ label, input[check-imput][small] ~ label,
+input[radio-imput] ~ label, input[radio-imput][small] ~ label {
+    padding-left: 28px;
+}
+input[check-image] ~ label, input[check-image][small] ~ label,
+input[radio-image] ~ label, input[radio-image][small] ~ label {
+    padding-left: 38px;
+}
+input[check-icons] ~ label, input[check-icons][small] ~ label,
+input[view-icons] ~ label, input[view-icons][small] ~ label,
+input[radio-icons] ~ label, input[radio-icons][small] ~ label {
+    padding-left: 38px;
+}
+
+input[check-phone] ~ label {
+    font-family: var(--fa-style-family, "Font Awesome 6 Free");
+    font-weight: var(--fa-style, 900);
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    display: var(--fa-display, inline-block);
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    font-size: 1.2rem;
+}
+
+input[check-phone]:not(:checked) ~ label::before {
+    content: "\f0e0"; /*Envelope*/
+}
+input[check-phone]:checked ~ label::before {
+    content: "\f095"; /*Telefone*/
+}
+
+/*VISUAL DESABILITADO DA INPUT*/
+input[check-imput] ~ label::before,
+input[radio-imput] ~ label::before{
+    position: absolute;
+    display: block;
+    border-width: 1px;
+    border-style: solid;
+    content: '';
+    border-radius: 8px;
+}
+
+input[radio-imput] ~ label::before{
+    height: 14px;
+    width: 14px;
+    left: 7px;
+    top: calc(50% - 7px);
+}
+
+input[radio-imput]:checked ~ label::after{
+    position: absolute;
+    display: block;
+    height: 8px;
+    width: 8px;
+    top: calc(50% - 4px);
+    left: 10px;
+    content: '';
+    border-radius: 50%;
+}
+
+input[check-imput] ~ label::before{
+    height: 20px;
+    width: 10px;
+    left: 6px;
+    top: calc(50% - 11px);
+}
+
+input[check-imput]:checked ~ label::after{
+    position: absolute;
+    display: block;
+    height: 12px;
+    width: 12px;
+    top: calc(50% - 11px);
+    left: 5px;
+    border-width: 1px;
+    border-style: solid;
+    content: '';
+    border-radius: 50%;
+}
+
+input[check-imput]:not(:checked) ~ label::after{
+    position: absolute;
+    display: block;
+    height: 12px;
+    width: 12px;
+    top: calc(50% - 3px);
+    left: 5px;
+    border-width: 1px;
+    border-style: solid;
+    content: '';
+    border-radius: 50%;
+}
+
+input[type="checkbox"][disabled] ~ label,
+input[type="radio"][disabled] ~ label {
+    cursor: default !important;
+}
+
+/*VISUAL DA INPUT*/
+
+input[type="checkbox"][check-clean] ~ label,
+input[type="radio"][radio-clean] ~ label,
+input[type="checkbox"][radio-clean] ~ label {
+    width: 34px;
+    height: 34px;
+    box-sizing: border-box !important;
+    padding: 0;
+    border: 0;
+    background: none !important;
+    color: unset;
+}
+
+input[radio-clean] ~ label::before {
+    position: absolute;
+    display: block;
+    height: 18px;
+    width: 18px;
+    top: calc(50% - 10px);
+    left: calc(50% - 10px);
+    border-width: 1px;
+    border-style: solid;
+    content: '';
+    border-radius: 50%;
+}
+
+input[radio-clean]:checked ~ label::after {
+    position: absolute;
+    display: block;
+    height: 12px;
+    width: 12px;
+    top: calc(50% - 7px);
+    left: calc(50% - 7px);
+    content: '';
+    border-radius: 50%;
+}
+
+input[check-clean]:checked ~ label::before {
+    position: absolute;
+    display: block;
+    height: 24px;
+    width: 14px;
+    top: calc(50% - 13px);
+    left: calc(50% - 7px);
+    border-width: 1px;
+    border-style: solid;
+    content: '';
+    border-radius: 8px;
+}
+
+input[check-clean]:not(:checked) ~ label::before {
+    position: absolute;
+    display: block;
+    height: 24px;
+    width: 14px;
+    top: calc(50% - 13px);
+    left: calc(50% - 7px);
+    border-width: 1px;
+    border-style: solid;
+    content: '';
+    border-radius: 8px;
+}
+
+input[check-clean]:checked ~ label::after {
+    position: absolute;
+    display: block;
+    height: 18px;
+    width: 18px;
+    top: 0;
+    left: calc(50% - 9px);
+    border-width: 1px;
+    border-style: solid;
+    content: '';
+    border-radius: 50%;
+}
+
+input[check-clean]:not(:checked) ~ label::after {
+    position: absolute;
+    display: block;
+    height: 18px;
+    width: 18px;
+    bottom: 0;
+    left: calc(50% - 9px);
+    border-width: 1px;
+    border-style: solid;
+    content: '';
+    border-radius: 50%;
+}
+
+input[check-clean][disabled]:checked ~ label:before,
+input[radio-clean][disabled]:checked ~ label:before{
+    background-image: none;
+    background-color: #5C5C5C;
+}
+input[check-clean][disabled]:not(:checked) ~ label:before,
+input[radio-clean][disabled]:not(:checked) ~ label:before{
+    background-image: none;
+    background-color: #5C5C5C;
+}
+
+input[check-image] ~ label:before,
+input[radio-image] ~ label:before{
+    position: absolute;
+    display: block;
+    left: 0.25em;
+    height: 32px;
+    width: 48px;
+    top: 50%;
+    margin-top: -16px;
+    border-radius: 3px;
+    background-size: 48px 32px;
+    background-color: unset;
+    background-repeat: no-repeat;
+    background-position: left center;
+    content: '';
+}
+
+input[check-image] ~ label{
+    padding-left: 56px;
+}
+
+input[radio-image] ~ label{
+    padding-left: 56px;
+}
+
+input[check-icons] ~ label:before,
+input[view-icons] ~ label:before,
+input[radio-icons] ~ label:before{
+    position: absolute;
+    display: block;
+    left: 0.25em;
+    height: 32px;
+    width: 32px;
+    top: 50%;
+    margin-top: -16px;
+    border-radius: 50%;
+    background-size: 32px;
+    background-repeat: no-repeat;
+    background-position: center center;
+    content: '';
+}
+input[check-icons][small] ~ label:before,
+input[view-icons][small] ~ label:before,
+input[radio-icons][small] ~ label:before{
+    position: absolute;
+    display: block;
+    left: 0.25em;
+    height: 24px;
+    width: 24px;
+    top: 50%;
+    margin-top: -12px;
+    border-radius: 50%;
+    background-size: 24px;
+    background-repeat: no-repeat;
+    background-position: center center;
+    content: '';
+}
+input[check-icons] ~ label,
+input[view-icons] ~ label{
+    padding-left: 40px;
+}
+input[radio-icons] ~ label{
+    padding-left: 40px;
+}
+
+
+/* botton style */
+.button {
+    position: relative;
+    text-decoration: none;
+    background-color: transparent;
+    -webkit-text-decoration-skip: objects;
+}
+
+.button-block {
+    display: block;
+    width: 100%;
+}
+
+.button-framed {
+    display: inline-block;
+    min-width: 150px;
+    padding: 9px 20px;
+    font-size: 12px;
+    line-height: 21px;
+    font-weight: 900;
+    text-align: center;
+    border-radius: 30px;
+    vertical-align: middle;
+    touch-action: manipulation;
+    cursor: pointer;
+    background-image: none;
+    border: 1px solid transparent;
+
+    text-transform: uppercase;
+    transition: .3s ease-out;
+    margin: 1rem;
+}
+
+/* return link styles */
+.return-link {
+    position: relative;
+}
+.return-link > a, .return-link > span, .return-link > em{
+    color: var(--global-palette3);
+    font-style: normal;
+    padding: 4px;
+    user-select: none;
+}
+.return-link > em:before{
+    font-size: 11px;
+    content: '❯';
+}
+.return-link > a[href]:hover{
+    color: var(--global-palette2);
+    font-style: normal;
+    padding: 4px;
+}
+.return-link > span{
+    color: var(--global-palette1);
+    font-style: normal;
+    padding: 4px;
+}
+
+
+
+
+
+
+
+
+

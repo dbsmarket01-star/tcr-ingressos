@@ -1,0 +1,494 @@
+.icon {
+    position: relative;
+    display: list-item;
+    list-style: none;
+    justify-content: center;
+    align-items: center;
+    outline: none;
+    border: 0;
+    margin: 0;
+    z-index: 0;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-color: transparent;
+    background-image: none !important;
+}
+
+.icon-svg {
+    display: flex;
+    outline: none;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-color: transparent;
+    background-image: none !important;
+}
+
+.icon-svg:before {
+    position: absolute;
+    background-position: center center;
+    background-repeat: no-repeat;
+    content: '';
+}
+
+.icon:before{
+    position: absolute;
+    display: block;
+    background-position: center center;
+    background-repeat: no-repeat;
+    content: '';
+}
+
+.icon > span{
+    position: relative;
+    display: block;
+    text-align: center;
+    vertical-align: middle;
+    padding: 0.5em 0;
+    box-sizing: content-box;
+    -webkit-appearance: textfield;
+}
+/*
+i.icon{
+   position: absolute;
+	top: 2px;
+	right: 0;
+}*/
+
+.icon[href], .icon[disabled], .icon[onClick]{ opacity: .7; }
+.icon[href]:hover, .icon[onClick]:hover { opacity: 1; cursor: pointer; }
+.icon.disabled{ opacity: .5; }
+.icon.disabled:hover{ opacity: .5; cursor: default; }
+.icon.no-hover{ opacity: 1; }
+
+.icon-svg.icon-1x { width: 1rem; height: 1rem; }
+.icon-svg.icon-2x { width: 2rem; height: 2rem; }
+.icon-svg.icon-3x { width: 3rem; height: 3rem; }
+.icon-svg.icon-4x { width: 4rem; height: 4rem; }
+
+.icon-1x:before{ width: 1rem; height: 1rem; background-size: 1rem; }
+.icon-2x:before{ width: 2rem; height: 2rem; background-size: 2rem; }
+.icon-3x:before{ width: 3rem; height: 3rem; background-size: 3rem; }
+.icon-4x:before{ width: 4rem; height: 4rem; background-size: 4rem; }
+.icon-tool:before { width: 1.6rem; height: 1.6rem; background-size: 1.6rem; }
+
+.icon-cr01, .icon-cr01:before{ filter: invert(13%) sepia(96%) saturate(7500%) hue-rotate(358deg) brightness(100%) contrast(118%); }
+.icon-cr02, .icon-cr02:before{ filter: invert(49%) sepia(65%) saturate(3385%) hue-rotate(90deg) brightness(60%) contrast(114%); }
+.icon-cr03, .icon-cr03:before{ filter: invert(38%) sepia(100%) saturate(6386%) hue-rotate(218deg) brightness(106%) contrast(111%); }
+.icon-cr04, .icon-cr04:before{ filter: invert(85%) sepia(85%) saturate(5761%) hue-rotate(102deg) brightness(101%) contrast(105%); }
+.icon-cr05, .icon-cr05:before{ filter: invert(18%) sepia(95%) saturate(3900%) hue-rotate(294deg) brightness(114%) contrast(126%); }
+.icon-cr06, .icon-cr06:before{ filter: invert(93%) sepia(29%) saturate(2826%) hue-rotate(359deg) brightness(107%) contrast(104%); }
+.icon-cr07, .icon-cr07:before{ filter: invert(59%) sepia(39%) saturate(4002%) hue-rotate(360deg) brightness(102%) contrast(101%); }
+.icon-cr08, .icon-cr08:before{ filter: invert(14%) sepia(94%) saturate(7436%) hue-rotate(322deg) brightness(103%) contrast(101%); }
+
+.svg-invert { filter: invert(72%); }
+.svg-hue { filter: hue-rotate(0deg); }
+
+.svg-white-blue:before { filter: hue-rotate(37deg) brightness(150%) contrast(150%) invert();}
+.svg-white-red:before { filter: hue-rotate(164deg) brightness(150%) contrast(150%) invert(); }
+.svg-white-orange:before { filter: hue-rotate(204deg) brightness(150%) contrast(150%) invert();}
+.svg-white-yellow:before { filter: hue-rotate(224deg) brightness(100%) contrast(185%) invert();}
+.svg-white-green:before { filter: hue-rotate(257deg) brightness(150%) contrast(150%) invert();}
+.svg-white:before { filter: brightness(0) contrast(100) invert() sepia(1) hue-rotate(145deg);}
+
+.svg-blue:before { filter: invert(38%) sepia(100%) saturate(6386%) hue-rotate(218deg) brightness(106%) contrast(111%); }
+/*.svg-blue:before { filter: invert(15%) sepia(100%) saturate(2000%) hue-rotate(220deg) brightness(200%) contrast(150%); }*/
+.svg-red:before { filter: invert(13%) sepia(96%) saturate(7500%) hue-rotate(358deg) brightness(100%) contrast(118%); }
+/*.svg-red:before { filter: invert(15%) sepia(100%) saturate(2000%) hue-rotate(355deg) brightness(150%) contrast(165%); }*/
+.svg-green:before { filter: invert(49%) sepia(65%) saturate(3385%) hue-rotate(90deg) brightness(95%) contrast(114%); }
+/*.svg-green:before { filter: invert(15%) sepia(100%) saturate(2000%) hue-rotate(130deg) brightness(165%) contrast(95%); }*/
+/*.svg-yellow:before { filter: invert(15%) sepia(100%) saturate(1000%) hue-rotate(0deg) brightness(375%) contrast(400%); }*/
+/*.svg-yellow:before { filter: invert(56%) sepia(74%) saturate(1448%) hue-rotate(19deg) brightness(102%) contrast(101%); }*/
+.svg-yellow:before { filter: invert(48%) sepia(80%) saturate(3000%) hue-rotate(29deg) brightness(130%) contrast(140%); }
+.svg-orange:before { filter: invert(48%) sepia(80%) saturate(3000%) hue-rotate(9deg) brightness(110%) contrast(140%); }
+.svg-gray:before { filter: invert(70%) sepia(40%) saturate(18%) hue-rotate(256deg) brightness(180%) contrast(53%); }
+.svg-gray50:before { filter: invert(82%) sepia(12%) saturate(188%) hue-rotate(169deg) brightness(87%) contrast(90%); }
+
+.svg-pink:before{ filter: invert(18%) sepia(95%) saturate(3900%) hue-rotate(294deg) brightness(114%) contrast(126%); }
+
+.svg-black-blue:before { filter: hue-rotate(190deg) brightness(100%) contrast(100%);}
+.svg-black-red:before { filter: hue-rotate(355deg) brightness(75%) contrast(200%);}
+.svg-black-orange:before { filter: hue-rotate(0) brightness(100%) contrast(100%);}
+.svg-black-yellow:before { filter: hue-rotate(0) brightness(300%) contrast(200%);}
+.svg-black-green:before { filter: hue-rotate(110deg) brightness(100%) contrast(100%);}
+.svg-black:before { filter: brightness(0) contrast(200%) sepia(100%);}
+
+.more-dot.svg-black{ filter: brightness(0) contrast(200%) sepia(100%);}
+
+.icon-round:before{
+    border-radius: 50%;
+}
+
+.icon-menu-round{
+    border-radius: 5px;
+}
+
+
+.bee-tool-pencil, .bee-tool-pencil:before, input[type="radio"] ~ label.bee-tool-pencil:before, input[type="checkbox"] ~ label.bee-tool-pencil:before { background-image: url(https://phsis.com.br/assets/tool/pencil.svg); }
+.bee-tool-trash, .bee-tool-trash:before, input[type="radio"] ~ label.bee-tool-trash:before, input[type="checkbox"] ~ label.bee-tool-trash:before { background-image: url(https://phsis.com.br/assets/tool/trash.svg); }
+.bee-tool-eye, .bee-tool-eye:before, input[type="radio"] ~ label.bee-tool-eye:before, input[type="checkbox"] ~ label.bee-tool-eye:before { background-image: url(https://phsis.com.br/assets/tool/eye.svg); }
+.bee-tool-eye-slash, .bee-tool-eye-slash:before, input[type="radio"] ~ label.bee-tool-eye-slash:before, input[type="checkbox"] ~ label.bee-tool-eye-slash:before { background-image: url(https://phsis.com.br/assets/tool/eye-slash.svg); }
+.bee-tool-check, .bee-tool-check:before, input[type="radio"] ~ label.bee-tool-check:before, input[type="checkbox"] ~ label.bee-tool-check:before { background-image: url(https://phsis.com.br/assets/tool/check.svg); }
+.bee-tool-check-square, .bee-tool-check-square:before, input[type="radio"] ~ label.bee-tool-check-square:before, input[type="check-squarebox"] ~ label.bee-tool-check-square:before { background-image: url(https://phsis.com.br/assets/tool/check-square.svg); }
+.bee-tool-check-circle, .bee-tool-check-circle:before, input[type="radio"] ~ label.bee-tool-check-circle:before, input[type="check-circlebox"] ~ label.bee-tool-check-circle:before { background-image: url(https://phsis.com.br/assets/tool/check-circle.svg); }
+.bee-tool-xmark, .bee-tool-xmark:before, input[type="radio"] ~ label.bee-tool-xmark:before, input[type="checkbox"] ~ label.bee-tool-xmark:before { background-image: url(https://phsis.com.br/assets/tool/xmark.svg); }
+.bee-tool-xmark-square, .bee-tool-xmark-square:before, input[type="radio"] ~ label.bee-tool-xmark-square:before, input[type="checkbox"] ~ label.bee-tool-xmark-square:before { background-image: url(https://phsis.com.br/assets/tool/xmark-square.svg); }
+.bee-tool-xmark-circle, .bee-tool-xmark-circle:before, input[type="radio"] ~ label.bee-tool-xmark-circle:before, input[type="checkbox"] ~ label.bee-tool-xmark-circle:before { background-image: url(https://phsis.com.br/assets/tool/xmark-circle.svg); }
+
+.bee-icon-address, .bee-icon-address:before, input[type="radio"] ~ label.bee-icon-address:before, input[type="checkbox"] ~ label.bee-icon-address:before { background-image: url(https://phsis.com.br/assets/icon/address.svg); }
+.bee-icon-airplane-boarding, .bee-icon-airplane-boarding:before, input[type="radio"] ~ label.bee-icon-airplane-boarding:before, input[type="checkbox"] ~ label.bee-icon-airplane-boarding:before { background-image: url(https://phsis.com.br/assets/icon/airplane-boarding.svg); }
+.bee-icon-airplane-landing, .bee-icon-airplane-landing:before, input[type="radio"] ~ label.bee-icon-airplane-landing:before, input[type="checkbox"] ~ label.bee-icon-airplane-landing:before { background-image: url(https://phsis.com.br/assets/icon/airplane-landing.svg); }
+.bee-icon-airplane, .bee-icon-airplane:before, input[type="radio"] ~ label.bee-icon-airplane:before, input[type="checkbox"] ~ label.bee-icon-airplane:before { background-image: url(https://phsis.com.br/assets/icon/airplane.svg); }
+.bee-icon-android, .bee-icon-android:before, input[type="radio"] ~ label.bee-icon-android:before, input[type="checkbox"] ~ label.bee-icon-android:before { background-image: url(https://phsis.com.br/assets/icon/android.svg); }
+.bee-icon-arrow-down, .bee-icon-arrow-down:before, input[type="radio"] ~ label.bee-icon-arrow-down:before, input[type="checkbox"] ~ label.bee-icon-arrow-down:before { background-image: url(https://phsis.com.br/assets/icon/arrow-down.svg); }
+.bee-icon-arrow-up, .bee-icon-arrow-up:before, input[type="radio"] ~ label.bee-icon-arrow-up:before, input[type="checkbox"] ~ label.bee-icon-arrow-up:before { background-image: url(https://phsis.com.br/assets/icon/arrow-up.svg); }
+.bee-icon-atm-deposit, .bee-icon-atm-deposit:before, input[type="radio"] ~ label.bee-icon-atm-deposit:before, input[type="checkbox"] ~ label.bee-icon-atm-deposit:before { background-image: url(https://phsis.com.br/assets/icon/atm-deposit.svg); }
+.bee-icon-atm-sacking, .bee-icon-atm-sacking:before, input[type="radio"] ~ label.bee-icon-atm-sacking:before, input[type="checkbox"] ~ label.bee-icon-atm-sacking:before { background-image: url(https://phsis.com.br/assets/icon/atm-sacking.svg); }
+.bee-icon-bag, .bee-icon-bag:before, input[type="radio"] ~ label.bee-icon-bag:before, input[type="checkbox"] ~ label.bee-icon-bag:before { background-image: url(https://phsis.com.br/assets/icon/bag.svg); }
+.bee-icon-bags, .bee-icon-bags:before, input[type="radio"] ~ label.bee-icon-bags:before, input[type="checkbox"] ~ label.bee-icon-bags:before { background-image: url(https://phsis.com.br/assets/icon/bags.svg); }
+.bee-icon-balance, .bee-icon-balance:before, input[type="radio"] ~ label.bee-icon-balance:before, input[type="checkbox"] ~ label.bee-icon-balance:before { background-image: url(https://phsis.com.br/assets/icon/balance.svg); }
+.bee-icon-bank, .bee-icon-bank:before, input[type="radio"] ~ label.bee-icon-bank:before, input[type="checkbox"] ~ label.bee-icon-bank:before { background-image: url(https://phsis.com.br/assets/icon/bank.svg); }
+.bee-icon-barcode-search, .bee-icon-barcode-search:before, input[type="radio"] ~ label.bee-icon-barcode-search:before, input[type="checkbox"] ~ label.bee-icon-barcode-search:before { background-image: url(https://phsis.com.br/assets/icon/barcode-search.svg); }
+.bee-icon-barcode, .bee-icon-barcode:before, input[type="radio"] ~ label.bee-icon-barcode:before, input[type="checkbox"] ~ label.bee-icon-barcode:before { background-image: url(https://phsis.com.br/assets/icon/barcode.svg); }
+.bee-icon-bed-double, .bee-icon-bed-double:before, input[type="radio"] ~ label.bee-icon-bed-double:before, input[type="checkbox"] ~ label.bee-icon-bed-double:before { background-image: url(https://phsis.com.br/assets/icon/bed-double.svg); }
+.bee-icon-bed-queen, .bee-icon-bed-queen:before, input[type="radio"] ~ label.bee-icon-bed-queen:before, input[type="checkbox"] ~ label.bee-icon-bed-queen:before { background-image: url(https://phsis.com.br/assets/icon/bed-queen.svg); }
+.bee-icon-bed-single-2, .bee-icon-bed-single-2:before, input[type="radio"] ~ label.bee-icon-bed-single-2:before, input[type="checkbox"] ~ label.bee-icon-bed-single-2:before { background-image: url(https://phsis.com.br/assets/icon/bed-single-2.svg); }
+.bee-icon-bed-single-3, .bee-icon-bed-single-3:before, input[type="radio"] ~ label.bee-icon-bed-single-3:before, input[type="checkbox"] ~ label.bee-icon-bed-single-3:before { background-image: url(https://phsis.com.br/assets/icon/bed-single-3.svg); }
+.bee-icon-bed-single-4, .bee-icon-bed-single-4:before, input[type="radio"] ~ label.bee-icon-bed-single-4:before, input[type="checkbox"] ~ label.bee-icon-bed-single-4:before { background-image: url(https://phsis.com.br/assets/icon/bed-single-4.svg); }
+.bee-icon-bed-single-5, .bee-icon-bed-single-5:before, input[type="radio"] ~ label.bee-icon-bed-single-5:before, input[type="checkbox"] ~ label.bee-icon-bed-single-5:before { background-image: url(https://phsis.com.br/assets/icon/bed-single-5.svg); }
+.bee-icon-bed-single, .bee-icon-bed-single:before, input[type="radio"] ~ label.bee-icon-bed-single:before, input[type="checkbox"] ~ label.bee-icon-bed-single:before { background-image: url(https://phsis.com.br/assets/icon/bed-single.svg); }
+.bee-icon-bell, .bee-icon-bell:before, input[type="radio"] ~ label.bee-icon-bell:before, input[type="checkbox"] ~ label.bee-icon-bell:before { background-image: url(https://phsis.com.br/assets/icon/bell.svg); }
+.bee-icon-bucket, .bee-icon-bucket:before, input[type="radio"] ~ label.bee-icon-bucket:before, input[type="checkbox"] ~ label.bee-icon-bucket:before { background-image: url(https://phsis.com.br/assets/icon/bucket.svg); }
+.bee-icon-bus-broken, .bee-icon-bus-broken:before, input[type="radio"] ~ label.bee-icon-bus-broken:before, input[type="checkbox"] ~ label.bee-icon-bus-broken:before { background-image: url(https://phsis.com.br/assets/icon/bus-broken.svg); }
+.bee-icon-bus-check, .bee-icon-bus-check:before, input[type="radio"] ~ label.bee-icon-bus-check:before, input[type="checkbox"] ~ label.bee-icon-bus-check:before { background-image: url(https://phsis.com.br/assets/icon/bus-check.svg); }
+.bee-icon-bus-down, .bee-icon-bus-down:before, input[type="radio"] ~ label.bee-icon-bus-down:before, input[type="checkbox"] ~ label.bee-icon-bus-down:before { background-image: url(https://phsis.com.br/assets/icon/bus-down.svg); }
+.bee-icon-bus-exclamation, .bee-icon-bus-exclamation:before, input[type="radio"] ~ label.bee-icon-bus-exclamation:before, input[type="checkbox"] ~ label.bee-icon-bus-exclamation:before { background-image: url(https://phsis.com.br/assets/icon/bus-exclamation.svg); }
+.bee-icon-bus-fast, .bee-icon-bus-fast:before, input[type="radio"] ~ label.bee-icon-bus-fast:before, input[type="checkbox"] ~ label.bee-icon-bus-fast:before { background-image: url(https://phsis.com.br/assets/icon/bus-fast.svg); }
+.bee-icon-bus-minus, .bee-icon-bus-minus:before, input[type="radio"] ~ label.bee-icon-bus-minus:before, input[type="checkbox"] ~ label.bee-icon-bus-minus:before { background-image: url(https://phsis.com.br/assets/icon/bus-minus.svg); }
+.bee-icon-bus-old, .bee-icon-bus-old:before, input[type="radio"] ~ label.bee-icon-bus-old:before, input[type="checkbox"] ~ label.bee-icon-bus-old:before { background-image: url(https://phsis.com.br/assets/icon/bus-old.svg); }
+.bee-icon-bus-pencil, .bee-icon-bus-pencil:before, input[type="radio"] ~ label.bee-icon-bus-pencil:before, input[type="checkbox"] ~ label.bee-icon-bus-pencil:before { background-image: url(https://phsis.com.br/assets/icon/bus-pencil.svg); }
+.bee-icon-bus-plus, .bee-icon-bus-plus:before, input[type="radio"] ~ label.bee-icon-bus-plus:before, input[type="checkbox"] ~ label.bee-icon-bus-plus:before { background-image: url(https://phsis.com.br/assets/icon/bus-plus.svg); }
+.bee-icon-bus-question, .bee-icon-bus-question:before, input[type="radio"] ~ label.bee-icon-bus-question:before, input[type="checkbox"] ~ label.bee-icon-bus-question:before { background-image: url(https://phsis.com.br/assets/icon/bus-question.svg); }
+.bee-icon-bus-timer, .bee-icon-bus-timer:before, input[type="radio"] ~ label.bee-icon-bus-timer:before, input[type="checkbox"] ~ label.bee-icon-bus-timer:before { background-image: url(https://phsis.com.br/assets/icon/bus-timer.svg); }
+.bee-icon-bus-tool, .bee-icon-bus-tool:before, input[type="radio"] ~ label.bee-icon-bus-tool:before, input[type="checkbox"] ~ label.bee-icon-bus-tool:before { background-image: url(https://phsis.com.br/assets/icon/bus-tool.svg); }
+.bee-icon-bus-trade, .bee-icon-bus-trade:before, input[type="radio"] ~ label.bee-icon-bus-trade:before, input[type="checkbox"] ~ label.bee-icon-bus-trade:before { background-image: url(https://phsis.com.br/assets/icon/bus-trade.svg); }
+.bee-icon-bus-trash, .bee-icon-bus-trash:before, input[type="radio"] ~ label.bee-icon-bus-trash:before, input[type="checkbox"] ~ label.bee-icon-bus-trash:before { background-image: url(https://phsis.com.br/assets/icon/bus-trash.svg); }
+.bee-icon-bus-up, .bee-icon-bus-up:before, input[type="radio"] ~ label.bee-icon-bus-up:before, input[type="checkbox"] ~ label.bee-icon-bus-up:before { background-image: url(https://phsis.com.br/assets/icon/bus-up.svg); }
+.bee-icon-bus-value, .bee-icon-bus-value:before, input[type="radio"] ~ label.bee-icon-bus-value:before, input[type="checkbox"] ~ label.bee-icon-bus-value:before { background-image: url(https://phsis.com.br/assets/icon/bus-value.svg); }
+.bee-icon-bus-xmark, .bee-icon-bus-xmark:before, input[type="radio"] ~ label.bee-icon-bus-xmark:before, input[type="checkbox"] ~ label.bee-icon-bus-xmark:before { background-image: url(https://phsis.com.br/assets/icon/bus-xmark.svg); }
+.bee-icon-bus, .bee-icon-bus:before, input[type="radio"] ~ label.bee-icon-bus:before, input[type="checkbox"] ~ label.bee-icon-bus:before { background-image: url(https://phsis.com.br/assets/icon/bus.svg); }
+.bee-icon-calendar-amount, .bee-icon-calendar-amount:before, input[type="radio"] ~ label.bee-icon-calendar-amount:before, input[type="checkbox"] ~ label.bee-icon-calendar-amount:before { background-image: url(https://phsis.com.br/assets/icon/calendar-amount.svg); }
+.bee-icon-calendar-check, .bee-icon-calendar-check:before, input[type="radio"] ~ label.bee-icon-calendar-check:before, input[type="checkbox"] ~ label.bee-icon-calendar-check:before { background-image: url(https://phsis.com.br/assets/icon/calendar-check.svg); }
+.bee-icon-calendar-minus, .bee-icon-calendar-minus:before, input[type="radio"] ~ label.bee-icon-calendar-minus:before, input[type="checkbox"] ~ label.bee-icon-calendar-minus:before { background-image: url(https://phsis.com.br/assets/icon/calendar-minus.svg); }
+.bee-icon-calendar-pencil, .bee-icon-calendar-pencil:before, input[type="radio"] ~ label.bee-icon-calendar-pencil:before, input[type="checkbox"] ~ label.bee-icon-calendar-pencil:before { background-image: url(https://phsis.com.br/assets/icon/calendar-pencil.svg); }
+.bee-icon-calendar-plus, .bee-icon-calendar-plus:before, input[type="radio"] ~ label.bee-icon-calendar-plus:before, input[type="checkbox"] ~ label.bee-icon-calendar-plus:before { background-image: url(https://phsis.com.br/assets/icon/calendar-plus.svg); }
+.bee-icon-calendar-question, .bee-icon-calendar-question:before, input[type="radio"] ~ label.bee-icon-calendar-question:before, input[type="checkbox"] ~ label.bee-icon-calendar-question:before { background-image: url(https://phsis.com.br/assets/icon/calendar-question.svg); }
+.bee-icon-calendar-reload, .bee-icon-calendar-reload:before, input[type="radio"] ~ label.bee-icon-calendar-reload:before, input[type="checkbox"] ~ label.bee-icon-calendar-reload:before { background-image: url(https://phsis.com.br/assets/icon/calendar-reload.svg); }
+.bee-icon-calendar-split, .bee-icon-calendar-split:before, input[type="radio"] ~ label.bee-icon-calendar-split:before, input[type="checkbox"] ~ label.bee-icon-calendar-split:before { background-image: url(https://phsis.com.br/assets/icon/calendar-split.svg); }
+.bee-icon-calendar-timer, .bee-icon-calendar-timer:before, input[type="radio"] ~ label.bee-icon-calendar-timer:before, input[type="checkbox"] ~ label.bee-icon-calendar-timer:before { background-image: url(https://phsis.com.br/assets/icon/calendar-timer.svg); }
+.bee-icon-calendar-trash, .bee-icon-calendar-trash:before, input[type="radio"] ~ label.bee-icon-calendar-trash:before, input[type="checkbox"] ~ label.bee-icon-calendar-trash:before { background-image: url(https://phsis.com.br/assets/icon/calendar-trash.svg); }
+.bee-icon-calendar-unite, .bee-icon-calendar-unite:before, input[type="radio"] ~ label.bee-icon-calendar-unite:before, input[type="checkbox"] ~ label.bee-icon-calendar-unite:before { background-image: url(https://phsis.com.br/assets/icon/calendar-unite.svg); }
+.bee-icon-calendar-xmark, .bee-icon-calendar-xmark:before, input[type="radio"] ~ label.bee-icon-calendar-xmark:before, input[type="checkbox"] ~ label.bee-icon-calendar-xmark:before { background-image: url(https://phsis.com.br/assets/icon/calendar-xmark.svg); }
+.bee-icon-calendar, .bee-icon-calendar:before, input[type="radio"] ~ label.bee-icon-calendar:before, input[type="checkbox"] ~ label.bee-icon-calendar:before { background-image: url(https://phsis.com.br/assets/icon/calendar.svg); }
+.bee-icon-card-amount, .bee-icon-card-amount:before, input[type="radio"] ~ label.bee-icon-card-amount:before, input[type="checkbox"] ~ label.bee-icon-card-amount:before { background-image: url(https://phsis.com.br/assets/icon/card-amount.svg); }
+.bee-icon-card-check, .bee-icon-card-check:before, input[type="radio"] ~ label.bee-icon-card-check:before, input[type="checkbox"] ~ label.bee-icon-card-check:before { background-image: url(https://phsis.com.br/assets/icon/card-check.svg); }
+.bee-icon-card-exclamation, .bee-icon-card-exclamation:before, input[type="radio"] ~ label.bee-icon-card-exclamation:before, input[type="checkbox"] ~ label.bee-icon-card-exclamation:before { background-image: url(https://phsis.com.br/assets/icon/card-exclamation.svg); }
+.bee-icon-card-minus, .bee-icon-card-minus:before, input[type="radio"] ~ label.bee-icon-card-minus:before, input[type="checkbox"] ~ label.bee-icon-card-minus:before { background-image: url(https://phsis.com.br/assets/icon/card-minus.svg); }
+.bee-icon-card-pencil, .bee-icon-card-pencil:before, input[type="radio"] ~ label.bee-icon-card-pencil:before, input[type="checkbox"] ~ label.bee-icon-card-pencil:before { background-image: url(https://phsis.com.br/assets/icon/card-pencil.svg); }
+.bee-icon-card-plus, .bee-icon-card-plus:before, input[type="radio"] ~ label.bee-icon-card-plus:before, input[type="checkbox"] ~ label.bee-icon-card-plus:before { background-image: url(https://phsis.com.br/assets/icon/card-plus.svg); }
+.bee-icon-card-question, .bee-icon-card-question:before, input[type="radio"] ~ label.bee-icon-card-question:before, input[type="checkbox"] ~ label.bee-icon-card-question:before { background-image: url(https://phsis.com.br/assets/icon/card-question.svg); }
+.bee-icon-card-timer, .bee-icon-card-timer:before, input[type="radio"] ~ label.bee-icon-card-timer:before, input[type="checkbox"] ~ label.bee-icon-card-timer:before { background-image: url(https://phsis.com.br/assets/icon/card-timer.svg); }
+.bee-icon-card-xmark, .bee-icon-card-xmark:before, input[type="radio"] ~ label.bee-icon-card-xmark:before, input[type="checkbox"] ~ label.bee-icon-card-xmark:before { background-image: url(https://phsis.com.br/assets/icon/card-xmark.svg); }
+.bee-icon-card, .bee-icon-card:before, input[type="radio"] ~ label.bee-icon-card:before, input[type="checkbox"] ~ label.bee-icon-card:before { background-image: url(https://phsis.com.br/assets/icon/card.svg); }
+.bee-icon-card-crop, .bee-icon-card-crop:before, input[type="radio"] ~ label.bee-icon-card-crop:before, input[type="checkbox"] ~ label.bee-icon-card-crop:before { background-image: url(https://phsis.com.br/assets/icon/card-crop.svg); }
+.bee-icon-cards, .bee-icon-cards:before, input[type="radio"] ~ label.bee-icon-cards:before, input[type="checkbox"] ~ label.bee-icon-cards:before { background-image: url(https://phsis.com.br/assets/icon/cards.svg); }
+.bee-icon-cart-baby, .bee-icon-cart-baby:before, input[type="radio"] ~ label.bee-icon-cart-baby:before, input[type="checkbox"] ~ label.bee-icon-cart-baby:before { background-image: url(https://phsis.com.br/assets/icon/cart-baby.svg); }
+.bee-icon-cart, .bee-icon-cart:before, input[type="radio"] ~ label.bee-icon-cart:before, input[type="checkbox"] ~ label.bee-icon-cart:before { background-image: url(https://phsis.com.br/assets/icon/cart.svg); }
+.bee-icon-chair-trade, .bee-icon-chair-trade:before, input[type="radio"] ~ label.bee-icon-chair-trade:before, input[type="checkbox"] ~ label.bee-icon-chair-trade:before { background-image: url(https://phsis.com.br/assets/icon/chair-trade.svg); }
+.bee-icon-chair, .bee-icon-chair:before, input[type="radio"] ~ label.bee-icon-chair:before, input[type="checkbox"] ~ label.bee-icon-chair:before { background-image: url(https://phsis.com.br/assets/icon/chair.svg); }
+.bee-icon-charge-full, .bee-icon-charge-full:before, input[type="radio"] ~ label.bee-icon-charge-full:before, input[type="checkbox"] ~ label.bee-icon-charge-full:before { background-image: url(https://phsis.com.br/assets/icon/charge-full.svg); }
+.bee-icon-charge-high, .bee-icon-charge-high:before, input[type="radio"] ~ label.bee-icon-charge-high:before, input[type="checkbox"] ~ label.bee-icon-charge-high:before { background-image: url(https://phsis.com.br/assets/icon/charge-high.svg); }
+.bee-icon-charge-low, .bee-icon-charge-low:before, input[type="radio"] ~ label.bee-icon-charge-low:before, input[type="checkbox"] ~ label.bee-icon-charge-low:before { background-image: url(https://phsis.com.br/assets/icon/charge-low.svg); }
+.bee-icon-check-circle, .bee-icon-check-circle:before, input[type="radio"] ~ label.bee-icon-check-circle:before, input[type="checkbox"] ~ label.bee-icon-check-circle:before { background-image: url(https://phsis.com.br/assets/icon/check-circle.svg); }
+.bee-icon-clean, .bee-icon-clean:before, input[type="radio"] ~ label.bee-icon-clean:before, input[type="checkbox"] ~ label.bee-icon-clean:before { background-image: url(https://phsis.com.br/assets/icon/clean.svg); }
+.bee-icon-clipboard-check-list, .bee-icon-clipboard-check-list:before, input[type="radio"] ~ label.bee-icon-clipboard-check-list:before, input[type="checkbox"] ~ label.bee-icon-clipboard-check-list:before { background-image: url(https://phsis.com.br/assets/icon/clipboard-check-list.svg); }
+.bee-icon-clipboard-check, .bee-icon-clipboard-check:before, input[type="radio"] ~ label.bee-icon-clipboard-check:before, input[type="checkbox"] ~ label.bee-icon-clipboard-check:before { background-image: url(https://phsis.com.br/assets/icon/clipboard-check.svg); }
+.bee-icon-clipboard-down, .bee-icon-clipboard-down:before, input[type="radio"] ~ label.bee-icon-clipboard-down:before, input[type="checkbox"] ~ label.bee-icon-clipboard-down:before { background-image: url(https://phsis.com.br/assets/icon/clipboard-down.svg); }
+.bee-icon-clipboard-exclamation, .bee-icon-clipboard-exclamation:before, input[type="radio"] ~ label.bee-icon-clipboard-exclamation:before, input[type="checkbox"] ~ label.bee-icon-clipboard-exclamation:before { background-image: url(https://phsis.com.br/assets/icon/clipboard-exclamation.svg); }
+.bee-icon-clipboard-minus, .bee-icon-clipboard-minus:before, input[type="radio"] ~ label.bee-icon-clipboard-minus:before, input[type="checkbox"] ~ label.bee-icon-clipboard-minus:before { background-image: url(https://phsis.com.br/assets/icon/clipboard-minus.svg); }
+.bee-icon-clipboard-pencil, .bee-icon-clipboard-pencil:before, input[type="radio"] ~ label.bee-icon-clipboard-pencil:before, input[type="checkbox"] ~ label.bee-icon-clipboard-pencil:before { background-image: url(https://phsis.com.br/assets/icon/clipboard-pencil.svg); }
+.bee-icon-clipboard-plus, .bee-icon-clipboard-plus:before, input[type="radio"] ~ label.bee-icon-clipboard-plus:before, input[type="checkbox"] ~ label.bee-icon-clipboard-plus:before { background-image: url(https://phsis.com.br/assets/icon/clipboard-plus.svg); }
+.bee-icon-clipboard-question, .bee-icon-clipboard-question:before, input[type="radio"] ~ label.bee-icon-clipboard-question:before, input[type="checkbox"] ~ label.bee-icon-clipboard-question:before { background-image: url(https://phsis.com.br/assets/icon/clipboard-question.svg); }
+.bee-icon-clipboard-reload, .bee-icon-clipboard-reload:before, input[type="radio"] ~ label.bee-icon-clipboard-reload:before, input[type="checkbox"] ~ label.bee-icon-clipboard-reload:before { background-image: url(https://phsis.com.br/assets/icon/clipboard-reload.svg); }
+.bee-icon-clipboard-search, .bee-icon-clipboard-search:before, input[type="radio"] ~ label.bee-icon-clipboard-search:before, input[type="checkbox"] ~ label.bee-icon-clipboard-search:before { background-image: url(https://phsis.com.br/assets/icon/clipboard-search.svg); }
+.bee-icon-clipboard-timer, .bee-icon-clipboard-timer:before, input[type="radio"] ~ label.bee-icon-clipboard-timer:before, input[type="checkbox"] ~ label.bee-icon-clipboard-timer:before { background-image: url(https://phsis.com.br/assets/icon/clipboard-timer.svg); }
+.bee-icon-clipboard-trash, .bee-icon-clipboard-trash:before, input[type="radio"] ~ label.bee-icon-clipboard-trash:before, input[type="checkbox"] ~ label.bee-icon-clipboard-trash:before { background-image: url(https://phsis.com.br/assets/icon/clipboard-trash.svg); }
+.bee-icon-clipboard-up, .bee-icon-clipboard-up:before, input[type="radio"] ~ label.bee-icon-clipboard-up:before, input[type="checkbox"] ~ label.bee-icon-clipboard-up:before { background-image: url(https://phsis.com.br/assets/icon/clipboard-up.svg); }
+.bee-icon-clipboard-value, .bee-icon-clipboard-value:before, input[type="radio"] ~ label.bee-icon-clipboard-value:before, input[type="checkbox"] ~ label.bee-icon-clipboard-value:before { background-image: url(https://phsis.com.br/assets/icon/clipboard-value.svg); }
+.bee-icon-clipboard-xmark-list, .bee-icon-clipboard-xmark-list:before, input[type="radio"] ~ label.bee-icon-clipboard-xmark-list:before, input[type="checkbox"] ~ label.bee-icon-clipboard-xmark-list:before { background-image: url(https://phsis.com.br/assets/icon/clipboard-xmark-list.svg); }
+.bee-icon-clipboard-xmark, .bee-icon-clipboard-xmark:before, input[type="radio"] ~ label.bee-icon-clipboard-xmark:before, input[type="checkbox"] ~ label.bee-icon-clipboard-xmark:before { background-image: url(https://phsis.com.br/assets/icon/clipboard-xmark.svg); }
+.bee-icon-clipboard, .bee-icon-clipboard:before, input[type="radio"] ~ label.bee-icon-clipboard:before, input[type="checkbox"] ~ label.bee-icon-clipboard:before { background-image: url(https://phsis.com.br/assets/icon/clipboard.svg); }
+.bee-icon-clock-reset, .bee-icon-clock-reset:before, input[type="radio"] ~ label.bee-icon-clock-reset:before, input[type="checkbox"] ~ label.bee-icon-clock-reset:before { background-image: url(https://phsis.com.br/assets/icon/clock-reset.svg); }
+.bee-icon-coffee, .bee-icon-coffee:before, input[type="radio"] ~ label.bee-icon-coffee:before, input[type="checkbox"] ~ label.bee-icon-coffee:before { background-image: url(https://phsis.com.br/assets/icon/coffee.svg); }
+.bee-icon-coin-amount, .bee-icon-coin-amount:before, input[type="radio"] ~ label.bee-icon-coin-amount:before, input[type="checkbox"] ~ label.bee-icon-coin-amount:before { background-image: url(https://phsis.com.br/assets/icon/coin-amount.svg); }
+.bee-icon-coin-check, .bee-icon-coin-check:before, input[type="radio"] ~ label.bee-icon-coin-check:before, input[type="checkbox"] ~ label.bee-icon-coin-check:before { background-image: url(https://phsis.com.br/assets/icon/coin-check.svg); }
+.bee-icon-coin-down, .bee-icon-coin-down:before, input[type="radio"] ~ label.bee-icon-coin-down:before, input[type="checkbox"] ~ label.bee-icon-coin-down:before { background-image: url(https://phsis.com.br/assets/icon/coin-down.svg); }
+.bee-icon-coin-exclamation, .bee-icon-coin-exclamation:before, input[type="radio"] ~ label.bee-icon-coin-exclamation:before, input[type="checkbox"] ~ label.bee-icon-coin-exclamation:before { background-image: url(https://phsis.com.br/assets/icon/coin-exclamation.svg); }
+.bee-icon-coin-minus, .bee-icon-coin-minus:before, input[type="radio"] ~ label.bee-icon-coin-minus:before, input[type="checkbox"] ~ label.bee-icon-coin-minus:before { background-image: url(https://phsis.com.br/assets/icon/coin-minus.svg); }
+.bee-icon-coin-plus, .bee-icon-coin-plus:before, input[type="radio"] ~ label.bee-icon-coin-plus:before, input[type="checkbox"] ~ label.bee-icon-coin-plus:before { background-image: url(https://phsis.com.br/assets/icon/coin-plus.svg); }
+.bee-icon-coin-question, .bee-icon-coin-question:before, input[type="radio"] ~ label.bee-icon-coin-question:before, input[type="checkbox"] ~ label.bee-icon-coin-question:before { background-image: url(https://phsis.com.br/assets/icon/coin-question.svg); }
+.bee-icon-coin-timer, .bee-icon-coin-timer:before, input[type="radio"] ~ label.bee-icon-coin-timer:before, input[type="checkbox"] ~ label.bee-icon-coin-timer:before { background-image: url(https://phsis.com.br/assets/icon/coin-timer.svg); }
+.bee-icon-coin-up, .bee-icon-coin-up:before, input[type="radio"] ~ label.bee-icon-coin-up:before, input[type="checkbox"] ~ label.bee-icon-coin-up:before { background-image: url(https://phsis.com.br/assets/icon/coin-up.svg); }
+.bee-icon-coin-xmark, .bee-icon-coin-xmark:before, input[type="radio"] ~ label.bee-icon-coin-xmark:before, input[type="checkbox"] ~ label.bee-icon-coin-xmark:before { background-image: url(https://phsis.com.br/assets/icon/coin-xmark.svg); }
+.bee-icon-cold, .bee-icon-cold:before, input[type="radio"] ~ label.bee-icon-cold:before, input[type="checkbox"] ~ label.bee-icon-cold:before { background-image: url(https://phsis.com.br/assets/icon/cold.svg); }
+.bee-icon-comments-line, .bee-icon-comments-line:before, input[type="radio"] ~ label.bee-icon-comments-line:before, input[type="checkbox"] ~ label.bee-icon-comments-line:before { background-image: url(https://phsis.com.br/assets/icon/comments-line.svg); }
+.bee-icon-comments-square, .bee-icon-comments-square:before, input[type="radio"] ~ label.bee-icon-comments-square:before, input[type="checkbox"] ~ label.bee-icon-comments-square:before { background-image: url(https://phsis.com.br/assets/icon/comments-square.svg); }
+.bee-icon-comments, .bee-icon-comments:before, input[type="radio"] ~ label.bee-icon-comments:before, input[type="checkbox"] ~ label.bee-icon-comments:before { background-image: url(https://phsis.com.br/assets/icon/comments.svg); }
+.bee-icon-day-night, .bee-icon-day-night:before, input[type="radio"] ~ label.bee-icon-day-night:before, input[type="checkbox"] ~ label.bee-icon-day-night:before { background-image: url(https://phsis.com.br/assets/icon/day-night.svg); }
+.bee-icon-document-edit, .bee-icon-document-edit:before, input[type="radio"] ~ label.bee-icon-document-edit:before, input[type="checkbox"] ~ label.bee-icon-document-edit:before { background-image: url(https://phsis.com.br/assets/icon/document-edit.svg); }
+.bee-icon-document-new, .bee-icon-document-new:before, input[type="radio"] ~ label.bee-icon-document-new:before, input[type="checkbox"] ~ label.bee-icon-document-new:before { background-image: url(https://phsis.com.br/assets/icon/document-new.svg); }
+.bee-icon-document-search, .bee-icon-document-search:before, input[type="radio"] ~ label.bee-icon-document-search:before, input[type="checkbox"] ~ label.bee-icon-document-search:before { background-image: url(https://phsis.com.br/assets/icon/document-search.svg); }
+.bee-icon-dots, .bee-icon-dots:before, input[type="radio"] ~ label.bee-icon-dots:before, input[type="checkbox"] ~ label.bee-icon-dots:before { background-image: url(https://phsis.com.br/assets/icon/dots.svg); }
+.bee-icon-drag-n-drop, .bee-icon-drag-n-drop:before, input[type="radio"] ~ label.bee-icon-drag-n-drop:before, input[type="checkbox"] ~ label.bee-icon-drag-n-drop:before { background-image: url(https://phsis.com.br/assets/icon/drag-n-drop.svg); }
+.bee-icon-drink, .bee-icon-drink:before, input[type="radio"] ~ label.bee-icon-drink:before, input[type="checkbox"] ~ label.bee-icon-drink:before { background-image: url(https://phsis.com.br/assets/icon/drink.svg); }
+.bee-icon-driver, .bee-icon-driver:before, input[type="radio"] ~ label.bee-icon-driver:before, input[type="checkbox"] ~ label.bee-icon-driver:before { background-image: url(https://phsis.com.br/assets/icon/driver.svg); }
+.bee-icon-duplicate, .bee-icon-duplicate:before, input[type="radio"] ~ label.bee-icon-duplicate:before, input[type="checkbox"] ~ label.bee-icon-duplicate:before { background-image: url(https://phsis.com.br/assets/icon/duplicate.svg); }
+.bee-icon-earphone, .bee-icon-earphone:before, input[type="radio"] ~ label.bee-icon-earphone:before, input[type="checkbox"] ~ label.bee-icon-earphone:before { background-image: url(https://phsis.com.br/assets/icon/earphone.svg); }
+.bee-icon-engine-part, .bee-icon-engine-part:before, input[type="radio"] ~ label.bee-icon-engine-part:before, input[type="checkbox"] ~ label.bee-icon-engine-part:before { background-image: url(https://phsis.com.br/assets/icon/engine-part.svg); }
+.bee-icon-envelope-content, .bee-icon-envelope-content:before, input[type="radio"] ~ label.bee-icon-envelope-content:before, input[type="checkbox"] ~ label.bee-icon-envelope-content:before { background-image: url(https://phsis.com.br/assets/icon/envelope-content.svg); }
+.bee-icon-envelope-letter, .bee-icon-envelope-letter:before, input[type="radio"] ~ label.bee-icon-envelope-letter:before, input[type="checkbox"] ~ label.bee-icon-envelope-letter:before { background-image: url(https://phsis.com.br/assets/icon/envelope-letter.svg); }
+.bee-icon-envelope-stack, .bee-icon-envelope-stack:before, input[type="radio"] ~ label.bee-icon-envelope-stack:before, input[type="checkbox"] ~ label.bee-icon-envelope-stack:before { background-image: url(https://phsis.com.br/assets/icon/envelope-stack.svg); }
+.bee-icon-envelope, .bee-icon-envelope:before, input[type="radio"] ~ label.bee-icon-envelope:before, input[type="checkbox"] ~ label.bee-icon-envelope:before { background-image: url(https://phsis.com.br/assets/icon/envelope.svg); }
+.bee-icon-exit, .bee-icon-exit:before, input[type="radio"] ~ label.bee-icon-exit:before, input[type="checkbox"] ~ label.bee-icon-exit:before { background-image: url(https://phsis.com.br/assets/icon/exit.svg); }
+.bee-icon-eye-slash, .bee-icon-eye-slash:before, input[type="radio"] ~ label.bee-icon-eye-slash:before, input[type="checkbox"] ~ label.bee-icon-eye-slash:before { background-image: url(https://phsis.com.br/assets/icon/eye-slash.svg); }
+.bee-icon-eye, .bee-icon-eye:before, input[type="radio"] ~ label.bee-icon-eye:before, input[type="checkbox"] ~ label.bee-icon-eye:before { background-image: url(https://phsis.com.br/assets/icon/eye.svg); }
+.bee-icon-file-circle-check, .bee-icon-file-circle-check:before, input[type="radio"] ~ label.bee-icon-file-circle-check:before, input[type="checkbox"] ~ label.bee-icon-file-circle-check:before { background-image: url(https://phsis.com.br/assets/icon/file-circle-check.svg); }
+.bee-icon-file-circle-down, .bee-icon-file-circle-down:before, input[type="radio"] ~ label.bee-icon-file-circle-down:before, input[type="checkbox"] ~ label.bee-icon-file-circle-down:before { background-image: url(https://phsis.com.br/assets/icon/file-circle-down.svg); }
+.bee-icon-file-circle-exclamation, .bee-icon-file-circle-exclamation:before, input[type="radio"] ~ label.bee-icon-file-circle-exclamation:before, input[type="checkbox"] ~ label.bee-icon-file-circle-exclamation:before { background-image: url(https://phsis.com.br/assets/icon/file-circle-exclamation.svg); }
+.bee-icon-file-circle-minus, .bee-icon-file-circle-minus:before, input[type="radio"] ~ label.bee-icon-file-circle-minus:before, input[type="checkbox"] ~ label.bee-icon-file-circle-minus:before { background-image: url(https://phsis.com.br/assets/icon/file-circle-minus.svg); }
+.bee-icon-file-circle-plus, .bee-icon-file-circle-plus:before, input[type="radio"] ~ label.bee-icon-file-circle-plus:before, input[type="checkbox"] ~ label.bee-icon-file-circle-plus:before { background-image: url(https://phsis.com.br/assets/icon/file-circle-plus.svg); }
+.bee-icon-file-circle-question, .bee-icon-file-circle-question:before, input[type="radio"] ~ label.bee-icon-file-circle-question:before, input[type="checkbox"] ~ label.bee-icon-file-circle-question:before { background-image: url(https://phsis.com.br/assets/icon/file-circle-question.svg); }
+.bee-icon-file-circle-up, .bee-icon-file-circle-up:before, input[type="radio"] ~ label.bee-icon-file-circle-up:before, input[type="checkbox"] ~ label.bee-icon-file-circle-up:before { background-image: url(https://phsis.com.br/assets/icon/file-circle-up.svg); }
+.bee-icon-file-circle-value, .bee-icon-file-circle-value:before, input[type="radio"] ~ label.bee-icon-file-circle-value:before, input[type="checkbox"] ~ label.bee-icon-file-circle-value:before { background-image: url(https://phsis.com.br/assets/icon/file-circle-value.svg); }
+.bee-icon-file-circle-xmark, .bee-icon-file-circle-xmark:before, input[type="radio"] ~ label.bee-icon-file-circle-xmark:before, input[type="checkbox"] ~ label.bee-icon-file-circle-xmark:before { background-image: url(https://phsis.com.br/assets/icon/file-circle-xmark.svg); }
+.bee-icon-file-down, .bee-icon-file-down:before, input[type="radio"] ~ label.bee-icon-file-down:before, input[type="checkbox"] ~ label.bee-icon-file-down:before { background-image: url(https://phsis.com.br/assets/icon/file-down.svg); }
+.bee-icon-file-invoice, .bee-icon-file-invoice:before, input[type="radio"] ~ label.bee-icon-file-invoice:before, input[type="checkbox"] ~ label.bee-icon-file-invoice:before { background-image: url(https://phsis.com.br/assets/icon/file-invoice.svg); }
+.bee-icon-file-money, .bee-icon-file-money:before, input[type="radio"] ~ label.bee-icon-file-money:before, input[type="checkbox"] ~ label.bee-icon-file-money:before { background-image: url(https://phsis.com.br/assets/icon/file-money.svg); }
+.bee-icon-file-new, .bee-icon-file-new:before, input[type="radio"] ~ label.bee-icon-file-new:before, input[type="checkbox"] ~ label.bee-icon-file-new:before { background-image: url(https://phsis.com.br/assets/icon/file-new.svg); }
+.bee-icon-file-search, .bee-icon-file-search:before, input[type="radio"] ~ label.bee-icon-file-search:before, input[type="checkbox"] ~ label.bee-icon-file-search:before { background-image: url(https://phsis.com.br/assets/icon/file-search.svg); }
+.bee-icon-file-searching, .bee-icon-file-searching:before, input[type="radio"] ~ label.bee-icon-file-searching:before, input[type="checkbox"] ~ label.bee-icon-file-searching:before { background-image: url(https://phsis.com.br/assets/icon/file-searching.svg); }
+.bee-icon-file-signature, .bee-icon-file-signature:before, input[type="radio"] ~ label.bee-icon-file-signature:before, input[type="checkbox"] ~ label.bee-icon-file-signature:before { background-image: url(https://phsis.com.br/assets/icon/file-signature.svg); }
+.bee-icon-file-timer, .bee-icon-file-timer:before, input[type="radio"] ~ label.bee-icon-file-timer:before, input[type="checkbox"] ~ label.bee-icon-file-timer:before { background-image: url(https://phsis.com.br/assets/icon/file-timer.svg); }
+.bee-icon-file-trash, .bee-icon-file-trash:before, input[type="radio"] ~ label.bee-icon-file-trash:before, input[type="checkbox"] ~ label.bee-icon-file-trash:before { background-image: url(https://phsis.com.br/assets/icon/file-trash.svg); }
+.bee-icon-file-up, .bee-icon-file-up:before, input[type="radio"] ~ label.bee-icon-file-up:before, input[type="checkbox"] ~ label.bee-icon-file-up:before { background-image: url(https://phsis.com.br/assets/icon/file-up.svg); }
+.bee-icon-file-pencil, .bee-icon-file-pencil:before, input[type="radio"] ~ label.bee-icon-file-pencil:before, input[type="checkbox"] ~ label.bee-icon-file-pencil:before { background-image: url(https://phsis.com.br/assets/icon/file-pencil.svg); }
+.bee-icon-file, .bee-icon-file:before, input[type="radio"] ~ label.bee-icon-file:before, input[type="checkbox"] ~ label.bee-icon-file:before { background-image: url(https://phsis.com.br/assets/icon/file.svg); }
+.bee-icon-folder-out, .bee-icon-folder-out:before, input[type="radio"] ~ label.bee-icon-folder-out:before, input[type="checkbox"] ~ label.bee-icon-folder-out:before { background-image: url(https://phsis.com.br/assets/icon/folder-out.svg); }
+.bee-icon-font-change, .bee-icon-font-change:before, input[type="radio"] ~ label.bee-icon-font-change:before, input[type="checkbox"] ~ label.bee-icon-font-change:before { background-image: url(https://phsis.com.br/assets/icon/font-change.svg); }
+.bee-icon-fuel, .bee-icon-fuel:before, input[type="radio"] ~ label.bee-icon-fuel:before, input[type="checkbox"] ~ label.bee-icon-fuel:before { background-image: url(https://phsis.com.br/assets/icon/fuel.svg); }
+.bee-icon-fuel-crop, .bee-icon-fuel-crop:before, input[type="radio"] ~ label.bee-icon-fuel-crop:before, input[type="checkbox"] ~ label.bee-icon-fuel-crop:before { background-image: url(https://phsis.com.br/assets/icon/fuel-crop.svg); }
+.bee-icon-fuel-amount, .bee-icon-fuel-amount:before, input[type="radio"] ~ label.bee-icon-fuel-amount:before, input[type="checkbox"] ~ label.bee-icon-fuel-amount:before { background-image: url(https://phsis.com.br/assets/icon/fuel-amount.svg); }
+.bee-icon-fuel-check, .bee-icon-fuel-check:before, input[type="radio"] ~ label.bee-icon-fuel-check:before, input[type="checkbox"] ~ label.bee-icon-fuel-check:before { background-image: url(https://phsis.com.br/assets/icon/fuel-check.svg); }
+.bee-icon-fuel-down, .bee-icon-fuel-down:before, input[type="radio"] ~ label.bee-icon-fuel-down:before, input[type="checkbox"] ~ label.bee-icon-fuel-down:before { background-image: url(https://phsis.com.br/assets/icon/fuel-down.svg); }
+.bee-icon-fuel-exclamation, .bee-icon-fuel-exclamation:before, input[type="radio"] ~ label.bee-icon-fuel-exclamation:before, input[type="checkbox"] ~ label.bee-icon-fuel-exclamation:before { background-image: url(https://phsis.com.br/assets/icon/fuel-exclamation.svg); }
+.bee-icon-fuel-minus, .bee-icon-fuel-minus:before, input[type="radio"] ~ label.bee-icon-fuel-minus:before, input[type="checkbox"] ~ label.bee-icon-fuel-minus:before { background-image: url(https://phsis.com.br/assets/icon/fuel-minus.svg); }
+.bee-icon-fuel-plus, .bee-icon-fuel-plus:before, input[type="radio"] ~ label.bee-icon-fuel-plus:before, input[type="checkbox"] ~ label.bee-icon-fuel-plus:before { background-image: url(https://phsis.com.br/assets/icon/fuel-plus.svg); }
+.bee-icon-fuel-question, .bee-icon-fuel-question:before, input[type="radio"] ~ label.bee-icon-fuel-question:before, input[type="checkbox"] ~ label.bee-icon-fuel-question:before { background-image: url(https://phsis.com.br/assets/icon/fuel-question.svg); }
+.bee-icon-fuel-timer, .bee-icon-fuel-timer:before, input[type="radio"] ~ label.bee-icon-fuel-timer:before, input[type="checkbox"] ~ label.bee-icon-fuel-timer:before { background-image: url(https://phsis.com.br/assets/icon/fuel-timer.svg); }
+.bee-icon-fuel-up, .bee-icon-fuel-up:before, input[type="radio"] ~ label.bee-icon-fuel-up:before, input[type="checkbox"] ~ label.bee-icon-fuel-up:before { background-image: url(https://phsis.com.br/assets/icon/fuel-up.svg); }
+.bee-icon-fuel-xmark, .bee-icon-fuel-xmark:before, input[type="radio"] ~ label.bee-icon-fuel-xmark:before, input[type="checkbox"] ~ label.bee-icon-fuel-xmark:before { background-image: url(https://phsis.com.br/assets/icon/fuel-xmark.svg); }
+.bee-icon-galery, .bee-icon-galery:before, input[type="radio"] ~ label.bee-icon-galery:before, input[type="checkbox"] ~ label.bee-icon-galery:before { background-image: url(https://phsis.com.br/assets/icon/galery.svg); }
+.bee-icon-gear, .bee-icon-gear:before, input[type="radio"] ~ label.bee-icon-gear:before, input[type="checkbox"] ~ label.bee-icon-gear:before { background-image: url(https://phsis.com.br/assets/icon/gear.svg); }
+.bee-icon-gear-plus, .bee-icon-gear-plus:before, input[type="radio"] ~ label.bee-icon-gear-plus:before, input[type="checkbox"] ~ label.bee-icon-gear-plus:before { background-image: url(https://phsis.com.br/assets/icon/gear-plus.svg); }
+.bee-icon-gear-minus, .bee-icon-gear-minus:before, input[type="radio"] ~ label.bee-icon-gear-minus:before, input[type="checkbox"] ~ label.bee-icon-gear-minus:before { background-image: url(https://phsis.com.br/assets/icon/gear-minus.svg); }
+.bee-icon-gears, .bee-icon-gears:before, input[type="radio"] ~ label.bee-icon-gears:before, input[type="checkbox"] ~ label.bee-icon-gears:before { background-image: url(https://phsis.com.br/assets/icon/gears.svg); }
+.bee-icon-hamburger, .bee-icon-hamburger:before, input[type="radio"] ~ label.bee-icon-hamburger:before, input[type="checkbox"] ~ label.bee-icon-hamburger:before { background-image: url(https://phsis.com.br/assets/icon/hamburger.svg); }
+.bee-icon-hand-down, .bee-icon-hand-down:before, input[type="radio"] ~ label.bee-icon-hand-down:before, input[type="checkbox"] ~ label.bee-icon-hand-down:before { background-image: url(https://phsis.com.br/assets/icon/hand-down.svg); }
+.bee-icon-hand-gear, .bee-icon-hand-gear:before, input[type="radio"] ~ label.bee-icon-hand-gear:before, input[type="checkbox"] ~ label.bee-icon-hand-gear:before { background-image: url(https://phsis.com.br/assets/icon/hand-gear.svg); }
+.bee-icon-hand-touch, .bee-icon-hand-touch:before, input[type="radio"] ~ label.bee-icon-hand-touch:before, input[type="checkbox"] ~ label.bee-icon-hand-touch:before { background-image: url(https://phsis.com.br/assets/icon/hand-touch.svg); }
+.bee-icon-handshake, .bee-icon-handshake:before, input[type="radio"] ~ label.bee-icon-handshake:before, input[type="checkbox"] ~ label.bee-icon-handshake:before { background-image: url(https://phsis.com.br/assets/icon/handshake.svg); }
+.bee-icon-hot-cold, .bee-icon-hot-cold:before, input[type="radio"] ~ label.bee-icon-hot-cold:before, input[type="checkbox"] ~ label.bee-icon-hot-cold:before { background-image: url(https://phsis.com.br/assets/icon/hot-cold.svg); }
+.bee-icon-hot, .bee-icon-hot:before, input[type="radio"] ~ label.bee-icon-hot:before, input[type="checkbox"] ~ label.bee-icon-hot:before { background-image: url(https://phsis.com.br/assets/icon/hot.svg); }
+.bee-icon-house, .bee-icon-house:before, input[type="radio"] ~ label.bee-icon-house:before, input[type="checkbox"] ~ label.bee-icon-house:before { background-image: url(https://phsis.com.br/assets/icon/house.svg); }
+.bee-icon-id-card-amount, .bee-icon-id-card-amount:before, input[type="radio"] ~ label.bee-icon-id-card-amount:before, input[type="checkbox"] ~ label.bee-icon-id-card-amount:before { background-image: url(https://phsis.com.br/assets/icon/id-card-amount.svg); }
+.bee-icon-id-card-check, .bee-icon-id-card-check:before, input[type="radio"] ~ label.bee-icon-id-card-check:before, input[type="checkbox"] ~ label.bee-icon-id-card-check:before { background-image: url(https://phsis.com.br/assets/icon/id-card-check.svg); }
+.bee-icon-id-card-down, .bee-icon-id-card-down:before, input[type="radio"] ~ label.bee-icon-id-card-down:before, input[type="checkbox"] ~ label.bee-icon-id-card-down:before { background-image: url(https://phsis.com.br/assets/icon/id-card-down.svg); }
+.bee-icon-id-card-exclamation, .bee-icon-id-card-exclamation:before, input[type="radio"] ~ label.bee-icon-id-card-exclamation:before, input[type="checkbox"] ~ label.bee-icon-id-card-exclamation:before { background-image: url(https://phsis.com.br/assets/icon/id-card-exclamation.svg); }
+.bee-icon-id-card-minus, .bee-icon-id-card-minus:before, input[type="radio"] ~ label.bee-icon-id-card-minus:before, input[type="checkbox"] ~ label.bee-icon-id-card-minus:before { background-image: url(https://phsis.com.br/assets/icon/id-card-minus.svg); }
+.bee-icon-id-card-pencil, .bee-icon-id-card-pencil:before, input[type="radio"] ~ label.bee-icon-id-card-pencil:before, input[type="checkbox"] ~ label.bee-icon-id-card-pencil:before { background-image: url(https://phsis.com.br/assets/icon/id-card-pencil.svg); }
+.bee-icon-id-card-plus, .bee-icon-id-card-plus:before, input[type="radio"] ~ label.bee-icon-id-card-plus:before, input[type="checkbox"] ~ label.bee-icon-id-card-plus:before { background-image: url(https://phsis.com.br/assets/icon/id-card-plus.svg); }
+.bee-icon-id-card-question, .bee-icon-id-card-question:before, input[type="radio"] ~ label.bee-icon-id-card-question:before, input[type="checkbox"] ~ label.bee-icon-id-card-question:before { background-image: url(https://phsis.com.br/assets/icon/id-card-question.svg); }
+.bee-icon-id-card-reload, .bee-icon-id-card-reload:before, input[type="radio"] ~ label.bee-icon-id-card-reload:before, input[type="checkbox"] ~ label.bee-icon-id-card-reload:before { background-image: url(https://phsis.com.br/assets/icon/id-card-reload.svg); }
+.bee-icon-id-card-timer, .bee-icon-id-card-timer:before, input[type="radio"] ~ label.bee-icon-id-card-timer:before, input[type="checkbox"] ~ label.bee-icon-id-card-timer:before { background-image: url(https://phsis.com.br/assets/icon/id-card-timer.svg); }
+.bee-icon-id-card-trash, .bee-icon-id-card-trash:before, input[type="radio"] ~ label.bee-icon-id-card-trash:before, input[type="checkbox"] ~ label.bee-icon-id-card-trash:before { background-image: url(https://phsis.com.br/assets/icon/id-card-trash.svg); }
+.bee-icon-id-card-up, .bee-icon-id-card-up:before, input[type="radio"] ~ label.bee-icon-id-card-up:before, input[type="checkbox"] ~ label.bee-icon-id-card-up:before { background-image: url(https://phsis.com.br/assets/icon/id-card-up.svg); }
+.bee-icon-id-card-xmark, .bee-icon-id-card-xmark:before, input[type="radio"] ~ label.bee-icon-id-card-xmark:before, input[type="checkbox"] ~ label.bee-icon-id-card-xmark:before { background-image: url(https://phsis.com.br/assets/icon/id-card-xmark.svg); }
+.bee-icon-id-card, .bee-icon-id-card:before, input[type="radio"] ~ label.bee-icon-id-card:before, input[type="checkbox"] ~ label.bee-icon-id-card:before { background-image: url(https://phsis.com.br/assets/icon/id-card.svg); }
+.bee-icon-image, .bee-icon-image:before, input[type="radio"] ~ label.bee-icon-image:before, input[type="checkbox"] ~ label.bee-icon-image:before { background-image: url(https://phsis.com.br/assets/icon/image.svg); }
+.bee-icon-industry, .bee-icon-industry:before, input[type="radio"] ~ label.bee-icon-industry:before, input[type="checkbox"] ~ label.bee-icon-industry:before { background-image: url(https://phsis.com.br/assets/icon/industry.svg); }
+.bee-icon-innkeep, .bee-icon-innkeep:before, input[type="radio"] ~ label.bee-icon-innkeep:before, input[type="checkbox"] ~ label.bee-icon-innkeep:before { background-image: url(https://phsis.com.br/assets/icon/innkeep.svg); }
+.bee-icon-instrument-panel, .bee-icon-instrument-panel:before, input[type="radio"] ~ label.bee-icon-instrument-panel:before, input[type="checkbox"] ~ label.bee-icon-instrument-panel:before { background-image: url(https://phsis.com.br/assets/icon/instrument-panel.svg); }
+.bee-icon-ios, .bee-icon-ios:before, input[type="radio"] ~ label.bee-icon-ios:before, input[type="checkbox"] ~ label.bee-icon-ios:before { background-image: url(https://phsis.com.br/assets/icon/ios.svg); }
+.bee-icon-leito-01, .bee-icon-leito-01:before, input[type="radio"] ~ label.bee-icon-leito-01:before, input[type="checkbox"] ~ label.bee-icon-leito-01:before { background-image: url(https://phsis.com.br/assets/icon/leito-01.svg); }
+.bee-icon-leito-02, .bee-icon-leito-02:before, input[type="radio"] ~ label.bee-icon-leito-02:before, input[type="checkbox"] ~ label.bee-icon-leito-02:before { background-image: url(https://phsis.com.br/assets/icon/leito-02.svg); }
+.bee-icon-leito-03, .bee-icon-leito-03:before, input[type="radio"] ~ label.bee-icon-leito-03:before, input[type="checkbox"] ~ label.bee-icon-leito-03:before { background-image: url(https://phsis.com.br/assets/icon/leito-03.svg); }
+.bee-icon-leito-04, .bee-icon-leito-04:before, input[type="radio"] ~ label.bee-icon-leito-04:before, input[type="checkbox"] ~ label.bee-icon-leito-04:before { background-image: url(https://phsis.com.br/assets/icon/leito-04.svg); }
+.bee-icon-leito-05, .bee-icon-leito-05:before, input[type="radio"] ~ label.bee-icon-leito-05:before, input[type="checkbox"] ~ label.bee-icon-leito-05:before { background-image: url(https://phsis.com.br/assets/icon/leito-05.svg); }
+.bee-icon-location-heart, .bee-icon-location-heart:before, input[type="radio"] ~ label.bee-icon-location-heart:before, input[type="checkbox"] ~ label.bee-icon-location-heart:before { background-image: url(https://phsis.com.br/assets/icon/location-heart.svg); }
+.bee-icon-location-road, .bee-icon-location-road:before, input[type="radio"] ~ label.bee-icon-location-road:before, input[type="checkbox"] ~ label.bee-icon-location-road:before { background-image: url(https://phsis.com.br/assets/icon/location-road.svg); }
+.bee-icon-map-location, .bee-icon-map-location:before, input[type="radio"] ~ label.bee-icon-map-location:before, input[type="checkbox"] ~ label.bee-icon-map-location:before { background-image: url(https://phsis.com.br/assets/icon/map-location.svg); }
+.bee-icon-mask, .bee-icon-mask:before, input[type="radio"] ~ label.bee-icon-mask:before, input[type="checkbox"] ~ label.bee-icon-mask:before { background-image: url(https://phsis.com.br/assets/icon/mask.svg); }
+.bee-icon-maximize, .bee-icon-maximize:before, input[type="radio"] ~ label.bee-icon-maximize:before, input[type="checkbox"] ~ label.bee-icon-maximize:before { background-image: url(https://phsis.com.br/assets/icon/maximize.svg); }
+.bee-icon-measure, .bee-icon-measure:before, input[type="radio"] ~ label.bee-icon-measure:before, input[type="checkbox"] ~ label.bee-icon-measure:before { background-image: url(https://phsis.com.br/assets/icon/measure.svg); }
+.bee-icon-menu-bars, .bee-icon-menu-bars:before, input[type="radio"] ~ label.bee-icon-menu-bars:before, input[type="checkbox"] ~ label.bee-icon-menu-bars:before { background-image: url(https://phsis.com.br/assets/icon/menu-bars.svg); }
+.bee-icon-menu-dots, .bee-icon-menu-dots:before, input[type="radio"] ~ label.bee-icon-menu-dots:before, input[type="checkbox"] ~ label.bee-icon-menu-dots:before { background-image: url(https://phsis.com.br/assets/icon/menu-dots.svg); }
+.bee-icon-menu-plus, .bee-icon-menu-plus:before, input[type="radio"] ~ label.bee-icon-menu-plus:before, input[type="checkbox"] ~ label.bee-icon-menu-plus:before { background-image: url(https://phsis.com.br/assets/icon/menu-plus.svg); }
+.bee-icon-microphone, .bee-icon-microphone:before, input[type="radio"] ~ label.bee-icon-microphone:before, input[type="checkbox"] ~ label.bee-icon-microphone:before { background-image: url(https://phsis.com.br/assets/icon/microphone.svg); }
+.bee-icon-minimize, .bee-icon-minimize:before, input[type="radio"] ~ label.bee-icon-minimize:before, input[type="checkbox"] ~ label.bee-icon-minimize:before { background-image: url(https://phsis.com.br/assets/icon/minimize.svg); }
+.bee-icon-minus-plus, .bee-icon-minus-plus:before, input[type="radio"] ~ label.bee-icon-minus-plus:before, input[type="checkbox"] ~ label.bee-icon-minus-plus:before { background-image: url(https://phsis.com.br/assets/icon/minus-plus.svg); }
+.bee-icon-mobile-customer, .bee-icon-mobile-customer:before, input[type="radio"] ~ label.bee-icon-mobile-customer:before, input[type="checkbox"] ~ label.bee-icon-mobile-customer:before { background-image: url(https://phsis.com.br/assets/icon/mobile-customer.svg); }
+.bee-icon-mobile-hand, .bee-icon-mobile-hand:before, input[type="radio"] ~ label.bee-icon-mobile-hand:before, input[type="checkbox"] ~ label.bee-icon-mobile-hand:before { background-image: url(https://phsis.com.br/assets/icon/mobile-hand.svg); }
+.bee-icon-mobile-mail, .bee-icon-mobile-mail:before, input[type="radio"] ~ label.bee-icon-mobile-mail:before, input[type="checkbox"] ~ label.bee-icon-mobile-mail:before { background-image: url(https://phsis.com.br/assets/icon/mobile-mail.svg); }
+.bee-icon-mobile-message-receive, .bee-icon-mobile-message-receive:before, input[type="radio"] ~ label.bee-icon-mobile-message-receive:before, input[type="checkbox"] ~ label.bee-icon-mobile-message-receive:before { background-image: url(https://phsis.com.br/assets/icon/mobile-message-receive.svg); }
+.bee-icon-mobile-message-send, .bee-icon-mobile-message-send:before, input[type="radio"] ~ label.bee-icon-mobile-message-send:before, input[type="checkbox"] ~ label.bee-icon-mobile-message-send:before { background-image: url(https://phsis.com.br/assets/icon/mobile-message-send.svg); }
+.bee-icon-mobile-message, .bee-icon-mobile-message:before, input[type="radio"] ~ label.bee-icon-mobile-message:before, input[type="checkbox"] ~ label.bee-icon-mobile-message:before { background-image: url(https://phsis.com.br/assets/icon/mobile-message.svg); }
+.bee-icon-mobile-wifi, .bee-icon-mobile-wifi:before, input[type="radio"] ~ label.bee-icon-mobile-wifi:before, input[type="checkbox"] ~ label.bee-icon-mobile-wifi:before { background-image: url(https://phsis.com.br/assets/icon/mobile-wifi.svg); }
+.bee-icon-mobile, .bee-icon-mobile:before, input[type="radio"] ~ label.bee-icon-mobile:before, input[type="checkbox"] ~ label.bee-icon-mobile:before { background-image: url(https://phsis.com.br/assets/icon/mobile.svg); }
+.bee-icon-money-check, .bee-icon-money-check:before, input[type="radio"] ~ label.bee-icon-money-check:before, input[type="checkbox"] ~ label.bee-icon-money-check:before { background-image: url(https://phsis.com.br/assets/icon/money-check.svg); }
+.bee-icon-money-down, .bee-icon-money-down:before, input[type="radio"] ~ label.bee-icon-money-down:before, input[type="checkbox"] ~ label.bee-icon-money-down:before { background-image: url(https://phsis.com.br/assets/icon/money-down.svg); }
+.bee-icon-money-exclamation, .bee-icon-money-exclamation:before, input[type="radio"] ~ label.bee-icon-money-exclamation:before, input[type="checkbox"] ~ label.bee-icon-money-exclamation:before { background-image: url(https://phsis.com.br/assets/icon/money-exclamation.svg); }
+.bee-icon-money-fast, .bee-icon-money-fast:before, input[type="radio"] ~ label.bee-icon-money-fast:before, input[type="checkbox"] ~ label.bee-icon-money-fast:before { background-image: url(https://phsis.com.br/assets/icon/money-fast.svg); }
+.bee-icon-money-minus, .bee-icon-money-minus:before, input[type="radio"] ~ label.bee-icon-money-minus:before, input[type="checkbox"] ~ label.bee-icon-money-minus:before { background-image: url(https://phsis.com.br/assets/icon/money-minus.svg); }
+.bee-icon-money-plus, .bee-icon-money-plus:before, input[type="radio"] ~ label.bee-icon-money-plus:before, input[type="checkbox"] ~ label.bee-icon-money-plus:before { background-image: url(https://phsis.com.br/assets/icon/money-plus.svg); }
+.bee-icon-money-question, .bee-icon-money-question:before, input[type="radio"] ~ label.bee-icon-money-question:before, input[type="checkbox"] ~ label.bee-icon-money-question:before { background-image: url(https://phsis.com.br/assets/icon/money-question.svg); }
+.bee-icon-money-timer, .bee-icon-money-timer:before, input[type="radio"] ~ label.bee-icon-money-timer:before, input[type="checkbox"] ~ label.bee-icon-money-timer:before { background-image: url(https://phsis.com.br/assets/icon/money-timer.svg); }
+.bee-icon-money-up, .bee-icon-money-up:before, input[type="radio"] ~ label.bee-icon-money-up:before, input[type="checkbox"] ~ label.bee-icon-money-up:before { background-image: url(https://phsis.com.br/assets/icon/money-up.svg); }
+.bee-icon-money-value, .bee-icon-money-value:before, input[type="radio"] ~ label.bee-icon-money-value:before, input[type="checkbox"] ~ label.bee-icon-money-value:before { background-image: url(https://phsis.com.br/assets/icon/money-value.svg); }
+.bee-icon-money-xmark, .bee-icon-money-xmark:before, input[type="radio"] ~ label.bee-icon-money-xmark:before, input[type="checkbox"] ~ label.bee-icon-money-xmark:before { background-image: url(https://phsis.com.br/assets/icon/money-xmark.svg); }
+.bee-icon-money, .bee-icon-money:before, input[type="radio"] ~ label.bee-icon-money:before, input[type="checkbox"] ~ label.bee-icon-money:before { background-image: url(https://phsis.com.br/assets/icon/money.svg); }
+.bee-icon-monitor, .bee-icon-monitor:before, input[type="radio"] ~ label.bee-icon-monitor:before, input[type="checkbox"] ~ label.bee-icon-monitor:before { background-image: url(https://phsis.com.br/assets/icon/monitor.svg); }
+.bee-icon-movie-user, .bee-icon-movie-user:before, input[type="radio"] ~ label.bee-icon-movie-user:before, input[type="checkbox"] ~ label.bee-icon-movie-user:before { background-image: url(https://phsis.com.br/assets/icon/movie-user.svg); }
+.bee-icon-movie, .bee-icon-movie:before, input[type="radio"] ~ label.bee-icon-movie:before, input[type="checkbox"] ~ label.bee-icon-movie:before { background-image: url(https://phsis.com.br/assets/icon/movie.svg); }
+.bee-icon-music-files, .bee-icon-music-files:before, input[type="radio"] ~ label.bee-icon-music-files:before, input[type="checkbox"] ~ label.bee-icon-music-files:before { background-image: url(https://phsis.com.br/assets/icon/music-files.svg); }
+.bee-icon-music-folder, .bee-icon-music-folder:before, input[type="radio"] ~ label.bee-icon-music-folder:before, input[type="checkbox"] ~ label.bee-icon-music-folder:before { background-image: url(https://phsis.com.br/assets/icon/music-folder.svg); }
+.bee-icon-music, .bee-icon-music:before, input[type="radio"] ~ label.bee-icon-music:before, input[type="checkbox"] ~ label.bee-icon-music:before { background-image: url(https://phsis.com.br/assets/icon/music.svg); }
+.bee-icon-note-graphic, .bee-icon-note-graphic:before, input[type="radio"] ~ label.bee-icon-note-graphic:before, input[type="checkbox"] ~ label.bee-icon-note-graphic:before { background-image: url(https://phsis.com.br/assets/icon/note-graphic.svg); }
+.bee-icon-note, .bee-icon-note:before, input[type="radio"] ~ label.bee-icon-note:before, input[type="checkbox"] ~ label.bee-icon-note:before { background-image: url(https://phsis.com.br/assets/icon/note.svg); }
+.bee-icon-notifications, .bee-icon-notifications:before, input[type="radio"] ~ label.bee-icon-notifications:before, input[type="checkbox"] ~ label.bee-icon-notifications:before { background-image: url(https://phsis.com.br/assets/icon/notifications.svg); }
+.bee-icon-okay, .bee-icon-okay:before, input[type="radio"] ~ label.bee-icon-okay:before, input[type="checkbox"] ~ label.bee-icon-okay:before { background-image: url(https://phsis.com.br/assets/icon/okay.svg); }
+.bee-icon-package-charge, .bee-icon-package-charge:before, input[type="radio"] ~ label.bee-icon-package-charge:before, input[type="checkbox"] ~ label.bee-icon-package-charge:before { background-image: url(https://phsis.com.br/assets/icon/package-charge.svg); }
+.bee-icon-package-edit, .bee-icon-package-edit:before, input[type="radio"] ~ label.bee-icon-package-edit:before, input[type="checkbox"] ~ label.bee-icon-package-edit:before { background-image: url(https://phsis.com.br/assets/icon/package-edit.svg); }
+.bee-icon-package-in, .bee-icon-package-in:before, input[type="radio"] ~ label.bee-icon-package-in:before, input[type="checkbox"] ~ label.bee-icon-package-in:before { background-image: url(https://phsis.com.br/assets/icon/package-in.svg); }
+.bee-icon-package-load-edit, .bee-icon-package-load-edit:before, input[type="radio"] ~ label.bee-icon-package-load-edit:before, input[type="checkbox"] ~ label.bee-icon-package-load-edit:before { background-image: url(https://phsis.com.br/assets/icon/package-load-edit.svg); }
+.bee-icon-package-load, .bee-icon-package-load:before, input[type="radio"] ~ label.bee-icon-package-load:before, input[type="checkbox"] ~ label.bee-icon-package-load:before { background-image: url(https://phsis.com.br/assets/icon/package-load.svg); }
+.bee-icon-package-out, .bee-icon-package-out:before, input[type="radio"] ~ label.bee-icon-package-out:before, input[type="checkbox"] ~ label.bee-icon-package-out:before { background-image: url(https://phsis.com.br/assets/icon/package-out.svg); }
+.bee-icon-package-plus, .bee-icon-package-plus:before, input[type="radio"] ~ label.bee-icon-package-plus:before, input[type="checkbox"] ~ label.bee-icon-package-plus:before { background-image: url(https://phsis.com.br/assets/icon/package-plus.svg); }
+.bee-icon-package-tag, .bee-icon-package-tag:before, input[type="radio"] ~ label.bee-icon-package-tag:before, input[type="checkbox"] ~ label.bee-icon-package-tag:before { background-image: url(https://phsis.com.br/assets/icon/package-tag.svg); }
+.bee-icon-paper-toilet, .bee-icon-paper-toilet:before, input[type="radio"] ~ label.bee-icon-paper-toilet:before, input[type="checkbox"] ~ label.bee-icon-paper-toilet:before { background-image: url(https://phsis.com.br/assets/icon/paper-toilet.svg); }
+.bee-icon-parcel-different, .bee-icon-parcel-different:before, input[type="radio"] ~ label.bee-icon-parcel-different:before, input[type="checkbox"] ~ label.bee-icon-parcel-different:before { background-image: url(https://phsis.com.br/assets/icon/parcel-different.svg); }
+.bee-icon-parcel-distinct, .bee-icon-parcel-distinct:before, input[type="radio"] ~ label.bee-icon-parcel-distinct:before, input[type="checkbox"] ~ label.bee-icon-parcel-distinct:before { background-image: url(https://phsis.com.br/assets/icon/parcel-distinct.svg); }
+.bee-icon-parcel-equal, .bee-icon-parcel-equal:before, input[type="radio"] ~ label.bee-icon-parcel-equal:before, input[type="checkbox"] ~ label.bee-icon-parcel-equal:before { background-image: url(https://phsis.com.br/assets/icon/parcel-equal.svg); }
+.bee-icon-password, .bee-icon-password:before, input[type="radio"] ~ label.bee-icon-password:before, input[type="checkbox"] ~ label.bee-icon-password:before { background-image: url(https://phsis.com.br/assets/icon/password.svg); }
+.bee-icon-payment-hand, .bee-icon-payment-hand:before, input[type="radio"] ~ label.bee-icon-payment-hand:before, input[type="checkbox"] ~ label.bee-icon-payment-hand:before { background-image: url(https://phsis.com.br/assets/icon/payment-hand.svg); }
+.bee-icon-pdf-printer, .bee-icon-pdf-printer:before, input[type="radio"] ~ label.bee-icon-pdf-printer:before, input[type="checkbox"] ~ label.bee-icon-pdf-printer:before { background-image: url(https://phsis.com.br/assets/icon/pdf-printer.svg); }
+.bee-icon-pencil, .bee-icon-pencil:before, input[type="radio"] ~ label.bee-icon-pencil:before, input[type="checkbox"] ~ label.bee-icon-pencil:before { background-image: url(https://phsis.com.br/assets/icon/pencil.svg); }
+.bee-icon-phone-mail, .bee-icon-phone-mail:before, input[type="radio"] ~ label.bee-icon-phone-mail:before, input[type="checkbox"] ~ label.bee-icon-phone-mail:before { background-image: url(https://phsis.com.br/assets/icon/phone-mail.svg); }
+.bee-icon-phone-message, .bee-icon-phone-message:before, input[type="radio"] ~ label.bee-icon-phone-message:before, input[type="checkbox"] ~ label.bee-icon-phone-message:before { background-image: url(https://phsis.com.br/assets/icon/phone-message.svg); }
+.bee-icon-phone, .bee-icon-phone:before, input[type="radio"] ~ label.bee-icon-phone:before, input[type="checkbox"] ~ label.bee-icon-phone:before { background-image: url(https://phsis.com.br/assets/icon/phone.svg); }
+.bee-icon-pix, .bee-icon-pix:before, input[type="radio"] ~ label.bee-icon-pix:before, input[type="checkbox"] ~ label.bee-icon-pix:before { background-image: url(https://phsis.com.br/assets/icon/pix.svg); }
+.bee-icon-plug, .bee-icon-plug:before, input[type="radio"] ~ label.bee-icon-plug:before, input[type="checkbox"] ~ label.bee-icon-plug:before { background-image: url(https://phsis.com.br/assets/icon/plug.svg); }
+.bee-icon-points-dot, .bee-icon-points-dot:before, input[type="radio"] ~ label.bee-icon-points-dot:before, input[type="checkbox"] ~ label.bee-icon-points-dot:before { background-image: url(https://phsis.com.br/assets/icon/points-dot.svg); }
+.bee-icon-points-user, .bee-icon-points-user:before, input[type="radio"] ~ label.bee-icon-points-user:before, input[type="checkbox"] ~ label.bee-icon-points-user:before { background-image: url(https://phsis.com.br/assets/icon/points-user.svg); }
+.bee-icon-points-value, .bee-icon-points-value:before, input[type="radio"] ~ label.bee-icon-points-value:before, input[type="checkbox"] ~ label.bee-icon-points-value:before { background-image: url(https://phsis.com.br/assets/icon/points-value.svg); }
+.bee-icon-print, .bee-icon-print:before, input[type="radio"] ~ label.bee-icon-print:before, input[type="checkbox"] ~ label.bee-icon-print:before { background-image: url(https://phsis.com.br/assets/icon/print.svg); }
+.bee-icon-pump-station, .bee-icon-pump-station:before, input[type="radio"] ~ label.bee-icon-pump-station:before, input[type="checkbox"] ~ label.bee-icon-pump-station:before { background-image: url(https://phsis.com.br/assets/icon/pump-station.svg); }
+.bee-icon-qrcode, .bee-icon-qrcode:before, input[type="radio"] ~ label.bee-icon-qrcode:before, input[type="checkbox"] ~ label.bee-icon-qrcode:before { background-image: url(https://phsis.com.br/assets/icon/qrcode.svg); }
+.bee-icon-receive-hand, .bee-icon-receive-hand:before, input[type="radio"] ~ label.bee-icon-receive-hand:before, input[type="checkbox"] ~ label.bee-icon-receive-hand:before { background-image: url(https://phsis.com.br/assets/icon/receive-hand.svg); }
+.bee-icon-refresh, .bee-icon-refresh:before, input[type="radio"] ~ label.bee-icon-refresh:before, input[type="checkbox"] ~ label.bee-icon-refresh:before { background-image: url(https://phsis.com.br/assets/icon/refresh.svg); }
+.bee-icon-route-check, .bee-icon-route-check:before, input[type="radio"] ~ label.bee-icon-route-check:before, input[type="checkbox"] ~ label.bee-icon-route-check:before { background-image: url(https://phsis.com.br/assets/icon/route-check.svg); }
+.bee-icon-route-dot, .bee-icon-route-dot:before, input[type="radio"] ~ label.bee-icon-route-dot:before, input[type="checkbox"] ~ label.bee-icon-route-dot:before { background-image: url(https://phsis.com.br/assets/icon/route-dot.svg); }
+.bee-icon-route-exclamation, .bee-icon-route-exclamation:before, input[type="radio"] ~ label.bee-icon-route-exclamation:before, input[type="checkbox"] ~ label.bee-icon-route-exclamation:before { background-image: url(https://phsis.com.br/assets/icon/route-exclamation.svg); }
+.bee-icon-route-minus, .bee-icon-route-minus:before, input[type="radio"] ~ label.bee-icon-route-minus:before, input[type="checkbox"] ~ label.bee-icon-route-minus:before { background-image: url(https://phsis.com.br/assets/icon/route-minus.svg); }
+.bee-icon-route-plus, .bee-icon-route-plus:before, input[type="radio"] ~ label.bee-icon-route-plus:before, input[type="checkbox"] ~ label.bee-icon-route-plus:before { background-image: url(https://phsis.com.br/assets/icon/route-plus.svg); }
+.bee-icon-route-question, .bee-icon-route-question:before, input[type="radio"] ~ label.bee-icon-route-question:before, input[type="checkbox"] ~ label.bee-icon-route-question:before { background-image: url(https://phsis.com.br/assets/icon/route-question.svg); }
+.bee-icon-route-timer, .bee-icon-route-timer:before, input[type="radio"] ~ label.bee-icon-route-timer:before, input[type="checkbox"] ~ label.bee-icon-route-timer:before { background-image: url(https://phsis.com.br/assets/icon/route-timer.svg); }
+.bee-icon-route-value, .bee-icon-route-value:before, input[type="radio"] ~ label.bee-icon-route-value:before, input[type="checkbox"] ~ label.bee-icon-route-value:before { background-image: url(https://phsis.com.br/assets/icon/route-value.svg); }
+.bee-icon-route-xmark, .bee-icon-route-xmark:before, input[type="radio"] ~ label.bee-icon-route-xmark:before, input[type="checkbox"] ~ label.bee-icon-route-xmark:before { background-image: url(https://phsis.com.br/assets/icon/route-xmark.svg); }
+.bee-icon-route, .bee-icon-route:before, input[type="radio"] ~ label.bee-icon-route:before, input[type="checkbox"] ~ label.bee-icon-route:before { background-image: url(https://phsis.com.br/assets/icon/route.svg); }
+.bee-icon-search-user, .bee-icon-search-user:before, input[type="radio"] ~ label.bee-icon-search-user:before, input[type="checkbox"] ~ label.bee-icon-search-user:before { background-image: url(https://phsis.com.br/assets/icon/search-user.svg); }
+.bee-icon-search, .bee-icon-search:before, input[type="radio"] ~ label.bee-icon-search:before, input[type="checkbox"] ~ label.bee-icon-search:before { background-image: url(https://phsis.com.br/assets/icon/search.svg); }
+.bee-icon-select-option, .bee-icon-select-option:before, input[type="radio"] ~ label.bee-icon-select-option:before, input[type="checkbox"] ~ label.bee-icon-select-option:before { background-image: url(https://phsis.com.br/assets/icon/select-option.svg); }
+.bee-icon-share, .bee-icon-share:before, input[type="radio"] ~ label.bee-icon-share:before, input[type="checkbox"] ~ label.bee-icon-share:before { background-image: url(https://phsis.com.br/assets/icon/share.svg); }
+.bee-icon-shared, .bee-icon-shared:before, input[type="radio"] ~ label.bee-icon-shared:before, input[type="checkbox"] ~ label.bee-icon-shared:before { background-image: url(https://phsis.com.br/assets/icon/shared.svg); }
+.bee-icon-shield, .bee-icon-shield:before, input[type="radio"] ~ label.bee-icon-shield:before, input[type="checkbox"] ~ label.bee-icon-shield:before { background-image: url(https://phsis.com.br/assets/icon/shield.svg); }
+.bee-icon-ship-boarding, .bee-icon-ship-boarding:before, input[type="radio"] ~ label.bee-icon-ship-boarding:before, input[type="checkbox"] ~ label.bee-icon-ship-boarding:before { background-image: url(https://phsis.com.br/assets/icon/ship-boarding.svg); }
+.bee-icon-ship-landing, .bee-icon-ship-landing:before, input[type="radio"] ~ label.bee-icon-ship-landing:before, input[type="checkbox"] ~ label.bee-icon-ship-landing:before { background-image: url(https://phsis.com.br/assets/icon/ship-landing.svg); }
+.bee-icon-ship, .bee-icon-ship:before, input[type="radio"] ~ label.bee-icon-ship:before, input[type="checkbox"] ~ label.bee-icon-ship:before { background-image: url(https://phsis.com.br/assets/icon/ship.svg); }
+.bee-icon-signature, .bee-icon-signature:before, input[type="radio"] ~ label.bee-icon-signature:before, input[type="checkbox"] ~ label.bee-icon-signature:before { background-image: url(https://phsis.com.br/assets/icon/signature.svg); }
+.bee-icon-signpost, .bee-icon-signpost:before, input[type="radio"] ~ label.bee-icon-signpost:before, input[type="checkbox"] ~ label.bee-icon-signpost:before { background-image: url(https://phsis.com.br/assets/icon/signpost.svg); }
+.bee-icon-silverware, .bee-icon-silverware:before, input[type="radio"] ~ label.bee-icon-silverware:before, input[type="checkbox"] ~ label.bee-icon-silverware:before { background-image: url(https://phsis.com.br/assets/icon/silverware.svg); }
+.bee-icon-site-check-list, .bee-icon-site-check-list:before, input[type="radio"] ~ label.bee-icon-site-check-list:before, input[type="checkbox"] ~ label.bee-icon-site-check-list:before { background-image: url(https://phsis.com.br/assets/icon/site-check-list.svg); }
+.bee-icon-site-check-sale, .bee-icon-site-check-sale:before, input[type="radio"] ~ label.bee-icon-site-check-sale:before, input[type="checkbox"] ~ label.bee-icon-site-check-sale:before { background-image: url(https://phsis.com.br/assets/icon/site-check-sale.svg); }
+.bee-icon-site-check, .bee-icon-site-check:before, input[type="radio"] ~ label.bee-icon-site-check:before, input[type="checkbox"] ~ label.bee-icon-site-check:before { background-image: url(https://phsis.com.br/assets/icon/site-check.svg); }
+.bee-icon-site-favorite, .bee-icon-site-favorite:before, input[type="radio"] ~ label.bee-icon-site-favorite:before, input[type="checkbox"] ~ label.bee-icon-site-favorite:before { background-image: url(https://phsis.com.br/assets/icon/site-favorite.svg); }
+.bee-icon-site-headline, .bee-icon-site-headline:before, input[type="radio"] ~ label.bee-icon-site-headline:before, input[type="checkbox"] ~ label.bee-icon-site-headline:before { background-image: url(https://phsis.com.br/assets/icon/site-headline.svg); }
+.bee-icon-site-image, .bee-icon-site-image:before, input[type="radio"] ~ label.bee-icon-site-image:before, input[type="checkbox"] ~ label.bee-icon-site-image:before { background-image: url(https://phsis.com.br/assets/icon/site-image.svg); }
+.bee-icon-site-message-check, .bee-icon-site-message-check:before, input[type="radio"] ~ label.bee-icon-site-message-check:before, input[type="checkbox"] ~ label.bee-icon-site-message-check:before { background-image: url(https://phsis.com.br/assets/icon/site-message-check.svg); }
+.bee-icon-site-message-xmark, .bee-icon-site-message-xmark:before, input[type="radio"] ~ label.bee-icon-site-message-xmark:before, input[type="checkbox"] ~ label.bee-icon-site-message-xmark:before { background-image: url(https://phsis.com.br/assets/icon/site-message-xmark.svg); }
+.bee-icon-site-text, .bee-icon-site-text:before, input[type="radio"] ~ label.bee-icon-site-text:before, input[type="checkbox"] ~ label.bee-icon-site-text:before { background-image: url(https://phsis.com.br/assets/icon/site-text.svg); }
+.bee-icon-site-webpage, .bee-icon-site-webpage:before, input[type="radio"] ~ label.bee-icon-site-webpage:before, input[type="checkbox"] ~ label.bee-icon-site-webpage:before { background-image: url(https://phsis.com.br/assets/icon/site-webpage.svg); }
+.bee-icon-site-xmark-sale, .bee-icon-site-xmark-sale:before, input[type="radio"] ~ label.bee-icon-site-xmark-sale:before, input[type="checkbox"] ~ label.bee-icon-site-xmark-sale:before { background-image: url(https://phsis.com.br/assets/icon/site-xmark-sale.svg); }
+.bee-icon-site-xmark, .bee-icon-site-xmark:before, input[type="radio"] ~ label.bee-icon-site-xmark:before, input[type="checkbox"] ~ label.bee-icon-site-xmark:before { background-image: url(https://phsis.com.br/assets/icon/site-xmark.svg); }
+.bee-icon-speedometer-max, .bee-icon-speedometer-max:before, input[type="radio"] ~ label.bee-icon-speedometer-max:before, input[type="checkbox"] ~ label.bee-icon-speedometer-max:before { background-image: url(https://phsis.com.br/assets/icon/speedometer-max.svg); }
+.bee-icon-speedometer, .bee-icon-speedometer:before, input[type="radio"] ~ label.bee-icon-speedometer:before, input[type="checkbox"] ~ label.bee-icon-speedometer:before { background-image: url(https://phsis.com.br/assets/icon/speedometer.svg); }
+.bee-icon-star-empty, .bee-icon-star-empty:before, input[type="radio"] ~ label.bee-icon-star-empty:before, input[type="checkbox"] ~ label.bee-icon-star-empty:before { background-image: url(https://phsis.com.br/assets/icon/star-empty.svg); }
+.bee-icon-star-filled, .bee-icon-star-filled:before, input[type="radio"] ~ label.bee-icon-star-filled:before, input[type="checkbox"] ~ label.bee-icon-star-filled:before { background-image: url(https://phsis.com.br/assets/icon/star-filled.svg); }
+.bee-icon-stat-up, .bee-icon-stat-up:before, input[type="radio"] ~ label.bee-icon-stat-up:before, input[type="checkbox"] ~ label.bee-icon-stat-up:before { background-image: url(https://phsis.com.br/assets/icon/stat-up.svg); }
+.bee-icon-stopwatch, .bee-icon-stopwatch:before, input[type="radio"] ~ label.bee-icon-stopwatch:before, input[type="checkbox"] ~ label.bee-icon-stopwatch:before { background-image: url(https://phsis.com.br/assets/icon/stopwatch.svg); }
+.bee-icon-suport, .bee-icon-suport:before, input[type="radio"] ~ label.bee-icon-suport:before, input[type="checkbox"] ~ label.bee-icon-suport:before { background-image: url(https://phsis.com.br/assets/icon/suport.svg); }
+.bee-icon-support-time, .bee-icon-support-time:before, input[type="radio"] ~ label.bee-icon-support-time:before, input[type="checkbox"] ~ label.bee-icon-support-time:before { background-image: url(https://phsis.com.br/assets/icon/support-time.svg); }
+.bee-icon-support, .bee-icon-support:before, input[type="radio"] ~ label.bee-icon-support:before, input[type="checkbox"] ~ label.bee-icon-support:before { background-image: url(https://phsis.com.br/assets/icon/support.svg); }
+.bee-icon-tag-bar, .bee-icon-tag-bar:before, input[type="radio"] ~ label.bee-icon-tag-bar:before, input[type="checkbox"] ~ label.bee-icon-tag-bar:before { background-image: url(https://phsis.com.br/assets/icon/tag-bar.svg); }
+.bee-icon-tag-ota, .bee-icon-tag-ota:before, input[type="radio"] ~ label.bee-icon-tag-ota:before, input[type="checkbox"] ~ label.bee-icon-tag-ota:before { background-image: url(https://phsis.com.br/assets/icon/tag-ota.svg); }
+.bee-icon-tag-percent, .bee-icon-tag-percent:before, input[type="radio"] ~ label.bee-icon-tag-percent:before, input[type="checkbox"] ~ label.bee-icon-tag-percent:before { background-image: url(https://phsis.com.br/assets/icon/tag-percent.svg); }
+.bee-icon-textile, .bee-icon-textile:before, input[type="radio"] ~ label.bee-icon-textile:before, input[type="checkbox"] ~ label.bee-icon-textile:before { background-image: url(https://phsis.com.br/assets/icon/textile.svg); }
+.bee-icon-ticket-airplane, .bee-icon-ticket-airplane:before, input[type="radio"] ~ label.bee-icon-ticket-airplane:before, input[type="checkbox"] ~ label.bee-icon-ticket-airplane:before { background-image: url(https://phsis.com.br/assets/icon/ticket-airplane.svg); }
+.bee-icon-ticket-bus, .bee-icon-ticket-bus:before, input[type="radio"] ~ label.bee-icon-ticket-bus:before, input[type="checkbox"] ~ label.bee-icon-ticket-bus:before { background-image: url(https://phsis.com.br/assets/icon/ticket-bus.svg); }
+.bee-icon-ticket-check, .bee-icon-ticket-check:before, input[type="radio"] ~ label.bee-icon-ticket-check:before, input[type="checkbox"] ~ label.bee-icon-ticket-check:before { background-image: url(https://phsis.com.br/assets/icon/ticket-check.svg); }
+.bee-icon-ticket-fast, .bee-icon-ticket-fast:before, input[type="radio"] ~ label.bee-icon-ticket-fast:before, input[type="checkbox"] ~ label.bee-icon-ticket-fast:before { background-image: url(https://phsis.com.br/assets/icon/ticket-fast.svg); }
+.bee-icon-ticket-minus, .bee-icon-ticket-minus:before, input[type="radio"] ~ label.bee-icon-ticket-minus:before, input[type="checkbox"] ~ label.bee-icon-ticket-minus:before { background-image: url(https://phsis.com.br/assets/icon/ticket-minus.svg); }
+.bee-icon-ticket-plus, .bee-icon-ticket-plus:before, input[type="radio"] ~ label.bee-icon-ticket-plus:before, input[type="checkbox"] ~ label.bee-icon-ticket-plus:before { background-image: url(https://phsis.com.br/assets/icon/ticket-plus.svg); }
+.bee-icon-ticket-question, .bee-icon-ticket-question:before, input[type="radio"] ~ label.bee-icon-ticket-question:before, input[type="checkbox"] ~ label.bee-icon-ticket-question:before { background-image: url(https://phsis.com.br/assets/icon/ticket-question.svg); }
+.bee-icon-ticket-ship, .bee-icon-ticket-ship:before, input[type="radio"] ~ label.bee-icon-ticket-ship:before, input[type="checkbox"] ~ label.bee-icon-ticket-ship:before { background-image: url(https://phsis.com.br/assets/icon/ticket-ship.svg); }
+.bee-icon-ticket-value, .bee-icon-ticket-value:before, input[type="radio"] ~ label.bee-icon-ticket-value:before, input[type="checkbox"] ~ label.bee-icon-ticket-value:before { background-image: url(https://phsis.com.br/assets/icon/ticket-value.svg); }
+.bee-icon-ticket-xmark, .bee-icon-ticket-xmark:before, input[type="radio"] ~ label.bee-icon-ticket-xmark:before, input[type="checkbox"] ~ label.bee-icon-ticket-xmark:before { background-image: url(https://phsis.com.br/assets/icon/ticket-xmark.svg); }
+.bee-icon-ticket, .bee-icon-ticket:before, input[type="radio"] ~ label.bee-icon-ticket:before, input[type="checkbox"] ~ label.bee-icon-ticket:before { background-image: url(https://phsis.com.br/assets/icon/ticket.svg); }
+.bee-icon-toilet, .bee-icon-toilet:before, input[type="radio"] ~ label.bee-icon-toilet:before, input[type="checkbox"] ~ label.bee-icon-toilet:before { background-image: url(https://phsis.com.br/assets/icon/toilet.svg); }
+.bee-icon-tool-screwdriver, .bee-icon-tool-screwdriver:before, input[type="radio"] ~ label.bee-icon-tool-screwdriver:before, input[type="checkbox"] ~ label.bee-icon-tool-screwdriver:before { background-image: url(https://phsis.com.br/assets/icon/tool-screwdriver.svg); }
+.bee-icon-tools, .bee-icon-tools:before, input[type="radio"] ~ label.bee-icon-tools:before, input[type="checkbox"] ~ label.bee-icon-tools:before { background-image: url(https://phsis.com.br/assets/icon/tools.svg); }
+.bee-icon-trash-recover, .bee-icon-trash-recover:before, input[type="radio"] ~ label.bee-icon-trash-recover:before, input[type="checkbox"] ~ label.bee-icon-trash-recover:before { background-image: url(https://phsis.com.br/assets/icon/trash-recover.svg); }
+.bee-icon-trash, .bee-icon-trash:before, input[type="radio"] ~ label.bee-icon-trash:before, input[type="checkbox"] ~ label.bee-icon-trash:before { background-image: url(https://phsis.com.br/assets/icon/trash.svg); }
+.bee-icon-transference, .bee-icon-transference:before, input[type="radio"] ~ label.bee-icon-transference:before, input[type="checkbox"] ~ label.bee-icon-transference:before { background-image: url(https://phsis.com.br/assets/icon/transference.svg); }
+.bee-icon-truck-fast, .bee-icon-truck-fast:before, input[type="radio"] ~ label.bee-icon-truck-fast:before, input[type="checkbox"] ~ label.bee-icon-truck-fast:before { background-image: url(https://phsis.com.br/assets/icon/truck-fast.svg); }
+.bee-icon-truck, .bee-icon-truck:before, input[type="radio"] ~ label.bee-icon-truck:before, input[type="checkbox"] ~ label.bee-icon-truck:before { background-image: url(https://phsis.com.br/assets/icon/truck.svg); }
+.bee-icon-user-change, .bee-icon-user-change:before, input[type="radio"] ~ label.bee-icon-user-change:before, input[type="checkbox"] ~ label.bee-icon-user-change:before { background-image: url(https://phsis.com.br/assets/icon/user-change.svg); }
+.bee-icon-user-girl, .bee-icon-user-girl:before, input[type="radio"] ~ label.bee-icon-user-girl:before, input[type="checkbox"] ~ label.bee-icon-user-girl:before { background-image: url(https://phsis.com.br/assets/icon/user-girl.svg); }
+.bee-icon-user-man, .bee-icon-user-man:before, input[type="radio"] ~ label.bee-icon-user-man:before, input[type="checkbox"] ~ label.bee-icon-user-man:before { background-image: url(https://phsis.com.br/assets/icon/user-man.svg); }
+.bee-icon-user-message, .bee-icon-user-message:before, input[type="radio"] ~ label.bee-icon-user-message:before, input[type="checkbox"] ~ label.bee-icon-user-message:before { background-image: url(https://phsis.com.br/assets/icon/user-message.svg); }
+.bee-icon-user-old, .bee-icon-user-old:before, input[type="radio"] ~ label.bee-icon-user-old:before, input[type="checkbox"] ~ label.bee-icon-user-old:before { background-image: url(https://phsis.com.br/assets/icon/user-old.svg); }
+.bee-icon-user-woman, .bee-icon-user-woman:before, input[type="radio"] ~ label.bee-icon-user-woman:before, input[type="checkbox"] ~ label.bee-icon-user-woman:before { background-image: url(https://phsis.com.br/assets/icon/user-woman.svg); }
+.bee-icon-user-worker, .bee-icon-user-worker:before, input[type="radio"] ~ label.bee-icon-user-worker:before, input[type="checkbox"] ~ label.bee-icon-user-worker:before { background-image: url(https://phsis.com.br/assets/icon/user-worker.svg); }
+.bee-icon-user, .bee-icon-user:before, input[type="radio"] ~ label.bee-icon-user:before, input[type="checkbox"] ~ label.bee-icon-user:before { background-image: url(https://phsis.com.br/assets/icon/user.svg); }
+.bee-icon-users, .bee-icon-users:before, input[type="radio"] ~ label.bee-icon-users:before, input[type="checkbox"] ~ label.bee-icon-users:before { background-image: url(https://phsis.com.br/assets/icon/users.svg); }
+.bee-icon-vehicles, .bee-icon-vehicles:before, input[type="radio"] ~ label.bee-icon-vehicles:before, input[type="checkbox"] ~ label.bee-icon-vehicles:before { background-image: url(https://phsis.com.br/assets/icon/vehicles.svg); }
+.bee-icon-wallet, .bee-icon-wallet:before, input[type="radio"] ~ label.bee-icon-wallet:before, input[type="checkbox"] ~ label.bee-icon-wallet:before { background-image: url(https://phsis.com.br/assets/icon/wallet.svg); }
+.bee-icon-wash, .bee-icon-wash:before, input[type="radio"] ~ label.bee-icon-wash:before, input[type="checkbox"] ~ label.bee-icon-wash:before { background-image: url(https://phsis.com.br/assets/icon/wash.svg); }
+.bee-icon-water-bottle-big, .bee-icon-water-bottle-big:before, input[type="radio"] ~ label.bee-icon-water-bottle-big:before, input[type="checkbox"] ~ label.bee-icon-water-bottle-big:before { background-image: url(https://phsis.com.br/assets/icon/water-bottle-big.svg); }
+.bee-icon-water-bottle, .bee-icon-water-bottle:before, input[type="radio"] ~ label.bee-icon-water-bottle:before, input[type="checkbox"] ~ label.bee-icon-water-bottle:before { background-image: url(https://phsis.com.br/assets/icon/water-bottle.svg); }
+.bee-icon-water-drop, .bee-icon-water-drop:before, input[type="radio"] ~ label.bee-icon-water-drop:before, input[type="checkbox"] ~ label.bee-icon-water-drop:before { background-image: url(https://phsis.com.br/assets/icon/water-drop.svg); }
+.bee-icon-webs, .bee-icon-webs:before, input[type="radio"] ~ label.bee-icon-webs:before, input[type="checkbox"] ~ label.bee-icon-webs:before { background-image: url(https://phsis.com.br/assets/icon/webs.svg); }
+.bee-icon-whatsapp, .bee-icon-whatsapp:before, input[type="radio"] ~ label.bee-icon-whatsapp:before, input[type="checkbox"] ~ label.bee-icon-whatsapp:before { background-image: url(https://phsis.com.br/assets/icon/whatsapp.svg); }
+.bee-icon-xls-icon, .bee-icon-xls-icon:before, input[type="radio"] ~ label.bee-icon-xls-icon:before, input[type="checkbox"] ~ label.bee-icon-xls-icon:before { background-image: url(https://phsis.com.br/assets/icon/xls-icon.svg); }
+.bee-icon-xmark-circle, .bee-icon-xmark-circle:before, input[type="radio"] ~ label.bee-icon-xmark-circle:before, input[type="checkbox"] ~ label.bee-icon-xmark-circle:before { background-image: url(https://phsis.com.br/assets/icon/xmark-circle.svg); }
+.bee-icon-xpoint, .bee-icon-xpoint:before, input[type="radio"] ~ label.bee-icon-xpoint:before, input[type="checkbox"] ~ label.bee-icon-xpoint:before { background-image: url(https://phsis.com.br/assets/icon/xpoint.svg); }
+.bee-icon-wheelchair, .bee-icon-wheelchair:before, input[type="radio"] ~ label.bee-icon-wheelchair:before, input[type="checkbox"] ~ label.bee-icon-wheelchair:before { background-image: url(https://phsis.com.br/assets/icon/wheelchair.svg); }
+

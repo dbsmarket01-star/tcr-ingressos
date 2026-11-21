@@ -1,0 +1,960 @@
+/* DEFAULT (file) */
+body{
+	font-family: var(--font-family), serif;
+	background: var(--body);
+}
+
+main {
+	background: var(--main);
+}
+
+.background {
+	background: var(--bg);
+	background-repeat: no-repeat;
+}
+
+a.icon[disabled] > i {
+	color: #888888 !important;
+}
+
+/* LOADER (file) */
+.loader {
+	border-top-color: var(--load-01);
+}
+.loader:before {
+	border-left-color: var(--load-02);
+}
+.loader:after {
+	border-right-color: var(--load-03);
+}
+
+
+/* HEADER (file) */
+.header.active{
+	background-color: var(--menu-bar);
+	-webkit-box-shadow: var(--box-shadow);
+	box-shadow: var(--box-shadow);
+}
+
+.header .navbar .nav-btn{
+	color: var(--main-link);
+}
+.header .navbar .nav-btn:hover{
+	color: var(--main-link-hover);
+}
+
+.header .icon-container .fa-icon{
+	color: var(--main-link);
+}
+.header .icon-container .fa-icon:hover{
+	color: var(--main-link-hover);
+}
+
+.header .icon-menu .fa-icon{
+	color: var(--main-link);
+}
+.header .icon-menu .fa-icon:hover{
+	color: var(--main-link-hover);
+}
+
+.dropdown-content{
+	background-color: var(--white);
+	-webkit-box-shadow: var(--box-shadow);
+	box-shadow: var(--box-shadow);
+}
+
+.dropdown-content a{
+	color: var(--black);
+}
+.dropdown-content a:hover{
+	color: var(--main-link-hover);
+}
+
+/* FOOBAR (file) */
+.foobar.active, .cartbar.active{
+	background-color: var(--foot-bar);
+	box-shadow: var(--box-shadow-up);
+}
+
+.foobar .navbar .nav-btn{
+	color: var(--main-link);
+}
+.foobar .navbar .nav-btn:hover{
+	color: var(--main-link-hover);
+}
+
+.foobar .icon-container .fa-icon{
+	color: var(--main-link);
+}
+.foobar .icon-container .fa-icon:hover{
+	color: var(--main-link-hover);
+}
+
+
+/* BACKGROUNDS */
+.bg-default {
+	background: var(--white);
+	fill: var(--white);
+}
+
+.bg-black {
+	background: var(--black);
+	fill: var(--black);
+}
+
+.bg-dark {
+	background: var(--dark);
+	fill: var(--dark);
+}
+
+.bg-darker {
+	background: var(--darker);
+	fill: var(--darker);
+}
+
+.bg-overlay-dark {
+	background: var(--dark-ovelay);
+	fill: var(--dark-ovelay);
+}
+
+.bg-overlay-light {
+	background: var(--light-ovelay);
+	fill: var(--light-ovelay);
+}
+
+/* SWIPER (file) */
+.swiper-button-prev,
+.swiper-button-next {
+	width: calc(var(--swiper-navigation-size) / 44 * 27);
+	height: var(--swiper-navigation-size);
+	margin-top: calc(-1 * var(--swiper-navigation-size) / 2);
+}
+.swiper-button-prev:after,
+.swiper-button-next:after {
+	font-size: var(--swiper-navigation-size);
+}
+
+.swiper-pagination-progressbar .swiper-pagination-progressbar-fill {
+	background: var(--swiper-pagination-active);
+}
+.swiper-lazy-preloader {
+	background: var(--swiper-pagination-active);
+}
+
+.swiper-button-next,
+.swiper-button-prev{
+	color: var(--main-link);
+}
+.swiper-button-next::after,
+.swiper-button-prev::after {
+	color: var(--main-link);
+}
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+	background-color: var(--swiper-navigation-active);
+}
+.swiper-pagination-bullet{
+	border-radius: var(--bullet-border-radius);
+	background-color: var(--swiper-pagination);
+}
+.swiper-pagination-bullet-active{
+	background: var(--swiper-pagination-active);
+}
+.swiper-content-tool .button{
+	border-radius: var(--bullet-border-radius);
+}
+
+/* LAYOUT HEADING */
+.heading-main-title {
+	color: var(--darker) !important;
+}
+.heading-sub-title {
+	color: var(--dark) !important;
+}
+
+.heading-main-title-night {
+	color: var(--light) !important;
+}
+.heading-sub-title-night {
+	color: var(--silver) !important;
+}
+
+/* LAYOUT BUTTONS */
+.button-shadow {
+	box-shadow: var(--button-shadow);
+}
+
+.button-default {
+	color: var(--global-palette0);
+	background-color: var(--default);
+	border-color: var(--default);
+}
+
+.button-main {
+	color: var(--main-link);
+	background-color: var(--darker);
+	border-color: var(--darker);
+}
+
+.button-success {
+	color: var(--global-palette3);
+	background-color: var(--green);
+	border-color: var(--green);
+}
+
+.button-warning{
+	color: var(--global-palette0);
+	background-color: var(--orange);
+	border-color: var(--orange);
+}
+
+.button-alert {
+	color: var(--global-palette3);
+	background-color: var(--red);
+	border-color: var(--red);
+}
+
+.button-derker {
+	color: var(--default);
+	background-color: var(--darker);
+	border-color: var(--darker);
+}
+
+/* LAYOUT BUTTONS HOVER */
+.button-default[href]:hover,
+.button-default[onclick]:hover {
+	color: var(--global-palette0);
+	background-color: var(--default-hover);
+	border-color: var(--default-hover);
+}
+
+.button-main[href]:hover,
+.button-main[onclick]:hover {
+	color: var(--main-link-hover);
+	background-color: var(--darker-hover);
+	border-color: var(--darker-hover);
+}
+
+.button-success[href]:hover,
+.button-success[onclick]:hover {
+	color: var(--global-palette0);
+	background-color: var(--green-hover);
+	border-color: var(--green-hover);
+}
+
+.button-warning[href]:hover,
+.button-warning[onclick]:hover {
+	color: var(--global-palette3);
+	background-color: var(--orange-hover);
+	border-color: var(--orange-hover);
+}
+
+.button-alert[href]:hover,
+.button-alert[onclick]:hover {
+	color: var(--global-palette3);
+	background-color: var(--red-hover);
+	border-color: var(--red-hover);
+}
+
+.button-derker[href]:hover,
+.button-derker[onclick]:hover {
+	color: var(--default);
+	background-color: var(--darker-hover);
+	border-color: var(--darker-hover);
+}
+
+.text-white[href]:hover, .text-white[onclick]:hover      { color: var(--white) !important; }
+.text-black[href]:hover, .text-black[onclick]:hover      { color: var(--black) !important; }
+.text-darker[href]:hover, .text-darker[onclick]:hover    { color: var(--darker-hover) !important; }
+.text-dark[href]:hover, .text-dark[onclick]:hover        { color: var(--darker-hover) !important; }
+.text-gray[href]:hover, .text-gray[onclick]:hover        { color: var(--gray) !important; }
+.text-light[href]:hover, .text-light[onclick]:hover      { color: var(--light-ovelay) !important; }
+.text-bright[href]:hover, .text-bright[onclick]:hover    { color: var(--bright) !important; }
+.text-silver[href]:hover, .text-silver[onclick]:hover    { color: var(--silver) !important; }
+.text-warning[href]:hover, .text-warning[onclick]:hover  { color: var(--red-hover) !important; }
+.text-alert[href]:hover, .text-alert[onclick]:hover      { color: var(--orange-hover) !important; }
+
+
+/* PAGINATOR STYLES */
+
+#paginador li:first-child a:after {
+	border-right-color: var(--pager-next);
+}
+
+#paginador li:last-child a:after {
+	border-left-color: var(--pager-next);
+}
+#paginador a,
+#limitador a{
+	background-color: var(--pager-background);
+	color: var(--pager-color);
+}
+
+#paginador a[href]:hover,
+#limitador a[href]:hover{
+	background-color: var(--pager-hover);
+	color: var(--pager-color);
+}
+
+#paginador a:not([href]),
+#limitador a:not([href]){
+	background-color: var(--pager-selected);
+	color: var(--pager-color);
+}
+
+
+/* TICKET BOX */
+.YELO { background-color: var(--orange-hover) !important; }
+.WHITE { background-color: var(--white) !important; }
+.BACK { background-color: var(--red) !important; }
+.GOIN { background-color: var(--green) !important; }
+.cart-totais { background-color: var(--red-hover) !important; }
+
+
+
+
+.select2-dropdown {
+	background-color: var(--input-color);
+	border-color: var(--input-border);
+	color: var(--input-text);
+}
+.select2-search__field {
+	color: var(--input-text);
+}
+
+select,
+select[multiple],
+textarea,
+input[type=text],
+input[type=date],
+input[type=time],
+input[type=datetime-local],
+input[type=month],
+input[type=week],
+input[type=password],
+input[type=file],
+input[type=number],
+.select2-selection{
+	background-color: var(--input-color);
+	border-color: var(--input-border);
+	color: var(--input-text);
+	transition: .5s ease-in-out all;
+}
+
+select ~ .select2 > .selection > .select2-selection > .select2-selection__rendered {
+	color: var(--input-text);
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+	color: var(--input-text);
+}
+
+.select2-results__option,
+.select2-results__option > span.subtext,
+.select2-selection__rendered > span.subtext {
+	color: var(--input-subtext);
+}
+
+.select2-container--default .select2-selection--single {
+	background-color: var(--input-color);
+	border-color: var(--input-border);
+}
+
+select ~ label,
+select[multiple] ~ label,
+textarea ~ label,
+input[type=text] ~ label,
+input[type=date] ~ label,
+input[type=time] ~ label,
+input[type=datetime-local] ~ label,
+input[type=month] ~ label,
+input[type=week] ~ label,
+input[type=password] ~ label,
+input[type=file] ~ label,
+input[type=number] ~ label {
+	background-color: var(--label-color);
+	border-color: var(--label-border);
+	color: var(--input-text);
+	transition: .5s ease-in-out all;
+}
+
+select[require], select[data-config^="@required"],
+select[multiple],
+textarea[require], textarea[data-config^="@required"],
+input[type=text][require], input[type=text][data-config^="@required"],
+input[type=date][require], input[type=date][data-config^="@required"],
+input[type=time][require], input[type=time][data-config^="@required"],
+input[type=datetime-local][require], input[type=datetime-local][data-config^="@required"],
+input[type=month][require], input[type=month][data-config^="@required"],
+input[type=week][require], input[type=week][data-config^="@required"],
+input[type=password][require], input[type=password][data-config^="@required"],
+input[type=file][require], input[type=file][data-config^="@required"],
+input[type=number][require], input[type=number][data-config^="@required"],
+.select2-selection[require], .select2-selection[data-config^="@required"] {
+	border-color: var(--input-border-required);
+	transition: .5s ease-in-out all;
+}
+
+select[require] ~ label, select[data-config^="@required"] ~ label,
+select[multiple] ~ label,
+textarea[require] ~ label, textarea[data-config^="@required"] ~ label,
+input[type=text][require] ~ label, input[type=text][data-config^="@required"] ~ label,
+input[type=date][require] ~ label, input[type=date][data-config^="@required"] ~ label,
+input[type=time][require] ~ label, input[type=time][data-config^="@required"] ~ label,
+input[type=datetime-local][require] ~ label, input[type=datetime-local][data-config^="@required"] ~ label,
+input[type=month][require] ~ label, input[type=month][data-config^="@required"] ~ label,
+input[type=week][require] ~ label, input[type=week][data-config^="@required"] ~ label,
+input[type=password][require] ~ label, input[type=password][data-config^="@required"] ~ label,
+input[type=file][require] ~ label, input[type=file][data-config^="@required"] ~ label,
+input[type=number][require] ~ label, input[type=number][data-config^="@required"] ~ label,
+.select2-selection[require] ~ label, .select2-selection[data-config^="@required"] ~ label {
+	background-color: var(--label-color-required);
+	border-color: var(--label-border-required);
+	color: var(--label-text-required);
+	transition: .5s ease-in-out all;
+}
+
+
+input[type=text][success],
+input[type=date][success],
+input[type=time][success],
+input[type=datetime-local][success],
+input[type=month][success],
+input[type=week][success],
+input[type=password][success],
+input[type=file][success],
+input[type=number][success],
+select[success],.select2-selection[sucess]{
+	background-color: var(--input-color);
+	border-color: var(--input-border-sucess);
+	transition: .5s ease-in-out all;
+}
+
+input[type=text][empty],
+input[type=date][empty],
+input[type=time][empty],
+input[type=datetime-local][empty],
+input[type=month][empty],
+input[type=week][empty],
+input[type=password][empty],
+input[type=file][empty],
+input[type=number][empty],
+select[empty],.select2-selection[empty]{
+	background-color: var(--input-color);
+	border-color: var(--input-border-empty);
+	transition: .5s ease-in-out all;
+}
+
+input[type=text][empty] ~ label,
+input[type=date][empty] ~ label,
+input[type=time][empty] ~ label,
+input[type=datetime-local][empty] ~ label,
+input[type=month][empty] ~ label,
+input[type=week][empty] ~ label,
+input[type=password][empty] ~ label,
+input[type=file][empty] ~ label,
+input[type=number][empty] ~ label,
+select[empty] ~ label {
+	background-color: var(--label-color-empty) !important;
+	border-color: var(--label-border-empty) !important;
+	color: var(--label-text-empty) !important;
+	transition: .5s ease-in-out all;
+}
+
+input[type=text][invalid],
+input[type=date][invalid],
+input[type=time][invalid],
+input[type=datetime-local][invalid],
+input[type=month][invalid],
+input[type=week][invalid],
+input[type=password][invalid],
+input[type=file][invalid],
+input[type=number][invalid],
+select[invalid],
+.select2-selection[invalid]{
+	background-color: var(--input-color);
+	border-color: var(--input-border-invalid) !important;
+	transition: .5s ease-in-out all;
+}
+
+input[type=text][invalid] ~ label,
+input[type=date][invalid] ~ label,
+input[type=time][invalid] ~ label,
+input[type=datetime-local][invalid] ~ label,
+input[type=month][invalid] ~ label,
+input[type=week][invalid] ~ label,
+input[type=password][invalid] ~ label,
+input[type=file][invalid] ~ label,
+input[type=number][invalid] ~ label,
+select[invalid] ~ label{
+	background-color: var(--label-color-invalid) !important;
+	border-color: var(--label-border-invalid) !important;
+	color: var(--label-text-invalid) !important;
+	transition: .5s ease-in-out all;
+}
+
+select:focus,
+select[multiple]:focus,
+textarea:focus,
+input[type=text]:focus,
+input[type=date]:focus,
+input[type=time]:focus,
+input[type=datetime-local]:focus,
+input[type=month]:focus,
+input[type=week]:focus,
+input[type=password]:focus,
+input[type=file]:focus,
+input[type=number]:focus,
+input[type=text]:focus,
+.select2-selection:focus {
+	background-color: var(--input-color-focus) !important;
+	border-color: var(--input-border-focus) !important;
+	transition: .5s ease-in-out all;
+}
+
+select[disabled],
+select[multiple][disabled],
+textarea[disabled],
+input[type=text][disabled],
+input[type=date][disabled],
+input[type=time][disabled],
+input[type=datetime-local][disabled],
+input[type=month][disabled],
+input[type=week][disabled],
+input[type=password][disabled],
+input[type=file][disabled],
+input[type=number][disabled],
+input[type=text][disabled],
+.select2-selection[disabled] {
+	background-color: var(--input-color-disabled) !important;
+	border-color: var(--input-border-disabled) !important;
+	transition: .5s ease-in-out all;
+}
+
+select[readonly],
+select[multiple][readonly],
+textarea[readonly],
+input[type=text][readonly],
+input[type=date][readonly],
+input[type=time][readonly],
+input[type=datetime-local][readonly],
+input[type=month][readonly],
+input[type=week][readonly],
+input[type=password][readonly],
+input[type=file][readonly],
+input[type=number][readonly],
+input[type=text][readonly],
+.select2-selection[readonly] {
+	background-color: var(--input-color-disabled) !important;
+	border-color: var(--input-border-disabled) !important;
+	transition: .5s ease-in-out all;
+}
+
+
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+input[type="cancel"],
+input[class*="buscar"]{
+	background-color: #676767;
+	border-color: #676767;
+}
+
+input[class="submit"]:focus,
+input[class="submit"]:hover{
+	background-color: #0E8010 !important;
+	border-color: #0E8010 !important;
+}
+
+input[class="button"]:focus,
+input[class="button"]:hover{
+	background-color: #274466 !important;
+	border-color: #274466 !important;
+}
+
+input[class*="buscar"]:focus,
+input[class*="buscar"]:hover{
+	background-color: #000000 !important;
+	border-color: #000000 !important;
+}
+
+input[class="cancel"]:focus,
+input[class="cancel"]:hover{
+	background-color: #800E23 !important;
+	border-color: #800E23 !important;
+}
+
+
+
+
+input[type="checkbox"] ~ label,
+input[type="radio"] ~ label {
+	background-color: var(--input-color);
+	border-color: var(--input-border);
+	color: var(--label-text);
+	transition: .5s ease-in-out all;
+}
+
+input[check-imput] ~ label::before,
+input[radio-imput] ~ label::before{
+	border-color: var(--label-border-before);
+	transition: .5s ease-in-out all;
+}
+
+input[check-imput] ~ label::after,
+input[check-imput]:not(:checked) ~ label::after{
+	border-color: var(--label-border-before);
+	transition: .5s ease-in-out all;
+}
+
+input[type="checkbox"][disabled] ~ label,
+input[type="radio"][disabled] ~ label {
+	background-color: var(--label-color-disabled);
+	border-color: var(--label-border-disabled);
+	color: var(--label-text-disabled);
+	transition: .5s ease-in-out all;
+}
+
+input[radio-imput] ~ label::before,
+input[check-imput] ~ label::before,
+input[radio-clean] ~ label::before {
+	background-color: var(--label-begin);
+	background-image: linear-gradient(var(--label-begin), var(--label-end), var(--label-begin));
+}
+
+input[radio-imput]:checked ~ label::after,
+input[radio-clean]:checked ~ label::after {
+	background-color: var(--label-begin-checked);
+	background-image: linear-gradient(var(--label-begin-checked), var(--label-end-checked), var(--label-begin-checked));;
+}
+
+input[check-imput]:checked ~ label::before,
+input[check-clean]:checked ~ label::before {
+	background-color: var(--label-begin-checked);
+	background-image: linear-gradient(var(--label-begin-checked), var(--label-end-checked), var(--label-begin-checked));;
+}
+
+input[check-imput]:not(:checked) ~ label::before,
+input[check-clean]:not(:checked) ~ label::before {
+	background-color: var(--label-begin-unchecked);
+	background-image: linear-gradient(var(--label-begin-unchecked), var(--label-end-unchecked), var(--label-begin-unchecked));;
+}
+
+input[check-imput]:checked ~ label::after,
+input[check-clean]:checked ~ label::after {
+	background-color: var(--label-begin);
+	background-image: linear-gradient(var(--label-begin), var(--label-end), var(--label-begin));
+}
+
+input[check-imput]:not(:checked) ~ label::after,
+input[check-clean]:not(:checked) ~ label::after {
+	background-color: var(--label-begin);
+	background-image: linear-gradient(var(--label-begin), var(--label-end), var(--label-begin));
+}
+
+input[radio-clean] ~ label:before {
+	border-color: var(--label-border-before);
+}
+
+input[check-clean]:checked ~ label:before {
+	border-color: var(--label-border-before);
+}
+
+input[check-clean]:not(:checked) ~ label:before {
+	border-color: var(--label-border-before);
+}
+
+input[check-clean]:checked ~ label:after {
+	border-color: var(--label-border-before);
+}
+
+input[check-clean]:not(:checked) ~ label:after {
+	border-color: var(--label-border-before);
+}
+
+
+input[type="checkbox"][colored]:checked ~ label,
+input[type="radio"][colored]:checked ~ label{
+	background-color: #CCFCCC !important;
+	transition: .5s ease-in-out all;
+}
+
+input[type="checkbox"][colored]:not(:checked) ~ label,
+input[type="radio"][colored]:not(:checked) ~ label {
+	background-color: #FFFFFF;
+	transition: .5s ease-in-out all;
+}
+
+
+
+
+
+
+.imput-result{
+	background: #F9F9F9;
+	border-color: #E0E0E0;
+	color: #666666;
+	transition: .5s ease-in-out all;
+}
+
+.imput-result ~ label {
+	border-color: #E0E0E0;
+	background: #E0E0E0;
+	color: var(--label-text);
+	transition: .5s ease-in-out all;
+}
+
+
+
+
+
+table{
+	color: #333333;
+	transition: .5s ease-in-out color;
+}
+table caption{
+	background-color: #A1A1A1;
+	transition: .5s ease-in-out background;
+}
+
+table.striped tbody tr:nth-child(odd){
+	background-color: #F1F1F1;
+	transition: .5s ease-in-out background;
+}
+table.striped tbody tr:nth-child(even){
+	background-color: #E6E6E6;
+	transition: .5s ease-in-out background;
+}
+table.actived tbody tr[active]{
+	background-color: #D8F8EF;
+	transition: .5s ease-in-out background;
+}
+
+table.table > thead > tr > th,
+table.table > thead > tr > td,
+table.table > tbody > tr > th,
+table.table > tbody > tr > td,
+table.table > tfoot > tr > th,
+table.table > tfoot > tr > td{
+	border-top-color: #CCCCCC;
+	transition: .5s ease-in-out border;
+}
+
+table.table > thead > tr,
+table.table > tfoot > tr,
+table.table > thead > tr,
+table.table > tfoot > tr{
+	background-color: #BBBBBB;
+	transition: .5s ease-in-out background;
+}
+
+table.hovered tbody tr:hover,
+table.hovered.striped tbody tr:nth-child(odd):hover,
+table.hovered.striped tbody tr:nth-child(even):hover{
+	background-color: #DBF0F4;
+	transition: .1s ease-in-out background;
+}
+
+table.table > thead > tr > td[onClick]{
+}
+table.table > thead > tr > td[onClick][actived]::before{
+	border-color: rgba(50,50,50,1) rgba(50,50,50,0);
+}
+
+
+.slick-next:hover,
+.slick-prev:hover{
+	background: #999999;
+	color: #FFFFFF;
+	transition: .20s ease-in-out all;
+}
+
+.limit-select{
+	border-color: #505050;
+	background-color: #EEE;
+	background-image: linear-gradient(#EEE, #EEE, #CCC, #EEE);
+	transition: .5s ease-in-out all;
+}
+.limit-select::after{
+	background-color: #404040;
+}
+
+.limit-select.on{
+	background-color: #A7E66B;
+	background-image: linear-gradient(#A7E66B, #A7E66B, #487012, #A7E66B);
+	transition: .5s ease-in-out all;
+}
+
+.only-active{
+	color: #333333;
+	transition: .5s ease-in-out all;
+}
+
+.buss-sett input[type="checkbox"]:checked ~ label {
+	background-color: rgba(123,176,115,1.00);
+	transition: .5s ease-in-out all;
+}
+
+input[check-buss] ~ label,
+input[radio-buss] ~ label {
+	background-color: rgba(194,189,148,1.00);
+	transition: .5s ease-in-out all;
+}
+
+input[check-buss][selling] ~ label,
+input[radio-buss][selling] ~ label {
+	background-color: rgba(197,128,128,1.00);
+	transition: .5s ease-in-out all;
+}
+
+input[check-buss]:checked ~ label,
+input[radio-buss]:checked ~ label {
+	background-color: rgba(142,189,136,1.00);
+	transition: .5s ease-in-out all;
+}
+
+input[check-buss]:disabled ~ label,
+input[radio-buss]:disabled ~ label {
+	background-color: rgba(176,128,115,0.10);
+	border-color: #666;
+	transition: .5s ease-in-out all;
+}
+
+.box-img figcaption.img-nav{
+	background: rgba(255,255,255,0.5);
+	transition: .5s ease-in-out background;
+}
+
+/******************************
+ COLORS
+******************************/
+
+.boxcolor-s00 { background-color: #e9e9e9 !important; }
+.boxcolor-s01 { background-color: #b7dab9 !important; }
+.boxcolor-s02 { background-color: #b7d4f7 !important; }
+.boxcolor-s03 { background-color: #ebecb7 !important; }
+.boxcolor-s04 { background-color: #ebcbcc !important; }
+.boxcolor-s05 { background-color: #dcc3e6 !important; }
+.boxcolor-s06 { background-color: #eacdb7 !important; }
+.boxcolor-s07 { background-color: #c8c1b7 !important; }
+.boxcolor-s08 { background-color: #b8b7e1 !important; }
+.boxcolor-s09 { background-color: #d8d8d8 !important; }
+.boxcolor-s10 { background-color: #c5c5c5 !important; }
+.boxcolor-s11 { background-color: #b7b7b7 !important; }
+.boxcolor-s12 { background-color: #f6f892 !important; }
+.boxcolor-s13 { background-color: #aff892 !important; }
+.boxcolor-s14 { background-color: #92f8d1 !important; }
+.boxcolor-s15 { background-color: #92bef8 !important; }
+.boxcolor-s16 { background-color: #ea92f8 !important; }
+.boxcolor-s17 { background-color: #f8929b !important; }
+.boxcolor-s18 { background-color: #f8c592 !important; }
+.boxcolor-s19 { background-color: #92f89a !important; }
+.boxcolor-s20 { background-color: #f6f6f6 !important; }
+.boxcolor-s21 { background-color: #dbe9dc !important; }
+.boxcolor-s22 { background-color: #dbe7f5 !important; }
+.boxcolor-s23 { background-color: #f5f5e0 !important; }
+.boxcolor-s24 { background-color: #f1dcdd !important; }
+
+
+.subtext {
+	text-align: right;
+	font-weight: bold;
+}
+
+/******************************
+ ICONS
+******************************/
+span[class*='square']:before,
+a[class*='square']:before {
+	border-radius: 50%;
+	background-color: var(--global-palette7);
+}
+
+span[class*='icon-black']:before,
+a[class*='icon-black']:before,
+a[class*='tool-black']:before {
+	filter: brightness(0.1) sepia(1%) saturate(6000%) hue-rotate(0deg);
+}
+
+a[href]:hover[class*='icon-black']:before,
+a[href]:hover[class*='tool-black']:before,
+a[onclick]:hover[class*='icon-black']:before,
+a[onclick]:hover[class*='tool-black']:before {
+	filter: brightness(0.5) sepia(6%) saturate(6000%) hue-rotate(0deg);
+}
+
+span[class*='icon-dark']:before,
+a[class*='icon-dark']:before,
+a[class*='tool-dark']:before {
+	filter: brightness(0.4) sepia(0%) saturate(6000%) hue-rotate(0deg);
+}
+
+a:hover[class*='icon-dark']:before,
+a:hover[class*='tool-dark']:before {
+	filter: brightness(0.5) sepia(6%) saturate(6000%) hue-rotate(0deg);
+}
+
+span[class*='icon-white']:before,
+a[class*='icon-white']:before,
+a[class*='tool-white']:before {
+	filter: brightness(0.9) sepia(0) saturate(6000%) hue-rotate(0deg);
+}
+
+a[href]:hover[class*='icon-white']:before,
+a[href]:hover[class*='tool-white']:before,
+a[onclick]:hover[class*='icon-white']:before,
+a[onclick]:hover[class*='tool-white']:before {
+	filter: brightness(0.5) sepia(6%) saturate(6000%) hue-rotate(0deg);
+}
+
+.float-whats {
+	position: fixed;
+	width: 48px;
+	height: 48px;
+	bottom: 6rem;
+	right: 20px;
+	background-color: #25d366;
+	border-radius: 50%;
+	text-align: center;
+	font-size: 30px;
+	box-shadow: 1px 1px 2px #888;
+	z-index: 1000;
+	background-image: url("/site-antigo/assets/tcr/assets/icons/whats.svg");
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100%;
+}
+
+/* HEADER (file) */
+.header.active{
+	background-color: var(--menu-bar);
+	-webkit-box-shadow: var(--box-shadow);
+	box-shadow: var(--box-shadow);
+}
+
+.header .navbar .nav-btn{
+	color: var(--main-link);
+}
+.header .navbar .nav-btn:hover{
+	color: var(--main-link-hover);
+}
+
+.header .icon-container .fa-icon{
+	color: var(--main-link);
+}
+.header .icon-container .fa-icon:hover{
+	color: var(--main-link-hover);
+}
+
+.dropdown-content{
+	background-color: var(--white);
+	-webkit-box-shadow: var(--box-shadow);
+	box-shadow: var(--box-shadow);
+}
+
+.dropdown-content a{
+	color: var(--black);
+}
+.dropdown-content a:hover{
+	color: var(--main-link-hover);
+}

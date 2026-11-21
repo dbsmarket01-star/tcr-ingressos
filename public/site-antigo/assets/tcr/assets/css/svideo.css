@@ -1,0 +1,68 @@
+
+.hero_section{
+    background-image: url("/site-antigo/assets/tcr/assets/images/loader.gif");
+    background-position: center center;
+    background-repeat: no-repeat;
+    /*-webkit-background-size: cover;
+    background-size: cover;*/
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 96px);
+    z-index: 1;
+}
+.hero_section .svideo{
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+.hero_section .YTPOverlay{
+    background-color: rgba(17,17,17,0.6) !important;
+}
+.hero_section .hero_content{}
+.hero_section .hero_content h3{
+    color: #fff;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 2px rgba(0,0,0,0.6);
+}
+.hero_section .hero_content h1{
+    margin-bottom: 20px;
+}
+.hero_section .hero_content p{
+    margin-bottom: 30px;
+    color: #fff;
+}
+
+h3 { font-size: 32px !important; }
+
+@media (max-width: 400px) {
+    h3 { font-size: 24px !important; }
+}
+
+
+.hero_section {
+    height: 14rem;
+}
+
+@media (min-width: 390px) {
+    .hero_section {
+        height: 18rem;
+    }
+}
+@media (min-width: 768px) {
+    .hero_section {
+        height: 32rem;
+    }
+}
+@media (min-width: 992px) {
+    .hero_section {
+        height: 40rem;
+    }
+}
+@media (min-width: 1200px) {
+    .hero_section {
+        height: calc(100vh - 5rem);
+    }
+}

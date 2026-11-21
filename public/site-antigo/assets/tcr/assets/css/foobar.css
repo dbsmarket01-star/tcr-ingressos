@@ -1,0 +1,168 @@
+/* Header Styles */
+foobar{
+    position: fixed;
+    display: none;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0;
+    transition: 0.5s;
+    z-index: 9;
+    background-color: transparent;
+    height: auto;
+}
+
+/* Navbar Styles */
+foobar > div{
+    display: flex;
+    height: 100%;
+    width: 100%;
+    gap: 1rem;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+    background-color: var(--menu-foobar);
+    flex-direction: row;
+    padding: 0 .5rem;
+}
+
+foobar > div > .navbar{
+    display: flex;
+    height: 100%;
+    width: 100%;
+    gap: 1rem;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+    flex-direction: row;
+}
+
+/* Navbar Button */
+foobar > div > .navbar a{
+    display: flex;
+    font-size: var(--menu-font-size);
+    color: var(--main-link);
+    font-stretch: condensed;
+    cursor: pointer;
+    letter-spacing: 0.1rem;
+    background: none;
+    transition: 0.5s;
+    width: 4rem;
+    flex-direction: column;
+    justify-content: center!important;
+    align-content: center!important;
+    align-items: center!important;
+    padding: 0.5rem;
+    text-decoration: none;
+}
+
+foobar > div > .navbar a > i{
+    position: relative;
+    font-size: 1.8rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: 0.5s;
+}
+
+foobar > div > .navbar a > span{
+    padding: 0 0.5rem;
+    font-size: .5rem !important;
+    letter-spacing: 0.1rem;
+    font-weight: 400;
+}
+
+foobar > div > .navbar a[href]:hover{
+    color: var(--main-link-hover);
+}
+
+@media (max-width: 768px) {
+    foobar {
+        display: flex;
+    }
+}
+
+.pin-value {
+    position: absolute;
+    font-size: .4rem;
+    background-color: var(--red);
+    font-weight: lighter;
+    font-style: normal !important;
+    text-align: center;
+    border-radius: 50%;
+    padding: .20rem;
+    letter-spacing: .05rem;
+    width: .8rem;
+    height: .8rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.header .pin-value {
+    top: 0;
+    right: 0;
+}
+foobar .pin-value {
+    top: 0;
+    right: 0;
+}
+
+
+.cartbar-icon-container{
+    display: flex;
+    height: 100%;
+    width: 100%;
+    gap: 1rem;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+    flex-direction: row;
+}
+
+.cartbar-icon-container > .cartbar-button {
+    display: flex;
+    width: calc(100% - 9rem);
+    justify-content: flex-start;
+    align-items: center;
+}
+/*.cartbar-icon-container > .cartbar-button > a {
+    background-color: #0E8010;
+    padding: .5rem;
+    border-radius: 6px;
+}*/
+
+.cartbar-icon-container > .cartbar-value {
+    display: flex;
+    width: 8rem;
+    justify-content: flex-end;
+}
+.cartbar-icon-container > .cartbar-value em {
+    font-style: normal !important;
+}
+
+.cartbar-icon-container > div > *{
+    color: #FFFFFF;
+    font-size: 12px;
+}
+.cartbar-icon-container > div > a[href]{
+    cursor: pointer;
+}
+
+.cartbar-icon-container > li.texto {
+    min-width: 2.4rem;
+}
+.cartbar-icon-container > li.value {
+    min-width: 5.2rem;
+}
+
+#button-container .cartbar-icon-container > div > *{
+    color: #000 !important;
+}
+
+
+
+
+

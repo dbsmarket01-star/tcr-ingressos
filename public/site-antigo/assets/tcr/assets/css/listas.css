@@ -1,0 +1,427 @@
+/* LIST */
+.list {
+    list-style: none;
+    font-style: normal !important;
+}
+.list.rescued {
+    padding: 1rem 0;
+}
+.list.rescued li {
+    margin-left: 3rem;
+    position: relative;
+}
+
+.list.rescued li > i {
+    position: absolute;
+    top: calc(50% - .5rem);
+    margin-left: -2rem;
+}
+
+.list-inline {
+    padding-left: 0;
+    list-style: none;
+}
+
+.list-inline-item > li {
+    display: inline;
+}
+
+.list-lblock-item > li {
+    display: inline-block;
+}
+
+.list > li {
+    margin-top: 10px;
+}
+
+.list-1 > li {
+    margin-top: 1px;
+}
+
+.list-12 > li {
+    margin-top: 12px;
+}
+
+.list-6 > li {
+    margin-top: 6px;
+}
+
+.list-modern li {
+    padding: 8px 16px;
+    border-radius: 30px;
+    border: 2px solid transparent;
+}
+
+.list-modern li.active {
+    background-color: #ff9f1c;
+    color: #000;
+}
+
+.list-modern .icon {
+    margin-top: 3px;
+}
+
+.list > li > i {
+    margin-right: 0.5rem;
+    text-align: center;
+    width: 1rem;
+    height: 1rem;
+}
+
+
+@media (min-width: 1200px) {
+    .list-modern li, .list-modern a, .list-modern a[class*="text-"] {
+        transition: .3s all ease;
+    }
+    .list-modern li:hover {
+        border-color: #ff9f1c;
+    }
+    .list-modern li:hover a, .list-modern li:hover a[class*="text-"] {
+        color: #000;
+    }
+    .list-modern li:hover .icon:before {
+        content: '\f24c';
+    }
+}
+
+.list-checkbox li .checkbox-inline > span {
+
+}
+
+.list-checkbox li .checkbox-inline > span, .list-checkbox li .checkbox-inline .checkbox-custom-dummy {
+    transition: .3s all ease;
+}
+
+.list-checkbox li .checkbox-inline .checkbox-custom-dummy {
+    border-color: #aaa;
+}
+
+.list-checkbox li .checkbox-inline:hover > span {
+    color: #000;
+}
+
+.list-checkbox li .checkbox-inline:hover .checkbox-custom-dummy {
+    border-color: #000;
+}
+
+.list-stage > li {
+    flex-basis: 0;
+    flex-grow: 1;
+    max-width: 100%;
+}
+
+.list-inline {
+    margin-left: -5px;
+    margin-right: -5px;
+}
+
+.list-inline > li {
+    display: inline-block;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.list-inline-0 {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.list-inline-0 > li {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.list-inline-3 {
+    margin-left: -3px;
+    margin-right: -3px;
+}
+
+.list-inline-3 > li {
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+.list-inline-8 {
+    margin-left: -8px;
+    margin-right: -8px;
+}
+
+.list-inline-8 > li {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.list-inline-11 {
+    margin-left: -11px;
+    margin-right: -11px;
+}
+
+.list-inline-11 > li {
+    padding-left: 11px;
+    padding-right: 11px;
+}
+
+.list-inline-13 {
+    margin-left: -13px;
+    margin-right: -13px;
+}
+
+.list-inline-13 > li {
+    padding-left: 13px;
+    padding-right: 13px;
+}
+
+.list-inline-marked li {
+    position: relative;
+}
+
+.list-inline-marked li:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -4px;
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    margin-top: 1px;
+    border-radius: 30px;
+    background: #aaa;
+    -webkit-transform: translateY(-50%);
+    transform: translateY(-50%);
+}
+
+.list-inline-marked li:last-child:after {
+    display: none;
+}
+
+.list-inline-marked-offset-inverse-top li:after {
+    right: -4px;
+    margin-top: 0;
+}
+
+
+.list-inline-dash {
+    border-bottom: 1px dashed var(--steel);
+    padding-bottom: 0.5rem;
+}
+
+.list-inline-dashed {
+    margin-left: -30px;
+}
+
+.list-inline-dashed li {
+    padding-left: 20px;
+    padding-right: 10px;
+}
+
+.list-inline li.dashed {
+    padding-right: 30px;
+}
+
+.list-inline li.dashed:after {
+    content: '|';
+    position: relative;
+    right: -10px;
+    padding-left: 10px;
+    color: #eee;
+}
+
+.list-inline-dashed li:after {
+    content: '|';
+    position: relative;
+    right: -10px;
+    padding-left: 10px;
+    color: #eee;
+}
+
+.list-inline-dashed li:last-child {
+    padding-right: 0;
+}
+
+.list-inline-dashed li:last-child:after {
+    display: none;
+}
+
+.list-inline-dashed-xs {
+    margin-left: -15px;
+}
+
+.list-inline-dashed-xs li {
+    padding-left: 15px;
+}
+
+.list-inline-dashed-xs li:after {
+    right: -12.5px;
+    padding-left: 0;
+}
+
+.list-inline-dashed-sm {
+    margin-left: -35px;
+}
+
+.list-inline-dashed-sm li {
+    padding-left: 35px;
+}
+
+.list-inline-dashed-sm li:after {
+    right: -22.5px;
+    padding-left: 0;
+}
+
+
+@media (max-width: 1200px) {
+    .list-inline li.dashed-sm:after {
+        display: none;
+    }
+}
+
+@media (min-width: 992px) {
+    .list-inline-dashed-vertival [class*="cell-"],
+    .list-inline-dashed-vertival [class*="col-"],
+    .list-inline-dashed-vertival .owl-item {
+        position: relative;
+    }
+    .list-inline-dashed-vertival [class*="cell-"]:after,
+    .list-inline-dashed-vertival [class*="col-"]:after,
+    .list-inline-dashed-vertival .owl-item:after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: 0;
+        height: 100%;
+        width: 1px;
+        background: #e8e8e8;
+        transform: translateY(-50%);
+    }
+    .list-inline-dashed-vertival [class*="cell-"]:last-child:after,
+    .list-inline-dashed-vertival [class*="col-"]:last-child:after,
+    .list-inline-dashed-vertival .owl-item:last-child:after {
+        display: none;
+    }
+}
+
+.list-inline-modern {
+    display: inline-block;
+    border-radius: 40px;
+    padding-right: 18px;
+}
+
+.list-inline-modern > li {
+    vertical-align: middle;
+    line-height: 1;
+}
+
+.list-inline-modern > li:first-child {
+    padding-left: 0;
+}
+
+.list-inline-modern > li a, .list-inline-modern > li a[class*="text-"] {
+    transition: .3s all ease;
+}
+
+.list-inline-modern > li a:hover, .list-inline-modern > li a[class*="text-"]:hover {
+    color: #ff9f1c;
+}
+
+.list-primary li a, .list-primary li a[class*="text-"] {
+    transition: .3s all ease;
+}
+
+.list-primary li a:hover, .list-primary li a[class*="text-"]:hover {
+    color: #ff9f1c;
+}
+
+.list-silver-chalice li a, .list-silver-chalice li a[class*="text-"] {
+    color: #aaa;
+    transition: .3s all ease;
+}
+
+.list-silver-chalice li a:hover, .list-silver-chalice li a[class*="text-"]:hover {
+    color: #ff9f1c;
+}
+
+.list-primary-filled li a span[class*="bg-"] {
+    transition: .3s background ease;
+}
+
+.list-primary-filled li a span {
+    border-radius: 2px;
+}
+
+.list-primary-filled li a, .list-primary-filled li a[class*="text-"], .list-primary-filled li span[class*="text-"] {
+    transition: .3s all ease;
+}
+
+.list-primary-filled li a:hover, .list-primary-filled li a:hover span[class*="text-"], .list-primary-filled li a[class*="text-"]:hover, .list-primary-filled li a[class*="text-"]:hover span[class*="text-"], .list-primary-filled li span[class*="text-"]:hover, .list-primary-filled li span[class*="text-"]:hover span[class*="text-"] {
+    color: #fff;
+}
+
+.list-primary-filled li a:hover, .list-primary-filled li a:hover a[class*="bg-"], .list-primary-filled li a:hover span[class*="bg-"], .list-primary-filled li a[class*="text-"]:hover, .list-primary-filled li a[class*="text-"]:hover a[class*="bg-"], .list-primary-filled li a[class*="text-"]:hover span[class*="bg-"], .list-primary-filled li span[class*="text-"]:hover, .list-primary-filled li span[class*="text-"]:hover a[class*="bg-"], .list-primary-filled li span[class*="text-"]:hover span[class*="bg-"] {
+    background: #ff9f1c;
+}
+
+dl {
+    margin: 0;
+}
+
+.list-terms {
+    margin-top: 35px;
+}
+
+.list-terms dt + dd {
+    margin-top: 5px;
+}
+
+.list-terms dd + dt {
+    margin-top: 25px;
+}
+
+.list-index {
+    counter-reset: li;
+}
+
+.list-index li .list-index-counter:before {
+    content: counter(li, decimal-leading-zero);
+    counter-increment: li;
+}
+
+.list-marked li {
+    position: relative;
+    padding-left: 1rem;
+}
+
+/*.list-marked li:before {
+    content: '';
+    display: inline-block;
+    background: #ff9f1c;
+    width: 3px;
+    height: 3px;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+    transform: translateY(-50%);
+}*/
+
+.list-marked li > i {
+    display: inline-block;
+    position: absolute;
+    left: 0;
+    top: 0.1rem;
+    color: #ff9f1c;
+}
+
+.list-marked-icon li {
+    position: relative;
+    padding-left: 33px;
+}
+
+.list-marked-icon li:before {
+    content: '\f00c';
+    position: absolute;
+    top: 4px;
+    left: 13px;
+    display: inline-block;
+    font: 700 10px/10px "FontAwesome";
+    color: #ff9f1c;
+}

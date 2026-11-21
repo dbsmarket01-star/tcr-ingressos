@@ -1,0 +1,82 @@
+/* FAQ ACCORDION */
+.accordion-container {
+    width: 100%;
+    padding-right: 16px;
+    padding-left: 16px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.accordion-container .accordion {
+    margin-bottom: 1rem;
+    -webkit-box-shadow: var(--box-shadow);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+    border-radius: var(--border-radius);
+}
+
+.accordion-container .accordion:last-child {
+    margin-bottom: 0;
+}
+
+.accordion-container .accordion .accordion-heading {
+    padding: 1rem;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    gap: 1rem;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    background: var(--darker);
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.accordion-container .accordion.active .accordion-heading {
+    background: var(--global-palette8);
+}
+
+.accordion-container .accordion .accordion-heading h3 {
+    font-size: 1.2rem;
+    color: var(--white);
+    margin: 0.5rem !important;
+}
+
+.accordion-container .accordion .accordion-heading i {
+    font-size: 1.2rem;
+    color: var(--white);
+    transition: all 0.2s linear;
+}
+
+.accordion-container .accordion.active .accordion-heading i {
+    -webkit-transform: rotate(180deg);
+    transform: rotate(180deg);
+}
+
+.accordion-container .accordion-content {
+    padding: 1rem;
+    font-size: 1rem;
+    color: var(--darker);
+    display: none;
+    background: var(--silver);
+}
+
+.accordion-container .accordion-content .wrapper > div {
+    padding: 0.4rem;
+    white-space: nowrap;
+    text-align: center;
+    display: flex;
+}
+
+.accordion-container .accordion-content .wrapper > div p {
+    display: block;
+    margin: auto;
+}
+
+.accordion-container .accordion.active .accordion-content {
+    display: block;
+}

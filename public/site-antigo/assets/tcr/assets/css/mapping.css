@@ -1,0 +1,545 @@
+/*********************************************************************
+MAPPING
+*********************************************************************/
+.box-mapping {
+    margin: 0 1rem;
+}
+
+.mapping-dateline, .mapping-timeline {
+    position: relative;
+    width: 100%;
+    min-height: 1rem;
+    padding: 1rem 0;
+}
+/* DATA E HORA */
+.mapping-date {
+    color: var(--global-palette9);
+    font-size: 60px;
+    line-height: 1;
+    text-align: left;
+}
+
+.mapping-date sup {
+    font-size: 20px;
+    padding-right: 8px;
+}
+
+.mapping-date sub {
+    position: relative;
+    bottom: 12px;
+    font-size: 28px;
+    padding-left: 8px;
+}
+/* CONTENT GERAL */
+.mapping-content {
+    display: flex;
+    border-radius: 8px;
+    background-color: var(--transparent);
+    overflow: hidden;
+}
+
+.mapping-content,
+.mapping-date {
+    margin-left: 4rem;
+    margin-right: 1rem;
+}
+
+.mapping-content:before, .mapping-date:before {
+    position: absolute;
+    min-height: 100%;
+    content: '';
+}
+
+
+.mapping-content:before, .mapping-date:before {
+    border-left: 2px solid var(--global-palette9);
+    border-right: unset;
+    right: unset;
+    left: 1.4rem;
+}
+
+/*.mapping-content:before {
+    top: 1rem;
+}*/
+
+/* CONTENT ICONE */
+.mapping-icon {
+    position: absolute;
+    display: inline-block;
+    border-radius: 50%;
+    top: 8px;
+    width: 3rem;
+    height: 3rem;
+    will-change: transform;
+    border: 6px solid var(--global-palette9);
+    background-color: var(--global-palette9);
+}
+
+.mapping-icon {
+    left: 0;
+}
+
+.mapping-icon > a {
+    background-color: unset;
+    text-decoration: none;
+    position: absolute;
+    display: block;
+    list-style: none;
+    width: 3rem;
+    height: 3rem;
+    top: calc(50% - 1rem);
+    left: calc(50% - 1.5rem);
+    border: 0;
+    text-align: center;
+    overflow: hidden;
+    border-radius: 50%;
+    color: var(--global-palette3);
+}
+
+/* CONTENT FIGURA */
+.mapping-content .mapping-figure {
+    background-color: var(--transparent);
+}
+
+.mapping-content .mapping-figure > a{
+    cursor: pointer;
+}
+
+.mapping-content .mapping-figure figure{
+    background: none;
+    position: relative;
+    display: block;
+    padding: 0;
+    border: 0;
+    margin: -1px 0 0;
+    overflow: hidden;
+}
+
+
+.mapping-figure i {
+    display: block;
+    position: absolute;
+    top: 16px;
+    right: -38px;
+    width: 140px;
+    font-size: 16px;
+    line-height: 1px;
+    background-color: #ef0808;
+    color: #FFF;
+    border-radius: 2px;
+    text-align: center;
+    padding: 12px;
+    transform: rotate(45deg);
+    box-shadow: 0 5px 10px 0 rgba(0,0,0,0.8);
+}
+
+.mapping-content .mapping-figure figure img {
+    max-width: 100%;
+    border: none;
+}
+
+.mapping-content .mapping-figure figcaption {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    text-align: center;
+    padding: 1rem;
+    background-color:  var(--dark-ovelay);
+    color: var(--white);
+    font-size: 20px;
+    transition: all 300ms ease;
+}
+
+.mapping-content .mapping-figure a[href]:hover figcaption {
+    background-color:  var(--black);
+}
+
+.mapping-content .mapping-figure .lotation {
+    position: absolute;
+    right: .5em;
+    top: .5em;
+    color: var(--default);
+    font-size: 16px;
+    font-weight: bolder;
+}
+
+/* CONTENT POINT */
+.mapping-content .mapping-point {
+    background-color: var(--transparent);
+    width: 100%;
+}
+
+.mapping-content .mapping-point > a{
+    background-color: var(--green);
+    text-decoration: none;
+    position: relative;
+    display: block;
+    list-style: none;
+    width: 100%;
+    height: auto;
+    border: 0;
+    text-align: left;
+    overflow: hidden;
+    color: var(--black);
+    padding: 1rem;
+    font-size: large;
+}
+
+.mapping-content .mapping-point.GOIN > a{
+    background-color: var(--green);
+}
+
+.mapping-content .mapping-point.BACK > a{
+    background-color: var(--red);
+}
+
+@media (min-width: 992px){
+    .mapping-timeline{
+        flex: 0 0 calc(50% + 1px);
+        max-width: calc(50% + 1px);
+    }
+    .mapping-dateline{
+        flex: 0 0 calc(50% + 1px);
+        max-width: calc(50% + 1px);
+        display: block;
+    }
+
+    .box-mapping:nth-child(odd) {
+        justify-content: flex-end !important;
+    }
+    .box-mapping:nth-child(even)  {
+        justify-content: flex-start !important;
+    }
+
+    .box-mapping:nth-child(even)  {
+        justify-content: flex-start !important;
+    }
+
+
+    .box-mapping:nth-child(even) .mapping-content,
+    .box-mapping:nth-child(even) .mapping-date {
+        margin-right: 4rem;
+        margin-left: 1rem;
+    }
+
+    .box-mapping:nth-child(odd) .mapping-content:before, .box-mapping:nth-child(odd) .mapping-date:before {
+        border-left: 2px solid var(--global-palette9);
+        border-right: unset;
+        left: 0;
+        right: unset;
+    }
+
+    .box-mapping:nth-child(even) .mapping-content:before, .box-mapping:nth-child(even) .mapping-date:before {
+        border-right: 2px solid var(--global-palette9);
+        border-left: unset;
+        left: unset;
+        right: 0;
+    }
+
+    .box-mapping:nth-child(odd) .mapping-icon {
+        left: calc(-1.5rem + 1px) !important;
+        right: unset !important;
+    }
+
+    .box-mapping:nth-child(even) .mapping-icon {
+        left: unset !important;
+        right: calc(-1.5rem + 1px) !important;
+    }
+
+    .box-mapping:nth-child(even) .mapping-date {
+        text-align: right;
+    }
+
+    .box-mapping:nth-child(even) .mapping-content .mapping-point > a{
+        text-align: right;
+    }
+}
+
+/*
+@media (min-width: 992px){
+    .mapping-timeline{
+        flex: 0 0 50%;
+        max-width: 54%;
+    }
+    .mapping-dateline{
+        flex: 0 0 50%;
+        max-width: 50%;
+        display: block;
+    }
+    .mapping.mapping-left .mapping-box {
+        margin-right: 96px;
+        margin-left: unset;
+    }
+    .mapping.mapping-left .mapping-box:before {
+        border-left: unset;
+        border-right: 2px solid var(--global-palette9);
+        right: -1px;
+        left: unset;
+    }
+    .mapping.mapping-left .mapping-box-caption:after,
+    .mapping.mapping-left .mapping-box-mosaic:after {
+        border-right-color: transparent;
+        border-left-color: var(--global-palette9);
+        left: unset;
+        right: 79px;
+    }
+    .mapping.mapping-left .mapping-box .mapping-figure {
+        left: unset;
+        right: -30px;
+    }
+    .mapping.mapping-left .mapping-box .mapping-box-caption,
+    .mapping.mapping-left .mapping-box .mapping-box-mosaic {
+        text-align: right;
+    }
+    .mapping.mapping-left .mapping-date {
+        text-align: left;
+        margin-left: 48px;
+    }
+    .mapping .mapping-date-responsive {
+        display: none;
+    }
+}
+
+/*
+.mapping-box .mapping-figure > a {
+    background-color: unset;
+    text-decoration: none;
+    position: relative;
+    display: block;
+    list-style: none;
+    width: 50px;
+    height: 50px;
+    border: 0;
+    text-align: center;
+    overflow: hidden;
+    border-radius: 50%;
+    transition: all 1s ease;
+    -o-transition: all 1s ease;
+    -ms-transition: all 1s ease;
+    -moz-transition: all 1s ease;
+    -webkit-transition: all 1s ease;
+}
+
+.mapping-box .mapping-figure figure{
+    background: none;
+    position: relative;
+    display: block;
+    padding: 0;
+    border: 0;
+    margin: -1px 0 0;
+    overflow: hidden;
+    text-decoration: none;
+}
+
+.mapping-box .mapping-figure figure img {
+    max-width: 100%;
+    min-height: 100%;
+    border: 0;
+}
+
+.mapping-quote .mapping-caption {
+    padding: 16px 16px 16px 32px;
+    background-color: var(--global-palette8);
+}
+
+.mapping-quote .mapping-title {
+    font-size: 14px;
+}
+
+.mapping-quote .mapping-title a {
+    transition: .3s all ease;
+    color: var(--global-palette1);
+}
+
+.mapping-quote .mapping-title a:hover {
+    color: var(--global-palette2);
+}
+
+.mapping-quote .mapping-description {
+    line-height: 1.5;
+    color: var(--global-palette3);
+}
+
+.mapping-quote .mapping-text {
+    line-height: 1.5;
+    color: var(--global-palette6);
+}*/
+
+
+
+
+/*
+
+.mapping-content .mapping-figure figcaption{
+    position: absolute;
+    line-height: 1.2;
+    left: 1rem;
+    bottom: 1rem;
+    right: 1rem;
+    text-align: left;
+    color: var(--global-palette2);
+    background-color: var(--global-palette3);
+}
+
+
+.mapping-box .mapping-box-caption {
+    color: var(--global-palette9);
+    padding: 32px;
+    text-align: right;
+}
+
+.mapping-box .mapping-box-mosaic {
+    padding: 0;
+}
+
+.mapping-box .mapping-box-mosaic > a {
+    color: var(--global-palette9);
+    text-align: right;
+    cursor: pointer;
+}
+
+.mapping-box .mapping-box-mosaic figure{
+    background: none;
+    position: relative;
+    display: block;
+    padding: 0;
+    border: 0;
+    margin: -1px 0 0;
+    overflow: hidden;
+    text-decoration: none;
+}
+
+.mapping-box .mapping-box-mosaic figure img {
+    max-width: 100%;
+    min-height: 100%;
+    border: 0;
+}
+
+.mapping-box .mapping-box-mosaic figcaption {
+    position: absolute;
+    line-height: 1.2;
+    left: 16px;
+    bottom: 16px;
+    right: 16px;
+    text-align: left;
+    color: var(--global-palette2);
+}
+
+.mapping-box .mapping-box-mosaic figcaption {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(15px);
+    transition: all 300ms ease;
+    z-index: 1;
+}
+
+.mapping-box .mapping-box-mosaic figure:before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 102%;
+    height: 50%;
+    background-image: linear-gradient(0deg, rgba(255, 255, 255, 0.9), transparent);
+    background-repeat: repeat-x;
+    border-radius: 0;
+}
+
+.mapping-box .mapping-box-mosaic figure:before {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(40%);
+    transition: all 300ms ease;
+    z-index: 1;
+}
+
+.mapping-box .mapping-box-mosaic:hover figcaption,
+.mapping-box .mapping-box-mosaic:hover figure:before {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(0);
+}
+
+.mapping .mapping-box-caption:after, .mapping .mapping-box-mosaic:after {
+    position: absolute;
+    top: 24px;
+    display: block;
+    width: 0;
+    height: 0;
+    content: '';
+    border: 16px solid transparent;
+}
+
+.mapping .mapping-box-caption:after, .mapping .mapping-box-mosaic:after {
+    border-right-color: var(--global-palette4);
+    border-left-color: transparent;
+    left: 79px;
+    right: unset;
+}
+
+.mapping .mapping-box .mapping-box-caption {
+    text-align: left;
+    min-width: 100%;
+}
+
+.mapping .mapping-date {
+    color: var(--global-palette9);
+    font-size: 60px;
+    line-height: 1;
+    text-align: right;
+}
+
+.mapping .mapping-date sup {
+    font-size: 26px;
+    padding-right: 8px;
+}
+
+.mapping .mapping-date sub {
+    position: relative;
+    bottom: 12px;
+    font-size: 32px;
+    padding-left: 8px;
+}
+
+.mapping .mapping-date-responsive {
+    /*position: absolute;
+    top: -38px;
+    left: 8px;
+    color: var(--global-palette9);
+    font-size: 30px;
+    line-height: 1;
+    margin-bottom: 32px;
+}
+
+.mapping .mapping-date-responsive sup {
+    font-size: 14px;
+    padding-right: 8px;
+}
+
+.mapping .mapping-date-responsive sub {
+    position: relative;
+    bottom: 8px;
+    font-size: 16px;
+    padding-left: 8px;
+}
+
+.mapping .mapping-date {
+    text-align: right;
+    margin-right: 48px;
+}
+
+.mapping-box .mapping-title {
+    font-size: 14px;
+    color: var(--global-palette1);
+}
+
+.mapping-box .mapping-text {
+    line-height: 1.5;
+    color: var(--global-palette3);
+}
+
+.mapping-dateline{
+    display: none;
+}*/

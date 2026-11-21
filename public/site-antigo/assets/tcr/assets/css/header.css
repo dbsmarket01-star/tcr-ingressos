@@ -1,0 +1,214 @@
+/* Header Styles */
+
+.minha-classe {
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+.header{
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    height: 5rem;
+    width: 100%;
+    padding: 0 5%;
+    background-color: transparent;
+    transition: 0.5s;
+}
+
+/* Navbar Styles */
+.header .navbar{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    height: 100%;
+    gap: 1rem;
+}
+
+/* Navbar Button */
+.header .navbar .nav-btn{
+    display: inline-block;
+    font-size: var(--menu-font-size);
+    font-stretch: condensed;
+    cursor: pointer;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    letter-spacing: 0.1rem;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    background: none;
+    transition: 0.5s;
+}
+
+/* Navbar Button Icon */
+.header .navbar .nav-btn i{
+    padding-left: 0.5rem;
+}
+
+/* Menu Button */
+.header #menubar{
+    display: none;
+}
+
+/* Menu Button */
+.header .nav-icons{
+    display: flex;
+}
+
+/* Header Icons */
+.header .icon-container, .header .icon-menu{
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+.header .icon-menu{
+    margin-right: 0.7rem;
+}
+
+/* Header Icon */
+.header .icon-container .fa-icon, .header .icon-menu .fa-icon{
+    font-size: 1rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: 0.5s;
+}
+
+/* Menu link span */
+.header .icon-container a span, .header .icon-menu a span{
+    margin-left: 8px;
+}
+
+/* Dropdown Menu Styles */
+.dropdown-menu{
+    position: relative;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+
+/* Dropdown Content Styles */
+.dropdown-content{
+    position: absolute;
+    top: 100%;
+    left: 0;
+    padding: 0.5rem;
+    width: 20rem;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    transform: scale(0);
+    -webkit-transition:  all 0.5s;
+    -moz-transition:  all 0.5s;
+    -o-transition:  all 0.5s;
+    transition:  all 0.5s;
+    z-index: 1000;
+}
+
+/* Dropdown Content Link */
+.dropdown-content a{
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--black);
+    padding: 0.5rem;
+    cursor: pointer;
+}
+
+/* Dropdown Menu, On Hover */
+.dropdown-menu:hover .dropdown-content{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    transform: scale(1);
+}
+
+/* Mobile Menu */
+.mobile-menu{
+    display: none;
+}
+
+
+
+
+/* Logo Styles */
+header .logo{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Logo Image */
+header .logo img{
+    height: 5rem;
+    object-fit: cover;
+}
+
+/* Logo Heading */
+header .logo h3{
+    font-size: 2rem;
+    font-weight: 500;
+    color: var(--white);
+    letter-spacing: 0.2rem;
+    line-height: 1;
+}
+
+.header #form-search, .header #menu-search {
+    display: none;
+}
+.header #form-search.active, .header #menu-search.active {
+    display: flex;
+}
+
+.header .form-search input {
+    padding: 10px;
+    font-size: 17px;
+    float: left;
+    width: calc(100% - 2rem);
+    height: 2.3rem;
+    background: #f1f1f1;
+    border: 0;
+    border-radius: 8px 0 0 8px
+}
+
+.header .form-search button {
+    float: right;
+    width: 2rem;
+    height: 2.3rem;
+    padding: 8px;
+    background: var(--main-link-hover);
+    color: white;
+    font-size: 17px;
+    border-left: none;
+    cursor: pointer;
+    border-radius: 0 8px 8px 0
+}
+
+
+
+
+

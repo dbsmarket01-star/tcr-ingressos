@@ -1,0 +1,175 @@
+:root {
+
+    /* GENERAL */
+    --font-family: "Lato", Helvetica, Arial, sans-serif;
+    --border-radius: 0.5rem;
+    --border: 0.1rem solid rgba(0, 0, 0, 0.1);
+    --box-shadow: 0 0.2rem 0.3rem rgba(0, 0, 0, 0.8);
+    --box-shadow-up: 0 -0.4rem 0.6rem rgba(0, 0, 0, 0.8);
+    --button-shadow: 0 0.2rem 0.2rem -0.05rem rgba(0,0,0,0.5);
+
+    /* DEFAULT */
+    --bg: linear-gradient(148deg, rgb(72, 122, 59) 0%, rgba(255, 153, 0, 0) 40%);
+    --body: #FFFFFF;
+    --main: transparent; /*linear-gradient(148deg, rgba(255, 153, 0, 1) 0%, rgba(255, 153, 0, 0) 40%);*/
+    --text: linear-gradient(148deg, rgb(72, 122, 59) 0%, rgba(255, 153, 0, 0) 40%, rgb(72, 122, 59) 100%);
+
+    /* LOADER */
+    --load-01: #0b2d01;
+    --load-02: #227d2e;
+    --load-03: #FFFFFF;
+
+    /* HEADER */
+    --menu-bar: #040a00;
+    --side-bar: #0b2d01;
+    --main-link: #FFFFFF;
+    --main-link-cross: #040a00;
+    --main-link-hover: #258109;
+    --foot-bar: #181209;
+
+    --sub-bar: #227d2e;
+    --sub-link: #0b2d01;
+    --sub-link-hover: #FFFFFF;
+
+    --menu-font-size: 1rem;
+
+    /* FOOBAR */
+    --menu-foobar: #0e1c06;
+
+    /* FOOTER */
+    --footer-background: #040a00;
+    --footer-title: #FFFFFF;
+    --footer-text: #FFFFFF;
+
+    /* PAGER */
+    --pager-background: #0b2d01;
+    --pager-hover: #49793b;
+    --pager-selected: #49793b;
+    --pager-next: #FFFFFF;
+    --pager-color: #FFFFFF;
+
+    /* LAYOUT */
+    --black:  #000000;
+    --darker: #222222;
+    --dark:   #333333;
+    --gray:   #666666;
+    --steel:  #888888;
+    --silver: #AAAAAA;
+    --light:  #CCCCCC;
+    --bright: #DDDDDD;
+    --white:  #FFFFFF;
+    --night:  #258109;
+    --transparent: transparent;
+
+    /* SWIPER */
+    --swiper-theme-color: #007aff;
+
+    --swiper-navigation-white: #ffffff;
+    --swiper-navigation-black: #000000;
+    --swiper-navigation-size: 32px;
+    --swiper-navigation-active: rgba(72, 122, 59, 0.5);
+
+    --swiper-pagination-white: #ffffff;
+    --swiper-pagination-black: #000000;
+
+    --swiper-preloader-white: #ffffff;
+    --swiper-preloader-black: #000000;
+
+    --bullet-border-radius: 0.25rem;
+    --swiper-pagination: rgba(119, 250, 76, 0.30);
+    --swiper-pagination-active: rgba(72, 122, 59, 0.5);
+
+    /* CONFIG */
+    --dark-ovelay: rgba(34, 34, 34, 0.6);
+    --light-ovelay: rgba(170, 170, 170, 0.6);
+
+    --blue: #3498db;
+    --blue-hover: #2980b9;
+    --green: #2ecc71;
+    --green-hover: #27ae60;
+    --red: #e74c3c;
+    --red-hover: #c0392b;
+    --orange: #f1c40f;
+    --orange-hover: #f39c12;
+    --purple: #9b59b6;
+    --purple-hover: #8e44ad;
+    --default: #ecf0f1;
+    --default-hover: #bdc3c7;
+    --darker-hover: #111111;
+
+    --global-palette1:#dea46b;
+    --global-palette2:#FB4E4E;
+    --global-palette3:#FFFFFF;
+    --global-palette4:#2c472f;
+    --global-palette5:#CDCFD4;
+    --global-palette6:#A6A6A6;
+    --global-palette7: #114515;
+    --global-palette8:#1e3820;
+    --global-palette9:#142916;
+    --global-palette0:#111111;
+    --transparent-palette0: rgba(10, 20, 11, 0.8);
+
+    /* INPUT */
+    --title-box: #CCCCCC;
+    --title-box-hover: #FFFFFF;
+
+    --input-color: #FFFFFF;
+    --input-border: #989898;
+    --input-text:    #333333;
+    --label-color:   #FFFFFF;
+    --label-border:  #FFFFFF;
+    --label-text:    #333333;
+    --input-subtext: #222222;
+
+    --input-color-required:  #FFFFFF;
+    --input-border-required: #989898;
+    --input-text-required:   #333333;
+    --label-color-required:  #FFFFFF;
+    --label-border-required: #FFFFFF;
+    --label-text-required:   #333333;
+
+    --input-border-sucess: #01800d;
+
+    --input-border-empty: #Cf2E2A;
+    --label-color-empty:  #FFFFFF;
+    --label-border-empty: #FFFFFF;
+    --label-text-empty:   #Cf2E2A;
+
+    --input-border-invalid: #C7A220;
+    --label-color-invalid:  #FFFFFF;
+    --label-border-invalid: #FFFFFF;
+    --label-text-invalid:   #C7A220;
+
+
+    --input-color-focus: #FFFFFF;
+    --input-border-focus: #1f1f1f;
+
+    --label-border-before:   #666666;
+
+    --input-color-disabled: #FFFFFF;
+    --input-border-disabled: #989898;
+    --label-color-disabled:  #F1F1F1;
+    --label-border-disabled: #DDDDDD;
+    --label-text-disabled:   #666666;
+
+    --label-begin: #EEEEEE;
+    --label-end:   #CCCCCC;
+
+    --label-begin-checked: #7bcf2a;
+    --label-end-checked:   #487012;
+
+    --label-begin-unchecked: #Cf2E2A;
+    --label-end-unchecked:   #681816;
+
+    /* CUSTOMER BOX */
+    --box-color: #1e1e1e;
+    --box-figure-border-color: #1e1e1e;
+
+    /* BANNER HEIGHT STATES */
+    --height-mobile:  12rem; /* 0 +   */
+    --height-tablet:  18rem; /* 390 + */
+    --height-lscape:  32rem; /* 768 + */
+    --height-desktop: 40rem; /* 992 + */
+    --height-fullah:  100vh; /* 1200+ */
+
+}

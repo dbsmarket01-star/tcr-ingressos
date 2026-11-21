@@ -1,0 +1,152 @@
+/* GRID STYLE */
+.grid-1, .grid-2, .grid-3, .grid-4, .grid-5, .grid-6, .grid-7, .grid-8, .grid-9, .grid-10, .grid-11, .grid-12, .grid,
+.grid-auto {
+    position: relative;
+    width: 100%;
+    min-height: 1px;
+    padding-right: 16px;
+    padding-left: 16px;
+}
+
+.grid {
+    flex-basis: 0;
+    flex-grow: 1;
+    max-width: 100%;
+}
+
+.grid-auto {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: none;
+}
+
+@media (min-width: 576px){
+    .grid-1, .grid-2 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+    footer .grid-4 {
+        flex: 0 0 80%;
+        max-width: 80%;
+    }
+}
+
+@media (min-width: 768px){
+    .grid-1, .grid-2 {
+        flex: 0 0 25%;
+        max-width: 25%;
+    }
+
+    .grid-3, .grid-4 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+@media (min-width: 992px){
+    .grid-1 {
+        flex: 0 0 16.66667%;
+        max-width: 16.66667%;
+    }
+
+    .grid-2 {
+        flex: 0 0 33.33333%;
+        max-width: 33.33333%;
+    }
+
+    .grid-3 {
+        flex: 0 0 33.33333%;
+        max-width: 33.33333%;
+    }
+
+    .grid-4 {
+        flex: 0 0 45%;
+        max-width: 45%;
+    }
+
+    .grid-5 {
+        flex: 0 0 41.66667%;
+        max-width: 41.66667%;
+    }
+
+    .grid-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    .grid-7 {
+        flex: 0 0 58.33333%;
+        max-width: 58.33333%;
+    }
+
+    footer .grid-4 {
+        flex: 0 0 33.33333%;
+        max-width: 33.33333%;
+    }
+}
+
+@media (min-width: 1200px) {
+    .grid {
+        flex-basis: 0;
+        flex-grow: 1;
+        max-width: 100%;
+    }
+    .grid-auto {
+        flex: 0 0 auto;
+        width: auto;
+        max-width: none;
+    }
+    .grid-1 {
+        flex: 0 0 8.33333%;
+        max-width: 8.33333%;
+    }
+    .grid-2 {
+        flex: 0 0 16.66667%;
+        max-width: 16.66667%;
+    }
+    .grid-3 {
+        flex: 0 0 25%;
+        max-width: 25%;
+    }
+    .grid-4 {
+        flex: 0 0 33.33333%;
+        max-width: 33.33333%;
+    }
+    .grid-5 {
+        flex: 0 0 41.66667%;
+        max-width: 41.66667%;
+    }
+    .grid-6 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+    .grid-7 {
+        flex: 0 0 58.33333%;
+        max-width: 58.33333%;
+    }
+    .grid-8 {
+        flex: 0 0 66.66667%;
+        max-width: 66.66667%;
+    }
+    .grid-9 {
+        flex: 0 0 75%;
+        max-width: 75%;
+    }
+    .grid-10 {
+        flex: 0 0 83.33333%;
+        max-width: 83.33333%;
+    }
+    .grid-11 {
+        flex: 0 0 91.66667%;
+        max-width: 91.66667%;
+    }
+    .grid-12 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    footer .grid-4 {
+        flex: 0 0 33.33333%;
+        max-width: 33.33333%;
+    }
+}

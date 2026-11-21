@@ -1,0 +1,62 @@
+/* page slider */
+.swiper-page{
+    position: relative;
+}
+
+/* page slider height */
+/*.swiper-page {
+    height: 24rem;
+}
+
+@media (min-width: 390px) {
+    .swiper-page {
+        height: 18rem;
+    }
+}
+@media (min-width: 768px) {
+    .swiper-page {
+        height: 28rem;
+    }
+}
+@media (min-width: 992px) {
+    .swiper-page {
+        height: 34rem;
+    }
+    .grid-6 .swiper-page {
+        height: 24rem;
+    }
+}
+@media (min-width: 1200px) {
+    .swiper-page {
+        height: 40rem;
+    }
+    .grid-6 .swiper-page {
+        height: 28rem;
+    }
+}*/
+
+/* page Slider Navigation Buttons */
+.swiper-page .swiper-button-next,
+.swiper-page .swiper-button-prev{
+    font-size: 1rem;
+    height: 3rem;
+    width: 3rem;
+    border-radius: 50%;
+}
+
+/* page Slider Navigation Buttons Icon */
+.swiper-page .swiper-button-next::after,
+.swiper-page .swiper-button-prev::after {
+    font-size: 2rem;
+    font-weight: bold;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+

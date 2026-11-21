@@ -1,0 +1,83 @@
+/*****************************************************************
+PAGINADOR
+*****************************************************************/
+#paginador{
+    background: none;
+    position: relative;
+    padding: 1px;
+    font-size: 15px;
+    overflow: hidden;
+    min-height: 30px;
+}
+#limitador{
+    background: none;
+    position: relative;
+    float: right;
+    padding: 1px;
+    font-size: 15px;
+}
+
+#paginador li,
+#limitador li{
+    display: inline-block;
+    height: 30px;
+    margin-left: 1px;
+    vertical-align: top;
+}
+
+#paginador a,
+#limitador a{
+    line-height: 20px;
+    padding: 2px;
+    height: 30px;
+    min-width: 30px;
+    display: block;
+    position: relative;
+    border: 3px solid transparent;
+    -ms-user-select: none;
+    user-select: none;
+    text-align: center;
+}
+#paginador li:first-child a,
+#limitador li:first-child a {
+    border-radius: 8px 0 0 8px;
+    -ms-border-radius: 8px 0 0 8px;
+}
+
+#paginador li:last-child a,
+#limitador li:last-child a {
+    border-radius: 0 8px 8px 0;
+    -ms-border-radius: 0 8px 8px 0;
+}
+
+#paginador li:first-child a:after, #paginador li:last-child a:after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 8px solid transparent;
+    top: 4px;
+}
+
+#paginador li:first-child a:after {
+    left: 0;
+}
+
+#paginador li:last-child a:after {
+    right: 0;
+}
+
+#paginador a,
+#limitador a{
+    transition: .5s ease-in-out all;
+}
+
+#paginador a[href]:hover,
+#limitador a[href]:hover{
+    transition: .20s ease-in-out all;
+}
+
+#paginador a:not([href]),
+#limitador a:not([href]){
+    transition: .5s ease-in-out all;
+}

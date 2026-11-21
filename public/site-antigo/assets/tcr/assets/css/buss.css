@@ -1,0 +1,617 @@
+@charset "utf-8";
+/* CSS Document */
+
+#loaderbus, #loaderdrive{
+	min-height: 1px;
+}
+
+.buss input[type=text]{
+	padding: 2px !important;
+	line-height: normal;
+	min-height: 12px;
+	text-align: center;
+}
+
+.buss-recue-left{padding-left: 5px;}
+.buss-recue-right{padding-right: 5px;}
+
+.buss{
+	background: rgba(51,51,51,1);
+	position: relative;
+	display: inline-block;
+	width: 210px;
+	/*margin: 2px 0 10px 0;*/
+	border-radius:         10px;
+	-ms-border-radius:     10px;
+	border: 10px solid rgba(51,51,51,1);
+}
+
+.buss-head{
+	background: rgba(102,102,102,1);
+	position: relative;
+	display: block;
+	width: 190px;
+	height: 50px;
+	margin-bottom: 10px;
+	border-radius:         5px 5px 0px 0px;
+	-ms-border-radius:     5px 5px 0px 0px;
+}
+
+.buss-body-level-2{
+	margin-top: 8px;
+}
+
+.buss-head > a {
+	background: #EEE;
+	position: relative;
+	display: block;
+	outline: none;
+	width: 100%;
+	height: 20px;
+	border: 0;
+	padding: 15px 0;
+	border-radius:         5px 5px 0px 0px;
+	-ms-border-radius:     5px 5px 0px 0px;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.buss-head > a[href]:before { background: #AB494B;
+	display: block;
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 0;
+	border-style: solid;
+	border-color: rgba(255,255,255,1.00);
+	border-color: rgba(255,255,255,0) rgba(255,255,255,1.00);
+	border-width: 13px 15px 13px 0;
+}
+
+.buss-head > a.close {
+	position: absolute;
+	display: block;
+	outline: none;
+	width: 20px !important;
+	height: 20px !important;
+	border: 0;
+	padding: 0;
+	border-radius: 0;
+	-ms-border-radius: 0;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.buss-foot{
+	background: rgba(102,102,102,1);
+	position: relative;
+	display: block;
+	width: 190px;
+	height: 20px;
+	margin-top: 10px;
+	border-radius:         0px 0px 5px 5px;
+	-ms-border-radius:     0px 0px 5px 5px;
+}
+
+.buss-body{
+	background: rgba(204,204,204,1);
+	position: relative;
+	display: block;
+	width: 190px !important;
+	padding: 5px;
+
+	border-radius:         5px;
+	-ms-border-radius:     5px;
+}
+
+.buss-line{
+	background-color: unset;
+	position: relative;
+	width: 100%;
+}
+
+.buss-sett {
+	position: relative;
+	display: block;
+	margin: unset;
+	float: left;
+	width: 36px;
+	min-height: 1px;
+	background-color: unset;
+}
+
+.buss-hall {
+	position: relative;
+	display: block;
+	margin: unset;
+	float: left;
+	width: 36px;
+	height: 50px;
+}
+
+.buss-seat{
+	position: relative;
+	display: block;
+	margin: unset;
+	width: 36px;
+	height: 50px;
+	text-align: center;
+	vertical-align: bottom;
+}
+
+.buss-check{
+	overflow: hidden;
+}
+
+.buss-sett input[type="checkbox"] {
+	position: absolute;
+	visibility: hidden;
+}
+
+.buss-sett label {
+	position: relative;
+	display: block;
+	text-align: center !important;
+	vertical-align: bottom;
+	width: 36px;
+	height: 50px;
+	margin: 0;
+	cursor: pointer;
+}
+
+.buss-sett label span {
+	position: absolute;
+	width: 2rem;
+	top: 1.2rem;
+	left: calc(50% - 1rem);
+	color: var(--white);
+}
+
+
+
+.buss-sett input[type="text"] {
+	width: 24px;
+	height: 24px;
+	font-size: 12px;
+}
+
+/*.buss-seat > input[type="checkbox"]{
+	position: absolute;
+	top: 2px;
+	left: 5px;
+}*/
+
+a.buss-seat{
+	-ms-user-select: none;
+    user-select: none;
+}
+a.buss-seat[href]{
+	cursor: pointer;
+}
+a.buss-seat[href]:not{
+	cursor: default;
+}
+
+a.buss-seat:before {
+	position: absolute;
+	display: block;
+	width: 100%;
+	height: 100%;
+	background-position: center center;
+	background-repeat: no-repeat;
+	content: '';
+}
+
+.free:before {
+	background-image:url(/site-antigo/assets/tcr/assets/images/free.svg);
+}
+.unck:before {
+	background-image:url(/site-antigo/assets/tcr/assets/images/lock.svg);
+}
+
+.man:before {
+	background-image: url(/site-antigo/assets/tcr/assets/images/man-warning.svg);
+}
+
+.man.sold:before {
+	background-image: url(/site-antigo/assets/tcr/assets/images/man-success.svg);
+}
+
+.man.lock:before {
+	background-image: url(/site-antigo/assets/tcr/assets/images/man-error.svg);
+}
+
+.man.sold.lock:before {
+	background-image: url(/site-antigo/assets/tcr/assets/images/man-error.svg);
+}
+
+.wom:before {
+	background-image: url(/site-antigo/assets/tcr/assets/images/girl-warning.svg);
+}
+
+.wom.sold:before {
+	background-image: url(/site-antigo/assets/tcr/assets/images/girl-success.svg);
+}
+
+.wom.lock:before {
+	background-image: url(/site-antigo/assets/tcr/assets/images/girl-warning.svg);
+}
+
+.wom.sold.lock:before {
+	background-image: url(/site-antigo/assets/tcr/assets/images/girl-error.svg);
+}
+
+.free.select:before {
+	background-image: url(/site-antigo/assets/tcr/assets/images/man-success.svg);
+}
+
+.buss-seat i{
+	position: absolute;
+	width: 20px;
+	height: 6px;
+	top: 0;
+	left: 50%;
+	margin-left: -10px;
+	display: block;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.buss-seat i.leito-2{
+	background-image: url(/site-antigo/assets/tcr/assets/images/star-1.svg);
+}
+.buss-seat i.leito-3{
+	background-image: url(/site-antigo/assets/tcr/assets/images/star-2.svg);
+}
+.buss-seat i.leito-4{
+	background-image: url(/site-antigo/assets/tcr/assets/images/star-3.svg);
+}
+
+.buss-seat .chair-number{
+	position: absolute;
+	top: -0.25rem;
+	left: 0;
+	right: 0;
+	padding: 0;
+}
+
+.buss-seat span{
+	background-color: unset;
+	position: relative;
+	padding: 0;
+	top: 1rem;
+	line-height: 1rem;
+	height: 13px;
+	font-size: 12px;
+	font-weight: bold;
+	color: #FFFFFF;
+}
+
+.calendar-left {
+	float: left;
+	min-height: 50px;
+	margin-right: 10px;
+	border: 0;
+}
+
+.calendar-right {
+	overflow: hidden;
+	min-height: 50px;
+}
+
+
+.travel-buss {
+	display: flex;
+	min-height: 50px;
+	border: 0;
+	justify-content: center;
+}
+
+.travel-list {
+    overflow: hidden;
+    min-height: 50px;
+    /*border: 2px dashed #f0f;*/
+}
+
+.collapses {
+    padding: 6px;
+    margin-top: 5px;
+    border: 1px dashed #666;
+}
+
+
+dl.list-buss, dl.list-buss dt {
+    position: relative;
+}
+dl.list-buss dt {
+    margin-left: 18px;
+}
+dl.list-buss > dt:after{
+    position: absolute;
+	top: 7px;
+	left: -16px;
+	width: 8px;
+	height: 2px;
+	display: block;
+	background: #222222;
+	content: '';
+}
+
+dl.list-buss > dt:before {
+	position: absolute;
+	left: -13px;
+	top: 4px;
+	height: 8px;
+	display: block;
+	width: 2px;
+	background: #222222;
+	content: '';
+	-webkit-transition: all .25s ease;
+	-moz-transition: all .25s ease;
+	-ms-transition: all .25s ease;
+	-o-transition: all .25s ease;
+	transition: all .25s ease;
+}
+
+dl.list-buss > dt.active:before {
+	top: 8px;
+	height: 0;
+}
+
+.buss-chair{
+	background: rgba(51,51,51,0.1);
+	position: relative;
+	display: block;
+	width: 100%;
+	border-radius:         10px;
+	-ms-border-radius:     10px;
+	padding-bottom: 5px;
+}
+.buss-chair-roow{
+	background: none;
+	position: relative;
+	display: block;
+	width: 100%;
+	height: 60px;
+}
+.buss-chair-cell{
+	background: none;
+	position: relative;
+	display: block;
+	width: 24%;
+	height: 60px;
+	float: left;
+}
+.buss-chair-cent{
+	background: none;
+	position: relative;
+	display: block;
+	width: 4%;
+	height: 60px;
+	float: left;
+}
+/*
+input[check-buss-change] ~ label,
+input[radio-buss-change] ~ label {
+	text-align: center;
+	width: 36px;
+	height: 50px;
+	min-height: 50px !important;
+	padding: 3px 1px;
+	margin: 1px;
+	cursor: pointer;
+	-ms-user-select: none;
+	user-select: none;
+	font-size: 11px;
+	font-weight: bold;
+	border-radius:         4px;
+	-ms-border-radius:     4px;
+	border-width: 1px;
+	border-style: solid;
+	vertical-align: middle;
+}*/
+
+input[radio-buss]:disabled ~ label {
+	border-style: dashed;
+	cursor: default;
+}
+
+input[type="radio"][radio-buss-change], input[type="checkbox"][radio-buss-change] {
+	width: 1px;
+	height: 1px;
+}
+input[type="radio"][radio-buss-change] ~ label, input[type="checkbox"][radio-buss-change] ~ label {
+	position: relative;
+	display: block;
+	width: 36px;
+	height: 50px;
+	border: 0 !important;
+	padding: 0 !important;
+	background-color: unset !important;
+	text-align: center !important;
+	transition: .02s ease-in-out all;
+}
+
+/*input[type="radio"][radio-buss-change] ~ label, input[type="checkbox"][radio-buss-change] ~ label {
+	position: absolute;
+	display: block;
+	width: 36px;
+	height: 50px;
+	background-repeat: no-repeat;
+	background-position: center center;
+	font-size: 9px;
+	font-weight: bold;
+	color: #FFFFFF;
+}*/
+
+input[type="radio"][radio-buss-change]:not(:checked) ~ label, input[type="checkbox"][radio-buss-change]:not(:checked) ~ label{
+	background-image: url("/site-antigo/assets/tcr/assets/images/free.svg");
+	transition: .02s ease-in-out all;
+}
+
+input[type="radio"][radio-buss-change]:is(:checked) ~ label, input[type="checkbox"][radio-buss-change]:is(:checked) ~ label{
+	background-image: url("/site-antigo/assets/tcr/assets/images/man-success.svg");
+	transition: .02s ease-in-out all;
+}
+
+input[type="radio"][radio-buss-change][actived][checked] ~ label, input[type="checkbox"][radio-buss-change][actived][checked] ~ label{
+	background-image: url("/site-antigo/assets/tcr/assets/images/man-success.svg");
+	transition: .02s ease-in-out all;
+}
+
+input[type="radio"][radio-buss-change]:hover ~ label, input[type="checkbox"][radio-buss-change]:hover ~ label{
+	background-image: url("/site-antigo/assets/tcr/assets/images/man-success.svg");
+	transition: .02s ease-in-out all;
+}
+
+input[type="radio"][radio-buss-change][disabled]:not(:checked) ~ label, input[type="checkbox"][radio-buss-change][disabled]:not(:checked) ~ label,
+input[type="radio"][radio-buss-change][disabled]:is(:checked) ~ label, input[type="checkbox"][radio-buss-change][disabled]:is(:checked) ~ label {
+	background-image: url("/site-antigo/assets/tcr/assets/images/man-error.svg");
+	transition: .02s ease-in-out all;
+}
+
+input[check-buss-change] ~ label > i,
+input[radio-buss-change] ~ label > i {
+	position: absolute;
+	top: -0.2rem;
+	left: -0.2rem;
+	width: 1.3rem;
+	height: 1.3rem;
+	display: block;
+}
+
+a.buss-seat > i {
+	position: absolute;
+	top: -0.2rem;
+	left: 0.4rem;
+	width: 1.3rem;
+	height: 1.3rem;
+	display: block;
+}
+
+
+.legenda span {
+	display: flex;
+}
+
+.legenda span > i {
+	width: 1.3rem;
+	height: 1.3rem;
+	display: block;
+}
+/*
+.bed1 > i {
+	background: url("/site-antigo/assets/tcr/assets/icons/leito-01.svg");
+}
+.bed2 > i {
+	background: url("/site-antigo/assets/tcr/assets/icons/leito-02.svg");
+}
+.bed3 > i {
+	background: url("/site-antigo/assets/tcr/assets/icons/leito-03.svg");
+}
+.bed4 > i {
+	background: url("/site-antigo/assets/tcr/assets/icons/leito-04.svg");
+}
+.bed5 > i {
+	background: url("/site-antigo/assets/tcr/assets/icons/leito-05.svg");
+}*/
+
+
+a.buss-seat > em {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	display: block;
+}
+
+a.buss-seat > em:before {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	display: block;
+	content: '';
+}
+
+a.buss-seat > em.man:before{
+	background: url("/site-antigo/assets/tcr/assets/icons/man-icon.svg");
+}
+a.buss-seat > em.wom:before{
+	background: url("/site-antigo/assets/tcr/assets/icons/wom-icon.svg");
+}
+
+a.buss-seat > em.man:before{
+	filter: invert(15%) sepia(100%) saturate(1000%) hue-rotate(80deg) brightness(80%) contrast(100%);
+}
+
+a.buss-seat > em.wom:before{
+	/*filter: invert(15%) sepia(100%) saturate(1000%) hue-rotate(60deg) brightness(100%) contrast(100%);*/
+}
+
+
+a.buss-seat.bed1:before {
+	filter: invert(15%) sepia(100%) saturate(600%) hue-rotate(130deg) brightness(60%) contrast(100%);
+}
+a.buss-seat.bed2:before {
+	filter: invert(15%) sepia(100%) saturate(600%) hue-rotate(160deg) brightness(60%) contrast(100%);
+}
+a.buss-seat.bed3:before {
+	filter: invert(15%) sepia(100%) saturate(600%) hue-rotate(190deg) brightness(60%) contrast(100%);
+}
+a.buss-seat.bed4:before {
+	filter: invert(15%) sepia(100%) saturate(600%) hue-rotate(220deg) brightness(60%) contrast(100%);
+}
+a.buss-seat.bed5:before {
+	filter: invert(15%) sepia(100%) saturate(600%) hue-rotate(250deg) brightness(60%) contrast(100%);
+}
+
+a.buss-seat[disabled]:before {
+	filter: invert(15%) sepia(100%) saturate(1%) hue-rotate(250deg) brightness(90%) contrast(100%);
+}
+a.buss-seat[selected]:before{
+	filter: invert(15%) sepia(100%) saturate(1000%) hue-rotate(10deg) brightness(100%) contrast(100%);
+}
+
+a.buss-seat {
+	cursor: default !important;
+}
+a.buss-seat[data-link] {
+	cursor: pointer !important;
+}
+
+/********************************************************************/
+/************************   MAPEAMENTO   ****************************/
+/********************************************************************/
+.agenda-buss{
+	background: rgba(199,251,191,0);
+	width: 100%;
+	clear: both;
+}
+
+.cury{
+	position: relative;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	-webkit-font-smoothing: auto;
+	overflow: hidden;
+	display: block;
+	min-height: 14px;
+}
+.cury > a{
+	position: relative;
+	margin-right: 4px;
+	cursor: pointer;
+}
+
+.room{
+	background: rgba(51,51,51,1);
+	position: relative;
+	display: inline-block;
+	width: 190px;
+	margin: 2px 0 10px 0;
+	border-radius:         10px;
+	-ms-border-radius:     10px;
+	border: 10px solid rgba(51,51,51,1);	
+}

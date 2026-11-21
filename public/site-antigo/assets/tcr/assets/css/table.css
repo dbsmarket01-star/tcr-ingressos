@@ -1,0 +1,707 @@
+@charset "utf-8";
+
+.nowrap{
+	overflow: hidden;
+	text-overflow: ellipsis !important;
+	white-space: nowrap !important;
+}
+
+.table{
+	background: none;
+	position: relative;
+	display: block;
+	padding: 0;
+	margin: 0;
+	border: 0;
+	clear: both;
+}
+
+.table-content{
+	background-color: unset;
+	position: relative;
+	display: inline-block;
+	padding: 0;
+	margin: 0;
+	border: 0;
+	float: left;
+	overflow: hidden;
+}
+
+.table-area{
+	background: #EEEEEE;
+	position: relative;
+	display: block;
+	padding: 0;
+	border: .3125em solid #EEEEEE;
+	margin: 0; /* 0.125em; */
+	overflow: hidden;
+}
+
+.panel-check{
+	background-color: unset;
+	position: relative;
+	display: inline-block;
+	padding: 0;
+	margin: 0;
+	border: 0;
+	float: left;
+	overflow: hidden;
+}
+
+input[panel-check] ~ label .panel-area:before {
+    position: absolute;
+    display: block;
+	left: 0;
+	top:  7px;
+	height: 32px;
+	width: 32px;
+	background-color: unset;
+	background-repeat: no-repeat;
+	background-position: center center;
+	content: '';
+	background-size: 32px;
+}
+
+input[panel-check]:not(:checked) ~ label .panel-area:before {
+	background-image: url(/site-antigo/assets/tcr/assets/icons/led-06.png);
+}
+
+input[panel-check]:not(:checked) ~ label .panel-area {
+	background-color: #EEDDDD;
+	border: .625em solid #EEDDDD;
+}
+
+input[panel-check]:checked ~ label .panel-area:before {
+	background-image: url(/site-antigo/assets/tcr/assets/icons/led-01.png);
+}
+
+input[panel-check]:checked ~ label .panel-area {
+	background-color: #DFEEE0;
+	border: .625em solid #DFEEE0;
+}
+
+.panel-area{
+	background: #EEEEEE;
+	position: relative;
+	display: block;
+	padding: 0;
+	border: .3125em solid #EEEEEE;
+	margin: 0.125em;
+	overflow: hidden;
+}
+
+.panel-retry{
+	margin-left: 54px;
+}
+
+.panel-midle{
+	position: relative;
+	display: block;
+	border-right: 1px solid #E0E0E0;
+	overflow: hidden;
+	margin-left: 2.625em;
+	margin-right: 2.3125em;
+	padding-right: .3125em;
+	min-height: 2em;
+}
+
+.panel-middle{
+	position: relative;
+	display: block;
+	border-right: 0;
+	overflow: hidden;
+	margin-left: 2.625em;
+	min-height: 2em;
+}
+
+.clamp{
+	margin: 0;
+	height: 2.3125em;
+	display: block;
+	overflow: hidden;
+}
+
+.clamp > span{
+	line-height: 1.5em;
+	text-overflow: ellipsis !important;
+}
+
+.panel div[resize]{
+	cursor: pointer;
+}
+
+.panel div[resize]:after{
+	display: block;
+	position: absolute;
+	bottom: 0;
+	right: .125em;
+	width: 0;
+	opacity: .2;
+	border-style: solid;
+	border-color: rgba(0,0,0,1) rgba(0,0,0,0);
+	border-width: 0 0 8px 8px;
+	content: "";
+}
+.panel div.opened[resize]:after{
+	border-color: rgba(0,0,0,0) rgba(0,0,0,1);
+}
+.panel div[resize]:hover:after{
+	opacity: .5;
+}
+.opened[resize] > .clamp{
+	height: 100% !important;
+}
+
+.panel-icon{
+	position: absolute;
+	display: block;
+	top: 0; left: 0;
+	padding: 0;
+	border: 0;
+	margin: .3125em;
+	overflow: hidden;
+	border-radius: 50%;
+	width: 2em;
+	height: 2em;
+	background-color: unset;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.no-round{
+	border-radius: .3125em
+}
+
+.panel .include{
+	background: none;
+	position: relative;
+	display: block;
+	padding: 0;
+	border: 0;
+	margin: 0;
+	overflow: hidden;
+}
+
+.panel-content > a {
+	text-decoration: none;
+	position: relative;
+	display: block;
+	list-style: none;
+	padding: 0.5625em;
+	margin: 0.3125em;
+	min-height: 2em;
+	overflow: hidden;
+
+	border: 1px dashed #CCC;
+
+	border-radius: 8px;
+
+	transition: all 0.2s ease;
+	-o-transition: all 0.2s ease;
+	-ms-transition: all 0.2s ease;
+	-moz-transition: all 0.2s ease;
+	-webkit-transition: all 0.2s ease;
+}
+
+.shadown {
+	box-shadow: 2px 2px 1px #828282;
+}
+
+.panel-content > a:after  {
+	position: absolute;
+	bottom: 25%;
+	right: 50%;
+	width: 0;
+	height: 8px;
+	margin-right: 4px;
+	display: block;
+	background: #888;
+	content: '';
+	opacity: 0;
+	-ms-transition: 0.2s;
+	transition: 0.2s;
+	border-radius: 2px;
+}
+
+.panel-content > a:before {
+	position: absolute;
+	display: block;
+	bottom: 25%;
+	right: 50%;
+	width: 8px;
+	height: 0;
+	margin-bottom: 4px;
+	margin-right: -4px;
+	background: #888;
+	content: '';
+	opacity: 0;
+	-ms-transition: 0.2s;
+	transition: 0.2s;
+	border-radius: 2px;
+}
+.panel-content:hover > a:after{
+	width: 24px;
+	margin-right: -12px;
+	opacity: 1;
+}
+.panel-content:hover > a:before {
+	height: 24px;
+	margin-bottom: -8px;
+	opacity: 1;
+}
+.panel-menu{
+	position: absolute;
+	display: block;
+	top: 0; right: 0;
+	padding: 0;
+	border: 0;
+	margin: 0;
+	overflow: hidden;
+	width: auto;
+}
+.panel-midle > ul, .panel-middle > ul{
+	float: left;
+	padding: 0;
+}
+.panel-content ul > li{
+	margin: 0;
+	padding: 1px 0;
+	float: left;
+	overflow: hidden;
+	text-overflow: ellipsis !important;
+	white-space: nowrap !important;
+}
+.panel ul > li > legend{
+	float: left;
+	padding-right: 4px;
+}
+
+
+.sub-panel-left{
+	background: none;
+	position: relative;
+	display: inline;
+}
+
+.sub-panel-right{
+	background: none;
+	position: relative;
+	display: inline;
+	padding: .3125em;
+	border: 0;
+	margin: 0;
+}
+
+.sub-panel-right a{
+	float: left;
+}
+
+.sub-panel-active{
+	background-color: aqua;
+}
+
+
+.subpanel-left{
+	position: relative;
+    overflow: hidden;
+	background-color: blueviolet;
+}
+.subpanel-right{
+	position: relative;
+    float: right;
+    width: 300px;
+    min-height: 20px;
+}
+
+.subpanel-right a{
+	float: left;
+	display: block;
+	width: 10px;
+	height: 10px;
+	background-color: #690;
+}
+
+
+
+.sub-panel-menu {
+	position: relative;
+    float: right;
+	padding-top: 0.425em;
+    border: 0;
+}
+
+.sub-panel-content {
+	position: relative;
+    overflow: hidden;
+	padding: 0;
+    margin: 0;
+}
+
+.sub-panel-menu a {
+	float: left;
+	display: block;
+}
+
+
+
+.panel input[type="checkbox"],
+.panel input[type="radio"]{
+	position: absolute;
+	visibility: hidden;
+}
+
+.panel input[type="checkbox"] ~ label,
+.panel input[type="radio"] ~ label {
+	font-size: 13px;
+	vertical-align: middle;
+	font-weight: normal;
+	outline: none;
+	border: 1px solid transparent;
+	position: relative;
+	display: block;
+	cursor: pointer;
+	border-radius: 5px;
+	-ms-border-radius: 5px;
+	width: 100%;
+	background-image: none;
+	box-sizing: border-box !important;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis !important;
+}
+
+.panel input[type="checkbox"]:disabled ~ label,
+.panel input[type="radio"]:disabled ~ label{
+	cursor: default !important;
+}
+
+.panel input[check-clean] ~ label,
+.panel input[check-input] ~ label,
+.panel input[radio-clean] ~ label,
+.panel input[radio-input] ~ label{
+	padding: 8px 2px 8px 24px;
+}
+.panel input[swich-clean] ~ label,
+.panel input[swich-input] ~ label{
+	padding: 8px 2px 8px 32px;
+}
+.panel input[check-input] ~ label,
+.panel input[swich-input] ~ label,
+.panel input[radio-input] ~ label{
+	background-color: #FAFAFA;
+	border: 1px solid #E0E0E0;
+}
+.panel input[check-icons] ~ label,
+.panel input[view-icons] ~ label{
+	padding: 8px 2px 8px 36px;
+	background-color: #FAFAFA;
+	border: 1px solid #E0E0E0;
+}
+.panel input[swich-clean] ~ label:before,
+.panel input[swich-input] ~ label:before {
+    position: absolute;
+    display: block;
+	left: 0.25em;
+	height: 16px;
+	width: 24px;
+	top: 50%;
+	margin-top: -8px;
+	background-color: unset;
+	background-repeat: no-repeat;
+	background-position: center center;
+	content: '';
+}
+
+.panel input[check-clean] ~ label:before,
+.panel input[check-input] ~ label:before {
+    position: absolute;
+    display: block;
+	left: 0.25em;
+	height: 24px;
+	width: 16px;
+	top: 50%;
+	margin-top: -12px;
+	background-color: unset;
+	background-repeat: no-repeat;
+	background-position: center center;
+	content: '';
+}
+
+.panel input[radio-clean] ~ label:before,
+.panel input[radio-input] ~ label:before {
+    position: absolute;
+    display: block;
+	left: 0.25em;
+	height: 16px;
+	width: 16px;
+	top: 50%;
+	margin-top: -8px;
+	background-color: unset;
+	background-repeat: no-repeat;
+	background-position: center center;
+	content: '';
+}
+
+.panel input[check-icons] ~ label:before,
+.panel input[view-icons] ~ label:before{
+    position: absolute;
+    display: block;
+	left: 0.25em;
+	height: 24px;
+	width: 24px;
+	top: 50%;
+	margin-top: -12px;
+	border-radius: 50%;
+	background-repeat: no-repeat;
+	background-position: center center;
+	content: '';
+}
+/*
+.panel input[check-icons][small] ~ label:before,
+.panel input[view-icons][small] ~ label:before{
+	height: 20px;
+	width: 20px;
+}*/
+
+.panel input[swich-clean] ~ label:before, .panel input[swich-input] ~ label:before {
+    /*background-image: url(/site-antigo/assets/tcr/assets/images/swich.png);*/
+}
+.panel input[swich-clean]:checked ~ label:before, .panel input[swich-input]:checked ~ label:before {
+	background-position: bottom center;
+}
+.panel input[swich-clean]:not(:checked) ~ label:before, .panel input[swich-input]:not(:checked) ~ label:before {
+	background-position: top center;
+}
+.panel input[swich-clean]:disabled ~ label:before, .panel input[swich-input]:disabled ~ label:before {
+	background-position: center center;
+}
+
+.panel input[check-clean] ~ label:before, .panel input[check-input] ~ label:before {
+    /*background-image: url(/site-antigo/assets/tcr/assets/images/check.png);*/
+}
+.panel input[check-clean]:checked ~ label:before, .panel input[check-input]:checked ~ label:before {
+	background-position: right center;
+}
+.panel input[check-clean]:not(:checked) ~ label:before, .panel input[check-input]:not(:checked) ~ label:before {
+	background-position: left center;
+}
+.panel input[check-clean]:disabled ~ label:before, .panel input[check-input]:disabled ~ label:before {
+	/*background-position: center center;*/
+}
+
+.panel input[radio-clean] ~ label:before, .panel input[radio-input] ~ label:before {
+    /*background-image: url(/site-antigo/assets/tcr/assets/images/radio.png);*/
+}
+.panel input[radio-clean]:checked ~ label:before, .panel input[radio-input]:checked ~ label:before {
+	background-position: right center;
+}
+.panel input[radio-clean]:not(:checked) ~ label:before, .panel input[radio-input]:not(:checked) ~ label:before {
+	background-position: left center;
+}
+.panel input[radio-clean]:disabled ~ label:before, .panel input[radio-input]:disabled ~ label:before {
+	/*background-position: center center;*/
+}
+
+.panel input[check-icons] ~ label:before,
+.panel input[view-icons] ~ label:before{
+    background-color: #808080;
+}
+.panel input[check-icons]:checked ~ label:before,
+.panel input[view-icons]:checked ~ label:before{
+    background-color: #008800;
+}
+
+.panel-icon a.active:after{
+	position: absolute;
+	display: block;
+	height: 16px;
+	width: 16px;
+	bottom: 0;
+	right: 0;
+	background-color: unset;
+	background-position: center center;
+	background-repeat: no-repeat;
+	background-size: 16px;
+	background-image: url(/site-antigo/assets/tcr/assets/icons/ok.png);
+	content: '';
+}
+
+.panel-tools{
+	vertical-align: middle;
+	outline: none;
+	background: none;
+	border: 1px solid #E0E0E0;
+	padding: 0;
+	width: 100%;
+	height: 34px;
+	border-radius: 5px;
+	-ms-border-radius: 5px;
+	box-sizing: border-box !important;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.panel-tools.has-icons > a{
+	position: relative;
+    display: inline-block;
+	right: 0;
+	height: 32px;
+	width: 32px;
+	top: 50%;
+	float: right;
+	margin-top: -16px;
+	background-color: #E0E0E0;
+	background-repeat: no-repeat;
+	background-position: center center;
+	content: '';
+	border-left: 1px solid #CCCCCC;
+}
+
+
+
+
+.panel .card-flag:after  {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	width: 65px;
+	height: 43px;
+	margin-right: 4px;
+	display: block;
+	content: '';
+	opacity: 1;
+	-ms-transition: 0.2s;
+	transition: 0.2s;
+	border-radius: 4px;
+	background-color: unset;
+	background-position: center center;
+	background-repeat: no-repeat;
+	background-size: 50px;
+}
+
+.panel .flag-0:after{ background-image: url(/site-antigo/assets/tcr/assets/icons/maquina.png);}
+.panel .flag-1:after{ background-image: url(/site-antigo/assets/tcr/assets/icons/Visa.png);}
+.panel .flag-2:after{ background-image: url(/site-antigo/assets/tcr/assets/icons/Master.png);}
+.panel .flag-3:after{ background-image: url(/site-antigo/assets/tcr/assets/icons/Amex.png);}
+.panel .flag-4:after{ background-image: url(/site-antigo/assets/tcr/assets/icons/Hipercard.png);}
+.panel .flag-5:after{ background-image: url(/site-antigo/assets/tcr/assets/icons/Diners.png);}
+.panel .flag-6:after{ background-image: url(/site-antigo/assets/tcr/assets/icons/Elo.png);}
+.panel .flag-7:after{ background-image: url(/site-antigo/assets/tcr/assets/icons/Discover.png);}
+
+.boxc-00{ background-color: #AAAAAA; border-color: #AAAAAA; }
+.boxc-01{ background-color: #DFEEE0; border-color: #DFEEE0; }
+.boxc-02{ background-color: #D9E8EA; border-color: #D9E8EA; }
+.boxc-03{ background-color: #F0EFD3; border-color: #F0EFD3; }
+.boxc-04{ background-color: #EEDDDD; border-color: #EEDDDD; }
+.boxc-05{ background-color: #EADFEF; border-color: #EADFEF; }
+.boxc-06{ background-color: #ECD9C7; border-color: #ECD9C7; }
+.boxc-07{ background-color: #E7E6D8; border-color: #E7E6D8; }
+.boxc-10{ background-color: #F3F3F3; border-color: #F3F3F3; }
+.boxc-11{ background-color: #F0FFF1; border-color: #F0FFF1; }
+.boxc-12{ background-color: #F9F9EE; border-color: #F9F9EE; }
+.boxc-13{ background-color: #FFF7EE; border-color: #FFF7EE; }
+.boxc-20{ background-color: #DDDDDD; border-color: #DDDDDD; }
+.boxc-30{ background-color: #EEEEEE; border-color: #EEEEEE; }
+
+.boxc-000{ background-color: #898989; border-color: #898989; }
+.boxc-101{ background-color: #7BB97F; border-color: #7BB97F; }
+.boxc-102{ background-color: #7AAEB5; border-color: #7AAEB5; }
+.boxc-103{ background-color: #D1CE78; border-color: #D1CE78; }
+.boxc-104{ background-color: #B77070; border-color: #B77070; }
+.boxc-105{ background-color: #A97CBD; border-color: #A97CBD; }
+.boxc-106{ background-color: #C8915D; border-color: #C8915D; }
+.boxc-107{ background-color: #3F382D; border-color: #3F382D; }
+
+.agenda{
+	background: none;
+	position: relative;
+	display: block;
+	width: 100%;
+	padding: 0;
+	margin: 0;
+	border: 0;
+}
+
+.agenda li.agenda-col{
+	background: none;
+	position: relative;
+	display: inline-block;
+	float: left;
+	padding: 0;
+	margin: 0;
+	border: 0;
+	width: 14.285714%;
+}
+
+.agenda li.agenda-col>div{
+	position: relative;
+	display: block;
+	margin: 1px;
+	padding: 2px;
+	min-height: 12px;
+	border-radius: 4px;
+	border: 1px solid transparent;
+}
+.agenda li.agenda-col > div.agenda-week, .agenda li.agenda-col>div.agenda-days{
+	border: 1px solid #CCC;
+	background: #FFFFFF;
+	background: linear-gradient(#FEFEFE, #F3F3F3);
+	background: -o-linear-gradient(#FEFEFE, #F3F3F3);
+	background: -ms-linear-gradient(#FEFEFE, #F3F3F3);
+	background: -moz-linear-gradient(#FEFEFE, #F3F3F3);
+	background: -webkit-linear-gradient(#FEFEFE, #F3F3F3);
+}
+
+
+.agenda li.agenda-col>div span{
+	background: none;
+	display: block;
+	padding: 1px;
+}
+
+
+.agenda li.agenda-col>div em{
+	background: #FFF;
+	border-radius: 2px;
+	display: block;
+	width: 20px;
+	padding: 2px;
+	text-align: center;
+	left: 0;
+}
+
+.agenda ul.tab{
+	position: relative;
+	display: block;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	border: 0;
+	overflow: hidden;
+	width: 100%;
+}
+
+.agenda ul.tab li.tab-tr{
+	position: relative;
+	display: block;
+	list-style: none;
+	padding: 2px;
+}
+
+.agenda ul.tab li.tab-td{
+	position: relative;
+	display: inline-block;
+	list-style: none;
+	width: 48%;
+}
+
+.agenda ul.tab li.tab-th{
+	position: relative;
+	display: inline-block;
+	list-style: none;
+	width: 100%;
+}
+.agenda ul.tab li.tab-tr:nth-child(odd){
+	background-color: #f1f1f1;
+}

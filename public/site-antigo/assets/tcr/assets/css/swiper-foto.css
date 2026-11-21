@@ -1,0 +1,121 @@
+/* foto slider */
+.swiper-foto{
+    position: relative;
+}
+
+/* foto slider height */
+.swiper-foto {
+    height: 14rem;
+}
+
+@media (min-width: 390px) {
+    .swiper-foto {
+        height: 17rem;
+    }
+}
+@media (min-width: 768px) {
+    .swiper-foto {
+        height: 20rem;
+    }
+}
+@media (min-width: 992px) {
+    .swiper-foto {
+        height: 23rem;
+    }
+}
+@media (min-width: 1200px) {
+    .swiper-foto {
+        height: 26rem;
+    }
+}
+
+/* foto Slider Navigation Buttons */
+.swiper-foto .swiper-button-next,
+.swiper-foto .swiper-button-prev{
+    font-size: 1rem;
+    height: 3rem;
+    width: 3rem;
+    border-radius: 50%;
+}
+
+/* foto Slider Navigation Buttons Icon */
+.swiper-foto .swiper-button-next::after,
+.swiper-foto .swiper-button-prev::after {
+    font-size: 2rem;
+    font-weight: bold;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+.swiper-foto .swiper-slide {
+    padding: 2rem;
+}
+.swiper-foto .swiper-slide > a {
+    overflow: hidden;
+}
+.swiper-foto .swiper-pagination {
+    bottom: 0 !important;
+}
+
+
+/* Home Item Content */
+.swiper-foto .content{
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+
+/* Home Item Text Container */
+.swiper-foto .content .text{
+    text-align: center;
+    width: 20rem;
+}
+
+/* Home Item Heading */
+.swiper-foto .content h4{
+    color:var(--white);
+}
+
+/* Home Item Paragraph */
+.swiper-foto .content p{
+    padding: 2rem 0;
+}
+
+/* Home Item Buttons */
+.swiper-foto .content .btn-container{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    gap: 0.7rem;
+}
+
+/* Home Item First Button */
+.swiper-foto .content .btn1{
+    background-color: var(--main-link);
+}
+
+/* Home Item First Button, On Hover */
+.swiper-foto .content .btn1:hover{
+    background-color: var(--main-link-hover);
+}
+

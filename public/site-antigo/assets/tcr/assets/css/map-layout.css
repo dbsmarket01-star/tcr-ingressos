@@ -1,0 +1,255 @@
+.map-layout {
+    position: relative;
+    background-color: transparent;
+    width: 100%;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    align-items: center;
+    margin: 0 auto;
+    overflow: auto;
+    overflow-scrolling: touch;
+}
+
+.map-wrapper {
+    display: flex;
+    background-color: #FFFFFF;
+    position: relative;
+    margin: auto;
+}
+
+.map-area {
+    position: relative;
+    background-color: #F1F1F1;
+}
+
+.map-palco {
+    display: flex;
+    position: absolute;
+    background-color: #b7b7b7;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    border: 1px solid #5C5C5C;
+    border-radius: .25rem;
+}
+
+.map-palco span {
+    display: flex;
+    color: #5C5C5C;
+}
+
+.map-setor {
+    display: flex;
+    position: absolute;
+    background-color: #FFFFFF;
+}
+
+.map-point {
+    display: flex;
+    position: absolute;
+    background-color: unset;
+    text-align: center;
+    color: #FFFFFF;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+
+a.map-chair {
+    border-radius: 50%;
+}
+a.map-table {
+    border-radius: 50%;
+}
+a.map-cabin {
+    border-radius: .25rem;
+}
+a.map-pista {
+    border-radius: .25rem;
+}
+a.map-label {
+    border-radius: .25rem;
+}
+/*
+input[type="radio"][radio-event].map-chair ~ label,
+input[type="checkbox"][radio-event].map-chair ~ label {
+    border-radius: 50%;
+}
+input[type="radio"][radio-event].map-table ~ label,
+input[type="checkbox"][radio-event].map-table ~ label {
+    border-radius: 50%;
+}
+input[type="radio"][radio-event].map-cabin ~ label,
+input[type="checkbox"][radio-event].map-cabin ~ label {
+    border-radius: .25rem;
+}
+input[type="radio"][radio-event].map-label ~ label,
+input[type="checkbox"][radio-event].map-label ~ label {
+    border-radius: .25rem;
+}*/
+
+.map-control {
+    display: flex;
+    width: 100%;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+.map-control > a {
+    min-width: unset;
+}
+
+
+
+.map-area span {
+    display: flex;
+    position: relative;
+    color: #FFFFFF;
+    font-size: 0.43rem;
+    letter-spacing:  0.04rem;
+    margin: auto;
+}
+.map-area a {
+    display: flex;
+    position: relative;
+    background-color: unset;
+    width: calc(100% - 2px);
+    height: calc(100% - 2px);
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.01);
+    color: #000000;
+    font-size: 0.43rem;
+    text-align: center;
+    cursor: pointer;
+}
+
+.map-area a {
+    background-color: #E7E7E7;
+    transition: .02s ease-in-out all;
+}
+.map-area a:hover {
+    background-color: #a9a9a9;
+    transition: .02s ease-in-out all;
+}
+.map-area a[active] {
+    background-color: #67a254;
+    transition: .02s ease-in-out all;
+}
+.map-area a[disabled] {
+    background-color: #ff4848;
+    transition: .02s ease-in-out all;
+}
+.map-area a[disabled]:hover {
+    background-color: #ff4848;
+    transition: .02s ease-in-out all;
+    cursor: default;
+}
+.map-area a[active][disabled] {
+    background-color: #ff4848;
+    transition: .02s ease-in-out all;
+}
+
+
+input[type="radio"][radio-event],
+input[type="checkbox"][radio-event] {
+    width: 1px;
+    height: 1px;
+}
+input[type="radio"][radio-event] ~ label,
+input[type="checkbox"][radio-event] ~ label {
+    display: flex;
+    position: relative;
+    background-color: unset;
+    width: calc(100% - 2px);
+    height: calc(100% - 2px);
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.01);
+    color: #FFFFFF;
+    font-size: 0.43rem;
+    text-align: center;
+}
+
+
+input[type="radio"][radio-event][disabled] ~ label,
+input[type="checkbox"][radio-event][disabled] ~ label {
+    border: 1px solid rgba(255, 255, 255, 0.01);
+    color: #FFFFFF;
+}
+
+
+input[type="radio"][radio-event]:not(:checked) ~ label,
+input[type="checkbox"][radio-event]:not(:checked) ~ label{
+    background-color: #696969;
+    transition: .02s ease-in-out all;
+}
+
+input[type="radio"][radio-event]:is(:checked) ~ label,
+input[type="checkbox"][radio-event]:is(:checked) ~ label{
+    background-color: #218300;
+    transition: .02s ease-in-out all;
+}
+
+input[type="radio"][radio-event]:hover ~ label,
+input[type="checkbox"][radio-event]:hover ~ label{
+    background-color: #414141;
+    transition: .02s ease-in-out all;
+}
+
+input[type="radio"][radio-event][disabled]:not(:checked) ~ label,
+input[type="checkbox"][radio-event][disabled]:not(:checked) ~ label,
+input[type="radio"][radio-event][disabled]:is(:checked) ~ label,
+input[type="checkbox"][radio-event][disabled]:is(:checked) ~ label {
+    background-color: #a60000;
+    transition: .02s ease-in-out all;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

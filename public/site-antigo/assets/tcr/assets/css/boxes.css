@@ -1,0 +1,936 @@
+/* BOXES GENERAL STYLES ********************************************/
+.box {
+    display: flex;
+    overflow: hidden;
+}
+
+.box-shadow {
+    box-shadow: var(--box-shadow);
+}
+
+.box-radius {
+    border-radius: .5rem;
+}
+
+.box-border {
+    border: 1px solid var(--menu-bar);
+}
+
+.box-space {
+    margin: 0 .5rem .5rem;
+}
+
+.box-figure{
+    background-color: var(--transparent);
+}
+
+.box-figure > a {
+    background: transparent;
+    text-decoration: none;
+    position: relative;
+    display: block;
+    list-style: none;
+    border: 0;
+    text-align: center;
+    overflow: hidden;
+
+    transition: all 1s ease;
+    -o-transition: all 1s ease;
+    -ms-transition: all 1s ease;
+    -moz-transition: all 1s ease;
+    -webkit-transition: all 1s ease;
+}
+
+.box-figure figure{
+    background: none;
+    position: relative;
+    display: block;
+    padding: 0;
+    border: 0;
+    margin: -1px 0 0;
+    overflow: hidden;
+}
+
+.box-figure figure img {
+    max-width: 100%;
+    border: none;
+}
+
+.box-figure figcaption {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    text-align: left;
+    background-color:  rgba(0, 0, 0, 0.5);
+}
+
+.box-figure figcaption > i {
+    position: absolute;
+    top: calc(50% - 1.5rem);
+    left: calc(50% - 1.5rem);
+    width: 3rem;
+    height: 3rem;
+    text-align: center;
+    color: var(--white);
+}
+
+.box-figure figcaption {
+    opacity: 0;
+    visibility: hidden;
+    transition: all 300ms ease;
+    z-index: 1;
+}
+
+.box-figure a[href]:hover figcaption,
+.box-figure a[href]:hover figure:after {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(0);
+}
+
+.box-figure a[href] figcaption > i:before {
+    position: absolute;
+
+    top: calc(50% - 1.5rem);
+    left: calc(50% - 1.5rem);
+}
+
+
+.box .box-caption {
+    padding: 16px;
+}
+
+.box .box-title {
+    font-size: 14px;
+}
+
+.box .box-content {
+    display: block;
+    overflow: hidden;
+}
+
+.box .box-text {
+    line-height: 1.1;
+    color: var(--global-palette6);
+}
+
+.box .box-title a {
+    transition: .3s all ease;
+    color: var(--main-link);
+}
+
+.box .box-title a:hover {
+    color: var(--main-link-hover);
+}
+
+.box .box-list {
+    line-height: 1.2;
+    color: var(--global-palette5);
+}
+
+.box .box-list li {
+    margin-right: 16px;
+}
+
+
+.box-float-button {
+    position: static;
+    width: 100%;
+    padding: 20px 0;
+    background: transparent;
+}
+
+@media (max-width: 768px) {
+    .box-float-button {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: white; /* ou qualquer cor de fundo desejada */
+        z-index: 9999;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        padding: 10px 0;
+    }
+}
+
+
+
+/* OFFER BOXES *****************************************************/
+.box-offer {
+    display: flex;
+    background-color: var(--global-palette9);
+}
+
+.box-offer .box-offer-caption {
+    padding: 16px;
+}
+
+.box-offer .box-offer-title {
+    font-size: 14px;
+}
+
+.box-offer .box-offer-title a {
+    transition: .3s all ease;
+    color: var(--main-link);
+}
+
+.box-offer .box-offer-title a:hover {
+    color: var(--main-link-hover);
+}
+
+.box-offer .box-offer-list {
+    line-height: 1.2;
+    color: var(--global-palette5);
+}
+
+.box-offer .box-offer-text {
+    line-height: 1.1;
+    color: var(--global-palette6);
+}
+
+.box-offer .box-offer-list li {
+    margin-right: 16px;
+}
+
+.box-offer .box-offer-price {
+    font-size: 24px;
+    line-height: 1;
+}
+
+/* WIDGET BOX ******************************************************/
+.box-widget {
+    display: inline-block;
+    width: 100%;
+}
+
+.box-widget .box-figure figure{
+    width: 128px;
+    height: 128px;
+    margin-left: calc(50% - 64px);
+}
+
+
+/* PLANNING BOX ****************************************************/
+.box-planning {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    background: var(--global-palette8);
+    transition: .3s all ease;
+    overflow: hidden;
+}
+
+.box-planning .box-planning-label {
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    font-size: 10px;
+    font-weight: 900;
+    line-height: 34px;
+    text-transform: uppercase;
+}
+
+.box-planning .box-planning-caption {
+    padding: 32px;
+}
+
+.box-planning .box-planning-title {
+    color: var(--global-palette9);
+    font-size: 14px;
+}
+
+.box-planning .box-planning-price {
+    font-size: 48px;
+    line-height: 1;
+    padding: 32px 32px 0 32px;
+}
+
+.box-planning .box-planning-partir {
+    font-size: 48px;
+    line-height: 1;
+    text-align: left;
+    padding: 0;
+}
+
+.box-planning .box-planning-price-de{
+    position: relative;
+}
+
+.box-planning .box-planning-price-de *{
+    color: var(--red);
+}
+
+.box-planning .box-planning-price-de span{
+    position: relative;
+}
+
+.box-planning .box-planning-price-de span:before{
+    position: absolute;
+    top: 0.5rem;
+    left: 0;
+    right: 0;
+    bottom: 0.5rem;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    content: '';
+    background-color: var(--red);
+    clip-path: polygon(0 0, 7% 0, 100% 100%, 93% 100%);
+}
+
+.box-planning .box-planning-price-de label{
+    position: absolute;
+    left: 0;
+    bottom: 12px;
+    font-size: 18px;
+    line-height: 1;
+}
+
+
+.box-planning .box-planning-price-por{
+    position: relative;
+}
+
+.box-planning .box-planning-price-por *{
+    color: var(--white);
+}
+
+.box-planning .box-planning-price-por label{
+    position: absolute;
+    left: 0;
+    bottom: 12px;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.box-planning .box-planning-price sup {
+    font-size: 24px;
+}
+
+.box-planning .box-planning-price sub {
+    position: relative;
+    bottom: 12px;
+    font-size: 28px;
+}
+
+.box-planning .box-planning-price i {
+    position: relative;
+    line-height: 1.5;
+    width: 64px;
+    font-size: 14px;
+    font-style: normal !important;
+}
+
+.box-planning .box-planning-price p {
+    line-height: 1.5;
+}
+
+.box-planning .box-planning-list {
+    color: var(--global-palette3);
+    width: auto;
+    padding: 32px;
+    line-height: 1.5;
+}
+
+.box-planning .box-planning-text {
+    padding-left: 32px;
+    line-height: 1.5;
+}
+
+.box-planning .price-button {
+    display: inline-block;
+    min-width: 185px;
+    padding: 9px 20px;
+    font-size: 12px;
+    line-height: 21px;
+    font-weight: 900;
+    text-align: center;
+    vertical-align: middle;
+    touch-action: manipulation;
+    cursor: pointer;
+    background-image: none;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    text-transform: uppercase;
+    transition: .3s ease-out;
+}
+
+.box-planning-figure > a {
+    background: transparent;
+    text-decoration: none;
+    position: relative;
+    display: block;
+    list-style: none;
+    border: 0;
+    text-align: center;
+    overflow: hidden;
+
+    transition: all 1s ease;
+    -o-transition: all 1s ease;
+    -ms-transition: all 1s ease;
+    -moz-transition: all 1s ease;
+    -webkit-transition: all 1s ease;
+}
+
+.box-planning-figure figure{
+    background: none;
+    position: relative;
+    display: block;
+    padding: 0;
+    border: 0;
+    margin: -1px 0 0;
+    overflow: hidden;
+}
+
+.box-planning-figure figure img {
+    max-width: 100%;
+    border: none;
+}
+
+.box-planning > i{
+    display: block;
+    position: absolute;
+    top: 32px;
+    right: -32px;
+    width: 160px;
+    font-size: 16px;
+    line-height: 1px;
+    background-color: #ef0808;
+    color: #FFF;
+    border-radius: 2px;
+    text-align: center;
+    padding: 12px;
+    transform: rotate(45deg);
+    box-shadow: 0 5px 10px 0 rgba(0,0,0,0.8);
+}
+
+
+/* TICKET BOX SAMPLE ******************************************************/
+.box-sample {
+    display: flex;
+    position: relative;
+    transition: .3s all ease;
+    justify-content: center;
+    align-items: center;
+    padding: 0 -0.5rem;
+}
+
+.box-table {
+    border-top: 1px dashed var(--menu-bar);
+    padding-bottom: .4rem;
+}
+
+.box-table:last-child {
+    border-bottom: 1px dashed var(--menu-bar);
+}
+
+.box-table-border-bottom {
+    border-bottom: 1px dashed var(--menu-bar);
+}
+
+/* TICKET BOX SAMPLE - CAPTION BEGIN */
+.box-sample > .ticket-caption {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    background: var(--global-palette9);
+    color: var(--global-palette3);
+    padding: 1rem;
+}
+
+.box-sample > .ticket-caption > .ticket-title {
+    color: var(--global-palette3);
+    font-size: 20px;
+    text-align: center;
+}
+/* TICKET BOX SAMPLE - CAPTION END */
+
+.box-sample > .ticket-head {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    background: var(--side-bar);
+    color: var(--global-palette3);
+    padding: 1rem;
+}
+
+.box-sample > .ticket-head > .ticket-title {
+    color: var(--global-palette3);
+    font-size: 20px;
+    text-align: center;
+}
+
+.box-sample > .ticket-body {
+    position: relative;
+    display: block;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--global-palette3);
+    padding: 1rem;
+}
+
+.box-sample > .ticket-foot {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.box-sample > .ticket-foot > a {
+    position: relative;
+    text-decoration: none;
+    display: flex;
+    width: 100%;
+    padding: 1rem;
+    text-align: center;
+    color: var(--global-palette3);
+}
+
+/* TICKET BOX SAMPLE - PRICE BEGIN */
+.box-sample > .ticket-price {
+    background-color: var(--global-palette3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.box-sample > .ticket-price > .ticket-value span {
+    color: var(--global-palette9);
+    padding: 1rem;
+    font-size: 20px;
+    line-height: 1;
+}
+
+/* TICKET BOX SAMPLE - PRICE END */
+
+/* TICKET BOX SAMPLE - AMOUNT BEGIN */
+.box-sample .ticket-amount {
+    background-color: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: .4rem;
+}
+
+.box-sample .ticket-amount > .ticket-amount-field {
+    height: 2rem;
+    width: 2.8rem;
+    font-size: 20px;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--input-color);
+    color: var(--global-palette9);
+    border-radius: 0;
+    display: inline-block;
+    vertical-align: middle !important;
+    border-top: 1px solid var(--global-palette9);
+    border-bottom: 1px solid var(--global-palette9);
+}
+
+.box-sample .ticket-amount > .ticket-amount-plus,
+.box-sample .ticket-amount > .ticket-amount-minus {
+    position: relative;
+    width: 2rem;
+    height: 2rem;
+    font-size: 20px;
+    text-align: center;
+    background: var(--global-palette9);
+    color: var(--input-color);
+    padding: 0;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.box-sample .ticket-amount > .ticket-amount-plus {
+    border-radius: 0 .25rem .25rem 0;
+}
+
+.box-sample .ticket-amount > .ticket-amount-minus {
+    border-radius: .25rem 0 0 .25rem;
+}
+
+.box-sample .ticket-amount > .ticket-select {
+    height: 2rem;
+    text-align: left;
+    font-size: 20px;
+    margin: 0;
+    padding: 0;
+    background: var(--input-color);
+    color: var(--global-palette9);
+    border: 1px solid var(--global-palette9);
+    display: inline-block;
+    vertical-align: middle !important;
+    border-radius: .25rem;
+}
+
+.box-sample p {
+    line-height: 1.5;
+}
+
+/* TICKET BOX SAMPLE - AMOUNT END */
+
+@media (min-width:  768px) {
+    .box-sample > .ticket-caption {
+        justify-content: flex-start;
+    }
+    .box-sample > .ticket-amount, .box-sample > .ticket-price {
+        justify-content: flex-end;
+    }
+}
+
+
+/* TICKET BOX ******************************************************/
+.box-ticket {
+    display: block !important;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    background: var(--global-palette8);
+    transition: .3s all ease;
+}
+
+
+.box-ticket .box-ticket-menu {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
+
+.box-ticket .box-ticket-caption {
+    width: 100%;
+    background: var(--global-palette9);
+    padding: 1rem;
+}
+
+.box-ticket .box-ticket-title {
+    color: var(--global-palette9);
+    font-size: 14px;
+    text-align: left;
+}
+
+
+.box-ticket .box-ticket-text {
+    padding: 32px;
+    line-height: 1.5;
+    color: var(--global-palette3) !important;
+}
+
+.box-ticket-text .imput-result.clean{
+    font-size: 12px;
+    color: var(--global-palette5);
+}
+
+.box-ticket .box-ticket-price {
+    color: var(--global-palette3);
+    padding: 16px;
+    font-size: 54px;
+    line-height: 1;
+    text-align: left;
+}
+
+.box-ticket .box-ticket-partir {
+    color: var(--global-palette3);
+    font-size: 54px;
+    line-height: 1;
+    text-align: left;
+    padding: 0 16px;
+}
+
+.box-ticket .box-ticket-price > div {
+    display: block;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    float: unset;
+}
+
+.box-ticket .box-ticket-price sup {
+    font-size: 26px;
+}
+
+.box-ticket .box-ticket-price sub {
+    position: relative;
+    bottom: 12px;
+    font-size: 32px;
+}
+
+.box-ticket .box-ticket-price i {
+    position: relative;
+    line-height: 1.5;
+    width: 64px;
+    font-size: 14px;
+    font-style: normal !important;
+}
+
+
+.box-ticket .box-ticket-list {
+    background-color: var(--global-palette3);
+    width: auto;
+    padding: 16px;
+    line-height: 1.5;
+    text-align: left;
+    font-size: 14px;
+}
+
+.box-ticket .box-ticket-list .value{
+    width: 8rem;
+}
+.box-ticket .box-ticket-list .value-anchor-right{
+    width: 9.25rem;
+}
+.box-ticket .box-ticket-list .texto{
+    width: calc(100% - 9.5rem);
+}
+
+.box-ticket .box-ticket-list p {
+    display: inline-block;
+    line-height: 1.5;
+    font-size: 1rem;
+    background-color: #2ecc71;
+}
+
+.box-ticket .box-ticket-list ul > li.value > a{
+    position: absolute;
+    right: 16px;
+    margin-top: 4px;
+
+}
+
+.box-ticket .box-ticket-list ul > li > a.fa-icon{
+    color: var(--main-link);
+}
+.box-ticket .box-ticket-list ul > li > a.fa-icon:hover{
+    color: var(--main-link-hover);
+    cursor: pointer;
+}
+
+.box-ticket .box-ticket-price-wrapper {
+    position: relative;
+    padding: 16px;
+}
+
+.box-ticket .box-ticket-price-wrapper .ticket-field {
+    height: 42px;
+    width: 64px;
+    text-align: center;
+    font-size: 20px;
+    margin: 0;
+    padding: 0;
+    background: #FFF;
+    border-top: 2px solid #FFF;
+    border-bottom: 3px solid #FFF;
+    border-radius: 0;
+    display: inline-block;
+    vertical-align: middle !important;
+}
+
+.box-ticket .box-ticket-price-wrapper .ticket-select {
+    height: 42px;
+    width: 200px;
+    text-align: center;
+    font-size: 20px;
+    margin: 0;
+    padding: 0;
+    background: #FFF;
+    border-top: 2px solid #FFF;
+    border-bottom: 3px solid #FFF;
+    display: inline-block;
+    vertical-align: middle !important;
+    border-radius: 6px;
+}
+
+.box-ticket .box-ticket-price-wrapper .ticket-button-minus,
+.box-ticket .box-ticket-price-wrapper .ticket-button-plus {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    background: #FFF;
+    border-radius: 6px;
+    padding: 0;
+    border: 1px solid #FFF;
+    display: inline-block;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.box-ticket .box-ticket-price-wrapper .ticket-button {
+    position: relative;
+    height: 32px;
+    background: #FFF;
+    border-radius: 6px;
+    padding: 6px;
+    border: 1px solid #FFF;
+    display: inline-block;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.box-ticket .box-ticket-price-wrapper .add-cart-button,
+.box-ticket .box-ticket-price-wrapper .inc-cart-button {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    padding: 6px;
+    display: inline-block;
+    vertical-align: middle;
+    text-align: center;
+    cursor: pointer;
+    background-color: unset;
+}
+
+.box-ticket .box-ticket-price-wrapper .add-cart-button.fa-icon,
+.box-ticket .box-ticket-price-wrapper .inc-cart-button.fa-icon{
+    color: var(--main-link);
+}
+.box-ticket .box-ticket-price-wrapper .add-cart-button.fa-icon:hover,
+.box-ticket .box-ticket-price-wrapper .inc-cart-button.fa-icon:hover{
+    color: var(--main-link-hover);
+}
+
+.box-ticket .box-ticket-price-wrapper .ticket-button-minus{
+    border-radius: 6px 0 0 6px;
+}
+.box-ticket .box-ticket-price-wrapper .ticket-button-plus {
+    border-radius: 0 6px 6px 0;
+}
+/*
+.box-ticket .box-ticket-price-wrapper .ticket-button-minus:before{
+    position: absolute;
+    top: calc(50% - 4px);
+    right: calc(50% - 8px);
+    width: 16px;
+    height: 8px;
+    background-color: #000000;
+    border-radius: 2px;
+    content: '';
+}
+.box-ticket .box-ticket-price-wrapper .ticket-button-plus:before {
+    position: absolute;
+    top: calc(50% - 4px);
+    right: calc(50% - 8px);
+    width: 16px;
+    height: 8px;
+    background-color: #000000;
+    border-radius: 2px;
+    content: '';
+}
+.box-ticket .box-ticket-price-wrapper .ticket-button-plus:after {
+    position: absolute;
+    top: calc(50% - 8px);
+    right: calc(50% - 4px);
+    width: 8px;
+    height: 16px;
+    background-color: #000000;
+    border-radius: 2px;
+    content: '';
+}
+.box-ticket .box-ticket-price-wrapper .ticket-button-minus[disabled]:before{
+    background-color: #666;
+}
+.box-ticket .box-ticket-price-wrapper .ticket-button-plus[disabled]:before {
+    background-color: #666;
+}
+.box-ticket .box-ticket-price-wrapper .ticket-button-plus[disabled]:after {
+    background-color: #666;
+}*/
+
+
+.box-ticket .price-button {
+    display: inline-block;
+    min-width: 185px;
+    padding: 16px 20px;
+    font-size: 18px;
+    line-height: 21px;
+    font-weight: 900;
+    text-align: center;
+    vertical-align: middle;
+    touch-action: manipulation;
+    cursor: pointer;
+    background-image: none;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    text-transform: uppercase;
+    transition: .3s ease-out;
+}
+
+/*.box-ticket .price-button {
+    color: var(--global-palette3);
+    background-color: var(--text-red);
+    border-color: var(--text-red);
+}
+*/
+.box-ticket .price-button:hover {
+    color: var(--global-palette9);
+}
+
+.box-ticket > i{
+    display: block;
+    position: absolute;
+    top: 16px;
+    right: -38px;
+    width: 140px;
+    font-size: 16px;
+    line-height: 1px;
+    background-color: #ef0808;
+    color: #FFF;
+    border-radius: 2px;
+    text-align: center;
+    padding: 12px;
+    transform: rotate(45deg);
+    box-shadow: 0 5px 10px 0 rgba(0,0,0,0.8);
+}
+
+
+@media (min-width: 576px) {
+    .box-ticket .box-ticket-price-wrapper {
+        position: absolute;
+        bottom: 24px;
+        right: 16px;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    .box-ticket .box-ticket-price > div {
+        float: right;
+    }
+}
+
+/* FORM BOX ********************************************************/
+.box-form {
+    padding: 3rem;
+}
+
+/* ITEM BOX ********************************************************/
+.box-item-content {
+    display: block;
+    overflow: hidden;
+}
+.box-item-content .box-item-list {
+    width: auto;
+    padding: 1rem;
+    line-height: 1.5;
+}
+.box-item-content .box-item-text {
+    line-height: 1.5;
+    color: var(--global-palette6);
+}
+.box-item-content .box-item-list i {
+    position: relative;
+    line-height: 1.5;
+    width: 2rem;
+    font-style: normal !important;
+}
+.box-item-content .box-item-list span {
+    font-weight: bold;
+    margin-left: 1em;
+}
+
+
+/* FORM BOX ********************************************************/
+/* BOXES GENERAL STYLES ********************************************/

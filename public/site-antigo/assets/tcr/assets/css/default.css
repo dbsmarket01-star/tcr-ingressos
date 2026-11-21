@@ -1,0 +1,178 @@
+/* DEFAULT STYLE */
+*,
+*::before,
+*::after {
+    box-sizing: border-box !important;
+}
+
+@-ms-viewport {
+    width: device-width;
+}
+
+body, *, html{
+    padding: 0;
+    margin: 0;
+    border: 0;
+    user-select: none;
+    font-family: 'Lato', serif;
+}
+
+pre{
+    user-select: auto !important;
+}
+
+body, *, html, form, div {
+    caret-color: transparent !important;
+    caret: unset !important;
+}
+
+body, html{
+    position: relative;
+    min-height: 100%;
+}
+
+article, aside, figcaption, figure, footer, header, hgroup, main, nav, section {
+    display: block;
+}
+footer{
+    z-index: 1;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+}
+
+div {
+    cursor: default;
+}
+
+hr {
+    box-sizing: content-box;
+    height: 1px;
+    overflow: visible;
+}
+
+a {
+    user-select: none;
+    text-decoration: none;
+    background-color: transparent;
+    cursor: default;
+}
+
+a:focus {
+    outline: none; /* Remove focus outline */
+    text-decoration: none; /* Remove default underline */
+}
+
+a[href], a[onClick] {
+    cursor: pointer;
+}
+
+figure {
+    margin: 0 0 1rem;
+}
+
+img {
+    vertical-align: middle;
+    border-style: none;
+    margin: 0;
+}
+
+.clear {
+    clear: both;
+    width: 100%;
+    height: 1px;
+}
+
+.clear-fix::after {
+    display: block;
+    clear: both;
+    content: "";
+}
+
+ul,
+ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+span {
+    user-select: none;
+}
+
+.container > p{
+    user-select: none;
+}
+
+li.d-inline { margin-right: 1rem; }
+
+address {
+    letter-spacing: 0.1rem;
+}
+
+
+.bg-default {
+    background: var(--text-mercury);
+    fill: var(--text-mercury);
+}
+
+.bg-gallery {
+    background: var(--text-mercury);
+    fill: var(--text-white);
+}
+
+.bg-overlay-dark {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.bg-overlay-darker {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.bg-overlay {
+    background: var(--global-palette0);
+}
+
+.bg-overlay-light {
+    background: var(--global-palette8);
+}
+
+.box {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.box .error {
+    width: 100%;
+    height: 128px;
+    background-image: url("/site-antigo/assets/tcr/assets/icons/led-06.png");
+    background-size: 64px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.box .warning {
+    width: 100%;
+    height: 128px;
+    background-image: url("/site-antigo/assets/tcr/assets/icons/led-08.png");
+    background-size: 64px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.box .success {
+    width: 100%;
+    height: 128px;
+    background-image: url("/site-antigo/assets/tcr/assets/icons/led-01.png");
+    background-size: 64px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.fa-icon.white{
+    color: var(--main-link);
+}
+.fa-icon.white:hover{
+    color: var(--main-link-hover);
+}
