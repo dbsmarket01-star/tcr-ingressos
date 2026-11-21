@@ -3,10 +3,12 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { EventMapEditor } from "@/components/admin/EventMapEditor";
 import { ImageUploadField } from "@/components/forms/ImageUploadField";
 import { ErrorNotice } from "@/components/ui/ErrorNotice";
+import { EventCreateDraftPersistence } from "@/components/admin/EventCreateDraftPersistence";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
 import { createEventAction } from "@/features/events/event.actions";
 import { eventMapLayoutToFormValue } from "@/features/events/event-map";
 import { listEventMapSources } from "@/features/events/event.service";
+import { prisma } from "@/lib/prisma";
 
 type NewEventPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -14,6 +16,8 @@ type NewEventPageProps = {
 
 export default async function NewEventPage({ searchParams }: NewEventPageProps) {
   const admin = await requirePermission("EVENTS");
+  const organization = await prisma.organization.findUnique({ where: { id: admin.organizationId! }, select: { slug: true } });
+  const managedTcrTracking = organization?.slug === "tcr-ingressos";
   const mapSources = await listEventMapSources(admin.organizationId!, getAdminAllowedEventIds(admin));
   const params = searchParams ? await searchParams : {};
   const error = typeof params.error === "string" ? params.error : null;
@@ -23,7 +27,8 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
       title="Novo evento"
       description="Preencha primeiro o essencial do evento e deixe os blocos avançados para depois."
     >
-      <form action={createEventAction} className="card form wideForm">
+      <form id="event-create-form" action={createEventAction} className="card form wideForm">
+        <EventCreateDraftPersistence restoreAfterError={Boolean(error)} />
         {error ? <ErrorNotice message={error} /> : null}
         <section className="adminPanelHero compact">
           <div>
@@ -218,17 +223,19 @@ export default async function NewEventPage({ searchParams }: NewEventPageProps) 
                 <p className="muted">Preencha apenas quando o evento já estiver pronto para tráfego.</p>
               </div>
             </summary>
-            <div className="grid twoColumns">
+            {managedTcrTracking ? (
+              <p className="muted">O Pixel e a API de Conversões da TCR são aplicados automaticamente ao salvar.</p>
+            ) : <div className="grid twoColumns">
               <label className="field">
                 <span>Meta Pixel ID</span>
                 <input name="metaPixelId" inputMode="numeric" placeholder="Ex: 123456789012345" />
               </label>
               <label className="field">
                 <span>Token da API de conversão do Meta</span>
-                <input name="metaConversionsApiToken" placeholder="Ex: EAA..." type="password" />
+                <input name="metaConversionsApiToken" placeholder="Ex: EAA..." type="password" autoComplete="new-password" />
                 <small>Usado para a venda confirmada subir ao Meta mesmo quando o navegador não devolve a conversão.</small>
               </label>
-            </div>
+            </div>}
             <div className="grid twoColumns">
               <label className="field">
                 <span>Código de teste do Meta</span>

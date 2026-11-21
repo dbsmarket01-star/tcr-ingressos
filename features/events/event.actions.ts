@@ -10,6 +10,15 @@ import { createAuditLog } from "@/features/audit/audit.service";
 import { requireEventAccess, requirePermission } from "@/features/auth/auth.service";
 import { savePublicImageUpload } from "@/features/uploads/local-upload.service";
 import { getFriendlyErrorMessage } from "@/lib/friendly-error";
+import { prisma } from "@/lib/prisma";
+
+async function usesManagedTcrTracking(organizationId: string) {
+  const organization = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { slug: true }
+  });
+  return organization?.slug === "tcr-ingressos";
+}
 
 function optionalDate(value: FormDataEntryValue | null) {
   const text = String(value ?? "").trim();
@@ -109,6 +118,7 @@ function validationMessage(error: unknown) {
 
 export async function createEventAction(formData: FormData) {
   const admin = await requirePermission("EVENTS");
+  const managedTcrTracking = await usesManagedTcrTracking(admin.organizationId!);
   const title = String(formData.get("title") ?? "").trim();
   const rawSlug = String(formData.get("slug") ?? "").trim();
   const status = String(formData.get("status") ?? "DRAFT");
@@ -151,8 +161,8 @@ export async function createEventAction(formData: FormData) {
     eventMapLayout: parseEventMapLayoutFormValue(formData.get("eventMapLayout")),
     googleMapsUrl: String(formData.get("googleMapsUrl") ?? "").trim() || undefined,
     importantInfo: String(formData.get("importantInfo") ?? "").trim() || undefined,
-    metaPixelId: String(formData.get("metaPixelId") ?? "").trim() || undefined,
-    metaConversionsApiToken: String(formData.get("metaConversionsApiToken") ?? "").trim() || undefined,
+    metaPixelId: managedTcrTracking ? undefined : String(formData.get("metaPixelId") ?? "").trim() || undefined,
+    metaConversionsApiToken: managedTcrTracking ? undefined : String(formData.get("metaConversionsApiToken") ?? "").trim() || undefined,
     metaTestEventCode: String(formData.get("metaTestEventCode") ?? "").trim() || undefined,
     googleTagManagerId: String(formData.get("googleTagManagerId") ?? "").trim() || undefined,
     seoTitle: String(formData.get("seoTitle") ?? "").trim() || undefined,
@@ -228,7 +238,8 @@ export async function updateEventAction(formData: FormData) {
     throw new Error("Evento não informado.");
   }
 
-  await requireEventAccess(eventId);
+  const admin = await requireEventAccess(eventId);
+  const managedTcrTracking = await usesManagedTcrTracking(admin.organizationId!);
 
   const requestedRedirectTo = String(formData.get("redirectTo") ?? "").trim();
   const redirectTo = requestedRedirectTo.startsWith(`/admin/events/${eventId}`)
@@ -285,8 +296,8 @@ export async function updateEventAction(formData: FormData) {
     eventMapLayout: parseEventMapLayoutFormValue(formData.get("eventMapLayout")),
     googleMapsUrl: String(formData.get("googleMapsUrl") ?? "").trim() || undefined,
     importantInfo: String(formData.get("importantInfo") ?? "").trim() || undefined,
-    metaPixelId: String(formData.get("metaPixelId") ?? "").trim() || undefined,
-    metaConversionsApiToken: String(formData.get("metaConversionsApiToken") ?? "").trim() || undefined,
+    metaPixelId: managedTcrTracking ? undefined : String(formData.get("metaPixelId") ?? "").trim() || undefined,
+    metaConversionsApiToken: managedTcrTracking ? undefined : String(formData.get("metaConversionsApiToken") ?? "").trim() || undefined,
     metaTestEventCode: String(formData.get("metaTestEventCode") ?? "").trim() || undefined,
     googleTagManagerId: String(formData.get("googleTagManagerId") ?? "").trim() || undefined,
     seoTitle: String(formData.get("seoTitle") ?? "").trim() || undefined,
