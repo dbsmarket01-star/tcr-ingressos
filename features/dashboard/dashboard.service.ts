@@ -1,7 +1,7 @@
 import { EventPageVisitType, EventStatus, OrderStatus, PaymentProvider, type Prisma } from "@prisma/client";
 import { allocateOrderAmountsAfterRefund } from "@/features/finance/order-refund-allocation";
 import { prisma } from "@/lib/prisma";
-import { formatReportDateInput, getReportPeriod } from "@/features/reports/report-period";
+import { getReportPeriod } from "@/features/reports/report-period";
 import { getAdmissionCount } from "@/features/tickets/admission-count";
 
 type DashboardFilters = {
@@ -93,27 +93,30 @@ function changePercent(current: number, previous: number) {
   return Number((((current - previous) / previous) * 100).toFixed(1));
 }
 
-function formatDayKey(value: Date) {
-  return formatReportDateInput(value);
-}
+const brazilDayKeyFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/Sao_Paulo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit"
+});
+const brazilDayLabelFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+  timeZone: "America/Sao_Paulo"
+});
 
 function formatBrazilDateKey(value: Date) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  }).formatToParts(value);
+  const parts = brazilDayKeyFormatter.formatToParts(value);
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return `${values.year}-${values.month}-${values.day}`;
 }
 
+function formatDayKey(value: Date) {
+  return formatBrazilDateKey(value);
+}
+
 function formatDayLabel(value: Date) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    timeZone: "America/Sao_Paulo"
-  }).format(value);
+  return brazilDayLabelFormatter.format(value);
 }
 
 function buildDateSeries(start: Date, end: Date) {
@@ -143,14 +146,11 @@ type PaidOrderLite = {
   createdAt: Date;
   event: {
     id: string;
+    slug: string;
     title: string;
     city: string;
     state: string;
     bannerUrl: string | null;
-  };
-  customer: {
-    name: string;
-    email: string;
   };
   payment: {
     provider: PaymentProvider;
@@ -160,20 +160,14 @@ type PaidOrderLite = {
   items: Array<{
     quantity: number;
     admissionsPerUnit: number;
-    lot: {
-      name: string;
-    };
   }>;
-  tickets: Array<{
-    id: string;
-    status: string;
-  }>;
+  _count: { tickets: number };
 };
 
 function getPaidTicketQuantity(orders: PaidOrderLite[]) {
   return orders.reduce((sum, order) => {
     const itemQuantity = getAdmissionCount(order.items);
-    return sum + (itemQuantity || order.tickets.length);
+    return sum + (itemQuantity || order._count.tickets);
   }, 0);
 }
 
@@ -280,10 +274,15 @@ export async function getDashboardMetrics(
   ] = await Promise.all([
     prisma.order.findMany({
       where: paidPeriodWhere,
-      orderBy: {
-        paidAt: "desc"
-      },
-      include: {
+      select: {
+        customerId: true,
+        subtotalInCents: true,
+        serviceFeeInCents: true,
+        cardInterestInCents: true,
+        refundedInCents: true,
+        totalInCents: true,
+        paidAt: true,
+        createdAt: true,
         event: {
           select: {
             id: true,
@@ -294,7 +293,6 @@ export async function getDashboardMetrics(
             bannerUrl: true
           }
         },
-        customer: true,
         payment: {
           select: {
             provider: true,
@@ -303,53 +301,26 @@ export async function getDashboardMetrics(
           }
         },
         items: {
-          include: {
-            lot: true
-          }
+          select: { quantity: true, admissionsPerUnit: true }
         },
-        tickets: {
-          select: {
-            id: true,
-            status: true
-          }
-        }
+        _count: { select: { tickets: true } }
       }
     }),
     prisma.order.findMany({
       where: previousPaidPeriodWhere,
-      orderBy: {
-        paidAt: "desc"
-      },
-      include: {
-        event: {
-          select: {
-            id: true,
-            slug: true,
-            title: true,
-            city: true,
-            state: true,
-            bannerUrl: true
-          }
-        },
-        customer: true,
-        payment: {
-          select: {
-            provider: true,
-            pixQrCodePayload: true,
-            rawPayload: true
-          }
-        },
+      select: {
+        customerId: true,
+        subtotalInCents: true,
+        serviceFeeInCents: true,
+        cardInterestInCents: true,
+        refundedInCents: true,
+        totalInCents: true,
+        paidAt: true,
+        createdAt: true,
         items: {
-          include: {
-            lot: true
-          }
+          select: { quantity: true, admissionsPerUnit: true }
         },
-        tickets: {
-          select: {
-            id: true,
-            status: true
-          }
-        }
+        _count: { select: { tickets: true } }
       }
     }),
     prisma.order.count({
@@ -408,18 +379,16 @@ export async function getDashboardMetrics(
     prisma.event.findMany({
       where: dashboardEventWhere,
       orderBy: [{ startsAt: "asc" }, { createdAt: "desc" }],
-      include: {
-        lots: true,
-        orders: {
-          where: paidPeriodWhere,
-          select: {
-            totalInCents: true,
-            subtotalInCents: true,
-            serviceFeeInCents: true,
-            cardInterestInCents: true,
-            refundedInCents: true
-          }
-        }
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        bannerUrl: true,
+        status: true,
+        startsAt: true,
+        city: true,
+        state: true,
+        lots: { select: { totalQuantity: true, soldQuantity: true, reservedQuantity: true, admissionsPerUnit: true } }
       }
     }),
     prisma.ticket.groupBy({
@@ -506,7 +475,7 @@ export async function getDashboardMetrics(
     })
   ]);
 
-  const sumEffective = (orders: typeof currentPaidOrders, field: "totalInCents" | "subtotalInCents" | "serviceFeeInCents" | "cardInterestInCents") =>
+  const sumEffective = (orders: Array<{ totalInCents: number; subtotalInCents: number; serviceFeeInCents: number; cardInterestInCents: number; refundedInCents: number }>, field: "totalInCents" | "subtotalInCents" | "serviceFeeInCents" | "cardInterestInCents") =>
     orders.reduce((sum, order) => sum + allocateOrderAmountsAfterRefund(order)[field], 0);
   const currentRevenueInCents = sumEffective(currentPaidOrders, "totalInCents");
   const previousRevenueInCents = sumEffective(previousPaidOrders, "totalInCents");
@@ -638,10 +607,7 @@ export async function getDashboardMetrics(
       (sum, lot) => sum + lot.reservedQuantity * Math.max(lot.admissionsPerUnit, 1),
       0
     );
-    const revenueInCents = event.orders.reduce(
-      (sum, order) => sum + allocateOrderAmountsAfterRefund(order).totalInCents,
-      0
-    );
+    const revenueInCents = eventPerformanceMap.get(event.id)?.revenueInCents ?? 0;
     const eventTickets = ticketCountByEvent.get(event.id) ?? { active: 0, used: 0 };
     const periodEventPerformance = eventPerformanceMap.get(event.id);
     const conversionRate = totalCapacity > 0 ? percentage(periodEventPerformance?.count ?? 0, totalCapacity) : 0;
