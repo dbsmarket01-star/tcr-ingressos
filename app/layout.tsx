@@ -48,7 +48,14 @@ export async function generateMetadata(): Promise<Metadata> {
       ? `${organizationContext.platformName} é a plataforma SaaS que sustenta várias bilheterias com domínio, equipe, eventos, pedidos e check-in próprios.`
       : `Bilheteria oficial da ${organizationContext.brandName} para venda de ingressos, pedidos, check-in e operação de eventos.`,
     ...(organizationContext.organization.slug === "tcr-ingressos"
-      ? { verification: { google: "ql-tXO3OjTZ8K2j6IDYKfNkdtWt2bENQ3JEIAq_cnNY" } }
+      ? {
+          icons: {
+            icon: [{ url: "/site-antigo/assets/tcr/favicon.png", type: "image/png", sizes: "256x256" }],
+            shortcut: "/site-antigo/assets/tcr/favicon.png",
+            apple: "/site-antigo/assets/tcr/favicon.png"
+          },
+          verification: { google: "ql-tXO3OjTZ8K2j6IDYKfNkdtWt2bENQ3JEIAq_cnNY" }
+        }
       : {})
   };
 }
