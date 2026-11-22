@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { buildAddToCartPayload } from "@/features/tracking/add-to-cart";
 
 function readSelectedQuantity() {
   return Array.from(document.querySelectorAll<HTMLInputElement>('input[name^="quantity_"]')).reduce(
@@ -9,10 +10,11 @@ function readSelectedQuantity() {
   );
 }
 
-export function AddToCartButton() {
+export function AddToCartButton({ eventTitle, hasMetaPixel }: { eventTitle: string; hasMetaPixel: boolean }) {
   const [selectedQuantity, setSelectedQuantity] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const trackingSentRef = useRef(false);
 
   useEffect(() => {
     const form = buttonRef.current?.form;
@@ -24,11 +26,19 @@ export function AddToCartButton() {
     function handleSubmit() {
       if (readSelectedQuantity() > 0) {
         setSubmitting(true);
+        if (hasMetaPixel && !trackingSentRef.current && typeof window.fbq === "function" && form) {
+          const payload = buildAddToCartPayload(new FormData(form), eventTitle);
+          if (payload) {
+            window.fbq("track", "AddToCart", payload);
+            trackingSentRef.current = true;
+          }
+        }
       }
     }
 
     function resetSubmitting() {
       setSubmitting(false);
+      trackingSentRef.current = false;
       updateSelectedQuantity();
     }
 
@@ -49,7 +59,7 @@ export function AddToCartButton() {
       window.removeEventListener("pageshow", resetSubmitting);
       observer?.disconnect();
     };
-  }, []);
+  }, [eventTitle, hasMetaPixel]);
 
   const disabled = selectedQuantity <= 0 || submitting;
 
