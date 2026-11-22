@@ -249,12 +249,14 @@ export async function listRecentCheckIns(organizationId: string, allowedEventIds
   });
 }
 
-export async function getCheckInStats(organizationId: string, allowedEventIds?: string[] | null) {
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
+export async function getCheckInStats(organizationId: string, allowedEventIds?: string[] | null, adminUserId?: string) {
+  const brasiliaDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit"
+  }).format(new Date());
+  const startOfDay = new Date(`${brasiliaDate}T00:00:00-03:00`);
   const eventScope = buildCheckInEventWhere(organizationId, allowedEventIds);
 
-  const [approvedToday, blockedToday, totalToday] = await Promise.all([
+  const [approvedToday, blockedToday, totalToday, approvedTotal, operatorApprovedTotal] = await Promise.all([
     prisma.checkIn.count({
       where: {
         event: eventScope,
@@ -285,12 +287,29 @@ export async function getCheckInStats(organizationId: string, allowedEventIds?: 
           gte: startOfDay
         }
       }
-    })
+    }),
+    prisma.checkIn.count({
+      where: {
+        event: eventScope,
+        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+        status: CheckInStatus.APPROVED
+      }
+    }),
+    adminUserId ? prisma.checkIn.count({
+      where: {
+        event: eventScope,
+        ...(allowedEventIds ? { eventId: { in: allowedEventIds } } : {}),
+        status: CheckInStatus.APPROVED,
+        adminUserId
+      }
+    }) : Promise.resolve(0)
   ]);
 
   return {
     approvedToday,
     blockedToday,
-    totalToday
+    totalToday,
+    approvedTotal,
+    operatorApprovedTotal
   };
 }

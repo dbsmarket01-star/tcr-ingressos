@@ -56,7 +56,9 @@ const statusGuidance = {
 const emptyStats = {
   approvedToday: 0,
   blockedToday: 0,
-  totalToday: 0
+  totalToday: 0,
+  approvedTotal: 0,
+  operatorApprovedTotal: 0
 };
 
 function formatEventOptionDate(value: Date) {
@@ -83,7 +85,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
   const scopedEventIds = selectedEvent ? [selectedEvent.id] : [];
   const [recentCheckIns, stats] = await Promise.all([
     selectedEvent ? listRecentCheckIns(admin.organizationId, scopedEventIds) : Promise.resolve([]),
-    selectedEvent ? getCheckInStats(admin.organizationId, scopedEventIds) : Promise.resolve(emptyStats)
+    selectedEvent ? getCheckInStats(admin.organizationId, scopedEventIds, admin.id) : Promise.resolve(emptyStats)
   ]);
   const status = result.status && result.status in statusLabels
     ? result.status as keyof typeof statusLabels
@@ -157,9 +159,9 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
           <article className="checkInMetricCard">
             <span className="checkInMetricIcon checkInMetricGreen">E</span>
             <div>
-              <span>Entradas hoje</span>
-              <strong>{stats.approvedToday}</strong>
-              <small>pessoas</small>
+              <span>Entradas no evento</span>
+              <strong>{stats.approvedTotal}</strong>
+              <small>validações acumuladas</small>
             </div>
           </article>
           <article className="checkInMetricCard">
@@ -181,9 +183,9 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
           <article className="checkInMetricCard">
             <span className="checkInMetricIcon checkInMetricPurple">H</span>
             <div>
-              <span>Histórico carregado</span>
-              <strong>{recentCheckIns.length}</strong>
-              <small>registros</small>
+              <span>Validados por você</span>
+              <strong>{stats.operatorApprovedTotal}</strong>
+              <small>total desta conta no evento</small>
             </div>
           </article>
         </section>
