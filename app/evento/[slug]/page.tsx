@@ -624,7 +624,12 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
               {purchasableLots.length > 0 ? (
                 <>
-                  <AddToCartButton eventTitle={event.title} hasMetaPixel={Boolean(event.metaPixelId)} />
+                  <AddToCartButton
+                    eventId={event.id}
+                    eventTitle={event.title}
+                    hasMetaPixel={Boolean(event.metaPixelId)}
+                    lotPricesInCents={Object.fromEntries(visibleLots.map((lot) => [lot.id, lot.priceInCents]))}
+                  />
                   <p className="checkoutFootnote">
                     Você informará seus dados e concluirá o pedido na próxima etapa.
                   </p>

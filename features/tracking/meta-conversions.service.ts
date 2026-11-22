@@ -150,6 +150,105 @@ export async function trackMetaPurchaseForPaidOrder(orderId: string) {
   return { tracked: true as const };
 }
 
+export async function trackMetaInitiateCheckoutForOrder(orderId: string) {
+  const order = await getPaidOrderForMeta(orderId);
+  if (!order || order.status !== "PENDING_PAYMENT") return { tracked: false as const, reason: "not_needed" as const };
+  if (!order.event.metaPixelId || !order.event.metaConversionsApiToken || !order.clientUserAgent) {
+    return { tracked: false as const, reason: "tracking_not_configured" as const };
+  }
+
+  const endpoint = new URL(`https://graph.facebook.com/${META_GRAPH_API_VERSION}/${order.event.metaPixelId}/events`);
+  endpoint.searchParams.set("access_token", order.event.metaConversionsApiToken);
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(4_000),
+    body: JSON.stringify({
+      data: [{
+        event_name: "InitiateCheckout",
+        event_time: Math.floor(order.createdAt.getTime() / 1000),
+        event_id: order.code,
+        action_source: "website",
+        event_source_url: order.landingPage || createPublicOrderUrl(order.code, order.event.organization),
+        user_data: buildUserData(order),
+        custom_data: {
+          currency: order.currency || "BRL",
+          value: Number((order.totalInCents / 100).toFixed(2)),
+          content_name: order.event.title,
+          content_type: "product",
+          contents: order.items.map((item) => ({ id: item.lotId, quantity: item.quantity })),
+          num_items: order.items.reduce((sum, item) => sum + item.quantity, 0)
+        }
+      }],
+      test_event_code: order.event.metaTestEventCode || undefined
+    })
+  });
+  if (!response.ok) throw new Error(`Meta CAPI rejeitou InitiateCheckout: ${response.status}`);
+  return { tracked: true as const };
+}
+
+export async function trackMetaAddToCart(input: {
+  organizationId: string;
+  eventId: string;
+  trackingEventId: string;
+  contents: Array<{ id: string; quantity: number }>;
+  sourceUrl: string;
+  fbp?: string;
+  fbc?: string;
+  clientIpAddress?: string;
+  clientUserAgent: string;
+}) {
+  const event = await prisma.event.findFirst({
+    where: { id: input.eventId, organizationId: input.organizationId, status: "PUBLISHED" },
+    select: { slug: true, title: true, metaPixelId: true, metaConversionsApiToken: true, metaTestEventCode: true,
+      lots: { where: { id: { in: input.contents.map((item) => item.id) }, status: "ACTIVE" },
+        select: { id: true, priceInCents: true, maxPerOrder: true } }
+    }
+  });
+  if (!event?.metaPixelId || !event.metaConversionsApiToken) return { tracked: false as const, reason: "tracking_not_configured" as const };
+  if (new URL(input.sourceUrl).pathname !== `/evento/${event.slug}`) {
+    return { tracked: false as const, reason: "invalid_selection" as const };
+  }
+  const lots = new Map(event.lots.map((lot) => [lot.id, lot]));
+  if (input.contents.some((item) => !lots.has(item.id) || item.quantity > lots.get(item.id)!.maxPerOrder)) {
+    return { tracked: false as const, reason: "invalid_selection" as const };
+  }
+
+  const endpoint = new URL(`https://graph.facebook.com/${META_GRAPH_API_VERSION}/${event.metaPixelId}/events`);
+  endpoint.searchParams.set("access_token", event.metaConversionsApiToken);
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(4_000),
+    body: JSON.stringify({
+      data: [{
+        event_name: "AddToCart",
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: input.trackingEventId,
+        action_source: "website",
+        event_source_url: input.sourceUrl,
+        user_data: {
+          client_user_agent: input.clientUserAgent,
+          client_ip_address: input.clientIpAddress || undefined,
+          fbp: input.fbp || undefined,
+          fbc: input.fbc || undefined
+        },
+        custom_data: {
+          currency: "BRL",
+          value: Number((input.contents.reduce((sum, item) => sum + lots.get(item.id)!.priceInCents * item.quantity, 0) / 100).toFixed(2)),
+          content_name: event.title,
+          content_type: "product",
+          content_ids: input.contents.map((item) => item.id),
+          contents: input.contents
+        }
+      }],
+      test_event_code: event.metaTestEventCode || undefined
+    })
+  });
+  if (!response.ok) throw new Error(`Meta CAPI rejeitou AddToCart: ${response.status}`);
+  return { tracked: true as const };
+}
+
 type TrackMetaLeadPayload = {
   eventId: string;
   eventTitle: string;

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createPublicOrderUrl, sendOrderPendingPaymentEmail } from "@/features/email/email.service";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { assertRateLimit } from "@/features/security/rate-limit";
+import { trackMetaInitiateCheckoutForOrder } from "@/features/tracking/meta-conversions.service";
 import { getFriendlyErrorMessage } from "@/lib/friendly-error";
 import { resolveCheckoutLandingPage } from "./checkout-origin";
 import { checkoutOrderSchema } from "./order.schema";
@@ -236,6 +237,15 @@ export async function createCheckoutOrderAction(formData: FormData) {
   } catch (error) {
     const message = getFriendlyErrorMessage(error, "Não foi possível criar o pedido. Tente novamente.");
     redirect(buildCheckoutReturnUrl(formData, eventSlug || parsed.data.eventSlug, message));
+  }
+
+  try {
+    await trackMetaInitiateCheckoutForOrder(order.id);
+  } catch (error) {
+    console.error("[meta-capi] Falha ao enviar InitiateCheckout", {
+      orderCode: order.code,
+      error: error instanceof Error ? error.message : "unknown"
+    });
   }
 
   if (order.event.autoPendingPaymentEmailEnabled !== false) {

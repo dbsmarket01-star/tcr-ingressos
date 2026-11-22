@@ -10,7 +10,31 @@ function readSelectedQuantity() {
   );
 }
 
-export function AddToCartButton({ eventTitle, hasMetaPixel }: { eventTitle: string; hasMetaPixel: boolean }) {
+function readMetaCookie(name: string) {
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  if (!match) return "";
+  try { return decodeURIComponent(match[1]); } catch { return ""; }
+}
+
+function sendCartEventToServer(eventId: string, trackingEventId: string, contents: Array<{ id: string; quantity: number }>) {
+  const fbclid = new URLSearchParams(window.location.search).get("fbclid")?.trim();
+  const body = JSON.stringify({
+    eventId,
+    trackingEventId,
+    contents,
+    sourceUrl: window.location.href,
+    fbp: readMetaCookie("_fbp"),
+    fbc: readMetaCookie("_fbc") || (fbclid ? `fb.1.${Date.now()}.${fbclid}` : "")
+  });
+  const url = "/api/public/meta/add-to-cart";
+
+  if (navigator.sendBeacon?.(url, new Blob([body], { type: "application/json" }))) return;
+  void fetch(url, { method: "POST", body, headers: { "Content-Type": "application/json" }, keepalive: true }).catch(() => {});
+}
+
+export function AddToCartButton({ eventId, eventTitle, hasMetaPixel, lotPricesInCents }: {
+  eventId: string; eventTitle: string; hasMetaPixel: boolean; lotPricesInCents: Record<string, number>
+}) {
   const [selectedQuantity, setSelectedQuantity] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -26,11 +50,18 @@ export function AddToCartButton({ eventTitle, hasMetaPixel }: { eventTitle: stri
     function handleSubmit() {
       if (readSelectedQuantity() > 0) {
         setSubmitting(true);
-        if (hasMetaPixel && !trackingSentRef.current && typeof window.fbq === "function" && form) {
-          const payload = buildAddToCartPayload(new FormData(form), eventTitle);
-          if (payload) {
-            window.fbq("track", "AddToCart", payload);
-            trackingSentRef.current = true;
+        if (hasMetaPixel && !trackingSentRef.current && form) {
+          try {
+            const payload = buildAddToCartPayload(new FormData(form), eventTitle, lotPricesInCents);
+            if (payload) {
+              trackingSentRef.current = true;
+              const trackingEventId = `cart:${crypto.randomUUID()}`;
+              window.fbq?.("track", "AddToCart", payload, { eventID: trackingEventId });
+              sendCartEventToServer(eventId, trackingEventId, payload.contents);
+            }
+          } catch (error) {
+            // Marketing tracking must never block the ticket checkout.
+            console.warn("[tracking] AddToCart indisponível", error);
           }
         }
       }
@@ -59,7 +90,7 @@ export function AddToCartButton({ eventTitle, hasMetaPixel }: { eventTitle: stri
       window.removeEventListener("pageshow", resetSubmitting);
       observer?.disconnect();
     };
-  }, [eventTitle, hasMetaPixel]);
+  }, [eventId, eventTitle, hasMetaPixel, lotPricesInCents]);
 
   const disabled = selectedQuantity <= 0 || submitting;
 

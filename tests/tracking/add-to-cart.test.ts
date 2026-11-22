@@ -8,13 +8,14 @@ describe("Meta AddToCart payload", () => {
     form.set("quantity_camarote", "1");
     form.set("quantity_esgotado", "0");
 
-    expect(buildAddToCartPayload(form, "Show de teste")).toEqual({
+    expect(buildAddToCartPayload(form, "Show de teste", { pista: 10000, camarote: 25000 })).toEqual({
       content_name: "Show de teste",
       content_type: "product",
       content_ids: ["pista", "camarote"],
       contents: [{ id: "pista", quantity: 2 }, { id: "camarote", quantity: 1 }],
       num_items: 3,
-      currency: "BRL"
+      currency: "BRL",
+      value: 450
     });
   });
 
@@ -22,6 +23,6 @@ describe("Meta AddToCart payload", () => {
     const form = new FormData();
     form.set("quantity_pista", "0");
     form.set("quantity_camarote", "NaN");
-    expect(buildAddToCartPayload(form, "Show de teste")).toBeNull();
+    expect(buildAddToCartPayload(form, "Show de teste", {})).toBeNull();
   });
 });
