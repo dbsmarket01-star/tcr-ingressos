@@ -326,8 +326,8 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
       <input type="hidden" name="eventId" value={eventId} />
       <div className="checkInFormHeader">
         <div>
-          <h2>Validar ingresso</h2>
-          <p>Evento selecionado: {eventTitle}</p>
+          <h2>Leitor de ingressos</h2>
+          <p>{eventTitle}</p>
         </div>
         <span>
           {cameraStatus === "scanning" ? "Lendo"
@@ -345,17 +345,13 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
           type="button"
           disabled={cameraStatus === "starting" || cameraStatus === "scanning"}
         >
-          {cameraStatus === "interrupted" ? "Retomar câmera" : "Abrir câmera"}
+          {cameraStatus === "interrupted" ? "Retomar câmera" : "Iniciar leitura"}
         </button>
         {showCameraPreview ? (
-          <button className="secondaryButton" onClick={() => restartCamera()} type="button">
-            Reiniciar câmera
-          </button>
+          <button className="secondaryButton" onClick={() => restartCamera()} type="button">Reiniciar câmera</button>
         ) : null}
         {showCameraPreview ? (
-          <button className="secondaryButton" onClick={() => stopCamera()} type="button">
-            Parar leitura
-          </button>
+          <button className="secondaryButton" onClick={() => stopCamera()} type="button">Pausar</button>
         ) : null}
       </div>
 
@@ -371,20 +367,20 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
         {cameraStatus === "scanning" ? <small>Retire este QR Code e apresente o próximo. A câmera continua aberta.</small> : null}
       </div> : null}
 
-      {cameras.length > 1 ? <label className="field">
-        <span>Câmera para leitura</span>
+      {showCameraPreview ? (
+        <div className="scannerFrame">
+          <video muted playsInline ref={videoRef} />
+          <span>Aponte para o QR Code · próxima leitura automática</span>
+        </div>
+      ) : null}
+
+      {cameras.length > 1 ? <label className="field checkInCameraPicker">
+        <span>Selecionar outra câmera</span>
         <select value={selectedCameraRef.current || ""} onChange={(event) => restartCamera(event.target.value)} disabled={cameraStatus === "starting"}>
           <option value="">Traseira automática</option>
           {cameras.map((camera, index) => <option key={camera.deviceId} value={camera.deviceId}>{camera.label || `Câmera ${index + 1}`}</option>)}
         </select>
       </label> : null}
-
-      {showCameraPreview ? (
-        <div className="scannerFrame">
-          <video muted playsInline ref={videoRef} />
-          <span>Leitura contínua · posicione o QR Code no centro</span>
-        </div>
-      ) : null}
 
       {cameraStatus === "unsupported" ? (
         <p className="formHint">
@@ -410,32 +406,27 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
         </p>
       ) : null}
 
-      <label className="field">
-        <span>Código ou token do QR Code</span>
-        <input
-          name="code"
-          placeholder="Cole ou leia o código do ingresso"
-          ref={inputRef}
-          required
-        />
-      </label>
-      <label className="field">
-        <span>Dispositivo/portaria</span>
-        <input
-          name="deviceName"
-          placeholder="Ex: Portaria principal"
-          ref={deviceInputRef}
-          onBlur={(event) => {
-            try { window.localStorage.setItem("ingresaas-checkin-device", event.target.value.trim()); } catch { /* Optional preference. */ }
-          }}
-        />
-      </label>
-      <p className="muted">
-        Dica: se o QR Code falhar, procure o pedido ou o ingresso no atendimento e cole o código aqui. Isso costuma resolver mais rápido do que insistir na câmera.
-      </p>
-      <button className="button fullButton" type="submit">
-        Validar entrada
-      </button>
+      <details className="checkInManualEntry">
+        <summary>QR Code não leu? Digitar código</summary>
+        <div className="checkInManualFields">
+          <label className="field">
+            <span>Código do ingresso</span>
+            <input name="code" placeholder="Cole ou digite o código" ref={inputRef} required />
+          </label>
+          <label className="field">
+            <span>Dispositivo/portaria (opcional)</span>
+            <input
+              name="deviceName"
+              placeholder="Ex: Portaria principal"
+              ref={deviceInputRef}
+              onBlur={(event) => {
+                try { window.localStorage.setItem("ingresaas-checkin-device", event.target.value.trim()); } catch { /* Optional preference. */ }
+              }}
+            />
+          </label>
+          <button className="button fullButton" type="submit">Validar código</button>
+        </div>
+      </details>
       </PendingValidation>
     </form>
   );

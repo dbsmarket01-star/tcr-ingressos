@@ -19529,6 +19529,45 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   font-weight: 700;
 }
 
+.checkInEventSelectCopy small {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.checkInEventSelected {
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+  padding: 14px 18px;
+}
+
+.checkInEventSelected .checkInEventSelectForm {
+  align-items: center;
+  border: 0;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 0;
+}
+
+.checkInEventSelected .checkInEventSelectCopy {
+  gap: 3px;
+}
+
+.checkInEventSelected .checkInEventSelectCopy span {
+  color: #64748b;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.checkInEventSelected .checkInEventSelectCopy strong {
+  color: #0f172a;
+  font-size: 16px;
+}
+
+.checkInEventSelected .checkInSelectButton {
+  min-height: 40px;
+}
+
 .checkInSelectRow {
   align-items: center;
   display: grid;
@@ -19887,8 +19926,33 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .checkInRecentPanel {
+  min-height: 0;
+}
+
+.checkInRecentPanel[open] {
   align-content: start;
   gap: 22px;
+}
+
+.checkInRecentPanel summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.checkInRecentPanel summary::-webkit-details-marker {
+  display: none;
+}
+
+.checkInRecentPanel summary::after {
+  color: #64748b;
+  content: "Ver histórico";
+  font-size: 12px;
+  font-weight: 800;
+  margin-left: auto;
+}
+
+.checkInRecentPanel[open] summary::after {
+  content: "Ocultar";
 }
 
 .checkInPanelTitle {
@@ -19897,10 +19961,44 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   gap: 12px;
 }
 
-.checkInPanelTitle h2 {
+.checkInPanelTitle > span:last-of-type {
   color: #0f172a;
   font-size: 20px;
-  margin: 0;
+  font-weight: 800;
+}
+
+.checkInManualEntry {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 12px;
+}
+
+.checkInManualEntry summary {
+  color: #075d45;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 800;
+  list-style: none;
+  min-height: 44px;
+  padding: 11px 0;
+}
+
+.checkInManualEntry summary::-webkit-details-marker {
+  display: none;
+}
+
+.checkInManualEntry summary::after {
+  content: "⌄";
+  float: right;
+}
+
+.checkInManualEntry[open] summary::after {
+  content: "⌃";
+}
+
+.checkInManualFields {
+  display: grid;
+  gap: 12px;
+  padding-top: 8px;
 }
 
 .checkInHistoryIcon {
@@ -20144,6 +20242,22 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
     gap: 12px;
   }
 
+  .checkInEventSelected {
+    padding: 12px 14px;
+  }
+
+  .checkInEventSelected .checkInEventSelectForm {
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 0;
+  }
+
+  .checkInEventSelected .checkInSelectButton {
+    min-height: 38px;
+    padding-inline: 10px;
+    width: auto;
+  }
+
   .checkInEventSelectForm {
     gap: 12px;
     padding-bottom: 14px;
@@ -20255,7 +20369,47 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 
   .scannerActions {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .scannerActions > .button:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .scannerActions > .button:only-child {
+    grid-column: 1 / -1;
+  }
+
+  .checkInWorkGrid {
+    gap: 12px;
+  }
+
+  .checkInMainPanel {
+    min-height: 0;
+    padding: 0;
+  }
+
+  .checkInRecentPanel {
+    min-height: 0;
+  }
+
+  .checkInMetricCard {
+    min-height: 66px;
+    padding: 10px;
+  }
+
+  .checkInMetricIcon,
+  .checkInMetricCard small {
+    display: none;
+  }
+
+  .checkInMetricCard strong {
+    font-size: 24px;
+  }
+
+  .scannerFrame {
+    aspect-ratio: 1 / 1;
+    min-height: 0;
   }
 
   .checkInCurrentResult {

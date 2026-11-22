@@ -101,12 +101,13 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
       }
     >
       <section className="checkInDeskPage">
-        <section className="checkInEventSelectCard">
+        <section className={`checkInEventSelectCard${selectedEvent ? " checkInEventSelected" : ""}`}>
           {selectedEvent ? (
             <div className="checkInEventSelectForm">
               <div className="checkInEventSelectCopy">
-                <span>Evento selecionado</span>
-                <strong>{selectedEvent.title} — {formatEventOptionDate(selectedEvent.startsAt)}</strong>
+                <span>Você está lendo</span>
+                <strong>{selectedEvent.title} · {formatEventOptionDate(selectedEvent.startsAt)}</strong>
+                <small>{selectedEvent.venueName} · {selectedEvent.city}, {selectedEvent.state}</small>
               </div>
               <div className="checkInSelectRow">
                 <a className="secondaryButton checkInSelectButton" href="/admin/check-in">
@@ -135,24 +136,14 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
               </div>
             </form>
           )}
-          <div className="checkInEventStatusBox">
+          {!selectedEvent ? <div className="checkInEventStatusBox">
             <span className="checkInCalendarIcon" aria-hidden="true" />
             <p>
-              {selectedEvent ? (
-                <>
-                  <strong>{selectedEvent.title}</strong>
-                  <br />
-                  {selectedEvent.venueName} - {selectedEvent.city}, {selectedEvent.state}
-                </>
-              ) : (
-                <>
-                  Selecione um evento ao lado
-                  <br />
-                  <strong>para iniciar o check-in.</strong>
-                </>
-              )}
+              Selecione um evento ao lado
+              <br />
+              <strong>para iniciar o check-in.</strong>
             </p>
-          </div>
+          </div> : null}
         </section>
 
         {selectedEvent ? <>
@@ -191,11 +182,11 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
             </>
           </article>
 
-          <aside className="checkInRecentPanel">
-            <div className="checkInPanelTitle">
+          <details className="checkInRecentPanel">
+            <summary className="checkInPanelTitle">
               <span className="checkInHistoryIcon" aria-hidden="true" />
-              <h2>Últimos check-ins</h2>
-            </div>
+              <span>Últimos check-ins</span>
+            </summary>
             {recentCheckIns.length === 0 ? (
               <div className="checkInRecentEmpty">
                 <span aria-hidden="true" />
@@ -220,7 +211,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
                 ))}
               </div>
             )}
-          </aside>
+          </details>
         </section></> : null}
 
         {selectedEvent ? <section className="checkInMetricGrid">
@@ -258,32 +249,6 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
           </article>
         </section> : null}
 
-        <section className="checkInTipsPanel">
-          <h2>Dicas rápidas</h2>
-          <div className="checkInTipsGrid">
-            <article>
-              <span className="checkInTipIcon checkInMetricBlue">1</span>
-              <div>
-                <strong>Cada ingresso só pode ser validado uma vez.</strong>
-                <p>Releituras são bloqueadas automaticamente.</p>
-              </div>
-            </article>
-            <article>
-              <span className="checkInTipIcon checkInMetricGreen">2</span>
-              <div>
-                <strong>Mantenha sua conexão estável.</strong>
-                <p>Isso garante sincronização em tempo real.</p>
-              </div>
-            </article>
-            <article>
-              <span className="checkInTipIcon checkInMetricGreen">3</span>
-              <div>
-                <strong>Problemas com a leitura?</strong>
-                <p>Entre em contato com suporte imediato.</p>
-              </div>
-            </article>
-          </div>
-        </section>
       </section>
     </AdminShell>
   );
