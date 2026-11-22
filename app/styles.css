@@ -6260,7 +6260,7 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 }
 
 .dashboardGeneralKpiGrid {
-  grid-template-columns: repeat(6, minmax(180px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .dashboardGeneralKpiCard {
@@ -6300,20 +6300,16 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 
 .dashboardGeneralKpiCard strong {
   color: #121c2d;
-  font-size: clamp(19px, 1.35vw, 30px);
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
   line-height: 1.02;
   min-width: 0;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  white-space: nowrap;
 }
 
 .dashboardGeneralKpiCard .dashboardGeneralMoneyValue {
-  font-size: clamp(13px, 8.8cqi, 23px);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.04em;
-  overflow-wrap: normal !important;
-  white-space: nowrap;
-  word-break: keep-all !important;
+  font-size: inherit;
 }
 
 .dashboardGeneralDelta {
@@ -7095,6 +7091,12 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
 
   .dashboardGeneralPaymentGrid {
     grid-template-columns: 170px minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1100px) {
+  .dashboardGeneralKpiGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -29777,7 +29779,7 @@ small,
 
   .adminShell:has(.dashboardGeneralShell) .dashboardGeneralKpiGrid {
     gap: 10px;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: 1fr !important;
   }
 
   .adminShell:has(.dashboardGeneralShell) .dashboardGeneralKpiCard {
@@ -29802,11 +29804,11 @@ small,
   }
 
   .adminShell:has(.dashboardGeneralShell) .dashboardGeneralKpiCard strong {
-    font-size: clamp(17px, 5vw, 22px);
+    font-size: 24px;
   }
 
   .adminShell:has(.dashboardGeneralShell) .dashboardGeneralKpiCard .dashboardGeneralMoneyValue {
-    font-size: clamp(12px, 8.8cqi, 19px);
+    font-size: inherit;
   }
 
   .adminShell:has(.dashboardGeneralShell) .dashboardGeneralDelta {
