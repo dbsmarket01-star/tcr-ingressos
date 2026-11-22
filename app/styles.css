@@ -17422,6 +17422,10 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
   color: #111827;
   font-size: 14px;
   line-height: 1.28;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: normal;
 }
 
 .supportDeskTotal strong {
