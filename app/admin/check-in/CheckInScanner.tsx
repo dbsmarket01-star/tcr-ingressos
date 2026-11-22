@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { ContinuousScanGate, type LiveCheckInResult } from "@/features/check-in/continuous-scan";
+import { useFormStatus } from "react-dom";
+import { getCameraErrorMessage } from "@/features/check-in/camera-feedback";
 
 type CheckInScannerProps = {
-  action: (formData: FormData) => void | Promise<void>;
+  action: (formData: FormData) => Promise<LiveCheckInResult>;
   eventId: string;
   eventTitle: string;
 };
@@ -12,7 +16,20 @@ type ScannerControls = {
   stop(): void;
 };
 
+function PendingValidation({ children }: { children: ReactNode }) {
+  const { pending } = useFormStatus();
+  return <>
+    {pending ? <p role="status" className="formHint">Validando ingresso… Aguarde a confirmação antes de liberar a entrada.</p> : null}
+    <fieldset disabled={pending} aria-busy={pending} style={{ border: 0, padding: 0, margin: 0, minWidth: 0, display: "grid", gap: 16 }}>
+      {children}
+    </fieldset>
+  </>;
+}
+
 export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerProps) {
+  const router = useRouter();
+  const gateRef = useRef(new ContinuousScanGate());
+  const [validation, setValidation] = useState<LiveCheckInResult | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const deviceInputRef = useRef<HTMLInputElement>(null);
@@ -25,13 +42,17 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
   const recoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const frameWatchdogRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const unreadableTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const selectedCameraRef = useRef<string | undefined>(undefined);
+  const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
+  const [cameraError, setCameraError] = useState("");
   const [showUnreadableHint, setShowUnreadableHint] = useState(false);
   const [cameraStatus, setCameraStatus] = useState<
     "idle" | "unsupported" | "starting" | "scanning" | "interrupted" | "error"
   >("idle");
 
   useEffect(() => {
-    const savedDeviceName = window.localStorage.getItem("ingresaas-checkin-device");
+    let savedDeviceName: string | null = null;
+    try { savedDeviceName = window.localStorage.getItem("ingresaas-checkin-device"); } catch { /* Camera remains usable when storage is disabled. */ }
 
     if (savedDeviceName && deviceInputRef.current) {
       deviceInputRef.current.value = savedDeviceName;
@@ -77,8 +98,10 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
       return;
     }
 
+    if (!gateRef.current.claim(normalizedCode)) return;
+    setShowUnreadableHint(false);
+    if (unreadableTimerRef.current) clearTimeout(unreadableTimerRef.current);
     inputRef.current.value = normalizedCode;
-    stopCamera();
     formRef.current.requestSubmit();
   }
 
@@ -156,6 +179,11 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
       return;
     }
 
+    if (!navigator.mediaDevices?.getUserMedia || !window.isSecureContext) {
+      setCameraStatus("unsupported");
+      return;
+    }
+    setCameraError("");
     if (!automatic) recoveryAttemptsRef.current = 0;
     cameraWantedRef.current = true;
     setShowUnreadableHint(false);
@@ -175,6 +203,7 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
       }
 
       const { BrowserQRCodeReader } = await import("@zxing/browser");
+      if (sessionId !== cameraSessionRef.current) return;
       const reader = new BrowserQRCodeReader(undefined, {
         delayBetweenScanAttempts: 250,
         delayBetweenScanSuccess: 500
@@ -182,9 +211,9 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
       const controls = await reader.decodeFromConstraints(
         {
           video: {
-            facingMode: {
-              ideal: "environment"
-            },
+            ...(selectedCameraRef.current
+              ? { deviceId: { exact: selectedCameraRef.current } }
+              : { facingMode: { ideal: "environment" } }),
             width: { ideal: 1280 },
             height: { ideal: 720 }
           },
@@ -192,9 +221,9 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
         },
         videoRef.current,
         (result) => {
-          if (result && scanningRef.current && sessionId === cameraSessionRef.current) {
-            submitCode(result.getText());
-          }
+          if (!scanningRef.current || sessionId !== cameraSessionRef.current) return;
+          if (result) submitCode(result.getText());
+          else gateRef.current.observeEmptyFrame();
         }
       );
 
@@ -225,6 +254,14 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
         });
       }
 
+      // Listing can fail independently of capture; never interrupt a working camera.
+      void navigator.mediaDevices.enumerateDevices().then((devices) => {
+        if (sessionId === cameraSessionRef.current) {
+          setCameras(devices.filter((device) => device.kind === "videoinput"));
+          const activeStream = videoRef.current?.srcObject;
+          if (activeStream instanceof MediaStream) selectedCameraRef.current = activeStream.getVideoTracks()[0]?.getSettings().deviceId;
+        }
+      }).catch(() => {});
       setCameraStatus("scanning");
       unreadableTimerRef.current = setTimeout(() => {
         if (scanningRef.current && sessionId === cameraSessionRef.current) setShowUnreadableHint(true);
@@ -245,8 +282,9 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
     } catch (error) {
       if (sessionId === cameraSessionRef.current) {
         console.error("[check-in-camera] Não foi possível manter a câmera ativa", error);
-        if (error instanceof DOMException && (error.name === "NotAllowedError" || error.name === "NotFoundError")) {
+        if (error instanceof Error && ["NotAllowedError", "NotFoundError", "OverconstrainedError", "NotReadableError"].includes(error.name)) {
           stopCamera(false);
+          setCameraError(getCameraErrorMessage(error));
           setCameraStatus("error");
         } else {
           recoverInterruptedCamera();
@@ -255,10 +293,36 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
     }
   }
 
+  async function validateWithoutClosingCamera(formData: FormData) {
+    gateRef.current.pause();
+    setValidation(null);
+    try {
+      const result = await action(formData);
+      setValidation(result);
+      router.refresh();
+    } catch {
+      setValidation({ status: "ERROR", message: "Não foi possível confirmar a validação. Confira a conexão ou entre novamente no painel. Não libere a entrada sem confirmação." });
+    } finally {
+      gateRef.current.complete();
+      if (scanningRef.current) {
+        unreadableTimerRef.current = setTimeout(() => {
+          if (scanningRef.current) setShowUnreadableHint(true);
+        }, 8000);
+      }
+    }
+  }
+
+  function restartCamera(cameraId = selectedCameraRef.current) {
+    stopCamera(false);
+    selectedCameraRef.current = cameraId;
+    void startCamera();
+  }
+
   const showCameraPreview = cameraStatus === "starting" || cameraStatus === "scanning";
 
   return (
-    <form action={action} className="checkInScannerCard form checkInForm" ref={formRef}>
+    <form action={validateWithoutClosingCamera} className="checkInScannerCard form checkInForm" ref={formRef} onSubmit={() => gateRef.current.pause()}>
+      <PendingValidation>
       <input type="hidden" name="eventId" value={eventId} />
       <div className="checkInFormHeader">
         <div>
@@ -284,16 +348,41 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
           {cameraStatus === "interrupted" ? "Retomar câmera" : "Abrir câmera"}
         </button>
         {showCameraPreview ? (
+          <button className="secondaryButton" onClick={() => restartCamera()} type="button">
+            Reiniciar câmera
+          </button>
+        ) : null}
+        {showCameraPreview ? (
           <button className="secondaryButton" onClick={() => stopCamera()} type="button">
             Parar leitura
           </button>
         ) : null}
       </div>
 
+      {validation ? <div className={`checkInCurrentResult checkIn${validation.status}`} role="alert" aria-live="assertive">
+        <div className="checkInResultHeadline"><strong>{validation.status === "APPROVED" ? "Entrada liberada" : validation.status === "ALREADY_USED" ? "Já utilizado — não libere" : "Não libere a entrada"}</strong></div>
+        <p>{validation.message}</p>
+        {validation.ticket ? <div className="checkInResultSummary">
+          <span><small>Comprador</small><strong>{validation.ticket.buyerName}</strong></span>
+          <span><small>Ingresso</small><strong>{validation.ticket.lotName}</strong></span>
+          <span><small>Código</small><strong>{validation.ticket.code}</strong></span>
+          {validation.ticket.checkedAt ? <span><small>Validação registrada</small><strong>{new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "medium" }).format(new Date(validation.ticket.checkedAt))}</strong></span> : null}
+        </div> : null}
+        {cameraStatus === "scanning" ? <small>Retire este QR Code e apresente o próximo. A câmera continua aberta.</small> : null}
+      </div> : null}
+
+      {cameras.length > 1 ? <label className="field">
+        <span>Câmera para leitura</span>
+        <select value={selectedCameraRef.current || ""} onChange={(event) => restartCamera(event.target.value)} disabled={cameraStatus === "starting"}>
+          <option value="">Traseira automática</option>
+          {cameras.map((camera, index) => <option key={camera.deviceId} value={camera.deviceId}>{camera.label || `Câmera ${index + 1}`}</option>)}
+        </select>
+      </label> : null}
+
       {showCameraPreview ? (
         <div className="scannerFrame">
           <video muted playsInline ref={videoRef} />
-          <span>Posicione o QR Code no centro</span>
+          <span>Leitura contínua · posicione o QR Code no centro</span>
         </div>
       ) : null}
 
@@ -305,7 +394,7 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
 
       {cameraStatus === "error" ? (
         <p className="formHint">
-          Não consegui acessar a câmera. Confira a permissão do navegador ou valide pelo código.
+          {cameraError || "Não consegui acessar a câmera. Confira a permissão do navegador ou valide pelo código."}
         </p>
       ) : null}
 
@@ -337,7 +426,7 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
           placeholder="Ex: Portaria principal"
           ref={deviceInputRef}
           onBlur={(event) => {
-            window.localStorage.setItem("ingresaas-checkin-device", event.target.value.trim());
+            try { window.localStorage.setItem("ingresaas-checkin-device", event.target.value.trim()); } catch { /* Optional preference. */ }
           }}
         />
       </label>
@@ -347,6 +436,7 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
       <button className="button fullButton" type="submit">
         Validar entrada
       </button>
+      </PendingValidation>
     </form>
   );
 }

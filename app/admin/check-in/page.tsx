@@ -1,6 +1,6 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getAdminAllowedEventIds, requirePermission } from "@/features/auth/auth.service";
-import { validateTicketAction } from "@/features/check-in/check-in.actions";
+import { validateTicketContinuouslyAction } from "@/features/check-in/check-in.actions";
 import { getCheckInStats, listCheckInEvents, listRecentCheckIns } from "@/features/check-in/check-in.service";
 import { formatDateTime } from "@/lib/format";
 import { CheckInScanner } from "./CheckInScanner";
@@ -155,40 +155,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
           </div>
         </section>
 
-        {selectedEvent ? <><section className="checkInMetricGrid">
-          <article className="checkInMetricCard">
-            <span className="checkInMetricIcon checkInMetricGreen">E</span>
-            <div>
-              <span>Entradas no evento</span>
-              <strong>{stats.approvedTotal}</strong>
-              <small>validações acumuladas</small>
-            </div>
-          </article>
-          <article className="checkInMetricCard">
-            <span className="checkInMetricIcon checkInMetricRed">B</span>
-            <div>
-              <span>Bloqueios hoje</span>
-              <strong>{stats.blockedToday}</strong>
-              <small>tentativas</small>
-            </div>
-          </article>
-          <article className="checkInMetricCard">
-            <span className="checkInMetricIcon checkInMetricBlue">L</span>
-            <div>
-              <span>Leituras hoje</span>
-              <strong>{stats.totalToday}</strong>
-              <small>check-ins</small>
-            </div>
-          </article>
-          <article className="checkInMetricCard">
-            <span className="checkInMetricIcon checkInMetricPurple">H</span>
-            <div>
-              <span>Validados por você</span>
-              <strong>{stats.operatorApprovedTotal}</strong>
-              <small>total desta conta no evento</small>
-            </div>
-          </article>
-        </section>
+        {selectedEvent ? <>
 
         <section className="checkInWorkGrid">
           <article className="checkInMainPanel">
@@ -220,7 +187,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
                     </div>
                   </div>
                 ) : null}
-                <CheckInScanner action={validateTicketAction} eventId={selectedEvent.id} eventTitle={selectedEvent.title} />
+                <CheckInScanner key={selectedEvent.id} action={validateTicketContinuouslyAction} eventId={selectedEvent.id} eventTitle={selectedEvent.title} />
             </>
           </article>
 
@@ -255,6 +222,41 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
             )}
           </aside>
         </section></> : null}
+
+        {selectedEvent ? <section className="checkInMetricGrid">
+          <article className="checkInMetricCard">
+            <span className="checkInMetricIcon checkInMetricGreen">E</span>
+            <div>
+              <span>Entradas no evento</span>
+              <strong>{stats.approvedTotal}</strong>
+              <small>validações acumuladas</small>
+            </div>
+          </article>
+          <article className="checkInMetricCard">
+            <span className="checkInMetricIcon checkInMetricRed">B</span>
+            <div>
+              <span>Bloqueios hoje</span>
+              <strong>{stats.blockedToday}</strong>
+              <small>tentativas</small>
+            </div>
+          </article>
+          <article className="checkInMetricCard">
+            <span className="checkInMetricIcon checkInMetricBlue">L</span>
+            <div>
+              <span>Leituras hoje</span>
+              <strong>{stats.totalToday}</strong>
+              <small>check-ins</small>
+            </div>
+          </article>
+          <article className="checkInMetricCard">
+            <span className="checkInMetricIcon checkInMetricPurple">H</span>
+            <div>
+              <span>Validados por você</span>
+              <strong>{stats.operatorApprovedTotal}</strong>
+              <small>total desta conta no evento</small>
+            </div>
+          </article>
+        </section> : null}
 
         <section className="checkInTipsPanel">
           <h2>Dicas rápidas</h2>

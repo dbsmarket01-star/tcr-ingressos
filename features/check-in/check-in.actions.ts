@@ -71,3 +71,27 @@ export async function validateTicketAction(formData: FormData) {
 
   redirect(`/admin/check-in?${params.toString()}`);
 }
+
+/** Returns a result without navigation so the camera stream can stay open. */
+export async function validateTicketContinuouslyAction(formData: FormData): Promise<import("./continuous-scan").LiveCheckInResult> {
+  const admin = await requirePermission("CHECKIN");
+  const eventId = String(formData.get("eventId") ?? "").trim();
+  const code = String(formData.get("code") ?? "").trim();
+  const device = String(formData.get("deviceName") ?? "").trim();
+  if (!eventId || !code) return { status: "INVALID", message: "Selecione o evento e informe o código. Não libere a entrada." };
+  try {
+    const result = await validateTicketForCheckIn(code, device || undefined, admin, eventId);
+    revalidatePath("/admin/check-in");
+    return {
+      status: result.status,
+      message: result.message,
+      ...(result.ticket ? { ticket: {
+        code: result.ticket.code, buyerName: result.ticket.buyerName, lotName: result.ticket.lotName,
+        checkedAt: result.ticket.checkedAt?.toISOString()
+      } } : {})
+    };
+  } catch (error) {
+    console.error("[check-in] continuous validation failed", { eventId, adminUserId: admin.id, error: error instanceof Error ? error.message : "unknown" });
+    return { status: "ERROR", message: "Não foi possível confirmar a validação. Não libere a entrada; confira a conexão e consulte o pedido antes de tentar novamente." };
+  }
+}

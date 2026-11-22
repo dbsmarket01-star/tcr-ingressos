@@ -28,7 +28,7 @@ export async function validateTicketForCheckIn(
   deviceName?: string,
   admin?: CurrentAdmin,
   selectedEventId?: string
-) {
+): Promise<CheckInResult> {
   const code = inputCode.trim();
 
   if (!code) {
