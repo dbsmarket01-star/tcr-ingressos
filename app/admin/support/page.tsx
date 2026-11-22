@@ -64,9 +64,16 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
     >
       <div className="supportDeskPage">
         <section className="supportDeskSearchCard" aria-label="Busca de atendimento">
+          <div className="supportDeskSearchIntro">
+            <div>
+              <span className="supportDeskEyebrow">Central de atendimento</span>
+              <h2>Encontre um pedido</h2>
+              <p>Busque pelo nome ou pelos dados da compra para ajudar o cliente.</p>
+            </div>
+          </div>
           <form className="supportDeskSearchForm">
             <label>
-              <span>Buscar pedido, cliente ou ingresso</span>
+              <span>Pedido, cliente ou ingresso</span>
               <input
                 name="q"
                 placeholder="Ex: Nome, e-mail, telefone, CPF ou código do ingresso"
@@ -77,13 +84,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
               Buscar
             </button>
           </form>
-          <div className="supportDeskChips" aria-label="Tipos de busca">
-            <span>Pedido</span>
-            <span>E-mail</span>
-            <span>Telefone</span>
-            <span>CPF</span>
-            <span>Código do ingresso</span>
-          </div>
+          <p className="supportDeskSearchHint">Também funciona com e-mail, telefone, CPF e código do ingresso.</p>
 
           {params.sent ? (
             <div className="successBox supportDeskFeedback">
@@ -118,8 +119,8 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
                   <div className="supportDeskFoundHeader">
                     <div className="supportDeskFoundIcon" aria-hidden="true">✓</div>
                     <div>
+                      <span className="supportDeskEyebrow">Resultado da busca</span>
                       <h2>Pedido encontrado</h2>
-                      <p>Confira os dados do cliente e gerencie o ingresso.</p>
                     </div>
                     <Link className="supportDeskNewButton" href="/admin/support">
                       Novo atendimento
@@ -163,7 +164,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
                   <div className="supportDeskTicketPanel">
                     {order.items.map((item) => (
                       <div className="supportDeskTicketRow" key={item.id}>
-                      <div className="supportDeskTicketIcon" aria-hidden="true" />
+                      <span className="supportDeskTicketIcon" aria-hidden="true">Ingresso</span>
                       <div className="supportDeskTicketName">
                           <strong>{item.quantity}x {formatLotDisplayName(item.lot.name, item.lotOption?.label)}</strong>
                           <span>{item.lot.description || "Setor geral"}</span>
@@ -181,7 +182,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
                   </div>
 
                   <div className="supportDeskQuickActions">
-                    <h3>Ações rápidas</h3>
+                    <h3>O que você precisa fazer?</h3>
                     <div className="supportDeskActionGrid">
                       {whatsappHref ? (
                         <a
@@ -253,10 +254,6 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
           )}
         </section>
 
-        <aside className="supportDeskHint">
-          <strong>Dica rápida</strong>
-          <span>Use a busca acima para encontrar pedidos por nome, e-mail, telefone, CPF ou código do ingresso.</span>
-        </aside>
       </div>
     </AdminShell>
   );
