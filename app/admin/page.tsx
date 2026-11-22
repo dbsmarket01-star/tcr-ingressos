@@ -637,7 +637,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 <DashboardIcon kind={item.icon} />
               </span>
               <span className="dashboardGeneralKpiLabel">{item.label}</span>
-              <strong>{item.value}</strong>
+              <strong className={typeof item.value === "string" && item.value.startsWith("R$") ? "dashboardGeneralMoneyValue" : undefined}>
+                {item.value}
+              </strong>
               <small className={`dashboardGeneralDelta is-${item.delta.signal}`}>{item.delta.label}</small>
             </article>
           ))}
