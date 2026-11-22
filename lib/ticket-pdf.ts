@@ -187,7 +187,8 @@ function drawQrCode(value: string, x: number, y: number, size: number) {
   });
   const modules = qr.modules;
   const moduleSize = size / modules.size;
-  const commands = [fillRect(x - 12, y - 12, size + 24, size + 24, "1 1 1")];
+  const quietZone = Math.max(12, moduleSize * 4);
+  const commands = [fillRect(x - quietZone, y - quietZone, size + quietZone * 2, size + quietZone * 2, "1 1 1")];
 
   for (let row = 0; row < modules.size; row += 1) {
     for (let col = 0; col < modules.size; col += 1) {

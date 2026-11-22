@@ -16567,7 +16567,9 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .ticketQrCode {
-  background: white;
+  background: #fff;
+  color-scheme: only light;
+  forced-color-adjust: none;
   border: 1px solid var(--line);
   border-radius: 8px;
   display: grid;
@@ -16579,6 +16581,9 @@ body.operationTheme .loginBrandDark img.brandLogo[src*="elo-conference-wordmark-
 }
 
 .ticketQrCode svg {
+  background: #fff;
+  color-scheme: only light;
+  forced-color-adjust: none;
   display: block;
   height: auto;
   max-width: 100%;

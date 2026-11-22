@@ -7,7 +7,7 @@ export function getCameraErrorMessage(error: { name: string }) {
     case "NotReadableError":
       return "A câmera está ocupada ou indisponível. Feche outros aplicativos ou abas que usam a câmera e tente novamente.";
     case "OverconstrainedError":
-      return "A câmera selecionada não está disponível. Selecione Traseira automática ou outra câmera na lista.";
+      return "A câmera selecionada não está disponível. A seleção foi redefinida para Traseira automática. Toque em Iniciar leitura para tentar novamente.";
     default:
       return "Não foi possível iniciar a câmera. Tente novamente ou digite o código do ingresso.";
   }

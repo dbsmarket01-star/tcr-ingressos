@@ -284,6 +284,7 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
         console.error("[check-in-camera] Não foi possível manter a câmera ativa", error);
         if (error instanceof Error && ["NotAllowedError", "NotFoundError", "OverconstrainedError", "NotReadableError"].includes(error.name)) {
           stopCamera(false);
+          if (error.name === "OverconstrainedError" || error.name === "NotFoundError") selectedCameraRef.current = undefined;
           setCameraError(getCameraErrorMessage(error));
           setCameraStatus("error");
         } else {
@@ -362,7 +363,7 @@ export function CheckInScanner({ action, eventId, eventTitle }: CheckInScannerPr
           <span><small>Comprador</small><strong>{validation.ticket.buyerName}</strong></span>
           <span><small>Ingresso</small><strong>{validation.ticket.lotName}</strong></span>
           <span><small>Código</small><strong>{validation.ticket.code}</strong></span>
-          {validation.ticket.checkedAt ? <span><small>Validação registrada</small><strong>{new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "medium" }).format(new Date(validation.ticket.checkedAt))}</strong></span> : null}
+          {validation.ticket.checkedAt ? <span><small>{validation.status === "ALREADY_USED" ? "Primeira validação" : "Validação registrada"}</small><strong>{new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "medium" }).format(new Date(validation.ticket.checkedAt))}</strong></span> : null}
         </div> : null}
         {cameraStatus === "scanning" ? <small>Retire este QR Code e apresente o próximo. A câmera continua aberta.</small> : null}
       </div> : null}

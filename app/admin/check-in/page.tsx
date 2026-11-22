@@ -163,7 +163,7 @@ export default async function CheckInPage({ searchParams }: CheckInPageProps) {
                         <span><small>Ingresso</small><strong>{result.ticket}</strong></span>
                         <span><small>Comprador</small><strong>{result.buyer}</strong></span>
                         <span><small>Lote</small><strong>{result.lot}</strong></span>
-                        {result.checkedAt ? <span><small>Horário</small><strong>{formatDateTime(new Date(result.checkedAt))}</strong></span> : null}
+                        {result.checkedAt ? <span><small>{result.status === "ALREADY_USED" ? "Primeira validação" : "Horário"}</small><strong>{formatDateTime(new Date(result.checkedAt))}</strong></span> : null}
                       </div>
                     ) : null}
                     <div className="checkInResultActions">

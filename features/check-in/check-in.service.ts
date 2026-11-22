@@ -140,6 +140,15 @@ export async function validateTicketForCheckIn(
       });
 
       if (updated.count !== 1) {
+        const currentTicket = await tx.ticket.findUnique({
+          where: { id: ticket.id }, select: { status: true, usedAt: true }
+        });
+        // Never infer a successful first entry from a failed conditional update.
+        // Serializable conflicts roll back and surface as an inconclusive result;
+        // do not retry an admission whose outcome the operator cannot confirm.
+        if (currentTicket?.status !== "USED" || !currentTicket.usedAt) {
+          throw new Error("Check-in concorrente: consulte o pedido antes de tentar novamente.");
+        }
         await tx.checkIn.create({
           data: {
             ticketId: ticket.id,
@@ -153,13 +162,13 @@ export async function validateTicketForCheckIn(
 
         return {
           status: CheckInStatus.ALREADY_USED,
-          message: "Ingresso ja utilizado.",
+          message: getCheckInFeedback("ALREADY_USED"),
           ticket: {
             code: ticket.code,
             eventTitle: ticket.event.title,
             lotName: formatLotDisplayName(ticket.lot.name, ticket.lotOption?.label),
             buyerName: ticket.order.customer.name,
-            checkedAt: ticket.usedAt || undefined,
+            checkedAt: currentTicket.usedAt,
             publicUrl: getPublicTicketUrl(ticket.code, ticket.event.organization)
           }
         };
