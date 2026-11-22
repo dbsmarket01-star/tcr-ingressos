@@ -164,12 +164,14 @@ export function HomeEventCarousel({ events, trackingQuery }: HomeEventCarouselPr
       <div className="tcrCarouselRail" ref={railRef}>
         {events.map((event) => (
           <article className="tcrEventCard" key={event.id}>
-            <div
-              className="tcrEventCardMedia"
-              style={{
-                backgroundImage: `linear-gradient(180deg, rgba(6, 20, 24, 0.02), rgba(6, 20, 24, 0.24)), url("${event.bannerUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1200&q=80"}")`
-              }}
-            />
+            <div className="tcrEventCardMedia">
+              <img
+                src={event.bannerUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1200&q=80"}
+                alt={`Banner de ${event.title}`}
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
             <div className="tcrEventCardBody">
               <small>{formatEventDate(event.startsAt)}</small>
               <h3>{event.title}</h3>
