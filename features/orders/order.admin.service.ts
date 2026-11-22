@@ -278,27 +278,35 @@ export async function listAdminOrders(
 
   const where = await buildReportOrderWhere(filters, organizationId, allowedEventIds);
 
-  const [orders, totalCount] = await Promise.all([
+  const [orderReferences, totalCount] = await Promise.all([
     prisma.order.findMany({
       where,
       orderBy: {
         createdAt: "desc"
       },
       take: 5000,
-      include: {
-        customer: true,
-        event: true,
-        payment: true,
-        items: {
-          include: {
-            lot: true,
-            lotOption: true
-          }
-        }
-      }
+      select: { id: true, status: true, paidAt: true, createdAt: true }
     }),
     prisma.order.count({ where })
   ]);
+
+  const visibleIds = sortOrdersByReferenceDateDesc(orderReferences).slice(0, 100).map((order) => order.id);
+  if (visibleIds.length === 0) return { orders: [], totalCount };
+
+  const orders = await prisma.order.findMany({
+    where: { ...where, id: { in: visibleIds } },
+    include: {
+      customer: true,
+      event: true,
+      payment: true,
+      items: {
+        include: {
+          lot: true,
+          lotOption: true
+        }
+      }
+    }
+  });
 
   return { orders: sortOrdersByReferenceDateDesc(orders).slice(0, 100), totalCount };
 }

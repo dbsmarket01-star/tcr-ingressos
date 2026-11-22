@@ -87,7 +87,7 @@ describe("admin operational tenant isolation", () => {
     expect(prismaMock.order.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          event: eventScope
+          event: expect.objectContaining(eventScope)
         })
       })
     );
@@ -129,7 +129,9 @@ describe("admin operational tenant isolation", () => {
         { id: "pending_converted", customerId: "customer_1", eventId: "event_1" },
         { id: "pending_open", customerId: "customer_2", eventId: "event_1" }
       ])
-      .mockResolvedValueOnce([{ customerId: "customer_1", eventId: "event_1" }]);
+      .mockResolvedValueOnce([{ customerId: "customer_1", eventId: "event_1" }])
+      .mockResolvedValueOnce([{ totalInCents: 27580, subtotalInCents: 27580, serviceFeeInCents: 4827,
+        cardInterestInCents: 0, discountInCents: 0, pixDiscountInCents: 0, refundedInCents: 0 }]);
     prismaMock.order.groupBy.mockResolvedValue([{ status: "PENDING_PAYMENT", _count: { _all: 1 } }]);
     prismaMock.order.aggregate.mockResolvedValue({
       _sum: {
@@ -158,7 +160,7 @@ describe("admin operational tenant isolation", () => {
         })
       })
     );
-    expect(prismaMock.order.aggregate).toHaveBeenCalledWith(
+    expect(prismaMock.order.findMany).toHaveBeenLastCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           status: "PENDING_PAYMENT",
@@ -177,7 +179,8 @@ describe("admin operational tenant isolation", () => {
         { id: "pending_open", customerId: "customer_2", eventId: "event_1" }
       ])
       .mockResolvedValueOnce([{ customerId: "customer_1", eventId: "event_1" }])
-      .mockResolvedValueOnce([{ id: "pending_open" }]);
+      .mockResolvedValueOnce([{ id: "pending_open", status: "PENDING_PAYMENT", createdAt: new Date("2026-11-22T12:00:00Z"), paidAt: null }])
+      .mockResolvedValueOnce([{ id: "pending_open", status: "PENDING_PAYMENT", createdAt: new Date("2026-11-22T12:00:00Z"), paidAt: null }]);
     prismaMock.order.count.mockResolvedValue(1);
 
     await listAdminOrders({ status: "PENDING_PAYMENT" }, "org_a2", null);
@@ -186,9 +189,7 @@ describe("admin operational tenant isolation", () => {
       expect.objectContaining({
         where: expect.objectContaining({
           status: "PENDING_PAYMENT",
-          id: {
-            notIn: ["pending_converted"]
-          }
+          id: { in: ["pending_open"] }
         })
       })
     );
@@ -200,6 +201,29 @@ describe("admin operational tenant isolation", () => {
         }
       })
     });
+  });
+
+  it("loads full relations only for the 100 visible orders", async () => {
+    const { listAdminOrders } = await import("@/features/orders/order.admin.service");
+    const references = Array.from({ length: 101 }, (_, index) => ({
+      id: `order_${index}`,
+      status: "PAID",
+      createdAt: new Date(Date.UTC(2026, 10, 22, 12, 0, 0) - index * 1000),
+      paidAt: new Date(Date.UTC(2026, 10, 22, 12, 0, 0) - index * 1000)
+    }));
+    prismaMock.order.findMany.mockResolvedValueOnce(references).mockResolvedValueOnce([]);
+    prismaMock.order.count.mockResolvedValue(101);
+
+    const result = await listAdminOrders({}, "org_tcr", null);
+
+    expect(result.totalCount).toBe(101);
+    expect(prismaMock.order.findMany).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      take: 5000,
+      select: { id: true, status: true, paidAt: true, createdAt: true }
+    }));
+    expect(prismaMock.order.findMany).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      where: expect.objectContaining({ id: { in: references.slice(0, 100).map((order) => order.id) } })
+    }));
   });
 
   it("scopes admin tickets to the current organization", async () => {
