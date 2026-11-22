@@ -6308,10 +6308,6 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
   white-space: nowrap;
 }
 
-.dashboardGeneralKpiCard .dashboardGeneralMoneyValue {
-  font-size: inherit;
-}
-
 .dashboardGeneralDelta {
   font-size: 13px;
   font-weight: 800;
@@ -29805,10 +29801,6 @@ small,
 
   .adminShell:has(.dashboardGeneralShell) .dashboardGeneralKpiCard strong {
     font-size: 24px;
-  }
-
-  .adminShell:has(.dashboardGeneralShell) .dashboardGeneralKpiCard .dashboardGeneralMoneyValue {
-    font-size: inherit;
   }
 
   .adminShell:has(.dashboardGeneralShell) .dashboardGeneralDelta {
