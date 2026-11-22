@@ -286,6 +286,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const heroImage =
     event.bannerUrl ||
     "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1600&q=80";
+  const hasPortraitSourceBanner =
+    heroImage.includes("20261118131308.png") || heroImage.includes("20261118095956.png");
   const mapCrop = parseImageCrop(event.eventMapCrop);
   const ctaText = event.conversionCtaText || "Garantir minha vaga";
   const organizationSlug = organizationContext.organization.slug;
@@ -397,7 +399,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
       <section className="publicHero">
         <div
-          className="publicHeroMedia naturalBanner"
+          className={`publicHeroMedia naturalBanner${hasPortraitSourceBanner ? " panoramicEventBanner" : ""}`}
         >
           <Image
             className="publicHeroImage"

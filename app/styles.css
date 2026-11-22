@@ -29920,6 +29920,17 @@ small,
   transform: none;
 }
 
+/* Keep imported 4:3 artwork in the same panoramic event frame as native banners. */
+.publicHeroMedia.naturalBanner.panoramicEventBanner {
+  aspect-ratio: 2 / 1;
+}
+
+.publicHeroMedia.naturalBanner.panoramicEventBanner .publicHeroImage {
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
 .homePage .tcrEventCardMedia {
   background-size: 100% 100%, contain;
   background-repeat: no-repeat;
