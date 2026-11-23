@@ -9,7 +9,9 @@ const TCR_LEGACY_EVENT_PATHS: Record<string, string> = {
   "0hwVgLowlRH4438I_oGnKTZEwjTa0AyjtvEsx*e1wLM:": "rodrigo-teaser-em-marilia-2026",
   "0hwVgLowlRH4438I_oGnKfY465tNWRwtAKdF1oWg0Ws:": "rodrigo-teaser-em-taubate-2026",
   "0hwVgLowlRH4438I_oGnKW3NmayPU*_n2sR605GN9ec:": "rodrigo-teaser-em-piracicaba-2026",
+  "0hwVgLowlRH4438I_oGnKUAj1xCQYkXmbXPQLwZHgs2_4T_jztDNwLeRYdG9O5zS": "rodrigo-teaser-em-piracicaba-2026",
   "0hwVgLowlRH4438I_oGnKSUWYslKqBDWMG1436FUqW4:": "rodrigo-teaser-em-sao-caetano-do-sul-2026",
+  "0hwVgLowlRH4438I_oGnKQf8P3oa5EvHrBCxxjuNbPXYSgpU*vW6aVpDOmBzsOKY": "rodrigo-teaser-em-sao-caetano-do-sul-2026",
   "0hwVgLowlRH4438I_oGnKWBPB*kK2lPQn97fBv8Zo6c:": "rodrigo-teaser-em-sorocaba-2026",
   "HDyXwCcXvS6DhuU9I9s_yioj9*wLDONhafKRx59oVGk:": "guilherme-arantes-sao-caetano-do-sul"
 };

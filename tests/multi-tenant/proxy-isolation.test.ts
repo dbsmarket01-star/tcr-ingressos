@@ -23,6 +23,16 @@ describe("multi-tenant proxy isolation", () => {
     expect(legacyTcrRedirectPath("/%ZZ")).toBeNull();
   });
 
+  it.each([
+    ["/0hwVgLowlRH4438I_oGnKUAj1xCQYkXmbXPQLwZHgs2_4T_jztDNwLeRYdG9O5zS", "rodrigo-teaser-em-piracicaba-2026"],
+    ["/0hwVgLowlRH4438I_oGnKQf8P3oa5EvHrBCxxjuNbPXYSgpU%2AvW6aVpDOmBzsOKY", "rodrigo-teaser-em-sao-caetano-do-sul-2026"]
+  ])("redirects the Google-indexed legacy path %s to %s", (oldPath, slug) => {
+    const migrated = proxy(makeRequest(`https://tcringressos.com.br${oldPath}`, "tcringressos.com.br"));
+    expect(migrated.status).toBe(301);
+    expect(migrated.headers.get("location")).toBe(`https://tcringressos.com.br/evento/${slug}`);
+    expect(proxy(makeRequest(`https://tcringressos.app.br${oldPath}`, "tcringressos.app.br")).status).toBe(200);
+  });
+
   it("sends the old home URL to the new storefront without changing other hosts", () => {
     const migrated = proxy(makeRequest("https://www.tcringressos.com.br/home", "www.tcringressos.com.br"));
     expect(migrated.status).toBe(301);
