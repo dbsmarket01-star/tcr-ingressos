@@ -152,11 +152,23 @@ function getTicketDescriptionTopics(description?: string | null) {
     .filter(Boolean);
 }
 
-function getEditorialParagraphs(value?: string | null) {
-  return String(value ?? "")
-    .split(/\n{2,}/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
+function getEditorialSections(value?: string | null) {
+  const sections: Array<{ heading?: string; paragraphs: string[]; items: string[] }> = [];
+  let current = { heading: undefined as string | undefined, paragraphs: [] as string[], items: [] as string[] };
+  for (const block of String(value ?? "").replace(/\r\n/g, "\n").split(/\n{2,}/)) {
+    for (const line of block.split("\n").map((part) => part.trim()).filter(Boolean)) {
+      if (/^(?:setores disponíveis|condições especiais|ingressos especiais|mesa|camarotes disponíveis):$/iu.test(line)) {
+        if (current.paragraphs.length || current.items.length) sections.push(current);
+        current = { heading: line.slice(0, -1), paragraphs: [], items: [] };
+      } else if (/^(?:✅|[•-]\s)/u.test(line)) {
+        current.items.push(line.replace(/^(?:✅\s*|[•-]\s+)/u, ""));
+      } else {
+        current.paragraphs.push(line);
+      }
+    }
+  }
+  if (current.paragraphs.length || current.items.length) sections.push(current);
+  return sections;
 }
 
 function getImportantInfoTopics(value?: string | null) {
@@ -286,8 +298,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const heroImage =
     event.bannerUrl ||
     "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1600&q=80";
-  const hasPortraitSourceBanner =
-    heroImage.includes("20261118131308.png") || heroImage.includes("20261118095956.png");
   const mapCrop = parseImageCrop(event.eventMapCrop);
   const ctaText = event.conversionCtaText || "Garantir minha vaga";
   const organizationSlug = organizationContext.organization.slug;
@@ -329,7 +339,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     whatsappUrl?: string | null;
   };
   const eventDirections = buildEventDirections(event);
-  const descriptionParagraphs = getEditorialParagraphs(event.description);
+  const descriptionSections = getEditorialSections(event.description);
   const importantInfoTopics = getImportantInfoTopics(event.importantInfo);
   const baseUrl = getCanonicalPublicBaseUrl(organizationContext);
   const eventJsonLd = buildEventJsonLd(event, event.lots, `${baseUrl}/evento/${event.slug}`, organizationContext.brandName, baseUrl);
@@ -399,7 +409,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
       <section className="publicHero">
         <div
-          className={`publicHeroMedia naturalBanner${hasPortraitSourceBanner ? " panoramicEventBanner" : ""}`}
+          className="publicHeroMedia naturalBanner"
         >
           <Image
             className="publicHeroImage"
@@ -440,13 +450,17 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
       <section className={`container publicGrid ${hasNumberedSeatMap ? "hasNumberedSeatMap" : ""}`}>
         <article className="publicContent">
-          {descriptionParagraphs.length > 0 ? (
+          {descriptionSections.length > 0 ? (
             <section className="eventInfoBlock eventDescriptionBlock">
               <span className="eyebrow">Experiência do evento</span>
               <h2>Descrição do evento</h2>
               <div className="eventInfoText">
-                {descriptionParagraphs.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
+                {descriptionSections.map((section, index) => (
+                  <div className="eventDescriptionSection" key={`${section.heading ?? "intro"}-${index}`}>
+                    {section.heading ? <h3>{section.heading}</h3> : null}
+                    {section.paragraphs.map((paragraph, paragraphIndex) => <p key={`${paragraphIndex}-${paragraph}`}>{paragraph}</p>)}
+                    {section.items.length ? <ul className="eventInfoList">{section.items.map((item, itemIndex) => <li key={`${itemIndex}-${item}`}>{item}</li>)}</ul> : null}
+                  </div>
                 ))}
               </div>
             </section>
