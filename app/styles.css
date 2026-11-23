@@ -26299,7 +26299,7 @@ small,
 .tcrCarouselShell .tcrCarouselRail {
   grid-column: 1 / -1 !important;
   min-width: 0 !important;
-  scroll-behavior: smooth !important;
+  scroll-behavior: auto !important;
   scroll-snap-type: x mandatory !important;
 }
 
@@ -26431,80 +26431,6 @@ small,
     grid-row: 2 !important;
     justify-self: start !important;
     transform: none !important;
-  }
-}
-
-/* Keep homepage event cards readable across phones and narrow tablets. */
-@media (max-width: 900px) {
-  .homePage .tcrCarouselShell.hasCarouselControls {
-    grid-template-columns: 1fr 1fr !important;
-    max-width: 100% !important;
-    overflow: hidden !important;
-  }
-
-  .homePage .tcrCarouselShell.hasCarouselControls .tcrCarouselRail {
-    display: flex !important;
-    gap: 14px !important;
-    grid-column: 1 / -1 !important;
-    grid-row: 1 !important;
-    min-width: 0 !important;
-    overflow-x: auto !important;
-    padding: 4px 4px 12px !important;
-    scroll-padding-inline: 4px !important;
-    scroll-snap-type: x mandatory !important;
-    width: 100% !important;
-  }
-
-  .homePage .tcrCarouselRail .tcrEventCard {
-    flex: 0 0 clamp(280px, 84vw, 360px) !important;
-    max-width: clamp(280px, 84vw, 360px) !important;
-    min-width: clamp(280px, 84vw, 360px) !important;
-    scroll-snap-align: start !important;
-  }
-
-  .homePage .tcrEventCardBody {
-    gap: 10px !important;
-    padding: 15px 16px 17px !important;
-  }
-
-  .homePage .tcrEventCardBody h3 {
-    font-size: 18px !important;
-    line-height: 1.2 !important;
-    min-height: auto !important;
-    overflow-wrap: anywhere !important;
-  }
-
-  .homePage .tcrEventCardBody small,
-  .homePage .tcrEventCardLocation {
-    font-size: 14px !important;
-    line-height: 1.35 !important;
-  }
-
-  .homePage .tcrEventCardLocation {
-    min-height: auto !important;
-  }
-
-  .homePage .tcrEventCardBody strong,
-  .homePage .tcrEventCardButton {
-    font-size: 16px !important;
-  }
-
-  .homePage .tcrEventCardButton {
-    min-height: 46px !important;
-    padding: 0 15px !important;
-  }
-
-  .homePage .tcrCarouselArrowPrev,
-  .homePage .tcrCarouselArrowNext {
-    grid-row: 2 !important;
-  }
-}
-
-@media (max-width: 380px) {
-  .homePage .tcrCarouselRail .tcrEventCard {
-    flex-basis: calc(100vw - 48px) !important;
-    max-width: calc(100vw - 48px) !important;
-    min-width: calc(100vw - 48px) !important;
   }
 }
 
@@ -30179,6 +30105,32 @@ small,
 @media (max-width: 600px) {
   .homePage .tcrCarouselShell.hasCarouselControls .tcrCarouselRail,
 .homePage .tcrCarouselShell.isSingleCarousel .tcrCarouselRail {
-    grid-auto-columns: 100% !important;
+    grid-auto-columns: calc((100% - 10px) / 2) !important;
+    gap: 10px !important;
   }
+  .homePage .tcrEventCardBody { display: flex; flex-direction: column; padding: 9px !important; }
+  .homePage .tcrEventCardBody h3 { min-height: 0; overflow-wrap: normal; word-break: normal; }
+  .homePage .tcrEventCardBody strong { margin-top: auto; }
+  .homePage .tcrEventCardLocation { min-height: 0; }
+  .homePage .tcrEventCardButton { min-height: 44px !important; }
+}
+
+.homePage .tcrEventCardMedia .tcrEventCardBackdrop { display: none; }
+
+@media (max-width: 1100px) {
+  .homePage .tcrEventCardMedia {
+    aspect-ratio: 2 / 1 !important;
+    position: relative;
+    isolation: isolate;
+    background: #edf3f0;
+  }
+  .homePage .tcrEventCardMedia img { height: 100%; object-fit: contain; position: relative; }
+  .homePage .tcrEventCardMedia .tcrEventCardBackdrop {
+    display: block; position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; filter: blur(12px); transform: scale(1.15); opacity: .55; z-index: -1;
+  }
+}
+@media (max-width: 600px) {
+ .homePage .tcrEventCard { border-radius: 16px; }
+ .homePage .tcrEventCardButton svg { display: none; }
 }

@@ -22,7 +22,7 @@ type HomeEventCarouselProps = {
   trackingQuery?: string;
 };
 
-const carouselAutoRotationMs = 5000;
+const carouselAutoRotationMs = 4000;
 
 function PinIcon() {
   return (
@@ -73,6 +73,7 @@ function formatPrice(valueInCents?: number) {
 export function HomeEventCarousel({ events, trackingQuery }: HomeEventCarouselProps) {
   const railRef = useRef<HTMLDivElement | null>(null);
   const autoRotationIntervalRef = useRef<number | null>(null);
+  const pausedRef = useRef(new Set<string>());
   const hasCarouselControls = events.length > 1;
 
   const scrollRail = useCallback((direction: "prev" | "next") => {
@@ -88,28 +89,14 @@ export function HomeEventCarousel({ events, trackingQuery }: HomeEventCarouselPr
       return;
     }
 
-    const firstCard = rail.querySelector<HTMLElement>(".tcrEventCard");
-    const railStyles = window.getComputedStyle(rail);
-    const gap = Number.parseFloat(railStyles.columnGap || railStyles.gap || "0") || 0;
-    const step = firstCard
-      ? firstCard.getBoundingClientRect().width + gap
-      : Math.max(rail.clientWidth * 0.82, 280);
-    const tolerance = 8;
-    const isAtStart = rail.scrollLeft <= tolerance;
-    const isAtEnd = rail.scrollLeft >= maxScrollLeft - tolerance;
-    const target =
-      direction === "next"
-        ? isAtEnd
-          ? 0
-          : Math.min(rail.scrollLeft + step, maxScrollLeft)
-        : isAtStart
-          ? maxScrollLeft
-          : Math.max(rail.scrollLeft - step, 0);
-
-    rail.scrollTo({
-      left: target,
-      behavior: "smooth"
-    });
+    const cards = Array.from(rail.querySelectorAll<HTMLElement>(".tcrEventCard"));
+    const origin = cards[0]?.offsetLeft ?? 0;
+    const positions = [...new Set(cards.map(card => Math.min(card.offsetLeft - origin, maxScrollLeft)))];
+    const nearest = positions.reduce((best, position, index) =>
+      Math.abs(position - rail.scrollLeft) < Math.abs(positions[best] - rail.scrollLeft) ? index : best, 0);
+    const next = (nearest + (direction === "next" ? 1 : -1) + positions.length) % positions.length;
+    rail.scrollTo({ left: positions[next] ?? 0,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches || Math.abs(next - nearest) > 1 ? "instant" : "smooth" });
   }, []);
 
   const startAutoRotation = useCallback(() => {
@@ -123,7 +110,7 @@ export function HomeEventCarousel({ events, trackingQuery }: HomeEventCarouselPr
     }
 
     autoRotationIntervalRef.current = window.setInterval(() => {
-      scrollRail("next");
+      if (document.visibilityState === "visible" && pausedRef.current.size === 0 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) scrollRail("next");
     }, carouselAutoRotationMs);
   }, [hasCarouselControls, scrollRail]);
 
@@ -155,7 +142,15 @@ export function HomeEventCarousel({ events, trackingQuery }: HomeEventCarouselPr
   }
 
   return (
-    <div className={`tcrCarouselShell ${hasCarouselControls ? "hasCarouselControls" : "isSingleCarousel"}`}>
+    <div className={`tcrCarouselShell ${hasCarouselControls ? "hasCarouselControls" : "isSingleCarousel"}`}
+      onPointerEnter={event => { if (event.pointerType === "mouse") pausedRef.current.add("hover"); }}
+      onPointerLeave={() => { pausedRef.current.delete("hover"); pausedRef.current.delete("pointer"); startAutoRotation(); }}
+      onPointerDown={() => pausedRef.current.add("pointer")}
+      onPointerUp={() => { pausedRef.current.delete("pointer"); startAutoRotation(); }}
+      onPointerCancel={() => { pausedRef.current.delete("pointer"); startAutoRotation(); }}
+      onFocusCapture={() => pausedRef.current.add("focus")}
+      onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) { pausedRef.current.delete("focus"); startAutoRotation(); } }}
+    >
       {hasCarouselControls ? (
         <button aria-label="Eventos anteriores" className="tcrCarouselArrow tcrCarouselArrowPrev" onClick={() => navigateManually("prev")} type="button">
           ‹
@@ -165,6 +160,7 @@ export function HomeEventCarousel({ events, trackingQuery }: HomeEventCarouselPr
         {events.map((event) => (
           <article className="tcrEventCard" key={event.id}>
             <div className="tcrEventCardMedia">
+              {event.bannerUrl ? <img className="tcrEventCardBackdrop" src={event.bannerUrl} alt="" aria-hidden="true" loading="lazy" decoding="async" /> : null}
               <img
                 src={event.bannerUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1200&q=80"}
                 alt={`Banner de ${event.title}`}
