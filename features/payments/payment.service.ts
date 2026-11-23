@@ -382,6 +382,10 @@ export async function startPaymentForOrder(orderCode: string) {
     throw new Error("Pedido nao encontrado.");
   }
 
+  if (order.status === OrderStatus.PENDING_PAYMENT && order.expiresAt && order.expiresAt < new Date()) {
+    throw new Error("O prazo desta reserva terminou. Aguarde a confirmação do pagamento ou faça um novo pedido.");
+  }
+
   const discountableTicketTotalInCents = Math.max(order.subtotalInCents - order.discountInCents, 0);
   const pixDiscountInCents = capDiscountToPayableAmount(discountableTicketTotalInCents, order.pixDiscountInCents);
   const totalTicketDiscountInCents = order.discountInCents + pixDiscountInCents;
@@ -1034,6 +1038,10 @@ export async function payOrderWithAsaasCreditCard(input: CreditCardFormInput & {
 
   if (!order?.payment) {
     throw new Error("Pedido nao encontrado.");
+  }
+
+  if (order.status === OrderStatus.PENDING_PAYMENT && order.expiresAt && order.expiresAt < new Date()) {
+    throw new Error("O prazo desta reserva terminou. Aguarde a confirmação do pagamento ou faça um novo pedido.");
   }
 
   if (order.status === OrderStatus.EXPIRED) {

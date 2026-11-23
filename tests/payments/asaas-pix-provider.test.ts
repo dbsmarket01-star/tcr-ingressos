@@ -53,6 +53,18 @@ describe("Asaas payment provider", () => {
     vi.unstubAllGlobals();
   });
 
+  it("deletes an unpaid Pix charge through the Asaas payments endpoint", async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({ deleted: true }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await new AsaasPaymentProvider(config).deletePayment("pay_123");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://asaas.test/v3/payments/pay_123",
+      expect.objectContaining({ method: "DELETE" })
+    );
+  });
+
   it("always creates Pix payments with billingType PIX, even if the configured default is credit card", async () => {
     const requests: Array<{ url: string; method: string; body: Record<string, unknown> | null }> = [];
 

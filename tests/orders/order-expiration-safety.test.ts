@@ -5,7 +5,7 @@ vi.mock("@/features/seat-maps/seat-map.service", () => ({ releaseSeatReservation
 vi.mock("@/features/hospitality/home-list.service", () => ({ updateHomeListStatusForOrder: m.home }));
 import { expirePendingOrders, expirePendingOrderByCode } from "@/features/orders/order.service";
 const now = new Date("2026-11-23T15:30:00Z");
-const order = { id: "synthetic", code: "TEST", status: "PENDING_PAYMENT", expiresAt: new Date(now.getTime() - 1), expiredEmailSentAt: now, items: [{ lotId: "lot", lotOptionId: "box-23", quantity: 1 }], payment: { id: "payment", status: "PENDING" } };
+const order = { id: "synthetic", code: "TEST", status: "PENDING_PAYMENT", expiresAt: new Date(now.getTime() - 1), expiredEmailSentAt: now, items: [{ lotId: "lot", lotOptionId: "box-23", quantity: 1 }], payment: { id: "payment", provider: "SIMULATED", externalId: null, status: "PENDING" }, event: { organization: { slug: "test" } } };
 beforeEach(() => {
   vi.resetAllMocks(); vi.useFakeTimers(); vi.setSystemTime(now);
   m.findMany.mockResolvedValue([order]); m.findFirst.mockResolvedValue(order);

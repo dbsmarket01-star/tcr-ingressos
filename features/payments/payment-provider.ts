@@ -459,6 +459,12 @@ export class AsaasPaymentProvider implements PaymentProvider {
     });
   }
 
+  async deletePayment(paymentId: string): Promise<AsaasPaymentStatusResponse> {
+    return this.request<AsaasPaymentStatusResponse>(`/payments/${paymentId}`, {
+      method: "DELETE"
+    });
+  }
+
   async findPaymentsByOrderCode(orderCode: string): Promise<AsaasPaymentStatusResponse[]> {
     const response = await this.request<{ data?: AsaasPaymentStatusResponse[] }>(
       `/payments?externalReference=${encodeURIComponent(orderCode)}&limit=100`,

@@ -21,6 +21,7 @@ import { calculateAsaasSplitsForOrder, sumAsaasSplitsInCents } from "@/features/
 import { sendCartAbandonmentWhatsApp } from "@/features/whatsapp/whatsapp.service";
 import { isValidCpf, onlyDocumentDigits } from "@/lib/document-validation";
 import type { CheckoutOrderInput } from "./order.schema";
+import { paymentAllowsOrderExpiration } from "./order-expiration-payment-guard";
 import { effectiveLotMaxPerOrder, validateSorocabaOrderQuantity } from "./sorocaba-quantity-limit";
 
 const FALLBACK_ORDER_RESERVATION_MINUTES = 120;
@@ -714,6 +715,7 @@ export async function expirePendingOrders(options?: {
           title: true,
           organization: {
             select: {
+              id: true,
               slug: true,
               name: true,
               publicDomain: true,
@@ -729,12 +731,22 @@ export async function expirePendingOrders(options?: {
   let releasedQuantity = 0;
 
   for (const order of orders) {
+    try {
+      if (!(await paymentAllowsOrderExpiration(order, now))) continue;
+    } catch (error) {
+      console.error("[order-expiration] Pagamento não confirmado; reserva mantida.", {
+        orderCode: order.code,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      continue;
+    }
     const result = await prisma.$transaction(
       async (tx) => {
         const updatedOrder = await tx.order.updateMany({
           where: {
             id: order.id,
             status: OrderStatus.PENDING_PAYMENT,
+            payment: { is: { id: order.payment?.id, externalId: order.payment?.externalId, status: order.payment?.status } },
             expiresAt: {
               lt: now
             }
@@ -1004,6 +1016,8 @@ export async function expirePendingOrderByCode(code: string, organizationId?: st
           title: true,
           organization: {
             select: {
+              id: true,
+              slug: true,
               name: true,
               publicDomain: true,
               primaryColor: true
@@ -1023,12 +1037,23 @@ export async function expirePendingOrderByCode(code: string, organizationId?: st
 
   const now = new Date();
 
+  try {
+    if (!(await paymentAllowsOrderExpiration(order, now))) return { expiredCount: 0, releasedQuantity: 0 };
+  } catch (error) {
+    console.error("[order-expiration] Pagamento não confirmado; reserva mantida.", {
+      orderCode: order.code,
+      error: error instanceof Error ? error.message : String(error)
+    });
+    return { expiredCount: 0, releasedQuantity: 0 };
+  }
+
   const result = await prisma.$transaction(
     async (tx) => {
       const updatedOrder = await tx.order.updateMany({
         where: {
           id: order.id,
           status: OrderStatus.PENDING_PAYMENT,
+          payment: { is: { id: order.payment?.id, externalId: order.payment?.externalId, status: order.payment?.status } },
           expiresAt: {
             lt: now
           }
