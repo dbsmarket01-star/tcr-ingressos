@@ -13,6 +13,7 @@ const TCR_LEGACY_EVENT_PATHS: Record<string, string> = {
   "0hwVgLowlRH4438I_oGnKSUWYslKqBDWMG1436FUqW4:": "rodrigo-teaser-em-sao-caetano-do-sul-2026",
   "0hwVgLowlRH4438I_oGnKQf8P3oa5EvHrBCxxjuNbPXYSgpU*vW6aVpDOmBzsOKY": "rodrigo-teaser-em-sao-caetano-do-sul-2026",
   "0hwVgLowlRH4438I_oGnKWBPB*kK2lPQn97fBv8Zo6c:": "rodrigo-teaser-em-sorocaba-2026",
+  "0hwVgLowlRH4438I_oGnKew*SG*OfbyStIUFFZX8gRHwsdfA8fcqH7EQJAXP9g1v": "rodrigo-teaser-em-sorocaba-2026",
   "HDyXwCcXvS6DhuU9I9s_yioj9*wLDONhafKRx59oVGk:": "guilherme-arantes-sao-caetano-do-sul"
 };
 

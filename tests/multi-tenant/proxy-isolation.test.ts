@@ -25,7 +25,8 @@ describe("multi-tenant proxy isolation", () => {
 
   it.each([
     ["/0hwVgLowlRH4438I_oGnKUAj1xCQYkXmbXPQLwZHgs2_4T_jztDNwLeRYdG9O5zS", "rodrigo-teaser-em-piracicaba-2026"],
-    ["/0hwVgLowlRH4438I_oGnKQf8P3oa5EvHrBCxxjuNbPXYSgpU%2AvW6aVpDOmBzsOKY", "rodrigo-teaser-em-sao-caetano-do-sul-2026"]
+    ["/0hwVgLowlRH4438I_oGnKQf8P3oa5EvHrBCxxjuNbPXYSgpU%2AvW6aVpDOmBzsOKY", "rodrigo-teaser-em-sao-caetano-do-sul-2026"],
+    ["/0hwVgLowlRH4438I_oGnKew%2ASG%2AOfbyStIUFFZX8gRHwsdfA8fcqH7EQJAXP9g1v", "rodrigo-teaser-em-sorocaba-2026"]
   ])("redirects the Google-indexed legacy path %s to %s", (oldPath, slug) => {
     const migrated = proxy(makeRequest(`https://tcringressos.com.br${oldPath}`, "tcringressos.com.br"));
     expect(migrated.status).toBe(301);
