@@ -13106,6 +13106,17 @@ img.brandLogo[src*="elo-conference-wordmark-white"] {
     padding: 11px 9px 11px 12px;
   }
 
+  .ticketPickerCard.isSoldOut {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ticketPickerCard.isSoldOut .ticketSoldOutControl {
+    grid-column: 1;
+    justify-self: stretch;
+    min-width: 0;
+    width: 100%;
+  }
+
   .ticketPickerTitle,
   .ticketPickerPrice {
     font-size: 13px;
