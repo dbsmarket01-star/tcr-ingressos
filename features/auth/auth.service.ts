@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 const COOKIE_NAME = "ingresaas_admin_session";
 const LEGACY_COOKIE_NAMES = ["tcr_admin_session"];
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
+const GERIATRICUS_EVENT_SCOPE = "event-family:geriatricus";
 
 type SessionPayload = {
   sub: string;
@@ -215,6 +216,21 @@ export const getCurrentAdmin = cache(async (): Promise<CurrentAdmin | null> => {
 
   if (!admin.organizationId) {
     return null;
+  }
+
+  if (!admin.accessAllEvents && admin.allowedEventIds.includes(GERIATRICUS_EVENT_SCOPE)) {
+    const matchingEvents = await prisma.event.findMany({
+      where: {
+        organizationId: admin.organizationId,
+        title: { contains: "Geriatricus", mode: "insensitive" }
+      },
+      select: { id: true }
+    });
+
+    return {
+      ...admin,
+      allowedEventIds: matchingEvents.map((event) => event.id)
+    };
   }
 
   return admin as CurrentAdmin;
