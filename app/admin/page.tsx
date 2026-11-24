@@ -240,7 +240,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const organizationContext = await getCurrentOrganizationContext();
 
   if (admin.role === "SALES_VIEWER") {
-    const dashboard = await getDashboardMetrics(params, admin.organizationId, getAdminAllowedEventIds(admin), { activeEventsOnly: true });
+    const dashboard = await getDashboardMetrics(params, admin.organizationId, getAdminAllowedEventIds(admin));
     return <SalesViewerDashboard dashboard={dashboard} />;
   }
 

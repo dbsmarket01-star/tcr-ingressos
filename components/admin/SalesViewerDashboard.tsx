@@ -45,7 +45,7 @@ export function SalesViewerDashboard({ dashboard }: { dashboard: Dashboard }) {
     </section>
     <section className="salesViewerEvents spacedSection">
       <header className="salesViewerEventsHeader">
-        <div><span className="salesViewerEyebrow">DESEMPENHO DOS EVENTOS</span><h2>Vendas por evento no período</h2><p>Eventos publicados, com venda disponível a partir da data inicial. Totais pela data do pagamento.</p></div>
+        <div><span className="salesViewerEyebrow">DESEMPENHO DOS EVENTOS</span><h2>Vendas por evento no período</h2><p>Eventos liberados para sua conta, inclusive os encerrados. Totais pela data do pagamento.</p></div>
         <span className="salesViewerEventCount">{dashboard.eventSales.length} evento(s)</span>
       </header>
       <div className="salesViewerEventsBody">
@@ -57,7 +57,7 @@ export function SalesViewerDashboard({ dashboard }: { dashboard: Dashboard }) {
           </tr>)}</tbody>
           <tfoot><tr><th>Total no período</th><td data-label="Ingressos vendidos">{dashboard.kpis.paidTickets}</td><td data-label="Pedidos pagos">{dashboard.kpis.paidOrders}</td><td data-label="Valor dos ingressos">{formatCurrency(dashboard.kpis.ticketSalesInCents)}</td></tr></tfoot>
         </table></div>
-        {!dashboard.eventSales.length ? <p className="muted">Nenhum evento ativo disponível a partir da data inicial para este acesso.</p> : null}
+        {!dashboard.eventSales.length ? <p className="muted">Nenhum evento liberado para este acesso.</p> : null}
         <p className="muted salesViewerEventsHint">Selecione um evento para consultar seus pedidos no mesmo período. Valores somente dos ingressos.</p>
       </div>
     </section>
