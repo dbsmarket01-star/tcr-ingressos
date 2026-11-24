@@ -30119,7 +30119,9 @@ small,
 
 @media (max-width: 1100px) {
   .homePage .tcrEventCardMedia {
-    aspect-ratio: 2 / 1 !important;
+    /* Imported event artwork is commonly 4:3; a 2:1 slot shrank it into
+       a narrow strip with blurred sidebars on two-card mobile layouts. */
+    aspect-ratio: 4 / 3 !important;
     position: relative;
     isolation: isolate;
     background: #edf3f0;
