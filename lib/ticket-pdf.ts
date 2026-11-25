@@ -22,12 +22,12 @@ export type TicketPdfInput = {
   scheduleLines: string[];
 };
 
-export function buildScheduleLines(scheduleDescription?: string | null, limit = 10) {
+export function buildScheduleLines(scheduleDescription?: string | null, limit = Number.POSITIVE_INFINITY) {
   return String(scheduleDescription ?? "")
     .split(/\r?\n|;/)
     .map((line) => line.replace(/^[\s•-]+/, "").trim())
     .filter(Boolean)
-    .flatMap((line) => wrap(line, 85, 3))
+    .flatMap((line) => wrap(line, 85, Number.POSITIVE_INFINITY))
     .slice(0, limit);
 }
 
@@ -80,14 +80,23 @@ function wrap(value: unknown, maxLength: number, maxLines = 3) {
   return lines.slice(0, maxLines);
 }
 
-function truncate(value: unknown, maxLength: number) {
-  const clean = ascii(value).trim();
-
-  if (clean.length <= maxLength) {
-    return clean;
+// Standard Helvetica/Helvetica-Bold advance widths, using the larger value per glyph.
+// This bounds both fonts without relying on character counts (e.g. WWW vs iii).
+const glyphWidths = [278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 333, 584, 584, 584, 611, 1015, 722, 722, 722, 722, 667, 611, 778, 722, 278, 556, 722, 611, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 333, 278, 333, 584, 556, 333, 556, 611, 556, 611, 556, 333, 611, 611, 278, 278, 556, 278, 889, 611, 611, 611, 611, 389, 556, 333, 611, 556, 778, 556, 556, 500, 389, 280, 389, 584];
+function wrapToWidth(value: unknown, width: number, size: number) {
+  const measure = (line: string) => [...line].reduce((sum, char) => sum + (glyphWidths[char.charCodeAt(0) - 32] ?? 1015), 0) * size / 1000;
+  const lines: string[] = [];
+  let line = "";
+  for (const word of ascii(value).split(/\s+/).filter(Boolean)) {
+    if (line && measure(`${line} ${word}`) > width) { lines.push(line); line = ""; }
+    // Split unbroken identifiers/URLs too, so they never extend beyond the box.
+    for (const char of (line ? ` ${word}` : word)) {
+      if (measure(line + char) > width) { lines.push(line.trim()); line = ""; }
+      line += char;
+    }
   }
-
-  return `${clean.slice(0, Math.max(0, maxLength - 3)).trim()}...`;
+  if (line.trim()) lines.push(line.trim());
+  return lines;
 }
 
 function normalizeHexColor(value?: string | null) {
@@ -215,7 +224,17 @@ function drawQrCode(value: string, x: number, y: number, size: number) {
   return commands.join("\n");
 }
 
-function buildTicketPageStream(input: TicketPdfInput, hasBrandLogo: boolean) {
+function buildTicketPageStreams(input: TicketPdfInput, hasBrandLogo: boolean) {
+  const titleLines = wrapToWidth(input.eventTitle, 286, 16);
+  const venueLines = wrapToWidth(input.venue, 208, 8.2);
+  const addressLines = wrapToWidth(input.address, 286, 7.6);
+  const ticketLines = wrapToWidth(input.ticketName, 439, 12.5);
+  const allScheduleLines = input.scheduleLines.flatMap((line) => wrapToWidth(line, 439, 8.2));
+  const continuation: string[] = [];
+  for (const [label, lines] of [["EVENTO", titleLines], ["LOCAL", venueLines], ["ENDERECO", addressLines], ["INGRESSO", ticketLines]] as const) {
+    if (lines.length > 2) continuation.push(label, ...wrapToWidth(lines.join(" "), 479, 10), "");
+  }
+  if (allScheduleLines.length > 10) continuation.push("OBSERVACOES (CONTINUACAO)", ...allScheduleLines.slice(10).flatMap((line) => wrapToWidth(line, 479, 10)));
   const pageWidth = 595;
   const pageHeight = 842;
   const dark = "0.06 0.10 0.16";
@@ -225,7 +244,7 @@ function buildTicketPageStream(input: TicketPdfInput, hasBrandLogo: boolean) {
   const brandSoft = mixPdfColor(brand, 0.90);
   const brandSoftBorder = mixPdfColor(brand, 0.70);
   const logo = brandLockup(input.brandName);
-  const scheduleLines = input.scheduleLines.slice(0, 10);
+  const scheduleLines = allScheduleLines.slice(0, 10);
   const scheduleTop = 300;
   const scheduleHeight = input.scheduleLines.length ? Math.min(158, 48 + scheduleLines.length * 11) : 0;
   const scheduleBottom = scheduleTop - scheduleHeight;
@@ -249,7 +268,7 @@ function buildTicketPageStream(input: TicketPdfInput, hasBrandLogo: boolean) {
   const linkY = input.scheduleLines.length ? Math.max(118, scheduleBottom - 30) : 242;
   const urlY = input.scheduleLines.length ? Math.max(102, scheduleBottom - 46) : 226;
 
-  return [
+  const mainPage = [
     fillRect(0, 0, pageWidth, pageHeight, "0.965 0.978 0.992"),
     fillRect(0, 746, pageWidth, 96, brand),
     fillRect(0, 728, pageWidth, 18, brandDark),
@@ -265,26 +284,39 @@ function buildTicketPageStream(input: TicketPdfInput, hasBrandLogo: boolean) {
     fillRect(34, 58, 527, 648, "1 1 1"),
     strokeRect(34, 58, 527, 648, "0.78 0.84 0.90"),
     text(58, 678, "EVENTO", 8.5, "F2", brand),
-    ...wrap(input.eventTitle, 34, 2).map((line, index) => text(58, 654 - index * 19, line, index === 0 ? 20 : 15, "F2", dark)),
+    ...titleLines.slice(0, 2).map((line, index) => text(58, 654 - index * 19, line, 16, "F2", dark)),
     fillRect(58, 528, 286, 86, brandSoft),
     strokeRect(58, 528, 286, 86, brandSoftBorder),
     text(76, 590, "DATA E HORARIO", 8, "F2", brand),
     text(76, 572, formatDateTime(input.eventDate), 11.5, "F2", dark),
     text(76, 550, "LOCAL", 8, "F2", brand),
-    ...wrap(input.venue, 36, 2).map((line, index) => text(126, 550 - index * 11, line, 8.2, "F2", dark)),
-    ...wrap(input.address, 60, 2).map((line, index) => text(76, 514 - index * 10, line, 7.6, "F1", muted)),
+    ...venueLines.slice(0, 2).map((line, index) => text(126, 550 - index * 11, line, 8.2, "F2", dark)),
+    ...addressLines.slice(0, 2).map((line, index) => text(76, 514 - index * 10, line, 7.6, "F1", muted)),
     fillRect(374, 504, 148, 148, "1 1 1"),
     strokeRect(374, 504, 148, 148, "0.78 0.84 0.90"),
     drawQrCode(input.qrCodeToken, 394, 524, 108),
-    text(374, 486, truncate(input.ticketCode, 30), 8.5, "F2", dark),
+    text(374, 486, input.ticketCode, 8.5, "F2", dark),
     fillRect(58, 366, 479, 110, "0.996 0.998 1"),
     strokeRect(58, 366, 479, 110, "0.78 0.84 0.90"),
     text(78, 452, "INGRESSO", 8.2, "F2", brand),
-    ...wrap(input.ticketName, 60, 2).map((line, index) => text(78, 434 - index * 13, line, index === 0 ? 12.5 : 10.5, "F2", dark)),
+    ...ticketLines.slice(0, 2).map((line, index) => text(78, 434 - index * 13, line, index === 0 ? 12.5 : 10.5, "F2", dark)),
     ...scheduleContent,
     text(58, linkY, "CODIGO DO INGRESSO", 8.5, "F2", brand),
-    text(58, urlY, input.ticketCode, 10, "F2", dark)
+    text(58, urlY, input.ticketCode, 10, "F2", dark),
+    ...(continuation.length ? [text(58, 78, "Informacoes complementares nas paginas seguintes deste ingresso.", 8, "F2", brand)] : [])
   ].join("\n");
+  const pages = [mainPage];
+  for (let offset = 0; offset < continuation.length; offset += 48) {
+    pages.push([
+      fillRect(0, 0, pageWidth, pageHeight, "1 1 1"),
+      fillRect(0, 766, pageWidth, 76, brand),
+      text(58, 804, "INFORMACOES COMPLEMENTARES", 16, "F2", "1 1 1"),
+      text(58, 783, input.ticketCode, 10, "F2", "1 1 1"),
+      ...continuation.slice(offset, offset + 48).map((line, index) => text(58, 738 - index * 13, line, 10)),
+      text(58, 78, `Continuacao ${offset / 48 + 1} - acompanhe o QR Code da primeira pagina deste ingresso.`, 8, "F1", muted)
+    ].join("\n"));
+  }
+  return pages;
 }
 
 async function loadTcrLogo() {
@@ -314,7 +346,7 @@ export async function buildTicketsPdf(inputs: TicketPdfInput[]) {
   const pageWidth = 595;
   const pageHeight = 842;
   const tcrLogo = inputs.some((input) => input.brandName.toLowerCase().includes("tcr")) ? await loadTcrLogo() : null;
-  const pageStreams = inputs.map((input) => buildTicketPageStream(input, Boolean(tcrLogo && input.brandName.toLowerCase().includes("tcr"))));
+  const pageStreams = inputs.flatMap((input) => buildTicketPageStreams(input, Boolean(tcrLogo && input.brandName.toLowerCase().includes("tcr"))));
   const pageObjectIds = pageStreams.map((_, index) => 5 + (tcrLogo ? 1 : 0) + index * 2);
   const objects: Buffer[] = [
     "<< /Type /Catalog /Pages 2 0 R >>",
