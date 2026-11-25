@@ -57,7 +57,6 @@ export async function GET(_request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Este pedido nao possui ingressos validos para download." }, { status: 404 });
   }
 
-  const scheduleLines = buildScheduleLines();
   const ticketInputs: TicketPdfInput[] = order.tickets.map((ticket) => ({
     brandName: organizationContext.brandName,
     brandPrimaryColor: organizationContext.organization.primaryColor,
@@ -72,9 +71,9 @@ export async function GET(_request: Request, { params }: RouteContext) {
     issuedAt: ticket.issuedAt,
     qrCodeToken: ticket.qrCodeToken,
     ticketUrl: getPublicTicketUrl(ticket.code, organizationContext.organization),
-    scheduleLines
+    scheduleLines: buildScheduleLines([order.event.importantInfo, ticket.lot.description].filter(Boolean).join("\n"))
   }));
-  const pdf = buildTicketsPdf(ticketInputs);
+  const pdf = await buildTicketsPdf(ticketInputs);
 
   return new NextResponse(pdf, {
     headers: {

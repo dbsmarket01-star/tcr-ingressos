@@ -415,7 +415,7 @@ export async function sendTicketsEmail(input: TicketEmailInput) {
 }
 
 export function createPublicTicketUrl(ticketCode: string, organization?: EmailOrganization | null) {
-  return getPublicTicketUrl(ticketCode, organization);
+  return `${getPublicTicketUrl(ticketCode, organization)}/pdf`;
 }
 
 export function createPublicOrderUrl(orderCode: string, organization?: EmailOrganization | null) {

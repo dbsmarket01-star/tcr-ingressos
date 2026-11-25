@@ -312,7 +312,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
               <h2>Ingressos emitidos</h2>
               <div className="ticketList">
                 {order.tickets.map((ticket) => (
-                  <Link className="ticketCard" href={`/ingresso/${ticket.code}`} key={ticket.id}>
+                  <Link className="ticketCard" href={`/ingresso/${ticket.code}/pdf`} key={ticket.id}>
                     <div>
                       <strong>{formatLotDisplayName(ticket.lot.name, ticket.lotOption?.label)}</strong>
                       <span className="muted">{ticket.code}</span>
@@ -634,7 +634,7 @@ export default async function OrderPage({ params, searchParams }: OrderPageProps
                 </div>
                 <div className="approvedTicketList">
                   {order.tickets.map((ticket) => (
-                    <Link className="approvedTicketLink" href={`/ingresso/${ticket.code}`} key={ticket.id}>
+                    <Link className="approvedTicketLink" href={`/ingresso/${ticket.code}/pdf`} key={ticket.id}>
                       <span>Abrir ingresso</span>
                       <strong>{formatLotDisplayName(ticket.lot.name, ticket.lotOption?.label)}</strong>
                     </Link>

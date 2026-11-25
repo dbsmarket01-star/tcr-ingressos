@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CopyButton } from "@/components/forms/CopyButton";
-import { PrintButton } from "@/components/forms/PrintButton";
 import { getCurrentOrganizationContext } from "@/features/organizations/organization.service";
 import { createTicketQrCodeSvg } from "@/features/tickets/ticket-qrcode";
 import { getTicketByCode } from "@/features/tickets/ticket.service";
@@ -205,7 +204,9 @@ export default async function TicketPage({ params }: TicketPageProps) {
           <Link className="button fullButton" href={`/pedido/${ticket.order.code}`}>
             Voltar ao pedido
           </Link>
-          <PrintButton className="secondaryButton fullButton" label="Imprimir ingresso" />
+          <Link className="secondaryButton fullButton" href={`/ingresso/${ticket.code}/pdf`}>
+            Abrir voucher oficial em PDF
+          </Link>
           <CopyButton
             className="secondaryButton fullButton"
             copiedLabel="Código copiado"

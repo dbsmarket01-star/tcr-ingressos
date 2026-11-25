@@ -1,4 +1,8 @@
 import QRCode from "qrcode";
+import sharp from "sharp";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { deflateSync } from "node:zlib";
 import { formatDateTime } from "@/lib/format";
 
 export type TicketPdfInput = {
@@ -19,9 +23,12 @@ export type TicketPdfInput = {
 };
 
 export function buildScheduleLines(scheduleDescription?: string | null, limit = 10) {
-  void scheduleDescription;
-  void limit;
-  return [];
+  return String(scheduleDescription ?? "")
+    .split(/\r?\n|;/)
+    .map((line) => line.replace(/^[\s•-]+/, "").trim())
+    .filter(Boolean)
+    .flatMap((line) => wrap(line, 85, 3))
+    .slice(0, limit);
 }
 
 function ascii(value: unknown) {
@@ -208,7 +215,7 @@ function drawQrCode(value: string, x: number, y: number, size: number) {
   return commands.join("\n");
 }
 
-function buildTicketPageStream(input: TicketPdfInput) {
+function buildTicketPageStream(input: TicketPdfInput, hasBrandLogo: boolean) {
   const pageWidth = 595;
   const pageHeight = 842;
   const dark = "0.06 0.10 0.16";
@@ -218,7 +225,7 @@ function buildTicketPageStream(input: TicketPdfInput) {
   const brandSoft = mixPdfColor(brand, 0.90);
   const brandSoftBorder = mixPdfColor(brand, 0.70);
   const logo = brandLockup(input.brandName);
-  const scheduleLines = input.scheduleLines.slice(0, 9);
+  const scheduleLines = input.scheduleLines.slice(0, 10);
   const scheduleTop = 300;
   const scheduleHeight = input.scheduleLines.length ? Math.min(158, 48 + scheduleLines.length * 11) : 0;
   const scheduleBottom = scheduleTop - scheduleHeight;
@@ -226,7 +233,7 @@ function buildTicketPageStream(input: TicketPdfInput) {
     ? [
         fillRect(58, scheduleBottom, 479, scheduleHeight, "0.985 0.992 0.996"),
         strokeRect(58, scheduleBottom, 479, scheduleHeight, brandSoftBorder),
-        text(78, scheduleTop - 24, "PROGRAMACAO DO EVENTO", 8.5, "F2", brand),
+        text(78, scheduleTop - 24, "OBSERVACOES", 8.5, "F2", brand),
         ...scheduleLines.map((line, index) =>
           text(
             78,
@@ -241,16 +248,18 @@ function buildTicketPageStream(input: TicketPdfInput) {
     : [];
   const linkY = input.scheduleLines.length ? Math.max(118, scheduleBottom - 30) : 242;
   const urlY = input.scheduleLines.length ? Math.max(102, scheduleBottom - 46) : 226;
-  const issuedY = 84;
 
   return [
     fillRect(0, 0, pageWidth, pageHeight, "0.965 0.978 0.992"),
     fillRect(0, 746, pageWidth, 96, brand),
     fillRect(0, 728, pageWidth, 18, brandDark),
-    fillRect(38, 776, 72, 40, "1 1 1"),
-    text(52, 788, logo.mark, logo.mark.length <= 3 ? 26 : 20, "F2", brand),
-    text(124, 800, logo.name, 20, "F2", "1 1 1"),
-    text(124, 780, "Ingresso digital oficial", 9, "F1", "0.90 0.96 1.00"),
+    ...(hasBrandLogo
+      ? [fillRect(38, 766, 164, 57, "0.032 0.302 0.220"), "q 164 0 0 57 38 766 cm /Logo Do Q"]
+      : [
+          fillRect(38, 776, 72, 40, "1 1 1"),
+          text(52, 788, logo.mark, logo.mark.length <= 3 ? 26 : 20, "F2", brand),
+          text(124, 800, logo.name, 20, "F2", "1 1 1")
+        ]),
     text(426, 795, "QR Code individual", 9, "F2", "1 1 1"),
     text(426, 779, "Valide este ingresso na entrada", 7.8, "F1", "0.90 0.96 1.00"),
     fillRect(34, 58, 527, 648, "1 1 1"),
@@ -272,62 +281,71 @@ function buildTicketPageStream(input: TicketPdfInput) {
     strokeRect(58, 366, 479, 110, "0.78 0.84 0.90"),
     text(78, 452, "INGRESSO", 8.2, "F2", brand),
     ...wrap(input.ticketName, 60, 2).map((line, index) => text(78, 434 - index * 13, line, index === 0 ? 12.5 : 10.5, "F2", dark)),
-    fillRect(78, 374, 300, 42, brandSoft),
-    strokeRect(78, 374, 300, 42, brandSoftBorder),
-    text(94, 402, "COMPRADOR", 7.6, "F2", brand),
-    ...wrap(input.buyerName, 41, 2).map((line, index) => text(94, 387 - index * 10, line, 8.6, "F2", dark)),
-    fillRect(394, 374, 123, 42, brandSoft),
-    strokeRect(394, 374, 123, 42, brandSoftBorder),
-    text(410, 402, "PEDIDO", 7.6, "F2", brand),
-    ...wrap(input.orderCode, 18, 2).map((line, index) => text(410, 387 - index * 10, line, 8.4, "F2", dark)),
-    fillRect(58, 314, 479, 38, "0.985 0.992 0.998"),
-    strokeRect(58, 314, 479, 38, "0.78 0.84 0.90"),
-    text(78, 334, "COMO USAR", 8.2, "F2", brand),
-    text(164, 334, "Apresente este PDF ou abra o ingresso no celular. Cada QR Code vale uma unica entrada.", 8, "F1", muted),
     ...scheduleContent,
-    text(58, linkY, "LINK DO INGRESSO", 8.5, "F2", brand),
-    ...wrap(input.ticketUrl, 96, 2).map((line, index) => text(58, urlY - index * 11, line, 7.5, "F1", dark)),
-    text(58, issuedY, `Emitido em ${formatDateTime(input.issuedAt)}`, 8.5, "F1", muted)
+    text(58, linkY, "CODIGO DO INGRESSO", 8.5, "F2", brand),
+    text(58, urlY, input.ticketCode, 10, "F2", dark)
   ].join("\n");
 }
 
-export function buildTicketsPdf(inputs: TicketPdfInput[]) {
+async function loadTcrLogo() {
+  try {
+    const file = await readFile(join(process.cwd(), "public/brands/tcr-logomarca.png"));
+    const { data, info } = await sharp(file).flatten({ background: "#084d38" }).raw().toBuffer({ resolveWithObject: true });
+    return { data: deflateSync(data), width: info.width, height: info.height };
+  } catch {
+    return null;
+  }
+}
+
+export async function buildTicketsPdf(inputs: TicketPdfInput[]) {
   const pageWidth = 595;
   const pageHeight = 842;
-  const pageStreams = inputs.map(buildTicketPageStream);
-  const pageObjectIds = pageStreams.map((_, index) => 5 + index * 2);
-  const objects = [
+  const tcrLogo = inputs.some((input) => input.brandName.toLowerCase().includes("tcr")) ? await loadTcrLogo() : null;
+  const pageStreams = inputs.map((input) => buildTicketPageStream(input, Boolean(tcrLogo && input.brandName.toLowerCase().includes("tcr"))));
+  const pageObjectIds = pageStreams.map((_, index) => 5 + (tcrLogo ? 1 : 0) + index * 2);
+  const objects: Buffer[] = [
     "<< /Type /Catalog /Pages 2 0 R >>",
     `<< /Type /Pages /Kids [${pageObjectIds.map((id) => `${id} 0 R`).join(" ")}] /Count ${pageObjectIds.length} >>`,
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>"
-  ];
+  ].map((object) => Buffer.from(object, "utf8"));
+
+  if (tcrLogo) {
+    objects.push(Buffer.concat([
+      Buffer.from(`<< /Type /XObject /Subtype /Image /Width ${tcrLogo.width} /Height ${tcrLogo.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length ${tcrLogo.data.length} >>\nstream\n`, "utf8"),
+      tcrLogo.data,
+      Buffer.from("\nendstream", "utf8")
+    ]));
+  }
 
   pageStreams.forEach((stream, index) => {
     const pageObjectId = pageObjectIds[index];
     const contentObjectId = pageObjectId + 1;
     objects.push(
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${contentObjectId} 0 R >>`,
-      `<< /Length ${Buffer.byteLength(stream, "utf8")} >>\nstream\n${stream}\nendstream`
+      Buffer.from(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> ${tcrLogo ? "/XObject << /Logo 5 0 R >>" : ""} >> /Contents ${contentObjectId} 0 R >>`, "utf8"),
+      Buffer.from(`<< /Length ${Buffer.byteLength(stream, "utf8")} >>\nstream\n${stream}\nendstream`, "utf8")
     );
   });
 
-  let pdf = "%PDF-1.4\n";
+  const parts = [Buffer.from("%PDF-1.4\n", "utf8")];
+  let position = parts[0].length;
   const offsets: number[] = [];
 
   objects.forEach((object, index) => {
-    offsets.push(Buffer.byteLength(pdf, "utf8"));
-    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+    offsets.push(position);
+    const section = Buffer.concat([Buffer.from(`${index + 1} 0 obj\n`, "utf8"), object, Buffer.from("\nendobj\n", "utf8")]);
+    parts.push(section);
+    position += section.length;
   });
 
-  const xrefOffset = Buffer.byteLength(pdf, "utf8");
-  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  const xrefOffset = position;
+  let trailer = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
   offsets.forEach((offset) => {
-    pdf += `${String(offset).padStart(10, "0")} 00000 n \n`;
+    trailer += `${String(offset).padStart(10, "0")} 00000 n \n`;
   });
-  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+  trailer += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
 
-  return Buffer.from(pdf, "utf8");
+  return Buffer.concat([...parts, Buffer.from(trailer, "utf8")]);
 }
 
 export function buildTicketPdf(input: TicketPdfInput) {

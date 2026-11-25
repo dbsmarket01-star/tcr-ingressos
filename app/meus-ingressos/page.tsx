@@ -93,7 +93,7 @@ export default async function TicketLookupPage({ searchParams }: TicketLookupPag
     }
 
     if (ticket) {
-      redirect(`/ingresso/${ticket.code}`);
+      redirect(`/ingresso/${ticket.code}/pdf`);
     }
   }
 

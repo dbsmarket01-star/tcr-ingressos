@@ -27,7 +27,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
   }
 
   const ticketUrl = getPublicTicketUrl(ticket.code, organizationContext.organization);
-  const pdf = buildTicketPdf({
+  const pdf = await buildTicketPdf({
     brandName: organizationContext.brandName,
     brandPrimaryColor: organizationContext.organization.primaryColor,
     eventTitle: ticket.event.title,
@@ -41,14 +41,14 @@ export async function GET(_request: Request, { params }: RouteContext) {
     issuedAt: ticket.issuedAt,
     qrCodeToken: ticket.qrCodeToken,
     ticketUrl,
-    scheduleLines: buildScheduleLines()
+    scheduleLines: buildScheduleLines([ticket.event.importantInfo, ticket.lot.description].filter(Boolean).join("\n"))
   });
 
   return new NextResponse(pdf, {
     headers: {
       "Cache-Control": "no-store",
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="ingresso-${ticket.code}.pdf"`
+      "Content-Disposition": `inline; filename="ingresso-${ticket.code}.pdf"`
     }
   });
 }
