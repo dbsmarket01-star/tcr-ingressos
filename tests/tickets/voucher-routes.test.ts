@@ -33,3 +33,19 @@ it("delivers the official PDF links through the mocked email provider with each 
  const sent=mocks.send.mock.calls.at(-1)?.[0];expect(sent.html).toContain(url);expect(sent.text).toContain(url);
  }
 });
+it("formats ticket emails with the tenant brand, event details, and individual PDF buttons",async()=>{
+ vi.stubEnv("RESEND_API_KEY","synthetic-not-a-real-key"); mocks.send.mockResolvedValue({data:{id:"mock-only"},error:null});
+ const firstUrl=createPublicTicketUrl("AMOSTRA-001",{publicDomain:"tcringressos.com.br"});
+ const secondUrl=createPublicTicketUrl("AMOSTRA-002",{publicDomain:"tcringressos.com.br"});
+ await sendTicketsEmail({to:"qa@example.invalid",buyerName:"Diego <teste>",orderCode:"ORDER-001",brandName:"TCR Ingressos",organization:{publicDomain:"tcringressos.com.br"},eventTitle:"Rodrigo Teaser em Marília",eventDate:event.startsAt,venueName:"Teatro Municipal",tickets:[{code:"AMOSTRA-001",lotName:"Cadeira Ouro",url:firstUrl},{code:"AMOSTRA-002",lotName:"Cadeira Prata",url:secondUrl}]});
+ const sent=mocks.send.mock.calls.at(-1)?.[0];
+ expect(sent.subject).toBe("TCR INGRESSOS — Seus ingressos para Rodrigo Teaser em Marília");
+ expect(sent.html).toContain("Seus ingressos chegaram");
+ expect(sent.html).toContain("Detalhes do evento");
+ expect(sent.html).toContain("Teatro Municipal");
+ expect(sent.html).toContain("Diego &lt;teste&gt;");
+ expect(sent.html).not.toContain("Diego <teste>");
+ expect(sent.html.match(/Abrir ingresso em PDF/g)).toHaveLength(2);
+ expect(sent.html).toContain(firstUrl);
+ expect(sent.html).toContain(secondUrl);
+});

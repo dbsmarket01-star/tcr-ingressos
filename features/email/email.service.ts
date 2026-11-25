@@ -320,41 +320,50 @@ function getEmailAccentShadowColor(brandPrimaryColor?: string | null, alpha = 0.
 }
 
 function buildTicketEmailHtml(input: TicketEmailInput) {
-  const brandName = getDefaultBrandName(input.brandName);
+  const brandName = getDefaultBrandName(input.brandName || input.organization?.name);
   const accentColor = getEmailAccentColor(input.brandPrimaryColor);
+  const accentDarkColor = getEmailAccentDarkColor(input.brandPrimaryColor);
   const ticketLinks = input.tickets
     .map(
       (ticket) => `
-        <li style="margin: 14px 0; padding: 14px; border: 1px solid #dfe4ea; border-radius: 8px;">
-          <strong>${ticket.lotName}</strong><br />
-          Código: ${ticket.code}<br />
-          <a href="${ticket.url}" style="color: ${accentColor}; font-weight: 700;">Abrir ingresso</a>
-        </li>
+        <div style="background: #ffffff; border: 1px solid #dce7e2; border-radius: 14px; margin: 0 0 12px; padding: 18px;">
+          <p style="color: #677b72; font-size: 11px; font-weight: 700; letter-spacing: 1px; margin: 0 0 6px; text-transform: uppercase;">Ingresso</p>
+          <p style="color: #172b23; font-size: 19px; font-weight: 700; margin: 0 0 8px;">${escapeEmailHtml(ticket.lotName)}</p>
+          <p style="color: #53645d; font-size: 13px; margin: 0 0 16px;">Código: <strong>${escapeEmailHtml(ticket.code)}</strong></p>
+          <a href="${escapeEmailHtml(ticket.url)}" style="background: ${accentColor}; border-radius: 9px; color: #ffffff; display: inline-block; font-size: 14px; font-weight: 700; padding: 11px 18px; text-decoration: none;">Abrir ingresso em PDF</a>
+        </div>
       `
     )
     .join("");
 
   return `
-    <div style="font-family: Arial, sans-serif; color: #1d2430; line-height: 1.5;">
-      <h1 style="margin: 0 0 12px;">Seus ingressos - ${brandName}</h1>
-      <p>Olá, ${input.buyerName}.</p>
-      <p>Seu pagamento foi aprovado e seus ingressos para <strong>${input.eventTitle}</strong> estão disponíveis.</p>
-      <p>
-        <strong>Data:</strong> ${formatDate(input.eventDate)}<br />
-        <strong>Local:</strong> ${input.venueName}<br />
-        <strong>Pedido:</strong> ${input.orderCode}
-      </p>
-      <h2>Ingressos</h2>
-      <ul style="list-style: none; padding: 0; margin: 0;">
-        ${ticketLinks}
-      </ul>
-      <p>Apresente o QR Code do ingresso na entrada do evento.</p>
+    <div style="background: #eef4f0; color: #1d3027; font-family: Arial, sans-serif; line-height: 1.5; margin: 0; padding: 28px 12px;">
+      <div style="margin: 0 auto; max-width: 600px;">
+        <div style="background: ${accentDarkColor}; border-radius: 18px 18px 0 0; color: #ffffff; padding: 26px 24px;">
+          <p style="font-size: 12px; font-weight: 700; letter-spacing: 1.4px; margin: 0 0 14px; text-transform: uppercase;">${escapeEmailHtml(brandName)}</p>
+          <h1 style="font-size: 26px; line-height: 1.2; margin: 0 0 8px;">Seus ingressos chegaram</h1>
+          <p style="font-size: 15px; margin: 0; opacity: 0.9;">${escapeEmailHtml(input.eventTitle)}</p>
+        </div>
+        <div style="background: #ffffff; border: 1px solid #dce7e2; border-radius: 0 0 18px 18px; border-top: 0; padding: 24px;">
+          <p style="font-size: 16px; margin: 0 0 8px;">Olá, <strong>${escapeEmailHtml(input.buyerName)}</strong>.</p>
+          <p style="color: #53645d; font-size: 14px; margin: 0 0 22px;">Seu pagamento foi aprovado. Confira os dados do evento e abra seus ingressos abaixo.</p>
+          <div style="background: #f4f8f5; border: 1px solid #e0eae3; border-radius: 12px; margin: 0 0 24px; padding: 16px 18px;">
+            <p style="font-size: 11px; font-weight: 700; letter-spacing: 1px; margin: 0 0 10px; text-transform: uppercase;">Detalhes do evento</p>
+            <p style="font-size: 14px; margin: 0 0 6px;"><strong>Data:</strong> ${escapeEmailHtml(formatDate(input.eventDate))}</p>
+            <p style="font-size: 14px; margin: 0 0 6px;"><strong>Local:</strong> ${escapeEmailHtml(input.venueName)}</p>
+            <p style="font-size: 14px; margin: 0;"><strong>Pedido:</strong> ${escapeEmailHtml(input.orderCode)}</p>
+          </div>
+          <h2 style="font-size: 19px; margin: 0 0 14px;">${input.tickets.length === 1 ? "Seu ingresso" : "Seus ingressos"}</h2>
+          ${ticketLinks}
+          <p style="color: #53645d; font-size: 13px; margin: 18px 0 0;">No dia do evento, apresente o QR Code do PDF na entrada. Guarde este e-mail para acessar seus ingressos novamente.</p>
+        </div>
+      </div>
     </div>
   `;
 }
 
 function buildTicketEmailText(input: TicketEmailInput) {
-  const brandName = getDefaultBrandName(input.brandName);
+  const brandName = getDefaultBrandName(input.brandName || input.organization?.name);
   const tickets = input.tickets
     .map((ticket) => `- ${ticket.lotName} | ${ticket.code} | ${ticket.url}`)
     .join("\n");
@@ -397,7 +406,7 @@ export async function sendTicketsEmail(input: TicketEmailInput) {
   const result = await sendWithResend(resend, {
     from,
     to: input.to,
-    subject: `Seus ingressos - ${input.eventTitle}`,
+    subject: `${getDefaultBrandName(input.brandName || input.organization?.name).toLocaleUpperCase("pt-BR")} — Seus ingressos para ${input.eventTitle}`,
     html: buildTicketEmailHtml(input),
     text: buildTicketEmailText(input),
     tags: [
