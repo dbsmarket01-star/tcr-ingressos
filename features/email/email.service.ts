@@ -321,6 +321,7 @@ function getEmailAccentShadowColor(brandPrimaryColor?: string | null, alpha = 0.
 
 function buildTicketEmailHtml(input: TicketEmailInput) {
   const brandName = getDefaultBrandName(input.brandName || input.organization?.name);
+  const showBrandLabel = !brandName.toLocaleLowerCase("pt-BR").includes("tcr ingressos");
   const accentColor = getEmailAccentColor(input.brandPrimaryColor);
   const accentDarkColor = getEmailAccentDarkColor(input.brandPrimaryColor);
   const ticketLinks = input.tickets
@@ -340,7 +341,7 @@ function buildTicketEmailHtml(input: TicketEmailInput) {
     <div style="background: #eef4f0; color: #1d3027; font-family: Arial, sans-serif; line-height: 1.5; margin: 0; padding: 28px 12px;">
       <div style="margin: 0 auto; max-width: 600px;">
         <div style="background: ${accentDarkColor}; border-radius: 18px 18px 0 0; color: #ffffff; padding: 26px 24px;">
-          <p style="font-size: 12px; font-weight: 700; letter-spacing: 1.4px; margin: 0 0 14px; text-transform: uppercase;">${escapeEmailHtml(brandName)}</p>
+          ${showBrandLabel ? `<p style="font-size: 12px; font-weight: 700; letter-spacing: 1.4px; margin: 0 0 14px; text-transform: uppercase;">${escapeEmailHtml(brandName)}</p>` : ""}
           <h1 style="font-size: 26px; line-height: 1.2; margin: 0 0 8px;">Seus ingressos chegaram</h1>
           <p style="font-size: 15px; margin: 0; opacity: 0.9;">${escapeEmailHtml(input.eventTitle)}</p>
         </div>
@@ -372,7 +373,7 @@ function buildTicketEmailText(input: TicketEmailInput) {
     `Olá, ${input.buyerName}.`,
     "",
     `Seu pagamento foi aprovado e seus ingressos para ${input.eventTitle} estão disponíveis.`,
-    `Operação: ${brandName}`,
+    ...(!brandName.toLocaleLowerCase("pt-BR").includes("tcr ingressos") ? [`Operação: ${brandName}`] : []),
     `Data: ${formatDate(input.eventDate)}`,
     `Local: ${input.venueName}`,
     `Pedido: ${input.orderCode}`,
@@ -402,11 +403,14 @@ export async function sendTicketsEmail(input: TicketEmailInput) {
   }
 
   const resend = new Resend(apiKey);
+  const brandName = getDefaultBrandName(input.brandName || input.organization?.name);
 
   const result = await sendWithResend(resend, {
     from,
     to: input.to,
-    subject: `${getDefaultBrandName(input.brandName || input.organization?.name).toLocaleUpperCase("pt-BR")} — Seus ingressos para ${input.eventTitle}`,
+    subject: brandName.toLocaleLowerCase("pt-BR").includes("tcr ingressos")
+      ? `Seus ingressos para ${input.eventTitle}`
+      : `${brandName.toLocaleUpperCase("pt-BR")} — Seus ingressos para ${input.eventTitle}`,
     html: buildTicketEmailHtml(input),
     text: buildTicketEmailText(input),
     tags: [

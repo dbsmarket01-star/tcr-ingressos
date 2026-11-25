@@ -31,15 +31,20 @@ it("delivers the official PDF links through the mocked email provider with each 
  expect(url).toBe(`https://${publicDomain}/ingresso/AMOSTRA-001/pdf`);
  await sendTicketsEmail({to:"qa@example.invalid",buyerName:"Teste",orderCode:"ORDER-001",brandName:"Teste",organization:{publicDomain},eventTitle:event.title,eventDate:event.startsAt,venueName:event.venueName,tickets:[{code:ticket.code,lotName:"CAMAROTE - 17",url}]});
  const sent=mocks.send.mock.calls.at(-1)?.[0];expect(sent.html).toContain(url);expect(sent.text).toContain(url);
+ expect(sent.subject).toBe("TESTE — Seus ingressos para Evento sintetico");
+ expect(sent.html).toContain("Teste");
  }
 });
-it("formats ticket emails with the tenant brand, event details, and individual PDF buttons",async()=>{
+it("formats ticket emails without repeating the sender brand, preserving event details and PDF buttons",async()=>{
  vi.stubEnv("RESEND_API_KEY","synthetic-not-a-real-key"); mocks.send.mockResolvedValue({data:{id:"mock-only"},error:null});
  const firstUrl=createPublicTicketUrl("AMOSTRA-001",{publicDomain:"tcringressos.com.br"});
  const secondUrl=createPublicTicketUrl("AMOSTRA-002",{publicDomain:"tcringressos.com.br"});
  await sendTicketsEmail({to:"qa@example.invalid",buyerName:"Diego <teste>",orderCode:"ORDER-001",brandName:"TCR Ingressos",organization:{publicDomain:"tcringressos.com.br"},eventTitle:"Rodrigo Teaser em Marília",eventDate:event.startsAt,venueName:"Teatro Municipal",tickets:[{code:"AMOSTRA-001",lotName:"Cadeira Ouro",url:firstUrl},{code:"AMOSTRA-002",lotName:"Cadeira Prata",url:secondUrl}]});
  const sent=mocks.send.mock.calls.at(-1)?.[0];
- expect(sent.subject).toBe("TCR INGRESSOS — Seus ingressos para Rodrigo Teaser em Marília");
+ expect(sent.from).toContain("TCR Ingressos");
+ expect(sent.subject).toBe("Seus ingressos para Rodrigo Teaser em Marília");
+ expect(sent.html).not.toContain("TCR Ingressos");
+ expect(sent.text).not.toContain("TCR Ingressos");
  expect(sent.html).toContain("Seus ingressos chegaram");
  expect(sent.html).toContain("Detalhes do evento");
  expect(sent.html).toContain("Teatro Municipal");
