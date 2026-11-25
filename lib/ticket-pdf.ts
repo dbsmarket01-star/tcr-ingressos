@@ -1,5 +1,5 @@
 import QRCode from "qrcode";
-import sharp from "sharp";
+import { PNG } from "pngjs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { deflateSync } from "node:zlib";
@@ -290,8 +290,21 @@ function buildTicketPageStream(input: TicketPdfInput, hasBrandLogo: boolean) {
 async function loadTcrLogo() {
   try {
     const file = await readFile(join(process.cwd(), "public/brands/tcr-logomarca.png"));
-    const { data, info } = await sharp(file).flatten({ background: "#084d38" }).raw().toBuffer({ resolveWithObject: true });
-    return { data: deflateSync(data), width: info.width, height: info.height };
+    const png = PNG.sync.read(file);
+    const rgb = Buffer.alloc(png.width * png.height * 3);
+    const background = [8, 77, 56];
+
+    for (let pixel = 0; pixel < png.width * png.height; pixel += 1) {
+      const source = pixel * 4;
+      const destination = pixel * 3;
+      const alpha = png.data[source + 3] / 255;
+
+      for (let channel = 0; channel < 3; channel += 1) {
+        rgb[destination + channel] = Math.round(png.data[source + channel] * alpha + background[channel] * (1 - alpha));
+      }
+    }
+
+    return { data: deflateSync(rgb), width: png.width, height: png.height };
   } catch {
     return null;
   }
