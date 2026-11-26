@@ -4,6 +4,7 @@ import {
   decideOrRefer,
   guardPublishedHalfPriceAnswer,
   humanPauseUntil,
+  isWhatsAppAiMonthlyLimitHandoff,
   isGenericEventAdGreeting,
   isHumanHandoffRequest,
   isIncompleteRodrigoEventReply,
@@ -174,6 +175,12 @@ describe("human handoff intent", () => {
 });
 
 describe("human intervention pause", () => {
+  it("identifica somente handoffs causados pelo teto mensal, sem reativar intervenção humana", () => {
+    const limitReason = { reason: "Limite mensal da IA atingido (2005/2000)." };
+    expect(isWhatsAppAiMonthlyLimitHandoff("WHATSAPP_AI_HANDOFF", limitReason)).toBe(true);
+    expect(isWhatsAppAiMonthlyLimitHandoff("WHATSAPP_AI_PAUSED", limitReason)).toBe(false);
+    expect(isWhatsAppAiMonthlyLimitHandoff("WHATSAPP_AI_HANDOFF", { reason: "Cliente solicitou atendimento humano." })).toBe(false);
+  });
   it("pausa a IA por 12 horas por padrão", () => {
     const from = new Date("2026-09-29T15:00:00.000Z");
     expect(humanPauseUntil(from).toISOString()).toBe("2026-09-30T03:00:00.000Z");

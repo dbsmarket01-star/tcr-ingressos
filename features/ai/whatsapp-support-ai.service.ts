@@ -399,6 +399,13 @@ export function resolveWhatsAppAiConversationMode(input: {
   return "PAUSED" as const;
 }
 
+export function isWhatsAppAiMonthlyLimitHandoff(action?: string | null, metadata?: Prisma.JsonValue | null) {
+  const reason = jsonObject(metadata).reason;
+  return action === "WHATSAPP_AI_HANDOFF" &&
+    typeof reason === "string" &&
+    /^Limite mensal da IA atingido \(\d+\/\d+\)\.$/.test(reason);
+}
+
 export async function getWhatsAppAiConversationState(organizationId: string, phone?: string | null) {
   const key = phoneKey(phone);
   if (!key || !isEnabled()) return { mode: "DISABLED" as const, reason: "IA desativada no ambiente." };
@@ -411,12 +418,18 @@ export async function getWhatsAppAiConversationState(organizationId: string, pho
     orderBy: { createdAt: "desc" },
     select: { action: true, metadata: true, createdAt: true }
   });
-  const mode = resolveWhatsAppAiConversationMode({ action: latest?.action, metadata: latest?.metadata });
+  const recordedMode = resolveWhatsAppAiConversationMode({ action: latest?.action, metadata: latest?.metadata });
   const metadata = jsonObject(latest?.metadata);
+  const resumedAfterLimit = recordedMode === "HANDOFF" &&
+    isWhatsAppAiMonthlyLimitHandoff(latest?.action, latest?.metadata) &&
+    (await monthlyUsageAllowed(organizationId)).allowed;
+  const mode = resumedAfterLimit ? "ACTIVE" : recordedMode;
   return {
     mode,
     reason:
-      mode === "ACTIVE" && latest?.action === "WHATSAPP_AI_PAUSED"
+      resumedAfterLimit
+        ? "Limite mensal ampliado; IA reativada para novas mensagens."
+        : mode === "ACTIVE" && latest?.action === "WHATSAPP_AI_PAUSED"
         ? "Pausa do atendimento humano encerrada; IA reativada automaticamente."
         : String(metadata.reason || "Atendimento automatico ativo."),
     changedAt: latest?.createdAt || null,
